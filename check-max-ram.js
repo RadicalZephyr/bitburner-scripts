@@ -2,6 +2,6 @@ import { getHighestPurchasableRamLevel, reportServerComplementCost } from 'lib.j
 
 /** @param {NS} ns */
 export async function main(ns) {
-	let ram = getHighestPurchasableRamLevel(ns, ns.args[0]);
-	reportServerComplementCost(ns, ram);
+        let ram = getHighestPurchasableRamLevel(ns, ns.args[0]);
+        reportServerComplementCost(ns, ram);
 }
