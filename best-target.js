@@ -1,24 +1,24 @@
+import { exploitableHosts } from "lib.js";
+import { walkNetworkBFS } from "walk-network.js";
+
 /** @param {NS} ns */
 export async function main(ns) {
-	let nearbyNodes = ns.scan();
+  let allHosts = walkNetworkBFS(ns);
 
-	let bestScore = 0.0;
-	let bestNode = null;
+  let bestScore = 0.0;
+  let bestHost = null;
 
-	for (let i = 0; i < nearbyNodes.length; ++i) {
-		let node = nearbyNodes[i];
-		if (ns.hasRootAccess(node)) {
-			
-			let nodeMaxMoney = ns.getServerMaxMoney(node);
-			let nodeMinSecurity = ns.getServerMinSecurityLevel(node);
-			let nodeScore = nodeMaxMoney / nodeMinSecurity;
+  for (const host of exploitableHosts(ns, allHosts)) {
+    let hostMaxMoney = ns.getServerMaxMoney(host);
+    let hostMinSecurity = ns.getServerMinSecurityLevel(host);
+    let hostScore = hostMaxMoney / hostMinSecurity;
 
-			if (nodeScore > bestScore) {
-				bestScore = nodeScore;
-				bestNode = node;
-			}
-		}
-	}
+    if (hostScore > bestScore) {
+      bestScore = hostScore;
+      bestHost = host;
+    }
 
-	ns.tprint("best node to target is `%s" + bestNode + "`");
+  }
+
+  ns.tprintf("best host to target is `%s`", bestHost);
 }
