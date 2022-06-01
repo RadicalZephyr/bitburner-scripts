@@ -68,7 +68,7 @@ export function formatGigaBytes(value) {
  * @param {string} host
  */
 export function getRootAccess(ns, host) {
-  if (!ns.hasRootAccess(host) && canHack(ns, host)) {
+  if (!ns.hasRootAccess(host) && canNuke(ns, host)) {
     let portsNeeded = ns.getServerNumPortsRequired(host);
     let portOpenPrograms = [ns.brutessh, ns.ftpcrack, ns.relaysmtp, ns.httpworm, ns.sqlinject];
     for (let i = 0; i < portsNeeded; ++i) {
@@ -81,55 +81,45 @@ export function getRootAccess(ns, host) {
 
 /** Check if we can hack this host.
  *
+ * Note: hacking is different than nuking. Hacking
+ * steals money from a server. Nuking only acquires
+ * root access, and the hacking skill required is
+ * _always_ 1.
+ *
  * @param {NS} ns
  * @param {string} host
  */
 export function canHack(ns, host) {
-  if (ns.hasRootAccess(host)) { return true; }
-
-  if (ns.getHackingLevel() >= ns.getServerRequiredHackingLevel(host)) {
-    // Get number of open ports needed
-    let portsNeeded = ns.getServerNumPortsRequired(host);
-
-    // Check for existence of enough port opening programs
-    let portOpeningPrograms = ["BruteSSH.exe", "FTPCrack.exe", "relaySMTP.exe", "HTTPWorm.exe", "SQLInject.exe"];
-
-    for (let i = 0; i < portsNeeded; ++i) {
-      if (!ns.fileExists(portOpeningPrograms[i])) {
-        return false;
-      }
-    }
-    return true;
-  } else {
-    return false;
-  }
+  return ns.hasRootAccess(host) ||
+    (ns.getHackingLevel() >= ns.getServerRequiredHackingLevel(host)
+     && canNuke(ns, host));
 }
 
-/** Hack server, waiting if necessary.
+/** Check if we can nuke this host.
+ *
+ * Note: hacking is different than nuking. Hacking
+ * steals money from a server. Nuking only acquires
+ * root access, and the hacking skill required is
+ * _always_ 1.
  *
  * @param {NS} ns
- * @param {string} node
- * @param {number} level
+ * @param {string} host
  */
-export async function hackServer(ns, node, level) {
-  if (!ns.hasRootAccess(node) && ns.getHackingLevel() >= ns.getServerRequiredHackingLevel(node)) {
-    if (level >= 1) {
-      while (!ns.fileExists("BruteSSH.exe")) {
-        await ns.sleep(1000 * 60);
-      }
-      ns.brutessh(node);
-    }
-    if (level >= 2) {
-      while (!ns.fileExists("FTPCrack.exe")) {
-        await ns.sleep(1000 * 60);
-      }
-      ns.ftpcrack(node);
-    }
-    if (level >= 0) {
-      ns.nuke(node);
+export function canNuke(ns, host) {
+  if (ns.hasRootAccess(host)) { return true; }
+
+  // Get number of open ports needed
+  let portsNeeded = ns.getServerNumPortsRequired(host);
+
+  // Check for existence of enough port opening programs
+  let portOpeningPrograms = ["BruteSSH.exe", "FTPCrack.exe", "relaySMTP.exe", "HTTPWorm.exe", "SQLInject.exe"];
+
+  for (let i = 0; i < portsNeeded; ++i) {
+    if (!ns.fileExists(portOpeningPrograms[i])) {
+      return false;
     }
   }
-  return ns.hasRootAccess(node);
+  return true;
 }
 
 /** Filter hosts by exploitability.
@@ -162,7 +152,7 @@ function hasMoney(ns, host) {
 export function usableHosts(ns, hosts) {
   return hosts.filter((host) => {
     return ns.serverExists(host)
-      && canHack(ns, host)
+      && canNuke(ns, host)
       && hasRam(ns, host);
   });
 }
