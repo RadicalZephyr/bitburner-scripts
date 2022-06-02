@@ -1,0 +1,78 @@
+* Plans
+
+** Infrastructure
+
+*** Create script to update scripts from github
+    - Should not change every/often
+    - Updates should be based on an index file
+    - Should include a self-update mechanism
+
+*** Set up Github Actions to automatically build the index file
+
+*** Set up updater script to run automatically
+
+*** Set up LSP tooling so emacs can get API completions
+
+*** Write scripts in typescript?
+
+*** Hide scripts in a subdirectory and inkvoke with a single `do` command
+    Keep the home directory clean!
+
+** Network Graph
+
+*** Create a network graph
+
+*** Create a path-to-server program
+
+*** Create a program to sweep up all text files
+
+** File Related
+
+*** Create a program to identify contract files
+    Next extension is to then find the server path to that contract.
+
+*** Create a program to monitor for newly created faction challenges
+    It would then find the server path to the challenge server and
+    nuke it if possible (or wait until it can be nuked and then print out
+    the path to notify the player to go backdoor it.
+
+** Hacking Efficiency Improvements
+
+*** Constantly be growing, weakening and hacking
+    To maximize hacking output we want to always be able to hack a server
+    and we want to constantly be growing it.
+
+    Using one script to do all three things is crazy inefficient. It would
+    be way better to have three scripts, one for each task.
+
+
+*** Distribute grow, weaken and hack threads differently
+    It's good if money grows by a large amount, and it's good if server
+    security weakens by a large amount but it's bad if the hack takes too
+    much money at once because then a long time has to be spent growing
+    the server back up and a lot more weakening needs to be done.
+
+    So grow and weaken should have lots of threads dedicated to them, and
+    hack should have lots of scripts with small numbers of threads.
+
+
+*** Launch scripts in a round
+    To improve throughput and prevent multiple low-thread hack scripts
+    from depleting server money too much, they should be launched so as to
+    distribute them throughout the cycle time of the hack.
+
+
+*** Coordinate timing of hack, weaken and grow
+    It would be ideal if weaken would end slightly before hack starts, and
+    grow would end slightly after hack ends. That way the hack is always
+    as easy as possible.
+
+    Use ports to let the scripts communicate about this!
+
+** Stock Market
+
+*** Create a script to record stock highs and lows
+
+*** Create a script to play the market
+
+*** Create scripts to intentionally manipulate stock forecasts
