@@ -1,4 +1,0 @@
-contract-132186-Joe'sGuns.cct on avmnite-02h
-contract-448704.cct on syscore
-contract-127312.cct on rho-construction
-contract-111686-Joe'sGuns.cct on fulcrumassets
