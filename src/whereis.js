@@ -48,7 +48,7 @@ export async function main(ns) {
       await ns.sleep(1);
     }
   }
-  ns.tprintf("path to %s:\n%s", goalHost, S.reverse().join(" -> "));
+  ns.tprintf("path to %s:\n%s", goalHost, S.reverse().join(" ; go "));
 }
 
 /**
