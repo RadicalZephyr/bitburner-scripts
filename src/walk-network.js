@@ -45,9 +45,7 @@ export function walkNetworkDFS(ns) {
 
   while (s.length > 0) {
     let v = s.pop();
-    if (v == ".") {
-      break;
-    }
+
     let edges = ns.scan(v);
     network.set(v, edges);
     for (const w of edges) {
