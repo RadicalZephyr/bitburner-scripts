@@ -1,8 +1,8 @@
 /** @param {NS} ns */
 export async function main(ns) {
-  let allNodes = await walkNetworkDFS(ns);
-  //ns.tprint("found " + allNodes.length + " nodes");
-  //await ns.write("allNodesDFS.txt", allNodes.join("\n"), "w");
+  let network = await walkNetworkBFS(ns);
+  ns.tprintf("found %d nodes", Array.from(network.keys()).length);
+  await ns.write("networkJSON.txt", JSON.stringify(Array.from(network.entries()), null, 2), "w");
 }
 
 /** Walk the network and return an array of all hosts.
@@ -13,6 +13,7 @@ export async function walkNetworkBFS(ns) {
   let root = "home";
   let q = [];
   let explored = new Set();
+  let network = new Map();
 
   explored.add(root);
   q.push(root);
@@ -21,6 +22,7 @@ export async function walkNetworkBFS(ns) {
     let v = q.shift();
 
     let edges = ns.scan(v);
+    network.set(v, edges);
 
     for (const w of edges) {
       if (!explored.has(w)) {
@@ -28,15 +30,15 @@ export async function walkNetworkBFS(ns) {
         q.push(w);
       }
     }
-    await ns.sleep(10);
   }
-  return Array.from(explored.values());
+  return network;
 }
 
 export async function walkNetworkDFS(ns) {
   let root = "home";
   let s = [];
   let explored = new Set();
+  let network = new Map();
 
   explored.add(root);
   s.push(root);
@@ -47,7 +49,7 @@ export async function walkNetworkDFS(ns) {
       break;
     }
     let edges = ns.scan(v);
-
+    network.set(v, edges);
     for (const w of edges) {
       if (!explored.has(w)) {
         explored.add(w);
@@ -56,17 +58,5 @@ export async function walkNetworkDFS(ns) {
     }
     await ns.sleep(10);
   }
-  return Array.from(explored.values());
-}
-
-class Node {
-  constructor(value) {
-    this.value = value;
-    this.children = [];
-  }
-
-  addChild(value) {
-    this.children.push(new Node(value));
-    return this;
-  }
+  return network;
 }

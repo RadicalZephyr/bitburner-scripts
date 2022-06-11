@@ -1,10 +1,9 @@
 import { exploitableHosts } from "lib.js";
 import { walkNetworkBFS } from "walk-network.js";
 
-
 /** @param {NS} ns */
 export async function main(ns) {
-  let allHosts = await walkNetworkBFS(ns);
+  let allHosts = walkNetworkBFS(ns);
 
   let bestScore = 0.0;
   let bestHost = null;
@@ -21,5 +20,5 @@ export async function main(ns) {
 
   }
 
-  ns.tprintf("best host to target is `%s`", bestHost);
+  ns.tprintf("best host to target is ``", bestHost);
 }

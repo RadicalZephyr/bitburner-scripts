@@ -11,11 +11,14 @@ export function validTarget(ns, node) {
  *
  * @param {NS} ns
  * @param {string} node
- * @param {number} hackScriptRam
+ * @param {number} hackScript
+ * @param {number} percentage
  */
-export function numThreads(ns, node, hackScriptRam) {
+export function numThreads(ns, node, hackScript, percentage) {
+  percentage = percentage ? percentage : 1.0;
+  let hackScriptRam = ns.getScriptRam(hackScript);
   let availableNodeRam = ns.getServerMaxRam(node) - ns.getServerUsedRam(node);
-  return Math.floor(availableNodeRam / hackScriptRam);
+  return Math.floor(availableNodeRam * percentage / hackScriptRam);
 }
 
 /** Print the cost breakdown of a server tier with `ram` memory.
@@ -39,6 +42,7 @@ export function getHighestPurchasableRamLevel(ns, percentageSpend) {
   let maxServers = ns.getPurchasedServerLimit();
   let maxServerTierSpend = ns.getServerMoneyAvailable("home") * percentageSpend;
   let maxPerServerSpend = maxServerTierSpend / maxServers;
+  let maxServerRam = ns.getPurchasedServerMaxRam();
 
   let ram = 16;
 
@@ -59,7 +63,7 @@ export function formatMoney(value) {
 export function formatGigaBytes(value) {
   var s = ['GB', 'TB', 'PB'];
   var e = Math.floor(Math.log(value) / Math.log(1024));
-  return (value / Math.pow(1024, e)).toFixed(2) + s[e];
+  return (value / Math.pow(1024, e)).toFixed(0) + s[e];
 }
 
 /** Get root access to a server if possible.
@@ -90,9 +94,8 @@ export function getRootAccess(ns, host) {
  * @param {string} host
  */
 export function canHack(ns, host) {
-  return ns.hasRootAccess(host) ||
-    (ns.getHackingLevel() >= ns.getServerRequiredHackingLevel(host)
-     && canNuke(ns, host));
+  return ns.getHackingLevel() >= ns.getServerRequiredHackingLevel(host)
+    && canNuke(ns, host);
 }
 
 /** Check if we can nuke this host.
