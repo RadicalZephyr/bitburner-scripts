@@ -13,7 +13,7 @@ export async function main(ns) {
 
   let hackScript = "hack.js";
 
-  let network = await walkNetworkBFS(ns);
+  let network = walkNetworkBFS(ns);
   let allHosts = Array.from(network.keys());
 
   let hosts = usableHosts(ns, allHosts);

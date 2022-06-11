@@ -1,6 +1,6 @@
 /** @param {NS} ns */
 export async function main(ns) {
-  let network = await walkNetworkBFS(ns);
+  let network = walkNetworkBFS(ns);
   ns.tprintf("found %d nodes", Array.from(network.keys()).length);
   await ns.write("networkJSON.txt", JSON.stringify(Array.from(network.entries()), null, 2), "w");
 }
@@ -9,7 +9,7 @@ export async function main(ns) {
  *
  * @param {NS} ns
  */
-export async function walkNetworkBFS(ns) {
+export function walkNetworkBFS(ns) {
   let root = "home";
   let q = [];
   let explored = new Set();
@@ -34,7 +34,7 @@ export async function walkNetworkBFS(ns) {
   return network;
 }
 
-export async function walkNetworkDFS(ns) {
+export function walkNetworkDFS(ns) {
   let root = "home";
   let s = [];
   let explored = new Set();
@@ -56,7 +56,6 @@ export async function walkNetworkDFS(ns) {
         s.push(w);
       }
     }
-    await ns.sleep(10);
   }
   return network;
 }

@@ -1,7 +1,7 @@
 import { walkNetworkBFS } from "walk-network.js";
 /** @param {NS} ns */
 export async function main(ns) {
-  let network = await walkNetworkBFS(ns);
+  let network = walkNetworkBFS(ns);
   let allHosts = Array.from(network.keys());
 
   let contractFileLocations = "contract-locations.txt";

@@ -4,7 +4,7 @@ import { walkNetworkBFS } from "walk-network.js";
 
 /** @param {NS} ns */
 export async function main(ns) {
-  let allHosts = await walkNetworkBFS(ns);
+  let allHosts = walkNetworkBFS(ns);
 
   let bestScore = 0.0;
   let bestHost = null;

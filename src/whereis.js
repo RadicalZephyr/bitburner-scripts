@@ -29,14 +29,14 @@ export async function main(ns) {
     ns.exit();
   }
 
-  let network = await walkNetworkBFS(ns);
+  let network = walkNetworkBFS(ns);
   let allHosts = new Set(network.keys());
   if (!allHosts.has(goalHost)) {
     ns.tprint("Did not find goal host %s during network scan");
     ns.exit();
   }
 
-  let shortestPaths = await dijkstra(ns, network, flags.startingHost);
+  let shortestPaths = dijkstra(ns, network, flags.startingHost);
 
   let S = [];
   let u = goalHost;
@@ -57,7 +57,7 @@ export async function main(ns) {
  * @param {Map<string, string[]>} network
  * @param {string} source
  */
-export async function dijkstra(ns, network, source) {
+export function dijkstra(ns, network, source) {
   let Q = new Set();
   let dist = new Map();
   let prev = new Map();
