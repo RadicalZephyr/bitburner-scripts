@@ -27,12 +27,7 @@ export async function main(ns: NS) {
     const grow2x = Math.ceil(ns.growthAnalyze(server, 2));
     const grow3x = Math.ceil(ns.growthAnalyze(server, 3));
     const grow4x = Math.ceil(ns.growthAnalyze(server, 4));
-    const grow5x = Math.ceil(ns.growthAnalyze(server, 5));
-    const grow6x = Math.ceil(ns.growthAnalyze(server, 6));
-    const grow7x = Math.ceil(ns.growthAnalyze(server, 7));
     const grow8x = Math.ceil(ns.growthAnalyze(server, 8));
-    const grow9x = Math.ceil(ns.growthAnalyze(server, 9));
-    const grow10x = Math.ceil(ns.growthAnalyze(server, 10));
     const hack10 = Math.ceil(.10 / ns.hackAnalyze(server));
     const hack25 = Math.ceil(.25 / ns.hackAnalyze(server));
     const hack50 = Math.ceil(.50 / ns.hackAnalyze(server));
