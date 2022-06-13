@@ -1,7 +1,6 @@
 import { exploitableHosts } from "./lib.js";
 import { walkNetworkBFS } from "./walk-network.js";
 
-
 /** @param {NS} ns */
 export async function main(ns) {
   let allHosts = walkNetworkBFS(ns);
