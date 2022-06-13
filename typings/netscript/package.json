@@ -1,4 +1,5 @@
 {
   "name": "netscript",
-  "version": "1.7.0"
+  "version": "1.7.0",
+  "types": "index.d.ts",
 }
