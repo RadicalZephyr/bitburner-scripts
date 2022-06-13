@@ -15,8 +15,5 @@
   "bugs": {
     "url": "https://github.com/RadicalZephyr/bitburner-scripts/issues"
   },
-  "homepage": "https://github.com/RadicalZephyr/bitburner-scripts#readme",
-  "devDependencies": {
-    "tsup": "^6.1.2"
-  }
+  "homepage": "https://github.com/RadicalZephyr/bitburner-scripts#readme"
 }
