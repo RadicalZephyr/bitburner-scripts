@@ -1,10 +1,10 @@
-import type * as bb from "netscript";
+import type { NS, AutocompleteData } from "netscript";
 
-export function autocomplete(data: bb.AutocompleteData, _args: string[]): string[] {
+export function autocomplete(data: AutocompleteData, _args: string[]): string[] {
     return data.servers;
 }
 
-export async function main(ns: bb.NS) {
+export async function main(ns: NS) {
     const args = ns.flags([["help", false]]);
     if (args.help || ns.args.length > 1) {
         ns.tprint("This script does a more detailed analysis of a server.");
