@@ -8,6 +8,7 @@
     "allowJs": true,
     "noEmitHelpers": true,
     "noImplicitAny": true,
+    "noResolve": true,
     "preserveConstEnums": true
   },
   "include": ["src/**/*.ts", "src/**/*.js"],
