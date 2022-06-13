@@ -1,4 +1,4 @@
-import { walkNetworkBFS } from 'walk-network';
+import { walkNetworkBFS } from './walk-network.js';
 
 /** @param {NS} ns */
 export async function main(ns) {

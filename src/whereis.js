@@ -1,4 +1,4 @@
-import { walkNetworkBFS } from "walk-network.js";
+import { walkNetworkBFS } from "./walk-network.js";
 
 export function autocomplete(data, args) {
   return data.servers;

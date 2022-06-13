@@ -1,4 +1,4 @@
-import { getHighestPurchasableRamLevel, reportServerComplementCost } from 'lib.js';
+import { getHighestPurchasableRamLevel, reportServerComplementCost } from './lib.js';
 
 /** @param {NS} ns */
 export async function main(ns) {

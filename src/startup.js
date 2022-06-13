@@ -1,5 +1,5 @@
-import { getRootAccess, numThreads, exploitableHosts, usableHosts } from 'lib.js';
-import { walkNetworkBFS } from "walk-network.js";
+import { getRootAccess, numThreads, exploitableHosts, usableHosts } from './lib.js';
+import { walkNetworkBFS } from "./walk-network.js";
 
 let factionServers = ["CSEC", "avmnite-02h", "I.I.I.I", "run4theh111z", "The-Cave"];
 
