@@ -1,4 +1,4 @@
-import type * as bb from 'netscript';
+import type * as bb from "netscript";
 
 export function autocomplete(data: bb.AutocompleteData, _args: string[]): string[] {
     return data.servers;
