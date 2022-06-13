@@ -2,9 +2,10 @@
   "compilerOptions": {
     "target": "ES2021",
     "module": "ES2020",
+    "moduleResolution": "nodenext",
     "outDir": "dist",
-    "typeRoots": ["typings"],
-    "allowJS": true,
+    "typeRoots": ["./typings"],
+    "allowJs": true,
     "noEmitHelpers": true,
     "noImplicitAny": true,
     "preserveConstEnums": true
