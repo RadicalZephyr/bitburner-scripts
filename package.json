@@ -2,9 +2,8 @@
   "name": "radz-bitburner-scripts",
   "version": "0.1.0",
   "description": "My awesome scripts for automating Bitburner",
-  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc -p . && bitburner-rsync dist"
   },
   "repository": {
     "type": "git",
