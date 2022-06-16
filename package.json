@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "description": "My awesome scripts for automating Bitburner",
   "scripts": {
-    "build": "tsc -p . && bitburner-rsync dist"
+    "ship-it": "tsc -p . && bitburner-rsync dist",
+    "build": "tsc"
   },
   "repository": {
     "type": "git",
@@ -14,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/RadicalZephyr/bitburner-scripts/issues"
   },
-  "homepage": "https://github.com/RadicalZephyr/bitburner-scripts#readme"
+  "homepage": "https://github.com/RadicalZephyr/bitburner-scripts#readme",
+  "devDependencies": {
+    "typescript": "^4.7.3"
+  }
 }
