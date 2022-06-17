@@ -1,6 +1,11 @@
 name: Build and Test
 
-on: [push, pull_request]
+on:
+  workflow_call:
+    outputs:
+      compiled-files: ${{ jobs.build.compiled-files }}
+  push:
+  pull_request:
 
 jobs:
   build:
