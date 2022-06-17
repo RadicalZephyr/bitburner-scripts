@@ -54,7 +54,12 @@ export async function main(ns: NS) {
             await ns.sleep(1);
         }
     }
-    ns.tprintf("path to %s:\n%s", goalHost, S.reverse().join(" ; go "));
+    S.reverse();
+    ns.tprintf("path to %s:\n%s%s",
+        goalHost,
+        S[0] == 'home' ? '' : 'go ',
+        S.join(" ; go ")
+    );
 }
 
 /** Find the shortest paths from all hosts to the source host.
