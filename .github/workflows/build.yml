@@ -34,4 +34,4 @@ jobs:
         name: Build
         run: |
           npm run build
-          echo "::set-output files=$(find dist/ -type f -name '*.js')"
+          echo ::set-output files=\""$(find dist/ -type f -name '*.js' -print0 | tr '\0' ' ')"\"
