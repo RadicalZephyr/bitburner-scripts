@@ -1,0 +1,24 @@
+name: "Create Release"
+
+on:
+  push:
+    branches:
+      - "main"
+
+jobs:
+  build:
+    uses: ".github/workflows/build.yml@main"
+
+  release:
+    name: "Release"
+    runs-on: "ubuntu-latest"
+    needs: build
+
+    steps:
+      - uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "latest"
+          prerelease: false
+          title: "Build Release"
+          files: ${{ needs.build.outputs.files }}
