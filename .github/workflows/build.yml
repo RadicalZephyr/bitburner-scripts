@@ -3,7 +3,9 @@ name: Build and Test
 on:
   workflow_call:
     outputs:
-      compiled-files: ${{ jobs.build.compiled-files }}
+      compiled-files:
+        description: "A list of all output javascript files"
+        value: ${{ jobs.build.compiled-files }}
   push:
   pull_request:
 
