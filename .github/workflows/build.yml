@@ -10,9 +10,12 @@ on:
       artifact_name:
         description: Build Artifact Name
         value: ${{ jobs.build.outputs.artifact_name }}
+      artifact_file:
+        description: Build Artifact File Path
+        value: ${{ jobs.build.outputs.artifact_file }}
 
 env:
-  ARTIFACT_NAME: dist
+  ARTIFACT_NAME: scripts
 
 jobs:
   build:
@@ -20,6 +23,7 @@ jobs:
 
     outputs:
       artifact_name: ${{ env.ARTIFACT_NAME }}
+      artifact_file: ${{ env.ARTIFACT_NAME }}.zip
 
     strategy:
       matrix:
@@ -34,11 +38,12 @@ jobs:
       - name: Install
         run: npm install
       - name: Build
-        run: |
-          npm run build
-      - name: Upload dist
+        run: npm run build
+      - name: Package output
+        run: zip dist/${{ env.ARTIFACT_NAME }}.zip dist/*.js
+      - name: Upload Bitburner Runnable Scripts
         uses: actions/upload-artifact@v3
         with:
           name: ${{ env.ARTIFACT_NAME }}
           path: |
-            dist
+            dist/${{ env.ARTIFACT_NAME }}.zip

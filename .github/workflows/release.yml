@@ -27,4 +27,5 @@ jobs:
           automatic_release_tag: "latest"
           prerelease: false
           title: "Build Release"
-          files: ${{ needs.build.outputs.compiled_files }}
+          files: |
+            dist/${{ needs.build.outputs.artifact_file }}
