@@ -42,4 +42,5 @@ jobs:
           prerelease: false
           title: "Main branch Release"
           files: |
+            README.md
             dist/${{ needs.build.outputs.artifact_file }}
