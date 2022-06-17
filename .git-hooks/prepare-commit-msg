@@ -1,0 +1,24 @@
+#!/bin/sh
+
+# Adds a `[<folder>[|<folder>...]]` prefix for every folder that had a
+# new, changed, or deleted file in the current commit.
+
+COMMIT_FILENAME="$1"
+
+# Only execute for commits
+if [ -z "$2" -a -z "$3" ]
+then
+    file_names=$(awk '
+/# Changes to be committed:/ { keep=1 }
+(keep == 1) && /src\// && /(modified|deleted):/{ FS = "/" ; $0 = $3 ; sub(/\.[tj]s/, "",  $2) ; print $2 ; FS = " " }
+(keep == 1) && /src\// && /(new file):/ { FS = "/" ; $0 = $4 ; sub(/\.[tj]s/, "", $2) ; print $2 ; FS = " " }
+/# Changes not staged for commit:/ { keep=0 }
+' "$COMMIT_FILENAME" | sort | uniq | tr '\n' '|')
+    if [ -n "${file_names}" ]
+    then
+        temp_file=$(mktemp)
+        echo [${file_names%|}] > $temp_file
+        cat $COMMIT_FILENAME >> $temp_file
+        mv $temp_file $COMMIT_FILENAME
+    fi
+fi
