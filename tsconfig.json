@@ -8,7 +8,9 @@
     "noEmitHelpers": true,
     "noImplicitAny": true,
     "noResolve": true,
-    "preserveConstEnums": true
+    "preserveConstEnums": true,
+    "baseUrl": "types",
+    "typeRoots": ["types"]
   },
-  "include": ["src/**/*.ts", "src/**/*.js"],
+  "include": ["src/**/*.ts", "src/**/*.js"]
 }
