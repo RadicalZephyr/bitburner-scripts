@@ -9,7 +9,7 @@ on:
     outputs:
       artifact_name:
         description: Build Artifact Name
-        value: ${{ env.ARTIFACT_NAME }}
+        value: ${{ jobs.build.outputs.artifact_name }}
 
 env:
   ARTIFACT_NAME: dist
@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
 
     outputs:
-      compiled_files: ${{ steps.build.outputs.files }}
+      artifact_name: ${{ env.ARTIFACT_NAME }}
 
     strategy:
       matrix:
