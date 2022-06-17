@@ -18,16 +18,28 @@ jobs:
     needs: build
 
     steps:
-      - run: echo ${{ needs.build.outputs.artifact_name }}
       - uses: actions/download-artifact@v3
         with:
           name: ${{ needs.build.outputs.artifact_name }}
           path: dist
-      - uses: "marvinpinto/action-automatic-releases@latest"
+
+      - name: Package with specific tag
+        if: ${{ github.ref_type == 'tag' && startsWith(github.ref_name, 'v') }}
+        uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          prerelease: false
+          title: "Release ${{ github.ref_name }}"
+          files: |
+            dist/${{ needs.build.outputs.artifact_file }}
+
+      - name: Package main branch with `latest` tag
+        if: ${{ github.ref_type == 'branch' && github.ref_name == 'main' }}
+        uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           automatic_release_tag: "latest"
           prerelease: false
-          title: "Build Release"
+          title: "Main branch Release"
           files: |
             dist/${{ needs.build.outputs.artifact_file }}
