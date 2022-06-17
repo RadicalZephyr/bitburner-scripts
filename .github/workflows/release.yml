@@ -40,7 +40,7 @@ jobs:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           automatic_release_tag: "latest"
           prerelease: false
-          title: "Main branch Release"
+          title: "Latest Main Branch Release"
           files: |
             README.md
             dist/${{ needs.build.outputs.artifact_file }}
