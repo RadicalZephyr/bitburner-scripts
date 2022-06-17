@@ -16,7 +16,10 @@ export async function main(ns: NS) {
  */
 async function startEmbeddedScript(ns: NS, name: string, script: string, threads: number, args: (string | number | boolean)[]) {
     await ns.write(name, script, "w");
-    ns.run(name, threads, ...args);
+    if (threads > 0) {
+        ns.printf("running %s with %s threads", name, threads);
+        ns.run(name, threads, ...args);
+    }
 }
 
 const hackScript = `
