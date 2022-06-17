@@ -1,9 +1,14 @@
 import type { NS } from "netscript";
 
 export async function main(ns: NS) {
-    await startEmbeddedScript(ns, "only-hack.js", hackScript, 1, ns.args);
-    await startEmbeddedScript(ns, "only-grow.js", growScript, 1, ns.args);
-    await startEmbeddedScript(ns, "only-weaken.js", weakenScript, 1, ns.args);
+    const flags = ns.flags([
+        ['grow', 0],
+        ['hack', 0],
+        ['weaken', 0]
+    ]);
+    await startEmbeddedScript(ns, "only-hack.js", hackScript, flags.hack, ns.args);
+    await startEmbeddedScript(ns, "only-grow.js", growScript, flags.grow, ns.args);
+    await startEmbeddedScript(ns, "only-weaken.js", weakenScript, flags.weaken, ns.args);
 }
 
 /** Unpack and start running an embedded script with the specified parallelism and arguments.
