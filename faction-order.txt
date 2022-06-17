@@ -1,2 +1,2 @@
 - Sector-12 : BruteSSH & start with $1m
--
+- Tian Di Hui : No lack of focus penalty
