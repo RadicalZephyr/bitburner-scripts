@@ -23,13 +23,32 @@ jobs:
 
     outputs:
       artifact_name: ${{ env.ARTIFACT_NAME }}
-      artifact_file: ${{ env.ARTIFACT_NAME }}.zip
+      artifact_file: ${{ env.ARTIFACT_FILE }}
 
     strategy:
       matrix:
         node-version: [12.x]
 
     steps:
+      - name: Get the release version from the tag
+        shell: bash
+        if: github.ref_type == 'tag' && env.BBR_VERSION == ''
+        run: |
+          echo "SCRIPT_VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
+          echo "version is: ${{ env.SCRIPT_VERSION }}"
+
+      - name: Use latest as the release version when building from main branch
+        shell: bash
+        if: github.ref_type == 'branch' && github.ref_name == 'main'
+        run: |
+          echo "SCRIPT_VERSION=latest >> $GITHUB_ENV"
+          echo "version is: ${{ env.SCRIPT_VERSION }}"
+
+      - name: Store the artifact file name in the environment
+        shell: bash
+        run: |
+          echo "ARTIFACT_FILE=${{ env.ARTIFACT_NAME}}-${{env.SCRIPT_VERSION }}.zip" >> $GITHUB_ENV
+
       - uses: actions/checkout@v3
       - name: Node.js
         uses: actions/setup-node@v1
@@ -40,10 +59,10 @@ jobs:
       - name: Build
         run: npm run build
       - name: Package output
-        run: zip dist/${{ env.ARTIFACT_NAME }}.zip dist/*.js
+        run: zip ${{ env.ARTIFACT_FILE }} dist/*.js
       - name: Upload Bitburner Runnable Scripts
         uses: actions/upload-artifact@v3
         with:
           name: ${{ env.ARTIFACT_NAME }}
           path: |
-            dist/${{ env.ARTIFACT_NAME }}.zip
+            ${{ env.ARTIFACT_FILE }}
