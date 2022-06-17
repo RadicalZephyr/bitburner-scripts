@@ -23,4 +23,4 @@ jobs:
           automatic_release_tag: "latest"
           prerelease: false
           title: "Build Release"
-          files: ${{ needs.build.outputs.files }}
+          files: ${{ needs.build.outputs.compiled_files }}

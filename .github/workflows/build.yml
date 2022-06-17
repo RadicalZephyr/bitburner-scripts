@@ -3,9 +3,9 @@ name: Build and Test
 on:
   workflow_call:
     outputs:
-      compiled-files:
+      compiled_files:
         description: "A list of all output javascript files"
-        value: ${{ jobs.build.compiled-files }}
+        value: ${{ jobs.build.compiled_files }}
   push:
     branches-ignore:
       - "main"
@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
 
     outputs:
-      compiled-files: ${{ steps.build.outputs.files }}
+      compiled_files: ${{ steps.build.outputs.files }}
 
     strategy:
       matrix:
