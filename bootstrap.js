@@ -1,6 +1,6 @@
 /** @param {NS} ns */
 export async function main(ns) {
-  for (const file in files) {
+  for (const file of files) {
     await ns.wget(baseUrl + file, file, "home");
   }
 }
