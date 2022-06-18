@@ -1,10 +1,19 @@
 import type { NS } from "netscript";
 
 export async function main(ns: NS) {
-    const numNodes = ns.hacknet.numNodes();
+    const lastNode = ns.hacknet.numNodes() - 1;
 
-    for (let i = 0; i < numNodes; ++i) {
-        const stats = ns.hacknet.getNodeStats(i);
-        ns.tprintf('node %s:\n%s', i, JSON.stringify(stats));
+    let i = 0;
+    let levelsCost = [];
+    while (++i > 0) {
+        let levelCost = ns.hacknet.getLevelUpgradeCost(lastNode, i);
+        if (levelCost == Infinity || levelCost == 0) {
+            break;
+        }
+        levelsCost.push(levelCost);
+        await ns.sleep(1);
     }
+
+    const levelsText = levelsCost.map((level, index) => `${index + 1}, ${level}`).join('\n');
+    await ns.write("levels.txt", levelsText);
 }
