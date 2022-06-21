@@ -4,7 +4,8 @@
   "description": "My awesome scripts for automating Bitburner",
   "scripts": {
     "ship-it": "tsc -p . && bitburner-rsync dist",
-    "build": "tsc"
+    "build": "tsc",
+    "watch": "find src/ -type f | entr npm run ship-it"
   },
   "repository": {
     "type": "git",
