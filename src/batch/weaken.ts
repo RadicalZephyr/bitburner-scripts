@@ -15,4 +15,5 @@ export async function main(ns: NS) {
 
     await ns.sleep(sleepTime);
     await ns.weaken(target);
+    ns.tprint(`weakening ${target} done`);
 }

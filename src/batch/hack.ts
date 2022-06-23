@@ -15,4 +15,5 @@ export async function main(ns: NS) {
 
     await ns.sleep(sleepTime);
     await ns.hack(target);
+    ns.tprint(`hacking ${target} done`);
 }

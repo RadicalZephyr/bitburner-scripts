@@ -15,4 +15,5 @@ export async function main(ns: NS) {
 
     await ns.sleep(sleepTime);
     await ns.grow(target);
+    ns.tprint(`growing ${target} done`);
 }
