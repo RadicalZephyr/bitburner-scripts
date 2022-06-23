@@ -55,9 +55,11 @@ export async function main(ns: NS) {
         }
     }
     S.reverse();
-    ns.tprintf("path to %s:\n%s%s",
+    if (S[0] == flags.startingHost) {
+        S.shift();
+    }
+    ns.tprintf("path to %s:\ngo %s",
         goalHost,
-        S[0] == 'home' ? '' : 'go ',
         S.join(" ; go ")
     );
 }
