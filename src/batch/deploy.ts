@@ -1,15 +1,13 @@
 import type { NS } from "netscript";
 
-import { growthAnalyze, hackAnalyze, weakenAnalyze, weakenThreads, getRootAccess, numThreads, exploitableHosts, usableHosts } from './lib.js';
-import { walkNetworkBFS } from "./walk-network.js";
-
-const prepareScript = "prepare.js";
+import { growthAnalyze, hackAnalyze, weakenAnalyze, weakenThreads, getRootAccess, numThreads, exploitableHosts, usableHosts } from '../lib.js';
+import { walkNetworkBFS } from "../walk-network.js";
 
 const scripts = {
-    'runner': 'batch-runner.js',
-    'grow': 'batch-grow.js',
-    'hack': 'batch-hack.js',
-    'weaken': 'batch-weaken.js'
+    'runner': 'batch/runner.js',
+    'grow': 'batch/grow.js',
+    'hack': 'batch/hack.js',
+    'weaken': 'batch/weaken.js'
 };
 const scriptList = [scripts.runner, scripts.grow, scripts.hack, scripts.weaken];
 
