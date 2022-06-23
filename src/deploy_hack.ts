@@ -5,6 +5,14 @@ import { walkNetworkBFS } from "./walk-network.js";
 
 const prepareScript = "prepare.js";
 
+const scripts = {
+    'runner': 'batch-runner.js',
+    'grow': 'batch-grow.js',
+    'hack': 'batch-hack.js',
+    'weaken': 'batch-weaken.js'
+};
+const scriptList = [scripts.runner, scripts.grow, scripts.hack, scripts.weaken];
+
 export async function main(ns: NS) {
     let network = walkNetworkBFS(ns);
     let allHosts = Array.from(network.keys());
@@ -21,9 +29,7 @@ export async function main(ns: NS) {
 
     for (const host of hosts) {
         getRootAccess(ns, host);
-        await ns.scp(prepareScript, host);
-        const threads = numThreads(ns, host, prepareScript, 1);
-        ns.exec(prepareScript, host, threads);
+        await ns.scp(scriptList, host);
     }
 }
 
@@ -33,7 +39,7 @@ type ServerDetails = {
     postGrowthWeakenThreads: number,
 };
 
-function analyzeTarget(ns: NS, target: string): ServerDetails {
+function analyzeTargetPreparation(ns: NS, target: string): ServerDetails {
     const initialWeakenThreads = weakenAnalyze(ns, target, 1.0);
 
     const maxMoney = ns.getServerMaxMoney(target);
