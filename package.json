@@ -5,7 +5,7 @@
   "scripts": {
     "ship-it": "tsc -p . && bitburner-rsync dist",
     "build": "tsc",
-    "watch": "find src/ -type f | entr npm run ship-it"
+    "watch": "while true ; do find src/ -type f | entr -d npm run ship-it ; done"
   },
   "repository": {
     "type": "git",
