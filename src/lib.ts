@@ -67,11 +67,17 @@ export function formatGigaBytes(value: number): string {
 export function getRootAccess(ns: NS, host: string): boolean {
     if (!ns.hasRootAccess(host) && canNuke(ns, host)) {
 
-        let nsAny: any = ns;
+        const portOpeningProgramFns = {
+            "BruteSSH.exe": ns.brutessh,
+            "FTPCrack.exe": ns.ftpcrack,
+            "relaySMTP.exe": ns.relaysmtp,
+            "HTTPWorm.exe": ns.httpworm,
+            "SQLInject.exe": ns.sqlinject,
+
+        };
         for (const program of portOpeningPrograms) {
             if (ns.fileExists(program)) {
-                const programFnName = program.replace('.exe', '').toLowerCase();
-                nsAny[programFnName](host);
+                portOpeningProgramFns[program](host);
             }
         }
         ns.nuke(host);

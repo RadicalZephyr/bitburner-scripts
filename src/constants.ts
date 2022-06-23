@@ -5,7 +5,13 @@ export const factionServers = [
     "run4theh111z"
 ];
 
-export const portOpeningPrograms = [
+export type PortProgram = "BruteSSH.exe" |
+    "FTPCrack.exe" |
+    "relaySMTP.exe" |
+    "HTTPWorm.exe" |
+    "SQLInject.exe"
+    ;
+export const portOpeningPrograms: PortProgram[] = [
     "BruteSSH.exe",
     "FTPCrack.exe",
     "relaySMTP.exe",
