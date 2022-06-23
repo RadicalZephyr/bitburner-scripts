@@ -66,10 +66,13 @@ export function formatGigaBytes(value: number): string {
  */
 export function getRootAccess(ns: NS, host: string): boolean {
     if (!ns.hasRootAccess(host) && canNuke(ns, host)) {
-        let portsNeeded = ns.getServerNumPortsRequired(host);
-        let portOpenPrograms = [ns.brutessh, ns.ftpcrack, ns.relaysmtp, ns.httpworm, ns.sqlinject];
-        for (let i = 0; i < portsNeeded; ++i) {
-            portOpenPrograms[i](host);
+
+        let nsAny: any = ns;
+        for (const program of portOpeningPrograms) {
+            if (ns.fileExists(program)) {
+                const programFnName = program.replace('.exe', '').toLowerCase();
+                nsAny[programFnName](host);
+            }
         }
         ns.nuke(host);
     }
