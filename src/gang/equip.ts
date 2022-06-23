@@ -11,6 +11,7 @@ const vehicles = ["Ford Flex V20", "ATX1070 Superbike", "Mercedes-Benz S9001", "
 const rootkits = ["NUKE Rootkit", "Soulstealer Rootkit", "Demon Rootkit", "Hmap Node", "Jack the Ripper"];
 
 const allEquipment = [...augments, ...weapons, ...armor, ...vehicles, ...rootkits];
+const allEquipmentLC = allEquipment.map(e => e.toLowerCase());
 
 const equipmentCategories = {
     "Augments": augments,
@@ -20,23 +21,41 @@ const equipmentCategories = {
     "Rootkits": rootkits
 };
 
-export function autocomplete(_data: AutocompleteData, args: string[]) {
-    if (args.length > 0) {
-        return allEquipment.filter(a => a.startsWith(args[0])).map(a => a.replace(args[0] + ' ', ''));
+const FLAGS: [flag: string, default_value: boolean][] = [
+    ['g', false], // all augments
+    ['w', false], // all weapons
+    ['m', false], // all armors
+    ['v', false], // all vehicles
+    ['r', false], // all rootkits
+    ['A', false]  // All
+];
+
+export function autocomplete(_data: AutocompleteData, _args: string[]) {
+    const args = _args.map(a => a.toLowerCase());
+
+    // Eat any flags
+    const flagLetters = FLAGS.map(f => '-' + f[0]);
+    while (args.length > 0 && flagLetters.includes(args[0])) {
+        args.shift();
+    }
+
+    const [specifiedEquipment, rest] = extractValidEquipments(args);
+    // pop last item for completion
+    const restEquipmentName = rest.join(' ');
+    rest.pop();
+    const restEquipmentPrefix = new RegExp(rest.join(' '), 'i');
+
+    if (!allEquipmentLC.includes(restEquipmentName) && restEquipmentName != '') {
+        return allEquipment
+            .filter(e => e.toLowerCase().startsWith(restEquipmentName))
+            .map(e => e.replace(restEquipmentPrefix, '').trimStart());
     } else {
-        return allEquipment;
+        return allEquipment.filter(e => !specifiedEquipment.includes(e));
     }
 }
 
 export async function main(ns: NS) {
-    const options = ns.flags([
-        ['g', false], // all augments
-        ['w', false], // all weapons
-        ['m', false], // all armors
-        ['v', false], // all vehicles
-        ['r', false], // all rootkits
-        ['A', false]  // All
-    ]);
+    const options = ns.flags(FLAGS);
 
     const [equipmentList, rest] = buildEquipmentList(options);
 
@@ -126,7 +145,41 @@ function buildEquipmentList(options: Options): Equipment {
         equipments.push(...rootkits);
     }
 
-    return [equipments, options._];
+    let rest: string[] = [];
+    if (options._.length > 0) {
+        const [explicitEquipment, explicitRest] = extractValidEquipments([...options._]);
+        equipments.push(...explicitEquipment);
+        rest = explicitRest;
+    }
+
+    return [equipments, rest];
+}
+
+export function extractValidEquipments(_args: string[]): Equipment {
+    let args = [..._args];
+
+    let equipments: string[] = [];
+    let currentEquipment = [];
+
+    while (args.length > 0) {
+        currentEquipment.push(args.shift());
+        const currentEquipmentName = currentEquipment.join(' ');
+        const currentEquipmentRE = new RegExp('^' + currentEquipmentName, 'i');
+        const filteredEquipment = allEquipment.filter(e => currentEquipmentRE.test(e));
+
+        if (filteredEquipment.length == 1) {
+            const currentEquipmentTotalRE = new RegExp('^' + currentEquipmentName + '$', 'i');
+            if (currentEquipmentTotalRE.test(filteredEquipment[0])) {
+                equipments.push(currentEquipmentName);
+                currentEquipment = [];
+            }
+        } else if (filteredEquipment.length == 0) {
+            break;
+        }
+    }
+    args = currentEquipment.concat(args);
+
+    return [equipments, args];
 }
 
 function formatEquipment(name: string, equipments: string[]): string {
