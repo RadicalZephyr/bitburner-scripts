@@ -10,9 +10,9 @@ const vehicles = ["Ford Flex V20", "ATX1070 Superbike", "Mercedes-Benz S9001", "
 
 const rootkits = ["NUKE Rootkit", "Soulstealer Rootkit", "Demon Rootkit", "Hmap Node", "Jack the Ripper"];
 
-const all_equipment = [...augments, ...weapons, ...armor, ...vehicles, ...rootkits];
+const allEquipment = [...augments, ...weapons, ...armor, ...vehicles, ...rootkits];
 
-const equipment_categories = {
+const equipmentCategories = {
     "Augments": augments,
     "Weapons": weapons,
     "Armor": armor,
@@ -22,9 +22,9 @@ const equipment_categories = {
 
 export function autocomplete(_data: AutocompleteData, args: string[]) {
     if (args.length > 0) {
-        return all_equipment.filter(a => a.startsWith(args[0])).map(a => a.replace(args[0] + ' ', ''));
+        return allEquipment.filter(a => a.startsWith(args[0])).map(a => a.replace(args[0] + ' ', ''));
     } else {
-        return all_equipment;
+        return allEquipment;
     }
 }
 
@@ -40,7 +40,7 @@ export async function main(ns: NS) {
 
     const [equipmentList, rest] = buildEquipmentList(options);
 
-    if (options.help || isSubSet(equipmentList, all_equipment)) {
+    if (options.help || isSubSet(equipmentList, allEquipment)) {
         let errorMsg: string;
         if (equipmentList.length == 0) {
             errorMsg = "No equipment specified";
@@ -49,7 +49,7 @@ export async function main(ns: NS) {
         }
 
         let formattedEquipment = new String();
-        for (const [category, items] of Object.entries(equipment_categories)) {
+        for (const [category, items] of Object.entries(equipmentCategories)) {
             formattedEquipment += formatEquipment(category, items);
         }
         ns.tprintf('error: %s\nPlease choose one of the following equipments:\n %s', errorMsg, formattedEquipment);
@@ -103,7 +103,7 @@ function buildEquipmentList(options: Options): Equipment {
     let equipments: string[] = [];
 
     if (options.A) {
-        return [all_equipment, []];
+        return [allEquipment, []];
     }
 
     if (options.g) {
