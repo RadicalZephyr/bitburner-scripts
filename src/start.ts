@@ -57,7 +57,7 @@ async function shareHosts(ns: NS, hosts: string[], shareScript: string, shareAmo
         let threads = numThreads(ns, host, shareScript, shareAmount);
         if (threads > 0) {
             ns.printf("calculated num threads of %d", threads);
-            await getRootAccess(ns, host);
+            getRootAccess(ns, host);
             await ns.scp(shareScript, host);
             ns.exec(shareScript, host, threads);
         }
@@ -71,7 +71,7 @@ async function startHosts(ns: NS, hosts: string[], targets: string[], hackScript
     }
 
     for (const target of targets) {
-        await getRootAccess(ns, target);
+        getRootAccess(ns, target);
     }
 
     let targetIndex = 0;
@@ -85,7 +85,7 @@ async function startHosts(ns: NS, hosts: string[], targets: string[], hackScript
             continue;
         }
 
-        if (await getRootAccess(ns, host)) {
+        if (getRootAccess(ns, host)) {
             await ns.scp(hackScript, host);
 
             if (threads > targets.length * 10) {
