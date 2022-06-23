@@ -1,6 +1,6 @@
 import type { NS } from "netscript";
 
-import { getRootAccess, numThreads, exploitableHosts, usableHosts } from './lib.js';
+import { growthAnalyze, hackAnalyze, weakenAnalyze, weakenThreads, getRootAccess, numThreads, exploitableHosts, usableHosts } from './lib.js';
 import { walkNetworkBFS } from "./walk-network.js";
 
 const prepareScript = "prepare.js";
@@ -22,17 +22,31 @@ export async function main(ns: NS) {
     for (const host of hosts) {
         getRootAccess(ns, host);
         await ns.scp(prepareScript, host);
-        await ns.exec(prepareScript, host, threads)
-        // await prepareHost(ns, host);
+        const threads = numThreads(ns, host, prepareScript, 1);
+        ns.exec(prepareScript, host, threads);
     }
 }
 
-function analyzeTarget(ns: NS, target: string) {
-    const currentMoney = ns.getServerMoneyAvailable(target);
-    const maxMoney = ns.getServerMaxMoney(target);
+type ServerDetails = {
+    initialWeakenThreads: number,
+    initialGrowthThreads: number,
+    postGrowthWeakenThreads: number,
+};
 
-    const currentSecurity = ns.getServerSecurityLevel(target);
-    const minSecurity = ns.getServerMinSecurityLevel(target);
-    const initialWeakenAmount = currentSecurity - minSecurity;
-    const initialWeakenThreads = initialWeakenAmount * 20;
+function analyzeTarget(ns: NS, target: string): ServerDetails {
+    const initialWeakenThreads = weakenAnalyze(ns, target, 1.0);
+
+    const maxMoney = ns.getServerMaxMoney(target);
+    const currentMoney = ns.getServerMoneyAvailable(target);
+    const neededGrowthRatio = maxMoney / currentMoney;
+    const initialGrowthThreads = growthAnalyze(ns, target, neededGrowthRatio);
+    const initialGrowthSecurity = ns.growthAnalyzeSecurity(initialGrowthThreads, target);
+
+    const postGrowthWeakenThreads = weakenThreads(initialGrowthSecurity);
+
+    return {
+        'initialWeakenThreads': initialWeakenThreads,
+        'initialGrowthThreads': initialGrowthThreads,
+        'postGrowthWeakenThreads': postGrowthWeakenThreads,
+    };
 }
