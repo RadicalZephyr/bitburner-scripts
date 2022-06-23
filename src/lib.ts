@@ -1,5 +1,7 @@
 import type { NS } from "netscript";
 
+import { portOpeningPrograms } from "./constants";
+
 /** Check if node is a valid target
  */
 export function validTarget(ns: NS, node: any) {
@@ -100,8 +102,6 @@ export function canNuke(ns: NS, host: string): boolean {
     let portsNeeded = ns.getServerNumPortsRequired(host);
 
     // Check for existence of enough port opening programs
-    let portOpeningPrograms = ["BruteSSH.exe", "FTPCrack.exe", "relaySMTP.exe", "HTTPWorm.exe", "SQLInject.exe"];
-
     for (let i = 0; i < portsNeeded; ++i) {
         if (!ns.fileExists(portOpeningPrograms[i])) {
             return false;
