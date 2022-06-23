@@ -29,40 +29,120 @@ export function autocomplete(_data: AutocompleteData, args: string[]) {
 }
 
 export async function main(ns: NS) {
-    const equipment = ns.args.join(" ");
-    if (typeof equipment !== "string" || !all_equipment.includes(equipment)) {
-        ns.tprintf("error: Unknown equipment specified '%s'", equipment);
-        ns.tprint("\nPlease choose one of the following equipments:");
+    const options = ns.flags([
+        ['g', false], // all augments
+        ['w', false], // all weapons
+        ['m', false], // all armors
+        ['v', false], // all vehicles
+        ['r', false], // all rootkits
+        ['A', false]  // All
+    ]);
 
-        for (const [category, items] of Object.entries(equipment_categories)) {
-            ns.tprint(format_equipment(category, items));
+    const [equipmentList, rest] = buildEquipmentList(options);
+
+    if (options.help || isSubSet(equipmentList, all_equipment)) {
+        let errorMsg: string;
+        if (equipmentList.length == 0) {
+            errorMsg = "No equipment specified";
+        } else {
+            errorMsg = `Unknown equipment specified ${rest}`;
         }
 
+        let formattedEquipment = new String();
+        for (const [category, items] of Object.entries(equipment_categories)) {
+            formattedEquipment += formatEquipment(category, items);
+        }
+        ns.tprintf('error: %s\nPlease choose one of the following equipments:\n %s', errorMsg, formattedEquipment);
         return;
     }
 
     const members = ns.gang.getMemberNames().map(name => ns.gang.getMemberInformation(name));
-    let boughtFor = [];
-    for (const member of members) {
-        if (!member.upgrades.includes(equipment)) {
-            if (ns.gang.purchaseEquipment(member.name, equipment)) {
-                boughtFor.push(member.name);
-            }
 
+    let boughtList: [equipment: string, members: string[]][] = [];
+    for (const equipment of equipmentList) {
+        let boughtFor = [];
+        for (const member of members) {
+            if (!member.upgrades.includes(equipment)) {
+                if (ns.gang.purchaseEquipment(member.name, equipment)) {
+                    boughtFor.push(member.name);
+                }
+            }
+        }
+        if (boughtFor.length > 0) {
+            boughtList.push([equipment, boughtFor]);
         }
     }
 
-    if (boughtFor.length > 0) {
-        ns.tprintf("Bought %s for %s", equipment, boughtFor.join(", "));
+    if (boughtList.length > 0) {
+        let formattedBoughtEquipment = [];
+        for (const [equipment, members] of boughtList) {
+            formattedBoughtEquipment.push(`Bought ${equipment} for ${members.join(", ")}`);
+        }
+        ns.tprint(formattedBoughtEquipment.join('\n'));
     } else {
-        ns.tprintf("All gang members already equipped with %s", equipment);
+        ns.tprintf("All gang members already equipped with %s", equipmentList.join(", "));
     }
 }
 
-function format_equipment(name: string, equipments: string[]): string {
+type Options = {
+    g: boolean,
+    w: boolean,
+    m: boolean,
+    v: boolean,
+    r: boolean,
+    A: boolean,
+    _: string[]
+};
+
+type Equipment = [
+    equipments: string[],
+    rest: string[]
+];
+
+function buildEquipmentList(options: Options): Equipment {
+    let equipments: string[] = [];
+
+    if (options.A) {
+        return [all_equipment, []];
+    }
+
+    if (options.g) {
+        equipments.push(...augments);
+    }
+
+    if (options.w) {
+        equipments.push(...weapons);
+    }
+
+    if (options.m) {
+        equipments.push(...armor);
+    }
+
+    if (options.v) {
+        equipments.push(...vehicles);
+    }
+
+    if (options.r) {
+        equipments.push(...rootkits);
+    }
+
+    return [equipments, options._];
+}
+
+function formatEquipment(name: string, equipments: string[]): string {
     const equipmentList = equipments.map(equipment => " - " + equipment).join("\n");
     return `
 ${name}:
 ${equipmentList}
 `;
+}
+
+function isSubSet(potentialSubSet: string[], superSet: string[]): boolean {
+    for (const el of potentialSubSet) {
+        if (!superSet.includes(el)) {
+            return false;
+        }
+    }
+
+    return true;
 }
