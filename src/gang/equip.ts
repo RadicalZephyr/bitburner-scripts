@@ -22,6 +22,7 @@ const equipmentCategories = {
 };
 
 const FLAGS: [flag: string, default_value: boolean][] = [
+    ['list', false], // list out possible equipments
     ['g', false], // all augments
     ['w', false], // all weapons
     ['m', false], // all armors
@@ -57,6 +58,15 @@ export function autocomplete(_data: AutocompleteData, _args: string[]) {
 export async function main(ns: NS) {
     const options = ns.flags(FLAGS);
 
+    if (options.list) {
+        let formattedEquipment = new String();
+        for (const [category, items] of Object.entries(equipmentCategories)) {
+            formattedEquipment += formatEquipment(category, items);
+        }
+        ns.tprint(formattedEquipment);
+        return;
+    }
+
     const [equipmentList, rest] = buildEquipmentList(options);
 
     if (options.help || !isSubSet(equipmentList, allEquipment)) {
@@ -66,12 +76,17 @@ export async function main(ns: NS) {
         } else {
             errorMsg = `Unknown equipment specified ${rest}`;
         }
+        ns.tprint(`error: ${errorMsg}
+Usage: ${ns.getScriptName()} [OPTION...] EQUIPMENT...
 
-        let formattedEquipment = new String();
-        for (const [category, items] of Object.entries(equipmentCategories)) {
-            formattedEquipment += formatEquipment(category, items);
-        }
-        ns.tprintf('error: %s\nPlease choose one of the following equipments:\n %s', errorMsg, formattedEquipment);
+OPTIONS
+ --list  List out all available equipments
+ -g      Buy all augments
+ -w      Buy all weapons
+ -m      Buy all armors
+ -v      Buy all vehicles
+ -r      Buy all rootkits
+ -A      Buy all equipments`);
         return;
     }
 
