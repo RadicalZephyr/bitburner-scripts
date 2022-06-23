@@ -11,8 +11,8 @@ export function validTarget(ns, node) {
  *
  * @param {NS} ns
  * @param {string} node
- * @param {number} hackScript
- * @param {number} percentage
+ * @param {string} hackScript
+ * @param {number?} percentage
  */
 export function numThreads(ns, node, hackScript, percentage) {
   percentage = percentage ? percentage : 1.0;
