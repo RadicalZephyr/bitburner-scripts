@@ -102,12 +102,8 @@ export function canNuke(ns: NS, host: string): boolean {
     let portsNeeded = ns.getServerNumPortsRequired(host);
 
     // Check for existence of enough port opening programs
-    for (let i = 0; i < portsNeeded; ++i) {
-        if (!ns.fileExists(portOpeningPrograms[i])) {
-            return false;
-        }
-    }
-    return true;
+    let existingPrograms = portOpeningPrograms.filter(p => ns.fileExists(p));
+    return existingPrograms.length >= portsNeeded;
 }
 
 /** Filter hosts by exploitability.
