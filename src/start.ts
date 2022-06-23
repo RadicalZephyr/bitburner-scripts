@@ -1,17 +1,30 @@
-import type { AutocompleteData, NS } from "netscript";
+import type { NS } from "netscript";
 
 import { getRootAccess, numThreads, exploitableHosts, usableHosts } from './lib.js';
 import { walkNetworkBFS } from "./walk-network.js";
 
-export function autocomplete(_data: AutocompleteData, _args: string[]) {
-}
-
 export async function main(ns: NS) {
+    const options = ns.flags([
+        ['share', false],
+        ['share-percent', 0.75]
+    ]);
+
+    if (options.help) {
+        ns.tprint(`
+Usage: ${ns.getScriptName()} [OPTIONS]
+
+OPTIONS
+  --share Run share script on usable hosts
+  --share_percent Specify the percentage of usable hosts to share [0-1]
+`);
+        return;
+    }
     let shareScript = "share.js";
 
-    let ownedHosts = ns.getPurchasedServers();
-
-    await shareHosts(ns, ownedHosts, shareScript, 0.75);
+    if (options.share) {
+        let ownedHosts = ns.getPurchasedServers();
+        await shareHosts(ns, ownedHosts, shareScript, options.share_percent);
+    }
 
     let hackScript = "hack.js";
 
@@ -19,7 +32,10 @@ export async function main(ns: NS) {
     let allHosts = Array.from(network.keys());
 
     let hosts = usableHosts(ns, allHosts);
-    await shareHosts(ns, hosts, shareScript, 0.25);
+
+    if (options.share) {
+        await shareHosts(ns, hosts, shareScript, options.share_percent);
+    }
 
     let targets = exploitableHosts(ns, allHosts);
     ns.tprintf(
