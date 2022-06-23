@@ -59,7 +59,7 @@ export async function main(ns: NS) {
 
     const [equipmentList, rest] = buildEquipmentList(options);
 
-    if (options.help || isSubSet(equipmentList, allEquipment)) {
+    if (options.help || !isSubSet(equipmentList, allEquipment)) {
         let errorMsg: string;
         if (equipmentList.length == 0) {
             errorMsg = "No equipment specified";
