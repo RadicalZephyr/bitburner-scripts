@@ -138,3 +138,35 @@ export function usableHosts(ns: NS, hosts: string[]): string[] {
 function hasRam(ns: NS, host: string): boolean {
     return ns.getServerMaxRam(host) > 0;
 }
+
+/** Calculate the number of threads needed to grow the server by a
+ * certain multiplier.
+ */
+export function growthAnalyze(ns: NS, target: string, growthAmount: number): number {
+    return Math.ceil(ns.growthAnalyze(target, growthAmount));
+}
+
+/** Calculate the number of threads needed to hack the server for a
+ * given multiplier.
+ */
+export function hackAnalyze(ns: NS, target: string, hackAmount: number): number {
+    const oneThreadHackAmount = ns.hackAnalyze(target);
+    return Math.ceil(hackAmount / oneThreadHackAmount);
+}
+
+/** Calculate the number of threads needed to weaken the `target` by
+ * the given multiplier.
+ */
+export function weakenAnalyze(ns: NS, target: string, weakenAmount: number): number {
+    const currentSecurity = ns.getServerSecurityLevel(target);
+    const minSecurity = ns.getServerMinSecurityLevel(target);
+    return weakenThreads((currentSecurity - minSecurity) * weakenAmount);
+}
+
+/** Calculate the number of threads to weaken any server by the given amount.
+ */
+export function weakenThreads(weakenAmount: number): number {
+    // We multiply by 20 because 1 thread of weaken reduces security
+    // by a fixed amount of 0.05, or 1/20
+    return Math.ceil(weakenAmount * 20);
+}
