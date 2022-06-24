@@ -6,7 +6,7 @@ export async function main(ns: NS) {
     for (const member of members) {
         const ar = ns.gang.getAscensionResult(member);
 
-        if (ar.hack > 1.5) {
+        if (ar) {
             ns.gang.ascendMember(member);
         }
     }
