@@ -19,6 +19,9 @@ export async function main(ns) {
   let neededServers = serverLimit - currentServers.length;
   let serverCost = ns.getPurchasedServerCost(ram);
   for (let i = 0; i < neededServers; ++i) {
+    if (ns.getServerMoneyAvailable("home") < serverCost) {
+      ns.run(startScript);
+    }
     while (ns.getServerMoneyAvailable("home") < serverCost) {
       await ns.sleep(1000);
     }
@@ -36,6 +39,9 @@ export async function main(ns) {
 
     // Make sure this is actually an upgrade
     if (ns.getServerMaxRam(oldHostname) < ram) {
+      if (ns.getServerMoneyAvailable("home") < serverCost) {
+        ns.run(startScript);
+      }
       while (ns.getServerMoneyAvailable("home") < serverCost) {
         await ns.sleep(1000);
       }
