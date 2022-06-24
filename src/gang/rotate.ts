@@ -7,6 +7,9 @@ export async function main(ns: NS) {
     const heatTask = "Money Laundering";
     const coolTask = "Ethical Hacking";
 
+    // TODO: Incorporate ascension of gang members, and then training
+    // based on relatively low skill. And then augmentation as well?
+
     const memberNames = ns.gang.getMemberNames();
 
     const [trainingMembers, workingMembers] = splitMembers(ns, memberNames);
@@ -34,7 +37,6 @@ export async function main(ns: NS) {
         }
         await ns.sleep(500);
     }
-
 
     // forever
     while (true) {
