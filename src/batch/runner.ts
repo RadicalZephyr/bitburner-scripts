@@ -9,6 +9,6 @@ export async function main(ns: NS) {
     }
     const batchSpecs: BatchSpec[] = JSON.parse(specJSON);
     for (const spec of batchSpecs) {
-        ns.run(spec.script, spec.threads, spec.target, spec.delay);
+        ns.exec(spec.script, spec.host, spec.threads, spec.target, spec.delay);
     }
 }
