@@ -32,7 +32,7 @@ export async function main(ns: NS) {
             ns.gang.setMemberTask(member.name, heatTask);
             ++numHeating;
         }
-        await ns.sleep(50);
+        await ns.sleep(500);
     }
 
 
