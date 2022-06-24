@@ -4,7 +4,7 @@ export async function main(ns: NS) {
     const jobCheckInterval = 1000 * 20;
 
     const trainingTask = "Train Hacking";
-    const heatTask = "Identity Theft";
+    const heatTask = "Money Laundering";
     const coolTask = "Ethical Hacking";
 
     const memberNames = ns.gang.getMemberNames();
