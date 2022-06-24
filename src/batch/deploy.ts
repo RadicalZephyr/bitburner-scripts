@@ -1,15 +1,14 @@
 import type { NS } from "netscript";
 
-import { growthAnalyze, hackAnalyze, weakenAnalyze, weakenThreads, getRootAccess, numThreads, exploitableHosts, usableHosts } from '../lib.js';
+import { getRootAccess, exploitableHosts, usableHosts } from '../lib.js';
 import { walkNetworkBFS } from "../walk-network.js";
 
 const scripts = {
-    'runner': 'batch/runner.js',
     'grow': 'batch/grow.js',
     'hack': 'batch/hack.js',
     'weaken': 'batch/weaken.js'
 };
-const scriptList = [scripts.runner, scripts.grow, scripts.hack, scripts.weaken];
+const scriptList = [scripts.grow, scripts.hack, scripts.weaken];
 
 export async function main(ns: NS) {
     let network = walkNetworkBFS(ns);
@@ -25,32 +24,12 @@ export async function main(ns: NS) {
         fastTargets.length, fastTargets.join(", ")
     );
 
+    // Deploy all batch scripts to all host servers
     for (const host of hosts) {
         getRootAccess(ns, host);
         await ns.scp(scriptList, host);
     }
-}
 
-type ServerDetails = {
-    initialWeakenThreads: number,
-    initialGrowthThreads: number,
-    postGrowthWeakenThreads: number,
-};
-
-function analyzeTargetPreparation(ns: NS, target: string): ServerDetails {
-    const initialWeakenThreads = weakenAnalyze(ns, target, 1.0);
-
-    const maxMoney = ns.getServerMaxMoney(target);
-    const currentMoney = ns.getServerMoneyAvailable(target);
-    const neededGrowthRatio = maxMoney / currentMoney;
-    const initialGrowthThreads = growthAnalyze(ns, target, neededGrowthRatio);
-    const initialGrowthSecurity = ns.growthAnalyzeSecurity(initialGrowthThreads, target);
-
-    const postGrowthWeakenThreads = weakenThreads(initialGrowthSecurity);
-
-    return {
-        'initialWeakenThreads': initialWeakenThreads,
-        'initialGrowthThreads': initialGrowthThreads,
-        'postGrowthWeakenThreads': postGrowthWeakenThreads,
-    };
+    // Start the soften phase
+    ns.run("batch/soften.js", 1, JSON.stringify(hosts), JSON.stringify(fastTargets));
 }
