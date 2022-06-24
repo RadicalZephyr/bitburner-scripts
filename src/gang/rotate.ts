@@ -15,7 +15,7 @@ export async function main(ns: NS) {
     const [trainingMembers, workingMembers] = splitMembers(ns, memberNames);
     trainingMembers.forEach(m => ns.gang.setMemberTask(m.name, trainingTask));
 
-    workingMembers.sort((a, b) => a.hack_asc_points - b.hack_asc_points);
+    workingMembers.sort(byHackingXP);
 
     // Figure out a rough distribution of members to balance heating
     // and cooling. This could be off by one if the last member in the
@@ -104,10 +104,14 @@ function splitMembers(ns: NS, memberNames: string[]): [GangMemberInfo[], GangMem
     // Get current gang member levels
     const members = memberNames.map(m => ns.gang.getMemberInformation(m));
 
-    const memberXPStats = new Stats(members.map(m => m.hack_asc_points));
+    const memberXPStats = new Stats(members.map(m => m.hack_exp + m.hack_asc_points));
 
     const trainingMembers = members.filter(m => memberXPStats.isLowOutlier(m.hack_asc_points));
     const workingMembers = members.filter(m => !memberXPStats.isLowOutlier(m.hack_asc_points));
 
     return [trainingMembers, workingMembers];
+}
+
+function byHackingXP(a: GangMemberInfo, b: GangMemberInfo): number {
+    return (a.hack_exp + a.hack_asc_points) - (b.hack_exp + b.hack_asc_points);
 }
