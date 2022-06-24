@@ -1,5 +1,7 @@
 import { formatGigaBytes, getHighestPurchasableRamLevel, reportServerComplementCost } from './lib.js';
 
+const startScript = "start.js";
+
 /** @param {NS} ns */
 export async function main(ns) {
   let upgradeSpendPercentage = ns.args[0];
@@ -22,7 +24,7 @@ export async function main(ns) {
     }
     let hostname = ns.purchaseServer(serverName(ram), ram);
   }
-  ns.run("startup.js");
+  ns.run(startScript);
 
   let ramOrderedServers = currentServers.map(host => {
     return { "host": host, ram: ns.getServerMaxRam(host) };
@@ -45,7 +47,7 @@ export async function main(ns) {
     }
     await ns.sleep(100);
   }
-  ns.run("startup.js");
+  ns.run(startScript);
 }
 
 function serverName(ram) {
