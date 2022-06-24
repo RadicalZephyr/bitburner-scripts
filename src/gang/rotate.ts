@@ -1,7 +1,7 @@
 import type { GangMemberInfo, NS } from "netscript";
 
 export async function main(ns: NS) {
-    const jobCheckInterval = 1000 * 60;
+    const jobCheckInterval = 1000 * 20;
 
     const trainingTask = "Train Hacking";
     const heatTask = "Identity Theft";
