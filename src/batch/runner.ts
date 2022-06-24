@@ -1,5 +1,5 @@
 import type { NS } from "netscript";
-import type { BatchSpec } from "../types";
+import type { BatchSpec } from "./types";
 
 export async function main(ns: NS) {
     const specJSON = ns.args[0];
