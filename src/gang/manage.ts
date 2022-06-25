@@ -7,6 +7,7 @@ export async function main(ns: NS) {
     }
 
     const maxPenalty = 0.05;
+    const minWantedLevel = 10.0;
     const jobCheckInterval = 1000 * 20;
 
     const isHacking = ns.gang.getGangInformation().isHacking;
@@ -27,7 +28,7 @@ export async function main(ns: NS) {
             // If we're starting to get some heat and still heating,
             // then cool things off for a bit.
             --numHeating;
-        } else if (gangInfo.wantedLevel < 10.0 && gangInfo.wantedLevelGainRate < 0) {
+        } else if (gangInfo.wantedLevel < minWantedLevel && gangInfo.wantedLevelGainRate < 0) {
             // If we're totally cool and still cooling, then we can
             // afford to heat for a cycle.
             ++numHeating;
