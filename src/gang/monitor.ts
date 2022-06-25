@@ -23,16 +23,17 @@ export async function main(ns: NS) {
 
         ns.clearLog();
         ns.print('Member Hacking Info');
-        ns.printf("  %-9s | %9s %9s %9s %9s %9s %9s", 'member', 'exp', 'aexp', 'lvl', 'mult', 'amult', 'abonus');
-        ns.printf("--%'--9s-|-%'-9s-%'-9s-%'-9s-%'-9s-%'-9s-%'-9s", '', '', '', '', '', '', '');
+        ns.printf("  %-9s | %9s %9s %9s %9s %9s %9s %9s", 'member', 'task', 'lvl', 'exp', 'aexp', 'mult', 'amult', 'abonus');
+        ns.printf("--%'--9s-|-%'-9s-%'-9s-%'-9s-%'-9s-%'-9s-%'-9s-%'-9s", '', '', '', '', '', '', '', '');
         for (const member of members) {
             const ascResult = ns.gang.getAscensionResult(member.name);
             ns.printf(
-                '  %-9s | %9s %9s %9s %9s %9s %9s',
+                '  %-9s | %9s %9s %9s %9s %9s %9s %9s',
                 member.name,
+                member.task,
+                member.hack.toFixed(0),
                 member.hack_exp.toFixed(0),
                 member.hack_asc_points.toFixed(0),
-                member.hack.toFixed(0),
                 member.hack_mult.toFixed(2),
                 member.hack_asc_mult.toFixed(2),
                 ascResult ? ascResult.hack.toFixed(6) : ''
