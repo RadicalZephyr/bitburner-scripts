@@ -1,6 +1,11 @@
 import type { GangMemberInfo, NS } from "netscript";
 
 export async function main(ns: NS) {
+    if (ns.gang.inGang()) {
+        ns.tprint("Not in a gang currently.");
+        return;
+    }
+
     const jobCheckInterval = 1000 * 20;
 
     const trainingTask = "Train Hacking";
@@ -28,6 +33,7 @@ export async function main(ns: NS) {
         if (gangInfo.wantedLevelGainRate > 0) {
             // Take from the high end if cooling
             const member = workingMembers.pop();
+
             ns.gang.setMemberTask(member.name, coolTask);
         } else {
             // Take from the low end if heating
