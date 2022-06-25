@@ -112,8 +112,8 @@ function splitMembers(ns: NS, memberNames: string[]): [GangMemberInfo[], GangMem
 
     const memberXPStats = new Stats(members.map(m => m.hack_exp + m.hack_asc_points));
 
-    const trainingMembers = members.filter(m => memberXPStats.isLowOutlier(m.hack_asc_points));
-    const workingMembers = members.filter(m => !memberXPStats.isLowOutlier(m.hack_asc_points));
+    const trainingMembers = members.filter(m => memberXPStats.isLowOutlier(m.hack_exp + m.hack_asc_points));
+    const workingMembers = members.filter(m => !memberXPStats.isLowOutlier(m.hack_exp + m.hack_asc_points));
 
     return [trainingMembers, workingMembers];
 }
