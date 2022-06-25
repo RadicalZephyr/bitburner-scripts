@@ -1,7 +1,7 @@
 import type { GangMemberAscension, GangMemberInfo, NS } from "netscript";
 
 const ascendThreshold = 1.1;
-const trainingPercent = 3 / 12;
+const trainingPercent = 0 / 12;
 
 const maxPenalty = 0.05;
 const minWantedLevel = 10.0;
@@ -91,7 +91,7 @@ function splitMembers(ns: NS, memberNames: string[]): [GangMemberInfo, GangMembe
 
     members.sort((a, b) => lvl(a) - lvl(b));
 
-    const numberToTrain = Math.max(1, Math.ceil(members.length * trainingPercent));
+    const numberToTrain = Math.max(0, Math.floor(members.length * trainingPercent));
 
     const trainingMembers = members.slice(0, numberToTrain);
     const workingMembers = members.slice(numberToTrain);
