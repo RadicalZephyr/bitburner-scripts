@@ -67,7 +67,7 @@ export async function main(ns: NS) {
 }
 
 function splitMembers(ns: NS, memberNames: string[]): [GangMemberInfo, GangMemberInfo[], GangMemberInfo[]] {
-    const ascendThreshold = 1.001;
+    const ascendThreshold = 1.01;
     const trainingPercent = 0.2;
 
     const isHacking = ns.gang.getGangInformation().isHacking;
