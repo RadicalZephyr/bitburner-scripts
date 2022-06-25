@@ -27,7 +27,7 @@ export async function main(ns: NS) {
             // If we're starting to get some heat and still heating,
             // then cool things off for a bit.
             --numHeating;
-        } else if (gangInfo.wantedLevel == 1.0 && gangInfo.wantedLevelGainRate < 0) {
+        } else if (gangInfo.wantedLevel < 10.0 && gangInfo.wantedLevelGainRate < 0) {
             // If we're totally cool and still cooling, then we can
             // afford to heat for a cycle.
             ++numHeating;
