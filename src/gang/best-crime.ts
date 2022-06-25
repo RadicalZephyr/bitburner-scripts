@@ -2,10 +2,10 @@ import type { GangTaskStats, NS } from "netscript";
 
 export async function main(ns: NS) {
     let tasks = ns.gang.getTaskNames().map(t => ns.gang.getTaskStats(t)).filter(t => isCrime(t));
+    ns.tprint(`crime tasks: ${JSON.stringify(tasks)}`);
+    tasks.sort(byTaskValue);
 
-    tasks.sort(byTaskValue)
-
-    const bestTask = tasks[-1];
+    const bestTask = tasks[tasks.length - 1];
 
     ns.tprint(`
 Best task is ${bestTask.name}
