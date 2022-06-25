@@ -14,32 +14,8 @@ export async function main(ns: NS) {
 
     const memberNames = ns.gang.getMemberNames();
 
-    const [trainingMembers, workingMembers] = splitMembers(ns, memberNames);
-    trainingMembers.forEach(m => trainMember(ns, m));
-
-    workingMembers.sort(byHackingXP);
-
-    // Figure out a rough distribution of members to balance heating
-    // and cooling. This could be off by one if the last member in the
-    // list gets assigned to heating and this changes our wanted gain
-    // to positive.
-    let numHeating = 0;
-    while (workingMembers.length > 0) {
-        const gangInfo = ns.gang.getGangInformation();
-
-        if (gangInfo.wantedLevelGainRate > 0) {
-            // Take from the high end if cooling
-            const member = workingMembers.pop();
-
-            ns.gang.setMemberTask(member.name, coolTask);
-        } else {
-            // Take from the low end if heating
-            const member = workingMembers.shift();
-            ns.gang.setMemberTask(member.name, heatTask);
-            ++numHeating;
-        }
-        await ns.sleep(500);
-    }
+    // Start with everyone making money
+    let numHeating = memberNames.length;
 
     // forever
     while (true) {
