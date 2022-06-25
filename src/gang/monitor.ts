@@ -23,12 +23,12 @@ export async function main(ns: NS) {
 
         ns.clearLog();
         ns.print('Member Hacking Info');
-        ns.printf("  %-9s | %9s %9s %9s %9s %9s %9s %9s", 'member', 'task', 'lvl', 'exp', 'aexp', 'mult', 'amult', 'abonus');
-        ns.printf("--%'--9s-|-%'-9s-%'-9s-%'-9s-%'-9s-%'-9s-%'-9s-%'-9s", '', '', '', '', '', '', '', '');
+        ns.printf(" %-9s | %18s %9s %9s %9s %9s %9s %9s", 'member', 'task', 'lvl', 'exp', 'aexp', 'mult', 'amult', 'abonus');
+        ns.printf("-%'--9s-|-%'-18s-%'-9s-%'-9s-%'-9s-%'-9s-%'-9s-%'-9s", '', '', '', '', '', '', '', '');
         for (const member of members) {
             const ascResult = ns.gang.getAscensionResult(member.name);
             ns.printf(
-                '  %-9s | %9s %9s %9s %9s %9s %9s %9s',
+                ' %-9s | %18s %9s %9s %9s %9s %9s %9s',
                 member.name,
                 member.task,
                 member.hack.toFixed(0),
@@ -39,7 +39,7 @@ export async function main(ns: NS) {
                 ascResult ? ascResult.hack.toFixed(6) : ''
             );
         }
-        ns.print('\n');
+        ns.print('');
         await ns.sleep(flags.refreshrate);
     }
 }
