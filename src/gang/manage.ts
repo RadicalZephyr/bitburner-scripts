@@ -8,7 +8,7 @@ export async function main(ns: NS) {
 
     const maxPenalty = 0.05;
     const minWantedLevel = 10.0;
-    const jobCheckInterval = 1000 * 20;
+    const jobCheckInterval = 1000 * 5;
 
     const isHacking = ns.gang.getGangInformation().isHacking;
 
