@@ -1,16 +1,19 @@
-import type { GangMemberInfo, NS } from "netscript";
-
-const trainingTask = "Train Hacking";
-const heatTask = "Money Laundering";
-const coolTask = "Ethical Hacking";
+import type { GangMemberAscension, GangMemberInfo, NS } from "netscript";
 
 export async function main(ns: NS) {
     if (!ns.gang.inGang()) {
-        ns.tprint("Not in a gang currently.");
+        ns.tprint("No gang to manage.");
         return;
     }
 
+    const maxPenalty = 0.05;
     const jobCheckInterval = 1000 * 20;
+
+    const isHacking = ns.gang.getGangInformation().isHacking;
+
+    const trainingTask = isHacking ? "Train Hacking" : "Train Combat";
+    const heatTask = isHacking ? "Money Laundering" : "Terrorism";
+    const coolTask = isHacking ? "Ethical Hacking" : "Vigilante Justice";
 
     const memberNames = ns.gang.getMemberNames();
 
@@ -20,7 +23,7 @@ export async function main(ns: NS) {
     // forever
     while (true) {
         const gangInfo = ns.gang.getGangInformation();
-        if (gangInfo.wantedPenalty > 0.05 && gangInfo.wantedLevelGainRate > 0) {
+        if (gangInfo.wantedPenalty > maxPenalty && gangInfo.wantedLevelGainRate > 0) {
             // If we're starting to get some heat and still heating,
             // then cool things off for a bit.
             --numHeating;
@@ -30,11 +33,18 @@ export async function main(ns: NS) {
             ++numHeating;
         }
 
-        const [trainingMembers, workingMembers] = splitMembers(ns, memberNames);
-        trainingMembers.forEach(m => trainMember(ns, m));
+        const [ascendingMember, trainingMembers, workingMembers] = splitMembers(ns, memberNames);
 
-        // Sort by hack level
-        workingMembers.sort((a, b) => a.hack_asc_points - b.hack_asc_points);
+        if (ascendingMember) {
+            ns.gang.setMemberTask(ascendingMember.name, trainingTask);
+            ns.gang.ascendMember(ascendingMember.name);
+        }
+
+        trainingMembers.forEach(m => ns.gang.setMemberTask(m.name, trainingTask));
+
+        // Cap the number of heaters to not be more than the total
+        // number of workers.
+        numHeating = Math.max(workingMembers.length, numHeating);
 
         // Partition into two groups:
 
@@ -55,53 +65,59 @@ export async function main(ns: NS) {
     }
 }
 
-class Stats {
-    iqr: number;
-    upper_fence: number;
-    upper_quartile: number;
-    median: number;
-    lower_quartile: number;
-    lower_fence: number;
-
-    constructor(values: number[]) {
-        values.sort((a, b) => a - b);
-        const len = values.length;
-        this.median = Math.ceil(len / 2);
-        this.lower_quartile = Math.ceil(this.median / 2);
-        this.upper_quartile = Math.ceil((len + this.median) / 2);
-        this.iqr = this.upper_quartile - this.lower_quartile;
-        this.upper_fence = this.upper_quartile + (1.5 * this.iqr);
-        this.lower_fence = this.lower_quartile - (1.5 * this.iqr);
-    }
-
-    isLowOutlier(val: number): boolean {
-        return val < this.lower_fence;
-    }
-};
-
-function splitMembers(ns: NS, memberNames: string[]): [GangMemberInfo[], GangMemberInfo[]] {
-    // Get current gang member levels
-    const members = memberNames.map(m => ns.gang.getMemberInformation(m));
-
-    const memberXPStats = new Stats(members.map(m => m.hack_exp + m.hack_asc_points));
-
-    const trainingMembers = members.filter(m => memberXPStats.isLowOutlier(m.hack_exp + m.hack_asc_points));
-    const workingMembers = members.filter(m => !memberXPStats.isLowOutlier(m.hack_exp + m.hack_asc_points));
-
-    return [trainingMembers, workingMembers];
-}
-
-function byHackingXP(a: GangMemberInfo, b: GangMemberInfo): number {
-    return (a.hack_exp + a.hack_asc_points) - (b.hack_exp + b.hack_asc_points);
-}
-
-function trainMember(ns: NS, m: GangMemberInfo) {
+function splitMembers(ns: NS, memberNames: string[]): [GangMemberInfo, GangMemberInfo[], GangMemberInfo[]] {
     const ascendThreshold = 1.001;
+    const trainingPercent = 0.2;
 
-    ns.gang.setMemberTask(m.name, trainingTask);
+    const isHacking = ns.gang.getGangInformation().isHacking;
 
-    const ascResult = ns.gang.getAscensionResult(m.name);
-    if (ascResult && ascResult.hack > ascendThreshold) {
-        ns.gang.ascendMember(m.name);
+    let ascMult = isHacking ? hackAscMult : combatAscMult;
+    let lvl = isHacking ? hackLevel : combatLevel;
+    let ascResultMult = isHacking ? hackResultMult : combatResultMult;
+
+    // Get current gang member levels
+    let members = memberNames.map(m => ns.gang.getMemberInformation(m));
+
+    // Sort by highest ascension multiplier
+    members.sort((a, b) => ascMult(a) - ascMult(b));
+
+    // Lowest multiplier member gets ascended if they will gain enough bonus
+    let ascendingMember;
+    const ascResult = ns.gang.getAscensionResult(members[0].name);
+    if (ascResult && ascResultMult(ascResult) > ascendThreshold) {
+        ascendingMember = members.shift();
     }
+
+    members.sort((a, b) => lvl(a) - lvl(b));
+
+    const numberToTrain = Math.max(1, Math.ceil(members.length * trainingPercent));
+
+    const trainingMembers = members.slice(0, numberToTrain);
+    const workingMembers = members.slice(numberToTrain);
+
+    return [ascendingMember, trainingMembers, workingMembers];
+}
+
+function hackAscMult(m: GangMemberInfo): number {
+    return m.hack_asc_mult;
+}
+
+function hackLevel(m: GangMemberInfo): number {
+    return m.hack;
+}
+
+function hackResultMult(r: GangMemberAscension): number {
+    return r.hack;
+}
+
+function combatAscMult(m: GangMemberInfo): number {
+    return m.agi_asc_mult + m.def_asc_mult + m.dex_asc_mult + m.str_asc_mult;
+}
+
+function combatLevel(m: GangMemberInfo): number {
+    return m.agi + m.def + m.dex + m.str;
+}
+
+function combatResultMult(r: GangMemberAscension): number {
+    return (r.agi + r.def + r.dex + r.str) / 4;
 }
