@@ -1,5 +1,9 @@
 import type { GangMemberInfo, NS } from "netscript";
 
+const trainingTask = "Train Hacking";
+const heatTask = "Money Laundering";
+const coolTask = "Ethical Hacking";
+
 export async function main(ns: NS) {
     if (!ns.gang.inGang()) {
         ns.tprint("Not in a gang currently.");
@@ -8,17 +12,10 @@ export async function main(ns: NS) {
 
     const jobCheckInterval = 1000 * 20;
 
-    const trainingTask = "Train Hacking";
-    const heatTask = "Money Laundering";
-    const coolTask = "Ethical Hacking";
-
-    // TODO: Incorporate ascension of gang members, and then training
-    // based on relatively low skill. And then augmentation as well?
-
     const memberNames = ns.gang.getMemberNames();
 
     const [trainingMembers, workingMembers] = splitMembers(ns, memberNames);
-    trainingMembers.forEach(m => ns.gang.setMemberTask(m.name, trainingTask));
+    trainingMembers.forEach(m => trainMember(ns, m));
 
     workingMembers.sort(byHackingXP);
 
@@ -58,7 +55,7 @@ export async function main(ns: NS) {
         }
 
         const [trainingMembers, workingMembers] = splitMembers(ns, memberNames);
-        trainingMembers.forEach(m => ns.gang.setMemberTask(m.name, trainingTask));
+        trainingMembers.forEach(m => trainMember(ns, m));
 
         // Sort by hack level
         workingMembers.sort((a, b) => a.hack_asc_points - b.hack_asc_points);
@@ -120,4 +117,15 @@ function splitMembers(ns: NS, memberNames: string[]): [GangMemberInfo[], GangMem
 
 function byHackingXP(a: GangMemberInfo, b: GangMemberInfo): number {
     return (a.hack_exp + a.hack_asc_points) - (b.hack_exp + b.hack_asc_points);
+}
+
+function trainMember(ns: NS, m: GangMemberInfo) {
+    const ascendThreshold = 1.001;
+
+    ns.gang.setMemberTask(m.name, trainingTask);
+
+    const ascResult = ns.gang.getAscensionResult(m.name);
+    if (ascResult && ascResult.hack > ascendThreshold) {
+        ns.gang.ascendMember(m.name);
+    }
 }
