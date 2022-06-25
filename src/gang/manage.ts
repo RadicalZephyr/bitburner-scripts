@@ -1,14 +1,17 @@
 import type { GangMemberAscension, GangMemberInfo, NS } from "netscript";
 
+const ascendThreshold = 1.02;
+const trainingPercent = 0 / 12;
+
+const maxPenalty = 0.05;
+const minWantedLevel = 10.0;
+const jobCheckInterval = 1000 * 5;
+
 export async function main(ns: NS) {
     if (!ns.gang.inGang()) {
         ns.tprint("No gang to manage.");
         return;
     }
-
-    const maxPenalty = 0.05;
-    const minWantedLevel = 10.0;
-    const jobCheckInterval = 1000 * 5;
 
     const isHacking = ns.gang.getGangInformation().isHacking;
 
@@ -67,9 +70,6 @@ export async function main(ns: NS) {
 }
 
 function splitMembers(ns: NS, memberNames: string[]): [GangMemberInfo, GangMemberInfo[], GangMemberInfo[]] {
-    const ascendThreshold = 1.01;
-    const trainingPercent = 0.2;
-
     const isHacking = ns.gang.getGangInformation().isHacking;
 
     let ascMult = isHacking ? hackAscMult : combatAscMult;
