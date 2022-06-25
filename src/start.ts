@@ -19,6 +19,9 @@ OPTIONS
 `);
         return;
     }
+
+    ns.run("/gang/manage.js");
+
     let shareScript = "share.js";
 
     if (options.share) {
