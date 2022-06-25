@@ -5,7 +5,7 @@ export async function main(ns: NS) {
     ns.tprint(`crime tasks: ${JSON.stringify(tasks)}`);
     tasks.sort(byTaskValue);
 
-    const bestTask = tasks[tasks.length - 1];
+    const bestTask: GangTaskStats = tasks[tasks.length - 1];
 
     ns.tprint(`
 Best task is ${bestTask.name}
@@ -17,6 +17,11 @@ respect: ${bestTask.baseRespect}
 Challenge:
 wanted:     ${bestTask.baseWanted}
 difficulty: ${bestTask.difficulty}
+
+Territory:
+money:   ${bestTask.territory.money}
+respect: ${bestTask.territory.respect}
+wanted   ${bestTask.territory.wanted}
 
 Stat Weights:
 hak: ${bestTask.hackWeight}
