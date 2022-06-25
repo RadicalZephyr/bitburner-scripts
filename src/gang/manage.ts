@@ -1,6 +1,6 @@
 import type { GangMemberAscension, GangMemberInfo, NS } from "netscript";
 
-const ascendThreshold = 1.1;
+const ascendThreshold = 1.5;
 const trainingPercent = 0 / 12;
 
 const maxPenalty = 0.05;
@@ -16,7 +16,7 @@ export async function main(ns: NS) {
     const isHacking = ns.gang.getGangInformation().isHacking;
 
     const trainingTask = isHacking ? "Train Hacking" : "Train Combat";
-    const heatTask = isHacking ? "Money Laundering" : "Terrorism";
+    const heatTask = isHacking ? "Cyberterrorism" : "Terrorism";
     const coolTask = isHacking ? "Ethical Hacking" : "Vigilante Justice";
 
     const memberNames = ns.gang.getMemberNames();
