@@ -1,7 +1,7 @@
 import type { GangMemberInfo, NS } from "netscript";
 
 export async function main(ns: NS) {
-    if (ns.gang.inGang()) {
+    if (!ns.gang.inGang()) {
         ns.tprint("Not in a gang currently.");
         return;
     }
