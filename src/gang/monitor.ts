@@ -23,19 +23,18 @@ export async function main(ns: NS) {
         const maxTaskLength = Math.max(...members.map(m => m.task.length));
 
         ns.clearLog();
-        ns.print('Member Hacking Info');
-        ns.printf(` %-${maxNameLength}s | %${maxTaskLength}s %6s %7s %9s %9s %9s %9s`, 'member', 'task', 'hack', 'hack_exp', 'aexp', 'mult', 'amult', 'abonus');
-        ns.printf(`-%'--${maxNameLength}s-|-%'-${maxTaskLength}s-%'-6s-%'-7s-%'-9s-%'-9s-%'-9s-%'-9s`, '', '', '', '', '', '', '', '');
+        ns.print('Member Hacking Info\n');
+
+        ns.printf(` %-${maxNameLength}s | %${maxTaskLength}s %6s %7s %9s %9s`, 'member', 'task', 'hack', 'hack_exp', 'hack_mul', 'hack_asc');
+        ns.printf(`-%'--${maxNameLength}s-|-%'-${maxTaskLength}s-%'-6s-%'-7s-%'-9s-%'-9s`, '', '', '', '', '', '');
         for (const member of members) {
             const ascResult = ns.gang.getAscensionResult(member.name);
             ns.printf(
-                ` %-${maxNameLength}s | %${maxTaskLength}s %6s %7s %9s %9s %9s %9s`,
+                ` %-${maxNameLength}s | %${maxTaskLength}s %6s %7s %9s %9s`,
                 member.name,
                 member.task,
                 member.hack.toFixed(0),
                 member.hack_exp.toFixed(0),
-                member.hack_asc_points.toFixed(0),
-                member.hack_mult.toFixed(2),
                 member.hack_asc_mult.toFixed(2),
                 ascResult ? ascResult.hack.toFixed(6) : ''
             );
