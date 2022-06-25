@@ -10,7 +10,6 @@ export async function main(ns) {
     } else if (ns.getServerMoneyAvailable(target) < moneyThreshold) {
       await ns.grow(target);
     } else {
-      let player = ns.getPlayer();
       await ns.hack(target);
     }
   }
