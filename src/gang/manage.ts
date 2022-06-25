@@ -44,7 +44,7 @@ export async function main(ns: NS) {
 
         // Cap the number of heaters to not be more than the total
         // number of workers.
-        numHeating = Math.max(workingMembers.length, numHeating);
+        numHeating = Math.min(workingMembers.length, numHeating);
 
         // Partition into two groups:
 
