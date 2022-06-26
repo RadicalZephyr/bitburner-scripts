@@ -42,7 +42,7 @@ jobs:
         run: |
           cd dist
           git add .
-          git commit -m 'Update to ${{ github.sha }}'
+          git commit --author="Release Script <earthlingzephyr@gmail.com>" -m 'Update to ${{ github.sha }}'
           git push origin latest
 
       - name: Create README
