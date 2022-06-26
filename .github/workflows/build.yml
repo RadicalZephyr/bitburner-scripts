@@ -8,11 +8,14 @@ on:
   workflow_call:
     outputs:
       artifact_name:
-        description: Build Artifact Name
+        description: Build artifact name
         value: ${{ jobs.build.outputs.artifact_name }}
       artifact_file:
-        description: Build Artifact File Path
+        description: Build artifact file path
         value: ${{ jobs.build.outputs.artifact_file }}
+      artifact_version:
+        description: Build artifact version
+        value: ${{ jobs.build.outputs.artifact_version }}
 
 env:
   ARTIFACT_NAME: scripts
@@ -24,6 +27,7 @@ jobs:
     outputs:
       artifact_name: ${{ env.ARTIFACT_NAME }}
       artifact_file: ${{ env.ARTIFACT_FILE }}
+      artifact_version: ${{ env.SCRIPT_VERSION }}
 
     strategy:
       matrix:
