@@ -63,16 +63,18 @@ jobs:
       - name: Create bootstrap script
         shell: bash
         run: |
-          FILES="$(find dist/ -type f -name '*.js' | cut -d '/' -f 2- | sed 's/\(.*\)/"\/\1",/')"
+          FILES="$(find dist/ -type f -name '*.js' | cut -d '/' -f 2- | sed 's/\(.*\)/  "\1",/')"
           cat > bootstrap.js <<BOOTSTRAP_HERE
           /** @param {NS} ns */
           export async function main(ns) {
             files.pop(); // drop empty final element
+            const slashRE = /\//;
             for (const file of files) {
-              await ns.wget(baseUrl + file, file, "home");
+              const prefix = slashRE.test(file) ? '/' : '';
+              await ns.wget(baseUrl + file, prefix + file, "home");
             }
           }
-          const baseUrl = "https://raw.githubusercontent.com/RadicalZephyr/bitburner-scripts/${{ env.RELEASE_BRANCH }}";
+          const baseUrl = "https://raw.githubusercontent.com/RadicalZephyr/bitburner-scripts/${{ env.RELEASE_BRANCH }}/";
           let files = [
             $FILES
             ""
