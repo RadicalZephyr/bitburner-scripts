@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - "main"
-    tags:
-      - "v*"
 
 jobs:
   build:
@@ -18,46 +16,65 @@ jobs:
     needs: build
 
     steps:
-      - uses: actions/download-artifact@v3
+      - name: Download built scripts artifact
+        uses: actions/download-artifact@v3
         with:
           name: ${{ needs.build.outputs.artifact_name }}
           path: ./
 
-      - name: Unzip compiled scripts
+      - name: Checkout latest branch for upload
+        uses: actions/checkout@v3
+        with:
+          path: dist
+          ref: latest
+          fetch-depth: 0
+
+      - name: Remove old scripts
+        shell: bash
+        run: find dist -type f -name '*.js' -delete
+
+      - name: Unzip scripts artifact
         shell: bash
         run: unzip ${{ needs.build.outputs.artifact_file }} -d dist
+
+      - name: Commit and push new script files to latest branch
+        shell: bash
+        run: |
+          cd dist
+          git add .
+          git commit -m 'Update to ${{ github.sha }}'
+          git push origin latest
+
+      - name: Create README
+        shell: bash
+        run: |
+          cat > README.md <<README_HERE
+          # Latest Release
+          Download the bootstrap script with
+          `wget https://github.com/RadicalZephyr/bitburner-scripts/releases/download/latest/bootstrap.js`
+          then run it with `run bootstrap.js`.
+          README_HERE
 
       - name: Create bootstrap script
         shell: bash
         run: |
-          FILES="$(find dist/ -type f -name '*.js' | cut -d '/' -f 2 | sed 's/\(.*\)/"\1",/')"
-          cat > dist/bootstrap.js <<BOOTSTRAP_HERE
+          FILES="$(find dist/ -type f -name '*.js' | cut -d '/' -f 2- | sed 's/\(.*\)/"\/\1",/')"
+          cat > bootstrap.js <<BOOTSTRAP_HERE
           /** @param {NS} ns */
           export async function main(ns) {
+            files.pop(); // drop empty final element
             for (const file of files) {
               await ns.wget(baseUrl + file, file, "home");
             }
           }
-          const baseUrl = "https://github.com/RadicalZephyr/bitburner-scripts/releases/download/${{ needs.build.outputs.artifact_version }}/";
-          const files = [
+          const baseUrl = "https://raw.githubusercontent.com/RadicalZephyr/bitburner-scripts/latest";
+          let files = [
             $FILES
             ""
           ];
           BOOTSTRAP_HERE
 
-      - name: Package with specific tag
-        if: ${{ github.ref_type == 'tag' && startsWith(github.ref_name, 'v') }}
-        uses: "marvinpinto/action-automatic-releases@latest"
-        with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          prerelease: false
-          title: "Release ${{ github.ref_name }}"
-          files: |
-            README.md
-            dist/**/*.js
-
       - name: Package main branch with `latest` tag
-        if: ${{ github.ref_type == 'branch' && github.ref_name == 'main' }}
         uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
@@ -66,4 +83,5 @@ jobs:
           title: "Latest Main Branch Release"
           files: |
             README.md
-            dist/**/*.js
+            bootstrap.js
+            ${{ needs.build.outputs.artifact_file }}

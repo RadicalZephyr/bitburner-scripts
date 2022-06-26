@@ -13,9 +13,6 @@ on:
       artifact_file:
         description: Build artifact file path
         value: ${{ jobs.build.outputs.artifact_file }}
-      artifact_version:
-        description: Build artifact version
-        value: ${{ jobs.build.outputs.artifact_version }}
 
 env:
   ARTIFACT_NAME: scripts
@@ -27,20 +24,12 @@ jobs:
     outputs:
       artifact_name: ${{ env.ARTIFACT_NAME }}
       artifact_file: ${{ env.ARTIFACT_FILE }}
-      artifact_version: ${{ env.SCRIPT_VERSION }}
 
     strategy:
       matrix:
         node-version: [12.x]
 
     steps:
-      - name: Get the release version from the tag
-        shell: bash
-        if: github.ref_type == 'tag' && env.BBR_VERSION == ''
-        run: |
-          echo "SCRIPT_VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
-          echo "version is: ${{ env.SCRIPT_VERSION }}"
-
       - name: Use latest as the release version when building from main branch
         shell: bash
         if: github.ref_type == 'branch' && github.ref_name == 'main'
@@ -50,6 +39,7 @@ jobs:
 
       - name: Store the artifact file name in the environment
         shell: bash
+        if: github.ref_type == 'branch' && github.ref_name == 'main'
         run: |
           echo "ARTIFACT_FILE=${{ env.ARTIFACT_NAME }}-${{ env.SCRIPT_VERSION }}.zip" >> $GITHUB_ENV
 
@@ -67,10 +57,12 @@ jobs:
         run: npm run build
 
       - name: Package output
+        if: github.ref_type == 'branch' && github.ref_name == 'main'
         run: zip ${{ env.ARTIFACT_FILE }} dist/**/*.js
 
       - name: Upload Bitburner Runnable Scripts
         uses: actions/upload-artifact@v3
+        if: github.ref_type == 'branch' && github.ref_name == 'main'
         with:
           name: ${{ env.ARTIFACT_NAME }}
           path: |
