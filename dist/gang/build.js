@@ -5,7 +5,7 @@ export async function main(ns) {
     while (ns.gang.canRecruitMember()) {
         const name = unusedNames[nameIndex++];
         if (ns.gang.recruitMember(name)) {
-            ns.gang.setMemberTask(name, "Train Combat");
+            ns.gang.setMemberTask(name, "Train Hacking");
         }
         await ns.sleep(10);
     }
