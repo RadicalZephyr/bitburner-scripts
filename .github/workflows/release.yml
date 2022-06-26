@@ -35,7 +35,8 @@ jobs:
           prerelease: false
           title: "Release ${{ github.ref_name }}"
           files: |
-            dist/${{ needs.build.outputs.artifact_file }}
+            README.md
+            dist/**/*.js
 
       - name: Package main branch with `latest` tag
         if: ${{ github.ref_type == 'branch' && github.ref_name == 'main' }}
@@ -47,4 +48,4 @@ jobs:
           title: "Latest Main Branch Release"
           files: |
             README.md
-            dist/${{ needs.build.outputs.artifact_file }}
+            dist/**/*.js

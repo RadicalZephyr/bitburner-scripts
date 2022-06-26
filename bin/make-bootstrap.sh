@@ -12,7 +12,7 @@ export async function main(ns) {
   }
 }
 
-const baseUrl = "https://raw.githubusercontent.com/RadicalZephyr/bitburner-scripts/latest/";
+const baseUrl = "https://github.com/RadicalZephyr/bitburner-scripts/releases/download/latest/";
 
 const files = [
 $FILES
