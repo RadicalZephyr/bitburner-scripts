@@ -23,6 +23,10 @@ jobs:
           name: ${{ needs.build.outputs.artifact_name }}
           path: dist
 
+      - name: Create bootstrap script
+        shell: bash
+        run: bin/make-bootstrap.sh
+
       - name: Package with specific tag
         if: ${{ github.ref_type == 'tag' && startsWith(github.ref_name, 'v') }}
         uses: "marvinpinto/action-automatic-releases@latest"
