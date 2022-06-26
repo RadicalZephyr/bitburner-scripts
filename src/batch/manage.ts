@@ -18,31 +18,37 @@ export async function main(ns: NS) {
     scripts.hack.ram = ns.getScriptRam(scripts.hack.name);
     scripts.weaken.ram = ns.getScriptRam(scripts.weaken.name);
 
-    let usableServers = servers.filter(s => canNuke(ns, s));
-    usableServers.sort(byAvailableRam);
+    let hosts = usableServers(ns, servers);
+    hosts.sort(byAvailableRam);
 
-    const totalAvailableRam = usableServers.map(s => s.maxRam - s.ramUsed).reduce((acc, x) => acc + x);
+    // const totalAvailableRam = hosts.map(s => s.maxRam - s.ramUsed).reduce((acc, x) => acc + x);
 
     let exploitableServers = servers.filter(s => hasMoney(ns, s));
     let currentlyExploitableServers = exploitableServers.filter(s => canHack(ns, s));
 
     currentlyExploitableServers.sort(bySoftest);
 
-    let softenSpecs = currentlyExploitableServers.map(s => analyzeSoftenTarget(ns, target));
+    let softenSpecs = currentlyExploitableServers.map(s => analyzeSoftenTarget(ns, s));
 
     let weakenProcesses = [];
     for (const spec of softenSpecs) {
         let remainingThreads = spec.threads;
 
-        while (remainingThreads > 0 && usableServers.length > 0) {
-            let server = usableServers[0];
+        while (remainingThreads > 0 && hosts.length > 0) {
+            let server = hosts[0];
             let availableThreads = getAvailableThreads(ns, server, scripts.weaken.ram);
+
+            // Skip this attacking server if it can't host any threads
+            if (availableThreads <= 0) {
+                hosts.shift();
+                continue;
+            }
 
             if (remainingThreads > availableThreads) {
                 const pid = ns.exec(scripts.weaken.name, server.hostname, availableThreads, spec.host);
                 if (pid != 0) {
                     remainingThreads -= availableThreads;
-                    usableServers.shift();
+                    hosts.shift();
                     weakenProcesses.push({ 'pid': pid, 'host': server.hostname });
                 }
             } else {
@@ -54,7 +60,7 @@ export async function main(ns: NS) {
             }
         }
 
-        if (usableServers.length == 0) {
+        if (hosts.length == 0) {
             break;
         }
     }
