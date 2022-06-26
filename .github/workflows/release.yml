@@ -5,6 +5,9 @@ on:
     branches:
       - "main"
 
+env:
+  RELEASE_BRANCH: latest-files
+
 jobs:
   build:
     name: "Build"
@@ -26,7 +29,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           path: dist
-          ref: latest
+          ref: ${{ env.RELEASE_BRANCH }}
           fetch-depth: 0
 
       - name: Remove old scripts
@@ -45,7 +48,7 @@ jobs:
           git config user.email "earthlingzephyr@gmail.com"
           git add .
           git commit -m 'Update to ${{ github.sha }}'
-          git push origin latest
+          git push origin ${{ env.RELEASE_BRANCH }}
 
       - name: Create README
         shell: bash
@@ -69,7 +72,7 @@ jobs:
               await ns.wget(baseUrl + file, file, "home");
             }
           }
-          const baseUrl = "https://raw.githubusercontent.com/RadicalZephyr/bitburner-scripts/latest";
+          const baseUrl = "https://raw.githubusercontent.com/RadicalZephyr/bitburner-scripts/${{ env.RELEASE_BRANCH }}";
           let files = [
             $FILES
             ""
