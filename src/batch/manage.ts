@@ -39,17 +39,17 @@ export async function main(ns: NS) {
             let availableThreads = getAvailableThreads(ns, server, scripts.weaken.ram);
 
             if (remainingThreads > availableThreads) {
-                const pid = ns.exec(scripts.weaken.name, server.ip, availableThreads, spec.host);
+                const pid = ns.exec(scripts.weaken.name, server.hostname, availableThreads, spec.host);
                 if (pid != 0) {
                     remainingThreads -= availableThreads;
                     usableServers.shift();
-                    weakenProcesses.push({ 'pid': pid, 'host': server.ip });
+                    weakenProcesses.push({ 'pid': pid, 'host': server.hostname });
                 }
             } else {
-                const pid = ns.exec(scripts.weaken.name, server.ip, remainingThreads, spec.host);
+                const pid = ns.exec(scripts.weaken.name, server.hostname, remainingThreads, spec.host);
                 if (pid != 0) {
                     remainingThreads = 0;
-                    weakenProcesses.push({ 'pid': pid, 'host': server.ip });
+                    weakenProcesses.push({ 'pid': pid, 'host': server.hostname });
                 }
             }
         }
@@ -69,7 +69,7 @@ function bySoftest(a: Server, b: Server): number {
 }
 
 function getAvailableThreads(ns: NS, server: Server, ram: number) {
-    const availableRam = server.maxRam - ns.getServerUsedRam(server.ip);
+    const availableRam = server.maxRam - ns.getServerUsedRam(server.hostname);
     return Math.floor(availableRam / ram);
 }
 
@@ -82,9 +82,9 @@ type WeakenTargetSpec = {
 
 function analyzeSoftenTarget(ns: NS, target: Server): WeakenTargetSpec {
     const threads = weakenAnalyze(ns, target, 1.0);
-    const time = ns.getWeakenTime(target.ip);
+    const time = ns.getWeakenTime(target.hostname);
     return {
-        'host': target,
+        'host': target.hostname,
         'ram': threads * scripts.weaken.ram,
         'threads': threads,
         'time': time
