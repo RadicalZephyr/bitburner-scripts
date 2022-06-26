@@ -63,7 +63,7 @@ jobs:
         run: npm run build
 
       - name: Package output
-        run: zip ${{ env.ARTIFACT_FILE }} dist/*.js
+        run: zip ${{ env.ARTIFACT_FILE }} dist/**/*.js
 
       - name: Upload Bitburner Runnable Scripts
         uses: actions/upload-artifact@v3
