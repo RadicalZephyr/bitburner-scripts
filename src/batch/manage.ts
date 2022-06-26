@@ -34,6 +34,11 @@ export async function main(ns: NS) {
     for (const spec of softenSpecs) {
         let remainingThreads = spec.threads;
 
+        // Skip targeting this server if it doesn't need to be softened
+        if (remainingThreads <= 0) {
+            continue;
+        }
+
         while (remainingThreads > 0 && hosts.length > 0) {
             let server = hosts[0];
             let availableThreads = getAvailableThreads(ns, server, scripts.weaken.ram);
