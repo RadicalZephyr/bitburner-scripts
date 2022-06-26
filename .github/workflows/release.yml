@@ -41,8 +41,10 @@ jobs:
         shell: bash
         run: |
           cd dist
+          git config user.name  "Release Script"
+          git config user.email "earthlingzephyr@gmail.com"
           git add .
-          git commit --author="Release Script <earthlingzephyr@gmail.com>" -m 'Update to ${{ github.sha }}'
+          git commit -m 'Update to ${{ github.sha }}'
           git push origin latest
 
       - name: Create README
