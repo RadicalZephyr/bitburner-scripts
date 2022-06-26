@@ -25,7 +25,21 @@ jobs:
 
       - name: Create bootstrap script
         shell: bash
-        run: bin/make-bootstrap.sh
+        run: |
+          FILES="$(find dist/ -type f -name '*.js' | cut -d '/' -f 2 | sed 's/\(.*\)/"\1",/')"
+          cat > dist/bootstrap.js <<BOOTSTRAP_HERE
+          /** @param {NS} ns */
+          export async function main(ns) {
+            for (const file of files) {
+              await ns.wget(baseUrl + file, file, "home");
+            }
+          }
+          const baseUrl = "https://github.com/RadicalZephyr/bitburner-scripts/releases/download/${{ needs.build.outputs.artifact_version }}/";
+          const files = [
+            $FILES
+            ""
+          ];
+          BOOTSTRAP_HERE
 
       - name: Package with specific tag
         if: ${{ github.ref_type == 'tag' && startsWith(github.ref_name, 'v') }}
