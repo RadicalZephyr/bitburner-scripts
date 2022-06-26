@@ -38,7 +38,7 @@ jobs:
 
       - name: Unzip scripts artifact
         shell: bash
-        run: unzip ${{ needs.build.outputs.artifact_file }} -d dist
+        run: unzip ${{ needs.build.outputs.artifact_file }}
 
       - name: Commit and push new script files to latest branch
         shell: bash

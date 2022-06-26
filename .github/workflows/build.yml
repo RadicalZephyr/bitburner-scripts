@@ -58,7 +58,7 @@ jobs:
 
       - name: Package output
         if: github.ref_type == 'branch' && github.ref_name == 'main'
-        run: zip ${{ env.ARTIFACT_FILE }} dist/**/*.js
+        run: zip ${{ env.ARTIFACT_FILE }} dist/**/*.js dist/*.js
 
       - name: Upload Bitburner Runnable Scripts
         uses: actions/upload-artifact@v3
