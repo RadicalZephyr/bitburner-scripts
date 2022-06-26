@@ -21,7 +21,11 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: ${{ needs.build.outputs.artifact_name }}
-          path: dist
+          path: ./
+
+      - name: Unzip compiled scripts
+        shell: bash
+        run: unzip ${{ needs.build.outputs.artifact_file }} -d dist
 
       - name: Create bootstrap script
         shell: bash
