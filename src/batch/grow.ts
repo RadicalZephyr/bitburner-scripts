@@ -7,10 +7,9 @@ export async function main(ns: NS) {
         return;
     }
 
-    const sleepTime = ns.args[1];
+    let sleepTime = ns.args[1];
     if (typeof sleepTime != 'number') {
-        ns.print('invalid sleep time: %s', sleepTime);
-        return;
+        sleepTime = 0;
     }
 
     await ns.sleep(sleepTime);
