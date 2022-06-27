@@ -1,6 +1,6 @@
 import type { GangMemberAscension, GangMemberInfo, NS } from "netscript";
 
-const ascendThreshold = 1.01;
+const ascendThreshold = 1.001;
 const trainingPercent = 3 / 12;
 
 const maxPenalty = 0.05;
