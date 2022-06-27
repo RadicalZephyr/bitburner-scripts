@@ -12,7 +12,8 @@ export async function main(ns: NS) {
         ns.printf('invalid hosts list');
         return;
     }
-    let servers: Server[] = JSON.parse(hostsJSON);
+    let hostNames: string[] = JSON.parse(hostsJSON);
+    let servers = hostNames.map(name => ns.getServer(name));
 
     scripts.grow.ram = ns.getScriptRam(scripts.grow.name);
     scripts.hack.ram = ns.getScriptRam(scripts.hack.name);

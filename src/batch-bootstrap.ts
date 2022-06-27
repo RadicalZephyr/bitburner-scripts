@@ -2,12 +2,7 @@ import type { NS } from "netscript";
 
 import { walkNetworkBFS } from "./walk-network.js";
 
-const scripts = {
-    'grow': '/batch/grow.js',
-    'hack': '/batch/hack.js',
-    'weaken': '/batch/weaken.js'
-};
-const scriptList = [scripts.grow, scripts.hack, scripts.weaken];
+const scriptList = ['/batch/grow.js', '/batch/hack.js', '/batch/weaken.js'];
 
 export async function main(ns: NS) {
     let network = walkNetworkBFS(ns);
@@ -18,7 +13,5 @@ export async function main(ns: NS) {
         await ns.scp(scriptList, host);
     }
 
-    let hosts = hostNames.map(h => ns.getServer(h));
-
-    ns.run('/batch/manage.js', 1, JSON.stringify(hosts));
+    ns.run('/batch/manage.js', 1, JSON.stringify(hostNames));
 }
