@@ -1,10 +1,29 @@
-import type { NS } from "netscript";
+import type { NodeStats, NS } from "netscript";
 
 export async function main(ns: NS) {
-    const budget = 0.25;
     const maxNodes = ns.hacknet.maxNumNodes();
 
+    const budget = 0.25;
+
+    const totalMoney = ns.getServerMoneyAvailable('home');
+    const reserveMoney = totalMoney * (1 - budget);
+
+    const targetLevel = 160;
+    const targetRamLvl = 5;
+    const targetCoreLvl = 4;
+
     let ownedNodes = ns.hacknet.numNodes();
+
+    let nodes = Array(ownedNodes).map((_val, index) => ns.hacknet.getNodeStats(index));
+    nodes.sort((a, b) => a.production - b.production);
+
+    // Upgrade currently owned nodes to target levels
+    while (ns.getServerMoneyAvailable('home') > reserveMoney) {
+        for (let i = 0; i < ownedNodes; ++i) {
+
+        }
+    }
+
     let nextNodeCost = ns.hacknet.getPurchaseNodeCost();
 
     while (ownedNodes < maxNodes && nextNodeCost < ns.getServerMoneyAvailable('home') * budget) {
@@ -34,4 +53,8 @@ export async function main(ns: NS) {
             ns.hacknet.upgradeCore(nodeIndex, numCores);
         }
     }
+}
+
+class Heap {
+    const(values: NodeStats[]) { }
 }
