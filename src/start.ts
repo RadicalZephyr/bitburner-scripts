@@ -22,8 +22,13 @@ OPTIONS
         return;
     }
 
+    const manageScript = "/gang/manage.js";
     if (ns.gang.inGang()) {
-        ns.run("/gang/manage.js");
+        const manageProccesInfo = ns.getRunningScript(manageScript, 'home');
+        if (manageProccesInfo) {
+            ns.kill(manageProccesInfo.pid);
+        }
+        ns.run(manageScript);
     }
 
     let shareScript = "share.js";
