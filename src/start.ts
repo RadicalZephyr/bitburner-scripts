@@ -20,7 +20,9 @@ OPTIONS
         return;
     }
 
-    ns.run("/gang/manage.js");
+    if (ns.gang.inGang()) {
+        ns.run("/gang/manage.js");
+    }
 
     let shareScript = "share.js";
 
