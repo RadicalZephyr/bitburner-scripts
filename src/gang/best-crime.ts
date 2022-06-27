@@ -5,28 +5,42 @@ export async function main(ns: NS) {
     ns.clearLog();
     ns.tail();
 
+    const headers = ['task', '$', 'res', 'want', 'diff', 'T$', 'Tres', 'Twant', 'hak', 'str', 'def', 'dex', 'agi', 'cha'];
+    const statFns: ((t: GangTaskStats) => string)[] = [
+        t => t.name,
+        t => '' + t.baseMoney.toFixed(2),
+        t => '' + t.baseRespect,
+        t => '' + t.baseWanted,
+        t => '' + t.difficulty.toFixed(1),
+        t => '' + t.territory.money.toFixed(1),
+        t => '' + t.territory.respect.toFixed(1),
+        t => '' + t.territory.wanted.toFixed(2),
+        t => '' + t.hackWeight.toFixed(0),
+        t => '' + t.strWeight.toFixed(0),
+        t => '' + t.defWeight.toFixed(0),
+        t => '' + t.dexWeight.toFixed(0),
+        t => '' + t.agiWeight.toFixed(0),
+        t => '' + t.chaWeight.toFixed(0)
+    ];
+
     let tasks = ns.gang.getTaskNames().map(t => ns.gang.getTaskStats(t)).filter(t => isCrime(t));
+    tasks.sort((a, b) => a.difficulty - b.difficulty);
 
-    const longestTaskName = Math.max(...tasks.map(t => t.name.length));
+    const statLengths = statFns.map((statFn, index) => Math.max(headers[index].length, ...tasks.map(t => statFn(t).length)));
 
-    const baseFormatString = ` %${longestTaskName}s | %5s %5s %5s %5s %5s %5s %5s %5s %5s %5s %5s %5s %5s`;
+    const baseFormatString = ' %-' + statLengths[0] + 's |' +
+        '  %-' + statLengths[1] + 's' +
+        '  %-' + statLengths[2] + 's' +
+        '  %-' + statLengths.slice(3).join('s  %') + 's';
     const dividerFormatString = baseFormatString.replaceAll(' ', '-').replaceAll('%', "%'-");
 
-    const headers = ['task', '$', 'res', 'want', 'diff', 'terr $', 'terr res', 'terr want', 'hak', 'str', 'def', 'dex', 'agi', 'cha'];
     const blanks = Array(headers.length).fill('');
 
-    ns.printf(baseFormatString, headers);
+    ns.printf(baseFormatString, ...headers);
     ns.printf(dividerFormatString, ...blanks);
 
     for (const task of tasks) {
-        const stats = [
-            task.name,
-            task.baseMoney, task.baseRespect,
-            task.baseWanted, task.difficulty,
-            task.territory.money, task.territory.respect, task.territory.wanted,
-            task.hackWeight, task.strWeight, task.defWeight,
-            task.dexWeight, task.agiWeight, task.chaWeight
-        ];
+        const stats = statFns.map(statFn => statFn(task));
         ns.printf(baseFormatString, ...stats);
     }
 
@@ -34,7 +48,7 @@ export async function main(ns: NS) {
 
     const bestTask: GangTaskStats = tasks[tasks.length - 1];
 
-    ns.printf('Best task is %s', bestTask.name);
+    ns.printf('\nBest task is %s\n', bestTask.name);
 }
 
 function byTaskValue(t1: GangTaskStats, t2: GangTaskStats): number {
@@ -49,6 +63,7 @@ function taskValue(t: GangTaskStats): number {
 }
 
 const nonCrimes = [
+    "Unassigned",
     "Ethical Hacking",
     "Vigilante Justice",
     "Train Combat",
