@@ -6,8 +6,6 @@ export async function main(ns: NS) {
         ['help', false],
     ]);
 
-    const isHacking = ns.gang.getGangInformation().isHacking;
-
     if (flags.help) {
         ns.tprint("This script helps visualize what's going on with your gang.");
         ns.tprint(`USAGE: run ${ns.getScriptName()}`);
@@ -28,9 +26,6 @@ export async function main(ns: NS) {
         const baseFormatString = ' %4s | %5s %5s %9s %7s %10s';
         const dividerFormatString = baseFormatString.replaceAll(' ', '-').replaceAll('%', "%'-");
 
-        const gangType = isHacking ? 'Hacking' : 'Combat';
-        ns.print(`Member ${gangType} Info\n`);
-
         const headings = ['stat', 'lvl', 'mul', 'asc_bonus', 'xp', 'asc_points'];
         const blanks = Array(headings.length).fill('');
 
@@ -42,7 +37,7 @@ export async function main(ns: NS) {
 
             const ascResult = ns.gang.getAscensionResult(member.name);
 
-            const stats = isHacking ? ['hack', 'cha'] : ['str', 'def', 'dex', 'agi'];
+            const stats = ['hack', 'str', 'def', 'dex', 'agi', 'cha'];
             for (const stat of stats) {
                 const memberAny: any = member;
                 const ascResultAny: any = ascResult;
