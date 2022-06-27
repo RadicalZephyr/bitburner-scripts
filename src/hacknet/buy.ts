@@ -56,5 +56,43 @@ export async function main(ns: NS) {
 }
 
 class Heap {
-    const(values: NodeStats[]) { }
+    data: NodeStats[],
+
+    const(data: NodeStats[]) {
+        this.data = data;
+
+    }
+
+    push(item: NodeStats) {
+        const oldLen = this.data.length;
+        this.data.push(item);
+        siftUp(this.data, 0, oldLen);
+    }
+}
+
+function rebuild(data: NodeStats[]) {
+    let n = Math.floor(data.length / 2);
+
+    while (n > 0) {
+        n -= 1;
+
+        siftDown(data, n);
+    }
+
+}
+
+function siftUp(data: NodeStats[], start: number, pos: number) {
+
+}
+
+function siftDown(data: NodeStats[], pos: number) {
+    siftDownRange(data, pos, data.length);
+}
+
+function siftDownRange(data: NodeStats[], pos: number, end: number) {
+    let child = 2 * pos + 1;
+
+    while (child < end - 2) {
+
+    }
 }
