@@ -1,8 +1,6 @@
 import type { NodeStats, NS } from "netscript";
 
 export async function main(ns: NS) {
-    const maxNodes = ns.hacknet.maxNumNodes();
-
     const budget = 0.25;
 
     const totalMoney = ns.getServerMoneyAvailable('home');
@@ -20,8 +18,8 @@ export async function main(ns: NS) {
     // Upgrade currently owned nodes to target levels
     while (ns.getServerMoneyAvailable('home') > reserveMoney) {
         let minLevelNode = nodeLevelHeap.min();
-        let currentLevel = ns.hacknet.getNodeStats(minLevelNode).level;
 
+        let currentLevel = ns.hacknet.getNodeStats(minLevelNode).level;
         if (currentLevel >= targetLevel) break;
 
         if (!ns.hacknet.upgradeLevel(minLevelNode, 1)) break;
@@ -31,8 +29,8 @@ export async function main(ns: NS) {
     let nodeRamHeap = new Heap(nodes, nodeIndex => ns.hacknet.getNodeStats(nodeIndex).ram);
     while (ns.getServerMoneyAvailable('home') > reserveMoney) {
         let minRamNode = nodeRamHeap.min();
-        let currentRam = ns.hacknet.getNodeStats(minRamNode).ram;
 
+        let currentRam = ns.hacknet.getNodeStats(minRamNode).ram;
         if (currentRam >= targetRam) break;
 
         if (!ns.hacknet.upgradeRam(minRamNode, 1)) break;
@@ -42,12 +40,50 @@ export async function main(ns: NS) {
     let nodeCoreHeap = new Heap(nodes, nodeIndex => ns.hacknet.getNodeStats(nodeIndex).cores);
     while (ns.getServerMoneyAvailable('home') > reserveMoney) {
         let minCoreNode = nodeCoreHeap.min();
-        let currentRam = ns.hacknet.getNodeStats(minCoreNode).cores;
 
-        if (currentRam >= targetRam) break;
+        let currentCores = ns.hacknet.getNodeStats(minCoreNode).cores;
+        if (currentCores >= targetCore) break;
 
         if (!ns.hacknet.upgradeCore(minCoreNode, 1)) break;
         nodeRamHeap.updateMinKey();
+    }
+
+    const maxNodes = ns.hacknet.maxNumNodes();
+
+    let nextNodeCost = ns.hacknet.getPurchaseNodeCost();
+    while (ownedNodes <= maxNodes && ns.getServerMoneyAvailable('home') - nextNodeCost > reserveMoney) {
+        const nodeIndex = ns.hacknet.purchaseNode();
+        if (nodeIndex === -1) break;
+
+        ++ownedNodes;
+        nextNodeCost = ns.hacknet.getPurchaseNodeCost();
+
+        let nextLevelCost = ns.hacknet.getLevelUpgradeCost(nodeIndex, 1);
+        while (ns.getServerMoneyAvailable('home') - nextLevelCost > reserveMoney) {
+            if (!ns.hacknet.upgradeLevel(nodeIndex, 1)) return;
+            nextLevelCost = ns.hacknet.getLevelUpgradeCost(nodeIndex, 1);
+
+            let currentLevel = ns.hacknet.getNodeStats(nodeIndex).level;
+            if (currentLevel >= targetLevel) break;
+        }
+
+        let nextRamCost = ns.hacknet.getRamUpgradeCost(nodeIndex, 1);
+        while (ns.getServerMoneyAvailable('home') - nextRamCost > reserveMoney) {
+            if (!ns.hacknet.upgradeRam(nodeIndex, 1)) return;
+            nextRamCost = ns.hacknet.getRamUpgradeCost(nodeIndex, 1);
+
+            let currentRam = ns.hacknet.getNodeStats(nodeIndex).ram;
+            if (currentRam >= targetRam) break;
+        }
+
+        let nextCoreCost = ns.hacknet.getCoreUpgradeCost(nodeIndex, 1);
+        while (ns.getServerMoneyAvailable('home') - nextCoreCost > reserveMoney) {
+            if (!ns.hacknet.upgradeCore(nodeIndex, 1)) return;
+            nextCoreCost = ns.hacknet.getCoreUpgradeCost(nodeIndex, 1);
+
+            let currentCores = ns.hacknet.getNodeStats(nodeIndex).cores;
+            if (currentCores >= targetCore) break;
+        }
     }
 }
 
