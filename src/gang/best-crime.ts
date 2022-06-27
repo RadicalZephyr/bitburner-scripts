@@ -5,13 +5,13 @@ export async function main(ns: NS) {
     ns.clearLog();
     ns.tail();
 
-    const headers = ['task', '$', 'res', 'want', 'diff', 'T$', 'Tres', 'Twant', 'hak', 'str', 'def', 'dex', 'agi', 'cha'];
+    const headers = ['task', 'diff', '$', 'res', 'want', 'T$', 'Tres', 'Twant', 'hak', 'str', 'def', 'dex', 'agi', 'cha'];
     const statFns: ((t: GangTaskStats) => string)[] = [
         t => t.name,
+        t => '' + t.difficulty.toFixed(1),
         t => '' + t.baseMoney.toFixed(2),
         t => '' + t.baseRespect,
         t => '' + t.baseWanted,
-        t => '' + t.difficulty.toFixed(1),
         t => '' + t.territory.money.toFixed(1),
         t => '' + t.territory.respect.toFixed(1),
         t => '' + t.territory.wanted.toFixed(2),
@@ -29,9 +29,10 @@ export async function main(ns: NS) {
     const statLengths = statFns.map((statFn, index) => Math.max(headers[index].length, ...tasks.map(t => statFn(t).length)));
 
     const baseFormatString = ' %-' + statLengths[0] + 's |' +
-        '  %-' + statLengths[1] + 's' +
-        '  %-' + statLengths[2] + 's' +
-        '  %-' + statLengths.slice(3).join('s  %') + 's';
+        '  %' + statLengths[1] + 's' +
+        '  %' + statLengths[2] + 's' +
+        '  %-' + statLengths[3] + 's' +
+        '  %-' + statLengths.slice(4).join('s  %') + 's';
     const dividerFormatString = baseFormatString.replaceAll(' ', '-').replaceAll('%', "%'-");
 
     const blanks = Array(headers.length).fill('');
