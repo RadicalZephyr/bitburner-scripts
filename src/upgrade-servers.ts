@@ -7,6 +7,7 @@ const startScript = "start.js";
 export async function main(ns: NS) {
     const options = ns.flags([
         ['spend', 1.0],
+        ['wait', false],
         ['help', false]
     ]);
 
@@ -17,6 +18,7 @@ Usage: ${ns.getScriptName()} [OPTIONS]
 OPTIONS
   --help   Show this help message
   --spend  Percentage of money to spend on upgrading
+  --wait   Wait for money to become available to buy servers
 `);
     }
 
@@ -36,6 +38,7 @@ OPTIONS
     for (let i = 0; i < neededServers; ++i) {
         if (ns.getServerMoneyAvailable("home") < serverCost) {
             ns.run(startScript);
+            if (!options.wait) return;
         }
         while (ns.getServerMoneyAvailable("home") < serverCost) {
             await ns.sleep(1000);
@@ -56,6 +59,7 @@ OPTIONS
         if (ns.getServerMaxRam(oldHostname) < ram) {
             if (ns.getServerMoneyAvailable("home") < serverCost) {
                 ns.run(startScript);
+                if (!options.wait) return;
             }
             while (ns.getServerMoneyAvailable("home") < serverCost) {
                 await ns.sleep(1000);
