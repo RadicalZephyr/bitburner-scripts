@@ -71,16 +71,23 @@ class Heap<T> {
         this.keyFn = keyFn;
     }
 
-    push(key: number, value: T) {
-        const oldLen = this.data.length;
-        this.data.push({ key: key, value: value });
-        // TODO: Min heapify!
+    min(): T {
+        if (this.data.length > 0) {
+            return this.data[0].value;
+        }
     }
-}
+
+    updateMinKey() {
+        if (this.data.length <= 0) return;
+
+        let min = this.data[0];
+        min.key = this.keyFn(min.value);
+        minHeapify(this.data, 0);
+    }
 
 function buildMinHeap<T>(A: Entry<T>[]) {
-    const l = A.length;
-    for (let i = Math.floor(l / 2); i >= 0; --i) {
+    const last = A.length - 1;
+    for (let i = parent(last); i >= 0; --i) {
         minHeapify(A, i);
     }
 
