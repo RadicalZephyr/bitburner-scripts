@@ -1,36 +1,40 @@
 import type { GangTaskStats, NS } from "netscript";
 
 export async function main(ns: NS) {
+    ns.disableLog('ALL');
+    ns.clearLog();
+    ns.tail();
+
     let tasks = ns.gang.getTaskNames().map(t => ns.gang.getTaskStats(t)).filter(t => isCrime(t));
-    ns.tprint(`crime tasks: ${JSON.stringify(tasks)}`);
+
+    const longestTaskName = Math.max(...tasks.map(t => t.name.length));
+
+    const baseFormatString = ` %${longestTaskName}s | %5s %5s %5s %5s %5s %5s %5s %5s %5s %5s %5s %5s %5s`;
+    const dividerFormatString = baseFormatString.replaceAll(' ', '-').replaceAll('%', "%'-");
+
+    const headers = ['task', '$', 'res', 'want', 'diff', 'terr $', 'terr res', 'terr want', 'hak', 'str', 'def', 'dex', 'agi', 'cha'];
+    const blanks = Array(headers.length).fill('');
+
+    ns.printf(baseFormatString, headers);
+    ns.printf(dividerFormatString, ...blanks);
+
+    for (const task of tasks) {
+        const stats = [
+            task.name,
+            task.baseMoney, task.baseRespect,
+            task.baseWanted, task.difficulty,
+            task.territory.money, task.territory.respect, task.territory.wanted,
+            task.hackWeight, task.strWeight, task.defWeight,
+            task.dexWeight, task.agiWeight, task.chaWeight
+        ];
+        ns.printf(baseFormatString, ...stats);
+    }
+
     tasks.sort(byTaskValue);
 
     const bestTask: GangTaskStats = tasks[tasks.length - 1];
 
-    ns.tprint(`
-Best task is ${bestTask.name}
-
-Rewards:
-money:   ${bestTask.baseMoney}
-respect: ${bestTask.baseRespect}
-
-Challenge:
-wanted:     ${bestTask.baseWanted}
-difficulty: ${bestTask.difficulty}
-
-Territory:
-money:   ${bestTask.territory.money}
-respect: ${bestTask.territory.respect}
-wanted   ${bestTask.territory.wanted}
-
-Stat Weights:
-hak: ${bestTask.hackWeight}
-str: ${bestTask.strWeight}
-def: ${bestTask.defWeight}
-agi: ${bestTask.agiWeight}
-dex: ${bestTask.dexWeight}
-cha: ${bestTask.chaWeight}
-`);
+    ns.printf('Best task is %s', bestTask.name);
 }
 
 function byTaskValue(t1: GangTaskStats, t2: GangTaskStats): number {
