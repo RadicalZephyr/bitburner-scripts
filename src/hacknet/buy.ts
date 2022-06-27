@@ -1,14 +1,36 @@
 import type { NodeStats, NS } from "netscript";
 
 export async function main(ns: NS) {
-    const budget = 0.25;
+    const options = ns.flags([
+        ['help', false],
+        ['budget', 0.25],
+        ['level', 180],
+        ['ram', 32],
+        ['cores', 5]
+    ]);
+
+    if (options.help) {
+        ns.tprint(`
+Usage: ${ns.getScriptName()} [OPTIONS]
+
+OPTIONS
+  --help    Show this help message
+  --budget  Percentage of current money to spend
+  --level   Target levels to buy for all nodes
+  --ram     Target ram (GB) to buy for all nodes
+  --cores   Target cores to buy for all nodes
+`);
+        return;
+    }
+
+    const budget = options.budget;
 
     const totalMoney = ns.getServerMoneyAvailable('home');
     const reserveMoney = totalMoney * (1 - budget);
 
-    const targetLevel = 180;
-    const targetRam = 32;
-    const targetCore = 5;
+    const targetLevel = options.level;
+    const targetRam = options.ram;
+    const targetCores = options.cores;
 
     let ownedNodes = ns.hacknet.numNodes();
 
@@ -46,7 +68,7 @@ export async function main(ns: NS) {
         let minCoreNode = nodeCoreHeap.min();
 
         let currentCores = ns.hacknet.getNodeStats(minCoreNode).cores;
-        if (currentCores >= targetCore) break;
+        if (currentCores >= targetCores) break;
 
         if (!ns.hacknet.upgradeCore(minCoreNode, 1)) break;
         nodeRamHeap.updateMinKey();
@@ -92,7 +114,7 @@ export async function main(ns: NS) {
             nextCoreCost = ns.hacknet.getCoreUpgradeCost(nodeIndex, 1);
 
             let currentCores = ns.hacknet.getNodeStats(nodeIndex).cores;
-            if (currentCores >= targetCore) break;
+            if (currentCores >= targetCores) break;
 
             await ns.sleep(1);
         }
