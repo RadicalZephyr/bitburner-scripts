@@ -6,7 +6,8 @@ import { walkNetworkBFS } from "./walk-network.js";
 export async function main(ns: NS) {
     const options = ns.flags([
         ['share', false],
-        ['share-percent', 0.75]
+        ['share-percent', 0.75],
+        ['help', false]
     ]);
 
     if (options.help) {
@@ -14,7 +15,8 @@ export async function main(ns: NS) {
 Usage: ${ns.getScriptName()} [OPTIONS]
 
 OPTIONS
-  --share Run share script on usable hosts
+  --help          Show this help message
+  --share         Run share script on usable hosts
   --share_percent Specify the percentage of usable hosts to share [0-1]
 `);
         return;
