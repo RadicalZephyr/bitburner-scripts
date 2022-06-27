@@ -61,10 +61,14 @@ type Entry<T> = {
 }
 
 class Heap<T> {
-    data: Entry<T>[],
+    data: Entry<T>[];
+    keyFn: ((v: T) => number);
 
-    const() {
-        this.data = [];
+    const(values: T[], keyFn: ((v: T) => number)) {
+        let data = values.map(v => { return { key: keyFn(v), value: v }; });
+        buildMinHeap(data);
+        this.data = data;
+        this.keyFn = keyFn;
     }
 
     push(key: number, value: T) {
@@ -74,30 +78,34 @@ class Heap<T> {
     }
 }
 
-function rebuild(data: NodeStats[]) {
-    let n = Math.floor(data.length / 2);
-
-    while (n > 0) {
-        n -= 1;
-
-        siftDown(data, n);
+function buildMinHeap<T>(A: Entry<T>[]) {
+    const l = A.length;
+    for (let i = Math.floor(l / 2); i >= 0; --i) {
+        minHeapify(A, i);
     }
 
 }
 
-function siftUp<T>(data: Entry<T>[], start: number, pos: number) {
+function minHeapify<T>(A: Entry<T>[], i: number) {
+    const l = left(i);
+    const r = right(i);
 
-}
+    let smallest;
+    if (l <= A.length && A[l].key < A[i].key) {
+        smallest = l;
+    } else {
+        smallest = i;
+    }
 
-function siftDown(data: Entry<T>[], pos: number) {
-    siftDownRange(data, pos, data.length);
-}
+    if (r <= A.length && A[r].key < A[smallest].key) {
+        smallest = r;
+    }
 
-function siftDownRange(data: Entry<T>[], pos: number, end: number) {
-    let child = 2 * pos + 1;
-
-    while (child < end - 2) {
-
+    if (smallest != i) {
+        const temp = A[i];
+        A[i] = A[smallest];
+        A[smallest] = temp;
+        minHeapify(A, smallest);
     }
 }
 
