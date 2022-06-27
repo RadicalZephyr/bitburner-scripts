@@ -5,8 +5,22 @@ import { formatGigaBytes, getHighestPurchasableRamLevel, reportServerComplementC
 const startScript = "start.js";
 
 export async function main(ns: NS) {
-    let upgradeSpendPercentage = ns.args[0];
-    upgradeSpendPercentage = upgradeSpendPercentage && typeof upgradeSpendPercentage == 'string' ? parseFloat(upgradeSpendPercentage) : 1.0;
+    const options = ns.flags([
+        ['spend', 1.0],
+        ['help', false]
+    ]);
+
+    if (options.help) {
+        ns.tprint(`
+Usage: ${ns.getScriptName()} [OPTIONS]
+
+OPTIONS
+  --help   Show this help message
+  --spend  Percentage of money to spend on upgrading
+`);
+    }
+
+    let upgradeSpendPercentage = options.spend;
 
     // Find the highest amount of RAM we can purchase a full complement
     // of servers at right now
