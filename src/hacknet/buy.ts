@@ -8,52 +8,49 @@ export async function main(ns: NS) {
     const totalMoney = ns.getServerMoneyAvailable('home');
     const reserveMoney = totalMoney * (1 - budget);
 
-    const targetLevel = 160;
-    const targetRamLvl = 5;
-    const targetCoreLvl = 4;
+    const targetLevel = 180;
+    const targetRam = 32;
+    const targetCore = 5;
 
     let ownedNodes = ns.hacknet.numNodes();
 
-    let nodes = Array(ownedNodes).map((_val, index) => ns.hacknet.getNodeStats(index));
-    nodes.sort((a, b) => a.production - b.production);
+    let nodes = [...new Array(ownedNodes).keys()];
 
+    let nodeLevelHeap = new Heap(nodes, nodeIndex => ns.hacknet.getNodeStats(nodeIndex).level);
     // Upgrade currently owned nodes to target levels
     while (ns.getServerMoneyAvailable('home') > reserveMoney) {
-        for (let i = 0; i < ownedNodes; ++i) {
+        let minLevelNode = nodeLevelHeap.min();
+        let currentLevel = ns.hacknet.getNodeStats(minLevelNode).level;
 
-        }
+        if (currentLevel >= targetLevel) break;
+
+        if (!ns.hacknet.upgradeLevel(minLevelNode, 1)) break;
+        nodeLevelHeap.updateMinKey();
     }
 
-    let nextNodeCost = ns.hacknet.getPurchaseNodeCost();
+    let nodeRamHeap = new Heap(nodes, nodeIndex => ns.hacknet.getNodeStats(nodeIndex).ram);
+    while (ns.getServerMoneyAvailable('home') > reserveMoney) {
+        let minRamNode = nodeRamHeap.min();
+        let currentRam = ns.hacknet.getNodeStats(minRamNode).ram;
 
-    while (ownedNodes < maxNodes && nextNodeCost < ns.getServerMoneyAvailable('home') * budget) {
-        const nodeIndex = ns.hacknet.purchaseNode();
-        if (nodeIndex === -1) break;
+        if (currentRam >= targetRam) break;
 
-        ++ownedNodes;
+        if (!ns.hacknet.upgradeRam(minRamNode, 1)) break;
+        nodeRamHeap.updateMinKey();
+    }
 
-        const numLevels = 160;
-        const levelUpgradeCost = ns.hacknet.getLevelUpgradeCost(nodeIndex, numLevels);
+    let nodeCoreHeap = new Heap(nodes, nodeIndex => ns.hacknet.getNodeStats(nodeIndex).cores);
+    while (ns.getServerMoneyAvailable('home') > reserveMoney) {
+        let minCoreNode = nodeCoreHeap.min();
+        let currentRam = ns.hacknet.getNodeStats(minCoreNode).cores;
 
-        if (levelUpgradeCost < ns.getServerMoneyAvailable('home')) {
-            ns.hacknet.upgradeLevel(nodeIndex, numLevels);
-        }
+        if (currentRam >= targetRam) break;
 
-        const ramGB = 5;
-        const ramUpgradeCost = ns.hacknet.getRamUpgradeCost(nodeIndex, ramGB);
-
-        if (ramUpgradeCost < ns.getServerMoneyAvailable('home')) {
-            ns.hacknet.upgradeRam(nodeIndex, ramGB);
-        }
-
-        const numCores = 4;
-        const coreUpgradeCost = ns.hacknet.getCoreUpgradeCost(nodeIndex, numCores);
-
-        if (coreUpgradeCost < ns.getServerMoneyAvailable('home')) {
-            ns.hacknet.upgradeCore(nodeIndex, numCores);
-        }
+        if (!ns.hacknet.upgradeCore(minCoreNode, 1)) break;
+        nodeRamHeap.updateMinKey();
     }
 }
+
 
 type Entry<T> = {
     key: number,
@@ -64,11 +61,27 @@ class Heap<T> {
     data: Entry<T>[];
     keyFn: ((v: T) => number);
 
-    const(values: T[], keyFn: ((v: T) => number)) {
+    constructor(values: T[], keyFn: ((v: T) => number)) {
         let data = values.map(v => { return { key: keyFn(v), value: v }; });
         buildMinHeap(data);
         this.data = data;
         this.keyFn = keyFn;
+    }
+
+    length(): number {
+        return this.data.length;
+    }
+
+    pop(): T {
+        if (this.data.length > 1) {
+            const min = this.data[0].value;
+            let last = this.data.pop();
+            this.data[0] = last;
+            minHeapify(this.data, 0);
+            return min;
+        } else if (this.data.length == 1) {
+            return this.data.pop().value;
+        }
     }
 
     min(): T {
@@ -84,6 +97,7 @@ class Heap<T> {
         min.key = this.keyFn(min.value);
         minHeapify(this.data, 0);
     }
+}
 
 function buildMinHeap<T>(A: Entry<T>[]) {
     const last = A.length - 1;
@@ -98,13 +112,13 @@ function minHeapify<T>(A: Entry<T>[], i: number) {
     const r = right(i);
 
     let smallest;
-    if (l <= A.length && A[l].key < A[i].key) {
+    if (l < A.length && A[l].key < A[i].key) {
         smallest = l;
     } else {
         smallest = i;
     }
 
-    if (r <= A.length && A[r].key < A[smallest].key) {
+    if (r < A.length && A[r].key < A[smallest].key) {
         smallest = r;
     }
 
@@ -117,13 +131,13 @@ function minHeapify<T>(A: Entry<T>[], i: number) {
 }
 
 function parent(index: number) {
-    return Math.floor(index / 2);
+    return Math.floor((index - 1) / 2);
 }
 
 function left(index: number) {
-    return 2 * index;
+    return 2 * index + 1;
 }
 
 function right(index: number) {
-    return 2 * index + 1;
+    return 2 * index + 2;
 }
