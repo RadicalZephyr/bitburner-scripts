@@ -24,6 +24,8 @@ export async function main(ns: NS) {
 
         if (!ns.hacknet.upgradeLevel(minLevelNode, 1)) break;
         nodeLevelHeap.updateMinKey();
+
+        await ns.sleep(1);
     }
 
     let nodeRamHeap = new Heap(nodes, nodeIndex => ns.hacknet.getNodeStats(nodeIndex).ram);
@@ -35,6 +37,8 @@ export async function main(ns: NS) {
 
         if (!ns.hacknet.upgradeRam(minRamNode, 1)) break;
         nodeRamHeap.updateMinKey();
+
+        await ns.sleep(1);
     }
 
     let nodeCoreHeap = new Heap(nodes, nodeIndex => ns.hacknet.getNodeStats(nodeIndex).cores);
@@ -46,6 +50,8 @@ export async function main(ns: NS) {
 
         if (!ns.hacknet.upgradeCore(minCoreNode, 1)) break;
         nodeRamHeap.updateMinKey();
+
+        await ns.sleep(1);
     }
 
     const maxNodes = ns.hacknet.maxNumNodes();
@@ -65,6 +71,8 @@ export async function main(ns: NS) {
 
             let currentLevel = ns.hacknet.getNodeStats(nodeIndex).level;
             if (currentLevel >= targetLevel) break;
+
+            await ns.sleep(1);
         }
 
         let nextRamCost = ns.hacknet.getRamUpgradeCost(nodeIndex, 1);
@@ -74,6 +82,8 @@ export async function main(ns: NS) {
 
             let currentRam = ns.hacknet.getNodeStats(nodeIndex).ram;
             if (currentRam >= targetRam) break;
+
+            await ns.sleep(1);
         }
 
         let nextCoreCost = ns.hacknet.getCoreUpgradeCost(nodeIndex, 1);
@@ -83,7 +93,11 @@ export async function main(ns: NS) {
 
             let currentCores = ns.hacknet.getNodeStats(nodeIndex).cores;
             if (currentCores >= targetCore) break;
+
+            await ns.sleep(1);
         }
+
+        await ns.sleep(1);
     }
 }
 
