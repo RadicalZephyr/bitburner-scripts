@@ -71,7 +71,7 @@ OPTIONS
         if (currentCores >= targetCores) break;
 
         if (!ns.hacknet.upgradeCore(minCoreNode, 1)) break;
-        nodeRamHeap.updateMinKey();
+        nodeCoreHeap.updateMinKey();
 
         await ns.sleep(1);
     }
