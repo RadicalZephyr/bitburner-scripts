@@ -23,14 +23,17 @@ export async function main(ns: NS) {
         const maxTaskLength = Math.max(...members.map(m => m.task.length));
 
         ns.clearLog();
-        ns.print('Member Hacking Info\n');
 
-        ns.printf(` %-${maxNameLength}s | %${maxTaskLength}s %6s %7s %9s %9s`, 'member', 'task', 'hack', 'hack_exp', 'hack_mul', 'hack_asc');
-        ns.printf(`-%'--${maxNameLength}s-|-%'-${maxTaskLength}s-%'-6s-%'-7s-%'-9s-%'-9s`, '', '', '', '', '', '');
+        const baseFormatString = ` %-${maxNameLength}s | %${maxTaskLength}s %6s %7s %9s %9s`;
+        const dividerFormatString = baseFormatString.replaceAll(' ', '-').replaceAll('%', "%'-");
+
+        ns.print('Member Hacking Info\n');
+        ns.printf(baseFormatString, 'member', 'task', 'hack', 'hack_exp', 'hack_mul', 'hack_asc');
+        ns.printf(dividerFormatString, '', '', '', '', '', '');
         for (const member of members) {
             const ascResult = ns.gang.getAscensionResult(member.name);
             ns.printf(
-                ` %-${maxNameLength}s | %${maxTaskLength}s %6s %7s %9s %9s`,
+                baseFormatString,
                 member.name,
                 member.task,
                 member.hack.toFixed(0),
