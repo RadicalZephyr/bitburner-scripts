@@ -55,18 +55,22 @@ export async function main(ns: NS) {
     }
 }
 
-class Heap {
-    data: NodeStats[],
+type Entry<T> = {
+    key: number,
+    value: T,
+}
 
-    const(data: NodeStats[]) {
-        this.data = data;
+class Heap<T> {
+    data: Entry<T>[],
 
+    const() {
+        this.data = [];
     }
 
-    push(item: NodeStats) {
+    push(key: number, value: T) {
         const oldLen = this.data.length;
-        this.data.push(item);
-        siftUp(this.data, 0, oldLen);
+        this.data.push({ key: key, value: value });
+        // TODO: Min heapify!
     }
 }
 
@@ -81,18 +85,30 @@ function rebuild(data: NodeStats[]) {
 
 }
 
-function siftUp(data: NodeStats[], start: number, pos: number) {
+function siftUp<T>(data: Entry<T>[], start: number, pos: number) {
 
 }
 
-function siftDown(data: NodeStats[], pos: number) {
+function siftDown(data: Entry<T>[], pos: number) {
     siftDownRange(data, pos, data.length);
 }
 
-function siftDownRange(data: NodeStats[], pos: number, end: number) {
+function siftDownRange(data: Entry<T>[], pos: number, end: number) {
     let child = 2 * pos + 1;
 
     while (child < end - 2) {
 
     }
+}
+
+function parent(index: number) {
+    return Math.floor(index / 2);
+}
+
+function left(index: number) {
+    return 2 * index;
+}
+
+function right(index: number) {
+    return 2 * index + 1;
 }
