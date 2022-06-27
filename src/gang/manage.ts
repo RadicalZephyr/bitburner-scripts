@@ -7,11 +7,30 @@ const maxPenalty = 0.05;
 const minWantedLevel = 10.0;
 const jobCheckInterval = 1000 * 5;
 
+const names = new Set([
+    "Freya",
+    "Frigg",
+    "Gefion",
+    "Idun",
+    "Sif",
+    "Sigyn",
+    "Eir",
+    "Fulla",
+    "Gna",
+    "Hlin",
+    "Ilmrxs",
+    "Hel"
+]);
+
 export async function main(ns: NS) {
     if (!ns.gang.inGang()) {
         ns.tprint("No gang to manage.");
         return;
     }
+
+    const currentNames = new Set(ns.gang.getMemberNames());
+    const unusedNames = new Array(...(difference(names, currentNames).keys()));
+    let nameIndex = 0;
 
     const isHacking = ns.gang.getGangInformation().isHacking;
 
@@ -19,13 +38,21 @@ export async function main(ns: NS) {
     const heatTask = isHacking ? "Money Laundering" : "Mug People";
     const coolTask = isHacking ? "Ethical Hacking" : "Vigilante Justice";
 
-    const memberNames = ns.gang.getMemberNames();
+    let memberNames = ns.gang.getMemberNames();
 
     // Start with everyone making money
     let numHeating = memberNames.length;
 
     // forever
     while (true) {
+        if (ns.gang.canRecruitMember()) {
+            const name = unusedNames[nameIndex++];
+
+            if (ns.gang.recruitMember(name)) {
+                memberNames.push(name);
+            }
+        }
+
         const gangInfo = ns.gang.getGangInformation();
         if (gangInfo.wantedPenalty > maxPenalty && gangInfo.wantedLevelGainRate > 0) {
             // If we're starting to get some heat and still heating,
@@ -121,4 +148,12 @@ function combatLevel(m: GangMemberInfo): number {
 
 function combatResultMult(r: GangMemberAscension): number {
     return (r.agi + r.def + r.dex + r.str) / 4;
+}
+
+function difference<T>(setA: Set<T>, setB: Set<T>): Set<T> {
+    let _difference = new Set(setA)
+    for (let elem of setB) {
+        _difference.delete(elem)
+    }
+    return _difference
 }
