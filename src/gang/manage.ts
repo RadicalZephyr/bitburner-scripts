@@ -35,7 +35,7 @@ export async function main(ns: NS) {
     const isHacking = ns.gang.getGangInformation().isHacking;
 
     const trainingTask = isHacking ? "Train Hacking" : "Train Combat";
-    const heatTask = isHacking ? "Money Laundering" : "Mug People";
+    const heatTask = isHacking ? "Money Laundering" : "Strongarm Civilians";
     const coolTask = isHacking ? "Ethical Hacking" : "Vigilante Justice";
 
     let memberNames = ns.gang.getMemberNames();
