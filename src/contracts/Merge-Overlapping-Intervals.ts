@@ -1,5 +1,7 @@
 import type { NS } from "netscript";
 
+const CONTRACT_PORT: number = 20;
+
 /* Given the following array of array of numbers representing a list
  * of intervals, merge all overlapping intervals.
  *
@@ -16,5 +18,18 @@ import type { NS } from "netscript";
  * the second.
  */
 export async function main(ns: NS) {
+    const contractDataArg = ns.args[0];
+    if (typeof contractDataArg != 'string') {
+        return;
+    }
+    const contractData = JSON.parse(contractDataArg);
+
+    const answer = solve(contractData);
+
+    const contractPort = ns.getPortHandle(CONTRACT_PORT);
+    contractPort.write(answer);
+}
+
+function solve(contractData: any): any {
 
 }

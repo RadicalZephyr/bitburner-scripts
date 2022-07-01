@@ -1,5 +1,7 @@
 import type { NS } from "netscript";
 
+const CONTRACT_PORT: number = 20;
+
 /* Given a triangle, find the minimum path sum from top to bottom. In
  * each step of the path, you may only move to adjacent numbers in the
  * row below. The triangle is represented as a 2D array of numbers:

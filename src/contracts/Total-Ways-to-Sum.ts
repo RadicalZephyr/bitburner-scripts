@@ -1,5 +1,7 @@
 import type { NS } from "netscript";
 
+const CONTRACT_PORT: number = 20;
+
 export async function main(ns: NS) {
     const options = ns.flags([
         ['help', false],
