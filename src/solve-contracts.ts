@@ -60,7 +60,7 @@ run ${programName} "${stringContractData}"
         // If the port data isn't a valid answer then just skip this contract
         if (typeof answer == 'string' && answer === 'NULL PORT DATA') {
             ns.tprint(`
-No answer received for contract ${} from ${programName}.
+No answer received from ${programName}.
 Program should write the answer to the contract to port ${CONTRACT_PORT}.
 `);
             continue;
@@ -79,9 +79,16 @@ Program should write the answer to the contract to port ${CONTRACT_PORT}.
 
         if (typeof contractReward == 'string') {
             if (contractReward === '') {
-                ns.tprint(`failed contract`);
+                ns.tprint(`
+failed contract ${contract.contract_name}
+puzzle data: ${stringContractData}
+incorrect answer: ${contractAnswer}
+`);
             } else {
-                ns.tprint(`result of solving contract: ${contractReward}`);
+                ns.tprint(`
+solved ${contract.contract_name}
+reward: ${contractReward}
+`);
             }
         }
     }
