@@ -2,6 +2,8 @@ import type { NS } from "netscript";
 
 import { walkNetworkBFS } from "./walk-network.js";
 
+const CONTRACT_PORT: number = 20;
+
 type Contract = {
     file: string,
     host: string,
@@ -31,9 +33,47 @@ export async function main(ns: NS) {
     for (const contract of contracts) {
         const programName = '/contracts/' + contract.contract_name.replaceAll(' ', '-') + '.js';
         if (ns.fileExists(programName)) {
-            if (!ns.run(programName, 1, contract.host, contract.file)) {
+            const contractData: number = ns.codingcontract.getData(contract.file, contract.host);
+            const stringContractData = JSON.stringify(contractData);
+
+            const pid = ns.run(programName, 1, stringContractData)
+            if (pid !== 0) {
+                // Sleep until the solver script exits
+                while (ns.getRunningScript(pid)) await ns.sleep(200);
+
+                const contractPort = ns.getPortHandle(CONTRACT_PORT);
+                // Get output from contract solving program
+                let answer = contractPort.read();
+
+                // If the port data isn't a valid answer then just skip this contract
+                if (typeof answer == 'string' && answer === 'NULL PORT DATA') {
+                    ns.tprint(`
+No answer received for contract ${} from ${programName}.
+Program should write the answer to the contract to port ${CONTRACT_PORT}.
+`);
+                    continue;
+                }
+                let contractAnswer: number | string[];
+                if (typeof answer == 'string') {
+                    contractAnswer = [answer];
+                } else {
+                    contractAnswer = answer;
+                }
+
+                const options = { 'returnReward': true };
+                // Attempt to submit it to the contract
+                const contractReward = ns.codingcontract.attempt(contractAnswer, contract.file, contract.host, options);
+
+                if (typeof contractReward == 'string') {
+                    if (contractReward === '') {
+                        ns.tprint(`failed contract`);
+                    } else {
+                        ns.tprint(`result of solving contract: ${contractReward}`);
+                    }
+                }
+            } else {
                 ns.tprint(`Could not run ${programName}, try running manually:
-run ${programName} ${contract.host} ${contract.file}
+run ${programName} "${stringContractData}"
 `);
             }
         } else {
