@@ -1,28 +1,18 @@
 import type { NS } from "netscript";
 
+const CONTRACT_PORT: number = 20;
+
 export async function main(ns: NS) {
-    const contractData = ns.args[0];
-    if (typeof contractData != 'number') {
+    const contractDataArg = ns.args[0];
+    if (typeof contractDataArg != 'string') {
         return;
     }
-    // const host = ns.args[0];
-    // if (typeof host != 'string' || !ns.serverExists(host)) {
-    //     ns.print('invalid host: %s', host);
-    //     return;
-    // }
+    const contractData = JSON.parse(contractDataArg);
 
-    // let contract = ns.args[1];
-    // if (typeof contract != 'string' || !ns.fileExists(contract, host)) {
-    //     ns.print('invalid contract, no such file as %s on %s', contract, host);
-    //     return;
-    // }
+    const answer = maxPrimeFactor(contractData);
 
-    // // Puzzle Input
-    // const contractData: number = ns.codingcontract.getData(contract, host);
-
-    const mpf = maxPrimeFactor(contractData);
-    ns.tprintf("maxPrimeFactor of %s is %s", contractData, mpf);
-    // ns.codingcontract.attempt(mpf, contract, host);
+    const contractPort = ns.getPortHandle(CONTRACT_PORT);
+    contractPort.write(answer);
 }
 
 function maxPrimeFactor(n: number): number {
