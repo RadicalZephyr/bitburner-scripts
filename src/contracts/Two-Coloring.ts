@@ -1,33 +1,32 @@
 import type { NS } from "netscript";
 
-type Edge = [
-    start: number,
-    dest: number,
-];
+const CONTRACT_PORT: number = 20;
 
 export async function main(ns: NS) {
-    ns.disableLog('ALL');
-    ns.tail();
-
-    const host = ns.args[0];
-    if (typeof host != 'string' || !ns.serverExists(host)) {
-        ns.print('invalid host: %s', host);
+    const contractDataArg = ns.args[0];
+    if (typeof contractDataArg != 'string') {
         return;
     }
+    const contractData = JSON.parse(contractDataArg);
 
-    let contract = ns.args[1];
-    if (typeof contract != 'string' || !ns.fileExists(contract, host)) {
-        ns.print('invalid contract, no such file as %s on %s', contract, host);
-        return;
-    }
+    const answer = solve(contractData);
 
-    // Puzzle Input
-    const contractData = ns.codingcontract.getData(contract, host);
+    const contractPort = ns.getPortHandle(CONTRACT_PORT);
+    contractPort.write(answer);
+}
+
+function solve(contractData: any): any {
     const numVertices: number = contractData[0];
     const edges: Edge[] = contractData[1];
 
     const graph = new Graph(range(numVertices), edges);
+
 }
+
+type Edge = [
+    start: number,
+    dest: number,
+];
 
 function range(n: number): number[] {
     return [...Array(n).keys()];
