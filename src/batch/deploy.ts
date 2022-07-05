@@ -4,9 +4,9 @@ import { getRootAccess, exploitableHosts, usableHosts } from '../lib.js';
 import { walkNetworkBFS } from "../walk-network.js";
 
 const scripts = {
-    'grow': 'batch/grow.js',
-    'hack': 'batch/hack.js',
-    'weaken': 'batch/weaken.js'
+    'grow': '/batch/grow.js',
+    'hack': '/batch/hack.js',
+    'weaken': '/batch/weaken.js'
 };
 const scriptList = [scripts.grow, scripts.hack, scripts.weaken];
 
