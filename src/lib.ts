@@ -186,3 +186,96 @@ export function weakenThreads(weakenAmount: number): number {
     // by a fixed amount of 0.05, or 1/20
     return Math.ceil(weakenAmount * 20);
 }
+
+/*****************************************
+ * Heap Implementation
+ *****************************************/
+type Entry<T> = {
+    key: number,
+    value: T,
+}
+
+export class Heap<T> {
+    data: Entry<T>[];
+    keyFn: ((v: T) => number);
+
+    constructor(values: T[], keyFn: ((v: T) => number)) {
+        let data = values.map(v => { return { key: keyFn(v), value: v }; });
+        buildMinHeap(data);
+        this.data = data;
+        this.keyFn = keyFn;
+    }
+
+    length(): number {
+        return this.data.length;
+    }
+
+    pop(): T {
+        if (this.data.length > 1) {
+            const min = this.data[0].value;
+            let last = this.data.pop();
+            this.data[0] = last;
+            minHeapify(this.data, 0);
+            return min;
+        } else if (this.data.length == 1) {
+            return this.data.pop().value;
+        }
+    }
+
+    min(): T {
+        if (this.data.length > 0) {
+            return this.data[0].value;
+        }
+    }
+
+    updateMinKey() {
+        if (this.data.length <= 0) return;
+
+        let min = this.data[0];
+        min.key = this.keyFn(min.value);
+        minHeapify(this.data, 0);
+    }
+}
+
+function buildMinHeap<T>(A: Entry<T>[]) {
+    const last = A.length - 1;
+    for (let i = parent(last); i >= 0; --i) {
+        minHeapify(A, i);
+    }
+
+}
+
+function minHeapify<T>(A: Entry<T>[], i: number) {
+    const l = left(i);
+    const r = right(i);
+
+    let smallest;
+    if (l < A.length && A[l].key < A[i].key) {
+        smallest = l;
+    } else {
+        smallest = i;
+    }
+
+    if (r < A.length && A[r].key < A[smallest].key) {
+        smallest = r;
+    }
+
+    if (smallest != i) {
+        const temp = A[i];
+        A[i] = A[smallest];
+        A[smallest] = temp;
+        minHeapify(A, smallest);
+    }
+}
+
+function parent(index: number) {
+    return Math.floor((index - 1) / 2);
+}
+
+function left(index: number) {
+    return 2 * index + 1;
+}
+
+function right(index: number) {
+    return 2 * index + 2;
+}
