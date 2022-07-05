@@ -117,6 +117,16 @@ export function canNuke(ns: NS, host: string): boolean {
 
 /** Filter hosts by exploitability.
  */
+export function preppableHosts(ns: NS, hosts: string[]): string[] {
+    return hosts.filter((host) => {
+        return ns.serverExists(host)
+            && hasMoney(ns, host)
+            && canNuke(ns, host);
+    });
+}
+
+/** Filter hosts by exploitability.
+ */
 export function exploitableHosts(ns: NS, hosts: string[]): string[] {
     return hosts.filter((host) => {
         return ns.serverExists(host)
