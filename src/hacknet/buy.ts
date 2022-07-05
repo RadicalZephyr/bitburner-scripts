@@ -36,46 +36,49 @@ OPTIONS
 
     let ownedNodes = ns.hacknet.numNodes();
 
-    let nodes = [...new Array(ownedNodes).keys()];
+    // Upgrade current nodes before buying new ones
+    if (ownedNodes > 0) {
+        let nodes = [...new Array(ownedNodes).keys()];
 
-    let nodeLevelHeap = new Heap(nodes, nodeIndex => ns.hacknet.getNodeStats(nodeIndex).level);
-    // Upgrade currently owned nodes to target levels
-    while (ns.getServerMoneyAvailable('home') > reserveMoney) {
-        let minLevelNode = nodeLevelHeap.min();
+        let nodeLevelHeap = new Heap(nodes, nodeIndex => ns.hacknet.getNodeStats(nodeIndex).level);
+        // Upgrade currently owned nodes to target levels
+        while (ns.getServerMoneyAvailable('home') > reserveMoney) {
+            let minLevelNode = nodeLevelHeap.min();
 
-        let currentLevel = ns.hacknet.getNodeStats(minLevelNode).level;
-        if (currentLevel >= targetLevel) break;
+            let currentLevel = ns.hacknet.getNodeStats(minLevelNode).level;
+            if (currentLevel >= targetLevel) break;
 
-        if (!ns.hacknet.upgradeLevel(minLevelNode, 1)) break;
-        nodeLevelHeap.updateMinKey();
+            if (!ns.hacknet.upgradeLevel(minLevelNode, 1)) break;
+            nodeLevelHeap.updateMinKey();
 
-        await ns.sleep(1);
-    }
+            await ns.sleep(1);
+        }
 
-    let nodeRamHeap = new Heap(nodes, nodeIndex => ns.hacknet.getNodeStats(nodeIndex).ram);
-    while (ns.getServerMoneyAvailable('home') > reserveMoney) {
-        let minRamNode = nodeRamHeap.min();
+        let nodeRamHeap = new Heap(nodes, nodeIndex => ns.hacknet.getNodeStats(nodeIndex).ram);
+        while (ns.getServerMoneyAvailable('home') > reserveMoney) {
+            let minRamNode = nodeRamHeap.min();
 
-        let currentRam = ns.hacknet.getNodeStats(minRamNode).ram;
-        if (currentRam >= targetRam) break;
+            let currentRam = ns.hacknet.getNodeStats(minRamNode).ram;
+            if (currentRam >= targetRam) break;
 
-        if (!ns.hacknet.upgradeRam(minRamNode, 1)) break;
-        nodeRamHeap.updateMinKey();
+            if (!ns.hacknet.upgradeRam(minRamNode, 1)) break;
+            nodeRamHeap.updateMinKey();
 
-        await ns.sleep(1);
-    }
+            await ns.sleep(1);
+        }
 
-    let nodeCoreHeap = new Heap(nodes, nodeIndex => ns.hacknet.getNodeStats(nodeIndex).cores);
-    while (ns.getServerMoneyAvailable('home') > reserveMoney) {
-        let minCoreNode = nodeCoreHeap.min();
+        let nodeCoreHeap = new Heap(nodes, nodeIndex => ns.hacknet.getNodeStats(nodeIndex).cores);
+        while (ns.getServerMoneyAvailable('home') > reserveMoney) {
+            let minCoreNode = nodeCoreHeap.min();
 
-        let currentCores = ns.hacknet.getNodeStats(minCoreNode).cores;
-        if (currentCores >= targetCores) break;
+            let currentCores = ns.hacknet.getNodeStats(minCoreNode).cores;
+            if (currentCores >= targetCores) break;
 
-        if (!ns.hacknet.upgradeCore(minCoreNode, 1)) break;
-        nodeCoreHeap.updateMinKey();
+            if (!ns.hacknet.upgradeCore(minCoreNode, 1)) break;
+            nodeCoreHeap.updateMinKey();
 
-        await ns.sleep(1);
+            await ns.sleep(1);
+        }
     }
 
     const maxNodes = ns.hacknet.maxNumNodes();
