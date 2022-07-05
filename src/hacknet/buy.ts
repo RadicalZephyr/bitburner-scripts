@@ -1,4 +1,4 @@
-import type { NodeStats, NS } from "netscript";
+import type { NS } from "netscript";
 
 export async function main(ns: NS) {
     const options = ns.flags([
