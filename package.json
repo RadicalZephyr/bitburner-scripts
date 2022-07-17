@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "description": "My awesome scripts for automating Bitburner",
   "scripts": {
-    "ship-it": "tsc -p . && bitburner-rsync dist",
+    "clean": "find dist/ -type f -name '*.js' -print0 | xargs -0 rm -f --",
+    "ship-it": "npm run clean ; tsc -p . && bitburner-rsync dist",
     "build": "tsc",
     "watch": "while true ; do find src/ -type f | entr -d npm run ship-it ; done"
   },
