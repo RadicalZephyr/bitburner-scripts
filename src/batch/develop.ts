@@ -26,8 +26,6 @@ export async function main(ns: NS) {
     const target = flags._[0];
     ns.run("monitor.js", 1, target);
 
-    const targetSpecs = analyzeSoftenTarget(ns, target);
-
     let network = walkNetworkBFS(ns);
     let allHosts = Array.from(network.keys());
     let hosts = usableHosts(ns, allHosts);
@@ -37,27 +35,4 @@ export async function main(ns: NS) {
         getRootAccess(ns, host);
         await ns.scp(scriptList, host);
     }
-
-}
-
-type WeakenInstance = {
-    host: string,
-    pid: number,
-    threads: number,
-};
-
-type TargetSpec = {
-    host: string,
-    threads: number,
-    time: number,
-};
-
-function analyzeSoftenTarget(ns: NS, target: string): TargetSpec {
-    const threads = weakenAnalyze(ns, target, 1.0);
-    const time = ns.getWeakenTime(target);
-    return {
-        'host': target,
-        'threads': threads,
-        'time': time
-    };
 }
