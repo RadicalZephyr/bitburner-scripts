@@ -13,8 +13,14 @@ export function validTarget(ns: NS, node: any) {
 export function numThreads(ns: NS, node: string, hackScript: string, percentage?: number): number {
     percentage = percentage ? percentage : 1.0;
     let hackScriptRam = ns.getScriptRam(hackScript);
-    let availableNodeRam = ns.getServerMaxRam(node) - ns.getServerUsedRam(node);
+    let availableNodeRam = availableRam(ns, node);
     return Math.floor(availableNodeRam * percentage / hackScriptRam);
+}
+
+/** Determine total amount of RAM available for running scripts.
+ */
+function availableRam(ns: NS, node: string): number {
+    return ns.getServerMaxRam(node) - ns.getServerUsedRam(node);
 }
 
 /** Print the cost breakdown of a server tier with `ram` memory.
@@ -139,6 +145,15 @@ export function exploitableHosts(ns: NS, hosts: string[]): string[] {
  */
 function hasMoney(ns: NS, host: string): boolean {
     return ns.getServerMaxMoney(host) > 0;
+}
+
+/**
+ *
+ */
+export function availableHosts(ns: NS, hosts: string[]): string[] {
+    return hosts.filter((host) => {
+        return availableRam(ns, host) > 0;
+    });
 }
 
 /** Filter hosts by whether they can run scripts.
