@@ -203,6 +203,24 @@ export function weakenThreads(weakenAmount: number): number {
 }
 
 /*****************************************
+ * Iterator Utilities
+ *****************************************/
+
+type Partition<T> = [isTrue: T[], isFalse: T[]];
+
+export function partition<T>(arr: T[], pred: ((t: T) => boolean)): Partition<T> {
+    let part: Partition<T> = [[], []];
+    return arr.reduce((part, t) => {
+        if (pred(t)) {
+            part[0].push(t);
+        } else {
+            part[1].push(t);
+        }
+        return part;
+    }, part);
+}
+
+/*****************************************
  * Heap Implementation
  *****************************************/
 type Entry<T> = {
