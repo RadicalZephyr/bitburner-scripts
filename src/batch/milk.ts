@@ -21,14 +21,15 @@ export async function main(ns: NS) {
     const targetSpecs = targets.map(t => analyzeMilkTarget(ns, t));
 }
 
-type TargetSpec = {
+type HackSpec = {
+    host: string,
     hackThreads: number,
     postHackWeakenThreads: number,
     growthThreads: number,
     postGrowthWeakenThreads: number,
 };
 
-function analyzeMilkTarget(ns: NS, target: string): TargetSpec {
+function analyzeMilkTarget(ns: NS, target: string): HackSpec {
     // TODO: In terms of 100% server money, we need to calculate how much to
     // hack, preferably a small enough amount that we can easily grow back to
     // that amount with a reasonable number of threads.
@@ -42,6 +43,7 @@ function analyzeMilkTarget(ns: NS, target: string): TargetSpec {
     const postGrowthWeakenThreads = weakenThreads(growthSecurityIncrease);
 
     return {
+        'host': target,
         'hackThreads': hackThreads,
         'postHackWeakenThreads': postHackWeakenThreads,
         'growthThreads': growthThreads,

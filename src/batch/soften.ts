@@ -104,13 +104,13 @@ type WeakenInstance = {
     threads: number,
 };
 
-type TargetSpec = {
+type WeakenSpec = {
     host: string,
     threads: number,
     time: number,
 };
 
-function analyzeSoftenTarget(ns: NS, target: string): TargetSpec {
+function analyzeSoftenTarget(ns: NS, target: string): WeakenSpec {
     const threads = weakenAnalyze(ns, target, 1.0);
     const time = ns.getWeakenTime(target);
     return {
@@ -120,4 +120,4 @@ function analyzeSoftenTarget(ns: NS, target: string): TargetSpec {
     };
 }
 
-const byTime = (a: TargetSpec, b: TargetSpec) => a.time - b.time;
+const byTime = (a: WeakenSpec, b: WeakenSpec) => a.time - b.time;

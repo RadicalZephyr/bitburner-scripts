@@ -21,12 +21,13 @@ export async function main(ns: NS) {
     const targetSpecs = targets.map(t => analyzeBuildTarget(ns, t));
 }
 
-type TargetSpec = {
+type GrowSpec = {
+    host: string,
     initialGrowthThreads: number,
     postGrowthWeakenThreads: number,
 };
 
-function analyzeBuildTarget(ns: NS, target: string): TargetSpec {
+function analyzeBuildTarget(ns: NS, target: string): GrowSpec {
     const maxMoney = ns.getServerMaxMoney(target);
     const currentMoney = ns.getServerMoneyAvailable(target);
     const neededGrowthRatio = maxMoney / currentMoney;
@@ -36,6 +37,7 @@ function analyzeBuildTarget(ns: NS, target: string): TargetSpec {
     const postGrowthWeakenThreads = weakenThreads(initialGrowthSecurity);
 
     return {
+        'host': target,
         'initialGrowthThreads': initialGrowthThreads,
         'postGrowthWeakenThreads': postGrowthWeakenThreads,
     };
