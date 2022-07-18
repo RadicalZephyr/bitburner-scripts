@@ -24,7 +24,7 @@ export async function main(ns) {
     ns.clearLog(server);
     ns.print(`${server}:
  $_______: ${ns.nFormat(money, "$0.000a")} / ${ns.nFormat(maxMoney, "$0.000a")} (${(money / maxMoney * 100).toFixed(2)}%)
- security: +${(sec - minSec).toFixed(2)}
+ security: +${(sec - minSec).toFixed(2)} (${sec.toFixed(2)} / ${minSec.toFixed(2)})
  hack____: ${ns.tFormat(ns.getHackTime(server))} (t=${Math.ceil(ns.hackAnalyzeThreads(server, money))})
  grow____: ${ns.tFormat(ns.getGrowTime(server))} (t=${Math.ceil(ns.growthAnalyze(server, maxMoney / money))})
  weaken__: ${ns.tFormat(ns.getWeakenTime(server))} (t=${Math.ceil((sec - minSec) * 20)})
