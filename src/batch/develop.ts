@@ -11,9 +11,11 @@ export function autocomplete(data: AutocompleteData, args: string[]): string[] {
     return data.servers;
 }
 
+const growScript = '/batch/grow.js';
+const hackScript = '/batch/hack.js';
 const weakenScript = '/batch/weaken.js';
 
-const scriptList = [weakenScript];
+const scriptList = [growScript, hackScript, weakenScript];
 
 export async function main(ns: NS) {
     const flags = ns.flags([
