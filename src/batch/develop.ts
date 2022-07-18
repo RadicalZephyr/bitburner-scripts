@@ -17,13 +17,17 @@ const scriptList = [weakenScript];
 
 export async function main(ns: NS) {
     const flags = ns.flags([
+        ['refreshrate', 200],
         ['help', false],
     ]);
     if (flags.help) {
-        ns.tprint("This script prepares a server for batch hacking and then starts continuous batch hacking rounds against it.");
-        ns.tprint(`USAGE: run ${ns.getScriptName()} SERVER_NAME`);
-        ns.tprint("Example:");
-        ns.tprint(`> run ${ns.getScriptName()} n00dles`);
+        ns.tprint(`USAGE: run ${ns.getScriptName()} SERVER_NAME
+
+This script prepares a server for batch hacking and then starts continuous batch hacking rounds against it.
+
+OPTIONS
+ --refreshrate   Time to sleep between cycles of work assignment
+`);
         return;
     }
 
@@ -48,6 +52,8 @@ export async function main(ns: NS) {
         // Filter list of targets
         prepTargets = newNonMilkTargets;
         milkTargets.push(...newMilkTargets);
+
+        await ns.sleep(flags.refreshrate);
     }
 }
 
