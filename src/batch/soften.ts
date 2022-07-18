@@ -104,13 +104,13 @@ type WeakenInstance = {
     threads: number,
 };
 
-type WeakenSpec = {
+export type WeakenSpec = {
     host: string,
     threads: number,
     time: number,
 };
 
-function analyzeSoftenTarget(ns: NS, target: string): WeakenSpec {
+export function analyzeSoftenTarget(ns: NS, target: string): WeakenSpec {
     const threads = weakenAnalyze(ns, target, 1.0);
     const time = ns.getWeakenTime(target);
     return {
