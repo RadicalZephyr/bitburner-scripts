@@ -1,23 +1,26 @@
-import type { NS } from "netscript";
+import type { NS, AutocompleteData } from "netscript";
 
-import { numThreads, weakenAnalyze } from '../lib';
+import { availableHosts, numThreads, usableHosts, weakenAnalyze } from '../lib';
+import { walkNetworkBFS } from "../walk-network.js";
 
 const weakenScript = '/batch/weaken.js';
 
-export async function main(ns: NS) {
-    const hostsJSON = ns.args[0];
-    if (typeof hostsJSON != 'string') {
-        ns.printf('invalid hosts list');
-        return;
-    }
-    const hosts: string[] = JSON.parse(hostsJSON);
+export function autocomplete(data: AutocompleteData, args: string[]): string[] {
+    return data.servers;
+}
 
-    const targetsJSON = ns.args[1];
-    if (typeof targetsJSON != 'string') {
-        ns.printf('invalid targets list');
+export async function main(ns: NS) {
+    const target = ns.args[0];
+    if (typeof target != 'string' || ns.serverExists(target)) {
+        ns.printf('invalid target');
         return;
     }
-    const targets: string[] = JSON.parse(targetsJSON);
+
+    let network = walkNetworkBFS(ns);
+    let allHosts = Array.from(network.keys());
+
+    const hosts = availableHosts(ns, usableHosts(ns, allHosts));
+
 }
 
 export type WeakenInstance = {
