@@ -174,7 +174,11 @@ function hasRam(ns: NS, host: string): boolean {
  * certain multiplier.
  */
 export function growthAnalyze(ns: NS, target: string, growthAmount: number): number {
-    return Math.ceil(ns.growthAnalyze(target, growthAmount, 1));
+    if (growthAmount >= 1) {
+        return Math.ceil(ns.growthAnalyze(target, growthAmount, 1));
+    } else {
+        return 0;
+    }
 }
 
 /** Calculate the number of threads needed to hack the server for a
