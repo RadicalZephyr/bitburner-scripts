@@ -1,6 +1,6 @@
 import type { NS, AutocompleteData } from "netscript";
 
-import { numThreads, weakenAnalyze } from '../lib';
+import { numThreads, singleTargetBatchOptions, weakenAnalyze } from '../lib';
 
 const weakenScript = '/batch/weaken.js';
 
@@ -9,20 +9,11 @@ export function autocomplete(data: AutocompleteData, args: string[]): string[] {
 }
 
 export async function main(ns: NS) {
+    const [host, target] = singleTargetBatchOptions(ns);
+
     const delay = 0;
 
-    const host = ns.args[0];
-    if (typeof host != 'string' || !ns.serverExists(host)) {
-        ns.tprintf('invalid host');
-        return;
-    }
     let maxHostThreads = numThreads(ns, host, weakenScript);
-
-    const target = ns.args[1];
-    if (typeof target != 'string' || !ns.serverExists(target)) {
-        ns.tprintf('invalid target');
-        return;
-    }
     const targetSpec = analyzeSoftenTarget(ns, target);
 
     const runThreads = Math.min(maxHostThreads, targetSpec.threads);

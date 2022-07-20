@@ -220,6 +220,30 @@ export function partition<T>(arr: T[], pred: ((t: T) => boolean)): Partition<T> 
     }, part);
 }
 
+type BatchOptions = [
+    host: string,
+    target: string,
+];
+
+export function singleTargetBatchOptions(ns: NS): BatchOptions {
+    const host = ns.args[0];
+    if (typeof host != 'string' || !ns.serverExists(host)) {
+        ns.tprintf('invalid host');
+        return;
+    }
+
+    const target = ns.args[1];
+    if (typeof target != 'string' || !ns.serverExists(target)) {
+        ns.tprintf('invalid target');
+        return;
+    }
+
+    return [
+        host,
+        target
+    ];
+}
+
 /*****************************************
  * Heap Implementation
  *****************************************/
