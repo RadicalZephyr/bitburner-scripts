@@ -6,7 +6,7 @@
     "clean": "find dist -depth ! -name 'dist' ! -name .gitkeep -delete",
     "ship-it": "npm run clean ; tsc -p . && bitburner-rsync dist",
     "build": "tsc",
-    "watch": "while true ; do find src/ -type f | entr -d npm run ship-it ; done"
+    "watch": "while true ; do find src/ | entr -d npm run ship-it ; done"
   },
   "repository": {
     "type": "git",
