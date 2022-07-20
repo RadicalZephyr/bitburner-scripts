@@ -67,7 +67,7 @@ export type GrowSpec = {
 export function analyzeBuildTarget(ns: NS, target: string): GrowSpec {
     const maxMoney = ns.getServerMaxMoney(target);
     const currentMoney = ns.getServerMoneyAvailable(target);
-    const neededGrowthRatio = maxMoney / currentMoney;
+    const neededGrowthRatio = currentMoney > 0 ? maxMoney / currentMoney : maxMoney;
     const initialGrowthThreads = growthAnalyze(ns, target, neededGrowthRatio);
     const initialGrowthSecurity = ns.growthAnalyzeSecurity(initialGrowthThreads, target, 1);
 

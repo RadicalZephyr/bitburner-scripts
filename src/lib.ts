@@ -233,13 +233,15 @@ export function singleTargetBatchOptions(ns: NS): BatchOptions {
     const host = ns.args[0];
     if (typeof host != 'string' || !ns.serverExists(host)) {
         ns.tprintf('invalid host');
-        return;
+        ns.exit();
+        return ['', ''];
     }
 
     const target = ns.args[1];
     if (typeof target != 'string' || !ns.serverExists(target)) {
         ns.tprintf('invalid target');
-        return;
+        ns.exit();
+        return ['', ''];
     }
 
     return [
