@@ -1,6 +1,6 @@
 import type { NS, AutocompleteData } from "netscript";
 
-import { growthAnalyze, numThreads, singleTargetBatchOptions, weakenThreads } from '../lib.js';
+import { growAnalyze, numThreads, singleTargetBatchOptions, weakenThreads } from '../lib.js';
 
 const minimumTimeDelta = 20;
 
@@ -21,11 +21,11 @@ export async function main(ns: NS) {
     const targetSpec = analyzeBuildTarget(ns, target);
 
     const growTime = targetSpec.growTime;
-    const growThreads = targetSpec.initialGrowthThreads;
+    const growThreads = targetSpec.initialGrowThreads;
     // Calculate weaken time shifted to not include the minimum time
     // delta it needs to end after grow does.
     const weakenTime = targetSpec.weakenTime - minimumTimeDelta;
-    const weakenThreads = targetSpec.postGrowthWeakenThreads;
+    const weakenThreads = targetSpec.postGrowWeakenThreads;
     const totalThreads = growThreads + weakenThreads
 
     if (maxHostThreads > totalThreads && totalThreads > 0) {
@@ -59,19 +59,20 @@ trying to run ${growThreads} grow threads and ${weakenThreads} weaken threads
 export type GrowSpec = {
     host: string,
     growTime: number,
-    initialGrowthThreads: number,
+    initialGrowThreads: number,
     weakenTime: number,
-    postGrowthWeakenThreads: number,
+    postGrowWeakenThreads: number,
 };
 
 export function analyzeBuildTarget(ns: NS, target: string): GrowSpec {
     const maxMoney = ns.getServerMaxMoney(target);
     const currentMoney = ns.getServerMoneyAvailable(target);
-    const neededGrowthRatio = currentMoney > 0 ? maxMoney / currentMoney : maxMoney;
-    const initialGrowthThreads = growthAnalyze(ns, target, neededGrowthRatio);
-    const initialGrowthSecurity = ns.growthAnalyzeSecurity(initialGrowthThreads, target, 1);
 
-    const postGrowthWeakenThreads = weakenThreads(initialGrowthSecurity);
+    const neededGrowRatio = currentMoney > 0 ? maxMoney / currentMoney : maxMoney;
+
+    const initialGrowThreads = growAnalyze(ns, target, neededGrowRatio);
+    const initialGrowSecurity = ns.growthAnalyzeSecurity(initialGrowThreads, target, 1);
+    const postGrowWeakenThreads = weakenThreads(initialGrowSecurity);
 
     const growTime = ns.getGrowTime(target);
     const weakenTime = ns.getWeakenTime(target);
@@ -79,8 +80,8 @@ export function analyzeBuildTarget(ns: NS, target: string): GrowSpec {
     return {
         'host': target,
         'growTime': growTime,
-        'initialGrowthThreads': initialGrowthThreads,
+        'initialGrowThreads': initialGrowThreads,
         'weakenTime': weakenTime,
-        'postGrowthWeakenThreads': postGrowthWeakenThreads,
+        'postGrowWeakenThreads': postGrowWeakenThreads,
     };
 }

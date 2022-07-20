@@ -173,7 +173,7 @@ function hasRam(ns: NS, host: string): boolean {
 /** Calculate the number of threads needed to grow the server by a
  * certain multiplier.
  */
-export function growthAnalyze(ns: NS, target: string, growthAmount: number): number {
+export function growAnalyze(ns: NS, target: string, growthAmount: number): number {
     if (growthAmount >= 1) {
         return Math.ceil(ns.growthAnalyze(target, growthAmount, 1));
     } else {
