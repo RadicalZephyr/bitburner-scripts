@@ -32,7 +32,7 @@ export function analyzeBuildTarget(ns: NS, target: string): GrowSpec {
     const currentMoney = ns.getServerMoneyAvailable(target);
     const neededGrowthRatio = maxMoney / currentMoney;
     const initialGrowthThreads = growthAnalyze(ns, target, neededGrowthRatio);
-    const initialGrowthSecurity = ns.growthAnalyzeSecurity(initialGrowthThreads, target);
+    const initialGrowthSecurity = ns.growthAnalyzeSecurity(initialGrowthThreads, target, 1);
 
     const postGrowthWeakenThreads = weakenThreads(initialGrowthSecurity);
 
