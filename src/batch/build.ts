@@ -1,24 +1,50 @@
-import type { NS } from "netscript";
+import type { NS, AutocompleteData } from "netscript";
 
-import { growthAnalyze, weakenThreads } from '../lib.js';
+import { growthAnalyze, numThreads, singleTargetBatchOptions, weakenThreads } from '../lib.js';
+
+const weakenScript = '/batch/weaken.js';
+const growScript = '/batch/grow.js';
+
+export function autocomplete(data: AutocompleteData, args: string[]): string[] {
+    return data.servers;
+}
 
 export async function main(ns: NS) {
-    const hostsJSON = ns.args[0];
-    if (typeof hostsJSON != 'string') {
-        ns.printf('invalid hosts list');
-        return;
-    }
-    const hosts: string[] = JSON.parse(hostsJSON);
+    const [host, target] = singleTargetBatchOptions(ns);
 
-    const targetsJSON = ns.args[1];
-    if (typeof targetsJSON != 'string') {
-        ns.printf('invalid targets list');
-        return;
-    }
-    const targets: string[] = JSON.parse(targetsJSON);
+    const delay = 0;
 
-    // Calculate growth and weaken details for all targets
-    const targetSpecs = targets.map(t => analyzeBuildTarget(ns, t));
+    ns.kill('monitor.js', target);
+    ns.run('monitor.js', 1, target);
+
+    let maxHostThreads = numThreads(ns, host, growScript);
+    const targetSpec = analyzeBuildTarget(ns, target);
+
+    const growThreads = targetSpec.initialGrowthThreads;
+    const weakenThreads = targetSpec.postGrowthWeakenThreads;
+    const totalThreads = growThreads + weakenThreads
+    if (maxHostThreads > totalThreads && totalThreads > 0) {
+        ns.tprint(`building ${target} with ${growThreads} grow threads and ${weakenThreads} weaken threads on ${host}`);
+        if (growThreads > 0) {
+            ns.exec(weakenScript, host, weakenThreads, target, delay);
+        }
+        if (weakenThreads > 0) {
+            ns.exec(growScript, host, growThreads, target, delay);
+        }
+    } else {
+        ns.tprint(`
+not enough threads to run build on ${host}
+trying to run ${growThreads} grow threads and ${weakenThreads} weaken threads
+`);
+        await ns.sleep(100);
+        ns.kill('monitor.js', target);
+        if (maxHostThreads < 1) {
+            ns.tprint(`not enough RAM available to run grow and weaken on ${host}`);
+        }
+        if (growThreads < 1 || weakenThreads < 1) {
+            ns.tprint(`${target} does not need to be built`);
+        }
+    }
 }
 
 export type GrowSpec = {
