@@ -254,6 +254,66 @@ export function singleTargetBatchOptions(ns: NS): BatchOptions {
     ];
 }
 
+export type BatchScript = "/batch/grow.js" | "/batch/hack.js" | "/batch/weaken.js";
+
+export class BatchInstance {
+    pid: number;
+    script: BatchScript;
+    host: string;
+    threads: number;
+    target: string;
+    delay: number;
+
+    constructor(
+        pid: number,
+        script: BatchScript,
+        host: string,
+        threads: number,
+        target: string,
+        delay: number,
+    ) {
+        this.pid = pid;
+        this.script = script;
+        this.host = host;
+        this.threads = threads;
+        this.target = target;
+        this.delay = delay;
+    }
+};
+
+export class BatchSpec {
+    script: BatchScript;
+    host: string;
+    threads: number;
+    target: string;
+    delay: number;
+
+    constructor(
+        script: BatchScript,
+        host: string,
+        threads: number,
+        target: string,
+        delay: number,
+    ) {
+        this.script = script;
+        this.host = host;
+        this.threads = threads;
+        this.target = target;
+        this.delay = delay;
+    }
+
+    exec(ns: NS): BatchInstance {
+        if (this.threads >= 1) {
+            const pid = ns.exec(this.script, this.host, this.threads, this.target, this.delay);
+
+            if (pid == 0) return null;
+
+            return new BatchInstance(pid, this.script, this.host, this.threads, this.target, this.delay);
+        }
+        return null;
+    }
+};
+
 /*****************************************
  * Heap Implementation
  *****************************************/
