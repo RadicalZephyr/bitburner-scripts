@@ -229,6 +229,10 @@ type BatchOptions = [
     target: string,
 ];
 
+/*****************************************
+ * Batch hacking utilities
+ *****************************************/
+
 export function singleTargetBatchOptions(ns: NS): BatchOptions {
     const host = ns.args[0];
     if (typeof host != 'string' || !ns.serverExists(host)) {
