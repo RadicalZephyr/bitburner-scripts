@@ -14,19 +14,20 @@ export async function main(ns: NS) {
     const delay = 0;
 
     let maxHostThreads = numThreads(ns, host, weakenScript);
-    const targetSpec = analyzeSoftenTarget(ns, target);
 
-    const runThreads = Math.min(maxHostThreads, targetSpec.threads);
+    const threads = weakenAnalyze(ns, target, 1.0);
 
-    if (runThreads > 0) {
-        ns.tprint(`softening ${target} with ${runThreads} threads on ${host}`);
-        ns.exec(weakenScript, host, runThreads, target, delay);
+    if (maxHostThreads > 0 && maxHostThreads > threads) {
+        ns.tprint(`softening ${target} with ${threads} threads on ${host}`);
+        if (threads > 0) {
+            ns.exec(weakenScript, host, threads, target, delay);
+        }
     } else {
         if (maxHostThreads < 1) {
             ns.tprint(`not enough RAM available to run weaken on ${host}`);
         }
 
-        if (targetSpec.threads < 1) {
+        if (threads < 1) {
             ns.tprint(`${target} does not need to be weakened`);
         }
     }
