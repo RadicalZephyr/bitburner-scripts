@@ -85,18 +85,27 @@ milking ${target} from ${host}:
         const growStartTime = growEndTime - growTime;
         const hackStartTime = hackEndTime - hackTime;
 
-        if (postHackWeakenThreads > 0) {
-            ns.exec(weakenScript, host, postHackWeakenThreads, target, postHackWeakenStartTime);
-        }
-        if (postGrowWeakenThreads > 0) {
-            ns.exec(weakenScript, host, postGrowWeakenThreads, target, postGrowWeakenStartTime);
-        }
-        if (growThreads > 0) {
-            ns.exec(growScript, host, growThreads, target, growStartTime);
-        }
-        if (hackThreads > 0) {
-            ns.exec(hackScript, host, hackThreads, target, hackStartTime);
-        }
+        let script, threads, startTime;
+
+        script = weakenScript;
+        threads = postHackWeakenThreads;
+        startTime = postHackWeakenStartTime;
+        spawnBatchScript(ns, { script, threads, host, target, startTime });
+
+        script = weakenScript;
+        threads = postGrowWeakenThreads;
+        startTime = postGrowWeakenStartTime;
+        spawnBatchScript(ns, { script, threads, host, target, startTime });
+
+        script = growScript;
+        threads = growThreads;
+        startTime = growStartTime;
+        spawnBatchScript(ns, { script, threads, host, target, startTime });
+
+        script = hackScript;
+        threads = hackThreads;
+        startTime = hackStartTime;
+        spawnBatchScript(ns, { script, threads, host, target, startTime });
     } else {
         ns.tprint(`
 not enough threads to run milk on ${host}
@@ -106,5 +115,20 @@ trying to run:
   ${growThreads} grow threads
   ${postGrowWeakenThreads} post-grow weaken threads
 `);
+    }
+}
+
+type BatchScriptInstance = {
+    script: string;
+    threads: number;
+    host: string;
+    target: string;
+    startTime: number;
+};
+
+function spawnBatchScript(ns: NS, scriptInstance: BatchScriptInstance) {
+    const { script, threads, host, target, startTime } = scriptInstance;
+    if (threads > 0) {
+        ns.exec(script, host, threads, target, startTime);
     }
 }
