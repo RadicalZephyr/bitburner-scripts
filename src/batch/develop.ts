@@ -3,9 +3,9 @@ import type { AutocompleteData, NS } from "netscript";
 import { availableHosts, exploitableHosts, getRootAccess, partition, usableHosts } from '../lib.js';
 import { walkNetworkBFS } from "../walk-network.js";
 
-import { analyzeBuildTarget, GrowSpec } from "./build.js";
-import { analyzeMilkTarget, HackSpec } from "./milk.js";
-import { analyzeSoftenTarget, WeakenSpec } from "./soften.js";
+// import { analyzeBuildTarget, GrowSpec } from "./build.js";
+// import { analyzeMilkTarget, HackSpec } from "./milk.js";
+// import { analyzeSoftenTarget, WeakenSpec } from "./soften.js";
 
 export function autocomplete(data: AutocompleteData, args: string[]): string[] {
     return data.servers;
@@ -59,19 +59,19 @@ OPTIONS
     }
 }
 
-type TargetSpec = GrowSpec | HackSpec | WeakenSpec;
+// type TargetSpec = GrowSpec | HackSpec | WeakenSpec;
 
-function analyzeTargetPhase(ns: NS, target: string): TargetSpec {
-    if (inMilkPhase(ns, target)) {
-        return analyzeMilkTarget(ns, target);
-    } else if (inBuildPhase(ns, target)) {
-        return analyzeBuildTarget(ns, target);
-    } else if (inSoftenPhase(ns, target)) {
-        return analyzeSoftenTarget(ns, target);
-    } else {
-        ns.print('unable to classify phase for %s', target);
-    }
-}
+// function analyzeTargetPhase(ns: NS, target: string): TargetSpec {
+//     if (inMilkPhase(ns, target)) {
+//         return analyzeMilkTarget(ns, target);
+//     } else if (inBuildPhase(ns, target)) {
+//         return analyzeBuildTarget(ns, target);
+//     } else if (inSoftenPhase(ns, target)) {
+//         return analyzeSoftenTarget(ns, target);
+//     } else {
+//         ns.print('unable to classify phase for %s', target);
+//     }
+// }
 
 function inBuildPhase(ns: NS, host: string): boolean {
     return isSecurityMinimum(ns, host) && !isMoneyMaximum(ns, host);
