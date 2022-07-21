@@ -22,17 +22,21 @@ export async function main(ns: NS) {
 
     const growTime = targetSpec.growTime;
     const growThreads = targetSpec.initialGrowThreads;
-    // Calculate weaken time shifted to not include the minimum time
-    // delta it needs to end after grow does.
-    const weakenTime = targetSpec.weakenTime - minimumTimeDelta;
+
+    const weakenTime = targetSpec.weakenTime;
     const weakenThreads = targetSpec.postGrowWeakenThreads;
+
     const totalThreads = growThreads + weakenThreads
+
+    // Calculate weaken end time shifted to not include the minimum
+    // time delta it needs to end after grow does.
+    const weakenEndTime = weakenTime - minimumTimeDelta;
 
     if (maxHostThreads > totalThreads && totalThreads > 0) {
         ns.tprint(`building ${target} with ${growThreads} grow threads and ${weakenThreads} weaken threads on ${host}`);
 
-        const growDelay = weakenTime > growTime ? weakenTime - growTime : 0;
-        const weakenDelay = growTime > weakenTime ? growTime - weakenTime : 0;
+        const growDelay = weakenEndTime > growTime ? weakenEndTime - growTime : 0;
+        const weakenDelay = growTime > weakenEndTime ? growTime - weakenEndTime : 0;
 
         if (growThreads > 0) {
             ns.exec(growScript, host, growThreads, target, growDelay);
