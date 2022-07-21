@@ -19,16 +19,38 @@ export async function main(ns: NS) {
     ns.run('monitor.js', 1, target);
 
     let maxHostThreads = numThreads(ns, host, growScript);
-    const targetSpec = analyzeMilkTarget(ns, target);
 
-    const growTime = targetSpec.growTime;
-    const hackTime = targetSpec.hackTime;
-    const weakenTime = targetSpec.weakenTime;
+    // TODO: In terms of 100% server money, we need to calculate how much to
+    // hack, preferably a small enough amount that we can easily grow back to
+    // that amount with a reasonable number of threads.
+    const hackTime = ns.getHackTime(target);
+    const hackThreads = 100; // for now, we go with a single hack thread
 
-    const hackThreads = targetSpec.hackThreads;
-    const postHackWeakenThreads = targetSpec.postHackWeakenThreads;
-    const growThreads = targetSpec.growThreads;
-    const postGrowWeakenThreads = targetSpec.postGrowWeakenThreads;
+    const hackSecurityIncrease = ns.hackAnalyzeSecurity(hackThreads, target);
+    const postHackWeakenThreads = weakenThreads(hackSecurityIncrease);
+
+    const hackShrinkage = ns.hackAnalyze(target) * hackThreads;
+    const neededGrowthRatio = 1 / (1 - hackShrinkage);
+    ns.print(`hack shrinkage: ${hackShrinkage}`);
+    ns.print(`needed recovery growth: ${neededGrowthRatio}`);
+
+    const growTime = ns.getGrowTime(target);
+    const growThreads = growAnalyze(ns, target, neededGrowthRatio);
+
+    // N.B. In order to speculatively calculate how much security will
+    // increase, we must _not_ specify the target server. Doing so
+    // will cap the projected security growth by the amount of grow
+    // threads needed to grow the specified server to max money, and
+    // currently we know that server is at max money alread, thus
+    // security growth will be reported as zero.
+    const growSecurityIncrease = ns.growthAnalyzeSecurity(growThreads);
+
+    const weakenTime = ns.getWeakenTime(target);
+    const postGrowWeakenThreads = weakenThreads(growSecurityIncrease);
+
+    ns.print(`grow threads: ${growThreads}\n`);
+    ns.print(`grow security increase: ${growSecurityIncrease}\n`);
+    ns.print(`post grow weaken threads: ${postGrowWeakenThreads}`);
 
     const totalThreads = hackThreads + postHackWeakenThreads + growThreads + postGrowWeakenThreads;
 
@@ -85,60 +107,4 @@ trying to run:
   ${postGrowWeakenThreads} post-grow weaken threads
 `);
     }
-}
-
-export type HackSpec = {
-    host: string,
-    growTime: number,
-    hackTime: number,
-    weakenTime: number,
-    hackThreads: number,
-    postHackWeakenThreads: number,
-    growThreads: number,
-    postGrowWeakenThreads: number,
-};
-
-export function analyzeMilkTarget(ns: NS, target: string): HackSpec {
-    // TODO: In terms of 100% server money, we need to calculate how much to
-    // hack, preferably a small enough amount that we can easily grow back to
-    // that amount with a reasonable number of threads.
-    const hackTime = ns.getHackTime(target);
-    const hackThreads = 100; // for now, we go with a single hack thread
-
-    const hackSecurityIncrease = ns.hackAnalyzeSecurity(hackThreads, target);
-    const postHackWeakenThreads = weakenThreads(hackSecurityIncrease);
-
-    const hackShrinkage = ns.hackAnalyze(target) * hackThreads;
-    const neededGrowthRatio = 1 / (1 - hackShrinkage);
-    ns.print(`hack shrinkage: ${hackShrinkage}`);
-    ns.print(`needed recovery growth: ${neededGrowthRatio}`);
-
-    const growTime = ns.getGrowTime(target);
-    const growThreads = growAnalyze(ns, target, neededGrowthRatio);
-
-    // N.B. In order to speculatively calculate how much security will
-    // increase, we must _not_ specify the target server. Doing so
-    // will cap the projected security growth by the amount of grow
-    // threads needed to grow the specified server to max money, and
-    // currently we know that server is at max money alread, thus
-    // security growth will be reported as zero.
-    const growSecurityIncrease = ns.growthAnalyzeSecurity(growThreads);
-
-    const weakenTime = ns.getWeakenTime(target);
-    const postGrowWeakenThreads = weakenThreads(growSecurityIncrease);
-
-    ns.print(`grow threads: ${growThreads}\n`);
-    ns.print(`grow security increase: ${growSecurityIncrease}\n`);
-    ns.print(`post grow weaken threads: ${postGrowWeakenThreads}`);
-
-    return {
-        'host': target,
-        'growTime': growTime,
-        'hackTime': hackTime,
-        'weakenTime': weakenTime,
-        'hackThreads': hackThreads,
-        'postHackWeakenThreads': postHackWeakenThreads,
-        'growThreads': growThreads,
-        'postGrowWeakenThreads': postGrowWeakenThreads
-    };
 }
