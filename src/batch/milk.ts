@@ -112,7 +112,13 @@ export function analyzeMilkTarget(ns: NS, target: string): HackSpec {
     ns.print(`needed recovery growth: ${neededGrowthRatio}`);
 
     const growThreads = growAnalyze(ns, target, neededGrowthRatio);
-    const growSecurityIncrease = ns.growthAnalyzeSecurity(growThreads, target, 1);
+    // N.B. In order to speculatively calculate how much security will
+    // increase, we must _not_ specify the target server. Doing so
+    // will cap the projected security growth by the amount of grow
+    // threads needed to grow the specified server to max money, and
+    // currently we know that server is at max money alread, thus
+    // security growth will be reported as zero.
+    const growSecurityIncrease = ns.growthAnalyzeSecurity(growThreads);
     const postGrowWeakenThreads = weakenThreads(growSecurityIncrease);
     ns.print(`grow threads: ${growThreads}\n`);
     ns.print(`grow security increase: ${growSecurityIncrease}\n`);
