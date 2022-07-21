@@ -254,6 +254,22 @@ export function singleTargetBatchOptions(ns: NS): BatchOptions {
     ];
 }
 
+
+export type BatchScriptInstance = {
+    script: string;
+    threads: number;
+    host: string;
+    target: string;
+    startTime: number;
+};
+
+export function spawnBatchScript(ns: NS, scriptInstance: BatchScriptInstance) {
+    const { script, threads, host, target, startTime } = scriptInstance;
+    if (threads > 0) {
+        ns.exec(script, host, threads, target, startTime);
+    }
+}
+
 export type BatchScript = "/batch/grow.js" | "/batch/hack.js" | "/batch/weaken.js";
 
 export class BatchInstance {

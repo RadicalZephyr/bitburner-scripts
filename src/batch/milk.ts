@@ -1,6 +1,6 @@
 import type { NS, AutocompleteData } from "netscript";
 
-import { growAnalyze, numThreads, singleTargetBatchOptions, weakenThreads } from '../lib.js';
+import { growAnalyze, numThreads, singleTargetBatchOptions, spawnBatchScript, weakenThreads } from '../lib.js';
 
 const minimumTimeDelta = 20;
 
@@ -115,20 +115,5 @@ trying to run:
   ${growThreads} grow threads
   ${postGrowWeakenThreads} post-grow weaken threads
 `);
-    }
-}
-
-type BatchScriptInstance = {
-    script: string;
-    threads: number;
-    host: string;
-    target: string;
-    startTime: number;
-};
-
-function spawnBatchScript(ns: NS, scriptInstance: BatchScriptInstance) {
-    const { script, threads, host, target, startTime } = scriptInstance;
-    if (threads > 0) {
-        ns.exec(script, host, threads, target, startTime);
     }
 }
