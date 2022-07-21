@@ -70,9 +70,9 @@ export function analyzeBuildTarget(ns: NS, target: string): GrowSpec {
 
     const neededGrowRatio = currentMoney > 0 ? maxMoney / currentMoney : maxMoney;
 
-    const initialGrowThreads = growAnalyze(ns, target, neededGrowRatio);
-    const initialGrowSecurity = ns.growthAnalyzeSecurity(initialGrowThreads, target, 1);
-    const postGrowWeakenThreads = weakenThreads(initialGrowSecurity);
+    const growThreads = growAnalyze(ns, target, neededGrowRatio);
+    const growSecurityIncrease = ns.growthAnalyzeSecurity(growThreads, target, 1);
+    const postGrowWeakenThreads = weakenThreads(growSecurityIncrease);
 
     const growTime = ns.getGrowTime(target);
     const weakenTime = ns.getWeakenTime(target);
@@ -80,7 +80,7 @@ export function analyzeBuildTarget(ns: NS, target: string): GrowSpec {
     return {
         'host': target,
         'growTime': growTime,
-        'initialGrowThreads': initialGrowThreads,
+        'initialGrowThreads': growThreads,
         'weakenTime': weakenTime,
         'postGrowWeakenThreads': postGrowWeakenThreads,
     };
