@@ -102,7 +102,7 @@ export function analyzeMilkTarget(ns: NS, target: string): HackSpec {
     // TODO: In terms of 100% server money, we need to calculate how much to
     // hack, preferably a small enough amount that we can easily grow back to
     // that amount with a reasonable number of threads.
-    const hackThreads = 500; // for now, we go with a single hack thread
+    const hackThreads = 100; // for now, we go with a single hack thread
     const hackSecurityIncrease = ns.hackAnalyzeSecurity(hackThreads, target);
     const postHackWeakenThreads = weakenThreads(hackSecurityIncrease);
 
