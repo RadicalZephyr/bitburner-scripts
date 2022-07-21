@@ -108,10 +108,15 @@ export function analyzeMilkTarget(ns: NS, target: string): HackSpec {
 
     const hackShrinkage = ns.hackAnalyze(target) * hackThreads;
     const neededGrowthRatio = 1 / (1 - hackShrinkage);
+    ns.print(`hack shrinkage: ${hackShrinkage}`);
+    ns.print(`needed recovery growth: ${neededGrowthRatio}`);
 
     const growThreads = growAnalyze(ns, target, neededGrowthRatio);
     const growSecurityIncrease = ns.growthAnalyzeSecurity(growThreads, target, 1);
     const postGrowWeakenThreads = weakenThreads(growSecurityIncrease);
+    ns.print(`grow threads: ${growThreads}\n`);
+    ns.print(`grow security increase: ${growSecurityIncrease}\n`);
+    ns.print(`post grow weaken threads: ${postGrowWeakenThreads}`);
 
     const growTime = ns.getGrowTime(target);
     const weakenTime = ns.getWeakenTime(target);
