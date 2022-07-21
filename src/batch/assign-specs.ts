@@ -1,11 +1,33 @@
 import type { NS } from "netscript";
 
-import { exploitableHosts, numThreads, usableHosts } from '../lib';
+import { exploitableHosts, numThreads, usableHosts, weakenAnalyze } from '../lib';
 import { walkNetworkBFS } from "../walk-network.js";
 
-import { analyzeSoftenTarget, WeakenInstance, WeakenSpec } from './soften';
+// import { analyzeSoftenTarget, WeakenInstance, WeakenSpec } from './soften';
 
 const weakenScript = '/batch/weaken.js';
+
+export type WeakenInstance = {
+    host: string,
+    pid: number,
+    threads: number,
+};
+
+export type WeakenSpec = {
+    host: string,
+    threads: number,
+    time: number,
+};
+
+export function analyzeSoftenTarget(ns: NS, target: string): WeakenSpec {
+    const threads = weakenAnalyze(ns, target, 1.0);
+    const time = ns.getWeakenTime(target);
+    return {
+        'host': target,
+        'threads': threads,
+        'time': time
+    };
+}
 
 export async function main(ns: NS) {
     let network = walkNetworkBFS(ns);
