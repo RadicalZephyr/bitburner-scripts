@@ -87,7 +87,8 @@ total threads available on ${host}: ${maxHostThreads}
         let totalNeededGrowThreads = growInstance.threads;
 
         growInstance.threads = growThreads * numberOfParallelBatches;
-        weakenInstance.threads = weakenThreads * numberOfParallelBatches;
+        growSecurityIncrease = ns.growthAnalyzeSecurity(growThreads, target, 1);
+        weakenInstance.threads = weakenThreadsFn(growSecurityIncrease);
 
         ns.tprint('actual threads to spawn');
         ns.tprintf('g %s w %s', ...scriptInstances.map(i => i.threads));

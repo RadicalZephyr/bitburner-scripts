@@ -1,6 +1,6 @@
 import type { NS } from "netscript";
 
-import { exploitableHosts, usableHosts } from '../lib.js';
+import { exploitableHosts } from '../lib.js';
 import { walkNetworkBFS } from "../walk-network.js";
 
 export async function main(ns: NS) {
@@ -35,6 +35,7 @@ Example:
 
         // let hosts = usableHosts(ns, allHosts);
         let targets = exploitableHosts(ns, allHosts);
+        targets.sort((a, b) => byHackSkill(ns, a, b));
 
         const maxTargetNameLen = Math.max(...targets.map(t => t.length));
 
@@ -53,6 +54,10 @@ Example:
         }
         await ns.sleep(flags.refreshrate);
     }
+}
+
+function byHackSkill(ns: NS, a: string, b: string): number {
+    return ns.getServerRequiredHackingLevel(a) - ns.getServerRequiredHackingLevel(b);
 }
 
 function targetInfo(ns: NS, host: string): (string | number)[] {
