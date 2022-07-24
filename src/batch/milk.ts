@@ -2,6 +2,7 @@ import type { NS, AutocompleteData } from "netscript";
 
 import {
     growAnalyze,
+    hackToGrowPercent,
     numThreads,
     singleTargetBatchOptions,
     spawnBatchScript,
@@ -57,7 +58,7 @@ export async function main(ns: NS) {
     };
 
     const hackShrinkage = ns.hackAnalyze(target) * hackInstance.threads;
-    const neededGrowthRatio = 1 / (1 - hackShrinkage);
+    const neededGrowthRatio = hackToGrowPercent(hackShrinkage);
     ns.print(`hack shrinkage: ${hackShrinkage}`);
     ns.print(`needed recovery growth: ${neededGrowthRatio}`);
 

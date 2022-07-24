@@ -254,6 +254,13 @@ export function singleTargetBatchOptions(ns: NS): BatchOptions {
     ];
 }
 
+export function hackToGrowPercent(hackPercent: number): number {
+    return 1 / (1 - hackPercent);
+}
+
+export function growToHackPercent(growPercent: number): number {
+    return 1 - (1 / growPercent);
+}
 
 export type BatchScriptInstance = {
     script: string;
