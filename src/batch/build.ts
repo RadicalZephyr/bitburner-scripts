@@ -1,6 +1,6 @@
 import type { NS, AutocompleteData } from "netscript";
 
-import { growAnalyze, numThreads, singleTargetBatchOptions, weakenThreads as weakenThreadsFn } from '../lib.js';
+import { growAnalyze, numThreads, singleTargetBatchOptions, spawnBatchScript, weakenThreads as weakenThreadsFn } from '../lib.js';
 
 const minimumTimeDelta = 20;
 
@@ -44,12 +44,16 @@ export async function main(ns: NS) {
         const growDelay = weakenEndTime > growTime ? weakenEndTime - growTime : 0;
         const weakenDelay = growTime > weakenEndTime ? growTime - weakenEndTime : 0;
 
-        if (growThreads > 0) {
-            ns.exec(growScript, host, growThreads, target, growDelay);
-        }
-        if (weakenThreads > 0) {
-            ns.exec(weakenScript, host, weakenThreads, target, weakenDelay);
-        }
+        let script, threads, startTime;
+        script = growScript;
+        threads = growThreads;
+        startTime = growDelay;
+        spawnBatchScript(ns, { script, threads, host, target, startTime });
+
+        script = weakenScript;
+        threads = weakenThreads;
+        startTime = weakenDelay;
+        spawnBatchScript(ns, { script, threads, host, target, startTime });
     } else {
         ns.tprint(`
 not enough threads to run build on ${host}
