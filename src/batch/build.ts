@@ -1,6 +1,12 @@
 import type { NS, AutocompleteData } from "netscript";
 
-import { growAnalyze, numThreads, singleTargetBatchOptions, spawnBatchScript, weakenThreads as weakenThreadsFn } from '../lib.js';
+import {
+    growAnalyze,
+    numThreads,
+    singleTargetBatchOptions,
+    spawnBatchScript,
+    weakenThreads as weakenThreadsFn
+} from '../lib.js';
 
 const minimumTimeDelta = 50;
 

@@ -1,10 +1,16 @@
 import type { NS, AutocompleteData } from "netscript";
 
-import { growAnalyze, numThreads, singleTargetBatchOptions, spawnBatchScript, weakenThreads } from '../lib.js';
+import {
+    growAnalyze,
+    numThreads,
+    singleTargetBatchOptions,
+    spawnBatchScript,
+    weakenThreads
+} from '../lib.js';
 
 const minimumTimeDelta = 50;
 
-export function autocomplete(data: AutocompleteData, args: string[]): string[] {
+export function autocomplete(data: AutocompleteData, _args: string[]): string[] {
     return data.servers;
 }
 
