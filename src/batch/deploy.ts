@@ -33,7 +33,4 @@ export async function main(ns: NS) {
     for (const target of targets) {
         getRootAccess(ns, target);
     }
-
-    // Start the soften phase
-    ns.run("batch/soften.js", 1, JSON.stringify(hosts), JSON.stringify(fastTargets));
 }
