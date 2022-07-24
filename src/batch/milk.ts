@@ -20,7 +20,7 @@ export async function main(ns: NS) {
 
     let maxHostThreads = numThreads(ns, host, growScript);
 
-    let script, threads, startTime;
+    let script, threads;
 
     // TODO: In terms of 100% server money, we need to calculate how much to
     // hack, preferably a small enough amount that we can easily grow back to
@@ -30,16 +30,14 @@ export async function main(ns: NS) {
 
     script = hackScript;
     threads = hackThreads;
-    startTime = 0;
-    let hackInstance = { script, threads, host, target, startTime };
+    let hackInstance = { script, threads, host, target, startTime: 0 };
 
     const hackSecurityIncrease = ns.hackAnalyzeSecurity(hackThreads, target);
     const postHackWeakenThreads = weakenThreads(hackSecurityIncrease);
 
     script = weakenScript;
     threads = postHackWeakenThreads;
-    startTime = 0;
-    let hackWeakenInstance = { script, threads, host, target, startTime };
+    let hackWeakenInstance = { script, threads, host, target, startTime: 0 };
 
     const hackShrinkage = ns.hackAnalyze(target) * hackThreads;
     const neededGrowthRatio = 1 / (1 - hackShrinkage);
@@ -51,8 +49,7 @@ export async function main(ns: NS) {
 
     script = growScript;
     threads = growThreads;
-    startTime = 0;
-    let growInstance = { script, threads, host, target, startTime };
+    let growInstance = { script, threads, host, target, startTime: 0 };
 
     // N.B. In order to speculatively calculate how much security will
     // increase, we must _not_ specify the target server. Doing so
@@ -67,8 +64,7 @@ export async function main(ns: NS) {
 
     script = weakenScript;
     threads = postGrowWeakenThreads;
-    startTime = 0;
-    let growWeakenInstance = { script, threads, host, target, startTime };
+    let growWeakenInstance = { script, threads, host, target, startTime: 0 };
 
     ns.print(`grow threads: ${growThreads}\n`);
     ns.print(`grow security increase: ${growSecurityIncrease}\n`);
