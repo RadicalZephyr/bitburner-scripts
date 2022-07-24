@@ -1,6 +1,7 @@
 import type { NS, AutocompleteData } from "netscript";
 
 import {
+    BatchScriptInstance,
     growAnalyze,
     hackToGrowPercent,
     minimumTimeDelta,
@@ -18,11 +19,33 @@ export function autocomplete(data: AutocompleteData, _args: string[]): string[] 
 export async function main(ns: NS) {
     const [host, target] = singleTargetBatchOptions(ns);
 
+    const scriptInstances = calculateMilkBatch(ns, host, target);
+
+    const totalThreads = scriptInstances.reduce((sum, i) => sum + i.threads, 0);
+
+    const scriptDescriptions = scriptInstances.map(si => `  ${si.script} -t ${si.threads}`).join('\n');
+    ns.tprint(`
+milking ${target} from ${host}:
+${scriptDescriptions}
+`);
+
+    let maxHostThreads = numThreads(ns, host, '/batch/grow.js');
+
+    if (maxHostThreads > totalThreads && totalThreads > 0) {
+        scriptInstances.forEach(i => spawnBatchScript(ns, i));
+    } else {
+        ns.tprint(`
+not enough threads to run milk on ${host}!
+`);
+    }
+}
+
+function calculateMilkBatch(ns: NS, host: string, target: string): BatchScriptInstance[] {
     let maxHostThreads = numThreads(ns, host, '/batch/grow.js');
 
     // To minimize per-batch thread use but maximize the value
-    // received from that batch, we want to choose the amount we hack
-    // per batch according to the larger of these two amounts:
+    // rcalculateMilkBatchch, we want to choose the amount we hack
+    // per bacalculateMilkBatchlarger of these two amounts:
     //  - proportion hacked by one thread
     //  - proportion grown by one thread
     //
@@ -106,30 +129,5 @@ export async function main(ns: NS) {
 
     setInstanceStartTimes(scriptInstances);
 
-    ns.print(`grow threads: ${growInstance.threads}\n`);
-    ns.print(`grow security increase: ${growSecurityIncrease}\n`);
-    ns.print(`post grow weaken threads: ${growWeakenInstance.threads}`);
-
-    const totalThreads = scriptInstances.reduce((sum, i) => sum + i.threads, 0);
-
-    if (maxHostThreads > totalThreads && totalThreads > 0) {
-        ns.tprint(`
-milking ${target} from ${host}:
-  ${hackInstance.threads} hack threads
-  ${hackWeakenInstance.threads} post-hack weaken threads
-  ${growInstance.threads} grow threads
-  ${growWeakenInstance.threads} post-grow weaken threads
-`);
-
-        scriptInstances.forEach(i => spawnBatchScript(ns, i));
-    } else {
-        ns.tprint(`
-not enough threads to run milk on ${host}
-trying to run:
-  ${hackInstance.threads} hack threads
-  ${hackWeakenInstance.threads} post-hack weaken threads
-  ${growInstance.threads} grow threads
-  ${growWeakenInstance.threads} post-grow weaken threads
-`);
-    }
+    return scriptInstances;
 }
