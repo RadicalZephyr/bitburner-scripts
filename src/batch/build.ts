@@ -46,20 +46,24 @@ export async function main(ns: NS) {
 
     const totalThreads = growThreads + weakenThreads
 
-    // Calculate weaken end time shifted to not include the minimum
-    // time delta it needs to end after grow does.
-    const weakenEndTime = weakenTime - minimumTimeDelta;
-
     if (maxHostThreads > totalThreads && totalThreads > 0) {
         ns.tprint(`building ${target} with ${growThreads} grow threads and ${weakenThreads} weaken threads on ${host}`);
 
-        const growDelay = weakenEndTime > growTime ? weakenEndTime - growTime : 0;
-        const weakenDelay = growTime > weakenEndTime ? growTime - weakenEndTime : 0;
+        const growEndTime = growInstance.startTime + growInstance.runTime;
+        const nextEndTime = growEndTime + minimumTimeDelta;
 
-        growInstance.startTime = growDelay;
+        let weakenStartTime = nextEndTime - weakenInstance.runTime;
+
+        if (weakenStartTime < 0) {
+            const startTimeShift = -weakenStartTime;
+            growInstance.startTime += startTimeShift;
+            weakenInstance.startTime = 0;
+        } else {
+            weakenInstance.startTime = weakenStartTime;
+        }
+
         spawnBatchScript(ns, growInstance);
 
-        weakenInstance.startTime = weakenDelay;
         spawnBatchScript(ns, weakenInstance);
     } else {
         ns.tprint(`
