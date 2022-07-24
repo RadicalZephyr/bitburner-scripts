@@ -264,10 +264,6 @@ export type BatchScriptInstance = {
     runTime: number;
 };
 
-export function endTime(instance: BatchScriptInstance): number {
-    return instance.startTime + instance.runTime;
-}
-
 export function spawnBatchScript(ns: NS, scriptInstance: BatchScriptInstance) {
     const { script, threads, host, target, startTime } = scriptInstance;
     if (threads > 0) {

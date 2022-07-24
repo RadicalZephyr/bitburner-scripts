@@ -1,7 +1,6 @@
 import type { NS, AutocompleteData } from "netscript";
 
 import {
-    endTime,
     growAnalyze,
     numThreads,
     singleTargetBatchOptions,
