@@ -34,3 +34,20 @@ export async function main(ns: NS) {
         getRootAccess(ns, target);
     }
 }
+
+// Notes on how I'm using the single target scripts.
+
+// In general, softening doesn't take very many threads, so we should
+// basically do it as soon as we possibly can for each server.
+
+// Building is harder, and for every server larger than n00dles, we
+// need a _lot_ of RAM to completely build in one batch. This probably
+// means that we should only build one server at a time.
+
+// Minimal milking batches are pretty small, but because of how long
+// it takes to do a weaken (until we get to really high hacking
+// levels), it's hard to fill up an entire round of batches because of
+// how many batches ought to be launched in parallel.
+
+// This again means that until we have a lot of RAM we should settle
+// for longer delays between starting each script in a batch.
