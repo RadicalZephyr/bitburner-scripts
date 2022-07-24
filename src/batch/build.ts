@@ -82,5 +82,22 @@ total threads available on ${host}: ${maxHostThreads}
         growSecurityIncrease = ns.growthAnalyzeSecurity(growThreads, target, 1);
         const postWeakenThreads = weakenThreadsFn(growSecurityIncrease);
         ns.tprintf('g %s w-pre %s w-post %s', growThreads, weakenThreads, postWeakenThreads);
+
+        const totalEfficientBatchThreads = growThreads + weakenThreads;
+        const numberOfParallelBatches = Math.floor(maxHostThreads / totalEfficientBatchThreads);
+
+        let totalNeededGrowThreads = growInstance.threads;
+
+        growInstance.threads = growThreads;
+        weakenInstance.threads = weakenThreads;
+
+        ns.tprint('actual threads to spawn');
+        ns.tprintf('g %s w %s', ...scriptInstances.map(i => i.threads));
+
+        const sleepTimeBetweenBatches = scriptInstances.length * minimumTimeDelta;
+        for (let index = 0; index < numberOfParallelBatches; ++index) {
+            scriptInstances.forEach(inst => spawnBatchScript(ns, inst, index));
+            await ns.sleep(sleepTimeBetweenBatches);
+        }
     }
 }
