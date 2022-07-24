@@ -44,7 +44,7 @@ export async function main(ns: NS) {
         runTime: ns.getHackTime(target)
     };
 
-    const hackSecurityIncrease = ns.hackAnalyzeSecurity(hackThreads, target);
+    const hackSecurityIncrease = ns.hackAnalyzeSecurity(hackInstance.threads, target);
 
     const postHackWeakenThreads = weakenThreads(hackSecurityIncrease);
     let hackWeakenInstance = {
@@ -56,7 +56,7 @@ export async function main(ns: NS) {
         runTime: ns.getWeakenTime(target)
     };
 
-    const hackShrinkage = ns.hackAnalyze(target) * hackThreads;
+    const hackShrinkage = ns.hackAnalyze(target) * hackInstance.threads;
     const neededGrowthRatio = 1 / (1 - hackShrinkage);
     ns.print(`hack shrinkage: ${hackShrinkage}`);
     ns.print(`needed recovery growth: ${neededGrowthRatio}`);
@@ -77,7 +77,7 @@ export async function main(ns: NS) {
     // threads needed to grow the specified server to max money, and
     // currently we know that server is at max money alread, thus
     // security growth will be reported as zero.
-    const growSecurityIncrease = ns.growthAnalyzeSecurity(growThreads);
+    const growSecurityIncrease = ns.growthAnalyzeSecurity(growInstance.threads);
 
     const postGrowWeakenThreads = weakenThreads(growSecurityIncrease);
     let growWeakenInstance = {
@@ -91,19 +91,19 @@ export async function main(ns: NS) {
 
     const scriptInstances = [hackInstance, hackWeakenInstance, growInstance, growWeakenInstance];
 
-    ns.print(`grow threads: ${growThreads}\n`);
+    ns.print(`grow threads: ${growInstance.threads}\n`);
     ns.print(`grow security increase: ${growSecurityIncrease}\n`);
-    ns.print(`post grow weaken threads: ${postGrowWeakenThreads}`);
+    ns.print(`post grow weaken threads: ${growWeakenInstance.threads}`);
 
     const totalThreads = scriptInstances.reduce((sum, i) => sum + i.threads, 0);
 
     if (maxHostThreads > totalThreads && totalThreads > 0) {
         ns.tprint(`
 milking ${target} from ${host}:
-  ${hackThreads} hack threads
-  ${postHackWeakenThreads} post-hack weaken threads
-  ${growThreads} grow threads
-  ${postGrowWeakenThreads} post-grow weaken threads
+  ${hackInstance.threads} hack threads
+  ${hackWeakenInstance.threads} post-hack weaken threads
+  ${growInstance.threads} grow threads
+  ${growWeakenInstance.threads} post-grow weaken threads
 `);
 
         scriptInstances.reduce((endTime, i) => {
@@ -121,10 +121,10 @@ milking ${target} from ${host}:
         ns.tprint(`
 not enough threads to run milk on ${host}
 trying to run:
-  ${hackThreads} hack threads
-  ${postHackWeakenThreads} post-hack weaken threads
-  ${growThreads} grow threads
-  ${postGrowWeakenThreads} post-grow weaken threads
+  ${hackInstance.threads} hack threads
+  ${hackWeakenInstance.threads} post-hack weaken threads
+  ${growInstance.threads} grow threads
+  ${growWeakenInstance.threads} post-grow weaken threads
 `);
     }
 }
