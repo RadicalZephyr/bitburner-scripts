@@ -261,6 +261,7 @@ export type BatchScriptInstance = {
     host: string;
     target: string;
     startTime: number;
+    runTime: number;
 };
 
 export function spawnBatchScript(ns: NS, scriptInstance: BatchScriptInstance) {

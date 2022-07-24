@@ -20,7 +20,7 @@ export async function main(ns: NS) {
 
     let maxHostThreads = numThreads(ns, host, growScript);
 
-    let script, threads;
+    let script, threads, runTime;
 
     // TODO: In terms of 100% server money, we need to calculate how much to
     // hack, preferably a small enough amount that we can easily grow back to
@@ -30,14 +30,17 @@ export async function main(ns: NS) {
 
     script = hackScript;
     threads = hackThreads;
-    let hackInstance = { script, threads, host, target, startTime: 0 };
+    runTime = hackTime;
+    let hackInstance = { script, threads, host, target, startTime: 0, runTime };
 
+    const weakenTime = ns.getWeakenTime(target);
     const hackSecurityIncrease = ns.hackAnalyzeSecurity(hackThreads, target);
     const postHackWeakenThreads = weakenThreads(hackSecurityIncrease);
 
     script = weakenScript;
     threads = postHackWeakenThreads;
-    let hackWeakenInstance = { script, threads, host, target, startTime: 0 };
+    runTime = weakenTime;
+    let hackWeakenInstance = { script, threads, host, target, startTime: 0, runTime };
 
     const hackShrinkage = ns.hackAnalyze(target) * hackThreads;
     const neededGrowthRatio = 1 / (1 - hackShrinkage);
@@ -49,7 +52,8 @@ export async function main(ns: NS) {
 
     script = growScript;
     threads = growThreads;
-    let growInstance = { script, threads, host, target, startTime: 0 };
+    runTime = growTime;
+    let growInstance = { script, threads, host, target, startTime: 0, runTime };
 
     // N.B. In order to speculatively calculate how much security will
     // increase, we must _not_ specify the target server. Doing so
@@ -59,12 +63,12 @@ export async function main(ns: NS) {
     // security growth will be reported as zero.
     const growSecurityIncrease = ns.growthAnalyzeSecurity(growThreads);
 
-    const weakenTime = ns.getWeakenTime(target);
     const postGrowWeakenThreads = weakenThreads(growSecurityIncrease);
 
     script = weakenScript;
     threads = postGrowWeakenThreads;
-    let growWeakenInstance = { script, threads, host, target, startTime: 0 };
+    runTime = weakenTime;
+    let growWeakenInstance = { script, threads, host, target, startTime: 0, runTime };
 
     ns.print(`grow threads: ${growThreads}\n`);
     ns.print(`grow security increase: ${growSecurityIncrease}\n`);

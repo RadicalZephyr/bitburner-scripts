@@ -15,7 +15,8 @@ export async function main(ns: NS) {
 
     let script = weakenScript;
     let threads = weakenAnalyze(ns, target, 1.0);
-    const weakenInstance = { script, threads, host, target, startTime: 0 };
+    const runTime = ns.getWeakenTime(target);
+    const weakenInstance = { script, threads, host, target, startTime: 0, runTime };
 
     if (maxHostThreads > 0 && maxHostThreads > threads) {
         ns.tprint(`softening ${target} with ${threads} threads on ${host}`);

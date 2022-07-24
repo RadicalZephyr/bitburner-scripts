@@ -19,7 +19,7 @@ export async function main(ns: NS) {
 
     let maxHostThreads = numThreads(ns, host, growScript);
 
-    let script, threads;
+    let script, threads, runTime;
 
     const maxMoney = ns.getServerMaxMoney(target);
     const currentMoney = ns.getServerMoneyAvailable(target);
@@ -31,7 +31,8 @@ export async function main(ns: NS) {
 
     script = growScript;
     threads = growThreads;
-    let growInstance = { script, threads, host, target, startTime: 0 };
+    runTime = growTime;
+    let growInstance = { script, threads, host, target, startTime: 0, runTime };
 
     const growSecurityIncrease = ns.growthAnalyzeSecurity(growThreads, target, 1);
 
@@ -40,7 +41,8 @@ export async function main(ns: NS) {
 
     script = weakenScript;
     threads = weakenThreads;
-    let weakenInstance = { script, threads, host, target, startTime: 0 };
+    runTime = weakenTime;
+    let weakenInstance = { script, threads, host, target, startTime: 0, runTime };
 
     const totalThreads = growThreads + weakenThreads
 
