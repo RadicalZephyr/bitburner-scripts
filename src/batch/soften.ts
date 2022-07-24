@@ -11,17 +11,16 @@ export function autocomplete(data: AutocompleteData, args: string[]): string[] {
 export async function main(ns: NS) {
     const [host, target] = singleTargetBatchOptions(ns);
 
-    const delay = 0;
-
     let maxHostThreads = numThreads(ns, host, weakenScript);
 
-    const threads = weakenAnalyze(ns, target, 1.0);
+    let script = weakenScript;
+    let threads = weakenAnalyze(ns, target, 1.0);
+    let startTime = 0;
+    const weakenInstance = { script, threads, host, target, startTime };
 
     if (maxHostThreads > 0 && maxHostThreads > threads) {
         ns.tprint(`softening ${target} with ${threads} threads on ${host}`);
-        let script = weakenScript;
-        let startTime = delay;
-        spawnBatchScript(ns, { script, threads, host, target, startTime });
+        spawnBatchScript(ns, weakenInstance);
     } else {
         if (maxHostThreads < 1) {
             ns.tprint(`not enough RAM available to run weaken on ${host}`);

@@ -20,14 +20,26 @@ export async function main(ns: NS) {
 
     let maxHostThreads = numThreads(ns, host, growScript);
 
+    let script, threads, startTime;
+
     // TODO: In terms of 100% server money, we need to calculate how much to
     // hack, preferably a small enough amount that we can easily grow back to
     // that amount with a reasonable number of threads.
     const hackTime = ns.getHackTime(target);
     const hackThreads = 100; // for now, we go with a single hack thread
 
+    script = hackScript;
+    threads = hackThreads;
+    startTime = 0;
+    let hackInstance = { script, threads, host, target, startTime };
+
     const hackSecurityIncrease = ns.hackAnalyzeSecurity(hackThreads, target);
     const postHackWeakenThreads = weakenThreads(hackSecurityIncrease);
+
+    script = weakenScript;
+    threads = postHackWeakenThreads;
+    startTime = 0;
+    let hackWeakenInstance = { script, threads, host, target, startTime };
 
     const hackShrinkage = ns.hackAnalyze(target) * hackThreads;
     const neededGrowthRatio = 1 / (1 - hackShrinkage);
@@ -36,6 +48,11 @@ export async function main(ns: NS) {
 
     const growTime = ns.getGrowTime(target);
     const growThreads = growAnalyze(ns, target, neededGrowthRatio);
+
+    script = growScript;
+    threads = growThreads;
+    startTime = 0;
+    let growInstance = { script, threads, host, target, startTime };
 
     // N.B. In order to speculatively calculate how much security will
     // increase, we must _not_ specify the target server. Doing so
@@ -47,6 +64,11 @@ export async function main(ns: NS) {
 
     const weakenTime = ns.getWeakenTime(target);
     const postGrowWeakenThreads = weakenThreads(growSecurityIncrease);
+
+    script = weakenScript;
+    threads = postGrowWeakenThreads;
+    startTime = 0;
+    let growWeakenInstance = { script, threads, host, target, startTime };
 
     ns.print(`grow threads: ${growThreads}\n`);
     ns.print(`grow security increase: ${growSecurityIncrease}\n`);
@@ -85,27 +107,17 @@ milking ${target} from ${host}:
         const growStartTime = growEndTime - growTime;
         const hackStartTime = hackEndTime - hackTime;
 
-        let script, threads, startTime;
+        hackWeakenInstance.startTime = postHackWeakenStartTime;
+        spawnBatchScript(ns, hackWeakenInstance);
 
-        script = weakenScript;
-        threads = postHackWeakenThreads;
-        startTime = postHackWeakenStartTime;
-        spawnBatchScript(ns, { script, threads, host, target, startTime });
+        growWeakenInstance.startTime = postGrowWeakenStartTime;
+        spawnBatchScript(ns, growWeakenInstance);
 
-        script = weakenScript;
-        threads = postGrowWeakenThreads;
-        startTime = postGrowWeakenStartTime;
-        spawnBatchScript(ns, { script, threads, host, target, startTime });
+        growInstance.startTime = growStartTime;
+        spawnBatchScript(ns, growInstance);
 
-        script = growScript;
-        threads = growThreads;
-        startTime = growStartTime;
-        spawnBatchScript(ns, { script, threads, host, target, startTime });
-
-        script = hackScript;
-        threads = hackThreads;
-        startTime = hackStartTime;
-        spawnBatchScript(ns, { script, threads, host, target, startTime });
+        hackInstance.startTime = hackStartTime;
+        spawnBatchScript(ns, hackInstance);
     } else {
         ns.tprint(`
 not enough threads to run milk on ${host}

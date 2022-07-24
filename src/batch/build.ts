@@ -19,6 +19,8 @@ export async function main(ns: NS) {
 
     let maxHostThreads = numThreads(ns, host, growScript);
 
+    let script, threads, startTime;
+
     const maxMoney = ns.getServerMaxMoney(target);
     const currentMoney = ns.getServerMoneyAvailable(target);
 
@@ -27,10 +29,20 @@ export async function main(ns: NS) {
     const growTime = ns.getGrowTime(target);
     const growThreads = growAnalyze(ns, target, neededGrowRatio);
 
+    script = growScript;
+    threads = growThreads;
+    startTime = 0;
+    let growInstance = { script, threads, host, target, startTime };
+
     const growSecurityIncrease = ns.growthAnalyzeSecurity(growThreads, target, 1);
 
     const weakenTime = ns.getWeakenTime(target);
     const weakenThreads = weakenThreadsFn(growSecurityIncrease);
+
+    script = weakenScript;
+    threads = weakenThreads;
+    startTime = 0;
+    let weakenInstance = { script, threads, host, target, startTime };
 
     const totalThreads = growThreads + weakenThreads
 
@@ -44,16 +56,11 @@ export async function main(ns: NS) {
         const growDelay = weakenEndTime > growTime ? weakenEndTime - growTime : 0;
         const weakenDelay = growTime > weakenEndTime ? growTime - weakenEndTime : 0;
 
-        let script, threads, startTime;
-        script = growScript;
-        threads = growThreads;
-        startTime = growDelay;
-        spawnBatchScript(ns, { script, threads, host, target, startTime });
+        growInstance.startTime = growDelay;
+        spawnBatchScript(ns, growInstance);
 
-        script = weakenScript;
-        threads = weakenThreads;
-        startTime = weakenDelay;
-        spawnBatchScript(ns, { script, threads, host, target, startTime });
+        weakenInstance.startTime = weakenDelay;
+        spawnBatchScript(ns, weakenInstance);
     } else {
         ns.tprint(`
 not enough threads to run build on ${host}
