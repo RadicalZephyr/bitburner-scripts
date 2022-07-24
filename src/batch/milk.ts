@@ -35,7 +35,22 @@ export async function main(ns: NS) {
     // Weaken threads are then calculated based on these amounts
     // because we always need to reduce security to zero.
 
-    const hackThreads = 100; // for now, we go with a single hack thread
+    // Amount of money hacked per thread
+    const oneHackThreadHackPercent = ns.hackAnalyze(target);
+
+    // Start with one thread
+    let hackThreads = 1;
+    let hackThreadGrowThreads;
+    do {
+        hackThreads += 1;
+        const hackThreadsGrowPercent = hackToGrowPercent(oneHackThreadHackPercent * hackThreads);
+        hackThreadGrowThreads = ns.growthAnalyze(target, hackThreadsGrowPercent);
+    } while (hackThreadGrowThreads < 1);
+
+    // Reduce number of hack threads by 1. Because we start at 1 and
+    // immediately increment it this is at least 1.
+    hackThreads -= 1;
+
     let hackInstance = {
         host,
         target,
