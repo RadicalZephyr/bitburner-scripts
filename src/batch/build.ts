@@ -4,9 +4,6 @@ import { growAnalyze, numThreads, singleTargetBatchOptions, spawnBatchScript, we
 
 const minimumTimeDelta = 50;
 
-const weakenScript = '/batch/weaken.js';
-const growScript = '/batch/grow.js';
-
 export function autocomplete(data: AutocompleteData, args: string[]): string[] {
     return data.servers;
 }
@@ -17,34 +14,38 @@ export async function main(ns: NS) {
     ns.kill('monitor.js', target);
     ns.run('monitor.js', 1, target);
 
-    let maxHostThreads = numThreads(ns, host, growScript);
-
-    let script, threads, runTime;
+    let maxHostThreads = numThreads(ns, host, '/batch/grow.js');
 
     const maxMoney = ns.getServerMaxMoney(target);
     const currentMoney = ns.getServerMoneyAvailable(target);
 
     const neededGrowRatio = currentMoney > 0 ? maxMoney / currentMoney : maxMoney;
 
-    const growTime = ns.getGrowTime(target);
     const growThreads = growAnalyze(ns, target, neededGrowRatio);
 
-    script = growScript;
-    threads = growThreads;
-    runTime = growTime;
-    let growInstance = { script, threads, host, target, startTime: 0, runTime };
+    let growInstance = {
+        host,
+        target,
+        script: '/batch/grow.js',
+        threads: growThreads,
+        startTime: 0,
+        runTime: ns.getGrowTime(target)
+    };
 
     const growSecurityIncrease = ns.growthAnalyzeSecurity(growThreads, target, 1);
 
-    const weakenTime = ns.getWeakenTime(target);
     const weakenThreads = weakenThreadsFn(growSecurityIncrease);
 
-    script = weakenScript;
-    threads = weakenThreads;
-    runTime = weakenTime;
-    let weakenInstance = { script, threads, host, target, startTime: 0, runTime };
+    let weakenInstance = {
+        host,
+        target,
+        script: '/batch/weaken.js',
+        threads: weakenThreads,
+        startTime: 0,
+        runTime: ns.getWeakenTime(target)
+    };
 
-    const totalThreads = growThreads + weakenThreads
+    const totalThreads = growInstance.threads + weakenInstance.threads;
 
     if (maxHostThreads > totalThreads && totalThreads > 0) {
         ns.tprint(`building ${target} with ${growThreads} grow threads and ${weakenThreads} weaken threads on ${host}`);
