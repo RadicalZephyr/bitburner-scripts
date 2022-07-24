@@ -34,7 +34,6 @@ export async function main(ns: NS) {
     // Weaken threads are then calculated based on these amounts
     // because we always need to reduce security to zero.
 
-    const hackTime = ns.getHackTime(target);
     const hackThreads = 100; // for now, we go with a single hack thread
 
     let hackInstance = {
@@ -43,10 +42,9 @@ export async function main(ns: NS) {
         script: '/batch/hack.js',
         threads: hackThreads,
         startTime: 0,
-        runTime: hackTime
+        runTime: ns.getHackTime(target)
     };
 
-    const weakenTime = ns.getWeakenTime(target);
     const hackSecurityIncrease = ns.hackAnalyzeSecurity(hackThreads, target);
     const postHackWeakenThreads = weakenThreads(hackSecurityIncrease);
 
@@ -56,7 +54,7 @@ export async function main(ns: NS) {
         script: '/batch/weaken.js',
         threads: postHackWeakenThreads,
         startTime: 0,
-        runTime: weakenTime
+        runTime: ns.getWeakenTime(target)
     };
 
     const hackShrinkage = ns.hackAnalyze(target) * hackThreads;
@@ -64,7 +62,6 @@ export async function main(ns: NS) {
     ns.print(`hack shrinkage: ${hackShrinkage}`);
     ns.print(`needed recovery growth: ${neededGrowthRatio}`);
 
-    const growTime = ns.getGrowTime(target);
     const growThreads = growAnalyze(ns, target, neededGrowthRatio);
 
     let growInstance = {
@@ -73,7 +70,7 @@ export async function main(ns: NS) {
         script: '/batch/grow.js',
         threads: growThreads,
         startTime: 0,
-        runTime: growTime
+        runTime: ns.getGrowTime(target)
     };
 
     // N.B. In order to speculatively calculate how much security will
@@ -92,7 +89,7 @@ export async function main(ns: NS) {
         script: '/batch/weaken.js',
         threads: postGrowWeakenThreads,
         startTime: 0,
-        runTime: weakenTime
+        runTime: ns.getWeakenTime(target)
     };
 
     const scriptInstances = [hackInstance, hackWeakenInstance, growInstance, growWeakenInstance];
