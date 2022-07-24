@@ -6,6 +6,7 @@ import {
     setInstanceStartTimes,
     singleTargetBatchOptions,
     spawnBatchScript,
+    weakenAmount as weakenAmountFn,
     weakenThreads as weakenThreadsFn
 } from '../lib.js';
 
@@ -60,16 +61,26 @@ export async function main(ns: NS) {
         scriptInstances.forEach(i => spawnBatchScript(ns, i));
     } else {
         ns.tprint(`
-not enough threads to run build on ${host}
-trying to run ${growInstance.threads} grow threads and ${weakenInstance.threads} weaken threads
+not enough threads
+trying to build ${target} with ${growInstance.threads} grow threads and ${weakenInstance.threads} weaken threads on ${host}
+total threads available on ${host}: ${maxHostThreads}
 `);
-        await ns.sleep(100);
-        ns.kill('monitor.js', target);
-        if (maxHostThreads < 1) {
-            ns.tprint(`not enough RAM available to run grow and weaken on ${host}`);
+        // Calculate minimum size efficient batch, 1 weaken thread and
+        // however many grow threads it takes to generate that amount
+        // of security increase.
+        let growThreads = 2;
+        const weakenThreads = 1;
+        const weakenAmount = weakenAmountFn(weakenThreads);
+
+        let growSecurityIncrease = ns.growthAnalyzeSecurity(growThreads, target, 1);
+
+        while (growSecurityIncrease < weakenAmount) {
+            growThreads += 1;
+            growSecurityIncrease = ns.growthAnalyzeSecurity(growThreads, target, 1);
         }
-        if (growInstance.threads < 1 || weakenInstance.threads < 1) {
-            ns.tprint(`${target} does not need to be built`);
-        }
+        growThreads = Math.max(1, growThreads - 1);
+        growSecurityIncrease = ns.growthAnalyzeSecurity(growThreads, target, 1);
+        const postWeakenThreads = weakenThreadsFn(growSecurityIncrease);
+        ns.tprintf('g %s w-pre %s w-post %s', growThreads, weakenThreads, postWeakenThreads);
     }
 }
