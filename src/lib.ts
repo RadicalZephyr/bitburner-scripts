@@ -206,6 +206,15 @@ export function weakenThreads(weakenAmount: number): number {
     return Math.ceil(weakenAmount * 20);
 }
 
+/** Calculate the amount that security will be reduced by when running
+ *  weaken with the given number of threads.
+ */
+export function weakenAmount(threads: number): number {
+    // We divide by 20 because 1 thread of weaken reduces security
+    // by a fixed amount of 0.05, or 1/20
+    return Math.floor(threads) / 20;
+}
+
 /*****************************************
  * Iterator Utilities
  *****************************************/
