@@ -295,10 +295,10 @@ export function setInstanceStartTimes(scriptInstances: BatchScriptInstance[]): v
     scriptInstances.forEach(i => i.startTime += earliestStartTime);
 }
 
-export function spawnBatchScript(ns: NS, scriptInstance: BatchScriptInstance) {
+export function spawnBatchScript(ns: NS, scriptInstance: BatchScriptInstance, ...extraArgs: (string | number | boolean)[]) {
     const { script, threads, host, target, startTime } = scriptInstance;
     if (threads > 0) {
-        ns.exec(script, host, threads, target, startTime);
+        ns.exec(script, host, threads, target, startTime, ...extraArgs);
     }
 }
 
