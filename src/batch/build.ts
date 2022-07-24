@@ -90,16 +90,18 @@ total threads available on ${host}: ${maxHostThreads}
 
         let totalNeededGrowThreads = growInstance.threads;
 
-        growInstance.threads = growThreads;
-        weakenInstance.threads = weakenThreads;
+        growInstance.threads = growThreads * numberOfParallelBatches;
+        weakenInstance.threads = weakenThreads * numberOfParallelBatches;
 
         ns.tprint('actual threads to spawn');
         ns.tprintf('g %s w %s', ...scriptInstances.map(i => i.threads));
 
-        const sleepTimeBetweenBatches = scriptInstances.length * minimumTimeDelta;
-        for (let index = 0; index < numberOfParallelBatches; ++index) {
-            scriptInstances.forEach(inst => spawnBatchScript(ns, inst, index));
-            await ns.sleep(sleepTimeBetweenBatches);
-        }
+        scriptInstances.forEach(inst => spawnBatchScript(ns, inst));
+
+        // const sleepTimeBetweenBatches = scriptInstances.length * minimumTimeDelta;
+        // for (let index = 0; index < numberOfParallelBatches; ++index) {
+        //     scriptInstances.forEach(inst => spawnBatchScript(ns, inst, index));
+        //     await ns.sleep(sleepTimeBetweenBatches);
+        // }
     }
 }
