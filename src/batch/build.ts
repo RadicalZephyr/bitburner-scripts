@@ -51,16 +51,19 @@ export async function main(ns: NS) {
 
     const totalThreads = scriptInstances.reduce((sum, i) => sum + i.threads, 0);
 
+    const scriptDescriptions = scriptInstances.map(si => `  ${si.script} -t ${si.threads}`).join('\n');
+    ns.tprint(`
+building ${target} from ${host}:
+${scriptDescriptions}
+`);
+
     if (totalThreads < 1) {
         ns.tprint(`${target} does not need to be built`);
     } else if (maxHostThreads > totalThreads && totalThreads > 0) {
-        ns.tprint(`building ${target} with ${growInstance.threads} grow threads and ${weakenInstance.threads} weaken threads on ${host}`);
-
         scriptInstances.forEach(i => spawnBatchScript(ns, i));
     } else {
         ns.tprint(`
 not enough threads
-trying to build ${target} with ${growInstance.threads} grow threads and ${weakenInstance.threads} weaken threads on ${host}
 total threads available on ${host}: ${maxHostThreads}
 `);
         // Calculate minimum size efficient batch, 1 weaken thread and
