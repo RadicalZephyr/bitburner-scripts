@@ -2,6 +2,7 @@ import type { NS, AutocompleteData } from "netscript";
 
 import {
     growAnalyze,
+    minimumTimeDelta,
     numThreads,
     setInstanceStartTimes,
     singleTargetBatchOptions,
@@ -10,9 +11,7 @@ import {
     weakenThreads as weakenThreadsFn
 } from '../lib.js';
 
-const minimumTimeDelta = 50;
-
-export function autocomplete(data: AutocompleteData, args: string[]): string[] {
+export function autocomplete(data: AutocompleteData, _args: string[]): string[] {
     return data.servers;
 }
 

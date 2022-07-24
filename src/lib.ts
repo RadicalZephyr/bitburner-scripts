@@ -280,7 +280,7 @@ export type BatchScriptInstance = {
     runTime: number;
 };
 
-const minimumTimeDelta = 50;
+export const minimumTimeDelta = 50;
 
 export function setInstanceStartTimes(scriptInstances: BatchScriptInstance[]): void {
     let endTime = 0;

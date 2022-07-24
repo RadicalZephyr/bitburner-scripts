@@ -3,14 +3,13 @@ import type { NS, AutocompleteData } from "netscript";
 import {
     growAnalyze,
     hackToGrowPercent,
+    minimumTimeDelta,
     numThreads,
     setInstanceStartTimes,
     singleTargetBatchOptions,
     spawnBatchScript,
     weakenThreads
 } from '../lib.js';
-
-const minimumTimeDelta = 50;
 
 export function autocomplete(data: AutocompleteData, _args: string[]): string[] {
     return data.servers;

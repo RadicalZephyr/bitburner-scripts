@@ -4,7 +4,7 @@ import { numThreads, singleTargetBatchOptions, spawnBatchScript, weakenAnalyze }
 
 const weakenScript = '/batch/weaken.js';
 
-export function autocomplete(data: AutocompleteData, args: string[]): string[] {
+export function autocomplete(data: AutocompleteData, _args: string[]): string[] {
     return data.servers;
 }
 
