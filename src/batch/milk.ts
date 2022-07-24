@@ -35,7 +35,6 @@ export async function main(ns: NS) {
     // because we always need to reduce security to zero.
 
     const hackThreads = 100; // for now, we go with a single hack thread
-
     let hackInstance = {
         host,
         target,
@@ -46,8 +45,8 @@ export async function main(ns: NS) {
     };
 
     const hackSecurityIncrease = ns.hackAnalyzeSecurity(hackThreads, target);
-    const postHackWeakenThreads = weakenThreads(hackSecurityIncrease);
 
+    const postHackWeakenThreads = weakenThreads(hackSecurityIncrease);
     let hackWeakenInstance = {
         host,
         target,
@@ -63,7 +62,6 @@ export async function main(ns: NS) {
     ns.print(`needed recovery growth: ${neededGrowthRatio}`);
 
     const growThreads = growAnalyze(ns, target, neededGrowthRatio);
-
     let growInstance = {
         host,
         target,
@@ -82,7 +80,6 @@ export async function main(ns: NS) {
     const growSecurityIncrease = ns.growthAnalyzeSecurity(growThreads);
 
     const postGrowWeakenThreads = weakenThreads(growSecurityIncrease);
-
     let growWeakenInstance = {
         host,
         target,
