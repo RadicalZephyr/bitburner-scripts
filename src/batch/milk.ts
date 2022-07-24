@@ -1,6 +1,7 @@
 import type { NS, AutocompleteData } from "netscript";
 
 import {
+    endTime,
     growAnalyze,
     numThreads,
     singleTargetBatchOptions,
@@ -101,38 +102,33 @@ milking ${target} from ${host}:
   ${postGrowWeakenThreads} post-grow weaken threads
 `);
 
-        // Calculate script ending times relative to longest running time
-        // FIXME: Assume for now that weakenTime > growTime > hackTime
 
-        // Post-hack weaken dictates relative timing of the other scripts
-        const postHackWeakenEndTime = weakenTime;
-        // Hack should finish delta T before it's weaken.
-        const hackEndTime = postHackWeakenEndTime - minimumTimeDelta;
+        // Hack should finish first
+        const hackEndTime = endTime(hackInstance);
+        // Post-hack weaken should finish delta T after hack
+        const postHackWeakenEndTime = hackEndTime + minimumTimeDelta;
         // Grow should finish delta T after first weaken
         const growEndTime = postHackWeakenEndTime + minimumTimeDelta;
-        // Post-grow weaken should finish delta T after it
+        // Post-grow weaken should finish delta T after grow
         const postGrowWeakenEndTime = growEndTime + minimumTimeDelta;
 
-        // Calculate start times using end times and script durations
+        // Calculate start times using run times
+        hackInstance.startTime = hackEndTime - hackInstance.runTime;
+        hackWeakenInstance.startTime = postHackWeakenEndTime - hackWeakenInstance.runTime;
+        growInstance.startTime = growEndTime - growInstance.runTime;
+        growWeakenInstance.startTime = postGrowWeakenEndTime - growWeakenInstance.runTime;
 
-        // N.B. this should be 0
-        const postHackWeakenStartTime = postHackWeakenEndTime - weakenTime;
-        // N.B. this should be 2*minimumTimeDelta
-        const postGrowWeakenStartTime = postGrowWeakenEndTime - weakenTime;
+        // Push forward all start times so earliest one is zero
+        const earliestStartTime = -Math.min(hackInstance.startTime, hackWeakenInstance.startTime, growInstance.startTime, growWeakenInstance.startTime);
 
-        const growStartTime = growEndTime - growTime;
-        const hackStartTime = hackEndTime - hackTime;
+        hackInstance.startTime += earliestStartTime;
+        hackWeakenInstance.startTime += earliestStartTime;
+        growInstance.startTime += earliestStartTime;
+        growWeakenInstance.startTime += earliestStartTime;
 
-        hackWeakenInstance.startTime = postHackWeakenStartTime;
         spawnBatchScript(ns, hackWeakenInstance);
-
-        growWeakenInstance.startTime = postGrowWeakenStartTime;
         spawnBatchScript(ns, growWeakenInstance);
-
-        growInstance.startTime = growStartTime;
         spawnBatchScript(ns, growInstance);
-
-        hackInstance.startTime = hackStartTime;
         spawnBatchScript(ns, hackInstance);
     } else {
         ns.tprint(`
