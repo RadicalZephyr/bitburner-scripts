@@ -38,7 +38,7 @@ export async function main(ns: NS) {
 
     const growSecurityIncrease = ns.growthAnalyzeSecurity(growInstance.threads, target, 1);
 
-    let weakenInstance = {
+    const weakenInstance = {
         host,
         target,
         script: '/batch/weaken.js',
@@ -51,19 +51,19 @@ export async function main(ns: NS) {
 
     const totalThreads = scriptInstances.reduce((sum, i) => sum + i.threads, 0);
 
+    let endTime = 0;
+    scriptInstances.forEach(i => {
+        i.startTime = endTime - i.runTime;
+        endTime += minimumTimeDelta;
+    });
+
+    // Push forward all start times so earliest one is zero
+    const earliestStartTime = -Math.min(...scriptInstances.map(i => i.startTime));
+
+    scriptInstances.forEach(i => i.startTime += earliestStartTime);
+
     if (maxHostThreads > totalThreads && totalThreads > 0) {
         ns.tprint(`building ${target} with ${growInstance.threads} grow threads and ${weakenInstance.threads} weaken threads on ${host}`);
-
-        let endTime = 0;
-        scriptInstances.forEach(i => {
-            i.startTime = endTime - i.runTime;
-            endTime += minimumTimeDelta;
-        });
-
-        // Push forward all start times so earliest one is zero
-        const earliestStartTime = -Math.min(...scriptInstances.map(i => i.startTime));
-
-        scriptInstances.forEach(i => i.startTime += earliestStartTime);
 
         scriptInstances.forEach(i => spawnBatchScript(ns, i));
     } else {

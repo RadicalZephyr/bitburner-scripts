@@ -107,6 +107,17 @@ export async function main(ns: NS) {
 
     const scriptInstances = [hackInstance, hackWeakenInstance, growInstance, growWeakenInstance];
 
+    let endTime = 0;
+    scriptInstances.forEach(i => {
+        i.startTime = endTime - i.runTime;
+        endTime += minimumTimeDelta;
+    });
+
+    // Push forward all start times so earliest one is zero
+    const earliestStartTime = -Math.min(...scriptInstances.map(i => i.startTime));
+
+    scriptInstances.forEach(i => i.startTime += earliestStartTime);
+
     ns.print(`grow threads: ${growInstance.threads}\n`);
     ns.print(`grow security increase: ${growSecurityIncrease}\n`);
     ns.print(`post grow weaken threads: ${growWeakenInstance.threads}`);
@@ -121,17 +132,6 @@ milking ${target} from ${host}:
   ${growInstance.threads} grow threads
   ${growWeakenInstance.threads} post-grow weaken threads
 `);
-
-        let endTime = 0;
-        scriptInstances.forEach(i => {
-            i.startTime = endTime - i.runTime;
-            endTime += minimumTimeDelta;
-        });
-
-        // Push forward all start times so earliest one is zero
-        const earliestStartTime = -Math.min(...scriptInstances.map(i => i.startTime));
-
-        scriptInstances.forEach(i => i.startTime += earliestStartTime);
 
         scriptInstances.forEach(i => spawnBatchScript(ns, i));
     } else {
