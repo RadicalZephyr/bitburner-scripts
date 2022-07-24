@@ -87,11 +87,13 @@ export async function main(ns: NS) {
         runTime: weakenTime
     };
 
+    const scriptInstances = [hackInstance, hackWeakenInstance, growInstance, growWeakenInstance];
+
     ns.print(`grow threads: ${growThreads}\n`);
     ns.print(`grow security increase: ${growSecurityIncrease}\n`);
     ns.print(`post grow weaken threads: ${postGrowWeakenThreads}`);
 
-    const totalThreads = hackThreads + postHackWeakenThreads + growThreads + postGrowWeakenThreads;
+    const totalThreads = scriptInstances.reduce((sum, i) => sum + i.threads, 0);
 
     if (maxHostThreads > totalThreads && totalThreads > 0) {
         ns.tprint(`
@@ -102,34 +104,17 @@ milking ${target} from ${host}:
   ${postGrowWeakenThreads} post-grow weaken threads
 `);
 
-
-        // Hack should finish first
-        const hackEndTime = endTime(hackInstance);
-        // Post-hack weaken should finish delta T after hack
-        const postHackWeakenEndTime = hackEndTime + minimumTimeDelta;
-        // Grow should finish delta T after first weaken
-        const growEndTime = postHackWeakenEndTime + minimumTimeDelta;
-        // Post-grow weaken should finish delta T after grow
-        const postGrowWeakenEndTime = growEndTime + minimumTimeDelta;
-
-        // Calculate start times using run times
-        hackInstance.startTime = hackEndTime - hackInstance.runTime;
-        hackWeakenInstance.startTime = postHackWeakenEndTime - hackWeakenInstance.runTime;
-        growInstance.startTime = growEndTime - growInstance.runTime;
-        growWeakenInstance.startTime = postGrowWeakenEndTime - growWeakenInstance.runTime;
+        scriptInstances.reduce((endTime, i) => {
+            i.startTime = endTime - i.runTime;
+            return endTime + minimumTimeDelta;
+        }, 0);
 
         // Push forward all start times so earliest one is zero
-        const earliestStartTime = -Math.min(hackInstance.startTime, hackWeakenInstance.startTime, growInstance.startTime, growWeakenInstance.startTime);
+        const earliestStartTime = -Math.min(...scriptInstances.map(i => i.startTime));
 
-        hackInstance.startTime += earliestStartTime;
-        hackWeakenInstance.startTime += earliestStartTime;
-        growInstance.startTime += earliestStartTime;
-        growWeakenInstance.startTime += earliestStartTime;
+        scriptInstances.forEach(i => i.startTime += earliestStartTime);
 
-        spawnBatchScript(ns, hackWeakenInstance);
-        spawnBatchScript(ns, growWeakenInstance);
-        spawnBatchScript(ns, growInstance);
-        spawnBatchScript(ns, hackInstance);
+        scriptInstances.forEach(i => spawnBatchScript(ns, i));
     } else {
         ns.tprint(`
 not enough threads to run milk on ${host}
