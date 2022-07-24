@@ -52,26 +52,24 @@ export async function main(ns: NS) {
         runTime: ns.getWeakenTime(target)
     };
 
-    const totalThreads = growInstance.threads + weakenInstance.threads;
+    const scriptInstances = [growInstance, weakenInstance];
+
+    const totalThreads = scriptInstances.reduce((sum, i) => sum + i.threads, 0);
 
     if (maxHostThreads > totalThreads && totalThreads > 0) {
         ns.tprint(`building ${target} with ${growThreads} grow threads and ${weakenThreads} weaken threads on ${host}`);
 
-        const nextEndTime = endTime(growInstance) + minimumTimeDelta;
+        scriptInstances.reduce((endTime, i) => {
+            i.startTime = endTime - i.runTime;
+            return endTime + minimumTimeDelta;
+        }, 0);
 
-        let weakenStartTime = nextEndTime - weakenInstance.runTime;
+        // Push forward all start times so earliest one is zero
+        const earliestStartTime = -Math.min(...scriptInstances.map(i => i.startTime));
 
-        if (weakenStartTime < 0) {
-            const startTimeShift = -weakenStartTime;
-            growInstance.startTime += startTimeShift;
-            weakenInstance.startTime = 0;
-        } else {
-            weakenInstance.startTime = weakenStartTime;
-        }
+        scriptInstances.forEach(i => i.startTime += earliestStartTime);
 
-        spawnBatchScript(ns, growInstance);
-
-        spawnBatchScript(ns, weakenInstance);
+        scriptInstances.forEach(i => spawnBatchScript(ns, i));
     } else {
         ns.tprint(`
 not enough threads to run build on ${host}
