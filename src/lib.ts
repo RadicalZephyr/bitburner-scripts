@@ -271,6 +271,21 @@ export type BatchScriptInstance = {
     runTime: number;
 };
 
+const minimumTimeDelta = 50;
+
+export function setInstanceStartTimes(scriptInstances: BatchScriptInstance[]): void {
+    let endTime = 0;
+    scriptInstances.forEach(i => {
+        i.startTime = endTime - i.runTime;
+        endTime += minimumTimeDelta;
+    });
+
+    // Push forward all start times so earliest one is zero
+    const earliestStartTime = -Math.min(...scriptInstances.map(i => i.startTime));
+
+    scriptInstances.forEach(i => i.startTime += earliestStartTime);
+}
+
 export function spawnBatchScript(ns: NS, scriptInstance: BatchScriptInstance) {
     const { script, threads, host, target, startTime } = scriptInstance;
     if (threads > 0) {

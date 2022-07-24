@@ -4,6 +4,7 @@ import {
     growAnalyze,
     hackToGrowPercent,
     numThreads,
+    setInstanceStartTimes,
     singleTargetBatchOptions,
     spawnBatchScript,
     weakenThreads
@@ -107,16 +108,7 @@ export async function main(ns: NS) {
 
     const scriptInstances = [hackInstance, hackWeakenInstance, growInstance, growWeakenInstance];
 
-    let endTime = 0;
-    scriptInstances.forEach(i => {
-        i.startTime = endTime - i.runTime;
-        endTime += minimumTimeDelta;
-    });
-
-    // Push forward all start times so earliest one is zero
-    const earliestStartTime = -Math.min(...scriptInstances.map(i => i.startTime));
-
-    scriptInstances.forEach(i => i.startTime += earliestStartTime);
+    setInstanceStartTimes(scriptInstances);
 
     ns.print(`grow threads: ${growInstance.threads}\n`);
     ns.print(`grow security increase: ${growSecurityIncrease}\n`);
