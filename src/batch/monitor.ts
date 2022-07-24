@@ -70,5 +70,22 @@ function targetInfo(ns: NS, host: string): (string | number)[] {
     const moneyPercent = (money / maxMoney * 100).toFixed(2);
     const secPlus = (sec - minSec).toFixed(2);
 
-    return [host, moneyPercent, secPlus, 0, 0, 0];
+    let hackThreads = 0;
+    let growThreads = 0;
+    let weakenThreads = 0;
+
+    const pInfos = ns.ps('home');
+
+    pInfos.filter(pi => pi.args.includes(host))
+        .forEach(pi => {
+            if (pi.filename === '/batch/hack.js') {
+                hackThreads += pi.threads;
+            } else if (pi.filename === '/batch/grow.js') {
+                growThreads += pi.threads;
+            } else if (pi.filename === '/batch/weaken.js') {
+                weakenThreads += pi.threads;
+            }
+        });
+
+    return [host, moneyPercent, secPlus, hackThreads, growThreads, weakenThreads];
 }
