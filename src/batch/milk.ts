@@ -22,9 +22,18 @@ export async function main(ns: NS) {
 
     let maxHostThreads = numThreads(ns, host, '/batch/grow.js');
 
-    // TODO: In terms of 100% server money, we need to calculate how much to
-    // hack, preferably a small enough amount that we can easily grow back to
-    // that amount with a reasonable number of threads.
+    // To minimize per-batch thread use but maximize the value
+    // received from that batch, we want to choose the amount we hack
+    // per batch according to the larger of these two amounts:
+    //  - proportion hacked by one thread
+    //  - proportion grown by one thread
+    //
+    // Whichever is the smaller amount is then set to 1 thread, and
+    // the other is calculated to achieve the same amount of growth.
+    //
+    // Weaken threads are then calculated based on these amounts
+    // because we always need to reduce security to zero.
+
     const hackTime = ns.getHackTime(target);
     const hackThreads = 100; // for now, we go with a single hack thread
 
