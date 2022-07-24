@@ -1,6 +1,7 @@
 import type { NS, AutocompleteData } from "netscript";
 
 import {
+    endTime,
     growAnalyze,
     numThreads,
     singleTargetBatchOptions,
@@ -56,8 +57,7 @@ export async function main(ns: NS) {
     if (maxHostThreads > totalThreads && totalThreads > 0) {
         ns.tprint(`building ${target} with ${growThreads} grow threads and ${weakenThreads} weaken threads on ${host}`);
 
-        const growEndTime = growInstance.startTime + growInstance.runTime;
-        const nextEndTime = growEndTime + minimumTimeDelta;
+        const nextEndTime = endTime(growInstance) + minimumTimeDelta;
 
         let weakenStartTime = nextEndTime - weakenInstance.runTime;
 
