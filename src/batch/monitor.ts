@@ -18,6 +18,7 @@ USAGE: run ${ns.getScriptName()}
 OPTIONS:
   --refreshrate  Time to wait between display updates in milliseconds
   --help         Show this help message
+
 Example:
   > run ${ns.getScriptName()}
 `);
