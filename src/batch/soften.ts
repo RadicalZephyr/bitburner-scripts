@@ -1,6 +1,6 @@
 import type { NS, AutocompleteData } from "netscript";
 
-import { numThreads, singleTargetBatchOptions, weakenAnalyze } from '../lib';
+import { numThreads, singleTargetBatchOptions, spawnBatchScript, weakenAnalyze } from '../lib';
 
 const weakenScript = '/batch/weaken.js';
 
@@ -19,9 +19,9 @@ export async function main(ns: NS) {
 
     if (maxHostThreads > 0 && maxHostThreads > threads) {
         ns.tprint(`softening ${target} with ${threads} threads on ${host}`);
-        if (threads > 0) {
-            ns.exec(weakenScript, host, threads, target, delay);
-        }
+        let script = weakenScript;
+        let startTime = delay;
+        spawnBatchScript(ns, { script, threads, host, target, startTime });
     } else {
         if (maxHostThreads < 1) {
             ns.tprint(`not enough RAM available to run weaken on ${host}`);
