@@ -122,10 +122,11 @@ milking ${target} from ${host}:
   ${growWeakenInstance.threads} post-grow weaken threads
 `);
 
-        scriptInstances.reduce((endTime, i) => {
+        let endTime = 0;
+        scriptInstances.forEach(i => {
             i.startTime = endTime - i.runTime;
-            return endTime + minimumTimeDelta;
-        }, 0);
+            endTime += minimumTimeDelta;
+        });
 
         // Push forward all start times so earliest one is zero
         const earliestStartTime = -Math.min(...scriptInstances.map(i => i.startTime));
