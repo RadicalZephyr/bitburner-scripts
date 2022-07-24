@@ -2,7 +2,7 @@ import type { NS, AutocompleteData } from "netscript";
 
 import { growAnalyze, numThreads, singleTargetBatchOptions, spawnBatchScript, weakenThreads as weakenThreadsFn } from '../lib.js';
 
-const minimumTimeDelta = 20;
+const minimumTimeDelta = 50;
 
 const weakenScript = '/batch/weaken.js';
 const growScript = '/batch/grow.js';
