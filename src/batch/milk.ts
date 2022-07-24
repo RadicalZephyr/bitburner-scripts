@@ -18,9 +18,6 @@ export function autocomplete(data: AutocompleteData, _args: string[]): string[] 
 export async function main(ns: NS) {
     const [host, target] = singleTargetBatchOptions(ns);
 
-    ns.kill('monitor.js', target);
-    ns.run('monitor.js', 1, target);
-
     let maxHostThreads = numThreads(ns, host, '/batch/grow.js');
 
     // To minimize per-batch thread use but maximize the value
