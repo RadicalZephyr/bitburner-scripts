@@ -36,7 +36,7 @@ Example:
 
         // let hosts = usableHosts(ns, allHosts);
         let targets = exploitableHosts(ns, allHosts);
-        targets.sort(byHackSkill(ns));
+        targets.sort(byLongestTime(ns));
 
         const maxTargetNameLen = Math.max(...targets.map(t => t.length));
 
@@ -57,8 +57,12 @@ Example:
     }
 }
 
-function byHackSkill(ns: NS): ((a: string, b: string) => number) {
-    return (a, b) => ns.getServerRequiredHackingLevel(a) - ns.getServerRequiredHackingLevel(b);
+function byLongestTime(ns: NS): ((a: string, b: string) => number) {
+    return (a, b) => longestTime(ns, a) - longestTime(ns, b);
+}
+
+function longestTime(ns: NS, host: string): number {
+    return Math.max(ns.getHackTime(host), ns.getGrowTime(host), ns.getWeakenTime(host));
 }
 
 function targetInfo(ns: NS, host: string): (string | number)[] {
