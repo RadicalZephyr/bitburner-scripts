@@ -87,8 +87,6 @@ total threads available on ${host}: ${maxHostThreads}
 }
 
 function calculateBuildBatch(ns: NS, host: string, target: string): BatchScriptInstance[] {
-    let maxHostThreads = numThreads(ns, host, '/batch/grow.js');
-
     const maxMoney = ns.getServerMaxMoney(target);
     const currentMoney = ns.getServerMoneyAvailable(target);
 

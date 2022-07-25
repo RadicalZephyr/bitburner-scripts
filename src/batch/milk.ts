@@ -41,8 +41,6 @@ not enough threads to run milk on ${host}!
 }
 
 function calculateMilkBatch(ns: NS, host: string, target: string): BatchScriptInstance[] {
-    let maxHostThreads = numThreads(ns, host, '/batch/grow.js');
-
     // To minimize per-batch thread use but maximize the value
     // rcalculateMilkBatchch, we want to choose the amount we hack
     // per bacalculateMilkBatchlarger of these two amounts:
