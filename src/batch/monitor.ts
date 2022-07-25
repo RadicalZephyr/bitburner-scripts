@@ -65,12 +65,12 @@ function longestTime(ns: NS, host: string): number {
     return Math.max(ns.getHackTime(host), ns.getGrowTime(host), ns.getWeakenTime(host));
 }
 
-function targetInfo(ns: NS, host: string): (string | number)[] {
-    const maxMoney = ns.getServerMaxMoney(host);
-    const minSec = ns.getServerMinSecurityLevel(host);
-    let money = ns.getServerMoneyAvailable(host);
+function targetInfo(ns: NS, target: string): (string | number)[] {
+    const maxMoney = ns.getServerMaxMoney(target);
+    const minSec = ns.getServerMinSecurityLevel(target);
+    let money = ns.getServerMoneyAvailable(target);
     if (money === 0) money = 1;
-    const sec = ns.getServerSecurityLevel(host);
+    const sec = ns.getServerSecurityLevel(target);
 
     const moneyPercent = (money / maxMoney * 100).toFixed(2);
     const secPlus = (sec - minSec).toFixed(2);
@@ -79,18 +79,24 @@ function targetInfo(ns: NS, host: string): (string | number)[] {
     let growThreads = 0;
     let weakenThreads = 0;
 
-    const pInfos = ns.ps('home');
+    let hosts = ns.getPurchasedServers();
+    hosts.unshift('home');
 
-    pInfos.filter(pi => pi.args.includes(host))
-        .forEach(pi => {
-            if (pi.filename === '/batch/hack.js') {
-                hackThreads += pi.threads;
-            } else if (pi.filename === '/batch/grow.js') {
-                growThreads += pi.threads;
-            } else if (pi.filename === '/batch/weaken.js') {
-                weakenThreads += pi.threads;
-            }
-        });
+    for (const host of hosts) {
+        const pInfos = ns.ps(host);
 
-    return [host, moneyPercent, secPlus, hackThreads, growThreads, weakenThreads];
+        pInfos.filter(pi => pi.args.includes(target))
+            .forEach(pi => {
+                if (pi.filename === '/batch/hack.js') {
+                    hackThreads += pi.threads;
+                } else if (pi.filename === '/batch/grow.js') {
+                    growThreads += pi.threads;
+                } else if (pi.filename === '/batch/weaken.js') {
+                    weakenThreads += pi.threads;
+                }
+            });
+
+    }
+
+    return [target, moneyPercent, secPlus, hackThreads, growThreads, weakenThreads];
 }
