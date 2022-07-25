@@ -1,6 +1,7 @@
 import type { NS, AutocompleteData } from "netscript";
 
-import { numThreads, singleTargetBatchOptions, spawnBatchScript, weakenAnalyze } from '../lib';
+import { exploitableHosts, spawnBatchScript, weakenAnalyze } from '../lib';
+import { walkNetworkBFS } from "../walk-network.js";
 
 const weakenScript = '/batch/weaken.js';
 
@@ -9,23 +10,23 @@ export function autocomplete(data: AutocompleteData, _args: string[]): string[] 
 }
 
 export async function main(ns: NS) {
-    const [host, target] = singleTargetBatchOptions(ns);
+    const host = ns.args[0];
+    if (typeof host != 'string' || !ns.serverExists(host)) {
+        ns.tprintf('invalid host');
+        ns.exit();
+        return ['', ''];
+    }
 
-    let maxHostThreads = numThreads(ns, host, weakenScript);
+    let network = walkNetworkBFS(ns);
+    let allHosts = Array.from(network.keys());
+    let targets = exploitableHosts(ns, allHosts);
 
-    var weakenInstance = calculateWeakenInstance(ns, host, target);
+    targets.sort(byWeakenTime(ns));
 
-    if (maxHostThreads > 0 && maxHostThreads > weakenInstance.threads) {
+    for (const target of targets) {
+        var weakenInstance = calculateWeakenInstance(ns, host, target);
         ns.tprint(`softening ${target} with ${weakenInstance.threads} threads on ${host}`);
         spawnBatchScript(ns, weakenInstance);
-    } else {
-        if (maxHostThreads < 1) {
-            ns.tprint(`not enough RAM available to run weaken on ${host}`);
-        }
-
-        if (weakenInstance.threads < 1) {
-            ns.tprint(`${target} does not need to be weakened`);
-        }
     }
 }
 
@@ -34,4 +35,8 @@ function calculateWeakenInstance(ns: NS, host: string, target: string) {
     let threads = weakenAnalyze(ns, target, 1.0);
     const runTime = ns.getWeakenTime(target);
     return { script, threads, host, target, startTime: 0, runTime };
+}
+
+function byWeakenTime(ns: NS): ((a: string, b: string) => number) {
+    return (a, b) => ns.getWeakenTime(a) - ns.getWeakenTime(b);
 }
