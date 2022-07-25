@@ -4,7 +4,6 @@ import {
     BatchScriptInstance,
     growAnalyze,
     hackToGrowPercent,
-    minimumTimeDelta,
     numThreads,
     setInstanceStartTimes,
     singleTargetBatchOptions,
@@ -109,7 +108,7 @@ function calculateMilkBatch(ns: NS, host: string, target: string): BatchScriptIn
     // increase, we must _not_ specify the target server. Doing so
     // will cap the projected security growth by the amount of grow
     // threads needed to grow the specified server to max money, and
-    // currently we know that server is at max money alread, thus
+    // currently we know that server is at max money already, thus
     // security growth will be reported as zero.
     const growSecurityIncrease = ns.growthAnalyzeSecurity(growInstance.threads);
 
