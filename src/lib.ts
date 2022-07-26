@@ -141,7 +141,29 @@ export function exploitableHosts(ns: NS, hosts: string[]): string[] {
     });
 }
 
-/**
+/** Filter for hosts that are ready to be softened.
+ */
+export function softenableHosts(ns: NS, hosts: string[]): string[] {
+    return hosts.filter((host) => {
+        return ns.serverExists(host)
+            && hasMoney(ns, host)
+            && canNuke(ns, host)
+            && readyToSoften(ns, host);
+    });
+}
+
+/** Filter for hosts that are ready to be built.
+ */
+export function buildableHosts(ns: NS, hosts: string[]): string[] {
+    return hosts.filter((host) => {
+        return ns.serverExists(host)
+            && hasMoney(ns, host)
+            && canNuke(ns, host)
+            && readyToBuild(ns, host);
+    });
+}
+
+/** Filter for hosts that are ready to be milked.
  */
 export function milkableHosts(ns: NS, hosts: string[]): string[] {
     return hosts.filter((host) => {
