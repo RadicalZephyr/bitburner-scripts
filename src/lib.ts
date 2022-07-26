@@ -293,27 +293,14 @@ export function partition<T>(arr: T[], pred: ((t: T) => boolean)): Partition<T> 
     }, part);
 }
 
-type BatchOptions = [
+///////////////////////////////////////////
+// Batch Hacking Utilities
+///////////////////////////////////////////
+
+export type BatchOptions = [
     host: string,
     target: string,
 ];
-
-/*****************************************
- * Batch hacking utilities
- *****************************************/
-
-const weakenScript = '/batch/weaken.js';
-
-export function calculateWeakenInstance(ns: NS, target: string) {
-    let script = weakenScript;
-    let threads = weakenAnalyze(ns, target, 1.0);
-    const runTime = ns.getWeakenTime(target);
-    return { script, threads, target, startTime: 0, runTime, endDelay: 0, loop: false };
-}
-
-export function byWeakenTime(ns: NS): ((a: string, b: string) => number) {
-    return (a, b) => ns.getWeakenTime(a) - ns.getWeakenTime(b);
-}
 
 export function singleTargetBatchOptions(ns: NS): BatchOptions {
     const host = ns.args[0];
@@ -336,6 +323,28 @@ export function singleTargetBatchOptions(ns: NS): BatchOptions {
     ];
 }
 
+
+/*****************************************
+ * Softening/Weakening Utilities
+ *****************************************/
+
+const weakenScript = '/batch/weaken.js';
+
+export function calculateWeakenInstance(ns: NS, target: string) {
+    let script = weakenScript;
+    let threads = weakenAnalyze(ns, target, 1.0);
+    const runTime = ns.getWeakenTime(target);
+    return { script, threads, target, startTime: 0, runTime, endDelay: 0, loop: false };
+}
+
+export function byWeakenTime(ns: NS): ((a: string, b: string) => number) {
+    return (a, b) => ns.getWeakenTime(a) - ns.getWeakenTime(b);
+}
+
+
+/*****************************************
+ * Building/Growing Utilities
+ *****************************************/
 
 export type BatchRound = {
     target: string;
@@ -414,10 +423,14 @@ export function calculateBuildBatch(ns: NS, target: string): BatchScriptInstance
     return scriptInstances;
 }
 
+
+/*****************************************
+ * Milking/Hacking Utilities
+ *****************************************/
+
 export function byTotalThreads(ns: NS): ((a: MilkRound, b: MilkRound) => number) {
     return (a, b) => a.totalThreads - b.totalThreads;
 }
-
 
 export type MilkRound = {
     target: string;
