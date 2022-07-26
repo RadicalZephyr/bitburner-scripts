@@ -2,107 +2,126 @@ import type { NS, AutocompleteData } from "netscript";
 
 import {
     BatchScriptInstance,
+    byAvailableRam,
     growAnalyze,
-    minimumTimeDelta,
     numThreads,
     setInstanceStartTimes,
-    singleTargetBatchOptions,
     spawnBatchScript,
+    usableHosts,
     weakenAmount as weakenAmountFn,
-    weakenAnalyze,
     weakenThreads as weakenThreadsFn
 } from '../lib.js';
+import { walkNetworkBFS } from "../walk-network.js";
 
 export function autocomplete(data: AutocompleteData, _args: string[]): string[] {
     return data.servers;
 }
 
 export async function main(ns: NS) {
-    const [host, target] = singleTargetBatchOptions(ns);
+    const target = ns.args[0];
+    if (typeof target != 'string' || !ns.serverExists(target)) {
+        ns.tprintf('invalid target');
+        return;
+    }
 
-    let maxHostThreads = numThreads(ns, host, '/batch/grow.js');
+    const buildRound = calculateBuildRound(ns, target);
 
-    const scriptInstances = calculateBuildBatch(ns, target);
-    const [growInstance, weakenInstance] = scriptInstances;
-
-    const totalThreads = scriptInstances.reduce((sum, i) => sum + i.threads, 0);
-
-    const scriptDescriptions = scriptInstances.map(si => `  ${si.script} -t ${si.threads}`).join('\n');
+    const scriptDescriptions = buildRound.instances.map(si => `  ${si.script} -t ${si.threads}`).join('\n');
     ns.tprint(`
-building ${target} from ${host}:
+building ${target}:
 ${scriptDescriptions}
 `);
 
-    if (totalThreads < 1) {
+    if (buildRound.totalThreads < 1) {
         ns.tprint(`${target} does not need to be built`);
-    } else if (maxHostThreads > totalThreads && totalThreads > 0) {
-        scriptInstances.forEach(i => spawnBatchScript(ns, host, i));
-    } else {
-        ns.tprint(`
-not enough threads
-total threads available on ${host}: ${maxHostThreads}
-`);
-        // Calculate minimum size efficient batch, 1 weaken thread and
-        // however many grow threads it takes to generate that amount
-        // of security increase.
-        let growThreads = 2;
-        const weakenThreads = 1;
-        const weakenAmount = weakenAmountFn(weakenThreads);
+        return;
+    }
 
-        let growSecurityIncrease = ns.growthAnalyzeSecurity(growThreads, target, 1);
+    const network = walkNetworkBFS(ns);
+    const allHosts = Array.from(network.keys());
 
-        while (growSecurityIncrease < weakenAmount) {
-            growThreads += 1;
-            growSecurityIncrease = ns.growthAnalyzeSecurity(growThreads, target, 1);
-        }
-        growThreads = Math.max(1, growThreads - 1);
-        growSecurityIncrease = ns.growthAnalyzeSecurity(growThreads, target, 1);
-        const postWeakenThreads = weakenThreadsFn(growSecurityIncrease);
-        ns.tprintf('g %s w-pre %s w-post %s', growThreads, weakenThreads, postWeakenThreads);
+    let hosts = usableHosts(ns, allHosts);
+    hosts.sort(byAvailableRam(ns));
 
-        const totalEfficientBatchThreads = growThreads + weakenThreads;
-        const numberOfParallelBatches = Math.floor(maxHostThreads / totalEfficientBatchThreads);
+    let batchNumber = 0;
 
-        let totalNeededGrowThreads = growInstance.threads;
+    for (const host of hosts) {
+        let availableHostThreads = numThreads(ns, host, '/batch/grow.js');
 
-        growInstance.threads = growThreads * numberOfParallelBatches;
-        growSecurityIncrease = ns.growthAnalyzeSecurity(growInstance.threads, target, 1);
-        weakenInstance.threads = weakenThreadsFn(growSecurityIncrease);
-
-        ns.tprint('actual threads to spawn');
-        ns.tprintf('g %s w %s', ...scriptInstances.map(i => i.threads));
-
-        const waitTime = weakenInstance.startTime + weakenInstance.runTime + minimumTimeDelta;
-
-        for (let spawnedGrowThreads = 0; spawnedGrowThreads < totalNeededGrowThreads; spawnedGrowThreads += growInstance.threads) {
-            scriptInstances.forEach(inst => spawnBatchScript(ns, host, inst));
-            await ns.sleep(waitTime);
+        while (batchNumber < buildRound.numberOfBatches && availableHostThreads > buildRound.totalBatchThreads) {
+            buildRound.instances.forEach(inst => spawnBatchScript(ns, host, inst, batchNumber));
+            batchNumber += 1;
+            await ns.sleep(10);
+            availableHostThreads = numThreads(ns, host, '/batch/grow.js');
         }
     }
 }
 
-function calculateBuildBatch(ns: NS, target: string): BatchScriptInstance[] {
+type BatchRound = {
+    target: string;
+    instances: BatchScriptInstance[];
+    numberOfBatches: number;
+    totalBatchThreads: number;
+    totalThreads: number;
+};
+
+function calculateBuildRound(ns: NS, target: string): BatchRound {
     const maxMoney = ns.getServerMaxMoney(target);
     const currentMoney = ns.getServerMoneyAvailable(target);
 
     const neededGrowRatio = currentMoney > 0 ? maxMoney / currentMoney : maxMoney;
+    const totalGrowThreads = growAnalyze(ns, target, neededGrowRatio);
+
+    const instances = calculateBuildBatch(ns, target);
+    const growInstance = instances[0];
+
+    const numberOfBatches = Math.ceil(totalGrowThreads / growInstance.threads);
+
+    const totalBatchThreads = instances.reduce((sum, i) => sum + i.threads, 0);
+
+    const totalThreads = totalBatchThreads * numberOfBatches;
+
+    return {
+        target,
+        instances,
+        numberOfBatches,
+        totalBatchThreads,
+        totalThreads
+    };
+}
+
+function calculateBuildBatch(ns: NS, target: string): BatchScriptInstance[] {
+    // Calculate minimum size efficient batch, 1 weaken thread and
+    // however many grow threads it takes to generate that amount
+    // of security increase.
+    let growThreads = 2;
+    const weakenThreads = 1;
+    const weakenAmount = weakenAmountFn(weakenThreads);
+
+    let growSecurityIncrease = ns.growthAnalyzeSecurity(growThreads, target, 1);
+
+    while (growSecurityIncrease < weakenAmount) {
+        growThreads += 1;
+        growSecurityIncrease = ns.growthAnalyzeSecurity(growThreads, target, 1);
+    }
+    growThreads = Math.max(1, growThreads - 1);
 
     let growInstance = {
         target,
         script: '/batch/grow.js',
-        threads: growAnalyze(ns, target, neededGrowRatio),
+        threads: growThreads,
         startTime: 0,
         runTime: ns.getGrowTime(target),
         endDelay: 0,
         loop: false
     };
 
-    const growSecurityIncrease = ns.growthAnalyzeSecurity(growInstance.threads, target, 1);
+    growSecurityIncrease = ns.growthAnalyzeSecurity(growInstance.threads, target, 1);
 
     const weakenInstance = {
         target,
         script: '/batch/weaken.js',
-        threads: weakenAnalyze(ns, target, 1.0) + weakenThreadsFn(growSecurityIncrease),
+        threads: weakenThreadsFn(growSecurityIncrease),
         startTime: 0,
         runTime: ns.getWeakenTime(target),
         endDelay: 0,
