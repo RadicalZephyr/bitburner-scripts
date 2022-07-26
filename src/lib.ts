@@ -281,6 +281,7 @@ export type BatchScriptInstance = {
 };
 
 export const minimumTimeDelta = 150;
+export const timeAlignment = 1000;
 
 export function setInstanceStartTimes(scriptInstances: BatchScriptInstance[]): void {
     let endTime = 0;
@@ -288,10 +289,22 @@ export function setInstanceStartTimes(scriptInstances: BatchScriptInstance[]): v
         i.startTime = endTime - i.runTime;
         endTime += minimumTimeDelta;
     });
+    // Get relative end time of final instance
+    const relativeBatchEndTime = endTime - minimumTimeDelta;
+
+    // Determine offset to bring most negative start time to zero
+    let earliestStartTime = -Math.min(...scriptInstances.map(i => i.startTime));
+
+    // Calculate actual batch end time
+    const actualEndTime = relativeBatchEndTime + earliestStartTime;
+
+    // Pad out batch so that actualEndTime is aligned to the time alignment interval
+    if (actualEndTime > 1000) {
+        const padding = 1000 - (actualEndTime % timeAlignment);
+        earliestStartTime += padding;
+    }
 
     // Push forward all start times so earliest one is zero
-    const earliestStartTime = -Math.min(...scriptInstances.map(i => i.startTime));
-
     scriptInstances.forEach(i => i.startTime += earliestStartTime);
 }
 
