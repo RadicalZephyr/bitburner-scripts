@@ -152,7 +152,17 @@ export function milkableHosts(ns: NS, hosts: string[]): string[] {
     });
 }
 
-function readyToMilk(ns: NS, host: string): boolean {
+export function readyToSoften(ns: NS, host: string): boolean {
+    return moneyPercentage(ns, host) <= 0.9
+        && securityPercentage(ns, host) >= 0.1;
+}
+
+export function readyToBuild(ns: NS, host: string): boolean {
+    return moneyPercentage(ns, host) <= 0.9
+        && securityPercentage(ns, host) < 0.1;
+}
+
+export function readyToMilk(ns: NS, host: string): boolean {
     return moneyPercentage(ns, host) > 0.9
         && securityPercentage(ns, host) < 0.1;
 }
