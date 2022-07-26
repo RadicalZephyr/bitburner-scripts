@@ -19,31 +19,23 @@ export function autocomplete(data: AutocompleteData, _args: string[]): string[] 
 export async function main(ns: NS) {
     const [host, target] = singleTargetBatchOptions(ns);
 
-    const scriptInstances = calculateMilkBatch(ns, host, target);
-
     const maxHostThreads = numThreads(ns, host, '/batch/grow.js');
 
-    const lastScriptInstance = scriptInstances[scriptInstances.length - 1];
-    const totalBatchTime = lastScriptInstance.startTime + lastScriptInstance.runTime;
-    const numberOfBatches = totalBatchTime / timeAlignment;
+    const milkRound = calculateMilkRound(ns, host, target);
 
-    const totalBatchThreads = scriptInstances.reduce((sum, i) => sum + i.threads, 0);
-
-    const totalThreads = totalBatchThreads * numberOfBatches;
-
-    const scriptDescriptions = scriptInstances.map(si => `  ${si.script} -t ${si.threads}`).join('\n');
+    const scriptDescriptions = milkRound.instances.map(si => `  ${si.script} -t ${si.threads}`).join('\n');
     ns.tprint(`
 milking ${target} from ${host}:
 ${scriptDescriptions}
-total batch time: ${totalBatchTime}
-number of batches: ${numberOfBatches}
-total number of threads needed: ${totalThreads}
+total batch time: ${milkRound.totalBatchTime}
+number of batches: ${milkRound.numberOfBatches}
+total number of threads needed: ${milkRound.totalThreads}
 `);
 
-    if (maxHostThreads > totalThreads && totalThreads > 0) {
+    if (maxHostThreads > milkRound.totalThreads && milkRound.totalThreads > 0) {
         // Start at 1 so we make 1 less batch
-        for (let i = 1; i < numberOfBatches; ++i) {
-            scriptInstances.forEach(inst => spawnBatchScript(ns, inst, i));
+        for (let i = 1; i < milkRound.numberOfBatches; ++i) {
+            milkRound.instances.forEach(inst => spawnBatchScript(ns, inst, i));
             await ns.sleep(timeAlignment);
         }
         await ns.sleep(timeAlignment);
@@ -52,6 +44,36 @@ total number of threads needed: ${totalThreads}
 not enough threads to run milk on ${host}!
 `);
     }
+}
+
+export type MilkRound = {
+    instances: BatchScriptInstance[];
+    totalBatchTime: number;
+    numberOfBatches: number;
+    totalBatchThreads: number;
+    totalThreads: number;
+    batchOffset: number;
+};
+
+export function calculateMilkRound(ns: NS, host: string, target: string): MilkRound {
+    const instances = calculateMilkBatch(ns, host, target);
+
+    const lastScriptInstance = instances[instances.length - 1];
+    const totalBatchTime = lastScriptInstance.startTime + lastScriptInstance.runTime;
+    const numberOfBatches = totalBatchTime / timeAlignment;
+
+    const totalBatchThreads = instances.reduce((sum, i) => sum + i.threads, 0);
+
+    const totalThreads = totalBatchThreads * numberOfBatches;
+
+    return {
+        instances,
+        totalBatchTime,
+        numberOfBatches,
+        totalBatchThreads,
+        totalThreads,
+        batchOffset: timeAlignment
+    };
 }
 
 function calculateMilkBatch(ns: NS, host: string, target: string): BatchScriptInstance[] {
