@@ -17,7 +17,7 @@ Usage: ${ns.getScriptName()} [OPTIONS]
 OPTIONS
   --help          Show this help message
   --share         Run share script on usable hosts
-  --share_percent Specify the percentage of usable hosts to share [0-1]
+  --share-percent Specify the percentage of usable hosts to share [0-1]
 `);
         return;
     }
@@ -55,6 +55,11 @@ OPTIONS
         hosts.length, hosts.join(", "),
         targets.length, targets.join(", ")
     );
+
+    hosts = hosts.filter(h => !(h === 'home'));
+
+    const reservedTargets = ['n00dles', 'foodnstuff', 'sigma-cosmetics'];
+    targets = targets.filter(t => !reservedTargets.includes(t));
 
     await startHosts(ns, hosts, targets, hackScript);
 }
