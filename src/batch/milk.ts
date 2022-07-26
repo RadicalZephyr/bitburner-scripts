@@ -8,6 +8,7 @@ import {
     setInstanceStartTimes,
     singleTargetBatchOptions,
     spawnBatchScript,
+    timeAlignment,
     weakenThreads
 } from '../lib.js';
 
@@ -20,18 +21,34 @@ export async function main(ns: NS) {
 
     const scriptInstances = calculateMilkBatch(ns, host, target);
 
-    const totalThreads = scriptInstances.reduce((sum, i) => sum + i.threads, 0);
+    const maxHostThreads = numThreads(ns, host, '/batch/grow.js');
+
+    const lastScriptInstance = scriptInstances[scriptInstances.length - 1];
+    const totalBatchTime = lastScriptInstance.startTime + lastScriptInstance.runTime;
+    const numberOfBatches = totalBatchTime / timeAlignment;
+
+    const totalBatchThreads = scriptInstances.reduce((sum, i) => sum + i.threads, 0);
+
+    const totalThreads = totalBatchThreads * numberOfBatches;
 
     const scriptDescriptions = scriptInstances.map(si => `  ${si.script} -t ${si.threads}`).join('\n');
     ns.tprint(`
 milking ${target} from ${host}:
 ${scriptDescriptions}
+total batch time: ${totalBatchTime}
+number of batches: ${numberOfBatches}
+total number of threads needed: ${totalThreads}
 `);
 
-    let maxHostThreads = numThreads(ns, host, '/batch/grow.js');
-
     if (maxHostThreads > totalThreads && totalThreads > 0) {
-        scriptInstances.forEach(i => spawnBatchScript(ns, i));
+        while (true) {
+            // Start at 1 so we make 1 less batch
+            for (let i = 1; i < numberOfBatches; ++i) {
+                scriptInstances.forEach(inst => spawnBatchScript(ns, inst, i));
+                await ns.sleep(timeAlignment);
+            }
+            await ns.sleep(timeAlignment);
+        }
     } else {
         ns.tprint(`
 not enough threads to run milk on ${host}!
