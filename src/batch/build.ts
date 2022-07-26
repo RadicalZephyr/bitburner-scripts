@@ -77,13 +77,7 @@ total threads available on ${host}: ${maxHostThreads}
         for (let spawnedGrowThreads = 0; spawnedGrowThreads < totalNeededGrowThreads; spawnedGrowThreads += growInstance.threads) {
             scriptInstances.forEach(inst => spawnBatchScript(ns, host, inst));
             await ns.sleep(waitTime);
-
         }
-        // const sleepTimeBetweenBatches = scriptInstances.length * minimumTimeDelta;
-        // for (let index = 0; index < numberOfParallelBatches; ++index) {
-        //     scriptInstances.forEach(inst => spawnBatchScript(ns, inst, index));
-        //     await ns.sleep(sleepTimeBetweenBatches);
-        // }
     }
 }
 
