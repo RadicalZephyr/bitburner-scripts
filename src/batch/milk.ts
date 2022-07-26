@@ -2,7 +2,7 @@ import type { NS, AutocompleteData } from "netscript";
 
 import {
     BatchScriptInstance,
-    availableRam,
+    byAvailableRam,
     growAnalyze,
     hackToGrowPercent,
     numThreads,
@@ -16,10 +16,6 @@ import { walkNetworkBFS } from "../walk-network.js";
 
 export function autocomplete(data: AutocompleteData, _args: string[]): string[] {
     return data.servers;
-}
-
-function byAvailableRam(ns: NS): ((a: string, b: string) => number) {
-    return (a, b) => availableRam(ns, b) - availableRam(ns, a);
 }
 
 export async function main(ns: NS) {

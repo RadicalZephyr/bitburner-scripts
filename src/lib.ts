@@ -263,6 +263,10 @@ export function singleTargetBatchOptions(ns: NS): BatchOptions {
     ];
 }
 
+export function byAvailableRam(ns: NS): ((a: string, b: string) => number) {
+    return (a, b) => availableRam(ns, b) - availableRam(ns, a);
+}
+
 export function hackToGrowPercent(hackPercent: number): number {
     return 1 / (1 - hackPercent);
 }
