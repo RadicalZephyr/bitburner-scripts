@@ -12,6 +12,12 @@ export async function main(ns: NS) {
         sleepTime = 0;
     }
 
+    let endDelay = ns.args[2];
+    if (typeof endDelay != 'number') {
+        endDelay = 0;
+    }
+
     await ns.sleep(sleepTime);
     await ns.weaken(target);
+    await ns.sleep(endDelay);
 }
