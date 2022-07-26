@@ -33,12 +33,7 @@ total number of threads needed: ${milkRound.totalThreads}
 `);
 
     if (maxHostThreads > milkRound.totalThreads && milkRound.totalThreads > 0) {
-        // Start at 1 so we make 1 less batch
-        for (let i = 1; i < milkRound.numberOfBatches; ++i) {
-            milkRound.instances.forEach(inst => spawnBatchScript(ns, inst, i));
-            await ns.sleep(timeAlignment);
-        }
-        await ns.sleep(timeAlignment);
+        await launchMilkRound(ns, milkRound);
     } else {
         ns.tprint(`
 not enough threads to run milk on ${host}!
@@ -54,6 +49,14 @@ export type MilkRound = {
     totalThreads: number;
     batchOffset: number;
 };
+
+export async function launchMilkRound(ns: NS, milkRound: MilkRound) {
+    // Start at 1 so we make 1 less batch
+    for (let i = 1; i < milkRound.numberOfBatches; ++i) {
+        milkRound.instances.forEach(inst => spawnBatchScript(ns, inst, i));
+        await ns.sleep(milkRound.batchOffset);
+    }
+}
 
 export function calculateMilkRound(ns: NS, host: string, target: string): MilkRound {
     const instances = calculateMilkBatch(ns, host, target);
