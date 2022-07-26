@@ -34,7 +34,7 @@ Example:
     while (true) {
         ns.clearLog();
 
-        // let hosts = usableHosts(ns, allHosts);
+        let hosts = usableHosts(ns, allHosts);
         let targets = exploitableHosts(ns, allHosts);
         targets.sort(byLongestTime(ns));
 
@@ -50,7 +50,7 @@ Example:
         ns.printf(baseFormatString, ...headings);
         ns.printf(dividerFormatString, ...blanks);
         for (const target of targets) {
-            const info = targetInfo(ns, target);
+            const info = targetInfo(ns, hosts, target);
             ns.printf(baseFormatString, ...info);
         }
         await ns.sleep(flags.refreshrate);
@@ -65,7 +65,7 @@ function longestTime(ns: NS, host: string): number {
     return Math.max(ns.getHackTime(host), ns.getGrowTime(host), ns.getWeakenTime(host));
 }
 
-function targetInfo(ns: NS, target: string): (string | number)[] {
+function targetInfo(ns: NS, hosts: string[], target: string): (string | number)[] {
     const maxMoney = ns.getServerMaxMoney(target);
     const minSec = ns.getServerMinSecurityLevel(target);
     let money = ns.getServerMoneyAvailable(target);
@@ -78,10 +78,6 @@ function targetInfo(ns: NS, target: string): (string | number)[] {
     let hackThreads = 0;
     let growThreads = 0;
     let weakenThreads = 0;
-
-    let network = walkNetworkBFS(ns);
-    let allHosts = Array.from(network.keys());
-    let hosts = usableHosts(ns, allHosts);
 
     for (const host of hosts) {
         const pInfos = ns.ps(host);
