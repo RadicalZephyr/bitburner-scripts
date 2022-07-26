@@ -13,8 +13,7 @@ export async function main(ns: NS) {
     const host = ns.args[0];
     if (typeof host != 'string' || !ns.serverExists(host)) {
         ns.tprintf('invalid host');
-        ns.exit();
-        return ['', ''];
+        return;
     }
 
     let network = walkNetworkBFS(ns);
