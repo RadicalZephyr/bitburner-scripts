@@ -91,7 +91,8 @@ function calculateMilkBatch(ns: NS, host: string, target: string): BatchScriptIn
         script: '/batch/hack.js',
         threads: hackThreads,
         startTime: 0,
-        runTime: ns.getHackTime(target)
+        runTime: ns.getHackTime(target),
+        endDelay: 0
     };
 
     const hackSecurityIncrease = ns.hackAnalyzeSecurity(hackInstance.threads, target);
@@ -103,7 +104,8 @@ function calculateMilkBatch(ns: NS, host: string, target: string): BatchScriptIn
         script: '/batch/weaken.js',
         threads: postHackWeakenThreads,
         startTime: 0,
-        runTime: ns.getWeakenTime(target)
+        runTime: ns.getWeakenTime(target),
+        endDelay: 0
     };
 
     const hackShrinkage = ns.hackAnalyze(target) * hackInstance.threads;
@@ -118,7 +120,8 @@ function calculateMilkBatch(ns: NS, host: string, target: string): BatchScriptIn
         script: '/batch/grow.js',
         threads: growThreads,
         startTime: 0,
-        runTime: ns.getGrowTime(target)
+        runTime: ns.getGrowTime(target),
+        endDelay: 0
     };
 
     // N.B. In order to speculatively calculate how much security will
@@ -136,7 +139,8 @@ function calculateMilkBatch(ns: NS, host: string, target: string): BatchScriptIn
         script: '/batch/weaken.js',
         threads: postGrowWeakenThreads,
         startTime: 0,
-        runTime: ns.getWeakenTime(target)
+        runTime: ns.getWeakenTime(target),
+        endDelay: 0
     };
 
     const scriptInstances = [hackInstance, hackWeakenInstance, growInstance, growWeakenInstance];

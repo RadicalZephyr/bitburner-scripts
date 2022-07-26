@@ -33,7 +33,7 @@ function calculateWeakenInstance(ns: NS, host: string, target: string) {
     let script = weakenScript;
     let threads = weakenAnalyze(ns, target, 1.0);
     const runTime = ns.getWeakenTime(target);
-    return { script, threads, host, target, startTime: 0, runTime };
+    return { script, threads, host, target, startTime: 0, runTime, endDelay: 0 };
 }
 
 function byWeakenTime(ns: NS): ((a: string, b: string) => number) {

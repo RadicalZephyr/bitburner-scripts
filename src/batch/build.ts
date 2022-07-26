@@ -99,7 +99,8 @@ function calculateBuildBatch(ns: NS, host: string, target: string): BatchScriptI
         script: '/batch/grow.js',
         threads: growAnalyze(ns, target, neededGrowRatio),
         startTime: 0,
-        runTime: ns.getGrowTime(target)
+        runTime: ns.getGrowTime(target),
+        endDelay: 0
     };
 
     const growSecurityIncrease = ns.growthAnalyzeSecurity(growInstance.threads, target, 1);
@@ -110,7 +111,8 @@ function calculateBuildBatch(ns: NS, host: string, target: string): BatchScriptI
         script: '/batch/weaken.js',
         threads: weakenAnalyze(ns, target, 1.0) + weakenThreadsFn(growSecurityIncrease),
         startTime: 0,
-        runTime: ns.getWeakenTime(target)
+        runTime: ns.getWeakenTime(target),
+        endDelay: 0
     };
 
     const scriptInstances = [growInstance, weakenInstance];
