@@ -307,7 +307,10 @@ export function setInstanceStartTimes(scriptInstances: BatchScriptInstance[]): v
     }
 
     // Push forward all start times so earliest one is zero
-    scriptInstances.forEach(i => i.startTime += earliestStartTime);
+    scriptInstances.forEach(i => {
+        i.startTime += earliestStartTime;
+        i.endDelay = actualEndTime - (i.startTime + i.runTime);
+    });
 }
 
 export function spawnBatchScript(ns: NS, scriptInstance: BatchScriptInstance, ...extraArgs: (string | number | boolean)[]) {
