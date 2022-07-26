@@ -1,6 +1,6 @@
 import type { NS } from "netscript";
 
-import { exploitableHosts } from '../lib.js';
+import { exploitableHosts, usableHosts } from '../lib.js';
 import { walkNetworkBFS } from "../walk-network.js";
 
 export async function main(ns: NS) {
@@ -79,8 +79,9 @@ function targetInfo(ns: NS, target: string): (string | number)[] {
     let growThreads = 0;
     let weakenThreads = 0;
 
-    let hosts = ns.getPurchasedServers();
-    hosts.unshift('home');
+    let network = walkNetworkBFS(ns);
+    let allHosts = Array.from(network.keys());
+    let hosts = usableHosts(ns, allHosts);
 
     for (const host of hosts) {
         const pInfos = ns.ps(host);
