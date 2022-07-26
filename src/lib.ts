@@ -19,7 +19,7 @@ export function numThreads(ns: NS, node: string, hackScript: string, percentage?
 
 /** Determine total amount of RAM available for running scripts.
  */
-function availableRam(ns: NS, node: string): number {
+export function availableRam(ns: NS, node: string): number {
     return ns.getServerMaxRam(node) - ns.getServerUsedRam(node);
 }
 
