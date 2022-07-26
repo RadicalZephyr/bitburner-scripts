@@ -13,15 +13,14 @@ const scriptList = [scripts.grow, scripts.hack, scripts.weaken];
 export async function main(ns: NS) {
     let network = walkNetworkBFS(ns);
     let allHosts = Array.from(network.keys());
+
     let hosts = usableHosts(ns, allHosts);
     let targets = exploitableHosts(ns, allHosts);
-
-    let fastTargets = targets.filter(host => ns.getHackTime(host) < 1000 * 60 * 10);
 
     ns.tprintf(
         "hosts (%d): [%s]\ntargets (%d): [%s]\n",
         hosts.length, hosts.join(", "),
-        fastTargets.length, fastTargets.join(", ")
+        targets.length, targets.join(", ")
     );
 
     // Deploy all batch scripts to all host servers
