@@ -9,6 +9,7 @@ import {
     singleTargetBatchOptions,
     spawnBatchScript,
     weakenAmount as weakenAmountFn,
+    weakenAnalyze,
     weakenThreads as weakenThreadsFn
 } from '../lib.js';
 
@@ -107,7 +108,7 @@ function calculateBuildBatch(ns: NS, host: string, target: string): BatchScriptI
         host,
         target,
         script: '/batch/weaken.js',
-        threads: weakenThreadsFn(growSecurityIncrease),
+        threads: weakenAnalyze(ns, target, 1.0) + weakenThreadsFn(growSecurityIncrease),
         startTime: 0,
         runTime: ns.getWeakenTime(target)
     };
