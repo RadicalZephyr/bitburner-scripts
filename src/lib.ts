@@ -336,6 +336,84 @@ export function singleTargetBatchOptions(ns: NS): BatchOptions {
     ];
 }
 
+
+export type BatchRound = {
+    target: string;
+    instances: BatchScriptInstance[];
+    numberOfBatches: number;
+    totalBatchThreads: number;
+    totalThreads: number;
+};
+
+export function calculateBuildRound(ns: NS, target: string): BatchRound {
+    const maxMoney = ns.getServerMaxMoney(target);
+    const currentMoney = ns.getServerMoneyAvailable(target);
+
+    const neededGrowRatio = currentMoney > 0 ? maxMoney / currentMoney : maxMoney;
+    const totalGrowThreads = growAnalyze(ns, target, neededGrowRatio);
+
+    const instances = calculateBuildBatch(ns, target);
+    const growInstance = instances[0];
+
+    const numberOfBatches = Math.ceil(totalGrowThreads / growInstance.threads);
+
+    const totalBatchThreads = instances.reduce((sum, i) => sum + i.threads, 0);
+
+    const totalThreads = totalBatchThreads * numberOfBatches;
+
+    return {
+        target,
+        instances,
+        numberOfBatches,
+        totalBatchThreads,
+        totalThreads
+    };
+}
+
+export function calculateBuildBatch(ns: NS, target: string): BatchScriptInstance[] {
+    // Calculate minimum size efficient batch, 1 weaken thread and
+    // however many grow threads it takes to generate that amount
+    // of security increase.
+    let growThreads = 2;
+    const oneWeakenSecurityDecrease = weakenAmount(1);
+
+    let growSecurityIncrease = ns.growthAnalyzeSecurity(growThreads, target, 1);
+
+    while (growSecurityIncrease < oneWeakenSecurityDecrease) {
+        growThreads += 1;
+        growSecurityIncrease = ns.growthAnalyzeSecurity(growThreads, target, 1);
+    }
+    growThreads = Math.max(1, growThreads - 1);
+
+    let growInstance = {
+        target,
+        script: '/batch/grow.js',
+        threads: growThreads,
+        startTime: 0,
+        runTime: ns.getGrowTime(target),
+        endDelay: 0,
+        loop: false
+    };
+
+    growSecurityIncrease = ns.growthAnalyzeSecurity(growInstance.threads, target, 1);
+
+    const weakenInstance = {
+        target,
+        script: '/batch/weaken.js',
+        threads: weakenThreads(growSecurityIncrease),
+        startTime: 0,
+        runTime: ns.getWeakenTime(target),
+        endDelay: 0,
+        loop: false
+    };
+
+    const scriptInstances = [growInstance, weakenInstance];
+
+    setInstanceStartTimes(scriptInstances);
+
+    return scriptInstances;
+}
+
 export function byAvailableRam(ns: NS): ((a: string, b: string) => number) {
     return (a, b) => availableRam(ns, b) - availableRam(ns, a);
 }
