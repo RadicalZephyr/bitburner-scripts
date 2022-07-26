@@ -21,7 +21,7 @@ export async function main(ns: NS) {
 
     const maxHostThreads = numThreads(ns, host, '/batch/grow.js');
 
-    const milkRound = calculateMilkRound(ns, host, target);
+    const milkRound = calculateMilkRound(ns, target);
 
     const scriptDescriptions = milkRound.instances.map(si => `  ${si.script} -t ${si.threads}`).join('\n');
     ns.tprint(`
@@ -33,7 +33,7 @@ total number of threads needed: ${milkRound.totalThreads}
 `);
 
     if (maxHostThreads > milkRound.totalThreads && milkRound.totalThreads > 0) {
-        await launchMilkRound(ns, milkRound);
+        await launchMilkRound(ns, host, milkRound);
     } else {
         ns.tprint(`
 not enough threads to run milk on ${host}!
@@ -50,16 +50,16 @@ export type MilkRound = {
     batchOffset: number;
 };
 
-export async function launchMilkRound(ns: NS, milkRound: MilkRound) {
+export async function launchMilkRound(ns: NS, host: string, milkRound: MilkRound) {
     // Start at 1 so we make 1 less batch
     for (let i = 1; i < milkRound.numberOfBatches; ++i) {
-        milkRound.instances.forEach(inst => spawnBatchScript(ns, inst, i));
+        milkRound.instances.forEach(inst => spawnBatchScript(ns, host, inst, i));
         await ns.sleep(milkRound.batchOffset);
     }
 }
 
-export function calculateMilkRound(ns: NS, host: string, target: string): MilkRound {
-    const instances = calculateMilkBatch(ns, host, target);
+export function calculateMilkRound(ns: NS, target: string): MilkRound {
+    const instances = calculateMilkBatch(ns, target);
 
     const lastScriptInstance = instances[instances.length - 1];
     const totalBatchTime = lastScriptInstance.startTime + lastScriptInstance.runTime;
@@ -79,7 +79,7 @@ export function calculateMilkRound(ns: NS, host: string, target: string): MilkRo
     };
 }
 
-function calculateMilkBatch(ns: NS, host: string, target: string): BatchScriptInstance[] {
+function calculateMilkBatch(ns: NS, target: string): BatchScriptInstance[] {
     // To minimize per-batch thread use but maximize the value
     // rcalculateMilkBatchch, we want to choose the amount we hack
     // per bacalculateMilkBatchlarger of these two amounts:
@@ -109,7 +109,6 @@ function calculateMilkBatch(ns: NS, host: string, target: string): BatchScriptIn
     hackThreads -= 1;
 
     let hackInstance = {
-        host,
         target,
         script: '/batch/hack.js',
         threads: hackThreads,
@@ -123,7 +122,6 @@ function calculateMilkBatch(ns: NS, host: string, target: string): BatchScriptIn
 
     const postHackWeakenThreads = weakenThreads(hackSecurityIncrease);
     let hackWeakenInstance = {
-        host,
         target,
         script: '/batch/weaken.js',
         threads: postHackWeakenThreads,
@@ -140,7 +138,6 @@ function calculateMilkBatch(ns: NS, host: string, target: string): BatchScriptIn
 
     const growThreads = growAnalyze(ns, target, neededGrowthRatio + 0.1);
     let growInstance = {
-        host,
         target,
         script: '/batch/grow.js',
         threads: growThreads,
@@ -160,7 +157,6 @@ function calculateMilkBatch(ns: NS, host: string, target: string): BatchScriptIn
 
     const postGrowWeakenThreads = weakenThreads(growSecurityIncrease);
     let growWeakenInstance = {
-        host,
         target,
         script: '/batch/weaken.js',
         threads: postGrowWeakenThreads,

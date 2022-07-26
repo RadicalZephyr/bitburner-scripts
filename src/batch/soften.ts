@@ -23,17 +23,17 @@ export async function main(ns: NS) {
     targets.sort(byWeakenTime(ns));
 
     for (const target of targets) {
-        var weakenInstance = calculateWeakenInstance(ns, host, target);
+        var weakenInstance = calculateWeakenInstance(ns, target);
         ns.tprint(`softening ${target} with ${weakenInstance.threads} threads on ${host}`);
-        spawnBatchScript(ns, weakenInstance);
+        spawnBatchScript(ns, host, weakenInstance);
     }
 }
 
-function calculateWeakenInstance(ns: NS, host: string, target: string) {
+function calculateWeakenInstance(ns: NS, target: string) {
     let script = weakenScript;
     let threads = weakenAnalyze(ns, target, 1.0);
     const runTime = ns.getWeakenTime(target);
-    return { script, threads, host, target, startTime: 0, runTime, endDelay: 0, loop: false };
+    return { script, threads, target, startTime: 0, runTime, endDelay: 0, loop: false };
 }
 
 function byWeakenTime(ns: NS): ((a: string, b: string) => number) {

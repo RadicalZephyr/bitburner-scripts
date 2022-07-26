@@ -22,7 +22,7 @@ export async function main(ns: NS) {
 
     let maxHostThreads = numThreads(ns, host, '/batch/grow.js');
 
-    const scriptInstances = calculateBuildBatch(ns, host, target);
+    const scriptInstances = calculateBuildBatch(ns, target);
     const [growInstance, weakenInstance] = scriptInstances;
 
     const totalThreads = scriptInstances.reduce((sum, i) => sum + i.threads, 0);
@@ -36,7 +36,7 @@ ${scriptDescriptions}
     if (totalThreads < 1) {
         ns.tprint(`${target} does not need to be built`);
     } else if (maxHostThreads > totalThreads && totalThreads > 0) {
-        scriptInstances.forEach(i => spawnBatchScript(ns, i));
+        scriptInstances.forEach(i => spawnBatchScript(ns, host, i));
     } else {
         ns.tprint(`
 not enough threads
@@ -75,7 +75,7 @@ total threads available on ${host}: ${maxHostThreads}
         const waitTime = weakenInstance.startTime + weakenInstance.runTime + minimumTimeDelta;
 
         for (let spawnedGrowThreads = 0; spawnedGrowThreads < totalNeededGrowThreads; spawnedGrowThreads += growInstance.threads) {
-            scriptInstances.forEach(inst => spawnBatchScript(ns, inst));
+            scriptInstances.forEach(inst => spawnBatchScript(ns, host, inst));
             await ns.sleep(waitTime);
 
         }
@@ -87,14 +87,13 @@ total threads available on ${host}: ${maxHostThreads}
     }
 }
 
-function calculateBuildBatch(ns: NS, host: string, target: string): BatchScriptInstance[] {
+function calculateBuildBatch(ns: NS, target: string): BatchScriptInstance[] {
     const maxMoney = ns.getServerMaxMoney(target);
     const currentMoney = ns.getServerMoneyAvailable(target);
 
     const neededGrowRatio = currentMoney > 0 ? maxMoney / currentMoney : maxMoney;
 
     let growInstance = {
-        host,
         target,
         script: '/batch/grow.js',
         threads: growAnalyze(ns, target, neededGrowRatio),
@@ -107,7 +106,6 @@ function calculateBuildBatch(ns: NS, host: string, target: string): BatchScriptI
     const growSecurityIncrease = ns.growthAnalyzeSecurity(growInstance.threads, target, 1);
 
     const weakenInstance = {
-        host,
         target,
         script: '/batch/weaken.js',
         threads: weakenAnalyze(ns, target, 1.0) + weakenThreadsFn(growSecurityIncrease),

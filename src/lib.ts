@@ -272,10 +272,9 @@ export function growToHackPercent(growPercent: number): number {
 }
 
 export type BatchScriptInstance = {
+    target: string;
     script: string;
     threads: number;
-    host: string;
-    target: string;
     startTime: number;
     runTime: number;
     endDelay: number;
@@ -313,8 +312,8 @@ export function setInstanceStartTimes(scriptInstances: BatchScriptInstance[]): v
     });
 }
 
-export function spawnBatchScript(ns: NS, scriptInstance: BatchScriptInstance, ...extraArgs: (string | number | boolean)[]) {
-    const { script, threads, host, target, startTime } = scriptInstance;
+export function spawnBatchScript(ns: NS, host: string, scriptInstance: BatchScriptInstance, ...extraArgs: (string | number | boolean)[]) {
+    const { script, threads, target, startTime } = scriptInstance;
     if (threads > 0) {
         let args = [target, startTime, ...extraArgs];
         if (scriptInstance.loop) args.unshift('--loop');
