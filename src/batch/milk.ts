@@ -41,14 +41,12 @@ total number of threads needed: ${totalThreads}
 `);
 
     if (maxHostThreads > totalThreads && totalThreads > 0) {
-        while (true) {
-            // Start at 1 so we make 1 less batch
-            for (let i = 1; i < numberOfBatches; ++i) {
-                scriptInstances.forEach(inst => spawnBatchScript(ns, inst, i));
-                await ns.sleep(timeAlignment);
-            }
+        // Start at 1 so we make 1 less batch
+        for (let i = 1; i < numberOfBatches; ++i) {
+            scriptInstances.forEach(inst => spawnBatchScript(ns, inst, i));
             await ns.sleep(timeAlignment);
         }
+        await ns.sleep(timeAlignment);
     } else {
         ns.tprint(`
 not enough threads to run milk on ${host}!
