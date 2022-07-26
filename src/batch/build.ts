@@ -8,8 +8,8 @@ import {
     setInstanceStartTimes,
     spawnBatchScript,
     usableHosts,
-    weakenAmount as weakenAmountFn,
-    weakenThreads as weakenThreadsFn
+    weakenAmount,
+    weakenThreads
 } from '../lib.js';
 import { walkNetworkBFS } from "../walk-network.js";
 
@@ -95,12 +95,11 @@ function calculateBuildBatch(ns: NS, target: string): BatchScriptInstance[] {
     // however many grow threads it takes to generate that amount
     // of security increase.
     let growThreads = 2;
-    const weakenThreads = 1;
-    const weakenAmount = weakenAmountFn(weakenThreads);
+    const oneWeakenSecurityDecrease = weakenAmount(1);
 
     let growSecurityIncrease = ns.growthAnalyzeSecurity(growThreads, target, 1);
 
-    while (growSecurityIncrease < weakenAmount) {
+    while (growSecurityIncrease < oneWeakenSecurityDecrease) {
         growThreads += 1;
         growSecurityIncrease = ns.growthAnalyzeSecurity(growThreads, target, 1);
     }
@@ -121,7 +120,7 @@ function calculateBuildBatch(ns: NS, target: string): BatchScriptInstance[] {
     const weakenInstance = {
         target,
         script: '/batch/weaken.js',
-        threads: weakenThreadsFn(growSecurityIncrease),
+        threads: weakenThreads(growSecurityIncrease),
         startTime: 0,
         runTime: ns.getWeakenTime(target),
         endDelay: 0,
