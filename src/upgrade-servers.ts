@@ -20,6 +20,7 @@ OPTIONS
   --spend  Percentage of money to spend on upgrading
   --wait   Wait for money to become available to buy servers
 `);
+        return;
     }
 
     let upgradeSpendPercentage = options.spend;
