@@ -47,8 +47,8 @@ total number of threads needed: ${milkRound.totalThreads}
         while (batchNumber < milkRound.numberOfBatches && availableHostThreads > milkRound.totalBatchThreads) {
             milkRound.instances.forEach(inst => spawnBatchScript(ns, host, inst, batchNumber));
             batchNumber += 1;
-            availableHostThreads -= milkRound.totalBatchThreads;
             await ns.sleep(milkRound.batchOffset);
+            availableHostThreads = numThreads(ns, host, '/batch/grow.js');
         }
     }
 }
