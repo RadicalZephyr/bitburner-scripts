@@ -279,6 +279,7 @@ export type BatchScriptInstance = {
     startTime: number;
     runTime: number;
     endDelay: number;
+    loop: boolean;
 };
 
 export const minimumTimeDelta = 150;
