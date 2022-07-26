@@ -111,7 +111,7 @@ function calculateMilkBatch(ns: NS, host: string, target: string): BatchScriptIn
     ns.print(`hack shrinkage: ${hackShrinkage}`);
     ns.print(`needed recovery growth: ${neededGrowthRatio}`);
 
-    const growThreads = growAnalyze(ns, target, neededGrowthRatio);
+    const growThreads = growAnalyze(ns, target, neededGrowthRatio + 0.1);
     let growInstance = {
         host,
         target,
