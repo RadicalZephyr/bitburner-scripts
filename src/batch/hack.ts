@@ -3,7 +3,7 @@ import type { NS } from "netscript";
 export async function main(ns: NS) {
     const target = ns.args[0];
     if (typeof target != 'string') {
-        ns.print('invalid target: %s', target);
+        ns.tprint('invalid target: %s', target);
         return;
     }
 
@@ -14,5 +14,4 @@ export async function main(ns: NS) {
 
     await ns.sleep(sleepTime);
     await ns.hack(target);
-    ns.tprint(`hacking ${target} done`);
 }
