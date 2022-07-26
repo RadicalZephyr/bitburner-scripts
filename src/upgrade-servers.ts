@@ -6,6 +6,7 @@ const startScript = "start.js";
 
 export async function main(ns: NS) {
     const options = ns.flags([
+        ['hack', false],
         ['spend', 1.0],
         ['wait', false],
         ['help', false]
@@ -37,16 +38,17 @@ OPTIONS
     let neededServers = serverLimit - currentServers.length;
     let serverCost = ns.getPurchasedServerCost(ram);
     for (let i = 0; i < neededServers; ++i) {
-        if (ns.getServerMoneyAvailable("home") < serverCost) {
+        if (options.hack && ns.getServerMoneyAvailable("home") < serverCost) {
             ns.run(startScript);
             if (!options.wait) return;
         }
         while (ns.getServerMoneyAvailable("home") < serverCost) {
             await ns.sleep(1000);
         }
-        let hostname = ns.purchaseServer(serverName(ram), ram);
+        ns.purchaseServer(serverName(ram), ram);
     }
-    ns.run(startScript);
+
+    if (options.hack) ns.run(startScript);
 
     let ramOrderedServers = currentServers.map(host => {
         return { "host": host, ram: ns.getServerMaxRam(host) };
@@ -58,7 +60,7 @@ OPTIONS
 
         // Make sure this is actually an upgrade
         if (ns.getServerMaxRam(oldHostname) < ram) {
-            if (ns.getServerMoneyAvailable("home") < serverCost) {
+            if (options.hack && ns.getServerMoneyAvailable("home") < serverCost) {
                 ns.run(startScript);
                 if (!options.wait) return;
             }
@@ -73,7 +75,8 @@ OPTIONS
         }
         await ns.sleep(100);
     }
-    ns.run(startScript);
+
+    if (options.hack) ns.run(startScript);
 }
 
 function serverName(ram: number) {
