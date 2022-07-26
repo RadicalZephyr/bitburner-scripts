@@ -141,6 +141,34 @@ export function exploitableHosts(ns: NS, hosts: string[]): string[] {
     });
 }
 
+/**
+ */
+export function milkableHosts(ns: NS, hosts: string[]): string[] {
+    return hosts.filter((host) => {
+        return ns.serverExists(host)
+            && hasMoney(ns, host)
+            && canHack(ns, host)
+            && readyToMilk(ns, host)
+    });
+}
+
+function readyToMilk(ns: NS, host: string): boolean {
+    return moneyPercentage(ns, host) > 0.9
+        && securityPercentage(ns, host) < 0.1;
+}
+
+function moneyPercentage(ns: NS, host: string): number {
+    const curMoney = ns.getServerMoneyAvailable(host);
+    const maxMoney = ns.getServerMaxMoney(host);
+    return curMoney / maxMoney;
+}
+
+function securityPercentage(ns: NS, host: string): number {
+    const curSec = ns.getServerSecurityLevel(host);
+    const minSec = ns.getServerMinSecurityLevel(host);
+    return (curSec - minSec) / minSec;
+}
+
 /** Check if a host has a non-zero money capacity.
  */
 function hasMoney(ns: NS, host: string): boolean {
