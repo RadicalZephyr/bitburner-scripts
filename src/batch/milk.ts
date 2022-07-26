@@ -6,38 +6,48 @@ import {
     hackToGrowPercent,
     numThreads,
     setInstanceStartTimes,
-    singleTargetBatchOptions,
     spawnBatchScript,
     timeAlignment,
+    usableHosts,
     weakenThreads
 } from '../lib.js';
+import { walkNetworkBFS } from "../walk-network.js";
 
 export function autocomplete(data: AutocompleteData, _args: string[]): string[] {
     return data.servers;
 }
 
 export async function main(ns: NS) {
-    const [host, target] = singleTargetBatchOptions(ns);
-
-    const maxHostThreads = numThreads(ns, host, '/batch/grow.js');
+    const target = ns.args[0];
+    if (typeof target != 'string' || !ns.serverExists(target)) {
+        ns.tprintf('invalid target');
+        return;
+    }
 
     const milkRound = calculateMilkRound(ns, target);
 
     const scriptDescriptions = milkRound.instances.map(si => `  ${si.script} -t ${si.threads}`).join('\n');
     ns.tprint(`
-milking ${target} from ${host}:
+milking ${target}:
 ${scriptDescriptions}
 total batch time: ${milkRound.totalBatchTime}
 number of batches: ${milkRound.numberOfBatches}
 total number of threads needed: ${milkRound.totalThreads}
 `);
 
-    if (maxHostThreads > milkRound.totalThreads && milkRound.totalThreads > 0) {
-        await launchMilkRound(ns, host, milkRound);
-    } else {
-        ns.tprint(`
-not enough threads to run milk on ${host}!
-`);
+    let network = walkNetworkBFS(ns);
+    let allHosts = Array.from(network.keys());
+    let hosts = usableHosts(ns, allHosts);
+
+    let batchNumber = 0;
+
+    for (const host of hosts) {
+        let availableHostThreads = numThreads(ns, host, '/batch/grow.js');
+
+        while (batchNumber < milkRound.numberOfBatches && availableHostThreads > milkRound.totalBatchThreads) {
+            milkRound.instances.forEach(inst => spawnBatchScript(ns, host, inst, batchNumber));
+            await ns.sleep(milkRound.batchOffset);
+        }
     }
 }
 
