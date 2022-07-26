@@ -2,6 +2,7 @@ import type { NS, AutocompleteData } from "netscript";
 
 import {
     BatchScriptInstance,
+    availableRam,
     growAnalyze,
     hackToGrowPercent,
     numThreads,
@@ -15,6 +16,10 @@ import { walkNetworkBFS } from "../walk-network.js";
 
 export function autocomplete(data: AutocompleteData, _args: string[]): string[] {
     return data.servers;
+}
+
+function byAvailableRam(ns: NS): ((a: string, b: string) => number) {
+    return (a, b) => availableRam(ns, b) - availableRam(ns, a);
 }
 
 export async function main(ns: NS) {
@@ -38,6 +43,7 @@ total number of threads needed: ${milkRound.totalThreads}
     let network = walkNetworkBFS(ns);
     let allHosts = Array.from(network.keys());
     let hosts = usableHosts(ns, allHosts);
+    hosts.sort(byAvailableRam(ns));
 
     let batchNumber = 0;
 
