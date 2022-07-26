@@ -322,6 +322,8 @@ export function spawnBatchScript(ns: NS, host: string, scriptInstance: BatchScri
     }
 }
 
+export type ScriptArgs = string | number | boolean;
+
 export type BatchScript = "/batch/grow.js" | "/batch/hack.js" | "/batch/weaken.js";
 
 export class BatchInstance {
@@ -330,7 +332,6 @@ export class BatchInstance {
     host: string;
     threads: number;
     target: string;
-    delay: number;
 
     constructor(
         pid: number,
@@ -338,45 +339,52 @@ export class BatchInstance {
         host: string,
         threads: number,
         target: string,
-        delay: number,
     ) {
         this.pid = pid;
         this.script = script;
         this.host = host;
         this.threads = threads;
         this.target = target;
-        this.delay = delay;
     }
 };
 
 export class BatchSpec {
-    script: BatchScript;
-    host: string;
-    threads: number;
     target: string;
-    delay: number;
+    script: BatchScript;
+    threads: number;
+    startTime: number;
+    runTime: number;
+    endDelay: number;
+    loop: boolean;
 
     constructor(
-        script: BatchScript,
-        host: string,
-        threads: number,
         target: string,
-        delay: number,
+        script: BatchScript,
+        threads: number,
+        startTime: number,
+        runTime: number,
+        endDelay: number,
+        loop: boolean
     ) {
-        this.script = script;
-        this.host = host;
-        this.threads = threads;
         this.target = target;
-        this.delay = delay;
+        this.script = script;
+        this.threads = threads;
+        this.startTime = startTime;
+        this.runTime = runTime;
+        this.endDelay = endDelay;
+        this.loop = loop;
     }
 
-    exec(ns: NS): BatchInstance {
-        if (this.threads >= 1) {
-            const pid = ns.exec(this.script, this.host, this.threads, this.target, this.delay);
+    exec(ns: NS, host: string, ...extraArgs: ScriptArgs[]): BatchInstance {
+        if (this.threads > 0) {
+            let args = [this.target, this.startTime, ...extraArgs];
+            if (this.loop) args.unshift('--loop');
+
+            const pid = ns.exec(this.script, host, this.threads, ...args);
 
             if (pid == 0) return null;
 
-            return new BatchInstance(pid, this.script, this.host, this.threads, this.target, this.delay);
+            return new BatchInstance(pid, this.script, host, this.threads, this.target);
         }
         return null;
     }
