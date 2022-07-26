@@ -1,9 +1,7 @@
 import type { NS, AutocompleteData } from "netscript";
 
-import { exploitableHosts, spawnBatchScript, weakenAnalyze } from '../lib';
+import { byWeakenTime, calculateWeakenInstance, softenableHosts, spawnBatchScript } from '../lib';
 import { walkNetworkBFS } from "../walk-network.js";
-
-const weakenScript = '/batch/weaken.js';
 
 export function autocomplete(data: AutocompleteData, _args: string[]): string[] {
     return data.servers;
@@ -18,7 +16,7 @@ export async function main(ns: NS) {
 
     let network = walkNetworkBFS(ns);
     let allHosts = Array.from(network.keys());
-    let targets = exploitableHosts(ns, allHosts);
+    let targets = softenableHosts(ns, allHosts);
 
     targets.sort(byWeakenTime(ns));
 
@@ -27,15 +25,4 @@ export async function main(ns: NS) {
         ns.tprint(`softening ${target} with ${weakenInstance.threads} threads on ${host}`);
         spawnBatchScript(ns, host, weakenInstance);
     }
-}
-
-function calculateWeakenInstance(ns: NS, target: string) {
-    let script = weakenScript;
-    let threads = weakenAnalyze(ns, target, 1.0);
-    const runTime = ns.getWeakenTime(target);
-    return { script, threads, target, startTime: 0, runTime, endDelay: 0, loop: false };
-}
-
-function byWeakenTime(ns: NS): ((a: string, b: string) => number) {
-    return (a, b) => ns.getWeakenTime(a) - ns.getWeakenTime(b);
 }
