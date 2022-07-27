@@ -676,7 +676,7 @@ export function getHighestPurchasableRamLevel(ns: NS, percentageSpend: number): 
 
     let ram = 16;
 
-    while (maxPerServerSpend > ns.getPurchasedServerCost(ram)) {
+    while (ram * 2 <= maxServerRam && maxPerServerSpend > ns.getPurchasedServerCost(ram)) {
         ram *= 2;
     }
 
