@@ -7,7 +7,7 @@ import {
     spawnBatchScript,
     usableHosts,
 } from '../lib.js';
-import { walkNetworkBFS } from "../walk-network.js";
+import { walkNetworkBFS } from "../lib";
 
 export function autocomplete(data: AutocompleteData, _args: string[]): string[] {
     return data.servers;

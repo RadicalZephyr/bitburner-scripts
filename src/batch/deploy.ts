@@ -1,7 +1,6 @@
 import type { NS } from "netscript";
 
-import { getRootAccess, exploitableHosts, usableHosts } from '../lib.js';
-import { walkNetworkBFS } from "../walk-network.js";
+import { getRootAccess, exploitableHosts, usableHosts, walkNetworkBFS } from '../lib.js';
 
 const scripts = {
     'grow': '/batch/grow.js',

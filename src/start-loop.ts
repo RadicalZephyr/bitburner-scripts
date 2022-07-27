@@ -1,6 +1,6 @@
 import type { NS } from "netscript";
 
-import { walkNetworkBFS } from "./walk-network.js";
+import { walkNetworkBFS } from "./lib";
 
 const scriptList = ['/loop/grow.js', '/loop/hack.js', '/loop/weaken.js'];
 

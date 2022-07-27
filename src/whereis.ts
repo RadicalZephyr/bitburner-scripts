@@ -1,6 +1,6 @@
 import type { NS, AutocompleteData } from "netscript";
 
-import { walkNetworkBFS } from "./walk-network.js";
+import { walkNetworkBFS } from "./lib";
 
 export function autocomplete(data: AutocompleteData, args: string[]): string[] {
     return data.servers;

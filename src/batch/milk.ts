@@ -8,8 +8,8 @@ import {
     numThreads,
     spawnBatchScript,
     usableHosts,
+    walkNetworkBFS
 } from '../lib.js';
-import { walkNetworkBFS } from "../walk-network.js";
 
 export function autocomplete(data: AutocompleteData, _args: string[]): string[] {
     return data.servers;

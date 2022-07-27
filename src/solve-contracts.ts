@@ -1,6 +1,6 @@
 import type { NS } from "netscript";
 
-import { walkNetworkBFS } from "./walk-network.js";
+import { walkNetworkBFS } from "./lib";
 
 const CONTRACT_PORT: number = 20;
 

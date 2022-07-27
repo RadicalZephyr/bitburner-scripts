@@ -1,7 +1,6 @@
 import type { NS, AutocompleteData } from "netscript";
 
-import { byWeakenTime, calculateWeakenInstance, softenableHosts, spawnBatchScript } from '../lib';
-import { walkNetworkBFS } from "../walk-network.js";
+import { byWeakenTime, calculateWeakenInstance, softenableHosts, spawnBatchScript, walkNetworkBFS } from '../lib';
 
 export function autocomplete(data: AutocompleteData, _args: string[]): string[] {
     return data.servers;
