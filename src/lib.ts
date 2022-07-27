@@ -2,70 +2,6 @@ import type { NS } from "netscript";
 
 import { portOpeningPrograms } from "./constants";
 
-/** Check if node is a valid target
- */
-export function validTarget(ns: NS, node: any) {
-    return typeof (node) == "string" && ns.serverExists(node);
-}
-
-/** Calculate the number of threads this script can be run with on this node.
- */
-export function numThreads(ns: NS, node: string, hackScript: string, percentage?: number): number {
-    percentage = percentage ? percentage : 1.0;
-    let hackScriptRam = ns.getScriptRam(hackScript);
-    let availableNodeRam = availableRam(ns, node);
-    return Math.floor(availableNodeRam * percentage / hackScriptRam);
-}
-
-/** Determine total amount of RAM available for running scripts.
- */
-export function availableRam(ns: NS, node: string): number {
-    return ns.getServerMaxRam(node) - ns.getServerUsedRam(node);
-}
-
-/** Print the cost breakdown of a server tier with `ram` memory.
- */
-export function reportServerComplementCost(ns: NS, ram: number): void {
-    let maxServers = ns.getPurchasedServerLimit();
-    let serverCost = ns.getPurchasedServerCost(ram);
-    let totalCost = maxServers * serverCost;
-    ns.tprint("you can buy ", maxServers, " servers with ",
-        formatGigaBytes(ram), " of RAM for $",
-        formatMoney(serverCost), " per server ",
-        "for a total of $", formatMoney(totalCost),
-    );
-}
-
-/** Return the maximum amount of ram that can be purchased.
- */
-export function getHighestPurchasableRamLevel(ns: NS, percentageSpend: number): number {
-    let maxServers = ns.getPurchasedServerLimit();
-    let maxServerTierSpend = ns.getServerMoneyAvailable("home") * percentageSpend;
-    let maxPerServerSpend = maxServerTierSpend / maxServers;
-    let maxServerRam = ns.getPurchasedServerMaxRam();
-
-    let ram = 16;
-
-    while (maxPerServerSpend > ns.getPurchasedServerCost(ram)) {
-        ram *= 2;
-    }
-
-    return ram / 2;
-}
-
-export function formatMoney(value: number): string {
-    var s = ['', 'k', 'm', 'b', 't', 'q'];
-    var e = Math.floor(Math.log(value) / Math.log(1000));
-    return (value / Math.pow(1000, e)).toFixed(2) + s[e];
-}
-
-
-export function formatGigaBytes(value: number): string {
-    var s = ['GB', 'TB', 'PB'];
-    var e = Math.floor(Math.log(value) / Math.log(1024));
-    return (value / Math.pow(1024, e)).toFixed(0) + s[e];
-}
-
 /** Get root access to a server if possible.
  *
  * @returns whether you have root access to the target `host`.
@@ -121,13 +57,27 @@ export function canNuke(ns: NS, host: string): boolean {
     return existingPrograms.length >= portsNeeded;
 }
 
-/** Filter hosts by exploitability.
+
+//////////////////////////////////////////
+// Host Filtering Utilities
+//////////////////////////////////////////
+
+/**
+ *
  */
-export function preppableHosts(ns: NS, hosts: string[]): string[] {
+export function availableHosts(ns: NS, hosts: string[]): string[] {
+    return hosts.filter((host) => {
+        return availableRam(ns, host) > 0;
+    });
+}
+
+/** Filter hosts by whether they can run scripts.
+ */
+export function usableHosts(ns: NS, hosts: string[]): string[] {
     return hosts.filter((host) => {
         return ns.serverExists(host)
-            && hasMoney(ns, host)
-            && canNuke(ns, host);
+            && canNuke(ns, host)
+            && hasRam(ns, host);
     });
 }
 
@@ -189,13 +139,43 @@ export function readyToMilk(ns: NS, host: string): boolean {
         && securityPercentage(ns, host) < 0.1;
 }
 
-function moneyPercentage(ns: NS, host: string): number {
+
+//////////////////////////////////////////
+// Server Details Utilities
+//////////////////////////////////////////
+
+/** Check if node is a valid target
+ */
+export function validTarget(ns: NS, node: any) {
+    return typeof (node) == "string" && ns.serverExists(node);
+}
+
+/** Determine total amount of RAM available for running scripts.
+ */
+export function availableRam(ns: NS, node: string): number {
+    return ns.getServerMaxRam(node) - ns.getServerUsedRam(node);
+}
+
+/** Calculate the number of threads this script can be run with on this node.
+ */
+export function numThreads(ns: NS, node: string, hackScript: string, percentage?: number): number {
+    percentage = percentage ? percentage : 1.0;
+    let hackScriptRam = ns.getScriptRam(hackScript);
+    let availableNodeRam = availableRam(ns, node);
+    return Math.floor(availableNodeRam * percentage / hackScriptRam);
+}
+
+/** Determine how far below maximum money a host currently is.
+ */
+export function moneyPercentage(ns: NS, host: string): number {
     const curMoney = ns.getServerMoneyAvailable(host);
     const maxMoney = ns.getServerMaxMoney(host);
     return curMoney / maxMoney;
 }
 
-function securityPercentage(ns: NS, host: string): number {
+/** Determine how far above minimum security a host currently is.
+ */
+export function securityPercentage(ns: NS, host: string): number {
     const curSec = ns.getServerSecurityLevel(host);
     const minSec = ns.getServerMinSecurityLevel(host);
     return (curSec - minSec) / minSec;
@@ -203,32 +183,20 @@ function securityPercentage(ns: NS, host: string): number {
 
 /** Check if a host has a non-zero money capacity.
  */
-function hasMoney(ns: NS, host: string): boolean {
+export function hasMoney(ns: NS, host: string): boolean {
     return ns.getServerMaxMoney(host) > 0;
 }
 
-/**
- *
+/** Check if a host has non-zero RAM.
  */
-export function availableHosts(ns: NS, hosts: string[]): string[] {
-    return hosts.filter((host) => {
-        return availableRam(ns, host) > 0;
-    });
-}
-
-/** Filter hosts by whether they can run scripts.
- */
-export function usableHosts(ns: NS, hosts: string[]): string[] {
-    return hosts.filter((host) => {
-        return ns.serverExists(host)
-            && canNuke(ns, host)
-            && hasRam(ns, host);
-    });
-}
-
-function hasRam(ns: NS, host: string): boolean {
+export function hasRam(ns: NS, host: string): boolean {
     return ns.getServerMaxRam(host) > 0;
 }
+
+
+//////////////////////////////////////////
+// Hacking Analysis Utilities
+//////////////////////////////////////////
 
 /** Calculate the number of threads needed to grow the server by a
  * certain multiplier.
@@ -275,6 +243,7 @@ export function weakenAmount(threads: number): number {
     return Math.floor(threads) / 20;
 }
 
+
 ///////////////////////////////////////////
 // Batch Hacking Utilities
 ///////////////////////////////////////////
@@ -304,6 +273,137 @@ export function singleTargetBatchOptions(ns: NS): BatchOptions {
         target
     ];
 }
+
+export function byAvailableRam(ns: NS): ((a: string, b: string) => number) {
+    return (a, b) => availableRam(ns, b) - availableRam(ns, a);
+}
+
+export function hackToGrowPercent(hackPercent: number): number {
+    return 1 / (1 - hackPercent);
+}
+
+export function growToHackPercent(growPercent: number): number {
+    return 1 - (1 / growPercent);
+}
+
+export type BatchScriptInstance = {
+    target: string;
+    script: string;
+    threads: number;
+    startTime: number;
+    runTime: number;
+    endDelay: number;
+    loop: boolean;
+};
+
+export const minimumTimeDelta = 150;
+export const timeAlignment = 1000;
+
+export function setInstanceStartTimes(scriptInstances: BatchScriptInstance[]): void {
+    let endTime = 0;
+    scriptInstances.forEach(i => {
+        i.startTime = endTime - i.runTime;
+        endTime += minimumTimeDelta;
+    });
+    // Get relative end time of final instance
+    const relativeBatchEndTime = endTime - minimumTimeDelta;
+
+    // Determine offset to bring most negative start time to zero
+    let earliestStartTime = -Math.min(...scriptInstances.map(i => i.startTime));
+
+    // Calculate actual batch end time
+    const actualEndTime = relativeBatchEndTime + earliestStartTime;
+
+    // Pad out batch so that actualEndTime is aligned to the time alignment interval
+    if (actualEndTime > 1000) {
+        const padding = 1000 - (actualEndTime % timeAlignment);
+        earliestStartTime += padding;
+    }
+
+    // Push forward all start times so earliest one is zero
+    scriptInstances.forEach(i => {
+        i.startTime += earliestStartTime;
+        i.endDelay = actualEndTime - (i.startTime + i.runTime);
+    });
+}
+
+export function spawnBatchScript(ns: NS, host: string, scriptInstance: BatchScriptInstance, ...extraArgs: (string | number | boolean)[]) {
+    const { script, threads, target, startTime } = scriptInstance;
+    if (threads > 0) {
+        let args = [target, startTime, ...extraArgs];
+        if (scriptInstance.loop) args.unshift('--loop');
+
+        ns.exec(script, host, threads, ...args);
+    }
+}
+
+export type ScriptArgs = string | number | boolean;
+
+export type BatchScript = "/batch/grow.js" | "/batch/hack.js" | "/batch/weaken.js";
+
+export class BatchInstance {
+    pid: number;
+    script: BatchScript;
+    host: string;
+    threads: number;
+    target: string;
+
+    constructor(
+        pid: number,
+        script: BatchScript,
+        host: string,
+        threads: number,
+        target: string,
+    ) {
+        this.pid = pid;
+        this.script = script;
+        this.host = host;
+        this.threads = threads;
+        this.target = target;
+    }
+};
+
+export class BatchSpec {
+    target: string;
+    script: BatchScript;
+    threads: number;
+    startTime: number;
+    runTime: number;
+    endDelay: number;
+    loop: boolean;
+
+    constructor(
+        target: string,
+        script: BatchScript,
+        threads: number,
+        startTime: number,
+        runTime: number,
+        endDelay: number,
+        loop: boolean
+    ) {
+        this.target = target;
+        this.script = script;
+        this.threads = threads;
+        this.startTime = startTime;
+        this.runTime = runTime;
+        this.endDelay = endDelay;
+        this.loop = loop;
+    }
+
+    exec(ns: NS, host: string, ...extraArgs: ScriptArgs[]): BatchInstance {
+        if (this.threads > 0) {
+            let args = [this.target, this.startTime, ...extraArgs];
+            if (this.loop) args.unshift('--loop');
+
+            const pid = ns.exec(this.script, host, this.threads, ...args);
+
+            if (pid == 0) return null;
+
+            return new BatchInstance(pid, this.script, host, this.threads, this.target);
+        }
+        return null;
+    }
+};
 
 
 /*****************************************
@@ -548,140 +648,64 @@ export function calculateMilkBatch(ns: NS, target: string): BatchScriptInstance[
     return scriptInstances;
 }
 
-export function byAvailableRam(ns: NS): ((a: string, b: string) => number) {
-    return (a, b) => availableRam(ns, b) - availableRam(ns, a);
+
+//////////////////////////////////////////
+// Server Purchase Utilities
+//////////////////////////////////////////
+
+/** Print the cost breakdown of a server tier with `ram` memory.
+ */
+export function reportServerComplementCost(ns: NS, ram: number): void {
+    let maxServers = ns.getPurchasedServerLimit();
+    let serverCost = ns.getPurchasedServerCost(ram);
+    let totalCost = maxServers * serverCost;
+    ns.tprint("you can buy ", maxServers, " servers with ",
+        formatGigaBytes(ram), " of RAM for $",
+        formatMoney(serverCost), " per server ",
+        "for a total of $", formatMoney(totalCost),
+    );
 }
 
-export function hackToGrowPercent(hackPercent: number): number {
-    return 1 / (1 - hackPercent);
+/** Return the maximum amount of ram that can be purchased.
+ */
+export function getHighestPurchasableRamLevel(ns: NS, percentageSpend: number): number {
+    let maxServers = ns.getPurchasedServerLimit();
+    let maxServerTierSpend = ns.getServerMoneyAvailable("home") * percentageSpend;
+    let maxPerServerSpend = maxServerTierSpend / maxServers;
+    let maxServerRam = ns.getPurchasedServerMaxRam();
+
+    let ram = 16;
+
+    while (maxPerServerSpend > ns.getPurchasedServerCost(ram)) {
+        ram *= 2;
+    }
+
+    return ram / 2;
 }
 
-export function growToHackPercent(growPercent: number): number {
-    return 1 - (1 / growPercent);
+
+//////////////////////////////////////////
+// Formatting Utilities
+//////////////////////////////////////////
+
+export function formatMoney(value: number): string {
+    var s = ['', 'k', 'm', 'b', 't', 'q'];
+    var e = Math.floor(Math.log(value) / Math.log(1000));
+    return (value / Math.pow(1000, e)).toFixed(2) + s[e];
 }
 
-export type BatchScriptInstance = {
-    target: string;
-    script: string;
-    threads: number;
-    startTime: number;
-    runTime: number;
-    endDelay: number;
-    loop: boolean;
-};
 
-export const minimumTimeDelta = 150;
-export const timeAlignment = 1000;
-
-export function setInstanceStartTimes(scriptInstances: BatchScriptInstance[]): void {
-    let endTime = 0;
-    scriptInstances.forEach(i => {
-        i.startTime = endTime - i.runTime;
-        endTime += minimumTimeDelta;
-    });
-    // Get relative end time of final instance
-    const relativeBatchEndTime = endTime - minimumTimeDelta;
-
-    // Determine offset to bring most negative start time to zero
-    let earliestStartTime = -Math.min(...scriptInstances.map(i => i.startTime));
-
-    // Calculate actual batch end time
-    const actualEndTime = relativeBatchEndTime + earliestStartTime;
-
-    // Pad out batch so that actualEndTime is aligned to the time alignment interval
-    if (actualEndTime > 1000) {
-        const padding = 1000 - (actualEndTime % timeAlignment);
-        earliestStartTime += padding;
-    }
-
-    // Push forward all start times so earliest one is zero
-    scriptInstances.forEach(i => {
-        i.startTime += earliestStartTime;
-        i.endDelay = actualEndTime - (i.startTime + i.runTime);
-    });
+export function formatGigaBytes(value: number): string {
+    var s = ['GB', 'TB', 'PB'];
+    var e = Math.floor(Math.log(value) / Math.log(1024));
+    return (value / Math.pow(1024, e)).toFixed(0) + s[e];
 }
 
-export function spawnBatchScript(ns: NS, host: string, scriptInstance: BatchScriptInstance, ...extraArgs: (string | number | boolean)[]) {
-    const { script, threads, target, startTime } = scriptInstance;
-    if (threads > 0) {
-        let args = [target, startTime, ...extraArgs];
-        if (scriptInstance.loop) args.unshift('--loop');
 
-        ns.exec(script, host, threads, ...args);
-    }
-}
+//////////////////////////////////////////
+// Heap Implementation
+//////////////////////////////////////////
 
-export type ScriptArgs = string | number | boolean;
-
-export type BatchScript = "/batch/grow.js" | "/batch/hack.js" | "/batch/weaken.js";
-
-export class BatchInstance {
-    pid: number;
-    script: BatchScript;
-    host: string;
-    threads: number;
-    target: string;
-
-    constructor(
-        pid: number,
-        script: BatchScript,
-        host: string,
-        threads: number,
-        target: string,
-    ) {
-        this.pid = pid;
-        this.script = script;
-        this.host = host;
-        this.threads = threads;
-        this.target = target;
-    }
-};
-
-export class BatchSpec {
-    target: string;
-    script: BatchScript;
-    threads: number;
-    startTime: number;
-    runTime: number;
-    endDelay: number;
-    loop: boolean;
-
-    constructor(
-        target: string,
-        script: BatchScript,
-        threads: number,
-        startTime: number,
-        runTime: number,
-        endDelay: number,
-        loop: boolean
-    ) {
-        this.target = target;
-        this.script = script;
-        this.threads = threads;
-        this.startTime = startTime;
-        this.runTime = runTime;
-        this.endDelay = endDelay;
-        this.loop = loop;
-    }
-
-    exec(ns: NS, host: string, ...extraArgs: ScriptArgs[]): BatchInstance {
-        if (this.threads > 0) {
-            let args = [this.target, this.startTime, ...extraArgs];
-            if (this.loop) args.unshift('--loop');
-
-            const pid = ns.exec(this.script, host, this.threads, ...args);
-
-            if (pid == 0) return null;
-
-            return new BatchInstance(pid, this.script, host, this.threads, this.target);
-        }
-        return null;
-    }
-};
-
-/*****************************************
- * Heap Implementation
- *****************************************/
 type Entry<T> = {
     key: number,
     value: T,
@@ -772,9 +796,10 @@ function right(index: number) {
     return 2 * index + 2;
 }
 
-/*****************************************
- * Iterator Utilities
- *****************************************/
+
+//////////////////////////////////////////
+// Iterator Utilities
+//////////////////////////////////////////
 
 type Partition<T> = [isTrue: T[], isFalse: T[]];
 
