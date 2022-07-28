@@ -5,7 +5,7 @@ import { getRootAccess, numThreads, exploitableHosts, usableHosts, walkNetworkBF
 export async function main(ns: NS) {
     const options = ns.flags([
         ['share', false],
-        ['share-percent', 0.75],
+        ['share_percent', 0.75],
         ['help', false]
     ]);
 
@@ -16,7 +16,7 @@ Usage: ${ns.getScriptName()} [OPTIONS]
 OPTIONS
   --help          Show this help message
   --share         Run share script on usable hosts
-  --share-percent Specify the percentage of usable hosts to share [0-1]
+  --share_percent Specify the percentage of usable hosts to share [0-1]
 `);
         return;
     }
