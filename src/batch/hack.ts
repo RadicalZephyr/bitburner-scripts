@@ -19,8 +19,8 @@ export async function main(ns: NS) {
     }
 
     let endDelay = args[2];
-    if (typeof endDelay != 'number') {
-        endDelay = 1;
+    if (typeof endDelay != 'number' || endDelay < 10) {
+        endDelay = 10;
     }
 
     do {
