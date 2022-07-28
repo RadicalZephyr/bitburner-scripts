@@ -110,55 +110,6 @@ export function exploitableHosts(ns: NS, hosts: string[]): string[] {
     });
 }
 
-/** Filter for hosts that are ready to be softened.
- */
-export function softenableHosts(ns: NS, hosts: string[]): string[] {
-    return hosts.filter((host) => {
-        return ns.serverExists(host)
-            && hasMoney(ns, host)
-            && canNuke(ns, host)
-            && readyToSoften(ns, host);
-    });
-}
-
-/** Filter for hosts that are ready to be built.
- */
-export function buildableHosts(ns: NS, hosts: string[]): string[] {
-    return hosts.filter((host) => {
-        return ns.serverExists(host)
-            && hasMoney(ns, host)
-            && canNuke(ns, host)
-            && readyToBuild(ns, host);
-    });
-}
-
-/** Filter for hosts that are ready to be milked.
- */
-export function milkableHosts(ns: NS, hosts: string[]): string[] {
-    return hosts.filter((host) => {
-        return ns.serverExists(host)
-            && hasMoney(ns, host)
-            && canHack(ns, host)
-            && readyToMilk(ns, host)
-    });
-}
-
-export function readyToSoften(ns: NS, host: string): boolean {
-    return moneyPercentage(ns, host) <= 0.9
-        && securityPercentage(ns, host) >= 0.1;
-}
-
-export function readyToBuild(ns: NS, host: string): boolean {
-    return moneyPercentage(ns, host) <= 0.9
-        && securityPercentage(ns, host) < 0.1;
-}
-
-export function readyToMilk(ns: NS, host: string): boolean {
-    return moneyPercentage(ns, host) > 0.9
-        && securityPercentage(ns, host) < 0.1;
-}
-
-
 //////////////////////////////////////////
 // Server Details Utilities
 //////////////////////////////////////////
@@ -424,6 +375,58 @@ export class BatchSpec {
     }
 };
 
+
+/*****************************************
+ * Batch Lifecycle Filtering Utilities
+ *****************************************/
+
+/** Filter for hosts that are ready to be softened.
+ */
+export function softenableHosts(ns: NS, hosts: string[]): string[] {
+    return hosts.filter((host) => {
+        return ns.serverExists(host)
+            && hasMoney(ns, host)
+            && canNuke(ns, host)
+            && readyToSoften(ns, host);
+    });
+}
+
+/** Filter for hosts that are ready to be built.
+ */
+export function buildableHosts(ns: NS, hosts: string[]): string[] {
+    return hosts.filter((host) => {
+        return ns.serverExists(host)
+            && hasMoney(ns, host)
+            && canNuke(ns, host)
+            && readyToBuild(ns, host);
+    });
+}
+
+/** Filter for hosts that are ready to be milked.
+ */
+export function milkableHosts(ns: NS, hosts: string[]): string[] {
+    return hosts.filter((host) => {
+        return ns.serverExists(host)
+            && hasMoney(ns, host)
+            && canHack(ns, host)
+            && readyToMilk(ns, host)
+    });
+}
+
+export function readyToSoften(ns: NS, host: string): boolean {
+    return moneyPercentage(ns, host) <= 0.9
+        && securityPercentage(ns, host) >= 0.1;
+}
+
+export function readyToBuild(ns: NS, host: string): boolean {
+    return moneyPercentage(ns, host) <= 0.9
+        && securityPercentage(ns, host) < 0.1;
+}
+
+export function readyToMilk(ns: NS, host: string): boolean {
+    return moneyPercentage(ns, host) > 0.9
+        && securityPercentage(ns, host) < 0.1;
+}
 
 /*****************************************
  * Softening/Weakening Utilities
