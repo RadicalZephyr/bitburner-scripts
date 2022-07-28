@@ -298,9 +298,9 @@ export function setInstanceStartTimes(scriptInstances: BatchScriptInstance[]): v
 }
 
 export function spawnBatchScript(ns: NS, host: string, scriptInstance: BatchScriptInstance, ...extraArgs: (string | number | boolean)[]) {
-    const { script, threads, target, startTime } = scriptInstance;
+    const { script, threads, target, startTime, endDelay } = scriptInstance;
     if (threads > 0) {
-        let args = [target, startTime, ...extraArgs];
+        let args = [target, startTime, endDelay, ...extraArgs];
         if (scriptInstance.loop) args.unshift('--loop');
 
         ns.exec(script, host, threads, ...args);
