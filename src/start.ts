@@ -4,6 +4,8 @@ import { getRootAccess, numThreads, exploitableHosts, usableHosts, walkNetworkBF
 
 export async function main(ns: NS) {
     const options = ns.flags([
+        ['hack', false],
+        ['reserve', false],
         ['share', false],
         ['share_percent', 0.75],
         ['help', false]
@@ -15,6 +17,8 @@ Usage: ${ns.getScriptName()} [OPTIONS]
 
 OPTIONS
   --help          Show this help message
+  --hack          Start naive hacking scripts against all viable targets
+  --reserve       Reserve the weakest targets for script development
   --share         Run share script on usable hosts
   --share_percent Specify the percentage of usable hosts to share [0-1]
 `);
@@ -48,6 +52,7 @@ OPTIONS
         await shareHosts(ns, hosts, shareScript, options.share_percent);
     }
 
+    hosts = hosts.filter(h => !(h === 'home'));
     let targets = exploitableHosts(ns, allHosts);
     ns.tprintf(
         "hosts (%d): [%s]\ntargets (%d): [%s]\n",
@@ -55,12 +60,14 @@ OPTIONS
         targets.length, targets.join(", ")
     );
 
-    hosts = hosts.filter(h => !(h === 'home'));
+    if (options.hack) {
+        if (options.reserve) {
+            const reservedTargets = ['n00dles', 'foodnstuff', 'sigma-cosmetics'];
+            targets = targets.filter(t => !reservedTargets.includes(t));
+        }
 
-    const reservedTargets = ['n00dles', 'foodnstuff', 'sigma-cosmetics'];
-    targets = targets.filter(t => !reservedTargets.includes(t));
-
-    await startHosts(ns, hosts, targets, hackScript);
+        await startHosts(ns, hosts, targets, hackScript);
+    }
 }
 
 async function shareHosts(ns: NS, hosts: string[], shareScript: string, shareAmount: number) {
