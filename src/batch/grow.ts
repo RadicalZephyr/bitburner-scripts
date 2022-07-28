@@ -19,9 +19,10 @@ export async function main(ns: NS) {
     }
 
     let endDelay = args[2];
-    if (typeof endDelay != 'number' || endDelay < 20) {
+    if (typeof endDelay != 'number') {
         endDelay = 20;
     }
+    endDelay = Math.max(20, endDelay);
 
     do {
         await ns.sleep(sleepTime);
