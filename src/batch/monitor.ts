@@ -1,6 +1,6 @@
 import type { NS } from "netscript";
 
-import { exploitableHosts, usableHosts, walkNetworkBFS } from '../lib';
+import { buildableHosts, milkableHosts, softenableHosts, usableHosts, walkNetworkBFS } from '../lib';
 
 export async function main(ns: NS) {
     const flags = ns.flags([
@@ -33,24 +33,47 @@ Example:
     while (true) {
         ns.clearLog();
 
+        const targetThreads = countThreadsByTarget(ns, allHosts);
+
         let hosts = usableHosts(ns, allHosts);
-        let targets = exploitableHosts(ns, allHosts);
-        targets.sort(byLongestTime(ns));
+        let softenTargets = softenableHosts(ns, allHosts);
+        softenTargets.sort(byLongestTime(ns));
 
-        const maxTargetNameLen = Math.max(...targets.map(t => t.length));
+        let buildTargets = buildableHosts(ns, allHosts);
+        buildTargets.sort(byLongestTime(ns));
 
-        const baseFormatString = `%${maxTargetNameLen}s | %7s %6s %7s %7s %7s`;
-        const headings = ['target', '$: %', '+sec', 'thr(h)', 'thr(g)', 'thr(w)'];
+        let milkTargets = milkableHosts(ns, allHosts);
+        milkTargets.sort(byLongestTime(ns));
 
-        const dividerFormatString = baseFormatString.replaceAll(' ', '-').replaceAll('%', "%'-");
+        type TargetCategories = [
+            category: string,
+            targets: string[]
+        ];
+        const targetCategories: TargetCategories[] = [
+            ["Soften", softenTargets],
+            ["Build", buildTargets],
+            ["Milk", milkTargets]
+        ];
 
-        const blanks = Array(headings.length).fill('');
+        for (const [category, targets] of targetCategories) {
+            if (targets.length == 0) continue;
 
-        ns.printf(baseFormatString, ...headings);
-        ns.printf(dividerFormatString, ...blanks);
-        for (const target of targets) {
-            const info = targetInfo(ns, hosts, target);
-            ns.printf(baseFormatString, ...info);
+            const maxTargetNameLen = Math.max(...targets.map(t => t.length));
+
+            const baseFormatString = `%${maxTargetNameLen}s | %7s %6s %7s %7s %7s`;
+            const headings = ['target', '$: %', '+sec', 'thr(h)', 'thr(g)', 'thr(w)'];
+
+            const dividerFormatString = baseFormatString.replaceAll(' ', '-').replaceAll('%', "%'-");
+
+            const blanks = Array(headings.length).fill('');
+
+            ns.printf('\n%s Targets:', category);
+            ns.printf(baseFormatString, ...headings);
+            ns.printf(dividerFormatString, ...blanks);
+            for (const target of targets) {
+                const info = targetInfo(ns, target, targetThreads.get(target));
+                ns.printf(baseFormatString, ...info);
+            }
         }
         await ns.sleep(flags.refreshrate);
     }
@@ -64,7 +87,41 @@ function longestTime(ns: NS, host: string): number {
     return Math.max(ns.getHackTime(host), ns.getGrowTime(host), ns.getWeakenTime(host));
 }
 
-function targetInfo(ns: NS, hosts: string[], target: string): (string | number)[] {
+class TargetThreads {
+    hack: number;
+    grow: number;
+    weaken: number;
+
+    constructor() {
+        this.hack = 0;
+        this.grow = 0;
+        this.weaken = 0;
+    }
+}
+
+function countThreadsByTarget(ns: NS, hosts: string[]): Map<string, TargetThreads> {
+    let targetThreads = new Map(hosts.map(h => [h, new TargetThreads()]));
+
+    for (const host of hosts) {
+        for (const pi of ns.ps(host)) {
+
+            let target = pi.args[0] === '--loop' ? pi.args[1] : pi.args[0];
+            let targetThread = targetThreads.get(target);
+
+            if (pi.filename === '/batch/hack.js') {
+                targetThread.hack += pi.threads;
+            } else if (pi.filename === '/batch/grow.js') {
+                targetThread.grow += pi.threads;
+            } else if (pi.filename === '/batch/weaken.js') {
+                targetThread.weaken += pi.threads;
+            }
+        }
+    }
+
+    return targetThreads;
+}
+
+function targetInfo(ns: NS, target: string, targetThreads: TargetThreads): (string | number)[] {
     const maxMoney = ns.getServerMaxMoney(target);
     const minSec = ns.getServerMinSecurityLevel(target);
     let money = ns.getServerMoneyAvailable(target);
@@ -74,25 +131,5 @@ function targetInfo(ns: NS, hosts: string[], target: string): (string | number)[
     const moneyPercent = (money / maxMoney * 100).toFixed(2);
     const secPlus = (sec - minSec).toFixed(2);
 
-    let hackThreads = 0;
-    let growThreads = 0;
-    let weakenThreads = 0;
-
-    for (const host of hosts) {
-        const pInfos = ns.ps(host);
-
-        pInfos.filter(pi => pi.args.includes(target))
-            .forEach(pi => {
-                if (pi.filename === '/batch/hack.js') {
-                    hackThreads += pi.threads;
-                } else if (pi.filename === '/batch/grow.js') {
-                    growThreads += pi.threads;
-                } else if (pi.filename === '/batch/weaken.js') {
-                    weakenThreads += pi.threads;
-                }
-            });
-
-    }
-
-    return [target, moneyPercent, secPlus, hackThreads, growThreads, weakenThreads];
+    return [target, moneyPercent, secPlus, targetThreads.hack, targetThreads.grow, targetThreads.weaken];
 }
