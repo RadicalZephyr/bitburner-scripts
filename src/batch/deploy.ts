@@ -83,3 +83,38 @@ export async function main(ns: NS) {
 // time and the pid of the launched process, and compare the current
 // run time with the expected run time against the expected runtime of
 // a newly calculated script.
+
+////////////////////////////////////////
+
+// I'm on the fence currently about whether the build phase should be
+// directly supervised by the launcher script. One way to make this
+// moot, would be to add an option to the relevant grow and weaken
+// scripts to allow the launcher to specify a specific number of
+// iterations. This shouldn't increase the RAM cost at all because it
+// won't use any new Netscript APIs and it would mean that the build
+// phase is fire and forget, and not subject to other phases spawning
+// threads into RAM that it was previously using between when one
+// round ends and another begins.
+
+////////////////////////////////////////
+
+// Another interesting note is that I think the management script
+// almost certainly should not handle launching the milking
+// batches. For those it is actually fairly important to have the
+// relative timing roughly accurate and so trying to combine launching
+// batches against several different targets would introduce a lot of
+// variable lag time for the individual netscript operations time.
+
+// Also, once we launch the management script, it will sequentially
+// spin up each batch, and we can easily launch these batches in
+// parallel with parallel round starting scripts.
+
+
+////////////////////////////////////////
+
+// Finally, to make the manager script really robust, we probably need
+// to notice when the purchased servers get upgrade because a bunch of
+// threads will get killed, and that will kill a completely unknown
+// amount of batches. In order to fill a round again, we really need
+// to kill the rest of the batches in that round and just restart
+// them.
