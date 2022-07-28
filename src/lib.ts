@@ -484,6 +484,15 @@ export function byWeakenTime(ns: NS): ((a: string, b: string) => number) {
  * Building/Growing Utilities
  *****************************************/
 
+function neededGrowThreads(ns: NS, target: string) {
+    const maxMoney = ns.getServerMaxMoney(target);
+    const currentMoney = ns.getServerMoneyAvailable(target);
+
+    const neededGrowRatio = currentMoney > 0 ? maxMoney / currentMoney : maxMoney;
+    const totalGrowThreads = growAnalyze(ns, target, neededGrowRatio);
+    return totalGrowThreads;
+}
+
 export type BatchRound = {
     target: string;
     instances: BatchScriptInstance[];
@@ -493,11 +502,7 @@ export type BatchRound = {
 };
 
 export function calculateBuildRound(ns: NS, target: string): BatchRound {
-    const maxMoney = ns.getServerMaxMoney(target);
-    const currentMoney = ns.getServerMoneyAvailable(target);
-
-    const neededGrowRatio = currentMoney > 0 ? maxMoney / currentMoney : maxMoney;
-    const totalGrowThreads = growAnalyze(ns, target, neededGrowRatio);
+    const totalGrowThreads = neededGrowThreads(ns, target);
 
     const instances = calculateBuildBatch(ns, target);
     const growInstance = instances[0];
@@ -524,9 +529,10 @@ export function calculateBuildBatch(ns: NS, target: string): BatchScriptInstance
     let growThreads = 2;
     const oneWeakenSecurityDecrease = weakenAmount(1);
 
+    const maxGrowThreads = neededGrowThreads(ns, target);
     let growSecurityIncrease = ns.growthAnalyzeSecurity(growThreads, target, 1);
 
-    while (growSecurityIncrease < oneWeakenSecurityDecrease) {
+    while (growThreads <= maxGrowThreads && growSecurityIncrease < oneWeakenSecurityDecrease) {
         growThreads += 1;
         growSecurityIncrease = ns.growthAnalyzeSecurity(growThreads, target, 1);
     }
