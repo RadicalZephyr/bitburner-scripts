@@ -15,12 +15,12 @@ export async function main(ns: NS) {
 
     let sleepTime = args[1];
     if (typeof sleepTime != 'number') {
-        sleepTime = 1;
+        sleepTime = 0;
     }
 
     let endDelay = args[2];
-    if (typeof endDelay != 'number' || endDelay < 10) {
-        endDelay = 10;
+    if (typeof endDelay != 'number' || endDelay < 20) {
+        endDelay = 20;
     }
 
     do {
