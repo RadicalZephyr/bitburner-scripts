@@ -1,6 +1,6 @@
 import type { NS } from "netscript";
 
-import { exploitableHosts, usableHosts, walkNetworkBFS } from '../lib.js';
+import { exploitableHosts, usableHosts, walkNetworkBFS } from '../lib';
 
 export async function main(ns: NS) {
     const flags = ns.flags([

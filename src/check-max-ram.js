@@ -1,4 +1,4 @@
-import { formatGigaBytes, getHighestPurchasableRamLevel, reportServerComplementCost } from './lib.js';
+import { formatGigaBytes, getHighestPurchasableRamLevel, reportServerComplementCost } from './lib';
 
 /** @param {NS} ns */
 export async function main(ns) {

@@ -1,6 +1,6 @@
 import type { NS } from "netscript";
 
-import { formatGigaBytes, getHighestPurchasableRamLevel, reportServerComplementCost } from './lib.js';
+import { formatGigaBytes, getHighestPurchasableRamLevel, reportServerComplementCost } from './lib';
 
 const startScript = "start.js";
 

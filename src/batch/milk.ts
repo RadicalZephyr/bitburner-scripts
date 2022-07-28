@@ -9,7 +9,7 @@ import {
     spawnBatchScript,
     usableHosts,
     walkNetworkBFS
-} from '../lib.js';
+} from '../lib';
 
 export function autocomplete(data: AutocompleteData, _args: string[]): string[] {
     return data.servers;

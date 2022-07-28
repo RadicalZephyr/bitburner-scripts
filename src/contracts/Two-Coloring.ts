@@ -1,6 +1,6 @@
 import type { NS } from "netscript";
 
-import { Edge, Graph } from "./graph.js";
+import { Edge, Graph } from "./graph";
 
 const CONTRACT_PORT: number = 20;
 

@@ -1,6 +1,6 @@
 import type { AutocompleteData, NS } from "netscript";
 
-import { availableHosts, exploitableHosts, getRootAccess, partition, usableHosts, walkNetworkBFS } from '../lib.js';
+import { availableHosts, exploitableHosts, getRootAccess, partition, usableHosts, walkNetworkBFS } from '../lib';
 
 // import { analyzeBuildTarget, GrowSpec } from "./build.js";
 // import { analyzeMilkTarget, HackSpec } from "./milk.js";

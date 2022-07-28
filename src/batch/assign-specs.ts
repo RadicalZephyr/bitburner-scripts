@@ -1,7 +1,6 @@
 import type { NS } from "netscript";
 
-import { exploitableHosts, numThreads, usableHosts, weakenAnalyze } from '../lib';
-import { walkNetworkBFS } from "../lib";
+import { exploitableHosts, numThreads, usableHosts, walkNetworkBFS, weakenAnalyze } from '../lib';
 
 // import { analyzeSoftenTarget, WeakenInstance, WeakenSpec } from './soften';
 

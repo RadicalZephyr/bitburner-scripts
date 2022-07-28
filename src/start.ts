@@ -1,6 +1,6 @@
 import type { NS } from "netscript";
 
-import { getRootAccess, numThreads, exploitableHosts, usableHosts, walkNetworkBFS } from './lib.js';
+import { getRootAccess, numThreads, exploitableHosts, usableHosts, walkNetworkBFS } from './lib';
 
 export async function main(ns: NS) {
     const options = ns.flags([
