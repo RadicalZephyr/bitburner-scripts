@@ -50,5 +50,6 @@ ${scriptDescriptions}
             await ns.sleep(10);
             availableHostThreads = numThreads(ns, host, '/batch/grow.js');
         }
+        await ns.sleep(10);
     }
 }
