@@ -380,6 +380,40 @@ export class BatchSpec {
  * Batch Lifecycle Filtering Utilities
  *****************************************/
 
+export class TargetThreads {
+    hack: number;
+    grow: number;
+    weaken: number;
+
+    constructor() {
+        this.hack = 0;
+        this.grow = 0;
+        this.weaken = 0;
+    }
+}
+
+export function countThreadsByTarget(ns: NS, hosts: string[]): Map<string, TargetThreads> {
+    let targetThreads = new Map(hosts.map(h => [h, new TargetThreads()]));
+
+    for (const host of hosts) {
+        for (const pi of ns.ps(host)) {
+
+            let target = pi.args[0] === '--loop' ? pi.args[1] : pi.args[0];
+            let targetThread = targetThreads.get(target);
+
+            if (pi.filename === '/batch/hack.js') {
+                targetThread.hack += pi.threads;
+            } else if (pi.filename === '/batch/grow.js') {
+                targetThread.grow += pi.threads;
+            } else if (pi.filename === '/batch/weaken.js') {
+                targetThread.weaken += pi.threads;
+            }
+        }
+    }
+
+    return targetThreads;
+}
+
 /** Filter for hosts that are ready to be softened.
  */
 export function softenableHosts(ns: NS, hosts: string[]): string[] {

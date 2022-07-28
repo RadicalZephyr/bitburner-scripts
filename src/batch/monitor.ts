@@ -1,6 +1,14 @@
 import type { NS } from "netscript";
 
-import { buildableHosts, milkableHosts, softenableHosts, usableHosts, walkNetworkBFS } from '../lib';
+import {
+    TargetThreads,
+    buildableHosts,
+    countThreadsByTarget,
+    milkableHosts,
+    softenableHosts,
+    usableHosts,
+    walkNetworkBFS
+} from '../lib';
 
 export async function main(ns: NS) {
     const flags = ns.flags([
@@ -85,40 +93,6 @@ function byLongestTime(ns: NS): ((a: string, b: string) => number) {
 
 function longestTime(ns: NS, host: string): number {
     return Math.max(ns.getHackTime(host), ns.getGrowTime(host), ns.getWeakenTime(host));
-}
-
-class TargetThreads {
-    hack: number;
-    grow: number;
-    weaken: number;
-
-    constructor() {
-        this.hack = 0;
-        this.grow = 0;
-        this.weaken = 0;
-    }
-}
-
-function countThreadsByTarget(ns: NS, hosts: string[]): Map<string, TargetThreads> {
-    let targetThreads = new Map(hosts.map(h => [h, new TargetThreads()]));
-
-    for (const host of hosts) {
-        for (const pi of ns.ps(host)) {
-
-            let target = pi.args[0] === '--loop' ? pi.args[1] : pi.args[0];
-            let targetThread = targetThreads.get(target);
-
-            if (pi.filename === '/batch/hack.js') {
-                targetThread.hack += pi.threads;
-            } else if (pi.filename === '/batch/grow.js') {
-                targetThread.grow += pi.threads;
-            } else if (pi.filename === '/batch/weaken.js') {
-                targetThread.weaken += pi.threads;
-            }
-        }
-    }
-
-    return targetThreads;
 }
 
 function targetInfo(ns: NS, target: string, targetThreads: TargetThreads): (string | number)[] {
