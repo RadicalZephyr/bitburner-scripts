@@ -4,6 +4,7 @@ import {
     TargetThreads,
     buildableHosts,
     countThreadsByTarget,
+    getOwnedServers,
     milkableHosts,
     moneyPercentage,
     softenableHosts,
@@ -42,6 +43,7 @@ Example:
     while (true) {
         ns.clearLog();
 
+        const purchasedServers = getOwnedServers(ns);
         const targetThreads = countThreadsByTarget(ns, allHosts);
 
         let hosts = usableHosts(ns, allHosts);

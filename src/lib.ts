@@ -21,6 +21,19 @@ export const portOpeningPrograms: PortProgram[] = [
     "SQLInject.exe"
 ];
 
+/** Get list of all hosts.
+ */
+export function getAllHosts(ns: NS): string[] {
+    let existingHosts = publicHosts.filter(h => ns.serverExists(h));
+    return ['home', ...getOwnedServers(ns), ...existingHosts];
+}
+
+/** Get list of purchased servers.
+ */
+export function getOwnedServers(ns: NS): string[] {
+    return ns.scan('home').filter(host => host.startsWith('pserv'));
+}
+
 /** Get root access to a server if possible.
  *
  * @returns whether you have root access to the target `host`.
@@ -929,3 +942,76 @@ export function walkNetwork(ns: NS, options?: WalkOptions): Map<string, string[]
     }
     return network;
 }
+
+export const publicHosts = [
+    ".",
+    "4sigma",
+    "CSEC",
+    "I.I.I.I",
+    "The-Cave",
+    "aerocorp",
+    "aevum-police",
+    "alpha-ent",
+    "applied-energetics",
+    "avmnite-02h",
+    "b-and-a",
+    "blade",
+    "catalyst",
+    "clarkinc",
+    "computek",
+    "crush-fitness",
+    "darkweb",
+    "defcomm",
+    "deltaone",
+    "ecorp",
+    "foodnstuff",
+    "fulcrumassets",
+    "fulcrumtech",
+    "galactic-cyber",
+    "global-pharm",
+    "harakiri-sushi",
+    "helios",
+    "hong-fang-tea",
+    "icarus",
+    "infocomm",
+    "iron-gym",
+    "joesguns",
+    "johnson-ortho",
+    "kuai-gong",
+    "lexo-corp",
+    "max-hardware",
+    "megacorp",
+    "microdyne",
+    "millenium-fitness",
+    "n00dles",
+    "nectar-net",
+    "neo-net",
+    "netlink",
+    "nova-med",
+    "nwo",
+    "omega-net",
+    "omnia",
+    "omnitek",
+    "phantasy",
+    "powerhouse-fitness",
+    "rho-construction",
+    "rothman-uni",
+    "run4theh111z",
+    "sigma-cosmetics",
+    "silver-helix",
+    "snap-fitness",
+    "solaris",
+    "stormtech",
+    "summit-uni",
+    "syscore",
+    "taiyang-digital",
+    "the-hub",
+    "titan-labs",
+    "unitalife",
+    "univ-energy",
+    "vitalife",
+    "zb-def",
+    "zb-institute",
+    "zer0",
+    "zeus-med"
+];
