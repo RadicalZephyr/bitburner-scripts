@@ -1,209 +1,115 @@
-import type { NS, Server } from "netscript";
+import type { NS } from "netscript";
 
-const scripts = {
-    'grow': { 'name': '/batch/grow.js', 'ram': 0 },
-    'hack': { 'name': '/batch/hack.js', 'ram': 0 },
-    'weaken': { 'name': '/batch/weaken.js', 'ram': 0 }
-};
+import {
+    buildableHosts,
+    byHackLevel,
+    countThreadsByTarget,
+    getAllHosts,
+    milkableHosts,
+    softenableHosts
+} from '../lib';
 
 export async function main(ns: NS) {
-    const hostsJSON = ns.args[0];
-    if (typeof hostsJSON != 'string') {
-        ns.printf('invalid hosts list');
-        return;
-    }
-    let hostNames: string[] = JSON.parse(hostsJSON);
-    let servers = hostNames.map(name => ns.getServer(name));
+    let allHosts = getAllHosts(ns);
 
-    scripts.grow.ram = ns.getScriptRam(scripts.grow.name);
-    scripts.hack.ram = ns.getScriptRam(scripts.hack.name);
-    scripts.weaken.ram = ns.getScriptRam(scripts.weaken.name);
+    // Get initial lifecycle state of all hosts
+    let softenTargets = softenableHosts(ns, allHosts);
+    softenTargets.sort(byHackLevel(ns));
 
-    let hosts = usableServers(ns, servers);
-    hosts.sort(byAvailableRam);
+    let buildTargets = buildableHosts(ns, allHosts);
+    buildTargets.sort(byHackLevel(ns));
 
-    // const totalAvailableRam = hosts.map(s => s.maxRam - s.ramUsed).reduce((acc, x) => acc + x);
+    let milkTargets = milkableHosts(ns, allHosts);
+    milkTargets.sort(byHackLevel(ns));
 
-    let exploitableServers = servers.filter(s => hasMoney(ns, s));
-    let currentlyExploitableServers = exploitableServers.filter(s => canHack(ns, s));
+    while (true) {
+        const targetThreads = countThreadsByTarget(ns, allHosts);
 
-    currentlyExploitableServers.sort(bySoftest);
-
-    let softenSpecs = currentlyExploitableServers.map(s => analyzeSoftenTarget(ns, s));
-
-    let weakenProcesses = [];
-    for (const spec of softenSpecs) {
-        let remainingThreads = spec.threads;
-
-        // Skip targeting this server if it doesn't need to be softened
-        if (remainingThreads <= 0) {
-            continue;
-        }
-
-        while (remainingThreads > 0 && hosts.length > 0) {
-            let server = hosts[0];
-            let availableThreads = getAvailableThreads(ns, server, scripts.weaken.ram);
-
-            // Skip this attacking server if it can't host any threads
-            if (availableThreads <= 0) {
-                hosts.shift();
-                continue;
-            }
-
-            if (remainingThreads > availableThreads) {
-                const pid = ns.exec(scripts.weaken.name, server.hostname, availableThreads, spec.host);
-                if (pid != 0) {
-                    remainingThreads -= availableThreads;
-                    hosts.shift();
-                    weakenProcesses.push({ 'pid': pid, 'host': server.hostname });
-                }
-            } else {
-                const pid = ns.exec(scripts.weaken.name, server.hostname, remainingThreads, spec.host);
-                if (pid != 0) {
-                    remainingThreads = 0;
-                    weakenProcesses.push({ 'pid': pid, 'host': server.hostname });
-                }
-            }
-        }
-
-        if (hosts.length == 0) {
-            break;
-        }
     }
 }
 
-function byAvailableRam(a: Server, b: Server): number {
-    return (a.maxRam - a.ramUsed) - (b.maxRam - b.ramUsed);
-}
+// Notes on how I'm using the single target scripts.
 
-function bySoftest(a: Server, b: Server): number {
-    return (a.hackDifficulty - a.minDifficulty) - (b.hackDifficulty - b.minDifficulty);
-}
+// In general, softening doesn't take very many threads, so we should
+// basically do it as soon as we possibly can for each server.
 
-function getAvailableThreads(ns: NS, server: Server, ram: number) {
-    const availableRam = server.maxRam - ns.getServerUsedRam(server.hostname);
-    return Math.floor(availableRam / ram);
-}
+// Building is harder, and for every server larger than n00dles, we
+// need a _lot_ of RAM to completely build in one batch. This probably
+// means that we should only build one server at a time.
 
-type WeakenTargetSpec = {
-    host: string,
-    ram: number,
-    threads: number,
-    time: number,
-};
+// Minimal milking batches are pretty small, but because of how long
+// it takes to do a weaken (until we get to really high hacking
+// levels), it's hard to fill up an entire round of batches because of
+// how many batches ought to be launched in parallel.
 
-function analyzeSoftenTarget(ns: NS, target: Server): WeakenTargetSpec {
-    const threads = weakenAnalyze(ns, target, 1.0);
-    const time = ns.getWeakenTime(target.hostname);
-    return {
-        'host': target.hostname,
-        'ram': threads * scripts.weaken.ram,
-        'threads': threads,
-        'time': time
-    };
-}
+// This again means that until we have a lot of RAM we should settle
+// for longer delays between starting each script in a batch.
 
-/** Check if we can hack this server.
- *
- * Note: hacking is different than nuking. Hacking
- * steals money from a server. Nuking only acquires
- * root access, and the hacking skill required is
- * _always_ 1.
- */
-export function canHack(ns: NS, server: Server): boolean {
-    return ns.getHackingLevel() >= server.hackDifficulty
-        && canNuke(ns, server);
-}
+////////////////////////////////////////
+
+// Another interesting thing I just noticed is that it's actually more
+// time efficient to wait to soften higher level targets until our
+// hacking skill is higher.
+
+// After my last augment installation, I started the medium augmenting
+// scripts by softening all that are ready. Only foodnstuff finished
+// before building n00dles finished and my hacking skill jumped
+// significantly. Even waiting several more minutes, when I looked at
+// the rest of the original targets that were being softened, all of
+// them had more time remaining on their original weaken script than
+// they would if they were killed and restarted with my current
+// hacking level.
+
+// Now, this effect is probably exacerbated by my late node increases
+// to hacking skill and level gain. But we want this script to work
+// for all levels of play (or at least many). So it seems there is a
+// need for a heuristic that tracks how long a particular weaken
+// instance has left to run and then calculates how long it would take
+// to restart the weaken script with the current hacking level. If
+// restarting would take less time, then that script should be killed
+// and restarted.
+
+// The only tricky part of this is how does the management script
+// track how long a particular instance is going to run for?
+
+// I think the answer to this is that softening shouldn't be handled
+// by an external launcher script since it doesn't need to be done in
+// batches. Thus the manager script can just store the expected run
+// time and the pid of the launched process, and compare the current
+// run time with the expected run time against the expected runtime of
+// a newly calculated script.
+
+////////////////////////////////////////
+
+// I'm on the fence currently about whether the build phase should be
+// directly supervised by the launcher script. One way to make this
+// moot, would be to add an option to the relevant grow and weaken
+// scripts to allow the launcher to specify a specific number of
+// iterations. This shouldn't increase the RAM cost at all because it
+// won't use any new Netscript APIs and it would mean that the build
+// phase is fire and forget, and not subject to other phases spawning
+// threads into RAM that it was previously using between when one
+// round ends and another begins.
+
+////////////////////////////////////////
+
+// Another interesting note is that I think the management script
+// almost certainly should not handle launching the milking
+// batches. For those it is actually fairly important to have the
+// relative timing roughly accurate and so trying to combine launching
+// batches against several different targets would introduce a lot of
+// variable lag time for the individual netscript operations time.
+
+// Also, once we launch the management script, it will sequentially
+// spin up each batch, and we can easily launch these batches in
+// parallel with parallel round starting scripts.
 
 
-/** Check if we can nuke this server.
- *
- * Note: hacking is different than nuking. Hacking
- * steals money from a server. Nuking only acquires
- * root access, and the hacking skill required is
- * _always_ 1.
- */
-export function canNuke(ns: NS, server: Server): boolean {
-    if (server.hasAdminRights) { return true; }
+////////////////////////////////////////
 
-    // Get number of open ports needed
-    let portsNeeded = server.numOpenPortsRequired;
-
-    // Check for existence of enough port opening programs
-    let existingPrograms = portOpeningPrograms.filter(p => ns.fileExists(p));
-    return existingPrograms.length >= portsNeeded;
-}
-
-/** Filter servers by exploitability.
- */
-export function exploitableServers(ns: NS, servers: Server[]): Server[] {
-    return servers.filter((server) => {
-        return canHack(ns, server)
-            && hasMoney(ns, server);
-    });
-}
-
-/** Check if a server has a non-zero money capacity.
- */
-function hasMoney(ns: NS, server: Server): boolean {
-    return server.moneyMax > 0;
-}
-
-/** Filter servers by whether they can run scripts.
- */
-export function usableServers(ns: NS, servers: Server[]): Server[] {
-    return servers.filter((server) => {
-        return canNuke(ns, server)
-            && hasRam(ns, server);
-    });
-}
-
-function hasRam(ns: NS, server: Server): boolean {
-    return server.maxRam > 0;
-}
-
-/** Calculate the number of threads needed to grow the server by a
- * certain multiplier.
- */
-export function growthAnalyze(ns: NS, target: string, growthAmount: number): number {
-    return Math.ceil(ns.growthAnalyze(target, growthAmount));
-}
-
-/** Calculate the number of threads needed to hack the server for a
- * given multiplier.
- */
-export function hackAnalyze(ns: NS, target: string, hackAmount: number): number {
-    const oneThreadHackAmount = ns.hackAnalyze(target);
-    return Math.ceil(hackAmount / oneThreadHackAmount);
-}
-
-/** Calculate the number of threads needed to weaken the `target` by
- * the given multiplier.
- */
-export function weakenAnalyze(ns: NS, target: Server, weakenAmount: number): number {
-    const currentSecurity = target.hackDifficulty;
-    const minSecurity = target.minDifficulty;
-    return weakenThreads((currentSecurity - minSecurity) * weakenAmount);
-}
-
-/** Calculate the number of threads to weaken any server by the given amount.
- */
-export function weakenThreads(weakenAmount: number): number {
-    // We multiply by 20 because 1 thread of weaken reduces security
-    // by a fixed amount of 0.05, or 1/20
-    return Math.ceil(weakenAmount * 20);
-}
-
-export type PortProgram = "BruteSSH.exe" |
-    "FTPCrack.exe" |
-    "relaySMTP.exe" |
-    "HTTPWorm.exe" |
-    "SQLInject.exe"
-    ;
-export const portOpeningPrograms: PortProgram[] = [
-    "BruteSSH.exe",
-    "FTPCrack.exe",
-    "relaySMTP.exe",
-    "HTTPWorm.exe",
-    "SQLInject.exe"
-];
+// Finally, to make the manager script really robust, we probably need
+// to notice when the purchased servers get upgrade because a bunch of
+// threads will get killed, and that will kill a completely unknown
+// amount of batches. In order to fill a round again, we really need
+// to kill the rest of the batches in that round and just restart
+// them.
