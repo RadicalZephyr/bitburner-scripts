@@ -5,7 +5,7 @@ import {
     calculateWeakenInstance,
     countThreadsByTarget,
     getAllHosts,
-    softenableHosts,
+    readyToSoftenHosts,
     spawnBatchScript
 } from '../lib';
 
@@ -22,7 +22,7 @@ export async function main(ns: NS) {
 
     const allHosts = getAllHosts(ns);
     const allTargetThreads = countThreadsByTarget(ns, allHosts);
-    let targets = softenableHosts(ns, allTargetThreads, allHosts);
+    let targets = readyToSoftenHosts(ns, allTargetThreads, allHosts);
 
     targets.sort(byWeakenTime(ns));
 

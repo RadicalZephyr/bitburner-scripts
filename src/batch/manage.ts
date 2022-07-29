@@ -1,12 +1,12 @@
 import type { NS } from "netscript";
 
 import {
-    buildableHosts,
+    readyToBuildHosts,
     byHackLevel,
     countThreadsByTarget,
     getAllHosts,
-    milkableHosts,
-    softenableHosts
+    readyToMilkHosts,
+    readyToSoftenHosts
 } from '../lib';
 
 export async function main(ns: NS) {

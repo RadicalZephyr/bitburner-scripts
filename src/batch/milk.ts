@@ -6,7 +6,7 @@ import {
     calculateMilkRound,
     countThreadsByTarget,
     getAllHosts,
-    milkableHosts,
+    readyToMilkHosts,
     numThreads,
     spawnBatchScript,
     usableHosts
@@ -20,7 +20,7 @@ export async function main(ns: NS) {
     const allHosts = getAllHosts(ns);
     const allTargetThreads = countThreadsByTarget(ns, allHosts);
 
-    let targetRounds = milkableHosts(ns, allTargetThreads, allHosts).map(t => calculateMilkRound(ns, t));
+    let targetRounds = readyToMilkHosts(ns, allTargetThreads, allHosts).map(t => calculateMilkRound(ns, t));
     targetRounds.sort(byTotalThreads(ns));
 
     for (const milkRound of targetRounds) {

@@ -2,13 +2,16 @@ import type { NS } from "netscript";
 
 import {
     TargetThreads,
-    buildableHosts,
+    buildingHosts,
     byHackLevel,
     countThreadsByTarget,
     getAllHosts,
-    milkableHosts,
+    milkingHosts,
     moneyPercentage,
-    softenableHosts
+    readyToBuildHosts,
+    readyToMilkHosts,
+    readyToSoftenHosts,
+    softeningHosts
 } from '../lib';
 
 export async function main(ns: NS) {
@@ -42,23 +45,35 @@ Example:
         const allHosts = getAllHosts(ns);
         const allTargetThreads = countThreadsByTarget(ns, allHosts);
 
-        let softenTargets = softenableHosts(ns, allTargetThreads, allHosts);
-        softenTargets.sort(byHackLevel(ns));
+        let readyToSoftenTargets = readyToSoftenHosts(ns, allTargetThreads, allHosts);
+        readyToSoftenTargets.sort(byHackLevel(ns));
 
-        let buildTargets = buildableHosts(ns, allTargetThreads, allHosts);
-        buildTargets.sort(byHackLevel(ns));
+        let softeningTargets = softeningHosts(ns, allTargetThreads, allHosts);
+        softeningTargets.sort(byHackLevel(ns));
 
-        let milkTargets = milkableHosts(ns, allTargetThreads, allHosts);
-        milkTargets.sort(byHackLevel(ns));
+        let readyToBuildTargets = readyToBuildHosts(ns, allTargetThreads, allHosts);
+        readyToBuildTargets.sort(byHackLevel(ns));
+
+        let buildingTargets = buildingHosts(ns, allTargetThreads, allHosts);
+        buildingTargets.sort(byHackLevel(ns));
+
+        let readyToMilkTargets = readyToMilkHosts(ns, allTargetThreads, allHosts);
+        readyToMilkTargets.sort(byHackLevel(ns));
+
+        let milkingTargets = milkingHosts(ns, allTargetThreads, allHosts);
+        milkingTargets.sort(byHackLevel(ns));
 
         type TargetCategories = [
             category: string,
             targets: string[]
         ];
         const targetCategories: TargetCategories[] = [
-            ["Soften", softenTargets],
-            ["Build", buildTargets],
-            ["Milk", milkTargets]
+            ["Ready To Soften", readyToSoftenTargets],
+            ["Softening", softeningTargets],
+            ["Ready To Build", readyToBuildTargets],
+            ["Building", buildingTargets],
+            ["Ready To Milk", readyToMilkTargets],
+            ["Milking", milkingTargets]
         ];
 
         for (const [category, targets] of targetCategories) {
