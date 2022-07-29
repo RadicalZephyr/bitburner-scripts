@@ -15,16 +15,6 @@ export async function main(ns: NS) {
         const allHosts = getAllHosts(ns);
         const allTargetThreads = countThreadsByTarget(ns, allHosts);
 
-        // Get initial lifecycle state of all hosts
-        let softenTargets = softenableHosts(ns, allTargetThreads, allHosts);
-        softenTargets.sort(byHackLevel(ns));
-
-        let buildTargets = buildableHosts(ns, allTargetThreads, allHosts);
-        buildTargets.sort(byHackLevel(ns));
-
-        let milkTargets = milkableHosts(ns, allTargetThreads, allHosts);
-        milkTargets.sort(byHackLevel(ns));
-
     }
 }
 
