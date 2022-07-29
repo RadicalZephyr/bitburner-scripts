@@ -48,6 +48,7 @@ total number of threads needed: ${milkRound.totalThreads}
                 await ns.sleep(milkRound.batchOffset);
                 availableHostThreads = numThreads(ns, host, '/batch/grow.js');
             }
+            await ns.sleep(10);
         }
     }
 }
