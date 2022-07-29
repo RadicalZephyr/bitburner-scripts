@@ -101,5 +101,5 @@ function targetInfo(ns: NS, target: string, targetThreads: TargetThreads): (stri
     const moneyPercent = (moneyPercentage(ns, target) * 100).toFixed(2);
     const secPlus = (sec - minSec).toFixed(2);
 
-    return [target, moneyPercent, secPlus, targetThreads.hack, targetThreads.grow, targetThreads.weaken];
+    return [target, moneyPercent, secPlus, targetThreads.h, targetThreads.g, targetThreads.w];
 }

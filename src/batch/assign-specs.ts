@@ -1,6 +1,6 @@
 import type { NS } from "netscript";
 
-import { exploitableHosts, numThreads, usableHosts, walkNetworkBFS, weakenAnalyze } from '../lib';
+import { exploitableHosts, numThreads, usableHosts, walkNetworkBFS, softenAnalyze } from '../lib';
 
 // import { analyzeSoftenTarget, WeakenInstance, WeakenSpec } from './soften';
 
@@ -19,7 +19,7 @@ export type WeakenSpec = {
 };
 
 export function analyzeSoftenTarget(ns: NS, target: string): WeakenSpec {
-    const threads = weakenAnalyze(ns, target, 1.0);
+    const threads = softenAnalyze(ns, target, 1.0);
     const time = ns.getWeakenTime(target);
     return {
         'host': target,

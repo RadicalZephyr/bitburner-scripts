@@ -181,46 +181,46 @@ export function hasRam(ns: NS, host: string): boolean {
 // Hacking Analysis Utilities
 //////////////////////////////////////////
 
-/** Calculate the number of threads needed to grow the server by a
+/** Calculate the number of threads needed to build the server by a
  * certain multiplier.
  */
-export function growAnalyze(ns: NS, target: string, growthAmount: number): number {
-    if (growthAmount >= 1) {
-        return Math.ceil(ns.growthAnalyze(target, growthAmount, 1));
+export function buildAnalyze(ns: NS, target: string, buildAmount: number): number {
+    if (buildAmount >= 1) {
+        return Math.ceil(ns.growthAnalyze(target, buildAmount, 1));
     } else {
         return 0;
     }
 }
 
-/** Calculate the number of threads needed to hack the server for a
- * given multiplier.
+/** Calculate the number of threads needed to steal a certain
+ *  percentage of the money on the target.
  */
-export function hackAnalyze(ns: NS, target: string, hackAmount: number): number {
-    const oneThreadHackAmount = ns.hackAnalyze(target);
-    return Math.ceil(hackAmount / oneThreadHackAmount);
+export function stealAnalyze(ns: NS, target: string, hackAmount: number): number {
+    const oneThreadStealAmount = ns.hackAnalyze(target);
+    return Math.ceil(hackAmount / oneThreadStealAmount);
 }
 
-/** Calculate the number of threads needed to weaken the `target` by
+/** Calculate the number of threads needed to soften the `target` by
  * the given multiplier.
  */
-export function weakenAnalyze(ns: NS, target: string, weakenAmount: number): number {
+export function softenAnalyze(ns: NS, target: string, softenAmount: number): number {
     const currentSecurity = ns.getServerSecurityLevel(target);
     const minSecurity = ns.getServerMinSecurityLevel(target);
-    return weakenThreads((currentSecurity - minSecurity) * weakenAmount);
+    return softenThreads((currentSecurity - minSecurity) * softenAmount);
 }
 
-/** Calculate the number of threads to weaken any server by the given amount.
+/** Calculate the number of threads to soften any server by the given amount.
  */
-export function weakenThreads(weakenAmount: number): number {
+export function softenThreads(softenAmount: number): number {
     // We multiply by 20 because 1 thread of weaken reduces security
     // by a fixed amount of 0.05, or 1/20
-    return Math.ceil(weakenAmount * 20);
+    return Math.ceil(softenAmount * 20);
 }
 
 /** Calculate the amount that security will be reduced by when running
- *  weaken with the given number of threads.
+ *  soften with the given number of threads.
  */
-export function weakenAmount(threads: number): number {
+export function softenAmount(threads: number): number {
     // We divide by 20 because 1 thread of weaken reduces security
     // by a fixed amount of 0.05, or 1/20
     return Math.floor(threads) / 20;
@@ -261,12 +261,12 @@ export function byAvailableRam(ns: NS): ((a: string, b: string) => number) {
     return (a, b) => availableRam(ns, b) - availableRam(ns, a);
 }
 
-export function hackToGrowPercent(hackPercent: number): number {
-    return 1 / (1 - hackPercent);
+export function hToGPercent(hPercent: number): number {
+    return 1 / (1 - hPercent);
 }
 
-export function growToHackPercent(growPercent: number): number {
-    return 1 - (1 / growPercent);
+export function gToHPercent(gPercent: number): number {
+    return 1 - (1 / gPercent);
 }
 
 export type BatchScriptInstance = {
@@ -326,14 +326,14 @@ export function spawnBatchScript(ns: NS, host: string, scriptInstance: BatchScri
  *****************************************/
 
 export class TargetThreads {
-    hack: number;
-    grow: number;
-    weaken: number;
+    h: number;
+    g: number;
+    w: number;
 
     constructor() {
-        this.hack = 0;
-        this.grow = 0;
-        this.weaken = 0;
+        this.h = 0;
+        this.g = 0;
+        this.w = 0;
     }
 }
 
@@ -347,11 +347,11 @@ export function countThreadsByTarget(ns: NS, hosts: string[]): Map<string, Targe
             let targetThread = targetThreads.get(target);
 
             if (pi.filename === '/batch/hack.js') {
-                targetThread.hack += pi.threads;
+                targetThread.h += pi.threads;
             } else if (pi.filename === '/batch/grow.js') {
-                targetThread.grow += pi.threads;
+                targetThread.g += pi.threads;
             } else if (pi.filename === '/batch/weaken.js') {
-                targetThread.weaken += pi.threads;
+                targetThread.w += pi.threads;
             }
         }
     }
@@ -415,7 +415,7 @@ const weakenScript = '/batch/weaken.js';
 
 export function calculateWeakenInstance(ns: NS, target: string) {
     let script = weakenScript;
-    let threads = weakenAnalyze(ns, target, 1.0);
+    let threads = softenAnalyze(ns, target, 1.0);
     const runTime = ns.getWeakenTime(target);
     return { script, threads, target, startTime: 0, runTime, endDelay: 0, loop: false };
 }
@@ -426,15 +426,15 @@ export function byWeakenTime(ns: NS): ((a: string, b: string) => number) {
 
 
 /*****************************************
- * Building/Growing Utilities
+ * Building Utilities
  *****************************************/
 
-function neededGrowThreads(ns: NS, target: string) {
+function neededGThreads(ns: NS, target: string) {
     const maxMoney = ns.getServerMaxMoney(target);
     const currentMoney = ns.getServerMoneyAvailable(target);
 
     const neededGrowRatio = currentMoney > 0 ? maxMoney / currentMoney : maxMoney;
-    const totalGrowThreads = growAnalyze(ns, target, neededGrowRatio);
+    const totalGrowThreads = buildAnalyze(ns, target, neededGrowRatio);
     return totalGrowThreads;
 }
 
@@ -447,7 +447,7 @@ export type BatchRound = {
 };
 
 export function calculateBuildRound(ns: NS, target: string): BatchRound {
-    const totalGrowThreads = neededGrowThreads(ns, target);
+    const totalGrowThreads = neededGThreads(ns, target);
 
     const instances = calculateBuildBatch(ns, target);
     const growInstance = instances[0];
@@ -472,9 +472,9 @@ export function calculateBuildBatch(ns: NS, target: string): BatchScriptInstance
     // however many grow threads it takes to generate that amount
     // of security increase.
     let growThreads = 2;
-    const oneWeakenSecurityDecrease = weakenAmount(1);
+    const oneWeakenSecurityDecrease = softenAmount(1);
 
-    const maxGrowThreads = neededGrowThreads(ns, target);
+    const maxGrowThreads = neededGThreads(ns, target);
     let growSecurityIncrease = ns.growthAnalyzeSecurity(growThreads, target, 1);
 
     while (growThreads <= maxGrowThreads && growSecurityIncrease < oneWeakenSecurityDecrease) {
@@ -498,7 +498,7 @@ export function calculateBuildBatch(ns: NS, target: string): BatchScriptInstance
     const weakenInstance = {
         target,
         script: '/batch/weaken.js',
-        threads: weakenThreads(growSecurityIncrease),
+        threads: softenThreads(growSecurityIncrease),
         startTime: 0,
         runTime: ns.getWeakenTime(target),
         endDelay: 0,
@@ -582,7 +582,7 @@ export function calculateMilkBatch(ns: NS, target: string): BatchScriptInstance[
     let hackThreadGrowThreads;
     do {
         hackThreads += 1;
-        const hackThreadsGrowPercent = hackToGrowPercent(oneHackThreadHackPercent * hackThreads);
+        const hackThreadsGrowPercent = hToGPercent(oneHackThreadHackPercent * hackThreads);
         hackThreadGrowThreads = ns.growthAnalyze(target, hackThreadsGrowPercent);
     } while (hackThreadGrowThreads < 1);
 
@@ -602,7 +602,7 @@ export function calculateMilkBatch(ns: NS, target: string): BatchScriptInstance[
 
     const hackSecurityIncrease = ns.hackAnalyzeSecurity(hackInstance.threads, target);
 
-    const postHackWeakenThreads = weakenThreads(hackSecurityIncrease);
+    const postHackWeakenThreads = softenThreads(hackSecurityIncrease);
     let hackWeakenInstance = {
         target,
         script: '/batch/weaken.js',
@@ -614,11 +614,11 @@ export function calculateMilkBatch(ns: NS, target: string): BatchScriptInstance[
     };
 
     const hackShrinkage = ns.hackAnalyze(target) * hackInstance.threads;
-    const neededGrowthRatio = hackToGrowPercent(hackShrinkage);
+    const neededGrowthRatio = hToGPercent(hackShrinkage);
     ns.print(`hack shrinkage: ${hackShrinkage}`);
     ns.print(`needed recovery growth: ${neededGrowthRatio}`);
 
-    const growThreads = growAnalyze(ns, target, neededGrowthRatio + 0.1);
+    const growThreads = buildAnalyze(ns, target, neededGrowthRatio + 0.1);
     let growInstance = {
         target,
         script: '/batch/grow.js',
@@ -637,7 +637,7 @@ export function calculateMilkBatch(ns: NS, target: string): BatchScriptInstance[
     // security growth will be reported as zero.
     const growSecurityIncrease = ns.growthAnalyzeSecurity(growInstance.threads);
 
-    const postGrowWeakenThreads = weakenThreads(growSecurityIncrease);
+    const postGrowWeakenThreads = softenThreads(growSecurityIncrease);
     let growWeakenInstance = {
         target,
         script: '/batch/weaken.js',

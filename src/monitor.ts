@@ -1,6 +1,6 @@
 import type { NS, AutocompleteData } from "netscript";
 
-import { growAnalyze, weakenThreads } from './lib';
+import { buildAnalyze, softenThreads } from './lib';
 
 export function autocomplete(data: AutocompleteData, _args: string[]): string[] {
     return data.servers;
@@ -42,8 +42,8 @@ Example:
  $_______: ${ns.nFormat(money, "$0.000a")} / ${ns.nFormat(maxMoney, "$0.000a")} (${(money / maxMoney * 100).toFixed(2)}%)
  security: +${(sec - minSec).toFixed(2)} (${sec.toFixed(2)} / ${minSec.toFixed(2)})
  hack____: ${ns.tFormat(ns.getHackTime(server))} (t=${Math.ceil(ns.hackAnalyzeThreads(server, money))})
- grow____: ${ns.tFormat(ns.getGrowTime(server))} (t=${growAnalyze(ns, server, maxMoney / money)})
- weaken__: ${ns.tFormat(ns.getWeakenTime(server))} (t=${weakenThreads(sec - minSec)})
+ grow____: ${ns.tFormat(ns.getGrowTime(server))} (t=${buildAnalyze(ns, server, maxMoney / money)})
+ weaken__: ${ns.tFormat(ns.getWeakenTime(server))} (t=${softenThreads(sec - minSec)})
 `);
         await ns.sleep(flags.refreshrate);
     }
