@@ -40,15 +40,15 @@ Example:
         ns.clearLog();
 
         const allHosts = getAllHosts(ns);
-        const targetThreads = countThreadsByTarget(ns, allHosts);
+        const allTargetThreads = countThreadsByTarget(ns, allHosts);
 
-        let softenTargets = softenableHosts(ns, allHosts);
+        let softenTargets = softenableHosts(ns, allTargetThreads, allHosts);
         softenTargets.sort(byHackLevel(ns));
 
-        let buildTargets = buildableHosts(ns, allHosts);
+        let buildTargets = buildableHosts(ns, allTargetThreads, allHosts);
         buildTargets.sort(byHackLevel(ns));
 
-        let milkTargets = milkableHosts(ns, allHosts);
+        let milkTargets = milkableHosts(ns, allTargetThreads, allHosts);
         milkTargets.sort(byHackLevel(ns));
 
         type TargetCategories = [
@@ -77,7 +77,7 @@ Example:
             ns.printf(baseFormatString, ...headings);
             ns.printf(dividerFormatString, ...blanks);
             for (const target of targets) {
-                const info = targetInfo(ns, target, targetThreads.get(target));
+                const info = targetInfo(ns, target, allTargetThreads.get(target));
                 ns.printf(baseFormatString, ...info);
             }
         }

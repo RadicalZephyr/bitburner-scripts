@@ -4,11 +4,12 @@ import {
     byAvailableRam,
     byTotalThreads,
     calculateMilkRound,
+    countThreadsByTarget,
+    getAllHosts,
     milkableHosts,
     numThreads,
     spawnBatchScript,
-    usableHosts,
-    walkNetworkBFS
+    usableHosts
 } from '../lib';
 
 export function autocomplete(data: AutocompleteData, _args: string[]): string[] {
@@ -16,10 +17,10 @@ export function autocomplete(data: AutocompleteData, _args: string[]): string[] 
 }
 
 export async function main(ns: NS) {
-    const network = walkNetworkBFS(ns);
-    const allHosts = Array.from(network.keys());
+    const allHosts = getAllHosts(ns);
+    const allTargetThreads = countThreadsByTarget(ns, allHosts);
 
-    let targetRounds = milkableHosts(ns, allHosts).map(t => calculateMilkRound(ns, t));
+    let targetRounds = milkableHosts(ns, allTargetThreads, allHosts).map(t => calculateMilkRound(ns, t));
     targetRounds.sort(byTotalThreads(ns));
 
     for (const milkRound of targetRounds) {

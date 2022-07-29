@@ -3,10 +3,10 @@ import type { NS, AutocompleteData } from "netscript";
 import {
     byAvailableRam,
     calculateBuildRound,
+    getAllHosts,
     numThreads,
     spawnBatchScript,
-    usableHosts,
-    walkNetworkBFS
+    usableHosts
 } from '../lib';
 
 export function autocomplete(data: AutocompleteData, _args: string[]): string[] {
@@ -33,8 +33,7 @@ ${scriptDescriptions}
         return;
     }
 
-    const network = walkNetworkBFS(ns);
-    const allHosts = Array.from(network.keys());
+    const allHosts = getAllHosts(ns);
 
     let hosts = usableHosts(ns, allHosts);
     hosts.sort(byAvailableRam(ns));

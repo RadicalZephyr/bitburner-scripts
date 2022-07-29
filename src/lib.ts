@@ -363,53 +363,92 @@ export function countThreadsByTarget(ns: NS, hosts: string[]): Map<string, Targe
     return targetThreads;
 }
 
+type AllTargetThreads = Map<string, TargetThreads>;
+
 /** Filter for hosts that are ready to be softened.
  */
-export function softenableHosts(ns: NS, hosts: string[]): string[] {
+export function softenableHosts(ns: NS, allTargetThreads: AllTargetThreads, hosts: string[]): string[] {
     return hosts.filter((host) => {
+        const targetThreads = allTargetThreads.get(host);
         return ns.serverExists(host)
+            && targetThreads !== undefined
             && hasMoney(ns, host)
             && canNuke(ns, host)
-            && readyToSoften(ns, host);
+            && readyToSoften(ns, targetThreads, host);
     });
 }
 
 /** Filter for hosts that are ready to be built.
  */
-export function buildableHosts(ns: NS, hosts: string[]): string[] {
+export function buildableHosts(ns: NS, allTargetThreads: AllTargetThreads, hosts: string[]): string[] {
     return hosts.filter((host) => {
+        const targetThreads = allTargetThreads.get(host);
         return ns.serverExists(host)
+            && targetThreads !== undefined
             && hasMoney(ns, host)
             && canNuke(ns, host)
-            && readyToBuild(ns, host);
+            && readyToBuild(ns, targetThreads, host);
     });
 }
 
 /** Filter for hosts that are ready to be milked.
  */
-export function milkableHosts(ns: NS, hosts: string[]): string[] {
+export function milkableHosts(ns: NS, allTargetThreads: AllTargetThreads, hosts: string[]): string[] {
     return hosts.filter((host) => {
+        const targetThreads = allTargetThreads.get(host);
         return ns.serverExists(host)
+            && targetThreads !== undefined
             && hasMoney(ns, host)
             && canHack(ns, host)
-            && readyToMilk(ns, host)
+            && readyToMilk(ns, targetThreads, host);
     });
 }
 
-export function readyToSoften(ns: NS, host: string): boolean {
-    return moneyPercentage(ns, host) <= 0.9
-        && securityPercentage(ns, host) >= 0.1;
+export function readyToSoften(ns: NS, targetThreads: TargetThreads, host: string): boolean {
+    return softenThreadPattern(targetThreads) ||
+        (noThreads(targetThreads)
+            && moneyPercentage(ns, host) <= 0.9
+            && securityPercentage(ns, host) >= 0.1);
 }
 
-export function readyToBuild(ns: NS, host: string): boolean {
-    return moneyPercentage(ns, host) <= 0.9
-        && securityPercentage(ns, host) < 0.1;
+export function readyToBuild(ns: NS, targetThreads: TargetThreads, host: string): boolean {
+    return buildThreadPattern(targetThreads) ||
+        (noThreads(targetThreads)
+            && moneyPercentage(ns, host) <= 0.9
+            && securityPercentage(ns, host) < 0.1);
 }
 
-export function readyToMilk(ns: NS, host: string): boolean {
-    return moneyPercentage(ns, host) > 0.9
-        && securityPercentage(ns, host) < 0.1;
+export function readyToMilk(ns: NS, targetThreads: TargetThreads, host: string): boolean {
+    return milkThreadPattern(targetThreads) ||
+        (noThreads(targetThreads)
+            && moneyPercentage(ns, host) > 0.9
+            && securityPercentage(ns, host) < 0.1);
 }
+
+function softenThreadPattern(targetThreads: TargetThreads): boolean {
+    return targetThreads.h === 0
+        && targetThreads.g === 0
+        && targetThreads.w > 0;
+}
+
+function buildThreadPattern(targetThreads: TargetThreads): boolean {
+    return targetThreads.h === 0
+        && targetThreads.g > 0
+        && targetThreads.w > 0;
+}
+
+function milkThreadPattern(targetThreads: TargetThreads): boolean {
+    return targetThreads.h > 0
+        && targetThreads.g > 0
+        && targetThreads.w > 0;
+}
+
+function noThreads(targetThreads: TargetThreads): boolean {
+    return targetThreads.h === 0
+        && targetThreads.g === 0
+        && targetThreads.w === 0;
+}
+
 
 /*****************************************
  * Softening/Weakening Utilities

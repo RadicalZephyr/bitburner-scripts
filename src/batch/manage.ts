@@ -10,20 +10,20 @@ import {
 } from '../lib';
 
 export async function main(ns: NS) {
-    let allHosts = getAllHosts(ns);
-
-    // Get initial lifecycle state of all hosts
-    let softenTargets = softenableHosts(ns, allHosts);
-    softenTargets.sort(byHackLevel(ns));
-
-    let buildTargets = buildableHosts(ns, allHosts);
-    buildTargets.sort(byHackLevel(ns));
-
-    let milkTargets = milkableHosts(ns, allHosts);
-    milkTargets.sort(byHackLevel(ns));
 
     while (true) {
-        const targetThreads = countThreadsByTarget(ns, allHosts);
+        const allHosts = getAllHosts(ns);
+        const allTargetThreads = countThreadsByTarget(ns, allHosts);
+
+        // Get initial lifecycle state of all hosts
+        let softenTargets = softenableHosts(ns, allTargetThreads, allHosts);
+        softenTargets.sort(byHackLevel(ns));
+
+        let buildTargets = buildableHosts(ns, allTargetThreads, allHosts);
+        buildTargets.sort(byHackLevel(ns));
+
+        let milkTargets = milkableHosts(ns, allTargetThreads, allHosts);
+        milkTargets.sort(byHackLevel(ns));
 
     }
 }

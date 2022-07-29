@@ -1,6 +1,13 @@
 import type { NS, AutocompleteData } from "netscript";
 
-import { byWeakenTime, calculateWeakenInstance, softenableHosts, spawnBatchScript, walkNetworkBFS } from '../lib';
+import {
+    byWeakenTime,
+    calculateWeakenInstance,
+    countThreadsByTarget,
+    getAllHosts,
+    softenableHosts,
+    spawnBatchScript
+} from '../lib';
 
 export function autocomplete(data: AutocompleteData, _args: string[]): string[] {
     return data.servers;
@@ -13,9 +20,9 @@ export async function main(ns: NS) {
         return;
     }
 
-    let network = walkNetworkBFS(ns);
-    let allHosts = Array.from(network.keys());
-    let targets = softenableHosts(ns, allHosts);
+    const allHosts = getAllHosts(ns);
+    const allTargetThreads = countThreadsByTarget(ns, allHosts);
+    let targets = softenableHosts(ns, allTargetThreads, allHosts);
 
     targets.sort(byWeakenTime(ns));
 
