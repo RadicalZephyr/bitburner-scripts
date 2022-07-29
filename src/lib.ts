@@ -373,7 +373,7 @@ export class BatchSpec {
         this.loop = loop;
     }
 
-    exec(ns: NS, host: string, ...extraArgs: ScriptArgs[]): BatchInstance {
+    spawn(ns: NS, host: string, ...extraArgs: ScriptArgs[]): BatchInstance {
         if (this.threads > 0) {
             let args = [this.target, this.startTime, ...extraArgs];
             if (this.loop) args.unshift('--loop');
