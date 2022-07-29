@@ -4,12 +4,10 @@ import {
     TargetThreads,
     buildableHosts,
     countThreadsByTarget,
-    getOwnedServers,
+    getAllHosts,
     milkableHosts,
     moneyPercentage,
-    softenableHosts,
-    usableHosts,
-    walkNetworkBFS
+    softenableHosts
 } from '../lib';
 
 export async function main(ns: NS) {
@@ -37,16 +35,12 @@ Example:
     ns.tail();
     ns.disableLog('ALL');
 
-    let network = walkNetworkBFS(ns);
-    let allHosts = Array.from(network.keys());
-
     while (true) {
         ns.clearLog();
 
-        const purchasedServers = getOwnedServers(ns);
+        const allHosts = getAllHosts(ns);
         const targetThreads = countThreadsByTarget(ns, allHosts);
 
-        let hosts = usableHosts(ns, allHosts);
         let softenTargets = softenableHosts(ns, allHosts);
         softenTargets.sort(byHackLevel(ns));
 
