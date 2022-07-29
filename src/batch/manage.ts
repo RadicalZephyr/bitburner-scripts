@@ -1,15 +1,20 @@
 import type { NS } from "netscript";
 
 import {
-    buildingHosts,
+    Heap,
+    // buildingHosts,
     byHackLevel,
+    calculateWeakenInstance,
     countThreadsByTarget,
     getAllHosts,
-    milkingHosts,
-    readyToBuildHosts,
-    readyToMilkHosts,
+    inverseAvailableRam,
+    // milkingHosts,
+    // readyToBuildHosts,
+    // readyToMilkHosts,
     readyToSoftenHosts,
-    softeningHosts
+    // softeningHosts,
+    spawnBatchScript,
+    usableHosts
 } from '../lib';
 
 export async function main(ns: NS) {
@@ -18,25 +23,50 @@ export async function main(ns: NS) {
         const allHosts = getAllHosts(ns);
         const allTargetThreads = countThreadsByTarget(ns, allHosts);
 
+        const hosts = usableHosts(ns, allHosts);
+
+        let hostsHeap = new Heap(hosts, host => inverseAvailableRam(ns, host));
+
         let readyToSoftenTargets = readyToSoftenHosts(ns, allTargetThreads, allHosts);
         readyToSoftenTargets.sort(byHackLevel(ns));
 
-        let softeningTargets = softeningHosts(ns, allTargetThreads, allHosts);
-        softeningTargets.sort(byHackLevel(ns));
+        for (const sTarget of readyToSoftenTargets) {
+            let weakenInstance = calculateWeakenInstance(ns, sTarget);
 
-        let readyToBuildTargets = readyToBuildHosts(ns, allTargetThreads, allHosts);
-        readyToBuildTargets.sort(byHackLevel(ns));
+            let host = hostsHeap.min();
+            ns.print(`softening ${sTarget} with ${weakenInstance.threads} threads on ${host}`);
 
-        let buildingTargets = buildingHosts(ns, allTargetThreads, allHosts);
-        buildingTargets.sort(byHackLevel(ns));
+            spawnBatchScript(ns, host, weakenInstance);
+            await ns.sleep(20);
+            hostsHeap.updateMinKey();
+        }
 
-        let readyToMilkTargets = readyToMilkHosts(ns, allTargetThreads, allHosts);
-        readyToMilkTargets.sort(byHackLevel(ns));
+        // let readyToBuildTargets = readyToBuildHosts(ns, allTargetThreads, allHosts);
+        // readyToBuildTargets.sort(byHackLevel(ns));
 
-        let milkingTargets = milkingHosts(ns, allTargetThreads, allHosts);
-        milkingTargets.sort(byHackLevel(ns));
+        // for (const sTarget of readyToBuildTargets) {
 
+        // }
 
+        // let readyToMilkTargets = readyToMilkHosts(ns, allTargetThreads, allHosts);
+        // readyToMilkTargets.sort(byHackLevel(ns));
+
+        // for (const mTarget of readyToMilkTargets) {
+
+        // }
+
+        // let softeningTargets = softeningHosts(ns, allTargetThreads, allHosts);
+        // softeningTargets.sort(byHackLevel(ns));
+
+        // // Check if each softening target is going to take longer than
+        // // restarting with current stats.
+
+        // let buildingTargets = buildingHosts(ns, allTargetThreads, allHosts);
+        // buildingTargets.sort(byHackLevel(ns));
+
+        // let milkingTargets = milkingHosts(ns, allTargetThreads, allHosts);
+        // milkingTargets.sort(byHackLevel(ns));
+        await ns.sleep(200);
     }
 }
 
