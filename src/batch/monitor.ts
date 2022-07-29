@@ -43,6 +43,8 @@ Example:
         ns.clearLog();
 
         const allHosts = getAllHosts(ns);
+        const maxTargetNameLen = Math.max(...allHosts.map(t => t.length));
+
         const allTargetThreads = countThreadsByTarget(ns, allHosts);
 
         let readyToSoftenTargets = readyToSoftenHosts(ns, allTargetThreads, allHosts);
@@ -79,9 +81,7 @@ Example:
         for (const [category, targets] of targetCategories) {
             if (targets.length == 0) continue;
 
-            const maxTargetNameLen = Math.max(...targets.map(t => t.length));
-
-            const baseFormatString = `%${maxTargetNameLen}s | %7s %6s %7s %7s %7s`;
+            const baseFormatString = ` %${maxTargetNameLen}s | %7s %6s %7s %7s %7s`;
             const headings = ['target', '$: %', '+sec', 'thr(h)', 'thr(g)', 'thr(w)'];
 
             const dividerFormatString = baseFormatString.replaceAll(' ', '-').replaceAll('%', "%'-");
