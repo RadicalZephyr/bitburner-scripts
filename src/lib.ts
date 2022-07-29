@@ -148,6 +148,20 @@ export function numThreads(ns: NS, node: string, hackScript: string, percentage?
     return Math.floor(availableNodeRam * percentage / hackScriptRam);
 }
 
+/** Calculate a metric to make the largest amount of available RAM
+ *  produce the smallest number.
+ *
+ *  The purpose of this is to allow using the min-heap implementation
+ *  to sort hosts by highest available RAM.
+ */
+export function inverseAvailableRam(ns: NS, host: string): number {
+    const usedRam = ns.getServerUsedRam(host);
+    const maxRam = ns.getServerMaxRam(host);
+    const availableRam = maxRam - usedRam;
+    if (availableRam === 0) return +Infinity;
+    return 1 / availableRam;
+}
+
 /** Determine how far below maximum money a host currently is.
  */
 export function moneyPercentage(ns: NS, host: string): number {
