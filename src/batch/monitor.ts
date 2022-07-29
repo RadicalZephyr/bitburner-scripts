@@ -3,6 +3,7 @@ import type { NS } from "netscript";
 import {
     TargetThreads,
     buildableHosts,
+    byHackLevel,
     countThreadsByTarget,
     getAllHosts,
     milkableHosts,
@@ -82,10 +83,6 @@ Example:
         }
         await ns.sleep(flags.refreshrate);
     }
-}
-
-function byHackLevel(ns: NS): ((a: string, b: string) => number) {
-    return (a, b) => ns.getServerRequiredHackingLevel(a) - ns.getServerRequiredHackingLevel(b);
 }
 
 function targetInfo(ns: NS, target: string, targetThreads: TargetThreads): (string | number)[] {
