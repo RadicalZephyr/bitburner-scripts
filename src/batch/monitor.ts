@@ -5,6 +5,7 @@ import {
     buildableHosts,
     countThreadsByTarget,
     milkableHosts,
+    moneyPercentage,
     softenableHosts,
     usableHosts,
     walkNetworkBFS
@@ -96,13 +97,10 @@ function longestTime(ns: NS, host: string): number {
 }
 
 function targetInfo(ns: NS, target: string, targetThreads: TargetThreads): (string | number)[] {
-    const maxMoney = ns.getServerMaxMoney(target);
     const minSec = ns.getServerMinSecurityLevel(target);
-    let money = ns.getServerMoneyAvailable(target);
-    if (money === 0) money = 1;
     const sec = ns.getServerSecurityLevel(target);
 
-    const moneyPercent = (money / maxMoney * 100).toFixed(2);
+    const moneyPercent = (moneyPercentage(ns, target) * 100).toFixed(2);
     const secPlus = (sec - minSec).toFixed(2);
 
     return [target, moneyPercent, secPlus, targetThreads.hack, targetThreads.grow, targetThreads.weaken];
