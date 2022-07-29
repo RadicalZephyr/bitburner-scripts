@@ -1,12 +1,15 @@
 import type { NS } from "netscript";
 
 import {
-    readyToBuildHosts,
+    buildingHosts,
     byHackLevel,
     countThreadsByTarget,
     getAllHosts,
+    milkingHosts,
+    readyToBuildHosts,
     readyToMilkHosts,
-    readyToSoftenHosts
+    readyToSoftenHosts,
+    softeningHosts
 } from '../lib';
 
 export async function main(ns: NS) {
@@ -14,6 +17,25 @@ export async function main(ns: NS) {
     while (true) {
         const allHosts = getAllHosts(ns);
         const allTargetThreads = countThreadsByTarget(ns, allHosts);
+
+        let readyToSoftenTargets = readyToSoftenHosts(ns, allTargetThreads, allHosts);
+        readyToSoftenTargets.sort(byHackLevel(ns));
+
+        let softeningTargets = softeningHosts(ns, allTargetThreads, allHosts);
+        softeningTargets.sort(byHackLevel(ns));
+
+        let readyToBuildTargets = readyToBuildHosts(ns, allTargetThreads, allHosts);
+        readyToBuildTargets.sort(byHackLevel(ns));
+
+        let buildingTargets = buildingHosts(ns, allTargetThreads, allHosts);
+        buildingTargets.sort(byHackLevel(ns));
+
+        let readyToMilkTargets = readyToMilkHosts(ns, allTargetThreads, allHosts);
+        readyToMilkTargets.sort(byHackLevel(ns));
+
+        let milkingTargets = milkingHosts(ns, allTargetThreads, allHosts);
+        milkingTargets.sort(byHackLevel(ns));
+
 
     }
 }
