@@ -46,13 +46,13 @@ Example:
 
         let hosts = usableHosts(ns, allHosts);
         let softenTargets = softenableHosts(ns, allHosts);
-        softenTargets.sort(byLongestTime(ns));
+        softenTargets.sort(byHackLevel(ns));
 
         let buildTargets = buildableHosts(ns, allHosts);
-        buildTargets.sort(byLongestTime(ns));
+        buildTargets.sort(byHackLevel(ns));
 
         let milkTargets = milkableHosts(ns, allHosts);
-        milkTargets.sort(byLongestTime(ns));
+        milkTargets.sort(byHackLevel(ns));
 
         type TargetCategories = [
             category: string,
@@ -88,12 +88,8 @@ Example:
     }
 }
 
-function byLongestTime(ns: NS): ((a: string, b: string) => number) {
-    return (a, b) => longestTime(ns, a) - longestTime(ns, b);
-}
-
-function longestTime(ns: NS, host: string): number {
-    return Math.max(ns.getHackTime(host), ns.getGrowTime(host), ns.getWeakenTime(host));
+function byHackLevel(ns: NS): ((a: string, b: string) => number) {
+    return (a, b) => ns.getServerRequiredHackingLevel(a) - ns.getServerRequiredHackingLevel(b);
 }
 
 function targetInfo(ns: NS, target: string, targetThreads: TargetThreads): (string | number)[] {
