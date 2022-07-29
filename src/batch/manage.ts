@@ -108,8 +108,19 @@ export async function main(ns: NS) {
 ////////////////////////////////////////
 
 // Finally, to make the manager script really robust, we probably need
-// to notice when the purchased servers get upgrade because a bunch of
+// to notice when the purchased servers get upgraded because a bunch of
 // threads will get killed, and that will kill a completely unknown
 // amount of batches. In order to fill a round again, we really need
 // to kill the rest of the batches in that round and just restart
 // them.
+
+////////////////////////////////////////
+
+// There's also an issue with the length of a round changing over time
+// as our hacking level increases. I think this is basically why the
+// wiki shows those scripts as not having any looping, because
+// essentially every round there is the potential for our hacking
+// level to change so much that the round loop time will shrink and
+// then the batches will be sort of arbitrarily overlapping in
+// unmanaged ways. Also, the various wait times are probably just
+// getting totally fucked.
