@@ -10,8 +10,8 @@ import {
     getRootAccess,
     inverseAvailableRam,
     // milkingHosts,
-    // readyToBuildHosts,
-    // readyToMilkHosts,
+    readyToBuildHosts,
+    readyToMilkHosts,
     readyToSoftenHosts,
     // softeningHosts,
     spawnBatchScript,
@@ -75,19 +75,19 @@ OPTIONS:
             hostsHeap.updateMinKey();
         }
 
-        // let readyToBuildTargets = readyToBuildHosts(ns, allTargetThreads, allHosts);
-        // readyToBuildTargets.sort(byHackLevel(ns));
+        let readyToBuildTargets = readyToBuildHosts(ns, allTargetThreads, allHosts);
+        readyToBuildTargets.sort(byHackLevel(ns));
 
-        // for (const sTarget of readyToBuildTargets) {
+        for (const bTarget of readyToBuildTargets) {
+            ns.run('/batch/build.js', 1, bTarget);
+        }
 
-        // }
+        let readyToMilkTargets = readyToMilkHosts(ns, allTargetThreads, allHosts);
+        readyToMilkTargets.sort(byHackLevel(ns));
 
-        // let readyToMilkTargets = readyToMilkHosts(ns, allTargetThreads, allHosts);
-        // readyToMilkTargets.sort(byHackLevel(ns));
-
-        // for (const mTarget of readyToMilkTargets) {
-
-        // }
+        for (const mTarget of readyToMilkTargets) {
+            ns.run('/batch/milk.js', 1, mTarget);
+        }
 
         // let softeningTargets = softeningHosts(ns, allTargetThreads, allHosts);
         // softeningTargets.sort(byHackLevel(ns));
