@@ -18,6 +18,24 @@ import {
 } from '../lib';
 
 export async function main(ns: NS) {
+    const options = ns.flags([
+        ['refreshrate', 200],
+        ['help', false],
+    ]);
+
+    if (options.help) {
+        ns.tprint(`
+Manage identifying what stage of the batch hacking lifecycle targets
+are in and spawning appropriate scripts to progress them through it.
+
+USAGE: run ${ns.getScriptName()}
+
+OPTIONS:
+  --refreshrate  Time to wait between display updates in milliseconds
+  --help         Show this help message.
+`);
+        return;
+    }
 
     while (true) {
         const allHosts = getAllHosts(ns);
@@ -66,7 +84,7 @@ export async function main(ns: NS) {
 
         // let milkingTargets = milkingHosts(ns, allTargetThreads, allHosts);
         // milkingTargets.sort(byHackLevel(ns));
-        await ns.sleep(200);
+        await ns.sleep(options.refreshrate);
     }
 }
 
