@@ -95,7 +95,6 @@ Example:
                 const info = targetInfo(ns, target, allTargetThreads.get(target));
                 ns.printf(baseFormatString, ...info);
             }
-            await ns.sleep(10);
         }
         await ns.sleep(flags.refreshrate);
     }
