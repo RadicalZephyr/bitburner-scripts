@@ -113,6 +113,16 @@ export function usableHosts(ns: NS, hosts: string[]): string[] {
     });
 }
 
+/** Filter hosts by whether they have money and can be nuked.
+ */
+export function targetableHosts(ns: NS, hosts: string[]): string[] {
+    return hosts.filter((host) => {
+        return ns.serverExists(host)
+            && canNuke(ns, host)
+            && hasMoney(ns, host);
+    });
+}
+
 /** Filter hosts by exploitability.
  */
 export function exploitableHosts(ns: NS, hosts: string[]): string[] {
