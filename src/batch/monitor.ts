@@ -81,7 +81,7 @@ Example:
         for (const [category, targets] of targetCategories) {
             if (targets.length == 0) continue;
 
-            const baseFormatString = ` %${maxTargetNameLen}s | %7s %6s %7s %7s %7s`;
+            const baseFormatString = ` %-${maxTargetNameLen}s  | %6s %6s %7s %7s %7s`;
             const headings = ['target', '$: %', '+sec', 'thr(h)', 'thr(g)', 'thr(w)'];
 
             const dividerFormatString = baseFormatString.replaceAll(' ', '-').replaceAll('%', "%'-");
