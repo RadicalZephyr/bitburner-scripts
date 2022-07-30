@@ -7,6 +7,7 @@ import {
     calculateWeakenInstance,
     countThreadsByTarget,
     getAllHosts,
+    getRootAccess,
     inverseAvailableRam,
     // milkingHosts,
     // readyToBuildHosts,
@@ -14,8 +15,11 @@ import {
     readyToSoftenHosts,
     // softeningHosts,
     spawnBatchScript,
+    targetableHosts,
     usableHosts
 } from '../lib';
+
+const scriptList = ['/batch/grow.js', '/batch/hack.js', '/batch/weaken.js'];
 
 export async function main(ns: NS) {
     const options = ns.flags([
@@ -42,6 +46,18 @@ OPTIONS:
         const allTargetThreads = countThreadsByTarget(ns, allHosts);
 
         const hosts = usableHosts(ns, allHosts);
+        let targets = targetableHosts(ns, allHosts);
+        targets.sort(byHackLevel(ns));
+
+        // Deploy all batch scripts to all host servers
+        for (const host of hosts) {
+            getRootAccess(ns, host);
+            await ns.scp(scriptList, host);
+        }
+
+        for (const target of targets) {
+            getRootAccess(ns, target);
+        }
 
         let hostsHeap = new Heap(hosts, host => inverseAvailableRam(ns, host));
 
