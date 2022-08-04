@@ -313,24 +313,30 @@ export function setInstanceStartTimes(scriptInstances: BatchScriptInstance[]): v
         endTime += minimumTimeDelta;
     });
     // Get relative end time of final instance
+    // N.B. subtract one time delta to account for final loop increment
     const relativeBatchEndTime = endTime - minimumTimeDelta;
 
     // Determine offset to bring most negative start time to zero
-    let earliestStartTime = -Math.min(...scriptInstances.map(i => i.startTime));
+    let earliestStartTime = Math.abs(Math.min(...scriptInstances.map(i => i.startTime)));
 
     // Calculate actual batch end time
-    const actualEndTime = relativeBatchEndTime + earliestStartTime;
+    let actualEndTime = relativeBatchEndTime + earliestStartTime;
 
     // Pad out batch so that actualEndTime is aligned to the time alignment interval
-    if (actualEndTime > 1000) {
-        const padding = 1000 - (actualEndTime % timeAlignment);
+    if (actualEndTime > timeAlignment) {
+        const padding = timeAlignment - (actualEndTime % timeAlignment);
+        actualEndTime += padding;
         earliestStartTime += padding;
     }
 
     // Push forward all start times so earliest one is zero
     scriptInstances.forEach(i => {
         i.startTime += earliestStartTime;
-        i.endDelay = actualEndTime - (i.startTime + i.runTime);
+        const scriptEndTime = i.startTime + i.runTime;
+        // Calculate end delay based on how much time elapses between
+        // the end of this script and the end of the entire
+        // batch. This should basically be set by the ending order.
+        i.endDelay = actualEndTime - scriptEndTime;
     });
 }
 
