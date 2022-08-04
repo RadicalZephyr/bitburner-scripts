@@ -100,11 +100,10 @@ export function getHighestPurchasableRamLevel(ns: NS, percentageSpend: number): 
     let maxServers = ns.getPurchasedServerLimit();
     let maxServerTierSpend = ns.getServerMoneyAvailable("home") * percentageSpend;
     let maxPerServerSpend = maxServerTierSpend / maxServers;
-    let maxServerRam = ns.getPurchasedServerMaxRam();
 
     let ram = 16;
 
-    while (ram * 2 <= maxServerRam && maxPerServerSpend > ns.getPurchasedServerCost(ram)) {
+    while (maxPerServerSpend > ns.getPurchasedServerCost(ram)) {
         ram *= 2;
     }
 
