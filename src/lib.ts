@@ -340,7 +340,7 @@ export function spawnBatchScript(ns: NS, host: string, scriptInstance: BatchScri
         let args = [target, startTime, endDelay, ...extraArgs];
         if (scriptInstance.loop) args.unshift('--loop');
 
-        ns.exec(script, host, threads, ...args);
+        return ns.exec(script, host, threads, ...args);
     }
 }
 
