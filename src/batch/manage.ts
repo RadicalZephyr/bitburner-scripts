@@ -41,6 +41,8 @@ OPTIONS:
         return;
     }
 
+    let softeningTargets = [];
+
     while (true) {
         const allHosts = getAllHosts(ns);
         const allTargetThreads = countThreadsByTarget(ns, allHosts);
@@ -62,6 +64,35 @@ OPTIONS:
         let hostsHeap = new Heap(hosts, host => inverseAvailableRam(ns, host));
 
         let readyToSoftenTargets = readyToSoftenHosts(ns, allTargetThreads, allHosts);
+
+        // Get current running soften target script info
+        let stillSofteningTargets = softeningTargets
+            .map(({ pid, weakenInstance }) => {
+                return {
+                    pid,
+                    weakenInstance,
+                    scriptInfo: ns.getRunningScript(pid)
+                };
+            })
+            // filter for the scripts that are still running
+            .filter(sI => sI.scriptInfo);
+
+        for (const sInstance of stillSofteningTargets) {
+            // Calculate how much time remains for the current instance
+            const elapsedTime = sInstance.scriptInfo.onlineRunningTime;
+            const remainingTime = sInstance.weakenInstance.runTime - elapsedTime;
+
+            // Calculate the running time of a soften script launched now
+            const sTarget = sInstance.weakenInstance.target;
+            let currentWeakenInstance = calculateWeakenInstance(ns, sTarget);
+
+            // If restarting would be at least 25% faster, then restart.
+            // We use a large margin to avoid restarting scripts too often
+            if (currentWeakenInstance.runTime < remainingTime * 0.75) {
+                if (ns.kill(sInstance.pid)) readyToSoftenTargets.push(sTarget);
+            }
+        }
+
         readyToSoftenTargets.sort(byHackLevel(ns));
 
         for (const sTarget of readyToSoftenTargets) {
@@ -70,7 +101,10 @@ OPTIONS:
             let host = hostsHeap.min();
             ns.print(`softening ${sTarget} with ${weakenInstance.threads} threads on ${host}`);
 
-            spawnBatchScript(ns, host, weakenInstance);
+            const pid = spawnBatchScript(ns, host, weakenInstance);
+            if (pid !== 0) {
+                softeningTargets.push({ pid, weakenInstance });
+            }
             await ns.sleep(20);
             hostsHeap.updateMinKey();
         }
