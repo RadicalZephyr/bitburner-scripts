@@ -46,9 +46,9 @@ ${scriptDescriptions}
         while (batchNumber < buildRound.numberOfBatches && availableHostThreads > buildRound.totalBatchThreads) {
             buildRound.instances.forEach(inst => spawnBatchScript(ns, host, inst, batchNumber));
             batchNumber += 1;
-            await ns.sleep(10);
+            await ns.sleep(50);
             availableHostThreads = numThreads(ns, host, '/batch/grow.js');
         }
-        await ns.sleep(10);
+        await ns.sleep(100);
     }
 }
