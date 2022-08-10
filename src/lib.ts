@@ -729,7 +729,7 @@ export function calculateMilkBatch(ns: NS, target: string): BatchScriptInstance[
         startTime: 0,
         runTime: ns.getHackTime(target),
         endDelay: 0,
-        loop: true
+        loop: false
     };
 
     const hackSecurityIncrease = ns.hackAnalyzeSecurity(hackInstance.threads, target);
@@ -742,7 +742,7 @@ export function calculateMilkBatch(ns: NS, target: string): BatchScriptInstance[
         startTime: 0,
         runTime: ns.getWeakenTime(target),
         endDelay: 0,
-        loop: true
+        loop: false
     };
 
     const hackShrinkage = ns.hackAnalyze(target) * hackInstance.threads;
@@ -758,7 +758,7 @@ export function calculateMilkBatch(ns: NS, target: string): BatchScriptInstance[
         startTime: 0,
         runTime: ns.getGrowTime(target),
         endDelay: 0,
-        loop: true
+        loop: false
     };
 
     // N.B. In order to speculatively calculate how much security will
@@ -777,7 +777,7 @@ export function calculateMilkBatch(ns: NS, target: string): BatchScriptInstance[
         startTime: 0,
         runTime: ns.getWeakenTime(target),
         endDelay: 0,
-        loop: true
+        loop: false
     };
 
     const scriptInstances = [hackInstance, hackWeakenInstance, growInstance, growWeakenInstance];

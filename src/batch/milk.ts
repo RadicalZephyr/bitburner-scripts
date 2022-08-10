@@ -42,40 +42,35 @@ OPTIONS
 
     const allHosts = getAllHosts(ns);
 
-    let milkRound = calculateMilkRound(ns, target);
-    milkRound.instances.forEach(inst => inst.threads *= scale);
-
-    const scriptDescriptions = milkRound.instances.map(si => `  ${si.script} -t ${si.threads}`).join('\n');
-    ns.print(`
-milking ${milkRound.target}:
-${scriptDescriptions}
-total batch time: ${milkRound.totalBatchTime}
-number of batches: ${milkRound.numberOfBatches}
-total number of threads needed: ${milkRound.totalThreads}
-`);
-
     let hosts = usableHosts(ns, allHosts);
 
     let hostsHeap = new Heap(hosts, host => inverseAvailableRam(ns, host));
 
-    let batchNumber = 0;
+    while (true) {
+        let milkRound = calculateMilkRound(ns, target);
+        milkRound.instances.forEach(inst => inst.threads *= scale);
 
-    while (batchNumber < milkRound.numberOfBatches) {
-        const host = hostsHeap.min();
-        const availableHostThreads = numThreads(ns, host, '/batch/grow.js');
+        let batchNumber = 0;
 
-        // Check if enough RAM is available
-        if (availableHostThreads < milkRound.totalBatchThreads) {
-            // Since the heap is sorted by max memory, if the max
-            // memory host in the heap doesn't have enough memory,
-            // then none of the others do either, so we should just stop.
-            break;
+        while (batchNumber < milkRound.numberOfBatches) {
+            const host = hostsHeap.min();
+            const availableHostThreads = numThreads(ns, host, '/batch/grow.js');
+
+            // Check if enough RAM is available
+            if (availableHostThreads < milkRound.totalBatchThreads) {
+                // Since the heap is sorted by max memory, if the max
+                // memory host in the heap doesn't have enough memory,
+                // then none of the others do either, so we should just stop.
+                break;
+            }
+
+            milkRound.instances.forEach(inst => spawnBatchScript(ns, host, inst, batchNumber));
+            batchNumber += 1;
+
+            await ns.sleep(milkRound.batchOffset);
+            hostsHeap.updateMinKey();
         }
 
-        milkRound.instances.forEach(inst => spawnBatchScript(ns, host, inst, batchNumber));
-        batchNumber += 1;
-
         await ns.sleep(milkRound.batchOffset);
-        hostsHeap.updateMinKey();
     }
 }
