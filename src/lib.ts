@@ -408,9 +408,11 @@ export function countThreadsByTarget(ns: NS, hosts: string[]): Map<string, Targe
 
             if (pi.filename === '/batch/milk.js') {
                 targetThread.milking = true;
+                targetThread.hPid.unshift(pi.pid);
                 targetThread.mMoney = ns.getScriptIncome(pi.filename, host, ...pi.args);
             } else if (pi.filename === '/batch/build.js') {
                 targetThread.building = true;
+                targetThread.gPid.unshift(pi.pid);
             } else if (pi.filename === '/batch/hack.js') {
                 targetThread.hPid.push(pi.pid);
                 targetThread.h += pi.threads;
