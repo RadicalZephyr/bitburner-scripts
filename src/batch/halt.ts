@@ -29,14 +29,22 @@ OPTIONS
     for (const target of options._) {
         const targetInfo = allTargetThreads.get(target);
         if (targetInfo) {
+            const milkPid = targetInfo.hPid.shift();
+            ns.kill(milkPid);
+            await ns.sleep(500);
+
             targetInfo.hPid.forEach(pid => ns.kill(pid));
-            await ns.sleep(150);
+            await ns.sleep(500);
+
+            const buildPid = targetInfo.hPid.shift();
+            ns.kill(buildPid);
+            await ns.sleep(500);
 
             targetInfo.gPid.forEach(pid => ns.kill(pid));
-            await ns.sleep(150);
+            await ns.sleep(500);
 
             targetInfo.wPid.forEach(pid => ns.kill(pid));
-            await ns.sleep(150);
+            await ns.sleep(10);
         } else {
             ns.tprintf('nothing to kill for target %s', target);
         }
