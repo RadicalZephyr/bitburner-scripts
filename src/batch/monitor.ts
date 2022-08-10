@@ -3,8 +3,6 @@ import type { NS } from "netscript";
 import {
     TargetThreads,
     buildingHosts,
-    byHackLevel,
-    byMaxMoneyDescending,
     countThreadsByTarget,
     getAllHosts,
     milkingHosts,
@@ -48,12 +46,11 @@ Example:
 
         const allTargetThreads = countThreadsByTarget(ns, allHosts);
 
-        const maxMoneyDiffDesc = byMaxMoneyDescending(ns);
-        const hackLvlAsc = byHackLevel(ns);
-        const byLvlAndMoney = ((a: string, b: string) => {
-            const lvlDiff = hackLvlAsc(b, a);
-            if (Math.abs(lvlDiff) == 0) return maxMoneyDiffDesc(a, b);
-            return lvlDiff;
+        const byLvlAndMoney = ((aH: string, bH: string) => {
+            const a = ns.getServerMaxMoney(aH) / ns.getServerRequiredHackingLevel(aH);
+            const b = ns.getServerMaxMoney(bH) / ns.getServerRequiredHackingLevel(bH);
+            return b - a;
+
         });
 
         let readyToSoftenTargets = readyToSoftenHosts(ns, allTargetThreads, allHosts);
@@ -90,8 +87,8 @@ Example:
         for (const [category, targets] of targetCategories) {
             if (targets.length == 0) continue;
 
-            const baseFormatString = ` %${maxTargetNameLen}s  |  %4s  %8s  %7s  %7s  %7s  %7s  %7s  %8s`;
-            const headings = ['target', 'lvl', '$', '⌈$⌉%', '+sec', 'thr(h)', 'thr(g)', 'thr(w)', '$/thr(h)'];
+            const baseFormatString = ` %${maxTargetNameLen}s  |  %9s  %5s  %8s  %7s  %7s  %7s  %7s  %7s  %8s`;
+            const headings = ['target', '$/lvl', 'lvl', '$', '⌈$⌉%', '+sec', 'thr(h)', 'thr(g)', 'thr(w)', '$/thr(h)'];
 
             const dividerFormatString = baseFormatString.replaceAll(' ', '-').replaceAll('%', "%'-");
 
@@ -120,6 +117,7 @@ function targetInfo(ns: NS, target: string, targetThreads: TargetThreads): (stri
 
     return [
         target,
+        ns.nFormat(money / hackLvl, '0.00a') + ':1',
         ns.nFormat(hackLvl, '0,0'),
         ns.nFormat(money, '$0.00a'),
         Math.abs(moneyPercent - 100) < 0.1 ? '100.0%' : ns.nFormat(moneyPercent / 100, '0.00%'),
