@@ -111,9 +111,21 @@ function targetInfo(ns: NS, target: string, targetThreads: TargetThreads): (stri
         target,
         Math.abs(moneyPercent - 100) < 0.001 ? '100%' : ns.nFormat(moneyPercent / 100, '0.00%'),
         Math.abs(secPlus) < 0.1 ? '+0.0' : ns.nFormat(secPlus, '+0.00a'),
-        Math.abs(targetThreads.h) < 1 ? '' : ns.nFormat(targetThreads.h, '0.00a'),
-        Math.abs(targetThreads.g) < 1 ? '' : ns.nFormat(targetThreads.g, '0.00a'),
-        Math.abs(targetThreads.w) < 1 ? '' : ns.nFormat(targetThreads.w, '0.00a'),
+        formatThreads(ns, targetThreads.h),
+        formatThreads(ns, targetThreads.g),
+        formatThreads(ns, targetThreads.w),
         Math.abs(targetThreads.hAvgMoney) < 1 ? '' : ns.nFormat(targetThreads.hAvgMoney, '$0.00a')
     ];
+}
+
+function formatThreads(ns: NS, threads: number): string {
+    if (threads < 1) {
+        return '';
+    }
+
+    let fmt = '0.00a';
+    if (threads < 1000) {
+        fmt = '0';
+    }
+    return ns.nFormat(threads, fmt);
 }
