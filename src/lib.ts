@@ -357,11 +357,13 @@ export function spawnBatchScript(ns: NS, host: string, scriptInstance: BatchScri
 
 export class TargetThreads {
     h: number;
+    hAvgMoney: number;
     g: number;
     w: number;
 
     constructor() {
         this.h = 0;
+        this.hAvgMoney = 0;
         this.g = 0;
         this.w = 0;
     }
@@ -374,6 +376,7 @@ export function byHackLevel(ns: NS): ((a: string, b: string) => number) {
 export function countThreadsByTarget(ns: NS, hosts: string[]): Map<string, TargetThreads> {
     let targetThreads = new Map(hosts.map(h => [h, new TargetThreads()]));
 
+    let n = 0;
     for (const host of hosts) {
         for (const pi of ns.ps(host)) {
 
@@ -381,7 +384,11 @@ export function countThreadsByTarget(ns: NS, hosts: string[]): Map<string, Targe
             let targetThread = targetThreads.get(target);
 
             if (pi.filename === '/batch/hack.js') {
+                n += 1;
                 targetThread.h += pi.threads;
+                const totalMoney = ns.getScriptIncome(pi.filename, host, ...pi.args);
+                const perThreadMoney = totalMoney / pi.threads;
+                targetThread.hAvgMoney = ((n - 1) / n) * targetThread.hAvgMoney + perThreadMoney * (1 / n);
             } else if (pi.filename === '/batch/grow.js') {
                 targetThread.g += pi.threads;
             } else if (pi.filename === '/batch/weaken.js') {
