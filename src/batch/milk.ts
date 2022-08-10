@@ -15,7 +15,24 @@ export function autocomplete(data: AutocompleteData, _args: string[]): string[] 
 }
 
 export async function main(ns: NS) {
-    const target = ns.args[0];
+    const options = ns.flags([
+        ['help', false]
+    ]);
+
+    if (options.help || options._.length < 1) {
+        ns.tprint(`
+USAGE: run ${ns.getScriptName()} TARGET_HOST
+
+Calculate and start an entire milking round against the TARGET HOST.
+
+OPTIONS
+  --help   Show this help message
+  --scale  Scale the number of threads for each script
+`);
+        return;
+    }
+
+    const target = options._[0];
     if (typeof target != 'string' || !ns.serverExists(target)) {
         ns.tprintf('invalid target');
         return;
