@@ -16,6 +16,7 @@ export function autocomplete(data: AutocompleteData, _args: string[]): string[] 
 
 export async function main(ns: NS) {
     const options = ns.flags([
+        ['scale', 1],
         ['help', false]
     ]);
 
@@ -32,6 +33,7 @@ OPTIONS
         return;
     }
 
+    const scale = Math.max(Math.round(options.scale), 1);
     const target = options._[0];
     if (typeof target != 'string' || !ns.serverExists(target)) {
         ns.tprintf('invalid target');
@@ -41,6 +43,7 @@ OPTIONS
     const allHosts = getAllHosts(ns);
 
     const milkRound = calculateMilkRound(ns, target);
+    milkRound.instances.forEach(inst => inst.threads * scale);
 
     const scriptDescriptions = milkRound.instances.map(si => `  ${si.script} -t ${si.threads}`).join('\n');
     ns.print(`
