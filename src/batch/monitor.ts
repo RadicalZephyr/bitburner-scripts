@@ -97,9 +97,17 @@ Example:
             ns.printf('\n%s Targets:', category);
             ns.printf(baseFormatString, ...headings);
             ns.printf(dividerFormatString, ...blanks);
+
+            let totalMoney = 0;
             for (const target of targets) {
-                const info = targetInfo(ns, target, allTargetThreads.get(target));
+                const targetThreads = allTargetThreads.get(target);
+                totalMoney += targetThreads.mMoney;
+                const info = targetInfo(ns, target, targetThreads);
                 ns.printf(baseFormatString, ...info);
+            }
+
+            if (totalMoney > 0) {
+                ns.printf(baseFormatString, 'Total Income:', ns.nFormat(totalMoney, '$0.0a'), ...blanks);
             }
         }
         await ns.sleep(flags.refreshrate);
