@@ -3,6 +3,7 @@ import type { NS } from "netscript";
 import {
     TargetThreads,
     buildingHosts,
+    byHackLevel,
     byMaxMoneyDescending,
     countThreadsByTarget,
     getAllHosts,
@@ -47,23 +48,31 @@ Example:
 
         const allTargetThreads = countThreadsByTarget(ns, allHosts);
 
+        const maxMoneyDiffDesc = byMaxMoneyDescending(ns);
+        const hackLvlAsc = byHackLevel(ns);
+        const byLvlAndMoney = ((a: string, b: string) => {
+            const lvlDiff = hackLvlAsc(b, a);
+            if (Math.abs(lvlDiff) == 0) return maxMoneyDiffDesc(a, b);
+            return lvlDiff;
+        });
+
         let readyToSoftenTargets = readyToSoftenHosts(ns, allTargetThreads, allHosts);
-        readyToSoftenTargets.sort(byMaxMoneyDescending(ns));
+        readyToSoftenTargets.sort(byLvlAndMoney);
 
         let softeningTargets = softeningHosts(ns, allTargetThreads, allHosts);
-        softeningTargets.sort(byMaxMoneyDescending(ns));
+        softeningTargets.sort(byLvlAndMoney);
 
         let readyToBuildTargets = readyToBuildHosts(ns, allTargetThreads, allHosts);
-        readyToBuildTargets.sort(byMaxMoneyDescending(ns));
+        readyToBuildTargets.sort(byLvlAndMoney);
 
         let buildingTargets = buildingHosts(ns, allTargetThreads, allHosts);
-        buildingTargets.sort(byMaxMoneyDescending(ns));
+        buildingTargets.sort(byLvlAndMoney);
 
         let readyToMilkTargets = readyToMilkHosts(ns, allTargetThreads, allHosts);
-        readyToMilkTargets.sort(byMaxMoneyDescending(ns));
+        readyToMilkTargets.sort(byLvlAndMoney);
 
         let milkingTargets = milkingHosts(ns, allTargetThreads, allHosts);
-        milkingTargets.sort(byMaxMoneyDescending(ns));
+        milkingTargets.sort(byLvlAndMoney);
 
         type TargetCategories = [
             category: string,
@@ -111,7 +120,7 @@ function targetInfo(ns: NS, target: string, targetThreads: TargetThreads): (stri
 
     return [
         target,
-        ns.nFormat(hackLvl, '0a'),
+        ns.nFormat(hackLvl, '0,0'),
         ns.nFormat(money, '$0.00a'),
         Math.abs(moneyPercent - 100) < 0.1 ? '100.0%' : ns.nFormat(moneyPercent / 100, '0.00%'),
         Math.abs(secPlus) < 0.1 ? '+0.0' : ns.nFormat(secPlus, '+0.00a'),
