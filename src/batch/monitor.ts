@@ -3,7 +3,7 @@ import type { NS } from "netscript";
 import {
     TargetThreads,
     buildingHosts,
-    byHackLevel,
+    byMaxMoneyDescending,
     countThreadsByTarget,
     getAllHosts,
     milkingHosts,
@@ -48,34 +48,34 @@ Example:
         const allTargetThreads = countThreadsByTarget(ns, allHosts);
 
         let readyToSoftenTargets = readyToSoftenHosts(ns, allTargetThreads, allHosts);
-        readyToSoftenTargets.sort(byHackLevel(ns));
+        readyToSoftenTargets.sort(byMaxMoneyDescending(ns));
 
         let softeningTargets = softeningHosts(ns, allTargetThreads, allHosts);
-        softeningTargets.sort(byHackLevel(ns));
+        softeningTargets.sort(byMaxMoneyDescending(ns));
 
         let readyToBuildTargets = readyToBuildHosts(ns, allTargetThreads, allHosts);
-        readyToBuildTargets.sort(byHackLevel(ns));
+        readyToBuildTargets.sort(byMaxMoneyDescending(ns));
 
         let buildingTargets = buildingHosts(ns, allTargetThreads, allHosts);
-        buildingTargets.sort(byHackLevel(ns));
+        buildingTargets.sort(byMaxMoneyDescending(ns));
 
         let readyToMilkTargets = readyToMilkHosts(ns, allTargetThreads, allHosts);
-        readyToMilkTargets.sort(byHackLevel(ns));
+        readyToMilkTargets.sort(byMaxMoneyDescending(ns));
 
         let milkingTargets = milkingHosts(ns, allTargetThreads, allHosts);
-        milkingTargets.sort(byHackLevel(ns));
+        milkingTargets.sort(byMaxMoneyDescending(ns));
 
         type TargetCategories = [
             category: string,
             targets: string[]
         ];
         const targetCategories: TargetCategories[] = [
-            ["Ready To Milk", readyToMilkTargets],
             ["Milking", milkingTargets],
-            ["Ready To Build", readyToBuildTargets],
+            ["Ready To Milk", readyToMilkTargets],
             ["Building", buildingTargets],
-            ["Ready To Soften", readyToSoftenTargets],
-            ["Softening", softeningTargets]
+            ["Ready To Build", readyToBuildTargets],
+            ["Softening", softeningTargets],
+            ["Ready To Soften", readyToSoftenTargets]
         ];
 
         for (const [category, targets] of targetCategories) {

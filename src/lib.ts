@@ -379,6 +379,10 @@ export function byHackLevel(ns: NS): ((a: string, b: string) => number) {
     return (a, b) => ns.getServerRequiredHackingLevel(a) - ns.getServerRequiredHackingLevel(b);
 }
 
+export function byMaxMoneyDescending(ns: NS): ((a: string, b: string) => number) {
+    return (a, b) => ns.getServerMaxMoney(b) - ns.getServerMaxMoney(a);
+}
+
 export function countThreadsByTarget(ns: NS, hosts: string[]): Map<string, TargetThreads> {
     let targetThreads = new Map(hosts.map(h => [h, new TargetThreads()]));
 
