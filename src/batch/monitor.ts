@@ -109,7 +109,7 @@ function targetInfo(ns: NS, target: string, targetThreads: TargetThreads): (stri
 
     return [
         target,
-        Math.abs(moneyPercent - 100) < 0.001 ? '100%' : ns.nFormat(moneyPercent / 100, '0.00%'),
+        Math.abs(moneyPercent - 100) < 0.1 ? '100.0%' : ns.nFormat(moneyPercent / 100, '0.00%'),
         Math.abs(secPlus) < 0.1 ? '+0.0' : ns.nFormat(secPlus, '+0.00a'),
         formatThreads(ns, targetThreads.h),
         formatThreads(ns, targetThreads.g),
