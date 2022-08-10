@@ -115,9 +115,11 @@ function targetInfo(ns: NS, target: string, targetThreads: TargetThreads): (stri
     const moneyPercent = moneyPercentage(ns, target) * 100;
     const secPlus = sec - minSec;
 
+    const milkMoney = Math.max(targetThreads.mMoney, targetThreads.hAvgMoney);
+
     return [
         target,
-        Math.abs(targetThreads.hAvgMoney) < 1 ? '' : ns.nFormat(targetThreads.hAvgMoney, '$0.00a'),
+        Math.abs(milkMoney) < 0 ? '' : ns.nFormat(milkMoney, '$0.00a'),
         ns.nFormat(money / hackLvl, '$0.00a'),
         ns.nFormat(hackLvl, '0,0'),
         ns.nFormat(money, '$0.00a'),
