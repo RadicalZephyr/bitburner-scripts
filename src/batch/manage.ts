@@ -56,6 +56,7 @@ OPTIONS:
 
         for (const target of targets) {
             getRootAccess(ns, target);
+            await ns.sleep(50);
         }
 
         let hostsHeap = new Heap(hosts, host => inverseAvailableRam(ns, host));
@@ -88,6 +89,7 @@ OPTIONS:
             if (currentWeakenInstance.runTime < remainingTime * 0.75) {
                 if (ns.kill(sInstance.pid)) readyToSoftenTargets.push(sTarget);
             }
+            await ns.sleep(50);
         }
 
         readyToSoftenTargets.sort(byLvlAndMoney(ns));
@@ -102,7 +104,7 @@ OPTIONS:
             if (pid !== 0) {
                 softeningTargets.push({ pid, weakenInstance });
             }
-            await ns.sleep(20);
+            await ns.sleep(150);
             hostsHeap.updateMinKey();
         }
 
