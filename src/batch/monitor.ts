@@ -82,7 +82,7 @@ Example:
             if (targets.length == 0) continue;
 
             const baseFormatString = ` %-${maxTargetNameLen}s  | %6s %6s %9s %7s %7s %7s`;
-            const headings = ['target', '$: %', '+sec', '$/thr(h)', 'thr(h)', 'thr(g)', 'thr(w)'];
+            const headings = ['target', '⌈$⌉%', '+sec', '$/thr(h)', 'thr(h)', 'thr(g)', 'thr(w)'];
 
             const dividerFormatString = baseFormatString.replaceAll(' ', '-').replaceAll('%', "%'-");
 
