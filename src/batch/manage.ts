@@ -123,17 +123,6 @@ OPTIONS:
             ns.run('/batch/milk.js', 1, mTarget);
         }
 
-        // let softeningTargets = softeningHosts(ns, allTargetThreads, allHosts);
-        // softeningTargets.sort(byHackLevel(ns));
-
-        // // Check if each softening target is going to take longer than
-        // // restarting with current stats.
-
-        // let buildingTargets = buildingHosts(ns, allTargetThreads, allHosts);
-        // buildingTargets.sort(byHackLevel(ns));
-
-        // let milkingTargets = milkingHosts(ns, allTargetThreads, allHosts);
-        // milkingTargets.sort(byHackLevel(ns));
         await ns.sleep(options.refreshrate);
     }
 }
