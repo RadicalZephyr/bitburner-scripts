@@ -398,8 +398,9 @@ export function countThreadsByTarget(ns: NS, hosts: string[]): Map<string, Targe
                 targetThread.hPid.push(pi.pid);
                 targetThread.h += pi.threads;
                 const totalMoney = ns.getScriptIncome(pi.filename, host, ...pi.args);
-                const perThreadMoney = totalMoney / pi.threads;
-                targetThread.hAvgMoney = ((n - 1) / n) * targetThread.hAvgMoney + perThreadMoney * (1 / n);
+                if (Math.abs(totalMoney) > 1) {
+                    targetThread.hAvgMoney = ((n - 1) / n) * targetThread.hAvgMoney + totalMoney * (1 / n);
+                }
             } else if (pi.filename === '/batch/grow.js') {
                 targetThread.gPid.push(pi.pid);
                 targetThread.g += pi.threads;
