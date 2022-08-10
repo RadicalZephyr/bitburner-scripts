@@ -47,8 +47,8 @@ Example:
         const allTargetThreads = countThreadsByTarget(ns, allHosts);
 
         const byLvlAndMoney = ((aH: string, bH: string) => {
-            const a = ns.getServerMaxMoney(aH) / ns.getServerRequiredHackingLevel(aH) / ns.getHackTime(aH);
-            const b = ns.getServerMaxMoney(bH) / ns.getServerRequiredHackingLevel(bH) / ns.getHackTime(bH);
+            const a = ns.getServerMaxMoney(aH) / ns.getServerRequiredHackingLevel(aH);
+            const b = ns.getServerMaxMoney(bH) / ns.getServerRequiredHackingLevel(bH);
             return b - a;
 
         });
