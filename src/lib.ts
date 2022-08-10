@@ -393,6 +393,15 @@ export function byHackLevel(ns: NS): ((a: string, b: string) => number) {
     return (a, b) => ns.getServerRequiredHackingLevel(a) - ns.getServerRequiredHackingLevel(b);
 }
 
+export function byLvlAndMoney(ns: NS): ((aH: string, bH: string) => number) {
+    return (aH, bH) => {
+        const a = ns.getServerMaxMoney(aH) / ns.getServerRequiredHackingLevel(aH);
+        const b = ns.getServerMaxMoney(bH) / ns.getServerRequiredHackingLevel(bH);
+        return b - a;
+    };
+};
+
+
 export function byMaxMoneyDescending(ns: NS): ((a: string, b: string) => number) {
     return (a, b) => ns.getServerMaxMoney(b) - ns.getServerMaxMoney(a);
 }

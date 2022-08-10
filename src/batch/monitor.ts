@@ -3,6 +3,7 @@ import type { NS } from "netscript";
 import {
     TargetThreads,
     buildingHosts,
+    byLvlAndMoney,
     countThreadsByTarget,
     getAllHosts,
     milkingHosts,
@@ -46,30 +47,23 @@ Example:
 
         const allTargetThreads = countThreadsByTarget(ns, allHosts);
 
-        const byLvlAndMoney = ((aH: string, bH: string) => {
-            const a = ns.getServerMaxMoney(aH) / ns.getServerRequiredHackingLevel(aH);
-            const b = ns.getServerMaxMoney(bH) / ns.getServerRequiredHackingLevel(bH);
-            return b - a;
-
-        });
-
         let readyToSoftenTargets = readyToSoftenHosts(ns, allTargetThreads, allHosts);
-        readyToSoftenTargets.sort(byLvlAndMoney);
+        readyToSoftenTargets.sort(byLvlAndMoney(ns));
 
         let softeningTargets = softeningHosts(ns, allTargetThreads, allHosts);
-        softeningTargets.sort(byLvlAndMoney);
+        softeningTargets.sort(byLvlAndMoney(ns));
 
         let readyToBuildTargets = readyToBuildHosts(ns, allTargetThreads, allHosts);
-        readyToBuildTargets.sort(byLvlAndMoney);
+        readyToBuildTargets.sort(byLvlAndMoney(ns));
 
         let buildingTargets = buildingHosts(ns, allTargetThreads, allHosts);
-        buildingTargets.sort(byLvlAndMoney);
+        buildingTargets.sort(byLvlAndMoney(ns));
 
         let readyToMilkTargets = readyToMilkHosts(ns, allTargetThreads, allHosts);
-        readyToMilkTargets.sort(byLvlAndMoney);
+        readyToMilkTargets.sort(byLvlAndMoney(ns));
 
         let milkingTargets = milkingHosts(ns, allTargetThreads, allHosts);
-        milkingTargets.sort(byLvlAndMoney);
+        milkingTargets.sort(byLvlAndMoney(ns));
 
         type TargetCategories = [
             category: string,

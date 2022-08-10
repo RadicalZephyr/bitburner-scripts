@@ -2,18 +2,15 @@ import type { NS } from "netscript";
 
 import {
     Heap,
-    // buildingHosts,
-    byHackLevel,
+    byLvlAndMoney,
     calculateWeakenInstance,
     countThreadsByTarget,
     getAllHosts,
     getRootAccess,
     inverseAvailableRam,
-    // milkingHosts,
     readyToBuildHosts,
     readyToMilkHosts,
     readyToSoftenHosts,
-    // softeningHosts,
     spawnBatchScript,
     targetableHosts,
     usableHosts
@@ -49,7 +46,7 @@ OPTIONS:
 
         const hosts = usableHosts(ns, allHosts);
         let targets = targetableHosts(ns, allHosts);
-        targets.sort(byHackLevel(ns));
+        targets.sort(byLvlAndMoney(ns));
 
         // Deploy all batch scripts to all host servers
         for (const host of hosts) {
@@ -93,7 +90,7 @@ OPTIONS:
             }
         }
 
-        readyToSoftenTargets.sort(byHackLevel(ns));
+        readyToSoftenTargets.sort(byLvlAndMoney(ns));
 
         for (const sTarget of readyToSoftenTargets) {
             let weakenInstance = calculateWeakenInstance(ns, sTarget);
@@ -109,18 +106,18 @@ OPTIONS:
             hostsHeap.updateMinKey();
         }
 
-        let readyToBuildTargets = readyToBuildHosts(ns, allTargetThreads, allHosts);
-        readyToBuildTargets.sort(byHackLevel(ns));
-
-        for (const bTarget of readyToBuildTargets) {
-            ns.run('/batch/build.js', 1, bTarget);
-        }
-
         let readyToMilkTargets = readyToMilkHosts(ns, allTargetThreads, allHosts);
-        readyToMilkTargets.sort(byHackLevel(ns));
+        readyToMilkTargets.sort(byLvlAndMoney(ns));
 
         for (const mTarget of readyToMilkTargets) {
             ns.run('/batch/milk.js', 1, mTarget);
+        }
+
+        let readyToBuildTargets = readyToBuildHosts(ns, allTargetThreads, allHosts);
+        readyToBuildTargets.sort(byLvlAndMoney(ns));
+
+        for (const bTarget of readyToBuildTargets) {
+            ns.run('/batch/build.js', 1, bTarget);
         }
 
         await ns.sleep(options.refreshrate);
