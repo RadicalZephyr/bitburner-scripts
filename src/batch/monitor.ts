@@ -70,12 +70,12 @@ Example:
             targets: string[]
         ];
         const targetCategories: TargetCategories[] = [
-            ["Ready To Soften", readyToSoftenTargets],
-            ["Softening", softeningTargets],
+            ["Ready To Milk", readyToMilkTargets],
+            ["Milking", milkingTargets],
             ["Ready To Build", readyToBuildTargets],
             ["Building", buildingTargets],
-            ["Ready To Milk", readyToMilkTargets],
-            ["Milking", milkingTargets]
+            ["Ready To Soften", readyToSoftenTargets],
+            ["Softening", softeningTargets]
         ];
 
         for (const [category, targets] of targetCategories) {
