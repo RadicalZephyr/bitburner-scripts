@@ -395,11 +395,11 @@ export function countThreadsByTarget(ns: NS, hosts: string[]): Map<string, Targe
             let targetThread = targetThreads.get(target);
 
             if (pi.filename === '/batch/hack.js') {
-                targetThread.hN += 1;
                 targetThread.hPid.push(pi.pid);
                 targetThread.h += pi.threads;
                 const totalMoney = ns.getScriptIncome(pi.filename, host, ...pi.args);
                 if (Math.abs(totalMoney) > 1) {
+                    targetThread.hN += 1;
                     const n = targetThread.hN;
                     targetThread.hAvgMoney = ((n - 1) / n) * targetThread.hAvgMoney + totalMoney * (1 / n);
                 }
