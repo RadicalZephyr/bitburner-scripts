@@ -340,7 +340,9 @@ export function setInstanceStartTimes(scriptInstances: BatchScriptInstance[]): v
     });
 }
 
-export function spawnBatchScript(ns: NS, host: string, scriptInstance: BatchScriptInstance, ...extraArgs: (string | number | boolean)[]) {
+type ScriptArgs = (string | number | boolean);
+
+export function spawnBatchScript(ns: NS, host: string, scriptInstance: BatchScriptInstance, ...extraArgs: ScriptArgs[]) {
     const { script, threads, target, startTime, endDelay } = scriptInstance;
     if (threads > 0) {
         let args = [target, startTime, endDelay, ...extraArgs];
