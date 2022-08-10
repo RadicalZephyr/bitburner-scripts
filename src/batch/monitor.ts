@@ -115,7 +115,7 @@ function targetInfo(ns: NS, target: string, targetThreads: TargetThreads): (stri
     const moneyPercent = moneyPercentage(ns, target) * 100;
     const secPlus = sec - minSec;
 
-    const milkMoney = Math.max(targetThreads.mMoney, targetThreads.hAvgMoney);
+    const milkMoney = targetThreads.mMoney;
 
     return [
         target,

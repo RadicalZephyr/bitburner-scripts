@@ -359,25 +359,33 @@ export function spawnBatchScript(ns: NS, host: string, scriptInstance: BatchScri
 
 export class TargetThreads {
     h: number;
-    mMoney: number;
-    hN: number;
-    hAvgMoney: number;
     hPid: number[];
+
     g: number;
     gPid: number[];
+
     w: number;
     wPid: number[];
 
+    mMoney: number;
+    milking: boolean;
+
+    building: boolean;
+
     constructor() {
         this.h = 0;
-        this.mMoney = 0;
-        this.hN = 0;
-        this.hAvgMoney = 0;
         this.hPid = [];
+
         this.g = 0;
         this.gPid = [];
+
         this.w = 0;
         this.wPid = [];
+
+        this.mMoney = 0;
+        this.milking = false;
+
+        this.building = false;
     }
 }
 
@@ -399,16 +407,13 @@ export function countThreadsByTarget(ns: NS, hosts: string[]): Map<string, Targe
             let targetThread = targetThreads.get(target);
 
             if (pi.filename === '/batch/milk.js') {
+                targetThread.milking = true;
                 targetThread.mMoney = ns.getScriptIncome(pi.filename, host, ...pi.args);
+            } else if (pi.filename === '/batch/build.js') {
+                targetThread.building = true;
             } else if (pi.filename === '/batch/hack.js') {
                 targetThread.hPid.push(pi.pid);
                 targetThread.h += pi.threads;
-                const totalMoney = ns.getScriptIncome(pi.filename, host, ...pi.args);
-                if (Math.abs(totalMoney) > 1) {
-                    targetThread.hN += 1;
-                    const n = targetThread.hN;
-                    targetThread.hAvgMoney = ((n - 1) / n) * targetThread.hAvgMoney + totalMoney * (1 / n);
-                }
             } else if (pi.filename === '/batch/grow.js') {
                 targetThread.gPid.push(pi.pid);
                 targetThread.g += pi.threads;
@@ -527,21 +532,25 @@ function isSoftening(targetThreads: TargetThreads): boolean {
 }
 
 function isBuilding(targetThreads: TargetThreads): boolean {
-    return targetThreads.h === 0
-        && targetThreads.g > 0
-        && targetThreads.w > 0;
+    return targetThreads.building
+        || (targetThreads.h === 0
+            && targetThreads.g > 0
+            && targetThreads.w > 0);
 }
 
 function isMilking(targetThreads: TargetThreads): boolean {
-    return targetThreads.h > 0
+    return targetThreads.milking
+        || targetThreads.h > 0
         && targetThreads.g > 0
         && targetThreads.w > 0;
 }
 
 function noThreads(targetThreads: TargetThreads): boolean {
-    return targetThreads.h === 0
-        && targetThreads.g === 0
-        && targetThreads.w === 0;
+    return !targetThreads.building
+        && !targetThreads.milking
+        && (targetThreads.h === 0
+            && targetThreads.g === 0
+            && targetThreads.w === 0);
 }
 
 
