@@ -94,7 +94,7 @@ export function canNuke(ns: NS, host: string): boolean {
 // Host Filtering Utilities
 //////////////////////////////////////////
 
-/**
+/** Filter hosts by whether they have any ram available.
  *
  */
 export function availableHosts(ns: NS, hosts: string[]): string[] {
