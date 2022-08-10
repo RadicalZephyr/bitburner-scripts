@@ -87,8 +87,8 @@ Example:
         for (const [category, targets] of targetCategories) {
             if (targets.length == 0) continue;
 
-            const baseFormatString = ` %${maxTargetNameLen}s  |  %9s  %5s  %8s  %7s  %7s  %7s  %7s  %7s  %8s`;
-            const headings = ['target', '$/lvl/s', 'lvl', '$', '⌈$⌉%', '+sec', 'thr(h)', 'thr(g)', 'thr(w)', '$/thr(h)'];
+            const baseFormatString = ` %${maxTargetNameLen}s  |  %8s  %9s  %5s  %8s  %7s  %7s  %7s  %7s  %7s`;
+            const headings = ['target', '$/s', '$/lvl', 'lvl', '$', '⌈$⌉%', '+sec', 'thr(h)', 'thr(g)', 'thr(w)'];
 
             const dividerFormatString = baseFormatString.replaceAll(' ', '-').replaceAll('%', "%'-");
 
@@ -115,19 +115,17 @@ function targetInfo(ns: NS, target: string, targetThreads: TargetThreads): (stri
     const moneyPercent = moneyPercentage(ns, target) * 100;
     const secPlus = sec - minSec;
 
-    const hackTime = ns.getHackTime(target);
-
     return [
         target,
-        ns.nFormat(money / hackLvl / hackTime, '0.00a') + ':1',
+        Math.abs(targetThreads.hAvgMoney) < 1 ? '' : ns.nFormat(targetThreads.hAvgMoney, '$0.00a'),
+        ns.nFormat(money / hackLvl, '$0.00a'),
         ns.nFormat(hackLvl, '0,0'),
         ns.nFormat(money, '$0.00a'),
         Math.abs(moneyPercent - 100) < 0.1 ? '100.0%' : ns.nFormat(moneyPercent / 100, '0.00%'),
         Math.abs(secPlus) < 0.1 ? '+0.0' : ns.nFormat(secPlus, '+0.00a'),
         formatThreads(ns, targetThreads.h),
         formatThreads(ns, targetThreads.g),
-        formatThreads(ns, targetThreads.w),
-        Math.abs(targetThreads.hAvgMoney) < 1 ? '' : ns.nFormat(targetThreads.hAvgMoney, '$0.00a')
+        formatThreads(ns, targetThreads.w)
     ];
 }
 
