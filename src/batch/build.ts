@@ -1,9 +1,10 @@
 import type { NS, AutocompleteData } from "netscript";
 
 import {
-    byAvailableRam,
+    Heap,
     calculateBuildRound,
     getAllHosts,
+    inverseAvailableRam,
     numThreads,
     spawnBatchScript,
     usableHosts
@@ -36,19 +37,27 @@ ${scriptDescriptions}
     const allHosts = getAllHosts(ns);
 
     let hosts = usableHosts(ns, allHosts);
-    hosts.sort(byAvailableRam(ns));
+
+    let hostsHeap = new Heap(hosts, host => inverseAvailableRam(ns, host));
 
     let batchNumber = 0;
 
-    for (const host of hosts) {
-        let availableHostThreads = numThreads(ns, host, '/batch/grow.js');
+    while (batchNumber < buildRound.numberOfBatches) {
+        const host = hostsHeap.min();
+        const availableHostThreads = numThreads(ns, host, '/batch/grow.js');
 
-        while (batchNumber < buildRound.numberOfBatches && availableHostThreads > buildRound.totalBatchThreads) {
-            buildRound.instances.forEach(inst => spawnBatchScript(ns, host, inst, batchNumber));
-            batchNumber += 1;
-            await ns.sleep(50);
-            availableHostThreads = numThreads(ns, host, '/batch/grow.js');
+        // Check if enough RAM is available
+        if (availableHostThreads < buildRound.totalBatchThreads) {
+            // Since the heap is sorted by max memory, if the max
+            // memory host in the heap doesn't have enough memory,
+            // then none of the others do either, so we should just stop.
+            break;
         }
-        await ns.sleep(100);
+
+        buildRound.instances.forEach(inst => spawnBatchScript(ns, host, inst, batchNumber));
+        batchNumber += 1;
+
+        await ns.sleep(50);
+        hostsHeap.updateMinKey();
     }
 }

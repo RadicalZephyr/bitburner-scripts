@@ -54,6 +54,7 @@ total number of threads needed: ${milkRound.totalThreads}
 
         milkRound.instances.forEach(inst => spawnBatchScript(ns, host, inst, batchNumber));
         batchNumber += 1;
+
         await ns.sleep(milkRound.batchOffset);
         hostsHeap.updateMinKey();
     }
