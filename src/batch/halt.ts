@@ -2,7 +2,7 @@ import type { NS, AutocompleteData } from "netscript";
 
 import { getAllHosts, countThreadsByTarget } from '../lib';
 
-export function autocomplete(data: AutocompleteData, args: string[]): string[] {
+export function autocomplete(data: AutocompleteData, _args: string[]): string[] {
     return data.servers;
 }
 
