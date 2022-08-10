@@ -42,8 +42,8 @@ OPTIONS
 
     const allHosts = getAllHosts(ns);
 
-    const milkRound = calculateMilkRound(ns, target);
-    milkRound.instances.forEach(inst => inst.threads * scale);
+    let milkRound = calculateMilkRound(ns, target);
+    milkRound.instances.forEach(inst => inst.threads *= scale);
 
     const scriptDescriptions = milkRound.instances.map(si => `  ${si.script} -t ${si.threads}`).join('\n');
     ns.print(`
