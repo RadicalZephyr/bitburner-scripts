@@ -2,10 +2,9 @@ import type { NS, AutocompleteData } from "netscript";
 
 import {
     BatchScriptInstance,
-    Heap,
+    availableRam,
     calculateBuildRound,
     getAllHosts,
-    inverseAvailableRam,
     numThreads,
     spawnBatchScript,
     usableHosts
@@ -35,16 +34,13 @@ ${scriptDescriptions}
         return;
     }
 
-    const allHosts = getAllHosts(ns);
-
-    let hosts = usableHosts(ns, allHosts);
-
-    let hostsHeap = new Heap(hosts, host => inverseAvailableRam(ns, host));
-
     let batchNumber = 0;
 
     while (batchNumber < buildRound.numberOfBatches) {
-        const host = hostsHeap.min();
+        const allHosts = getAllHosts(ns);
+        const hosts = usableHosts(ns, allHosts);
+        const host = maxRamHost(ns, hosts);
+
         const availableHostThreads = numThreads(ns, host, '/batch/grow.js');
 
         // Check if enough RAM is available
@@ -60,11 +56,24 @@ ${scriptDescriptions}
         buildRound.instances.forEach(inst => spawnBatchScript(ns, host, scaleBatchThreads(inst, maxBatches), batchNumber));
         batchNumber += maxBatches;
 
-        await ns.sleep(50);
-        hostsHeap.updateMinKey();
+        await ns.sleep(500);
     }
 }
 
+function maxRamHost(ns: NS, hosts: string[]): string {
+    let maxRam = 0;
+    let maxRamHost;
+
+    for (const host of hosts) {
+        const hostRam = availableRam(ns, host);
+        if (hostRam > maxRam) {
+            maxRam = hostRam;
+            maxRamHost = host;
+        }
+    }
+
+    return maxRamHost;
+}
 
 function scaleBatchThreads(inst: BatchScriptInstance, scale: number): BatchScriptInstance {
     const {
