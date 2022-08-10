@@ -47,8 +47,8 @@ Example:
         const allTargetThreads = countThreadsByTarget(ns, allHosts);
 
         const byLvlAndMoney = ((aH: string, bH: string) => {
-            const a = ns.getServerMaxMoney(aH) / ns.getServerRequiredHackingLevel(aH);
-            const b = ns.getServerMaxMoney(bH) / ns.getServerRequiredHackingLevel(bH);
+            const a = ns.getServerMaxMoney(aH) / ns.getServerRequiredHackingLevel(aH) / ns.getHackTime(aH);
+            const b = ns.getServerMaxMoney(bH) / ns.getServerRequiredHackingLevel(bH) / ns.getHackTime(bH);
             return b - a;
 
         });
@@ -88,7 +88,7 @@ Example:
             if (targets.length == 0) continue;
 
             const baseFormatString = ` %${maxTargetNameLen}s  |  %9s  %5s  %8s  %7s  %7s  %7s  %7s  %7s  %8s`;
-            const headings = ['target', '$/lvl', 'lvl', '$', '⌈$⌉%', '+sec', 'thr(h)', 'thr(g)', 'thr(w)', '$/thr(h)'];
+            const headings = ['target', '$/lvl/s', 'lvl', '$', '⌈$⌉%', '+sec', 'thr(h)', 'thr(g)', 'thr(w)', '$/thr(h)'];
 
             const dividerFormatString = baseFormatString.replaceAll(' ', '-').replaceAll('%', "%'-");
 
@@ -115,9 +115,11 @@ function targetInfo(ns: NS, target: string, targetThreads: TargetThreads): (stri
     const moneyPercent = moneyPercentage(ns, target) * 100;
     const secPlus = sec - minSec;
 
+    const hackTime = ns.getHackTime(target);
+
     return [
         target,
-        ns.nFormat(money / hackLvl, '0.00a') + ':1',
+        ns.nFormat(money / hackLvl / hackTime, '0.00a') + ':1',
         ns.nFormat(hackLvl, '0,0'),
         ns.nFormat(money, '$0.00a'),
         Math.abs(moneyPercent - 100) < 0.1 ? '100.0%' : ns.nFormat(moneyPercent / 100, '0.00%'),
