@@ -1,9 +1,10 @@
 import type { NS, AutocompleteData } from "netscript";
 
 import {
-    byAvailableRam,
+    Heap,
     calculateMilkRound,
     getAllHosts,
+    inverseAvailableRam,
     numThreads,
     spawnBatchScript,
     usableHosts
@@ -34,19 +35,26 @@ total number of threads needed: ${milkRound.totalThreads}
 `);
 
     let hosts = usableHosts(ns, allHosts);
-    hosts.sort(byAvailableRam(ns));
+
+    let hostsHeap = new Heap(hosts, host => inverseAvailableRam(ns, host));
 
     let batchNumber = 0;
 
-    for (const host of hosts) {
-        let availableHostThreads = numThreads(ns, host, '/batch/grow.js');
+    while (batchNumber < milkRound.numberOfBatches) {
+        const host = hostsHeap.min();
+        const availableHostThreads = numThreads(ns, host, '/batch/grow.js');
 
-        while (batchNumber < milkRound.numberOfBatches && availableHostThreads > milkRound.totalBatchThreads) {
-            milkRound.instances.forEach(inst => spawnBatchScript(ns, host, inst, batchNumber));
-            batchNumber += 1;
-            await ns.sleep(milkRound.batchOffset);
-            availableHostThreads = numThreads(ns, host, '/batch/grow.js');
+        // Check if enough RAM is available
+        if (availableHostThreads < milkRound.totalBatchThreads) {
+            // Since the heap is sorted by max memory, if the max
+            // memory host in the heap doesn't have enough memory,
+            // then none of the others do either, so we should just stop.
+            break;
         }
-        await ns.sleep(100);
+
+        milkRound.instances.forEach(inst => spawnBatchScript(ns, host, inst, batchNumber));
+        batchNumber += 1;
+        await ns.sleep(milkRound.batchOffset);
+        hostsHeap.updateMinKey();
     }
 }
