@@ -358,14 +358,20 @@ export function spawnBatchScript(ns: NS, host: string, scriptInstance: BatchScri
 export class TargetThreads {
     h: number;
     hAvgMoney: number;
+    hPid: number[];
     g: number;
+    gPid: number[];
     w: number;
+    wPid: number[];
 
     constructor() {
         this.h = 0;
         this.hAvgMoney = 0;
+        this.hPid = [];
         this.g = 0;
+        this.gPid = [];
         this.w = 0;
+        this.wPid = [];
     }
 }
 
@@ -385,13 +391,16 @@ export function countThreadsByTarget(ns: NS, hosts: string[]): Map<string, Targe
 
             if (pi.filename === '/batch/hack.js') {
                 n += 1;
+                targetThread.hPid.push(pi.pid);
                 targetThread.h += pi.threads;
                 const totalMoney = ns.getScriptIncome(pi.filename, host, ...pi.args);
                 const perThreadMoney = totalMoney / pi.threads;
                 targetThread.hAvgMoney = ((n - 1) / n) * targetThread.hAvgMoney + perThreadMoney * (1 / n);
             } else if (pi.filename === '/batch/grow.js') {
+                targetThread.gPid.push(pi.pid);
                 targetThread.g += pi.threads;
             } else if (pi.filename === '/batch/weaken.js') {
+                targetThread.wPid.push(pi.pid);
                 targetThread.w += pi.threads;
             }
         }
