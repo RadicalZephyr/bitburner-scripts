@@ -20,7 +20,7 @@ const scriptList = ['/batch/grow.js', '/batch/hack.js', '/batch/weaken.js'];
 
 export async function main(ns: NS) {
     const options = ns.flags([
-        ['refreshrate', 200],
+        ['refreshrate', 500],
         ['help', false],
     ]);
 
