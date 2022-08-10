@@ -2,6 +2,7 @@ import type { NS, AutocompleteData } from "netscript";
 
 import {
     BatchScriptInstance,
+    availableHosts,
     availableRam,
     calculateBuildRound,
     getAllHosts,
@@ -38,8 +39,10 @@ ${scriptDescriptions}
 
     while (batchNumber < buildRound.numberOfBatches) {
         const allHosts = getAllHosts(ns);
-        const hosts = usableHosts(ns, allHosts);
+        const hosts = availableHosts(ns, usableHosts(ns, allHosts));
         const host = maxRamHost(ns, hosts);
+
+        if (host === undefined) return;
 
         const availableHostThreads = numThreads(ns, host, '/batch/grow.js');
 
@@ -53,8 +56,10 @@ ${scriptDescriptions}
 
         const maxBatches = Math.floor(availableHostThreads / buildRound.totalBatchThreads);
 
-        buildRound.instances.forEach(inst => spawnBatchScript(ns, host, scaleBatchThreads(inst, maxBatches), batchNumber));
-        batchNumber += maxBatches;
+        const totalBatches = Math.min(maxBatches, buildRound.numberOfBatches - batchNumber);
+
+        buildRound.instances.forEach(inst => spawnBatchScript(ns, host, scaleBatchThreads(inst, totalBatches), batchNumber));
+        batchNumber += totalBatches;
 
         await ns.sleep(500);
     }
