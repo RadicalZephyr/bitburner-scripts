@@ -89,6 +89,7 @@ Example:
             const blanks = Array(headings.length).fill('');
 
             ns.printf('\n%s Targets:', category);
+            ns.printf(targets.join(' '));
             ns.printf(baseFormatString, ...headings);
             ns.printf(dividerFormatString, ...blanks);
 
