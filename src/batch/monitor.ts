@@ -109,11 +109,11 @@ function targetInfo(ns: NS, target: string, targetThreads: TargetThreads): (stri
 
     return [
         target,
-        ns.nFormat(moneyPercent / 100, '0.00%'),
-        ns.nFormat(secPlus, '+0.00a'),
-        ns.nFormat(targetThreads.h, '0.00a'),
-        ns.nFormat(targetThreads.g, '0.00a'),
-        ns.nFormat(targetThreads.w, '0.00a'),
-        ns.nFormat(targetThreads.hAvgMoney, '$0.00a')
+        Math.abs(moneyPercent - 100) < 0.001 ? '100%' : ns.nFormat(moneyPercent / 100, '0.00%'),
+        Math.abs(secPlus) < 0.1 ? '+0.0' : ns.nFormat(secPlus, '+0.00a'),
+        Math.abs(targetThreads.h) < 1 ? '' : ns.nFormat(targetThreads.h, '0.00a'),
+        Math.abs(targetThreads.g) < 1 ? '' : ns.nFormat(targetThreads.g, '0.00a'),
+        Math.abs(targetThreads.w) < 1 ? '' : ns.nFormat(targetThreads.w, '0.00a'),
+        Math.abs(targetThreads.hAvgMoney) < 1 ? '' : ns.nFormat(targetThreads.hAvgMoney, '$0.00a')
     ];
 }
