@@ -13,7 +13,7 @@ export async function main(ns: NS) {
 
     if (options.help || options._.length < 1) {
         ns.tprint(`
-USAGE: run ${ns.getScriptName()} TARGET_HOST
+USAGE: run ${ns.getScriptName()} TARGET_HOST...
 
 Halt all batch hacking threads targeting the TARGET HOST.
 
@@ -26,18 +26,19 @@ OPTIONS
     const allHosts = getAllHosts(ns);
     const allTargetThreads = countThreadsByTarget(ns, allHosts);
 
-    const target = options._[0];
-    const targetInfo = allTargetThreads.get(target);
-    if (targetInfo) {
-        targetInfo.hPid.forEach(pid => ns.kill(pid));
-        await ns.sleep(150);
+    for (const target of options._) {
+        const targetInfo = allTargetThreads.get(target);
+        if (targetInfo) {
+            targetInfo.hPid.forEach(pid => ns.kill(pid));
+            await ns.sleep(150);
 
-        targetInfo.gPid.forEach(pid => ns.kill(pid));
-        await ns.sleep(150);
+            targetInfo.gPid.forEach(pid => ns.kill(pid));
+            await ns.sleep(150);
 
-        targetInfo.wPid.forEach(pid => ns.kill(pid));
-        await ns.sleep(150);
-    } else {
-        ns.tprintf('nothing to kill for target %s', target);
+            targetInfo.wPid.forEach(pid => ns.kill(pid));
+            await ns.sleep(150);
+        } else {
+            ns.tprintf('nothing to kill for target %s', target);
+        }
     }
 }
