@@ -12,10 +12,18 @@ export async function main(ns: NS) {
         ['help', false],
     ]);
     if (flags._.length === 0 || flags.help) {
-        ns.tprint("This script prints the path between two servers in the network.");
-        ns.tprint(`USAGE: run ${ns.getScriptName()} SERVER_NAME`);
-        ns.tprint("Example:");
-        ns.tprint(`> run ${ns.getScriptName()} n00dles`);
+        ns.tprint(`
+USAGE: run ${ns.getScriptName()} SERVER_NAME
+
+This script prints the path between two servers in the network.
+
+Example:
+  > run ${ns.getScriptName()} n00dles
+
+OPTIONS
+  --help           Show this help message
+  --startingHost   The host to start the search from
+`);
         return;
     }
 
