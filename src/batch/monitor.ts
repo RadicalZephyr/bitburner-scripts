@@ -81,8 +81,8 @@ Example:
         for (const [category, targets] of targetCategories) {
             if (targets.length == 0) continue;
 
-            const baseFormatString = ` %${maxTargetNameLen}s  |  %7s  %7s  %7s  %7s  %7s  %8s`;
-            const headings = ['target', '⌈$⌉%', '+sec', 'thr(h)', 'thr(g)', 'thr(w)', '$/thr(h)'];
+            const baseFormatString = ` %${maxTargetNameLen}s  |  %8s  %7s  %7s  %7s  %7s  %7s  %8s`;
+            const headings = ['target', '$', '⌈$⌉%', '+sec', 'thr(h)', 'thr(g)', 'thr(w)', '$/thr(h)'];
 
             const dividerFormatString = baseFormatString.replaceAll(' ', '-').replaceAll('%', "%'-");
 
@@ -104,11 +104,13 @@ function targetInfo(ns: NS, target: string, targetThreads: TargetThreads): (stri
     const minSec = ns.getServerMinSecurityLevel(target);
     const sec = ns.getServerSecurityLevel(target);
 
+    const money = ns.getServerMaxMoney(target);
     const moneyPercent = moneyPercentage(ns, target) * 100;
     const secPlus = sec - minSec;
 
     return [
         target,
+        ns.nFormat(money, '$0.00a'),
         Math.abs(moneyPercent - 100) < 0.1 ? '100.0%' : ns.nFormat(moneyPercent / 100, '0.00%'),
         Math.abs(secPlus) < 0.1 ? '+0.0' : ns.nFormat(secPlus, '+0.00a'),
         formatThreads(ns, targetThreads.h),
