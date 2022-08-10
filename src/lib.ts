@@ -677,8 +677,8 @@ export async function launchMilkRound(ns: NS, host: string, milkRound: MilkRound
     }
 }
 
-export function calculateMilkRound(ns: NS, target: string): MilkRound {
-    const instances = calculateMilkBatch(ns, target);
+export function calculateMilkRound(ns: NS, target: string, hackPercent: number): MilkRound {
+    const instances = calculateMilkBatch(ns, target, hackPercent);
 
     const lastScriptInstance = instances[instances.length - 1];
     const totalBatchTime = lastScriptInstance.startTime + lastScriptInstance.runTime;
@@ -699,7 +699,7 @@ export function calculateMilkRound(ns: NS, target: string): MilkRound {
     };
 }
 
-export function calculateMilkBatch(ns: NS, target: string): BatchScriptInstance[] {
+export function calculateMilkBatch(ns: NS, target: string, hackPercent: number): BatchScriptInstance[] {
     // To minimize per-batch thread use but maximize the value
     // rcalculateMilkBatchch, we want to choose the amount we hack
     // per bacalculateMilkBatchlarger of these two amounts:
@@ -715,8 +715,8 @@ export function calculateMilkBatch(ns: NS, target: string): BatchScriptInstance[
     // Amount of money hacked per thread
     const oneHackThreadHackPercent = ns.hackAnalyze(target);
 
-    // Start with one thread
-    let hackThreads = 1;
+    let hackThreads = Math.floor(hackPercent / oneHackThreadHackPercent);
+
     let hackThreadGrowThreads;
     do {
         hackThreads += 1;

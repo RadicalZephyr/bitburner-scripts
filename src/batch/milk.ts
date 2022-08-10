@@ -16,7 +16,7 @@ export function autocomplete(data: AutocompleteData, _args: string[]): string[] 
 
 export async function main(ns: NS) {
     const options = ns.flags([
-        ['scale', 1],
+        ['hack_percent', 0.9],
         ['help', false]
     ]);
 
@@ -27,13 +27,13 @@ USAGE: run ${ns.getScriptName()} TARGET_HOST
 Calculate and start an entire milking round against the TARGET HOST.
 
 OPTIONS
-  --help   Show this help message
-  --scale  Scale the number of threads for each script
+  --help          Show this help message
+  --hack_percent  Scale the number of threads for each script
 `);
         return;
     }
 
-    const scale = Math.max(Math.round(options.scale), 1);
+    const hack_percent = Math.max(0.01, Math.min(options.hack_percent, 0.99));
     const target = options._[0];
     if (typeof target != 'string' || !ns.serverExists(target)) {
         ns.tprintf('invalid target');
@@ -47,8 +47,7 @@ OPTIONS
     let hostsHeap = new Heap(hosts, host => inverseAvailableRam(ns, host));
 
     while (true) {
-        let milkRound = calculateMilkRound(ns, target);
-        milkRound.instances.forEach(inst => inst.threads *= scale);
+        let milkRound = calculateMilkRound(ns, target, hack_percent);
 
         let batchNumber = 0;
 
