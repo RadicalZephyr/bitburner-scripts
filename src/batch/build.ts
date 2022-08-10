@@ -1,6 +1,7 @@
 import type { NS, AutocompleteData } from "netscript";
 
 import {
+    BatchScriptInstance,
     Heap,
     calculateBuildRound,
     getAllHosts,
@@ -54,10 +55,34 @@ ${scriptDescriptions}
             break;
         }
 
-        buildRound.instances.forEach(inst => spawnBatchScript(ns, host, inst, batchNumber));
-        batchNumber += 1;
+        const maxBatches = Math.floor(availableHostThreads / buildRound.totalBatchThreads);
+
+        buildRound.instances.forEach(inst => spawnBatchScript(ns, host, scaleBatchThreads(inst, maxBatches), batchNumber));
+        batchNumber += maxBatches;
 
         await ns.sleep(50);
         hostsHeap.updateMinKey();
     }
+}
+
+
+function scaleBatchThreads(inst: BatchScriptInstance, scale: number): BatchScriptInstance {
+    const {
+        target,
+        script,
+        threads,
+        startTime,
+        runTime,
+        endDelay,
+        loop
+    } = inst;
+    return {
+        target,
+        script,
+        threads: Math.floor(scale * threads),
+        startTime,
+        runTime,
+        endDelay,
+        loop
+    };
 }
