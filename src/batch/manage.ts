@@ -41,6 +41,8 @@ OPTIONS:
         return;
     }
 
+    const byLvlAndMoneyDesc = byLvlAndMoney(ns);
+
     let softeningTargets = [];
 
     while (true) {
@@ -49,7 +51,7 @@ OPTIONS:
 
         const hosts = usableHosts(ns, allHosts);
         let targets = targetableHosts(ns, allHosts);
-        targets.sort(byLvlAndMoney(ns));
+        targets.sort(byLvlAndMoneyDesc);
 
         // Deploy all batch scripts to all host servers
         for (const host of hosts) {
@@ -95,7 +97,7 @@ OPTIONS:
             await ns.sleep(50);
         }
 
-        readyToSoftenTargets.sort(byLvlAndMoney(ns));
+        readyToSoftenTargets.sort(byLvlAndMoneyDesc);
 
         for (const sTarget of readyToSoftenTargets) {
             let weakenInstance = calculateWeakenInstance(ns, sTarget);
@@ -115,16 +117,16 @@ OPTIONS:
         let readyToMilkTargets = readyToMilkHosts(ns, allTargetThreads, allHosts);
 
         if (milkingTargets.length < options.milkMax) {
-            readyToMilkTargets.sort(byLvlAndMoney(ns));
+            readyToMilkTargets.sort(byLvlAndMoneyDesc);
 
             const numNewMilkTargets = options.milkMax - milkingTargets.length;
             for (const mTarget of readyToMilkTargets.slice(0, numNewMilkTargets)) {
                 ns.run('/batch/milk.js', 1, mTarget);
             }
-        }
+        } else { }
 
         let readyToBuildTargets = readyToBuildHosts(ns, allTargetThreads, allHosts);
-        readyToBuildTargets.sort(byLvlAndMoney(ns));
+        readyToBuildTargets.sort(byLvlAndMoneyDesc);
 
         for (const bTarget of readyToBuildTargets) {
             ns.run('/batch/build.js', 1, bTarget);
