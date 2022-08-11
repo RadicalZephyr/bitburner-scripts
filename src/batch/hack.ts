@@ -1,11 +1,13 @@
 import type { NS } from "netscript";
 
 export async function main(ns: NS) {
+    ns.disableLog('ALL');
+    ns.clearLog();
+
     const args = ns.args;
 
     const target = args[0];
     if (typeof target != 'string') {
-        ns.tprint('invalid target: %s', target);
         return;
     }
 
