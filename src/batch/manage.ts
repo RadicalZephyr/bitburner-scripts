@@ -8,6 +8,7 @@ import {
     getAllHosts,
     getRootAccess,
     inverseAvailableRam,
+    milkingHosts,
     readyToBuildHosts,
     readyToMilkHosts,
     readyToSoftenHosts,
@@ -20,6 +21,7 @@ const scriptList = ['/batch/grow.js', '/batch/hack.js', '/batch/weaken.js'];
 
 export async function main(ns: NS) {
     const options = ns.flags([
+        ['milkMax', 8],
         ['refreshrate', 500],
         ['help', false],
     ]);
@@ -32,7 +34,8 @@ are in and spawning appropriate scripts to progress them through it.
 USAGE: run ${ns.getScriptName()}
 
 OPTIONS:
-  --refreshrate  Time to wait between display updates in milliseconds
+  --milkMax      Maximum number of hosts to milk at one time
+  --refreshrate  Time to wait between refreshing target status in milliseconds
   --help         Show this help message.
 `);
         return;
@@ -108,11 +111,16 @@ OPTIONS:
             hostsHeap.updateMinKey();
         }
 
+        let milkingTargets = milkingHosts(ns, allTargetThreads, allHosts);
         let readyToMilkTargets = readyToMilkHosts(ns, allTargetThreads, allHosts);
-        readyToMilkTargets.sort(byLvlAndMoney(ns));
 
-        for (const mTarget of readyToMilkTargets) {
-            ns.run('/batch/milk.js', 1, mTarget);
+        if (milkingTargets.length < options.milkMax) {
+            readyToMilkTargets.sort(byLvlAndMoney(ns));
+
+            const numNewMilkTargets = options.milkMax - milkingTargets.length;
+            for (const mTarget of readyToMilkTargets.slice(0, numNewMilkTargets)) {
+                ns.run('/batch/milk.js', 1, mTarget);
+            }
         }
 
         let readyToBuildTargets = readyToBuildHosts(ns, allTargetThreads, allHosts);
