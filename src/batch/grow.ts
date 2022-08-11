@@ -1,11 +1,7 @@
 import type { NS } from "netscript";
 
 export async function main(ns: NS) {
-    const options = ns.flags([
-        ['loop', false]
-    ]);
-
-    const args = options._;
+    const args = ns.args;
 
     const target = args[0];
     if (typeof target != 'string') {
@@ -18,15 +14,6 @@ export async function main(ns: NS) {
         sleepTime = 0;
     }
 
-    let endDelay = args[2];
-    if (typeof endDelay != 'number') {
-        endDelay = 20;
-    }
-    endDelay = Math.max(20, endDelay);
-
-    do {
-        await ns.sleep(sleepTime);
-        await ns.grow(target);
-        await ns.sleep(endDelay);
-    } while (options.loop);
+    await ns.sleep(sleepTime);
+    await ns.grow(target);
 }
