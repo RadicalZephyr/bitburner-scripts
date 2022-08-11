@@ -304,7 +304,7 @@ export type BatchScriptInstance = {
 };
 
 export const minimumTimeDelta = 150;
-export const timeAlignment = 2000;
+export const timeAlignment = 1000;
 
 export function setInstanceStartTimes(scriptInstances: BatchScriptInstance[]): void {
     let endTime = 0;
