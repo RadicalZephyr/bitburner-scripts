@@ -42,6 +42,7 @@ OPTIONS:
     }
 
     const byLvlAndMoneyDesc = byLvlAndMoney(ns);
+    const byLvlAndMoneyAsc = (a: string, b: string) => byLvlAndMoneyDesc(b, a);
 
     let softeningTargets = [];
 
@@ -113,17 +114,41 @@ OPTIONS:
             hostsHeap.updateMinKey();
         }
 
-        let milkingTargets = milkingHosts(ns, allTargetThreads, allHosts);
-        let readyToMilkTargets = readyToMilkHosts(ns, allTargetThreads, allHosts);
+        let milkingTargets = augmentWithRipenessMetric(ns, milkingHosts(ns, allTargetThreads, allHosts));
+        let readyToMilkTargets = augmentWithRipenessMetric(ns, readyToMilkHosts(ns, allTargetThreads, allHosts));
+        readyToMilkTargets.sort(byRipenessDesc);
 
         if (milkingTargets.length < options.milkMax) {
-            readyToMilkTargets.sort(byLvlAndMoneyDesc);
-
             const numNewMilkTargets = options.milkMax - milkingTargets.length;
             for (const mTarget of readyToMilkTargets.slice(0, numNewMilkTargets)) {
-                ns.run('/batch/milk.js', 1, mTarget);
+                ns.run('/batch/milk.js', 1, mTarget.host);
             }
-        } else { }
+        } else {
+            // If we're at maximum capacity for milking, then replace
+            // current milking targets with higher value ones.
+
+            // Sort milking targets in ascending order, opposite of
+            // the ready to milk targets.
+            milkingTargets.sort(byRipenessAsc);
+
+            const totalCanSwap = Math.min(milkingTargets.length, readyToMilkTargets.length);
+
+            for (let i = 0; i < totalCanSwap; ++i) {
+                const current = milkingTargets[i];
+                const prospect = readyToMilkTargets[i];
+
+                // Because these arrays are sorted in opposing order,
+                // once we see a pair where the worst current milking
+                // target is better than the best ready to milk
+                // target, we can stop replacing.
+                if (current.ripeness >= prospect.ripeness) break;
+
+                // Otherwise, if the prospect is better, then halt the
+                // current target and milk the prospective one.
+                ns.run('/batch/halt.js', 1, current.host);
+                ns.run('/batch/milk.js', 1, prospect.host);
+            }
+        }
 
         let readyToBuildTargets = readyToBuildHosts(ns, allTargetThreads, allHosts);
         readyToBuildTargets.sort(byLvlAndMoneyDesc);
@@ -135,6 +160,24 @@ OPTIONS:
         await ns.sleep(options.refreshrate);
     }
 }
+
+type RipeHost = {
+    host: string,
+    ripeness: number,
+};
+
+function augmentWithRipenessMetric(ns: NS, hosts: string[]): RipeHost[] {
+    return hosts.map(host => {
+        let ripeness = ns.getServerMaxMoney(host) / ns.getServerRequiredHackingLevel(host);
+        return { host, ripeness };
+    });
+}
+
+const byRipenessAsc = ((a: RipeHost, b: RipeHost) => {
+    return a.ripeness - b.ripeness;
+});
+
+const byRipenessDesc = ((a: RipeHost, b: RipeHost) => byRipenessAsc(b, a));
 
 // Notes on how I'm using the single target scripts.
 
