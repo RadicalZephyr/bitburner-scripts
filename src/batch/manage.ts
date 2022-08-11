@@ -42,7 +42,6 @@ OPTIONS:
     }
 
     const byLvlAndMoneyDesc = byLvlAndMoney(ns);
-    const byLvlAndMoneyAsc = (a: string, b: string) => byLvlAndMoneyDesc(b, a);
 
     let softeningTargets = [];
 
@@ -98,20 +97,22 @@ OPTIONS:
             await ns.sleep(50);
         }
 
-        readyToSoftenTargets.sort(byLvlAndMoneyDesc);
+        if (readyToSoftenTargets.length > 0) {
+            readyToSoftenTargets.sort(byLvlAndMoneyDesc);
 
-        for (const sTarget of readyToSoftenTargets) {
-            let weakenInstance = calculateWeakenInstance(ns, sTarget);
+            for (const sTarget of readyToSoftenTargets) {
+                let weakenInstance = calculateWeakenInstance(ns, sTarget);
 
-            let host = hostsHeap.min();
-            ns.print(`softening ${sTarget} with ${weakenInstance.threads} threads on ${host}`);
+                let host = hostsHeap.min();
+                ns.print(`softening ${sTarget} with ${weakenInstance.threads} threads on ${host}`);
 
-            const pid = spawnBatchScript(ns, host, weakenInstance);
-            if (pid !== 0) {
-                softeningTargets.push({ pid, weakenInstance });
+                const pid = spawnBatchScript(ns, host, weakenInstance);
+                if (pid !== 0) {
+                    softeningTargets.push({ pid, weakenInstance });
+                }
+                await ns.sleep(150);
+                hostsHeap.updateMinKey();
             }
-            await ns.sleep(150);
-            hostsHeap.updateMinKey();
         }
 
         let milkingTargets = augmentWithRipenessMetric(ns, milkingHosts(ns, allTargetThreads, allHosts));
@@ -147,14 +148,19 @@ OPTIONS:
                 // current target and milk the prospective one.
                 ns.run('/batch/halt.js', 1, current.host);
                 ns.run('/batch/milk.js', 1, prospect.host);
+                await ns.sleep(10);
             }
         }
 
         let readyToBuildTargets = readyToBuildHosts(ns, allTargetThreads, allHosts);
-        readyToBuildTargets.sort(byLvlAndMoneyDesc);
 
-        for (const bTarget of readyToBuildTargets) {
-            ns.run('/batch/build.js', 1, bTarget);
+        if (readyToBuildTargets.length > 0) {
+            readyToBuildTargets.sort(byLvlAndMoneyDesc);
+
+            for (const bTarget of readyToBuildTargets) {
+                ns.run('/batch/build.js', 1, bTarget);
+                await ns.sleep(10);
+            }
         }
 
         await ns.sleep(options.refreshrate);
