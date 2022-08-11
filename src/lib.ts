@@ -481,7 +481,6 @@ export function readyToMilkHosts(ns: NS, allTargetThreads: AllTargetThreads, hos
 
 export function readyToSoften(ns: NS, targetThreads: TargetThreads, host: string): boolean {
     return noThreads(targetThreads)
-        && moneyPercentage(ns, host) <= 0.9
         && securityPercentage(ns, host) >= 0.1;
 }
 
