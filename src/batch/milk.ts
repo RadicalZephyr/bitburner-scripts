@@ -50,18 +50,21 @@ OPTIONS
     while (true) {
         let milkRound = calculateMilkRound(ns, target, hack_percent);
 
-        const host = hostsHeap.min();
-        const availableHostThreads = numThreads(ns, host, '/batch/grow.js');
+        for (const instance of milkRound.instances) {
+            const host = hostsHeap.pop();
+            const availableHostThreads = numThreads(ns, host, '/batch/grow.js');
 
-        // Check if enough RAM is available
-        if (availableHostThreads < milkRound.totalBatchThreads) {
-            // Since the heap is sorted by max memory, if the max
-            // memory host in the heap doesn't have enough memory,
-            // then none of the others do either, so we should just stop.
-            return;
+            // Check if enough RAM is available
+            if (availableHostThreads < instance.threads) {
+                // Since the heap is sorted by max memory, if the max
+                // memory host in the heap doesn't have enough memory,
+                // then none of the others do either, so we should just stop.
+                return;
+            }
+            spawnBatchScript(ns, host, instance, batchNumber);
         }
 
-        milkRound.instances.forEach(inst => spawnBatchScript(ns, host, inst, ++batchNumber));
+        batchNumber += 1;
 
         await ns.sleep(milkRound.batchOffset);
         hostsHeap.updateMinKey();
