@@ -303,6 +303,11 @@ export type BatchScriptInstance = {
     loop: boolean;
 };
 
+export function withLimitedThreads(inst: BatchScriptInstance, maxThreads: number): BatchScriptInstance {
+    const { target, script, threads, startTime, runTime, endDelay, loop } = inst;
+    return { target, script, threads: Math.min(threads, maxThreads), startTime, runTime, endDelay, loop };
+}
+
 export const minimumTimeDelta = 150;
 export const timeAlignment = 1000;
 
