@@ -1,6 +1,6 @@
 import type { NS } from "netscript";
 
-import { getRootAccess, targetableHosts, usableHosts, walkNetworkBFS } from '../lib';
+import { getRootAccess, getAllHosts, targetableHosts, usableHosts } from '../lib';
 
 const scripts = {
     'grow': '/batch/grow.js',
@@ -10,8 +10,7 @@ const scripts = {
 const scriptList = [scripts.grow, scripts.hack, scripts.weaken];
 
 export async function main(ns: NS) {
-    let network = walkNetworkBFS(ns);
-    let allHosts = Array.from(network.keys());
+    const allHosts = getAllHosts(ns);
 
     let hosts = usableHosts(ns, allHosts);
     let targets = targetableHosts(ns, allHosts);
