@@ -39,8 +39,8 @@ OPTIONS
     for (let i = 0; i < neededServers; ++i) {
         if (options.milk && ns.getServerMoneyAvailable("home") < serverCost) {
             ns.run(startScript);
-            if (!options.wait) return;
         }
+        if (!options.wait) return;
         while (ns.getServerMoneyAvailable("home") < serverCost) {
             await ns.sleep(1000);
         }
@@ -61,15 +61,15 @@ OPTIONS
         if (ns.getServerMaxRam(oldHostname) < ram) {
             if (options.milk && ns.getServerMoneyAvailable("home") < serverCost) {
                 ns.run(startScript);
-                if (!options.wait) return;
             }
+            if (!options.wait) return;
             while (ns.getServerMoneyAvailable("home") < serverCost) {
                 await ns.sleep(1000);
             }
             ns.killall(oldHostname);
             if (ns.deleteServer(oldHostname)) {
                 // and if successful, buy an upgraded replacement
-                let hostname = ns.purchaseServer(serverName(ram), ram);
+                ns.purchaseServer(serverName(ram), ram);
             }
         }
         await ns.sleep(100);
