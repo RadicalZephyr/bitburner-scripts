@@ -369,8 +369,10 @@ export class TargetThreads {
 
     mMoney: number;
     milking: boolean;
+    mPid: number[];
 
     building: boolean;
+    bPid: number[];
 
     constructor() {
         this.h = 0;
@@ -384,8 +386,10 @@ export class TargetThreads {
 
         this.mMoney = 0;
         this.milking = false;
+        this.mPid = [];
 
         this.building = false;
+        this.bPid = [];
     }
 }
 
@@ -417,11 +421,11 @@ export function countThreadsByTarget(ns: NS, hosts: string[]): Map<string, Targe
 
             if (pi.filename === '/batch/milk.js') {
                 targetThread.milking = true;
-                targetThread.hPid.unshift(pi.pid);
+                targetThread.mPid.push(pi.pid);
                 targetThread.mMoney = ns.getScriptIncome(pi.filename, host, ...pi.args);
             } else if (pi.filename === '/batch/build.js') {
                 targetThread.building = true;
-                targetThread.gPid.unshift(pi.pid);
+                targetThread.bPid.push(pi.pid);
             } else if (pi.filename === '/batch/hack.js') {
                 targetThread.hPid.push(pi.pid);
                 targetThread.h += pi.threads;

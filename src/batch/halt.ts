@@ -30,10 +30,8 @@ OPTIONS
 
     for (const target of targets) {
         const targetInfo = allTargetThreads.get(target);
-        const milkPid = targetInfo.hPid.shift();
-        if (milkPid) ns.kill(milkPid);
-        const buildPid = targetInfo.hPid.shift();
-        if (buildPid) ns.kill(buildPid);
+        targetInfo.mPid.forEach(mPid => ns.kill(mPid));
+        targetInfo.bPid.forEach(bPid => ns.kill(bPid));
         await ns.sleep(50);
     }
     await ns.sleep(1000);
