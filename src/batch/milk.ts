@@ -40,14 +40,13 @@ OPTIONS
         return;
     }
 
-    const allHosts = getAllHosts(ns);
-
-    let hosts = usableHosts(ns, allHosts);
-
-    let hostsHeap = new Heap(hosts, host => inverseAvailableRam(ns, host));
-
     let batchNumber = 0;
     while (true) {
+        const allHosts = getAllHosts(ns);
+        let hosts = usableHosts(ns, allHosts);
+
+        let hostsHeap = new Heap(hosts, host => inverseAvailableRam(ns, host));
+
         let milkRound = calculateMilkRound(ns, target, hack_percent);
 
         for (const instance of milkRound.instances) {
@@ -67,6 +66,5 @@ OPTIONS
         batchNumber += 1;
 
         await ns.sleep(milkRound.batchOffset);
-        hostsHeap.updateMinKey();
     }
 }
