@@ -7,7 +7,8 @@ import {
     inverseAvailableRam,
     numThreads,
     spawnBatchScript,
-    usableHosts
+    usableHosts,
+    withLimitedThreads
 } from '../lib';
 
 export function autocomplete(data: AutocompleteData, _args: string[]): string[] {
@@ -50,18 +51,39 @@ OPTIONS
 
         let milkRound = calculateMilkRound(ns, target, hack_percent);
 
-        for (const instance of milkRound.instances) {
-            const host = hostsHeap.pop();
-            const availableHostThreads = host.threads;
+        for (let instance of milkRound.instances) {
+            let host = hostsHeap.min();
 
             // Check if enough RAM is available
-            if (availableHostThreads < instance.threads) {
-                // Since the heap is sorted by max memory, if the max
-                // memory host in the heap doesn't have enough memory,
-                // then none of the others do either, so we should just stop.
-                return;
+            while (host && host.threads <= instance.threads) {
+                const limitedThreadsInstance = withLimitedThreads(instance, host.threads);
+
+                spawnBatchScript(ns, host.name, limitedThreadsInstance, batchNumber);
+
+                // Deduct spawned threads from our target total
+                instance.threads -= limitedThreadsInstance.threads;
+
+                // Remove this host from the heap because we just
+                // used all the remaining threads.
+                hostsHeap.pop();
+
+                // Choose the newest min host
+                host = hostsHeap.min();
             }
-            spawnBatchScript(ns, host.name, instance, batchNumber);
+
+            // If the hosts heap is empty, then we should quit
+            if (!host) return;
+
+            // If there are still threads remaining in the instance
+            if (instance.threads > 0) {
+                // launch one final instance on the current host
+                spawnBatchScript(ns, host.name, instance, batchNumber);
+
+                // and deduct those threads from the host thread count
+                host.threads -= instance.threads;
+                // and re-heapify the hosts list
+                hostsHeap.updateMinKey();
+            }
         }
 
         batchNumber += 1;
