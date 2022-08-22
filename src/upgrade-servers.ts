@@ -4,7 +4,7 @@ const startScript = "start.js";
 
 export async function main(ns: NS) {
     const options = ns.flags([
-        ['milk', false],
+        ['start', false],
         ['spend', 1.0],
         ['wait', false],
         ['help', false]
@@ -15,7 +15,7 @@ export async function main(ns: NS) {
 Usage: ${ns.getScriptName()} [OPTIONS]
 
 OPTIONS
-  --milk   Run the start script after purchasing servers
+  --start   Run the start script after purchasing servers
   --spend  Percentage of money to spend on upgrading
   --wait   Wait for money to become available to buy servers
   --help   Show this help message
@@ -37,7 +37,7 @@ OPTIONS
     let neededServers = serverLimit - currentServers.length;
     let serverCost = ns.getPurchasedServerCost(ram);
     for (let i = 0; i < neededServers; ++i) {
-        if (options.milk && ns.getServerMoneyAvailable("home") < serverCost) {
+        if (options.start && ns.getServerMoneyAvailable("home") < serverCost) {
             ns.run(startScript);
         }
         if (!options.wait) return;
@@ -47,7 +47,7 @@ OPTIONS
         ns.purchaseServer(serverName(ram), ram);
     }
 
-    if (options.milk) ns.run(startScript);
+    if (options.start) ns.run(startScript);
 
     let ramOrderedServers = currentServers.map(host => {
         return { "host": host, ram: ns.getServerMaxRam(host) };
@@ -59,7 +59,7 @@ OPTIONS
 
         // Make sure this is actually an upgrade
         if (ns.getServerMaxRam(oldHostname) < ram) {
-            if (options.milk && ns.getServerMoneyAvailable("home") < serverCost) {
+            if (options.start && ns.getServerMoneyAvailable("home") < serverCost) {
                 ns.run(startScript);
             }
             if (!options.wait) return;
@@ -75,7 +75,7 @@ OPTIONS
         await ns.sleep(100);
     }
 
-    if (options.milk) ns.run(startScript);
+    if (options.start) ns.run(startScript);
 }
 
 function serverName(ram: number) {
