@@ -25,6 +25,8 @@ OPTIONS
         return;
     }
 
+    ns.run('/batch/deploy.js');
+
     const manageScript = "/gang/manage.js";
     if (ns.gang.inGang()) {
         const manageProccesInfo = ns.getRunningScript(manageScript, 'home');
