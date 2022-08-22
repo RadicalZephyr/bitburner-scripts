@@ -44,14 +44,15 @@ OPTIONS
     while (true) {
         const allHosts = getAllHosts(ns);
         let hosts = usableHosts(ns, allHosts);
+        let hostsWithThreads = augmentWithAvailableThreads(ns, hosts);
 
-        let hostsHeap = new Heap(hosts, host => inverseAvailableRam(ns, host));
+        let hostsHeap = new Heap(hostsWithThreads, hwt => 1 / hwt.threads);
 
         let milkRound = calculateMilkRound(ns, target, hack_percent);
 
         for (const instance of milkRound.instances) {
             const host = hostsHeap.pop();
-            const availableHostThreads = numThreads(ns, host, '/batch/grow.js');
+            const availableHostThreads = host.threads;
 
             // Check if enough RAM is available
             if (availableHostThreads < instance.threads) {
@@ -60,11 +61,20 @@ OPTIONS
                 // then none of the others do either, so we should just stop.
                 return;
             }
-            spawnBatchScript(ns, host, instance, batchNumber);
+            spawnBatchScript(ns, host.name, instance, batchNumber);
         }
 
         batchNumber += 1;
 
         await ns.sleep(milkRound.batchOffset);
     }
+}
+
+type HostWithThread = {
+    name: string;
+    threads: number;
+};
+
+function augmentWithAvailableThreads(ns: NS, hosts: string[]): HostWithThread[] {
+    return hosts.map((host) => { return { name: host, threads: numThreads(ns, host, '/batch/grow.js') } });
 }
