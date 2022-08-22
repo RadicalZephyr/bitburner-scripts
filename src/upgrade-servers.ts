@@ -15,9 +15,10 @@ export async function main(ns: NS) {
 Usage: ${ns.getScriptName()} [OPTIONS]
 
 OPTIONS
-  --help   Show this help message
+  --milk   Run the start script after purchasing servers
   --spend  Percentage of money to spend on upgrading
   --wait   Wait for money to become available to buy servers
+  --help   Show this help message
 `);
         return;
     }
