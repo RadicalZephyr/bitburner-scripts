@@ -66,7 +66,7 @@ OPTIONS
     if (S[0] == flags.startingHost) {
         S.shift();
     }
-    ns.tprintf("path to %s:\ngo %s",
+    ns.tprintf("path to %s:\n  go %s",
         goalHost,
         S.join(" ; go ")
     );
