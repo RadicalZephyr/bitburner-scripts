@@ -6,6 +6,7 @@ export async function main(ns: NS) {
     const options = ns.flags([
         ['start', false],
         ['spend', 1.0],
+        ['min_ram', 8],
         ['wait', false],
         ['help', false]
     ]);
@@ -15,10 +16,11 @@ export async function main(ns: NS) {
 Usage: ${ns.getScriptName()} [OPTIONS]
 
 OPTIONS
-  --start   Run the start script after purchasing servers
-  --spend  Percentage of money to spend on upgrading
-  --wait   Wait for money to become available to buy servers
-  --help   Show this help message
+  --min_ram  The minimum amount of RAM to purchase servers at
+  --start    Run the start script after purchasing servers
+  --spend    Percentage of money to spend on upgrading
+  --wait     Wait for money to become available to buy servers
+  --help     Show this help message
 `);
         return;
     }
@@ -27,7 +29,7 @@ OPTIONS
 
     // Find the highest amount of RAM we can purchase a full complement
     // of servers at right now
-    let ram = getHighestPurchasableRamLevel(ns, upgradeSpendPercentage);
+    let ram = getHighestPurchasableRamLevel(ns, options.min_ram, upgradeSpendPercentage);
     reportServerComplementCost(ns, ram);
 
     let serverLimit = ns.getPurchasedServerLimit();
@@ -97,12 +99,13 @@ export function reportServerComplementCost(ns: NS, ram: number): void {
 
 /** Return the maximum amount of ram that can be purchased.
  */
-export function getHighestPurchasableRamLevel(ns: NS, percentageSpend: number): number {
+export function getHighestPurchasableRamLevel(ns: NS, minRam: number, percentageSpend: number): number {
     let maxServers = ns.getPurchasedServerLimit();
     let maxServerTierSpend = ns.getServerMoneyAvailable("home") * percentageSpend;
     let maxPerServerSpend = maxServerTierSpend / maxServers;
 
-    let ram = 16;
+    // Double minimum RAM so return division returns the right amount
+    let ram = minRam * 2;
 
     while (maxPerServerSpend > ns.getPurchasedServerCost(ram)) {
         ram *= 2;
