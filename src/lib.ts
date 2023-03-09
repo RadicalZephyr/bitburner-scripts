@@ -308,7 +308,7 @@ export function withLimitedThreads(inst: BatchScriptInstance, maxThreads: number
     return { target, script, threads: Math.min(threads, maxThreads), startTime, runTime, endDelay, loop };
 }
 
-export const minimumTimeDelta = 150;
+export const minimumTimeDelta = 200;
 export const timeAlignment = 1000;
 
 export function setInstanceStartTimes(scriptInstances: BatchScriptInstance[]): void {
