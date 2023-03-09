@@ -29,7 +29,7 @@ export async function main(ns: NS) {
             }
         }
         if (qualifiedNames.length > 0) {
-            await ns.scp(qualifiedNames, host, "home");
+            await ns.scp(qualifiedNames, "home", host);
         }
     }
 }
