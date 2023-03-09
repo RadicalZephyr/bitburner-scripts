@@ -2,11 +2,14 @@ import type { NS } from "netscript";
 
 const startScript = "start.js";
 
+const DEFAULT_SPEND = 1.0;
+const DEFAULT_MIN_RAM = 8;
+
 export async function main(ns: NS) {
     const options = ns.flags([
         ['start', false],
-        ['spend', 1.0],
-        ['min_ram', 8],
+        ['spend', DEFAULT_SPEND],
+        ['min_ram', DEFAULT_MIN_RAM],
         ['wait', false],
         ['help', false]
     ]);
@@ -16,9 +19,9 @@ export async function main(ns: NS) {
 Usage: ${ns.getScriptName()} [OPTIONS]
 
 OPTIONS
-  --min_ram  The minimum amount of RAM to purchase servers at
+  --min_ram  The minimum amount of RAM to purchase servers at (default ${formatGigaBytes(DEFAULT_MIN_RAM)})
   --start    Run the start script after purchasing servers
-  --spend    Percentage of money to spend on upgrading
+  --spend    Percentage of money to spend on upgrading (default ${ns.nFormat(DEFAULT_SPEND, '0.00%')})
   --wait     Wait for money to become available to buy servers
   --help     Show this help message
 `);
