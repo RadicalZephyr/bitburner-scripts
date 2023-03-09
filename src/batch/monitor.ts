@@ -36,8 +36,11 @@ Example:
 
         return;
     }
-    ns.tail();
     ns.disableLog('ALL');
+    ns.clearLog();
+    ns.tail();
+    ns.moveTail(250, 75);
+    ns.resizeTail(1050, 400);
 
     while (true) {
         ns.clearLog();

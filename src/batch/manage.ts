@@ -55,6 +55,8 @@ OPTIONS:
     ns.disableLog('ALL');
     ns.clearLog();
     ns.tail();
+    ns.moveTail(250, 40);
+    ns.resizeTail(1050, 400);
 
     while (true) {
         const allHosts = getAllHosts(ns);
