@@ -16,7 +16,7 @@ export function autocomplete(data: AutocompleteData, _args: string[]): string[] 
 
 export async function main(ns: NS) {
     const options = ns.flags([
-        ['hack_percent', 0.9],
+        ['hack_percent', 0.3],
         ['help', false]
     ]);
 
