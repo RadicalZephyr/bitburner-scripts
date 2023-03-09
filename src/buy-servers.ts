@@ -41,11 +41,12 @@ OPTIONS
     // Buy as many new servers as we can
     let neededServers = serverLimit - currentServers.length;
     let serverCost = ns.getPurchasedServerCost(ram);
+
     for (let i = 0; i < neededServers; ++i) {
-        if (options.start && ns.getServerMoneyAvailable("home") < serverCost) {
-            ns.run(startScript);
+        if (ns.getServerMoneyAvailable("home") < serverCost) {
+            if (options.start) ns.run(startScript);
+            if (!options.wait) return;
         }
-        if (!options.wait) return;
         while (ns.getServerMoneyAvailable("home") < serverCost) {
             await ns.sleep(1000);
         }
@@ -64,10 +65,10 @@ OPTIONS
 
         // Make sure this is actually an upgrade
         if (ns.getServerMaxRam(oldHostname) < ram) {
-            if (options.start && ns.getServerMoneyAvailable("home") < serverCost) {
-                ns.run(startScript);
+            if (ns.getServerMoneyAvailable("home") < serverCost) {
+                if (options.start) ns.run(startScript);
+                if (!options.wait) return;
             }
-            if (!options.wait) return;
             while (ns.getServerMoneyAvailable("home") < serverCost) {
                 await ns.sleep(1000);
             }
