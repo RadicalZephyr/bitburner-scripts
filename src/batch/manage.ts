@@ -116,7 +116,7 @@ OPTIONS:
                 let weakenInstance = calculateWeakenInstance(ns, sTarget);
 
                 let host = hostsHeap.min();
-                ns.print(`softening ${sTarget} with ${weakenInstance.threads} threads on ${host}`);
+                //ns.print(`softening ${sTarget} with ${weakenInstance.threads} threads on ${host}`);
 
                 const pid = spawnBatchScript(ns, host, weakenInstance);
                 if (pid !== 0) {
