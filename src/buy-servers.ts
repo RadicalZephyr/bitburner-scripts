@@ -71,6 +71,7 @@ OPTIONS
 
         // Make sure this is actually an upgrade
         if (ns.getServerMaxRam(oldHostname) < ram) {
+            const serverCost = ns.getPurchasedServerUpgradeCost(oldHostname, ram);
             if (ns.getServerMoneyAvailable("home") < serverCost) {
                 if (options.start) ns.run(startScript);
                 if (!options.wait) return;
@@ -78,11 +79,8 @@ OPTIONS
             while (ns.getServerMoneyAvailable("home") < serverCost) {
                 await ns.sleep(1000);
             }
-            ns.killall(oldHostname);
-            if (ns.deleteServer(oldHostname)) {
-                // and if successful, buy an upgraded replacement
-                ns.purchaseServer(serverName(ram), ram);
-            }
+            ns.upgradePurchasedServer(oldHostname, ram);
+            ns.renamePurchasedServer(oldHostname, serverName(ram));
         }
         await ns.sleep(100);
     }
