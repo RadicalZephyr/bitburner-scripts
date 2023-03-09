@@ -11,9 +11,9 @@ export async function main(ns: NS) {
         ['help', false]
     ]);
 
-    if (options.help || options._.length < 1) {
+    if (options.help) {
         ns.tprint(`
-USAGE: run ${ns.getScriptName()} TARGET_HOST...
+USAGE: run ${ns.getScriptName()} [TARGET_HOST...]
 
 Halt all batch hacking threads targeting the TARGET HOST.
 
@@ -26,7 +26,8 @@ OPTIONS
     const allHosts = getAllHosts(ns);
     let allTargetThreads = countThreadsByTarget(ns, allHosts);
 
-    let targets = options._.filter((t: any) => typeof (t) === 'string' && allTargetThreads.get(t));
+    const targetHosts = options._.length < 1 ? allHosts : options._;
+    let targets = targetHosts.filter((t: any) => typeof (t) === 'string' && allTargetThreads.get(t));
 
     for (const target of targets) {
         const targetInfo = allTargetThreads.get(target);
