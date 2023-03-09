@@ -177,7 +177,7 @@ export function inverseAvailableRam(ns: NS, host: string): number {
 export function moneyPercentage(ns: NS, host: string): number {
     const curMoney = ns.getServerMoneyAvailable(host);
     const maxMoney = ns.getServerMaxMoney(host);
-    return curMoney / maxMoney;
+    return maxMoney != 0.0 && maxMoney != -0.0 ? curMoney / maxMoney : 0.0;
 }
 
 /** Determine how far above minimum security a host currently is.
