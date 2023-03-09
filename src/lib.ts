@@ -42,11 +42,11 @@ export function getRootAccess(ns: NS, host: string): boolean {
     if (!ns.hasRootAccess(host) && canNuke(ns, host)) {
 
         const portOpeningProgramFns = {
-            "BruteSSH.exe": ns.brutessh,
-            "FTPCrack.exe": ns.ftpcrack,
-            "relaySMTP.exe": ns.relaysmtp,
-            "HTTPWorm.exe": ns.httpworm,
-            "SQLInject.exe": ns.sqlinject,
+            "BruteSSH.exe": ns.brutessh.bind(ns),
+            "FTPCrack.exe": ns.ftpcrack.bind(ns),
+            "relaySMTP.exe": ns.relaysmtp.bind(ns),
+            "HTTPWorm.exe": ns.httpworm.bind(ns),
+            "SQLInject.exe": ns.sqlinject.bind(ns),
 
         };
         for (const program of portOpeningPrograms) {
