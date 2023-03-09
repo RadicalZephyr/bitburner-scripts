@@ -2,6 +2,7 @@ import type { NS } from "netscript";
 
 import {
     Heap,
+    TargetThreads,
     byLvlAndMoney,
     calculateWeakenInstance,
     countThreadsByTarget,
@@ -9,6 +10,7 @@ import {
     getRootAccess,
     inverseAvailableRam,
     milkingHosts,
+    moneyPercentage,
     readyToBuildHosts,
     readyToMilkHosts,
     readyToSoftenHosts,
@@ -18,6 +20,11 @@ import {
 } from '../lib';
 
 const scriptList = ['/batch/grow.js', '/batch/hack.js', '/batch/weaken.js'];
+
+type TargetCategories = [
+    category: string,
+    targets: string[]
+];
 
 export async function main(ns: NS) {
     const options = ns.flags([
@@ -45,8 +52,13 @@ OPTIONS:
 
     let softeningTargets = [];
 
+    ns.disableLog('ALL');
+    ns.clearLog();
+    ns.tail();
+
     while (true) {
         const allHosts = getAllHosts(ns);
+        const maxTargetNameLen = Math.max(...allHosts.map(t => t.length));
         const allTargetThreads = countThreadsByTarget(ns, allHosts);
 
         const hosts = usableHosts(ns, allHosts);
@@ -108,7 +120,7 @@ OPTIONS:
 
                 const pid = spawnBatchScript(ns, host, weakenInstance);
                 if (pid !== 0) {
-                    softeningTargets.push({ pid, weakenInstance });
+                    softeningTargets.push({ host, pid, weakenInstance });
                 }
                 await ns.sleep(150);
                 hostsHeap.updateMinKey();
@@ -154,12 +166,53 @@ OPTIONS:
 
         let readyToBuildTargets = readyToBuildHosts(ns, allTargetThreads, allHosts);
 
+        let buildingTargets = [];
         if (readyToBuildTargets.length > 0) {
             readyToBuildTargets.sort(byLvlAndMoneyDesc);
 
             for (const bTarget of readyToBuildTargets) {
                 ns.run('/batch/build.js', 1, bTarget);
+                buildingTargets.push(bTarget);
                 await ns.sleep(10);
+            }
+        }
+
+        ns.clearLog();
+
+        const targetCategories: TargetCategories[] = [
+            ["Milking", stripRipeness(ns, milkingTargets)],
+            ["Ready To Milk", stripRipeness(ns, readyToMilkTargets)],
+            ["Building", buildingTargets],
+            ["Ready To Build", readyToBuildTargets],
+            ["Softening", softeningTargets.map(softenTarget => softenTarget.host)],
+            ["Ready To Soften", readyToSoftenTargets]
+        ];
+
+        for (const [category, targets] of targetCategories) {
+            if (targets.length == 0) continue;
+
+            const baseFormatString = ` %${maxTargetNameLen}s  |  %8s  %9s  %5s  %8s  %7s  %7s  %7s  %7s  %7s`;
+            const headings = ['target', '$/s', '$/lvl', 'lvl', '$', '⌈$⌉%', '+sec', 'thr(h)', 'thr(g)', 'thr(w)'];
+
+            const dividerFormatString = baseFormatString.replaceAll(' ', '-').replaceAll('%', "%'-");
+
+            const blanks = Array(headings.length).fill('');
+
+            ns.printf('\n%s Targets:', category);
+            ns.printf(targets.join(' '));
+            ns.printf(baseFormatString, ...headings);
+            ns.printf(dividerFormatString, ...blanks);
+
+            let totalMoney = 0;
+            for (const target of targets) {
+                const targetThreads = allTargetThreads.get(target);
+                totalMoney += targetThreads.mMoney;
+                const info = targetInfo(ns, target, targetThreads);
+                ns.printf(baseFormatString, ...info);
+            }
+
+            if (totalMoney > 0) {
+                ns.printf(baseFormatString, 'Total Income:', ns.nFormat(totalMoney, '$0.0a'), ...blanks);
             }
         }
 
@@ -179,11 +232,55 @@ function augmentWithRipenessMetric(ns: NS, hosts: string[]): RipeHost[] {
     });
 }
 
+function stripRipeness(ns: NS, ripeHosts: RipeHost[]): string[] {
+    return ripeHosts.map(ripeHost => {
+        return ripeHost.host;
+    })
+}
+
 const byRipenessAsc = ((a: RipeHost, b: RipeHost) => {
     return a.ripeness - b.ripeness;
 });
 
 const byRipenessDesc = ((a: RipeHost, b: RipeHost) => byRipenessAsc(b, a));
+
+
+function targetInfo(ns: NS, target: string, targetThreads: TargetThreads): (string | number)[] {
+    const hackLvl = ns.getServerRequiredHackingLevel(target);
+    const minSec = ns.getServerMinSecurityLevel(target);
+    const sec = ns.getServerSecurityLevel(target);
+
+    const money = ns.getServerMaxMoney(target);
+    const moneyPercent = moneyPercentage(ns, target) * 100;
+    const secPlus = sec - minSec;
+
+    const milkMoney = targetThreads.mMoney;
+
+    return [
+        target,
+        Math.abs(milkMoney) < 0 ? '' : ns.nFormat(milkMoney, '$0.00a'),
+        ns.nFormat(money / hackLvl, '$0.00a'),
+        ns.nFormat(hackLvl, '0,0'),
+        ns.nFormat(money, '$0.00a'),
+        Math.abs(moneyPercent - 100) < 0.1 ? '100.0%' : ns.nFormat(moneyPercent / 100, '0.00%'),
+        Math.abs(secPlus) < 0.1 ? '+0.0' : ns.nFormat(secPlus, '+0.00a'),
+        formatThreads(ns, targetThreads.h),
+        formatThreads(ns, targetThreads.g),
+        formatThreads(ns, targetThreads.w)
+    ];
+}
+
+function formatThreads(ns: NS, threads: number): string {
+    if (threads < 1) {
+        return '';
+    }
+
+    let fmt = '0.00a';
+    if (threads < 1000) {
+        fmt = '0';
+    }
+    return ns.nFormat(threads, fmt);
+}
 
 // Notes on how I'm using the single target scripts.
 
