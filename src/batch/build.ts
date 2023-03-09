@@ -24,11 +24,11 @@ export async function main(ns: NS) {
 
     const buildRound = calculateBuildRound(ns, target);
 
-    const scriptDescriptions = buildRound.instances.map(si => `  ${si.script} -t ${si.threads}`).join('\n');
-    ns.tprint(`
-building ${target}:
-${scriptDescriptions}
-`);
+    // const scriptDescriptions = buildRound.instances.map(si => `  ${si.script} -t ${si.threads}`).join('\n');
+    //     ns.tprint(`
+    // building ${target}:
+    // ${scriptDescriptions}
+    // `);
 
     if (buildRound.totalThreads < 1) {
         ns.tprint(`${target} does not need to be built`);

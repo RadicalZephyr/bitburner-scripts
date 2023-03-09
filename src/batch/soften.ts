@@ -28,7 +28,7 @@ export async function main(ns: NS) {
 
     for (const target of targets) {
         var weakenInstance = calculateWeakenInstance(ns, target);
-        ns.tprint(`softening ${target} with ${weakenInstance.threads} threads on ${host}`);
+        // ns.tprint(`softening ${target} with ${weakenInstance.threads} threads on ${host}`);
         spawnBatchScript(ns, host, weakenInstance);
     }
 }
