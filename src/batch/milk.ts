@@ -4,7 +4,6 @@ import {
     Heap,
     calculateMilkRound,
     getAllHosts,
-    inverseAvailableRam,
     numThreads,
     spawnBatchScript,
     usableHosts,
