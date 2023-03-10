@@ -68,7 +68,7 @@ OPTIONS:
         // Deploy all batch scripts to all host servers
         for (const host of hosts) {
             getRootAccess(ns, host);
-            await ns.scp(scriptList, host);
+            ns.scp(scriptList, host);
         }
 
         for (const target of targets) {
