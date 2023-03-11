@@ -11,7 +11,11 @@ export async function main(ns: NS) {
         ['help', false]
     ]);
 
-    if (options.help) {
+    if (options.help
+        || typeof options.hack != 'boolean'
+        || typeof options.reserve != 'boolean'
+        || typeof options.share != 'boolean'
+        || typeof options.share_percent != 'number') {
         ns.tprint(`
 Usage: ${ns.getScriptName()} [OPTIONS]
 

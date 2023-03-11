@@ -11,7 +11,13 @@ export async function main(ns: NS) {
         ['cores', 5]
     ]);
 
-    if (options.help) {
+    if (
+        options.help
+        || typeof options.budget != 'number'
+        || typeof options.level != 'number'
+        || typeof options.ram != 'number'
+        || typeof options.cores != 'number'
+    ) {
         ns.tprint(`
 Usage: ${ns.getScriptName()} [OPTIONS]
 

@@ -73,9 +73,8 @@ Program should write the answer to the contract to port ${CONTRACT_PORT}.
             contractAnswer = answer;
         }
 
-        const options = { 'returnReward': true };
         // Attempt to submit it to the contract
-        const contractReward = ns.codingcontract.attempt(contractAnswer, contract.file, contract.host, options);
+        const contractReward = ns.codingcontract.attempt(contractAnswer, contract.file, contract.host);
 
         if (typeof contractReward == 'string') {
             if (contractReward === '') {

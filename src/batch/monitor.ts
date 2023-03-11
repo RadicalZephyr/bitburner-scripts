@@ -20,7 +20,7 @@ export async function main(ns: NS) {
         ['help', false],
     ]);
 
-    if (flags.help) {
+    if (flags.help || typeof flags.refreshrate != 'number') {
         ns.tprint(`
 This script helps visualize what's going on with your batch hacking.
 

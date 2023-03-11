@@ -11,7 +11,7 @@ export async function main(ns: NS) {
         ['refreshrate', 200],
         ['help', false],
     ]);
-    if (flags._.length === 0 || flags.help) {
+    if (flags._.length === 0 || flags.help || typeof flags.refreshrate != 'number') {
 
         ns.tprint(`USAGE: run ${ns.getScriptName()} SERVER_NAME
 

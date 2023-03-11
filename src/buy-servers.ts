@@ -14,7 +14,13 @@ export async function main(ns: NS) {
         ['help', false]
     ]);
 
-    if (options.help) {
+    if (
+        options.help
+        || typeof options.start != 'boolean'
+        || typeof options.wait != 'boolean'
+        || typeof options.spend != 'number'
+        || typeof options.min_ram != 'number'
+    ) {
         ns.tprint(`
 Usage: ${ns.getScriptName()} [OPTIONS]
 

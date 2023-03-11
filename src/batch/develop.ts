@@ -21,7 +21,7 @@ export async function main(ns: NS) {
         ['refreshrate', 200],
         ['help', false],
     ]);
-    if (flags.help) {
+    if (flags.help || typeof flags.refreshrate != 'number') {
         ns.tprint(`USAGE: run ${ns.getScriptName()} SERVER_NAME
 
 This script prepares a server for batch hacking and then starts continuous batch hacking rounds against it.

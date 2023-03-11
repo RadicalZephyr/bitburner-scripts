@@ -33,7 +33,7 @@ export async function main(ns: NS) {
         ['help', false],
     ]);
 
-    if (options.help) {
+    if (options.help || typeof options.milkMax != 'number' || typeof options.refreshrate != 'number') {
         ns.tprint(`
 Manage identifying what stage of the batch hacking lifecycle targets
 are in and spawning appropriate scripts to progress them through it.

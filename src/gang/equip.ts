@@ -31,6 +31,20 @@ const FLAGS: [flag: string, default_value: boolean][] = [
     ['A', false]  // All
 ];
 
+function usage(ns: NS, errorMsg: string) {
+    ns.tprint(`error: ${errorMsg}
+Usage: ${ns.getScriptName()} [OPTION...] EQUIPMENT...
+
+OPTIONS
+ --list  List out all available equipments
+ -g      Buy all augments
+ -w      Buy all weapons
+ -m      Buy all armors
+ -v      Buy all vehicles
+ -r      Buy all rootkits
+ -A      Buy all equipments`);
+}
+
 export function autocomplete(_data: AutocompleteData, _args: string[]) {
     const args = _args.map(a => a.toLowerCase());
 
@@ -67,7 +81,29 @@ export async function main(ns: NS) {
         return;
     }
 
-    const [equipmentList, rest] = buildEquipmentList(options);
+    if (
+        typeof options.list != 'boolean'
+        || typeof options.g != 'boolean'
+        || typeof options.w != 'boolean'
+        || typeof options.m != 'boolean'
+        || typeof options.v != 'boolean'
+        || typeof options.r != 'boolean'
+        || typeof options.A != 'boolean'
+        || typeof options._ != 'object'
+    ) {
+        usage(ns, "incorrect list argument");
+        return;
+    }
+
+    const [equipmentList, rest] = buildEquipmentList({
+        g: options.g,
+        w: options.w,
+        m: options.m,
+        v: options.v,
+        r: options.r,
+        A: options.A,
+        _: options._
+    });
 
     if (options.help || !isSubSet(equipmentList, allEquipment)) {
         let errorMsg: string;
@@ -76,17 +112,7 @@ export async function main(ns: NS) {
         } else {
             errorMsg = `Unknown equipment specified ${rest}`;
         }
-        ns.tprint(`error: ${errorMsg}
-Usage: ${ns.getScriptName()} [OPTION...] EQUIPMENT...
-
-OPTIONS
- --list  List out all available equipments
- -g      Buy all augments
- -w      Buy all weapons
- -m      Buy all armors
- -v      Buy all vehicles
- -r      Buy all rootkits
- -A      Buy all equipments`);
+        usage(ns, errorMsg);
         return;
     }
 

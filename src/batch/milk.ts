@@ -20,7 +20,7 @@ export async function main(ns: NS) {
         ['help', false]
     ]);
 
-    if (options.help || options._.length < 1) {
+    if (options.help || options._.length < 1 || typeof options.hack_percent != 'number') {
         ns.tprint(`
 USAGE: run ${ns.getScriptName()} TARGET_HOST
 

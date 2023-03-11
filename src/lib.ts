@@ -422,6 +422,9 @@ export function countThreadsByTarget(ns: NS, hosts: string[]): Map<string, Targe
         for (const pi of ns.ps(host)) {
 
             let target = pi.args[0] === '--loop' ? pi.args[1] : pi.args[0] === '--hack_percent' ? pi.args[2] : pi.args[0];
+
+            if (typeof target != 'string') continue;
+
             let targetThread = targetThreads.get(target);
 
             if (pi.filename === '/batch/milk.js') {
