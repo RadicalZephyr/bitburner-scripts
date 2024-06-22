@@ -7,7 +7,7 @@ export async function main(ns: NS) {
     let allHosts = Array.from(network.keys());
 
     let contractFileLocations = "contract-locations.txt";
-    await ns.write(contractFileLocations, "", "w");
+    ns.write(contractFileLocations, "", "w");
 
     let scriptFile = /\.(js|script)/;
     let textFile = /\.txt/;
@@ -25,11 +25,11 @@ export async function main(ns: NS) {
             } else if (litFile.test(file)) {
                 qualifiedNames.push(file);
             } else {
-                await ns.write(contractFileLocations, `${file} on ${host}\n`, "a");
+                ns.write(contractFileLocations, `${file} on ${host}\n`, "a");
             }
         }
         if (qualifiedNames.length > 0) {
-            await ns.scp(qualifiedNames, "home", host);
+            ns.scp(qualifiedNames, "home", host);
         }
     }
 }
