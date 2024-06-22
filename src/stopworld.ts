@@ -1,6 +1,6 @@
 import type { NS } from "netscript";
 
-import { walkNetworkBFS } from './lib';
+import { walkNetworkBFS } from './walk';
 
 export async function main(ns: NS) {
     const flags = ns.flags([

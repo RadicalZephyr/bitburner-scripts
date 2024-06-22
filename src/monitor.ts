@@ -1,9 +1,26 @@
 import type { NS, AutocompleteData } from "netscript";
 
-import { buildAnalyze, softenThreads } from './lib';
-
 export function autocomplete(data: AutocompleteData, _args: string[]): string[] {
     return data.servers;
+}
+
+/** Calculate the number of threads to soften any server by the given amount.
+ */
+export function softenThreads(softenAmount: number): number {
+    // We multiply by 20 because 1 thread of weaken reduces security
+    // by a fixed amount of 0.05, or 1/20
+    return Math.ceil(softenAmount * 20);
+}
+
+/** Calculate the number of threads needed to build the server by a
+ * certain multiplier.
+ */
+function buildAnalyze(ns: NS, target: string, buildAmount: number): number {
+    if (buildAmount >= 1) {
+        return Math.ceil(ns.growthAnalyze(target, buildAmount, 1));
+    } else {
+        return 0;
+    }
 }
 
 export async function main(ns: NS) {
