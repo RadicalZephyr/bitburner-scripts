@@ -43,8 +43,10 @@ Example:
 `);
         return;
     }
-    ns.tail();
     ns.disableLog('ALL');
+    ns.clearLog();
+    ns.tail();
+    ns.resizeTail(450, 30 * 6);
 
     const server = flags._[0];
     const maxMoney = ns.getServerMaxMoney(server);
