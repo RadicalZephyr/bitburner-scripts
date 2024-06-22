@@ -4,7 +4,7 @@ import type { NS } from "netscript";
 // Server Purchase Utilities
 //////////////////////////////////////////
 
-const GB = 1000000000;
+export const GB = 1000000000;
 
 /** Print the cost breakdown of a server tier with `ram` memory.
  */
