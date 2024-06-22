@@ -1,10 +1,10 @@
 import type { NS } from "netscript";
 
-import { formatGigaBytes, formatMoney } from './format';
-
 //////////////////////////////////////////
 // Server Purchase Utilities
 //////////////////////////////////////////
+
+const GB = 1000000000;
 
 /** Print the cost breakdown of a server tier with `ram` memory.
  */
@@ -12,10 +12,11 @@ export function reportServerComplementCost(ns: NS, ram: number): void {
     let maxServers = ns.getPurchasedServerLimit();
     let serverCost = ns.getPurchasedServerCost(ram);
     let totalCost = maxServers * serverCost;
-    ns.tprintf("you can buy %s servers with %s of RAM for $%s per server for a total of $%s", maxServers,
-        formatGigaBytes(ram),
-        formatMoney(serverCost),
-        formatMoney(totalCost),
+    ns.tprintf("you can buy %s servers with %s of RAM for %s per server for a total of %s",
+        maxServers,
+        ns.nFormat(ram * GB, '0b'),
+        ns.nFormat(serverCost, '$0a'),
+        ns.nFormat(totalCost, '$0a'),
     );
 }
 
