@@ -7,7 +7,7 @@
     "watch:init": "node build/init.js",
     "watch:transpile": "tsc -w --preserveWatchOutput",
     "watch:local": "node build/watch.js",
-    "watch:remote": "bitburner-filesync",
+    "watch:remote": "bitburner-filesync $PWD/dist",
     "watch:all": "concurrently npm:watch:transpile npm:watch:local npm:watch:remote",
     "watch": "npm run watch:init && npm run watch:all"
   },
