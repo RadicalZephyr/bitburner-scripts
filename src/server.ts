@@ -12,10 +12,10 @@ export function reportServerComplementCost(ns: NS, ram: number): void {
     let maxServers = ns.getPurchasedServerLimit();
     let serverCost = ns.getPurchasedServerCost(ram);
     let totalCost = maxServers * serverCost;
-    ns.tprint("you can buy ", maxServers, " servers with ",
-        formatGigaBytes(ram), " of RAM for $",
-        formatMoney(serverCost), " per server ",
-        "for a total of $", formatMoney(totalCost),
+    ns.tprintf("you can buy %s servers with %s of RAM for $%s per server for a total of $%s", maxServers,
+        formatGigaBytes(ram),
+        formatMoney(serverCost),
+        formatMoney(totalCost),
     );
 }
 
