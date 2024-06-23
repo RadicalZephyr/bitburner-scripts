@@ -5,7 +5,7 @@ import { CONTRACTS } from './contract-locations';
 export async function main(ns: NS) {
     let contracts = [];
     for (let contract of CONTRACTS) {
-        let contractType = ns.codingcontract.getContractType(contract.file, contract.host).replaceAll(' ', '-');
+        let contractType = ns.codingcontract.getContractType(contract.file, contract.host).replace(':', '').replaceAll(' ', '-');
         contract['data'] = ns.codingcontract.getData(contract.file, contract.host);
         contracts.push(contract);
 
