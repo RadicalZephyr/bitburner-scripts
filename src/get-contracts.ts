@@ -33,8 +33,6 @@ export async function main(ns: NS) {
                 ns.tprintf('failed to run script for contract %s from host %s', contractType, contract['host']);
             }
 
-            await contractPort.nextWrite();
-
             // Wait until the contract solver script finishes.
             while (true) {
                 await ns.sleep(100);
