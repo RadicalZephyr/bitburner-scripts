@@ -1,0 +1,29 @@
+#!/bin/sh
+
+touch Find-Largest-Prime-Factor.ts
+touch Subarray-with-Maximum-Sum.ts
+touch Total-Ways-to-Sum.ts
+touch Total-Ways-to-Sum-II.ts
+touch Spiralize-Matrix.ts
+touch Array-Jumping-Game.ts
+touch Array-Jumping-Game-II.ts
+touch Merge-Overlapping-Intervals.ts
+touch Generate-IP-Addresses.ts
+touch Algorithmic-Stock-Trader-I.ts
+touch Algorithmic-Stock-Trader-II.ts
+touch Algorithmic-Stock-Trader-III.ts
+touch Algorithmic-Stock-Trader-IV.ts
+touch Minimum-Path-Sum-in-a-Triangle.ts
+touch Unique-Paths-in-a-Grid-I.ts
+touch Unique-Paths-in-a-Grid-II.ts
+touch Shortest-Path-in-a-Grid.ts
+touch Sanitize-Parentheses-in-Expression.ts
+touch Find-All-Valid-Math-Expressions.ts
+touch HammingCodes:-Integer-to-Encoded-Binary.ts
+touch HammingCodes:-Encoded-Binary-to-Integer.ts
+touch Proper-2-Coloring-of-a-Graph.ts
+touch Compression-I:-RLE-Compression.ts
+touch Compression-II:-LZ-Decompression.ts
+touch Compression-III:-LZ-Compression.ts
+touch Encryption-I:-Caesar-Cipher.ts
+touch Encryption-II:-Vigenère-Cipher.ts
