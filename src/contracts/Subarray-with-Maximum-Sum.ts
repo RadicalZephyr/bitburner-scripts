@@ -12,7 +12,7 @@ Ex. data [-8,-7,2,6,6,-7,2,8,-3,-4,4,9,1,0,-8,7,1,4,-1,8,-6,-2,8,2,-6,9,0,0]
 */
 
 import type { NS } from "netscript";
-import type { ContractData } from '../contract-locations';
+import type { ContractData } from '../all-contracts';
 
 export async function main(ns: NS) {
     let contractDataJSON = ns.args[0];

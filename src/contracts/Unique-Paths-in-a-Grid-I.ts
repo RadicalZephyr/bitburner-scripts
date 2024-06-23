@@ -13,7 +13,7 @@ of rows and columns:
  */
 
 import type { NS } from "netscript";
-import type { ContractData } from '../contract-locations';
+import type { ContractData } from '../all-contracts';
 
 export async function main(ns: NS) {
     let contractDataJSON = ns.args[0];
