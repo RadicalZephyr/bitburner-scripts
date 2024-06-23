@@ -1,8 +1,5 @@
 /* Algorithmic Stock Trader I
 
-You are attempting to solve a Coding Contract. You have 5 tries
-remaining, after which the contract will self-destruct.
-
 You are given the following array of stock prices (which are numbers)
 where the i-th element represents the stock price on day i:
 
@@ -15,7 +12,6 @@ buy the stock before you can sell it.
 */
 
 import type { NS } from "netscript";
-import type { ContractData } from '../all-contracts';
 
 export async function main(ns: NS) {
     let scriptName = ns.getScriptName();
@@ -35,6 +31,38 @@ export async function main(ns: NS) {
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
 
-function solve(data: any): any {
-    return null;
+function solve(data: number[]): any {
+    // Goal, find maximum cumulative difference between
+    // non-overlapping range ends.
+
+    // Could use a greedy algorithm, buying the first day possible,
+    // then selling on the first profitable day of trade. That seems
+    // unlikely to be optimal though. That probably means that we need
+    // to check all possible solutions.
+
+    // So, how do we check every possible pair? We could scan the
+    // array for every possible profitable trade, then if that list is
+    // empty, we know there is no possible profit and can return zero.
+
+    let profitableTrades: number[][] = Array.from({ length: data.length - 1 }, (_v, _i) => []);
+    for (let i = 0; i < data.length; ++i) {
+        for (let j = i + 1; j < data.length; ++j) {
+            if (data[i] < data[j]) {
+                profitableTrades[i].push(j);
+            }
+        }
+    }
+
+    let maxProfit = 0;
+
+    for (let i = 0; i < data.length; ++i) {
+        for (const end of profitableTrades[i]) {
+            let profit = data[end] - data[i];
+            if (maxProfit < profit) {
+                maxProfit = profit;
+            }
+        }
+    }
+
+    return maxProfit;
 }
