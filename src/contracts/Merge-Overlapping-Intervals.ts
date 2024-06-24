@@ -36,6 +36,23 @@ export async function main(ns: NS) {
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
 
-function solve(data: any): any {
-    return null;
+function solve(data: number[][]): any {
+    data.sort((b, c) => b[1] - c[1]);
+    data.sort((b, c) => b[0] - c[0]);
+
+    return data.reduce(mergeRanges, []);
+}
+
+function mergeRanges(acc: number[][], cur: number[]): number[][] {
+    if (acc.length == 0) {
+        return [cur];
+    }
+
+    let last: number[] = acc.at(-1);
+    if (last[0] <= cur[0] && cur[0] <= last[1]) {
+        last[1] = cur[1];
+    } else {
+        acc.push(cur);
+    }
+    return acc;
 }
