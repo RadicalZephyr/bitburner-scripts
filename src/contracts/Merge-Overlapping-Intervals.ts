@@ -1,8 +1,5 @@
 /* Merge Overlapping Intervals
 
-You are attempting to solve a Coding Contract. You have 15 tries
-remaining, after which the contract will self-destruct.
-
 Given the following array of arrays of numbers representing a list of
 intervals, merge all overlapping intervals.
 
@@ -20,7 +17,6 @@ second.
 */
 
 import type { NS } from "netscript";
-import type { ContractData } from '../all-contracts';
 
 export async function main(ns: NS) {
     let scriptName = ns.getScriptName();

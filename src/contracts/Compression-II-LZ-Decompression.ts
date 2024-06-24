@@ -30,7 +30,6 @@ Example: decoding '5aaabb450723abb' chunk-by-chunk
  */
 
 import type { NS } from "netscript";
-import type { ContractData } from '../all-contracts';
 
 export async function main(ns: NS) {
     let scriptName = ns.getScriptName();
