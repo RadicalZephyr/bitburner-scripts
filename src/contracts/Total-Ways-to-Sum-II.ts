@@ -1,8 +1,14 @@
-/*
+/* Total Ways to Sum II
+
+How many different distinct ways can the number 21 be written as a sum
+of integers contained in the set:
+
+[1,4,5,6,7,8,9,13]?
+
+You may use each integer in the set zero or more times.
  */
 
 import type { NS } from "netscript";
-import type { ContractData } from '../all-contracts';
 
 export async function main(ns: NS) {
     let scriptName = ns.getScriptName();
