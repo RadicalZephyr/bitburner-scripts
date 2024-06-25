@@ -13,6 +13,8 @@ export async function main(ns: NS) {
     let contractPort = ns.getPortHandle(contractPortNum);
     let contracts: ContractData[] = [];
 
+    let missingScriptContracts = [];
+
     for (const host of allHosts) {
         if (host == "home") { continue; }
 
@@ -24,7 +26,7 @@ export async function main(ns: NS) {
 
             let contractScriptName = ns.sprintf('/contracts/%s.js', contractType)
             if (!ns.fileExists(contractScriptName)) {
-                ns.tprintf('no script found for contract type %s from host %s', contractType, contract['host']);
+                missingScriptContracts.push(contract);
                 continue;
             }
 
@@ -46,6 +48,11 @@ export async function main(ns: NS) {
 
             contracts.push(contract);
         }
+    }
+
+    ns.tprintf('\n');
+    for (const c of missingScriptContracts) {
+        ns.tprintf('no script found for contract %s type %s from host %s', c.file, c.type, c.host);
     }
 
     let allContractsFile = "all-contracts.js";
