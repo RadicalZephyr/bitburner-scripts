@@ -40,8 +40,42 @@ export async function main(ns: NS) {
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
 
-function solve(data: any): any {
-    return null;
+function solve(data: string): any {
+    if (areParensBalanced(data)) {
+        return [data];
+    }
+
+    let parenPositions = findParenPositions(data);
+    let solutions = uniqueBalancedParens(data, parenPositions.map((x) => [x]));
+
+    if (solutions.length > 0) {
+        return solutions;
+    }
+
+    for (let m = 2; m < parenPositions.length; m++) {
+        let idxChoices = [...choose(parenPositions, m)];
+        let solutions = uniqueBalancedParens(data, idxChoices);
+
+        if (solutions.length > 0) {
+            return solutions;
+        }
+    }
+    return [""];
+}
+
+function uniqueBalancedParens(data: string, idxChoices: number[][]): string[] {
+    let balancedParens: string[] = idxChoices
+        .map((is) => {
+            is.sort((a, b) => b - a);
+            let s = data.split('');
+            for (const i of is) {
+                s.splice(i, 1);
+            }
+            return s.join('');
+        })
+        .filter(s => areParensBalanced(s));
+    let uniqueBalancedParens = new Set(balancedParens);
+    return [...uniqueBalancedParens];
 }
 
 function findParenPositions(s: string): number[] {
@@ -63,7 +97,7 @@ function areParensBalanced(s: string): boolean {
     return count === 0;
 }
 
-function* choose(a: any[], m: number): any {
+function* choose(a: any[], m: number): Iterable<number[]> {
     let n = a.length;
     let c = [];
     for (let i = 0; i != m; i++) {
@@ -71,10 +105,11 @@ function* choose(a: any[], m: number): any {
     }
     yield [...c];
     let p = initTwiddle(m, n);
-    let done = false;
-    while (!done) {
-        let [_done, x, _y, z] = twiddle(p);
-        done = _done;
+    while (true) {
+        let [done, x, _y, z] = twiddle(p);
+        if (done) {
+            return;
+        }
         c[z] = a[x];
         yield [...c];
     }
