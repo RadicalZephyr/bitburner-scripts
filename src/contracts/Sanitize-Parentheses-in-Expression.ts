@@ -43,3 +43,108 @@ export async function main(ns: NS) {
 function solve(data: any): any {
     return null;
 }
+
+function findParenPositions(s: string): number[] {
+    return [...s.matchAll(/([()])/g)].map(m => m.index);
+}
+
+function areParensBalanced(s: string): boolean {
+    let count = 0;
+    for (const c of s) {
+        if (c === '(') {
+            count += 1;
+        } else if (c === ')') {
+            count -= 1;
+        }
+        if (count < 0) {
+            return false;
+        }
+    }
+    return count === 0;
+}
+
+function* choose(a: any[], m: number): any {
+    let n = a.length;
+    let c = [];
+    for (let i = 0; i != m; i++) {
+        c.push(a[n - m + i]);
+    }
+    yield [...c];
+    let p = initTwiddle(m, n);
+    let done = false;
+    while (!done) {
+        let [_done, x, _y, z] = twiddle(p);
+        done = _done;
+        c[z] = a[x];
+        yield [...c];
+    }
+}
+
+function initTwiddle(m: number, n: number): number[] {
+    let p = [];
+    p.push(n + 1);
+    let i;
+    for (i = 1; i != n - m + 1; i++) {
+        p.push(0);
+    }
+    while (i != n + 1) {
+        p.push(i + m - n);
+        i++;
+    }
+    p.push(-2);
+    if (m === 0) {
+        p[1] = 1;
+    }
+    return p;
+}
+
+function twiddle(p: number[]): [boolean, number, number, number] {
+    let x, y, z;
+    let done = false;
+
+    let j = 1;
+    while (p[j] <= 0) {
+        j++;
+    }
+    if (p[j - 1] == 0) {
+        let i;
+        for (i = j - 1; i != 1; i--) {
+            p[i] = -1;
+        }
+        p[j] = 0;
+        x = z = 0;
+        p[1] = 1;
+        y = j - 1;
+    } else {
+        if (j > 1) {
+            p[j - 1] = 0;
+        }
+        do {
+            j++;
+        } while (p[j] > 0);
+        let k = j - 1;
+        let i = j;
+        while (p[i] == 0) {
+            p[i++] = -1;
+        }
+        if (p[i] == -1) {
+            p[i] = p[k];
+            z = p[k] - 1;
+            x = i - 1;
+            y = k - 1;
+            p[k] = -1;
+        } else {
+            if (i === p[0]) {
+                done = true;
+            } else {
+                p[j] = p[i];
+                z = p[i] - 1;
+                p[i] = 0;
+                x = j - 1;
+                y = i - 1;
+            }
+        }
+    }
+
+    return [done, x, y, z];
+}
