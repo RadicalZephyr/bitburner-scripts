@@ -31,38 +31,32 @@ export async function main(ns: NS) {
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
 
+type Trade = {
+    startDay: number,
+    endDay: number,
+    amount: number
+};
+
 function solve(data: number[]): any {
-    // Goal, find maximum cumulative difference between
-    // non-overlapping range ends.
-
-    // Could use a greedy algorithm, buying the first day possible,
-    // then selling on the first profitable day of trade. That seems
-    // unlikely to be optimal though. That probably means that we need
-    // to check all possible solutions.
-
-    // So, how do we check every possible pair? We could scan the
-    // array for every possible profitable trade, then if that list is
-    // empty, we know there is no possible profit and can return zero.
-
-    let profitableTrades: number[][] = Array.from({ length: data.length - 1 }, (_v, _i) => []);
-    for (let i = 0; i < data.length; ++i) {
+    let profitableTrades: Trade[] = [];
+    for (let i = 0; i < data.length - 1; ++i) {
         for (let j = i + 1; j < data.length; ++j) {
             if (data[i] < data[j]) {
-                profitableTrades[i].push(j);
+                let trade = {
+                    startDay: i,
+                    endDay: j,
+                    amount: data[j] - data[i]
+                };
+                profitableTrades.push(trade);
             }
         }
     }
 
-    let maxProfit = 0;
-
-    for (let i = 0; i < data.length; ++i) {
-        for (const end of profitableTrades[i]) {
-            let profit = data[end] - data[i];
-            if (maxProfit < profit) {
-                maxProfit = profit;
-            }
-        }
+    if (profitableTrades.length == 0) {
+        return 0;
     }
 
-    return maxProfit;
+    profitableTrades.sort((a, b) => b.amount - a.amount);
+
+    return profitableTrades[0].amount;
 }
