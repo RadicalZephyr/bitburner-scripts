@@ -97,7 +97,7 @@ function areParensBalanced(s: string): boolean {
     return count === 0;
 }
 
-function* choose(a: any[], m: number): Iterable<number[]> {
+function* choose<T>(a: T[], m: number): Iterable<T[]> {
     let n = a.length;
     let c = [];
     for (let i = 0; i != m; i++) {
