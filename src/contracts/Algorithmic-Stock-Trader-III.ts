@@ -34,6 +34,56 @@ export async function main(ns: NS) {
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
 
+type Trade = {
+    startDay: number,
+    endDay: number,
+    amount: number
+};
+
+type TwoTrade = {
+    trades: [Trade, Trade],
+    total: number,
+};
+
 function solve(data: any): any {
-    return null;
+    let profitableTrades: Trade[] = [];
+    for (let i = 0; i < data.length - 1; ++i) {
+        for (let j = i + 1; j < data.length; ++j) {
+            if (data[i] < data[j]) {
+                let trade = {
+                    startDay: i,
+                    endDay: j,
+                    amount: data[j] - data[i]
+                };
+                profitableTrades.push(trade);
+            }
+        }
+    }
+
+    if (profitableTrades.length == 0) {
+        return 0;
+    }
+
+    let twoTrades: TwoTrade[] = [];
+    for (const t1 of profitableTrades) {
+        for (const t2 of profitableTrades.slice(1)) {
+            if (!isOverlapping(t1, t2)) {
+                twoTrades.push({
+                    trades: [t1, t2],
+                    total: t1.amount + t2.amount
+                });
+            }
+        }
+    }
+    twoTrades.sort((a, b) => b.total - a.total);
+
+    return twoTrades[0].total;
+}
+
+function isOverlapping(tradeA: Trade, tradeB: Trade): boolean {
+    // Since start is always less than end, this implies that
+    // tradeA.startDay < tradeB.startDay
+    let aLessThanB = tradeA.endDay < tradeB.startDay;
+    let bLessThanA = tradeB.endDay < tradeA.startDay;
+    return !(aLessThanB || bLessThanA);
 }
