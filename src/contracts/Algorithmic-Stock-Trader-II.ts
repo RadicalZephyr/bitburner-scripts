@@ -44,6 +44,10 @@ function solve(data: number[]): any {
         }
     }
 
+    if (profitableTrades.every((trades) => trades.length == 0)) {
+        return 0;
+    }
+
     let result = maxRemainingProfit(data, profitableTrades, 0);
     return result.profit;
 }
