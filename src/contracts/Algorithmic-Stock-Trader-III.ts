@@ -46,6 +46,7 @@ type TwoTrade = {
 };
 
 async function solve(ns: NS, data: any): Promise<any> {
+    return null;
     let profitableTrades: Trade[] = [];
     for (let i = 0; i < data.length - 1; ++i) {
         for (let j = i + 1; j < data.length; ++j) {

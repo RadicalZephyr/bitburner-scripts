@@ -51,6 +51,7 @@ type TradeSeq = {
 };
 
 async function solve(ns: NS, data1: [number, number[]]): Promise<any> {
+    return null;
     let [k, stocks] = data1;
 
     let profitableTrades: Trade[] = [];
