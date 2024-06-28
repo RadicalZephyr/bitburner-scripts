@@ -28,6 +28,11 @@ export async function main(ns: NS) {
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
 
-function solve(data: any): any {
+function solve(data: number[]): number {
+    data.sort((a, b) => a - b);
     return null;
+}
+
+function countWays(nums: number[], sum: number): number {
+    return 0;
 }
