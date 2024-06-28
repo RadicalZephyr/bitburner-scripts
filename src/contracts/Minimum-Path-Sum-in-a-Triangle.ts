@@ -1,8 +1,33 @@
-/*
+/* Minimum Path Sum in a Triangle
+
+Given a triangle, find the minimum path sum from top to bottom. In
+each step of the path, you may only move to adjacent numbers in the
+row below. The triangle is represented as a 2D array of numbers:
+
+[
+         [4],
+        [5,1],
+       [4,4,5],
+      [4,3,2,4],
+     [5,8,1,5,8],
+    [3,1,8,1,8,9],
+   [2,1,3,8,5,5,4],
+  [6,8,9,4,9,4,4,7]
+]
+
+Example: If you are given the following triangle:
+
+[
+     [2],
+    [3,4],
+   [6,5,7],
+  [4,1,8,3]
+]
+
+The minimum path sum is 11 (2 -> 3 -> 5 -> 1).
  */
 
 import type { NS } from "netscript";
-import type { ContractData } from '../all-contracts';
 
 export async function main(ns: NS) {
     let scriptName = ns.getScriptName();
