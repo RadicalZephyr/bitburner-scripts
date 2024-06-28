@@ -37,7 +37,6 @@ Answer: ''
  */
 
 import type { NS } from "netscript";
-import type { ContractData } from '../all-contracts';
 
 export async function main(ns: NS) {
     let scriptName = ns.getScriptName();
