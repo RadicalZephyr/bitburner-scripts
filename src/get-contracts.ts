@@ -13,6 +13,7 @@ export async function main(ns: NS) {
     let contractPort = ns.getPortHandle(contractPortNum);
     let contracts: ContractData[] = [];
 
+    let incompleteScriptContracts = [];
     let missingScriptContracts = [];
 
     for (const host of allHosts) {
@@ -26,7 +27,12 @@ export async function main(ns: NS) {
 
             let contractScriptName = ns.sprintf('/contracts/%s.js', contractType)
             if (!ns.fileExists(contractScriptName)) {
-                missingScriptContracts.push(contract);
+                let incompleteContractScriptName = ns.sprintf('/contracts/incomplete/%s.js', contractType)
+                if (ns.fileExists(incompleteContractScriptName)) {
+                    incompleteScriptContracts.push(contract);
+                } else {
+                    missingScriptContracts.push(contract);
+                }
                 continue;
             }
 
@@ -49,10 +55,12 @@ export async function main(ns: NS) {
             contracts.push(contract);
         }
     }
+    let incompleteContractTypes = new Set(incompleteScriptContracts.map((c) => c.type));
+    ns.tprintf('\ncontracts with no solution: %s', JSON.stringify(incompleteContractTypes));
 
-    ns.tprintf('\n');
+    ns.tprintf('\nNo scripts found for the following contracts:');
     for (const c of missingScriptContracts) {
-        ns.tprintf('no script found for contract %s type %s from host %s', c.file, c.type, c.host);
+        ns.tprintf(' type %s contract %s from host %s', c.file, c.type, c.host);
     }
 
     let allContractsFile = "all-contracts.js";
