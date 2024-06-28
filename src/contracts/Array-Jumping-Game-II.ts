@@ -35,5 +35,38 @@ export async function main(ns: NS) {
 }
 
 function solve(data: any): any {
-    return null;
+    let result = jump(data, 0, 0);
+    return result.jumps;
+}
+
+type Result = {
+    done: boolean,
+    jumps: number,
+};
+
+function jump(a: number[], i: number, jumps: number): Result {
+    let maxJumps = a[i];
+    let maxIndex = i + maxJumps;
+
+    // Base case, we can reach the end in one jump.
+    if (maxIndex >= (a.length - 1)) {
+        return { done: true, jumps: jumps + 1 };
+    }
+
+    // Now we know we can't directly reach the end from this start
+    // index.
+    for (let n = maxIndex; n > i; n--) {
+        // No need to check slots with zeroes, they are dead ends.
+        if (a[n] === 0) {
+            continue;
+        }
+
+        // Check the next farthest square we can reach that's not a zero.
+        let result = jump(a, n, jumps + 1);
+        if (result.done) {
+            return result;
+        }
+    }
+    // Checked all the squares we can reach and all were dead ends.
+    return { done: false, jumps: jumps };
 }
