@@ -30,7 +30,7 @@ export async function main(ns: NS) {
     }
     let contractData: any = JSON.parse(contractDataJSON);
     ns.tprintf('contract data: %s', JSON.stringify(contractData));
-    let answer = solve(contractData);
+    let answer = await solve(ns, contractData);
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
 
@@ -45,7 +45,7 @@ type TwoTrade = {
     total: number,
 };
 
-function solve(data: any): any {
+async function solve(ns: NS, data: any): Promise<any> {
     let profitableTrades: Trade[] = [];
     for (let i = 0; i < data.length - 1; ++i) {
         for (let j = i + 1; j < data.length; ++j) {
@@ -57,6 +57,7 @@ function solve(data: any): any {
                 };
                 profitableTrades.push(trade);
             }
+            await ns.sleep(10);
         }
     }
 
@@ -73,6 +74,7 @@ function solve(data: any): any {
                     total: t1.amount + t2.amount
                 });
             }
+            await ns.sleep(10);
         }
     }
     twoTrades.sort((a, b) => b.total - a.total);

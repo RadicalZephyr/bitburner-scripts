@@ -35,7 +35,7 @@ export async function main(ns: NS) {
     }
     let contractData: any = JSON.parse(contractDataJSON);
     ns.tprintf('contract data: %s', JSON.stringify(contractData));
-    let answer = solve(contractData);
+    let answer = await solve(ns, contractData);
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
 
@@ -50,7 +50,7 @@ type TradeSeq = {
     total: number,
 };
 
-function solve(data1: [number, number[]]): any {
+async function solve(ns: NS, data1: [number, number[]]): Promise<any> {
     let [k, stocks] = data1;
 
     let profitableTrades: Trade[] = [];
@@ -64,6 +64,7 @@ function solve(data1: [number, number[]]): any {
                 };
                 profitableTrades.push(trade);
             }
+            await ns.sleep(10);
         }
     }
 
@@ -73,12 +74,13 @@ function solve(data1: [number, number[]]): any {
 
     let validTradeSeqs: TradeSeq[] = [];
     for (let tradeSeq of choose(profitableTrades, k)) {
-        if (validTradeSequence(tradeSeq)) {
+        if (await validTradeSequence(ns, tradeSeq)) {
             validTradeSeqs.push({
                 trades: tradeSeq,
                 total: tradeSeq.reduce((sum, t) => sum + t.amount, 0)
             });
         }
+        await ns.sleep(10);
     }
     // What if there are no non-overlapping trade sequences of length
     // `k`, but there are valid sequences of length `k-1`?
@@ -87,12 +89,13 @@ function solve(data1: [number, number[]]): any {
     return validTradeSeqs[0].total;
 }
 
-function validTradeSequence(trades: Trade[]): boolean {
+async function validTradeSequence(ns: NS, trades: Trade[]): Promise<boolean> {
     trades.sort((a, b) => a.startDay - b.startDay);
     for (let i = 0; i < trades.length - 1; i++) {
         if (trades[i].endDay >= trades[i + 1].startDay) {
             return false;
         }
+        await ns.sleep(10);
     }
     return true;
 }
