@@ -35,6 +35,32 @@ export async function main(ns: NS) {
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
 
-function solve(data: any): any {
-    return null;
+function solve(data: number[]): any {
+    return jump(data, 0) ? 1 : 0;
+}
+
+function jump(a: number[], i: number): boolean {
+    let maxJumps = a[i];
+    let maxIndex = i + maxJumps;
+
+    // Base case, we can reach the end in one jump.
+    if (maxIndex >= (a.length - 1)) {
+        return true;
+    }
+
+    // Now we know we can't directly reach the end from this start
+    // index.
+    for (let n = maxIndex; n > i; n--) {
+        // No need to check slots with zeroes, they are dead ends.
+        if (a[n] === 0) {
+            continue;
+        }
+
+        // Check the next farthest square we can reach that's not a zero.
+        if (jump(a, n)) {
+            return true;
+        }
+    }
+    // Checked all the squares we can reach and all were dead ends.
+    return false;
 }
