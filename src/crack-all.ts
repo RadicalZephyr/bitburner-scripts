@@ -25,6 +25,12 @@ export async function main(ns: NS) {
         for (let i = portsCracked; i < 6 && i <= numCrackers; i++) {
             const hosts = HOSTS_BY_PORTS_REQUIRED[i];
             for (const host of hosts) {
+                // Skip n00dles because that's probably where this
+                // script is running.
+                if (host === "n00dles") {
+                    continue;
+                }
+
                 crackHost(ns, host, i);
 
                 // SCP all hacking files appropriate to that amount of memory
