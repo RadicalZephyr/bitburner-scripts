@@ -12,4 +12,5 @@ export type AllServerInfo = {
 
 export const ALL_HOSTS: string[] = [];
 export const ALL_SERVER_INFO: AllServerInfo = {};
-export const HOSTS_BY_PORTS_REQUIRED: [string, number][][] = [[], [], [], [], [], []];
+export const HOSTS_BY_PORTS_REQUIRED: string[][] = [[], [], [], [], [], []];
+export const TARGETS_BY_PORTS_REQUIRED: string[][] = [[], [], [], [], [], []];

@@ -1,6 +1,6 @@
 import type { NS } from "netscript";
 
-import { HOSTS_BY_PORTS_REQUIRED } from "all-hosts";
+import { HOSTS_BY_PORTS_REQUIRED, TARGETS_BY_PORTS_REQUIRED } from "all-hosts";
 
 import { SOFTEN_PORT } from "util/ports";
 
@@ -22,13 +22,21 @@ export async function main(ns: NS) {
         for (let i = portsCracked; i < 6 && i <= numCrackers; i++) {
             const hosts = HOSTS_BY_PORTS_REQUIRED[i];
             for (const host of hosts) {
-                crackHost(ns, host[0], i);
+                crackHost(ns, host, i);
 
                 // SCP all hacking files appropriate to that amount of memory
-                ns.scp(HACKING_FILES, host[0], 'home');
+                ns.scp(HACKING_FILES, host, 'home');
 
                 // Write host name to the soften port
-                softenPort.write(host[0]);
+                softenPort.write(host);
+            }
+
+            const targets = TARGETS_BY_PORTS_REQUIRED[i];
+            for (const target of targets) {
+                crackHost(ns, target, i);
+
+                // Write host name to the soften port
+                softenPort.write(target);
             }
         }
         portsCracked = numCrackers;

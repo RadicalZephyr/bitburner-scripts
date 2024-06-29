@@ -10,7 +10,8 @@ export async function main(ns: NS) {
     let allHosts = new Set(Array(...network.keys()).filter((h) => h !== "home" && !pservPrefix.test(h)));
 
     let allServerInfo: AllServerInfo = {};
-    let hostsByPortsRequired: [string, number][][] = Array.from({ length: 6 }, (_v, _i) => []);
+    let hostsByPortsRequired: string[][] = Array.from({ length: 6 }, (_v, _i) => []);
+    let targetsByPortsRequired: string[][] = Array.from({ length: 6 }, (_v, _i) => []);
 
     for (const host of allHosts) {
         // Skip home and personal servers
@@ -27,30 +28,31 @@ export async function main(ns: NS) {
 
         // If there's no usable RAM, then don't record this host in
         // the nukable hosts list.
-        if (server.maxRam === 0) {
-            continue;
+        if (server.maxRam !== 0) {
+            let portsRequired = server.numOpenPortsRequired;
+            if (typeof portsRequired === 'number' && 0 <= portsRequired && portsRequired <= 5) {
+                hostsByPortsRequired[portsRequired].push(host);
+            }
         }
-        let portsRequired = server.numOpenPortsRequired;
-        if (typeof portsRequired === 'number' && 0 <= portsRequired && portsRequired <= 5) {
-            hostsByPortsRequired[portsRequired].push([host, server.maxRam]);
-        }
-    }
 
-    for (let hosts of hostsByPortsRequired) {
-        if (hosts.length === 0) {
-            continue;
+        if (server.moneyMax > 0) {
+            let portsRequired = server.numOpenPortsRequired;
+            if (typeof portsRequired === 'number' && 0 <= portsRequired && portsRequired <= 5) {
+                targetsByPortsRequired[portsRequired].push(host);
+            }
         }
-        hosts.sort((a, b) => b[1] - a[1]);
     }
 
     const allHostsFile = '/all-hosts.js';
     let content = ns.sprintf(
         "export const ALL_HOSTS = %s;\n"
         + "export const ALL_SERVER_INFO = %s;\n"
-        + "export const HOSTS_BY_PORTS_REQUIRED = %s;\n",
+        + "export const HOSTS_BY_PORTS_REQUIRED = %s;\n"
+        + "export const TARGETS_BY_PORTS_REQUIRED = %s;\n",
         JSON.stringify(Array(...allHosts), null, 2),
         JSON.stringify(allServerInfo, null, 2),
-        JSON.stringify(hostsByPortsRequired, null, 2)
+        JSON.stringify(hostsByPortsRequired, null, 2),
+        JSON.stringify(targetsByPortsRequired, null, 2)
     );
     ns.write(allHostsFile, content, "w");
 }
