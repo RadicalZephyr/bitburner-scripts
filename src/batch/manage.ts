@@ -1,6 +1,6 @@
 import type { NS } from "netscript";
 
-import { WORKERS_PORT, WORKERS_DONE } from "util/ports";
+import { WORKERS_PORT, WORKERS_DONE, EMPTY_SENTINEL } from "util/ports";
 
 const tillScript = "/batch/till.js";
 const sowScript = "/batch/sow.js";
@@ -17,8 +17,13 @@ export async function main(ns: NS) {
 
     let i = 0;
     while (true) {
-        await workersPort.nextWrite();
         let nextWorker = workersPort.read() as string;
+        // Check for empty value
+        if (nextWorker === EMPTY_SENTINEL) {
+            await workersPort.nextWrite();
+            continue;
+        }
+
         // Check for the done sentinel value
         if (nextWorker === WORKERS_DONE) {
             break;
@@ -37,6 +42,7 @@ export async function main(ns: NS) {
                 break;
         }
         i += 1;
+        await ns.sleep(100);
     }
 }
 

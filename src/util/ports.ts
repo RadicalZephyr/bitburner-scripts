@@ -4,6 +4,8 @@ function toPort(name: string): number {
     return name.split('').map((s) => s.codePointAt(0)).reduce((p, n) => p + n);
 }
 
+export const EMPTY_SENTINEL: string = "NULL PORT DATA";
+
 export const TILL_PORT: number = toPort("till");
 export const SOW_PORT: number = toPort("sow");
 export const HARVEST_PORT: number = toPort("harvest");
