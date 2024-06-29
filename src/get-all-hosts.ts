@@ -1,5 +1,5 @@
 import type { NS } from "netscript";
-import type { AllServerInfo } from 'all-hosts';
+import type { AllHostInfo, HostInfo } from 'all-hosts';
 
 import { walkNetworkBFS } from 'util/walk';
 
@@ -9,7 +9,7 @@ export async function main(ns: NS) {
     const pservPrefix = /^pserv-/;
     let allHosts = new Set(Array(...network.keys()).filter((h) => h !== "home" && !pservPrefix.test(h)));
 
-    let allServerInfo: AllServerInfo = {};
+    let allServerInfo: AllHostInfo = {};
     let hostsByPortsRequired: string[][] = Array.from({ length: 6 }, (_v, _i) => []);
     let targetsByPortsRequired: string[][] = Array.from({ length: 6 }, (_v, _i) => []);
 
@@ -19,24 +19,20 @@ export async function main(ns: NS) {
             continue;
         }
 
-        let server = ns.getServer(host);
-        allServerInfo[host] = {
-            hostname: host,
-            server: server,
-            reachableHosts: network.get(host)
-        };
+        let hostInfo = getHostInfo(ns, network, host);
+        allServerInfo[host] = hostInfo;
 
         // If there's no usable RAM, then don't record this host in
         // the nukable hosts list.
-        if (server.maxRam !== 0) {
-            let portsRequired = server.numOpenPortsRequired;
+        if (hostInfo.maxRam !== 0) {
+            let portsRequired = hostInfo.numOpenPortsRequired;
             if (typeof portsRequired === 'number' && 0 <= portsRequired && portsRequired <= 5) {
                 hostsByPortsRequired[portsRequired].push(host);
             }
         }
 
-        if (server.moneyMax > 0) {
-            let portsRequired = server.numOpenPortsRequired;
+        if (hostInfo.moneyMax > 0) {
+            let portsRequired = hostInfo.numOpenPortsRequired;
             if (typeof portsRequired === 'number' && 0 <= portsRequired && portsRequired <= 5) {
                 targetsByPortsRequired[portsRequired].push(host);
             }
@@ -55,4 +51,18 @@ export async function main(ns: NS) {
         JSON.stringify(targetsByPortsRequired, null, 2)
     );
     ns.write(allHostsFile, content, "w");
+}
+
+function getHostInfo(ns: NS, network: Map<string, string[]>, hostname: string): HostInfo {
+    return {
+        hostname: hostname,
+        numOpenPortsRequired: ns.getServerNumPortsRequired(hostname),
+        maxRam: ns.getServerMaxRam(hostname),
+        moneyMax: ns.getServerMaxMoney(hostname),
+        serverGrowth: ns.getServerGrowth(hostname),
+        // hackDifficulty: ns.getServer(hostname), //
+        minDifficulty: ns.getServerMinSecurityLevel(hostname),
+        requiredHackingSkill: ns.getServerRequiredHackingLevel(hostname),
+        reachableHosts: network.get(hostname)
+    };
 }
