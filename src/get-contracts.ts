@@ -1,7 +1,7 @@
 import type { NS } from "netscript";
-import type { ContractData } from "./all-contracts";
+import type { ContractData } from "all-contracts";
 
-import { walkNetworkBFS } from "./util/walk";
+import { walkNetworkBFS } from "util/walk";
 
 export async function main(ns: NS) {
     let network = walkNetworkBFS(ns);

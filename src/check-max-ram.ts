@@ -1,6 +1,6 @@
 import type { NS } from "netscript";
 
-import { GB, getHighestPurchasableRamLevel, reportServerComplementCost } from './util/server';
+import { GB, getHighestPurchasableRamLevel, reportServerComplementCost } from 'util/server';
 
 export async function main(ns: NS) {
     const percentSpend = ns.args[0] ? ns.args[0] : 1.0;

@@ -1,6 +1,6 @@
 import type { NS } from "netscript";
 
-import { HOSTS_BY_PORTS_REQUIRED } from "./all-hosts";
+import { HOSTS_BY_PORTS_REQUIRED } from "all-hosts";
 
 export async function main(ns: NS) {
     let numCrackers = countPortCrackers(ns);
