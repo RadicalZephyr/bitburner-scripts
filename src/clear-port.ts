@@ -27,13 +27,14 @@ OPTIONS
                 maxPort = portNum;
             }
         }
-        await ns.sleep(10);
     }
 
     if (flags.all) {
         for (let i = 1; i <= maxPort; i++) {
             ns.clearPort(i);
-            await ns.sleep(10);
+            if (i % 500 === 0) {
+                await ns.sleep(10);
+            }
         }
     }
 }
