@@ -10,12 +10,19 @@ export const HARVEST_PORT: number = toPort("harvest");
 
 export const MONITOR_PORT: number = toPort("monitor");
 
+export const WORKERS_PORT: number = toPort("workers");
+
 export async function main(ns: NS) {
     ns.tprintf(
-        "Till Port: %s\nSow Port: %s\nHarvest Port: %s\nMonitor Port: %s\n",
+        "Till Port: %s\n"
+        + "Sow Port: %s\n"
+        + "Harvest Port: %s\n"
+        + "Monitor Port: %s\n"
+        + "Workers Port: %s\n",
         TILL_PORT,
         SOW_PORT,
         HARVEST_PORT,
-        MONITOR_PORT
+        MONITOR_PORT,
+        WORKERS_PORT
     );
 }
