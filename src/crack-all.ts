@@ -5,8 +5,9 @@ import { HOSTS_BY_PORTS_REQUIRED, TARGETS_BY_PORTS_REQUIRED } from "all-hosts";
 import { TILL_PORT, WORKERS_PORT, WORKERS_DONE } from "util/ports";
 
 const HACKING_FILES = [
-    "/util/ports.js",
     "/all-hosts.js",
+    "/util/ports.js",
+    "/util/wait.js",
     "/batch/till.js",
     "/batch/sow.js",
     "/batch/harvest.js",
