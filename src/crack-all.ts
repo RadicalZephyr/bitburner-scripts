@@ -2,6 +2,8 @@ import type { NS } from "netscript";
 
 import { HOSTS_BY_PORTS_REQUIRED } from "all-hosts";
 
+import { SOFTEN_PORT } from "util/ports";
+
 const HACKING_FILES = [
     "/util/ports.js",
     "/all-hosts.js",
@@ -11,22 +13,26 @@ const HACKING_FILES = [
 ];
 
 export async function main(ns: NS) {
-    let numCrackers = countPortCrackers(ns);
+    let portsCracked = 0;
+    let softenPort = ns.getPortHandle(SOFTEN_PORT);
 
-    let crackedHosts: [string, number][] = [];
-    for (let i = 0; i < 6 && i <= numCrackers; i++) {
-        const hosts = HOSTS_BY_PORTS_REQUIRED[i];
-        for (const host of hosts) {
-            crackHost(ns, host[0], i);
-            crackedHosts.push(host);
+    while (true) {
+        let numCrackers = countPortCrackers(ns);
+
+        for (let i = portsCracked; i < 6 && i <= numCrackers; i++) {
+            const hosts = HOSTS_BY_PORTS_REQUIRED[i];
+            for (const host of hosts) {
+                crackHost(ns, host[0], i);
+
+                // SCP all hacking files appropriate to that amount of memory
+                ns.scp(HACKING_FILES, host[0], 'home');
+
+                // Write host name to the soften port
+                softenPort.write(host[0]);
+            }
         }
-    }
-
-    ns.tprintf("cracked hosts: %s", JSON.stringify(crackedHosts.map((h) => h[0])));
-
-    for (const host of crackedHosts) {
-        // SCP all hacking files appropriate to that amount of memory
-        ns.scp(HACKING_FILES, host[0], 'home');
+        portsCracked = numCrackers;
+        await ns.sleep(1000);
     }
 }
 
@@ -42,7 +48,7 @@ function countPortCrackers(ns: NS): number {
     let crackers = portOpeningProgramFns(ns);
     let numCrackers = 0;
     for (const c of crackers) {
-        if (ns.fileExists(c.file)) {
+        if (ns.fileExists(c.file, "home")) {
             numCrackers += 1;
         }
     }
