@@ -38,7 +38,7 @@ export async function main(ns: NS) {
 
 function crackHost(ns: NS, host: string, ports: number): void {
     let crackers = portOpeningProgramFns(ns);
-    for (let i = 0; i < ports - 1; i++) {
+    for (let i = 0; i < ports; i++) {
         crackers[i].fn(host);
     }
     ns.nuke(host);
