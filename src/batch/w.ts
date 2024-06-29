@@ -16,6 +16,13 @@ export async function main(ns: NS) {
         sleepTime = 1;
     }
 
-    await ns.sleep(sleepTime);
-    await ns.weaken(target);
+    let rounds = args[1];
+    if (typeof rounds != 'number') {
+        sleepTime = 1;
+    }
+
+    for (let i = 0; i < rounds; i++) {
+        await ns.sleep(sleepTime);
+        await ns.weaken(target);
+    }
 }
