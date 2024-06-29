@@ -2,14 +2,14 @@ import type { NS } from "netscript";
 
 import { HOSTS_BY_PORTS_REQUIRED, TARGETS_BY_PORTS_REQUIRED } from "all-hosts";
 
-import { SOFTEN_PORT } from "util/ports";
+import { TILL_PORT } from "util/ports";
 
 const HACKING_FILES = [
     "/util/ports.js",
     "/all-hosts.js",
-    "/batch/soften.js",
-    "/batch/build.js",
-    "/batch/steal.js",
+    "/batch/till.js",
+    "/batch/sow.js",
+    "/batch/harvest.js",
     "/batch/h.js",
     "/batch/g.js",
     "/batch/w.js"
@@ -17,7 +17,7 @@ const HACKING_FILES = [
 
 export async function main(ns: NS) {
     let portsCracked = 0;
-    let softenPort = ns.getPortHandle(SOFTEN_PORT);
+    let tillPort = ns.getPortHandle(TILL_PORT);
 
     while (portsCracked < 5) {
         let numCrackers = countPortCrackers(ns);
@@ -30,16 +30,16 @@ export async function main(ns: NS) {
                 // SCP all hacking files appropriate to that amount of memory
                 ns.scp(HACKING_FILES, host, 'home');
 
-                // Write host name to the soften port
-                softenPort.write(host);
+                // Write host name to the till port
+                tillPort.write(host);
             }
 
             const targets = TARGETS_BY_PORTS_REQUIRED[i];
             for (const target of targets) {
                 crackHost(ns, target, i);
 
-                // Write host name to the soften port
-                softenPort.write(target);
+                // Write host name to the till port
+                tillPort.write(target);
             }
         }
         portsCracked = numCrackers;

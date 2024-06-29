@@ -6,9 +6,9 @@ export async function main(ns: NS) {
     let monitorPort = ns.getPortHandle(MONITOR_PORT);
 
     let hosts: Hosts = {
-        soften: new Set(),
-        build: new Set(),
-        steal: new Set(),
+        till: new Set(),
+        sow: new Set(),
+        harvest: new Set(),
     };
 
     ns.disableLog('ALL');
@@ -18,20 +18,20 @@ export async function main(ns: NS) {
     while (true) {
         update(monitorPort, hosts);
         ns.clearLog();
-        ns.printf("Softening: %s\n", JSON.stringify([...hosts.soften]));
-        ns.printf("Building: %s\n", JSON.stringify([...hosts.build]));
-        ns.printf("Stealing: %s\n", JSON.stringify([...hosts.steal]));
+        ns.printf("Tilling: %s\n", JSON.stringify([...hosts.till]));
+        ns.printf("Sowing: %s\n", JSON.stringify([...hosts.sow]));
+        ns.printf("Harvesting: %s\n", JSON.stringify([...hosts.harvest]));
         await ns.sleep(100);
     }
 }
 
 type Hosts = {
-    soften: Set<string>,
-    build: Set<string>,
-    steal: Set<string>,
+    till: Set<string>,
+    sow: Set<string>,
+    harvest: Set<string>,
 };
 
-export type MonitorList = "soften" | "build" | "steal";
+export type MonitorList = "till" | "sow" | "harvest";
 export type MonitorAction = "add" | "remove";
 
 export type MonitorMessage = {
