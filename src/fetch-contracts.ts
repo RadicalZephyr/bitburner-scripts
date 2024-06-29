@@ -55,12 +55,17 @@ export async function main(ns: NS) {
             contracts.push(contract);
         }
     }
-    let incompleteContractTypes = new Set(incompleteScriptContracts.map((c) => c.type));
-    ns.tprintf('\ncontracts with no solution: %s', JSON.stringify(incompleteContractTypes));
+    let incompleteContractTypes = [...new Set(incompleteScriptContracts.map((c) => c.type))];
+    if (incompleteContractTypes.length > 0) {
+        incompleteContractTypes.sort();
+        ns.tprintf('\ncontracts with no solution: %s', JSON.stringify(incompleteContractTypes, null, 2));
+    }
 
-    ns.tprintf('\nNo scripts found for the following contracts:');
-    for (const c of missingScriptContracts) {
-        ns.tprintf(' type %s contract %s from host %s', c.file, c.type, c.host);
+    if (missingScriptContracts.length > 0) {
+        ns.tprintf('\nNo scripts found for the following contracts:');
+        for (const c of missingScriptContracts) {
+            ns.tprintf(' type %s contract %s from host %s', c.file, c.type, c.host);
+        }
     }
 
     let allContractsFile = "all-contracts.js";
