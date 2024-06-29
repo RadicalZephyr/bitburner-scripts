@@ -37,6 +37,9 @@ export async function main(ns: NS) {
     }
 
     for (let hosts of hostsByPortsRequired) {
+        if (hosts.length === 0) {
+            continue;
+        }
         hosts.sort((a, b) => b[1] - a[1]);
         let maxRam = hosts[0][1];
         while (hosts.at(-1)[1] < maxRam) {
