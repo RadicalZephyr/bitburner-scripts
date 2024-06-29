@@ -13,9 +13,9 @@ export async function main(ns: NS) {
         sleepTime = 1;
     }
 
-    let rounds = args[1];
+    let rounds = args[2];
     if (typeof rounds != 'number') {
-        sleepTime = 1;
+        rounds = 1;
     }
 
     for (let i = 0; i < rounds; i++) {

@@ -13,6 +13,14 @@ export async function main(ns: NS) {
         sleepTime = 0;
     }
 
-    await ns.sleep(sleepTime);
-    await ns.hack(target);
+    let rounds = args[2];
+    if (typeof rounds != 'number') {
+        rounds = 1;
+    }
+
+    for (let i = 0; i < rounds; i++) {
+        await ns.sleep(sleepTime);
+        await ns.hack(target);
+
+    }
 }
