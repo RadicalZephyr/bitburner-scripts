@@ -9,7 +9,10 @@ const HACKING_FILES = [
     "/all-hosts.js",
     "/batch/soften.js",
     "/batch/build.js",
-    "/batch/steal.js"
+    "/batch/steal.js",
+    "/batch/h.js",
+    "/batch/g.js",
+    "/batch/w.js"
 ];
 
 export async function main(ns: NS) {
