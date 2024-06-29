@@ -2,19 +2,32 @@ import type { NS } from "netscript";
 
 import { HOSTS_BY_PORTS_REQUIRED } from "all-hosts";
 
+const HACKING_FILES = [
+    "/util/ports.js",
+    "/all-hosts.js",
+    "/batch/soften.js",
+    "/batch/build.js",
+    "/batch/steal.js"
+];
+
 export async function main(ns: NS) {
     let numCrackers = countPortCrackers(ns);
 
-    let hostsCracked = [];
+    let crackedHosts: [string, number][] = [];
     for (let i = 0; i < 6 && i <= numCrackers; i++) {
         const hosts = HOSTS_BY_PORTS_REQUIRED[i];
         for (const host of hosts) {
             crackHost(ns, host[0], i);
-            hostsCracked.push(host[0]);
+            crackedHosts.push(host);
         }
     }
 
-    ns.tprintf("cracked hosts: %s", JSON.stringify(hostsCracked));
+    ns.tprintf("cracked hosts: %s", JSON.stringify(crackedHosts.map((h) => h[0])));
+
+    for (const host of crackedHosts) {
+        // SCP all hacking files appropriate to that amount of memory
+        ns.scp(HACKING_FILES, host[0], 'home');
+    }
 }
 
 function crackHost(ns: NS, host: string, ports: number): void {
