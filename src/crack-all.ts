@@ -40,7 +40,6 @@ export async function main(ns: NS) {
 
                 // Write host name to the worker and till ports
                 workersPort.write(host);
-                tillPort.write(host);
             }
 
             const targets = TARGETS_BY_PORTS_REQUIRED[i];
