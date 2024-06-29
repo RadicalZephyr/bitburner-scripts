@@ -2,7 +2,7 @@ import type { NS } from "netscript";
 
 import { HOSTS_BY_PORTS_REQUIRED, TARGETS_BY_PORTS_REQUIRED } from "all-hosts";
 
-import { TILL_PORT } from "util/ports";
+import { TILL_PORT, WORKERS_PORT } from "util/ports";
 
 const HACKING_FILES = [
     "/util/ports.js",
@@ -18,6 +18,7 @@ const HACKING_FILES = [
 export async function main(ns: NS) {
     let portsCracked = 0;
     let tillPort = ns.getPortHandle(TILL_PORT);
+    let workersPort = ns.getPortHandle(WORKERS_PORT);
 
     while (portsCracked < 5) {
         let numCrackers = countPortCrackers(ns);
@@ -36,7 +37,8 @@ export async function main(ns: NS) {
                 // SCP all hacking files appropriate to that amount of memory
                 ns.scp(HACKING_FILES, host, 'home');
 
-                // Write host name to the till port
+                // Write host name to the worker and till ports
+                workersPort.write(host);
                 tillPort.write(host);
             }
 
