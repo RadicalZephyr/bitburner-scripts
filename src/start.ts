@@ -24,12 +24,16 @@ function startCracker(ns: NS) {
     if (cracker !== null) {
         // TODO: Should we check if the kill succeeded?
         ns.kill(cracker.pid);
+    } else {
+        ns.nuke(crackHost);
     }
     const manageHost = "foodnstuff";
     const manageScript = "/batch/manage.js";
     let manager = ns.getRunningScript(manageScript, manageHost);
     if (manager !== null) {
         ns.kill(manager.pid);
+    } else {
+        ns.nuke(manageHost);
     }
 
     ns.scp(CRACK_FILES, crackHost, "home");
