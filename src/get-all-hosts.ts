@@ -41,10 +41,6 @@ export async function main(ns: NS) {
             continue;
         }
         hosts.sort((a, b) => b[1] - a[1]);
-        let maxRam = hosts[0][1];
-        while (hosts.at(-1)[1] < maxRam) {
-            hosts.pop();
-        }
     }
 
     const allHostsFile = '/all-hosts.js';
