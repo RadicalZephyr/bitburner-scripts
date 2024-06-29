@@ -2,7 +2,7 @@ import type { NS } from "netscript";
 
 import { HOSTS_BY_PORTS_REQUIRED, TARGETS_BY_PORTS_REQUIRED } from "all-hosts";
 
-import { TILL_PORT, WORKERS_PORT } from "util/ports";
+import { TILL_PORT, WORKERS_PORT, WORKERS_DONE } from "util/ports";
 
 const HACKING_FILES = [
     "/util/ports.js",
@@ -53,6 +53,8 @@ export async function main(ns: NS) {
         portsCracked = numCrackers;
         await ns.sleep(1000);
     }
+    // Signal that the last worker has been sent.
+    workersPort.write(WORKERS_DONE);
 }
 
 function crackHost(ns: NS, host: string, ports: number): void {

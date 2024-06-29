@@ -11,6 +11,7 @@ export const HARVEST_PORT: number = toPort("harvest");
 export const MONITOR_PORT: number = toPort("monitor");
 
 export const WORKERS_PORT: number = toPort("workers");
+export const WORKERS_DONE: string = "WORKERS_DONE_SENTINEL";
 
 export async function main(ns: NS) {
     ns.tprintf(
