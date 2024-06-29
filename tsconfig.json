@@ -1,17 +1,26 @@
 {
+  "include": ["NetscriptDefinitions.d.ts", "src/**/*.ts", "src/**/*.js"],
+  "exclude": ["src/lib/react.ts"],
   "compilerOptions": {
     "lib": ["ES2022"],
-    "target": "ES2021",
-    "module": "ES2020",
-    "moduleResolution": "node16",
-    "outDir": "dist",
+    "module": "esnext",
+    "target": "esnext",
+    "moduleResolution": "node",
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "esModuleInterop": true,
+    "inlineSourceMap": true,
+    "inlineSources": true,
+    "rootDir": "src/",
+    "outDir": "dist/",
+    "baseUrl": "src/",
     "allowJs": true,
-    "noEmitHelpers": true,
-    "noImplicitAny": true,
-    "noResolve": true,
-    "preserveConstEnums": true,
-    "baseUrl": "types",
-    "typeRoots": ["types"]
-  },
-  "include": ["src/**/*.ts", "src/**/*.js"]
+    "jsx": "react",
+    "types": [],
+    "paths": {
+      "/*": ["*"],
+      "netscript": ["../NetscriptDefinitions.d.ts"],
+      "@react": ["lib/react.ts"]
+    }
+  }
 }
