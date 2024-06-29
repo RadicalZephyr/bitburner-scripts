@@ -8,6 +8,7 @@ export async function main(ns: NS) {
     // When should these scripts quit?
     while (true) {
         let currentLevel = ns.getHackingLevel();
+        await ns.sleep(100);
 
     }
 }
