@@ -13,20 +13,29 @@ export async function main(ns: NS) {
 const CRACK_FILES: string[] = [
     "/all-hosts.js",
     "/util/ports.js",
-    "/crack-all.js"
+    "/crack-all.js",
+    "/batch/manage.js"
 ];
 
 function startCracker(ns: NS) {
-    let host = "n00dles";
-    let script = "/crack-all.js";
-    let crackScript = ns.getRunningScript(script, host);
-    if (crackScript !== null) {
+    const crackHost = "n00dles";
+    const crackScript = "/crack-all.js";
+    let cracker = ns.getRunningScript(crackScript, crackHost);
+    if (cracker !== null) {
         // TODO: Should we check if the kill succeeded?
-        ns.kill(crackScript.pid);
+        ns.kill(cracker.pid);
+    }
+    const manageHost = "foodnstuff";
+    const manageScript = "/batch/manage.js";
+    let manager = ns.getRunningScript(manageScript, manageHost);
+    if (manager !== null) {
+        ns.kill(manager.pid);
     }
 
-    ns.scp(CRACK_FILES, host, "home");
-    ns.exec(script, host);
+    ns.scp(CRACK_FILES, crackHost, "home");
+    ns.exec(crackScript, crackHost);
+    ns.scp(CRACK_FILES, manageHost, "home");
+    ns.exec(manageScript, manageHost);
 }
 
 async function waitForExit(ns: NS, pid: number): Promise<void> {
