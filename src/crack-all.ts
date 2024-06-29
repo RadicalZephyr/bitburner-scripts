@@ -16,7 +16,7 @@ export async function main(ns: NS) {
     let portsCracked = 0;
     let softenPort = ns.getPortHandle(SOFTEN_PORT);
 
-    while (true) {
+    while (portsCracked < 5) {
         let numCrackers = countPortCrackers(ns);
 
         for (let i = portsCracked; i < 6 && i <= numCrackers; i++) {
