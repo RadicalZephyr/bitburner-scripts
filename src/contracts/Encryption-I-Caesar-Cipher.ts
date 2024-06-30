@@ -33,6 +33,28 @@ export async function main(ns: NS) {
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
 
-function solve(data: any): any {
-    return null;
+const ALPHABET: string[] = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
+
+function solve(data: [string, number]): any {
+    let [plaintext, n] = data;
+    let upcase_plaintext = plaintext.toUpperCase();
+    return upcase_plaintext.split('').map((c) => shift(c, n)).join('');
+}
+
+const A_CODE: number = "A".codePointAt(0);
+
+function shift(c: string, n: number): string {
+    // Spaces remain unchanged
+    if (c === ' ') {
+        return c;
+    }
+    let index = c.codePointAt(0) - A_CODE;
+
+    // If c is not in the uppercase alphabet just return it.
+    if (index >= ALPHABET.length || index < 0) {
+        return c;
+    }
+
+    let shiftedIndex = (index + n) % ALPHABET.length;
+    return ALPHABET[shiftedIndex];
 }
