@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "My awesome scripts for automating Bitburner",
   "scripts": {
+    "build": "tsc",
     "clean": "find dist -depth ! -name 'dist' ! -name .gitkeep -delete",
     "watch:init": "node build/init.js",
     "watch:transpile": "tsc -w --preserveWatchOutput",
