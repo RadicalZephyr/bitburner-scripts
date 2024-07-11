@@ -2,3 +2,5 @@
   - SNA (bonus reputation)
   - No lack of focus penalty
 * Sector-12 : BruteSSH & start with $1m
+* Chongqing
+  - +40% hacking exp
