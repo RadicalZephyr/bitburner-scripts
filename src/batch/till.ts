@@ -1,6 +1,6 @@
 import type { NS } from "netscript";
 
-import { EMPTY_SENTINEL, TILL_PORT } from 'util/ports';
+import { EMPTY_SENTINEL, TILL_PORT, SOW_PORT } from 'util/ports';
 
 const softenScript = "/batch/w.js";
 
@@ -15,6 +15,7 @@ export async function main(ns: NS) {
     const softenScriptRam = ns.getScriptRam(softenScript, serverName);
 
     const tillPort = ns.getPortHandle(TILL_PORT);
+    const sowPort = ns.getPortHandle(SOW_PORT);
 
     let softenPids: SoftenPid[] = [];
 
@@ -36,6 +37,11 @@ export async function main(ns: NS) {
         let softenThreads = softenAnalyze(ns, nextTarget);
         let totalRam = softenScriptRam * softenThreads;
 
+        if (softenThreads === 0) {
+            sowPort.write(nextTarget);
+            continue;
+        }
+
         if (availableRam >= totalRam) {
             // Enough space is available, just launch the script
             let pid = ns.run(softenScript, softenThreads, nextTarget);
@@ -44,8 +50,7 @@ export async function main(ns: NS) {
             }
         } else {
             let rounds = Math.ceil(totalRam / availableRam);
-            let maxThreads = Math.floor(availableRam / softenScriptRam);
-
+            let maxThreads = Math.max(1, Math.floor(availableRam / softenScriptRam));
             let pid = ns.run(softenScript, maxThreads, nextTarget, 1, rounds);
             if (pid !== 0) {
                 softenPids.push({ pid: pid, target: nextTarget });
