@@ -20,13 +20,13 @@ jobs:
 
     steps:
       - name: Download built scripts artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ${{ needs.build.outputs.artifact_name }}
           path: ./
 
       - name: Checkout latest branch for upload
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: dist
           ref: ${{ env.RELEASE_BRANCH }}
