@@ -44,8 +44,7 @@ export async function main(ns: NS) {
             // Wait until the contract solver script finishes.
             while (true) {
                 await ns.sleep(100);
-                let scriptInfo = ns.getRunningScript(pid);
-                if (scriptInfo === null) {
+                if (!ns.isRunning(pid)) {
                     break;
                 }
             }
