@@ -69,6 +69,6 @@ export async function main(ns: NS) {
     }
 
     let allContractsFile = "all-contracts.js";
-    let fileData = ns.sprintf('export let CONTRACTS = %s;', JSON.stringify(contracts));
+    let fileData = ns.sprintf('export let CONTRACTS = %s;', JSON.stringify(contracts, null, 2));
     ns.write(allContractsFile, fileData, 'w');
 }
