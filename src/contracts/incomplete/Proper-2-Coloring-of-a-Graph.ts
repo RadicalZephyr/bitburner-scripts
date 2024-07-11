@@ -47,5 +47,49 @@ export async function main(ns: NS) {
 }
 
 function solve(data: any): any {
+    let [numVertices, edges] = data;
+    let graph = new Graph(numVertices, edges);
     return null;
+}
+
+type Edge = [
+    start: number,
+    dest: number,
+];
+
+type Vertex = {
+    label: number,
+    color?: number,
+};
+
+class Graph {
+    vertices: Vertex[];
+    edges: Edge[];
+    adjacency: Map<number, Set<number>>;
+
+    constructor(numVertices: number, edges: Edge[]) {
+        let vertices: Vertex[] = Array.from({ length: numVertices }, (_v, i) => { return { label: i }; });
+        this.vertices = vertices;
+        this.edges = edges;
+        this.adjacency = makeAdjacencyTable(vertices, edges);
+    }
+
+    neighbors(vertex: number): number[] {
+        return Array.from(this.adjacency.get(vertex).keys());
+    }
+}
+
+function makeAdjacencyTable(vertices: Vertex[], edges: Edge[]): Map<number, Set<number>> {
+    let adjacencyTable = new Map();
+    for (const v of vertices) {
+        adjacencyTable.set(v.label, new Set());
+    }
+
+    for (const e of edges) {
+        const l = e[0];
+        const r = e[1];
+        adjacencyTable.get(l).add(r);
+        adjacencyTable.get(r).add(l);
+    }
+    return adjacencyTable;
 }
