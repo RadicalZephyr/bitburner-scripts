@@ -32,6 +32,50 @@ export async function main(ns: NS) {
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
 
+/* The solution to this hinges on breaking the problem down. From each
+ * square, you can only go one of two ways, right or down. From there,
+ * the number of unique paths you have is just the sum of how many
+ * unique exist from the square below the current position and the
+ * square to the right of the current position.
+ *
+ * To actually calculate these, we can start from the goal. At the
+ * goal, we can say as a base case that there is one unique path
+ * because we're already at the goal. Similarly, if we are directly to
+ * the left or above the goal, then there is one unique path. From
+ * there we can simply use sums to fill in the number of unique paths
+ * starting from any grid location.
+ *
+ * For calculating this, it's more convenient to treat 0,0 as the
+ * target grid and fill in all the positions x,0 and 0,y with 1s.
+ *
+ * 1 1 1 1
+ * 1
+ * 1
+ *
+ * Then for every position from 1,1 to x_max,y_max we just fill in the
+ * sum of the two positions up and to the left of the current
+ * position.
+ *
+ * The only tricky thing is the iteration order needs to proceed in a
+ * diagonal fashion across the grid, not row-wise or column-wise.
+ *
+ * 1 1 1 1
+ * 1 2
+ * 1
+ *
+ * 1 1 1 1
+ * 1 2 3
+ * 1 3
+ *
+ * 1 1 1 1
+ * 1 2 3 4
+ * 1 3 6
+ *
+ * 1 1 1 1
+ * 1 2 3 4
+ * 1 3 6 10
+ *
+ */
 function solve(data: any): any {
     return null;
 }
