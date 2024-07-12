@@ -97,14 +97,10 @@ class Paths {
     }
 
     fillTable() {
-        let startPosition: Position = [1, 1];
-
-        let q = [startPosition];
-
-        while (q.length > 0) {
-            let nextPos = q.shift();
-            this.calculate(nextPos);
-            q.push(...this.nextNeighbors(nextPos));
+        for (let x = 1; x < this.numRows; x++) {
+            for (let y = 1; y < this.numCols; y++) {
+                this.calculate([x, y]);
+            }
         }
     }
 
@@ -115,11 +111,6 @@ class Paths {
 
     at([x, y]: Position): number {
         return this.paths[x][y];
-    }
-
-    nextNeighbors(position: Position): Position[] {
-        let [x, y] = position;
-        return [[x + 1, y], [x, y + 1]].filter(([x, y]) => x < this.numRows && y < this.numCols, this) as Position[];
     }
 
     prevNeighbors(position: Position): Position[] {
