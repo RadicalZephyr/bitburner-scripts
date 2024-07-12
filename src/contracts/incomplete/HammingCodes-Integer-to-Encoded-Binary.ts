@@ -52,3 +52,30 @@ export async function main(ns: NS) {
 function solve(data: any): any {
     return null;
 }
+
+function hammingParity(numString: string[]): string[] {
+    let enumeratedNum: [string, number][] = numString.map((v, i) => [v, i]);
+    let parityNum = enumeratedNum.filter(([v, _i]) => v === "1").map(([_v, i]) => i).reduce((p, c) => p ^ c);
+    return toBinaryArray(parityNum);
+}
+
+function toBinaryArray(x: number): string[] {
+    return Math.abs(x).toString(2).split('');
+}
+
+function codeLength(data: string[]): number {
+    let dataLen = data.length;
+    let n = 0;
+    let codeLen = 1;
+    while (dataLen > 0) {
+        let d = dBits(n);
+        dataLen -= d;
+        codeLen += 1 + d;
+        n += 1;
+    }
+    return codeLen + dataLen;
+}
+
+function dBits(n: number): number {
+    return ((2 ** (n + 1)) - 1) - (2 ** n);
+}
