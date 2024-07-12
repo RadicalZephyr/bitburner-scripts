@@ -76,6 +76,66 @@ export async function main(ns: NS) {
  * 1 3 6 10
  *
  */
-function solve(data: any): any {
-    return null;
+function solve(data: [number, number]): any {
+    let [numRows, numCols] = data;
+    let pathsTable = new Paths(numRows, numCols);
+    pathsTable.fillTable();
+    return pathsTable.at([numRows - 1, numCols - 1]);
+}
+
+type Position = [number, number];
+
+class Paths {
+    numRows: number;
+    numCols: number;
+    paths: number[][];
+
+    constructor(numRows: number, numCols: number) {
+        this.numRows = numRows;
+        this.numCols = numCols;
+        this.paths = seedTable(numRows, numCols);
+    }
+
+    fillTable() {
+        let startPosition: Position = [1, 1];
+
+        let q = [startPosition];
+
+        while (q.length > 0) {
+            let nextPos = q.shift();
+            this.calculate(nextPos);
+            q.push(...this.nextNeighbors(nextPos));
+        }
+    }
+
+    calculate(pos: Position) {
+        let sum = this.prevNeighbors(pos).map((p) => this.at(p), this).reduce((p, c) => p + c);
+        this.paths[pos[0]][pos[1]] = sum;
+    }
+
+    at([x, y]: Position): number {
+        return this.paths[x][y];
+    }
+
+    nextNeighbors(position: Position): Position[] {
+        let [x, y] = position;
+        return [[x + 1, y], [x, y + 1]].filter(([x, y]) => x < this.numRows && y < this.numCols, this) as Position[];
+    }
+
+    prevNeighbors(position: Position): Position[] {
+        let [x, y] = position;
+        return [[x - 1, y], [x, y - 1]].filter(([x, y]) => x >= 0 && y >= 0, this) as Position[];
+    }
+
+}
+
+function seedTable(numRows: number, numCols: number): number[][] {
+    let firstRow = Array.from({ length: numCols }, (_v, _i) => 1);
+    let rows = Array.from({ length: numRows - 1 }, (_v, _i) => {
+        let row = Array.from({ length: numCols - 1 }, (_v, _i) => 0);
+        row.unshift(1);
+        return row;
+    });
+    rows.unshift(firstRow);
+    return rows;
 }
