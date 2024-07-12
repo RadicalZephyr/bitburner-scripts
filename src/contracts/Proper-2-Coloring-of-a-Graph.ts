@@ -49,7 +49,36 @@ export async function main(ns: NS) {
 function solve(data: any): any {
     let [numVertices, edges] = data;
     let graph = new Graph(numVertices, edges);
-    return null;
+
+    if (colorGraphDfs(graph, 0, 0)) {
+        return graph.getColoring();
+    } else {
+        return [];
+    }
+}
+
+function nextColor(color: number): number {
+    return (color + 1) % 2;
+}
+
+function colorGraphDfs(graph: Graph, v: number, color: number): boolean {
+    graph.colorVertex(v, color);
+
+    for (const n of graph.neighbors(v)) {
+        if (graph.getColor(n) === undefined) {
+            // If neighbor is uncolored, color it opposite to the current node.
+            if (!colorGraphDfs(graph, n, nextColor(color))) {
+                return false;
+            }
+
+        } else if (graph.getColor(n) === color) {
+            // If graph is colored and it's the same as the current
+            // node's color, then this graph is not bipartite, and
+            // cannot be properly 2-colored
+            return false;
+        }
+    }
+    return true;
 }
 
 type Edge = [
@@ -57,9 +86,11 @@ type Edge = [
     dest: number,
 ];
 
+type Color = number;
+
 type Vertex = {
     label: number,
-    color?: number,
+    color?: Color,
 };
 
 class Graph {
@@ -72,6 +103,18 @@ class Graph {
         this.vertices = vertices;
         this.edges = edges;
         this.adjacency = makeAdjacencyTable(vertices, edges);
+    }
+
+    getColoring(): Color[] {
+        return this.vertices.map((v) => v.color !== undefined ? v.color : 0);
+    }
+
+    getColor(vertex: number): Color {
+        return this.vertices.at(vertex).color;
+    }
+
+    colorVertex(vertex: number, color: Color) {
+        this.vertices.at(vertex).color = color;
     }
 
     neighbors(vertex: number): number[] {
