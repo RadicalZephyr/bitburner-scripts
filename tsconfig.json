@@ -19,7 +19,7 @@
     "types": [],
     "paths": {
       "/*": ["*"],
-      "netscript": ["../NetscriptDefinitions.d.ts"],
+      "netscript": ["../NetScriptDefinitions.d.ts"],
       "@react": ["lib/react.ts"]
     }
   }

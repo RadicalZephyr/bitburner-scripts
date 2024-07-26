@@ -4,14 +4,14 @@
     ".script",
     ".txt"
   ],
-  "allowDeletingFiles": false,
+  "allowDeletingFiles": true,
   "port": 12525,
   "scriptsFolder": "./dist",
   "quiet": false,
   "dry": false,
   "definitionFile": {
-    "update": false,
-    "location": "NetScriptDefinitions.d.ts"
+    "update": true,
+    "location": "./NetScriptDefinitions.d.ts"
   },
-  "pushAllOnConnection": true
+  "pushAllOnConnection": false
 }
