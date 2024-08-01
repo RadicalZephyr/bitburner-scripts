@@ -11,7 +11,9 @@ export async function main(ns: NS) {
         ['startingHost', 'home'],
         ['help', false],
     ]);
-    if (flags._.length === 0 || flags.help || typeof flags.startingHost != 'string') {
+
+    const rest = flags._ as string[];
+    if (rest.length === 0 || flags.help || typeof flags.startingHost != 'string') {
         ns.tprint(`
 USAGE: run ${ns.getScriptName()} SERVER_NAME
 

@@ -23,7 +23,7 @@ Example:
         return;
     }
 
-    const targetScripts = flags._;
+    const targetScripts = flags._ as string[];
 
     const networkGraph = walkNetworkBFS(ns);
     for (const host of networkGraph.keys()) {

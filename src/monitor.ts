@@ -28,7 +28,9 @@ export async function main(ns: NS) {
         ['refreshrate', 200],
         ['help', false],
     ]);
-    if (flags._.length === 0 || flags.help || typeof flags.refreshrate != 'number') {
+    const rest = flags._ as string[];
+
+    if (rest.length === 0 || flags.help || typeof flags.refreshrate != 'number') {
 
         ns.tprint(`USAGE: run ${ns.getScriptName()} SERVER_NAME
 
@@ -48,7 +50,7 @@ Example:
     ns.tail();
     ns.resizeTail(450, 30 * 6);
 
-    const server = flags._[0];
+    const server = rest[0];
     const maxMoney = ns.getServerMaxMoney(server);
     const minSec = ns.getServerMinSecurityLevel(server);
 

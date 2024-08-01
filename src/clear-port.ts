@@ -18,8 +18,9 @@ OPTIONS
         return;
     }
 
+    let rest: string[] = flags._ as string[];
     let maxPort = 99999;
-    for (const arg of flags._) {
+    for (const arg of rest) {
         let portNum = Number(arg);
         if (!Number.isNaN(portNum)) {
             ns.clearPort(portNum);
