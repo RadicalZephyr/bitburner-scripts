@@ -102,7 +102,7 @@
 
 var $$type: string = '@@type';
 
-function type(x: any): string {
+export function type(x: any): string {
     return x != null &&
         x.constructor != null &&
         x.constructor.prototype !== x &&
