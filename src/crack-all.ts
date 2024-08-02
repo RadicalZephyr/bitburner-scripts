@@ -2,7 +2,7 @@ import type { NS } from "netscript";
 
 import { HOSTS_BY_PORTS_REQUIRED, TARGETS_BY_PORTS_REQUIRED } from "all-hosts";
 
-import { TILL_PORT, WORKERS_PORT, WORKERS_DONE } from "util/ports";
+import { HOSTS_PORT, HOSTS_DONE, workerMsg, targetMsg } from "util/ports";
 
 const HACKING_FILES = [
     "/all-hosts.js",
@@ -18,8 +18,7 @@ const HACKING_FILES = [
 
 export async function main(ns: NS) {
     let portsCracked = 0;
-    let tillPort = ns.getPortHandle(TILL_PORT);
-    let workersPort = ns.getPortHandle(WORKERS_PORT);
+    let hostsPort = ns.getPortHandle(HOSTS_PORT);
 
     while (portsCracked < 5) {
         let numCrackers = countPortCrackers(ns);
@@ -39,7 +38,7 @@ export async function main(ns: NS) {
                 ns.scp(HACKING_FILES, host, 'home');
 
                 // Write host name to the worker and till ports
-                workersPort.write(host);
+                hostsPort.write(workerMsg(host));
             }
 
             const targets = TARGETS_BY_PORTS_REQUIRED[i];
@@ -47,14 +46,14 @@ export async function main(ns: NS) {
                 crackHost(ns, target, i);
 
                 // Write host name to the till port
-                tillPort.write(target);
+                hostsPort.write(targetMsg(target));
             }
         }
         portsCracked = numCrackers;
         await ns.sleep(1000);
     }
     // Signal that the last worker has been sent.
-    workersPort.write(WORKERS_DONE);
+    hostsPort.write(HOSTS_DONE);
 }
 
 function crackHost(ns: NS, host: string, ports: number): void {

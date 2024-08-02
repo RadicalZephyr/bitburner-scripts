@@ -12,8 +12,32 @@ export const HARVEST_PORT: number = toPort("harvest");
 
 export const MONITOR_PORT: number = toPort("monitor");
 
-export const WORKERS_PORT: number = toPort("workers");
-export const WORKERS_DONE: string = "WORKERS_DONE_SENTINEL";
+export const HOSTS_PORT: number = 100;
+export const HOSTS_DONE: string = "HOSTS_DONE_SENTINEL";
+
+export const WorkerType = "worker";
+export const TargetType = "target";
+
+export type HostType = "worker" | "target";
+
+export type HostMsg = {
+    type: HostType
+    host: string
+};
+
+export function workerMsg(host: string): HostMsg {
+    return {
+        type: "worker",
+        host: host
+    };
+}
+
+export function targetMsg(host: string): HostMsg {
+    return {
+        type: "target",
+        host: host
+    };
+}
 
 export async function main(ns: NS) {
     ns.tprintf(
@@ -21,11 +45,11 @@ export async function main(ns: NS) {
         + "Sow Port: %s\n"
         + "Harvest Port: %s\n"
         + "Monitor Port: %s\n"
-        + "Workers Port: %s\n",
+        + "Hosts Port: %s\n",
         TILL_PORT,
         SOW_PORT,
         HARVEST_PORT,
         MONITOR_PORT,
-        WORKERS_PORT
+        HOSTS_PORT
     );
 }

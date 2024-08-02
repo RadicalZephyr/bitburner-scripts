@@ -1,59 +1,44 @@
 import type { NS } from "netscript";
 
-import { WORKERS_PORT, WORKERS_DONE, EMPTY_SENTINEL } from "util/ports";
+import { HostMsg, WorkerType, TargetType, HOSTS_PORT, HOSTS_DONE, EMPTY_SENTINEL } from "util/ports";
 
-const tillScript = "/batch/till.js";
-const sowScript = "/batch/sow.js";
-const harvestScript = "/batch/harvest.js";
+declare const React: any;
 
 export async function main(ns: NS) {
-    let workersPort = ns.getPortHandle(WORKERS_PORT);
+    ns.disableLog('sleep');
+
+    let hostsPort = ns.getPortHandle(HOSTS_PORT);
 
     let workers = [];
 
-    let tillers = [];
-    let sowers = [];
-    let harvesters = [];
+    let targets = [];
 
-    let i = 0;
     while (true) {
-        let nextWorker = workersPort.read() as string;
+        let nextMsg = hostsPort.read();
         // Check for empty value
-        if (nextWorker === EMPTY_SENTINEL) {
-            await workersPort.nextWrite();
+        if (typeof nextMsg === "string" && nextMsg === EMPTY_SENTINEL) {
+            await hostsPort.nextWrite();
             continue;
         }
 
         // Check for the done sentinel value
-        if (nextWorker === WORKERS_DONE) {
+        if (nextMsg === HOSTS_DONE) {
             break;
         }
 
-        workers.push(nextWorker);
-        switch (i % 3) {
-            case 0:
-                tillers.push(startTiller(ns, nextWorker));
-                break;
-            case 1:
-                sowers.push(startSower(ns, nextWorker));
-                break;
-            case 2:
-                harvesters.push(startHarvester(ns, nextWorker));
-                break;
+        if (typeof nextMsg === "object") {
+            let nextHostMsg = nextMsg as HostMsg;
+            ns.printf("new %s: %s", nextHostMsg.type, nextHostMsg.host);
+            switch (nextHostMsg.type) {
+                case WorkerType:
+                    workers.push(nextHostMsg.host);
+                    break;
+                case TargetType:
+                    targets.push(nextHostMsg.host);
+                    break;
+            }
         }
-        i += 1;
+
         await ns.sleep(100);
     }
-}
-
-function startTiller(ns: NS, worker: string): number {
-    return ns.exec(tillScript, worker);
-}
-
-function startSower(ns: NS, worker: string): number {
-    return ns.exec(sowScript, worker);
-}
-
-function startHarvester(ns: NS, worker: string): number {
-    return ns.exec(harvestScript, worker);
 }
