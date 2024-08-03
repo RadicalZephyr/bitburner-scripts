@@ -68,6 +68,8 @@
 //.
 //. ## API
 
+import { type } from "sanctuary-type-identifiers";
+
 //  concat_ :: Array a -> Array a -> Array a
 function concat_(xs) {
     return function(ys) {
@@ -273,7 +275,7 @@ function $(_name, dependencies, requirements) {
 //. > Setoid.test(null)
 //. true
 //. ```
-var Setoid = $('Setoid', [], { equals: Value });
+export var Setoid = $('Setoid', [], { equals: Value });
 
 //# Ord :: TypeClass
 //.
@@ -286,7 +288,7 @@ var Setoid = $('Setoid', [], { equals: Value });
 //. > Ord.test(Math.sqrt)
 //. false
 //. ```
-var Ord = $('Ord', [Setoid], { lte: Value });
+export var Ord = $('Ord', [Setoid], { lte: Value });
 
 //# Semigroupoid :: TypeClass
 //.
@@ -299,7 +301,7 @@ var Ord = $('Ord', [Setoid], { lte: Value });
 //. > Semigroupoid.test(0)
 //. false
 //. ```
-var Semigroupoid = $('Semigroupoid', [], { compose: Value });
+export var Semigroupoid = $('Semigroupoid', [], { compose: Value });
 
 //# Category :: TypeClass
 //.
@@ -312,7 +314,7 @@ var Semigroupoid = $('Semigroupoid', [], { compose: Value });
 //. > Category.test(0)
 //. false
 //. ```
-var Category = $('Category', [Semigroupoid], { id: Constructor });
+export var Category = $('Category', [Semigroupoid], { id: Constructor });
 
 //# Semigroup :: TypeClass
 //.
@@ -325,7 +327,7 @@ var Category = $('Category', [Semigroupoid], { id: Constructor });
 //. > Semigroup.test(0)
 //. false
 //. ```
-var Semigroup = $('Semigroup', [], { concat: Value });
+export var Semigroup = $('Semigroup', [], { concat: Value });
 
 //# Monoid :: TypeClass
 //.
@@ -338,7 +340,7 @@ var Semigroup = $('Semigroup', [], { concat: Value });
 //. > Monoid.test(0)
 //. false
 //. ```
-var Monoid = $('Monoid', [Semigroup], { empty: Constructor });
+export var Monoid = $('Monoid', [Semigroup], { empty: Constructor });
 
 //# Group :: TypeClass
 //.
@@ -351,7 +353,7 @@ var Monoid = $('Monoid', [Semigroup], { empty: Constructor });
 //. > Group.test('')
 //. false
 //. ```
-var Group = $('Group', [Monoid], { invert: Value });
+export var Group = $('Group', [Monoid], { invert: Value });
 
 //# Filterable :: TypeClass
 //.
@@ -364,7 +366,7 @@ var Group = $('Group', [Monoid], { invert: Value });
 //. > Filterable.test('')
 //. false
 //. ```
-var Filterable = $('Filterable', [], { filter: Value });
+export var Filterable = $('Filterable', [], { filter: Value });
 
 //# Functor :: TypeClass
 //.
@@ -377,7 +379,7 @@ var Filterable = $('Filterable', [], { filter: Value });
 //. > Functor.test('')
 //. false
 //. ```
-var Functor = $('Functor', [], { map: Value });
+export var Functor = $('Functor', [], { map: Value });
 
 //# Bifunctor :: TypeClass
 //.
@@ -390,7 +392,7 @@ var Functor = $('Functor', [], { map: Value });
 //. > Bifunctor.test([])
 //. false
 //. ```
-var Bifunctor = $('Bifunctor', [Functor], { bimap: Value });
+export var Bifunctor = $('Bifunctor', [Functor], { bimap: Value });
 
 //# Profunctor :: TypeClass
 //.
@@ -403,7 +405,7 @@ var Bifunctor = $('Bifunctor', [Functor], { bimap: Value });
 //. > Profunctor.test([])
 //. false
 //. ```
-var Profunctor = $('Profunctor', [Functor], { promap: Value });
+export var Profunctor = $('Profunctor', [Functor], { promap: Value });
 
 //# Apply :: TypeClass
 //.
@@ -416,7 +418,7 @@ var Profunctor = $('Profunctor', [Functor], { promap: Value });
 //. > Apply.test('')
 //. false
 //. ```
-var Apply = $('Apply', [Functor], { ap: Value });
+export var Apply = $('Apply', [Functor], { ap: Value });
 
 //# Applicative :: TypeClass
 //.
@@ -429,7 +431,7 @@ var Apply = $('Apply', [Functor], { ap: Value });
 //. > Applicative.test({})
 //. false
 //. ```
-var Applicative = $('Applicative', [Apply], { of: Constructor });
+export var Applicative = $('Applicative', [Apply], { of: Constructor });
 
 //# Chain :: TypeClass
 //.
@@ -442,7 +444,7 @@ var Applicative = $('Applicative', [Apply], { of: Constructor });
 //. > Chain.test({})
 //. false
 //. ```
-var Chain = $('Chain', [Apply], { chain: Value });
+export var Chain = $('Chain', [Apply], { chain: Value });
 
 //# ChainRec :: TypeClass
 //.
@@ -455,7 +457,7 @@ var Chain = $('Chain', [Apply], { chain: Value });
 //. > ChainRec.test({})
 //. false
 //. ```
-var ChainRec = $('ChainRec', [Chain], { chainRec: Constructor });
+export var ChainRec = $('ChainRec', [Chain], { chainRec: Constructor });
 
 //# Monad :: TypeClass
 //.
@@ -468,7 +470,7 @@ var ChainRec = $('ChainRec', [Chain], { chainRec: Constructor });
 //. > Monad.test({})
 //. false
 //. ```
-var Monad = $('Monad', [Applicative, Chain], {});
+export var Monad = $('Monad', [Applicative, Chain], {});
 
 //# Alt :: TypeClass
 //.
@@ -481,7 +483,7 @@ var Monad = $('Monad', [Applicative, Chain], {});
 //. > Alt.test('')
 //. false
 //. ```
-var Alt = $('Alt', [Functor], { alt: Value });
+export var Alt = $('Alt', [Functor], { alt: Value });
 
 //# Plus :: TypeClass
 //.
@@ -494,7 +496,7 @@ var Alt = $('Alt', [Functor], { alt: Value });
 //. > Plus.test('')
 //. false
 //. ```
-var Plus = $('Plus', [Alt], { zero: Constructor });
+export var Plus = $('Plus', [Alt], { zero: Constructor });
 
 //# Alternative :: TypeClass
 //.
@@ -507,7 +509,7 @@ var Plus = $('Plus', [Alt], { zero: Constructor });
 //. > Alternative.test({})
 //. false
 //. ```
-var Alternative = $('Alternative', [Applicative, Plus], {});
+export var Alternative = $('Alternative', [Applicative, Plus], {});
 
 //# Foldable :: TypeClass
 //.
@@ -520,7 +522,7 @@ var Alternative = $('Alternative', [Applicative, Plus], {});
 //. > Foldable.test('')
 //. false
 //. ```
-var Foldable = $('Foldable', [], { reduce: Value });
+export var Foldable = $('Foldable', [], { reduce: Value });
 
 //# Traversable :: TypeClass
 //.
@@ -533,7 +535,7 @@ var Foldable = $('Foldable', [], { reduce: Value });
 //. > Traversable.test('')
 //. false
 //. ```
-var Traversable = $('Traversable', [Functor, Foldable], { traverse: Value });
+export var Traversable = $('Traversable', [Functor, Foldable], { traverse: Value });
 
 //# Extend :: TypeClass
 //.
@@ -546,7 +548,7 @@ var Traversable = $('Traversable', [Functor, Foldable], { traverse: Value });
 //. > Extend.test({})
 //. false
 //. ```
-var Extend = $('Extend', [Functor], { extend: Value });
+export var Extend = $('Extend', [Functor], { extend: Value });
 
 //# Comonad :: TypeClass
 //.
@@ -559,7 +561,7 @@ var Extend = $('Extend', [Functor], { extend: Value });
 //. > Comonad.test([])
 //. false
 //. ```
-var Comonad = $('Comonad', [Extend], { extract: Value });
+export var Comonad = $('Comonad', [Extend], { extract: Value });
 
 //# Contravariant :: TypeClass
 //.
@@ -572,7 +574,7 @@ var Comonad = $('Comonad', [Extend], { extract: Value });
 //. > Contravariant.test([])
 //. false
 //. ```
-var Contravariant = $('Contravariant', [], { contramap: Value });
+export var Contravariant = $('Contravariant', [], { contramap: Value });
 
 //  Null$prototype$equals :: Null ~> Null -> Boolean
 function Null$prototype$equals(other) {
@@ -1104,7 +1106,7 @@ var implementations = {
 //. > equals(Cons('foo', Cons('bar', Nil)), Cons('bar', Cons('foo', Nil)))
 //. false
 //. ```
-var equals = (function() {
+export var equals = (function() {
     //  $pairs :: Array (Array2 Any Any)
     var $pairs = [];
 
@@ -1146,7 +1148,7 @@ var equals = (function() {
 //. > lt(1, 0)
 //. false
 //. ```
-function lt(x, y) {
+export function lt(x, y) {
     return sameType(x, y) && !lte(y, x);
 }
 
@@ -1175,7 +1177,7 @@ function lt(x, y) {
 //. > lte(1, 0)
 //. false
 //. ```
-var lte = (function() {
+export var lte = (function() {
     //  $pairs :: Array (Array2 Any Any)
     var $pairs = [];
 
@@ -1217,7 +1219,7 @@ var lte = (function() {
 //. > gt(1, 0)
 //. true
 //. ```
-function gt(x, y) {
+export function gt(x, y) {
     return lt(y, x);
 }
 
@@ -1241,7 +1243,7 @@ function gt(x, y) {
 //. > gte(1, 0)
 //. true
 //. ```
-function gte(x, y) {
+export function gte(x, y) {
     return lte(y, x);
 }
 
@@ -1263,7 +1265,7 @@ function gte(x, y) {
 //. > min('10', '2')
 //. '10'
 //. ```
-function min(x, y) {
+export function min(x, y) {
     return lte(x, y) ? x : y;
 }
 
@@ -1285,7 +1287,7 @@ function min(x, y) {
 //. > max('10', '2')
 //. '2'
 //. ```
-function max(x, y) {
+export function max(x, y) {
     return lte(x, y) ? y : x;
 }
 
@@ -1300,7 +1302,7 @@ function max(x, y) {
 //. > compose(Math.sqrt, x => x + 1)(99)
 //. 10
 //. ```
-function compose(x, y) {
+export function compose(x, y) {
     return Semigroupoid.methods.compose(y)(x);
 }
 
@@ -1315,7 +1317,7 @@ function compose(x, y) {
 //. > id(Function)('foo')
 //. 'foo'
 //. ```
-function id(typeRep) {
+export function id(typeRep) {
     return Category.methods.id(typeRep)();
 }
 
@@ -1339,7 +1341,7 @@ function id(typeRep) {
 //. > concat(Cons('foo', Cons('bar', Cons('baz', Nil))), Cons('quux', Nil))
 //. Cons('foo', Cons('bar', Cons('baz', Cons('quux', Nil))))
 //. ```
-function concat(x, y) {
+export function concat(x, y) {
     return Semigroup.methods.concat(x)(y);
 }
 
@@ -1363,7 +1365,7 @@ function concat(x, y) {
 //. > empty(List)
 //. Nil
 //. ```
-function empty(typeRep) {
+export function empty(typeRep) {
     return Monoid.methods.empty(typeRep)();
 }
 
@@ -1375,7 +1377,7 @@ function empty(typeRep) {
 //. > invert(Sum(5))
 //. Sum(-5)
 //. ```
-function invert(group) {
+export function invert(group) {
     return Group.methods.invert(group)();
 }
 
@@ -1408,7 +1410,7 @@ function invert(group) {
 //. > filter(x => x % 2 == 1, Just(1))
 //. Just(1)
 //. ```
-function filter(pred, filterable) {
+export function filter(pred, filterable) {
     return Filterable.methods.filter(filterable)(pred);
 }
 
@@ -1437,7 +1439,7 @@ function filter(pred, filterable) {
 //. > reject(x => x % 2 == 1, Just(1))
 //. Nothing
 //. ```
-function reject(pred, filterable) {
+export function reject(pred, filterable) {
     return filter(function(x) { return !pred(x); }, filterable);
 }
 
@@ -1460,7 +1462,7 @@ function reject(pred, filterable) {
 //. > takeWhile(s => /z/.test(s), ['xy', 'xz', 'yx', 'yz', 'zx', 'zy'])
 //. []
 //. ```
-function takeWhile(pred, filterable) {
+export function takeWhile(pred, filterable) {
     var take = true;
     return filter(function(x) { return take = take && pred(x); }, filterable);
 }
@@ -1484,7 +1486,7 @@ function takeWhile(pred, filterable) {
 //. > dropWhile(s => /z/.test(s), ['xy', 'xz', 'yx', 'yz', 'zx', 'zy'])
 //. ['xy', 'xz', 'yx', 'yz', 'zx', 'zy']
 //. ```
-function dropWhile(pred, filterable) {
+export function dropWhile(pred, filterable) {
     var take = false;
     return filter(function(x) { return take = take || !pred(x); }, filterable);
 }
@@ -1515,7 +1517,7 @@ function dropWhile(pred, filterable) {
 //. > map(Math.sqrt, Cons(1, Cons(4, Cons(9, Nil))))
 //. Cons(1, Cons(2, Cons(3, Nil)))
 //. ```
-function map(f, functor) {
+export function map(f, functor) {
     return Functor.methods.map(functor)(f);
 }
 
@@ -1538,7 +1540,7 @@ function map(f, functor) {
 //. > flip(Cons(Math.floor, Cons(Math.ceil, Nil)), 1.5)
 //. Cons(1, Cons(2, Nil))
 //. ```
-function flip(functor, x) {
+export function flip(functor, x) {
     return Functor.methods.map(functor)(thrush(x));
 }
 
@@ -1550,7 +1552,7 @@ function flip(functor, x) {
 //. > bimap(s => s.toUpperCase(), Math.sqrt, Tuple('foo', 64))
 //. Tuple('FOO', 8)
 //. ```
-function bimap(f, g, bifunctor) {
+export function bimap(f, g, bifunctor) {
     return Bifunctor.methods.bimap(bifunctor)(f, g);
 }
 
@@ -1562,7 +1564,7 @@ function bimap(f, g, bifunctor) {
 //. > mapLeft(Math.sqrt, Tuple(64, 9))
 //. Tuple(8, 9)
 //. ```
-function mapLeft(f, bifunctor) {
+export function mapLeft(f, bifunctor) {
     return bimap(f, identity, bifunctor);
 }
 
@@ -1577,7 +1579,7 @@ function mapLeft(f, bifunctor) {
 //. > promap(Math.abs, x => x + 1, Math.sqrt)(-100)
 //. 11
 //. ```
-function promap(f, g, profunctor) {
+export function promap(f, g, profunctor) {
     return Profunctor.methods.promap(profunctor)(f, g);
 }
 
@@ -1604,7 +1606,7 @@ function promap(f, g, profunctor) {
 //. > ap(Cons(Math.sqrt, Cons(x => x * x, Nil)), Cons(16, Cons(100, Nil)))
 //. Cons(4, Cons(10, Cons(256, Cons(10000, Nil))))
 //. ```
-function ap(applyF, applyX) {
+export function ap(applyF, applyX) {
     return Apply.methods.ap(applyX)(applyF);
 }
 
@@ -1624,7 +1626,7 @@ function ap(applyF, applyX) {
 //. > lift2(x => y => Math.pow(x, y), Identity(10), Identity(3))
 //. Identity(1000)
 //. ```
-function lift2(f, x, y) {
+export function lift2(f, x, y) {
     return ap(map(f, x), y);
 }
 
@@ -1644,7 +1646,7 @@ function lift2(f, x, y) {
 //. > lift3(x => y => z => x + z + y, Identity('<'), Identity('>'), Identity('baz'))
 //. Identity('<baz>')
 //. ```
-function lift3(f, x, y, z) {
+export function lift3(f, x, y, z) {
     return ap(ap(map(f, x), y), z);
 }
 
@@ -1664,7 +1666,7 @@ function lift3(f, x, y, z) {
 //. > apFirst(Identity(1), Identity(2))
 //. Identity(1)
 //. ```
-function apFirst(x, y) {
+export function apFirst(x, y) {
     return lift2(constant, x, y);
 }
 
@@ -1684,7 +1686,7 @@ function apFirst(x, y) {
 //. > apSecond(Identity(1), Identity(2))
 //. Identity(2)
 //. ```
-function apSecond(x, y) {
+export function apSecond(x, y) {
     return lift2(constant(identity), x, y);
 }
 
@@ -1705,7 +1707,7 @@ function apSecond(x, y) {
 //. > of(List, 42)
 //. Cons(42, Nil)
 //. ```
-function of(typeRep, x) {
+export function of(typeRep, x) {
     return Applicative.methods.of(typeRep)(x);
 }
 
@@ -1724,7 +1726,7 @@ function of(typeRep, x) {
 //. > append(3, Cons(1, Cons(2, Nil)))
 //. Cons(1, Cons(2, Cons(3, Nil)))
 //. ```
-function append(x, xs) {
+export function append(x, xs) {
     return concat(xs, of(xs.constructor, x));
 }
 
@@ -1743,7 +1745,7 @@ function append(x, xs) {
 //. > prepend(1, Cons(2, Cons(3, Nil)))
 //. Cons(1, Cons(2, Cons(3, Nil)))
 //. ```
-function prepend(x, xs) {
+export function prepend(x, xs) {
     return concat(of(xs.constructor, x), xs);
 }
 
@@ -1764,7 +1766,7 @@ function prepend(x, xs) {
 //. > chain(n => s => s.slice(0, n), s => Math.ceil(s.length / 2))('Haskell')
 //. 'Hask'
 //. ```
-function chain(f, chain_) {
+export function chain(f, chain_) {
     return Chain.methods.chain(chain_)(f);
 }
 
@@ -1784,7 +1786,7 @@ function chain(f, chain_) {
 //. > join(Identity(Identity(1)))
 //. Identity(1)
 //. ```
-function join(chain_) {
+export function join(chain_) {
     return chain(identity, chain_);
 }
 
@@ -1804,7 +1806,7 @@ function join(chain_) {
 //. . )
 //. ['oo!', 'oo?', 'on!', 'on?', 'no!', 'no?', 'nn!', 'nn?']
 //. ```
-function chainRec(typeRep, f, x) {
+export function chainRec(typeRep, f, x) {
     return ChainRec.methods.chainRec(typeRep)(f, x);
 }
 
@@ -1828,7 +1830,7 @@ function chainRec(typeRep, f, x) {
 //. > alt(Just(2), Just(3))
 //. Just(2)
 //. ```
-function alt(x, y) {
+export function alt(x, y) {
     return Alt.methods.alt(x)(y);
 }
 
@@ -1849,7 +1851,7 @@ function alt(x, y) {
 //. > zero(Maybe)
 //. Nothing
 //. ```
-function zero(typeRep) {
+export function zero(typeRep) {
     return Plus.methods.zero(typeRep)();
 }
 
@@ -1867,7 +1869,7 @@ function zero(typeRep) {
 //. > reduce(concat, '', Cons('foo', Cons('bar', Cons('baz', Nil))))
 //. 'foobarbaz'
 //. ```
-function reduce(f, x, foldable) {
+export function reduce(f, x, foldable) {
     return Foldable.methods.reduce(foldable)(f, x);
 }
 
@@ -1890,7 +1892,7 @@ function reduce(f, x, foldable) {
 //. > size(Cons('foo', Cons('bar', Cons('baz', Nil))))
 //. 3
 //. ```
-function size(foldable) {
+export function size(foldable) {
     //  Fast path for arrays.
     if (Array.isArray(foldable)) return foldable.length;
     return reduce(function(n, _) { return n + 1; }, 0, foldable);
@@ -1926,7 +1928,7 @@ function size(foldable) {
 //. > elem(0, Nothing)
 //. false
 //. ```
-function elem(x, foldable) {
+export function elem(x, foldable) {
     return reduce(function(b, y) { return b || equals(x, y); },
         false,
         foldable);
@@ -1944,7 +1946,7 @@ function elem(x, foldable) {
 //. > foldMap(String, f => f.name, [Math.sin, Math.cos, Math.tan])
 //. 'sincostan'
 //. ```
-function foldMap(typeRep, f, foldable) {
+export function foldMap(typeRep, f, foldable) {
     return reduce(function(monoid, x) { return concat(monoid, f(x)); },
         empty(typeRep),
         foldable);
@@ -1964,7 +1966,7 @@ function foldMap(typeRep, f, foldable) {
 //. > reverse(Cons(1, Cons(2, Cons(3, Nil))))
 //. Cons(3, Cons(2, Cons(1, Nil)))
 //. ```
-function reverse(foldable) {
+export function reverse(foldable) {
     //  Fast path for arrays.
     if (Array.isArray(foldable)) return foldable.slice().reverse();
     var F = foldable.constructor;
@@ -1993,7 +1995,7 @@ function reverse(foldable) {
 //. > sort(Cons('foo', Cons('bar', Cons('baz', Nil))))
 //. Cons('bar', Cons('baz', Cons('foo', Nil)))
 //. ```
-function sort(foldable) {
+export function sort(foldable) {
     return sortBy(identity, foldable);
 }
 
@@ -2021,7 +2023,7 @@ function sort(foldable) {
 //. > sortBy(s => s.length, Cons('red', Cons('green', Cons('blue', Nil))))
 //. Cons('red', Cons('blue', Cons('green', Nil)))
 //. ```
-function sortBy(f, foldable) {
+export function sortBy(f, foldable) {
     var rs = reduce(function(rs, x) {
         rs.push({ idx: rs.length, x: x, fx: f(x) });
         return rs;
@@ -2068,7 +2070,7 @@ function sortBy(f, foldable) {
 //. > traverse(Identity, x => Identity(x + 1), [1, 2, 3])
 //. Identity([2, 3, 4])
 //. ```
-function traverse(typeRep, f, traversable) {
+export function traverse(typeRep, f, traversable) {
     return Traversable.methods.traverse(traversable)(typeRep, f);
 }
 
@@ -2085,7 +2087,7 @@ function traverse(typeRep, f, traversable) {
 //. > sequence(Identity, [Identity(1), Identity(2), Identity(3)])
 //. Identity([1, 2, 3])
 //. ```
-function sequence(typeRep, traversable) {
+export function sequence(typeRep, traversable) {
     return traverse(typeRep, identity, traversable);
 }
 
@@ -2103,7 +2105,7 @@ function sequence(typeRep, traversable) {
 //. > extend(f => f([3, 4]), reverse)([1, 2])
 //. [4, 3, 2, 1]
 //. ```
-function extend(f, extend_) {
+export function extend(f, extend_) {
     return Extend.methods.extend(extend_)(f);
 }
 
@@ -2126,7 +2128,7 @@ function extend(f, extend_) {
 //. > duplicate(reverse)([1, 2])([3, 4])
 //. [4, 3, 2, 1]
 //. ```
-function duplicate(extend_) {
+export function duplicate(extend_) {
     return extend(identity, extend_);
 }
 
@@ -2138,7 +2140,7 @@ function duplicate(extend_) {
 //. > extract(Identity(42))
 //. 42
 //. ```
-function extract(comonad) {
+export function extract(comonad) {
     return Comonad.methods.extract(comonad)();
 }
 
@@ -2153,84 +2155,9 @@ function extract(comonad) {
 //. > contramap(s => s.length, Math.sqrt)('Sanctuary')
 //. 3
 //. ```
-function contramap(f, contravariant) {
+export function contramap(f, contravariant) {
     return Contravariant.methods.contramap(contravariant)(f);
 }
-
-return {
-    TypeClass: TypeClass,
-    Setoid: Setoid,
-    Ord: Ord,
-    Semigroupoid: Semigroupoid,
-    Category: Category,
-    Semigroup: Semigroup,
-    Monoid: Monoid,
-    Group: Group,
-    Filterable: Filterable,
-    Functor: Functor,
-    Bifunctor: Bifunctor,
-    Profunctor: Profunctor,
-    Apply: Apply,
-    Applicative: Applicative,
-    Chain: Chain,
-    ChainRec: ChainRec,
-    Monad: Monad,
-    Alt: Alt,
-    Plus: Plus,
-    Alternative: Alternative,
-    Foldable: Foldable,
-    Traversable: Traversable,
-    Extend: Extend,
-    Comonad: Comonad,
-    Contravariant: Contravariant,
-    equals: equals,
-    lt: lt,
-    lte: lte,
-    gt: gt,
-    gte: gte,
-    min: min,
-    max: max,
-    compose: compose,
-    id: id,
-    concat: concat,
-    empty: empty,
-    invert: invert,
-    filter: filter,
-    reject: reject,
-    map: map,
-    flip: flip,
-    bimap: bimap,
-    mapLeft: mapLeft,
-    promap: promap,
-    ap: ap,
-    lift2: lift2,
-    lift3: lift3,
-    apFirst: apFirst,
-    apSecond: apSecond,
-    of: of,
-    append: append,
-    prepend: prepend,
-    chain: chain,
-    join: join,
-    chainRec: chainRec,
-    alt: alt,
-    zero: zero,
-    reduce: reduce,
-    size: size,
-    elem: elem,
-    foldMap: foldMap,
-    reverse: reverse,
-    sort: sort,
-    sortBy: sortBy,
-    takeWhile: takeWhile,
-    dropWhile: dropWhile,
-    traverse: traverse,
-    sequence: sequence,
-    extend: extend,
-    duplicate: duplicate,
-    extract: extract,
-    contramap: contramap
-};
 
 //. [Alt]:                      v:fantasyland/fantasy-land#alt
 //. [Alternative]:              v:fantasyland/fantasy-land#alternative
