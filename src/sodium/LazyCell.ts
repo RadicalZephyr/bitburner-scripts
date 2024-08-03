@@ -1,7 +1,7 @@
-import { Lazy } from "Lazy";
-import { Cell } from "Cell";
-import { Stream } from "Stream";
-import { Transaction } from "Transaction";
+import { Lazy } from "sodium/Lazy";
+import { Cell } from "sodium/Cell";
+import { Stream } from "sodium/Stream";
+import { Transaction } from "sodium/Transaction";
 
 export class LazyCell<A> extends Cell<A> {
     constructor(lazyInitValue: Lazy<A>, str?: Stream<A>) {

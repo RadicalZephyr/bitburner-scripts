@@ -1,4 +1,4 @@
-import { TimerSystem, TimerSystemImpl } from "TimerSystem";
+import { TimerSystem, TimerSystemImpl } from "sodium/TimerSystem";
 
 /**
  * A timer system implementation using seconds as the time unit.

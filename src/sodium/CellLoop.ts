@@ -1,8 +1,8 @@
-import { Cell } from "Cell";
-import { Lazy } from "Lazy";
-import { LazyCell } from "LazyCell";
-import { Transaction } from "Transaction";
-import { StreamLoop } from "Stream";
+import { Cell } from "sodium/Cell";
+import { Lazy } from "sodium/Lazy";
+import { LazyCell } from "sodium/LazyCell";
+import { Transaction } from "sodium/Transaction";
+import { StreamLoop } from "sodium/Stream";
 
 /**
  * A forward reference for a {@link Cell} equivalent to the Cell that is referenced.

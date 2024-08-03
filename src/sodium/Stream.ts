@@ -6,16 +6,16 @@ import {
     Lambda5, Lambda5_deps, Lambda5_toFunction,
     Lambda6, Lambda6_deps, Lambda6_toFunction,
     toSources
-} from "Lambda";
-import { Source, Vertex } from "Vertex";
-import { Transaction } from "Transaction";
-import { CoalesceHandler } from "CoalesceHandler";
-import { Cell } from "Cell";
-//import { StreamLoop } from "StreamLoop";
-import { Listener } from "Listener";
-import { Tuple2 } from "Tuple2";
-import { Lazy } from "Lazy";
-import { LazyCell } from "LazyCell";
+} from "sodium/Lambda";
+import { Source, Vertex } from "sodium/Vertex";
+import { Transaction } from "sodium/Transaction";
+import { CoalesceHandler } from "sodium/CoalesceHandler";
+import { Cell } from "sodium/Cell";
+//import { StreamLoop } from "sodium/StreamLoop";
+import { Listener } from "sodium/Listener";
+import { Tuple2 } from "sodium/Tuple2";
+import { Lazy } from "sodium/Lazy";
+import { LazyCell } from "sodium/LazyCell";
 import * as Z from "sanctuary-type-classes";
 
 class MergeState<A> {

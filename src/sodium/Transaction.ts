@@ -1,4 +1,4 @@
-import { Vertex } from 'Vertex';
+import { Vertex } from 'sodium/Vertex';
 import * as Collections from 'typescript-collections';
 
 export class Entry {

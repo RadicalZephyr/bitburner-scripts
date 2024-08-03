@@ -1,6 +1,6 @@
-import { Stream, StreamWithSend } from "Stream";
-import { Vertex, Source } from "Vertex";
-import { Transaction } from "Transaction";
+import { Stream, StreamWithSend } from "sodium/Stream";
+import { Vertex, Source } from "sodium/Vertex";
+import { Transaction } from "sodium/Transaction";
 
 export class IOAction {
     /*!

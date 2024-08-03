@@ -1,4 +1,4 @@
-import { Source, Vertex } from "Vertex";
+import { Source, Vertex } from "sodium/Vertex";
 
 export class Listener<A> {
     constructor(h: (a: A) => void, target: Vertex) {

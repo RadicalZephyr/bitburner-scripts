@@ -1,6 +1,6 @@
 import { Dictionary, Set } from 'typescript-collections';
-import { Stream, StreamWithSend } from 'Stream';
-import { Vertex, Source } from 'Vertex';
+import { Stream, StreamWithSend } from 'sodium/Stream';
+import { Vertex, Source } from 'sodium/Vertex';
 
 export class Router<A, K> {
     private _inStream: Stream<A>;

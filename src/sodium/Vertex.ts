@@ -1,4 +1,4 @@
-import { Transaction } from "Transaction";
+import { Transaction } from "sodium/Transaction";
 import { Set } from "typescript-collections";
 
 let totalRegistrations: number = 0;
@@ -69,7 +69,6 @@ export function setVerbose(v: boolean): void { verbose = v; }
 
 export function describeAll(v: Vertex, visited: Set<number>) {
     if (visited.contains(v.id)) return;
-    console.log(v.descr());
     visited.add(v.id);
     let chs = v.children();
     for (let i = 0; i < chs.length; i++)
@@ -99,8 +98,6 @@ export class Vertex {
         return this.increment(target);
     }
     deregister(target: Vertex): void {
-        if (verbose)
-            console.log("deregister " + this.descr() + " => " + target.descr());
         this.decrement(target);
         Transaction._collectCyclesAtEnd();
     }
@@ -119,8 +116,6 @@ export class Vertex {
     }
 
     private decRefCount(target: Vertex): void {
-        if (verbose)
-            console.log("DEC " + this.descr());
         let matched = false;
         for (let i = target.childrn.length - 1; i >= 0; i--)
             if (target.childrn[i] === this) {
@@ -255,9 +250,6 @@ export class Vertex {
                     continue;
                 }
                 visited.add(vertex.id);
-                if (vertex.refCountAdj != 0) {
-                    console.log("markRoots(): reachable refCountAdj was not reset to zero: " + vertex.descr());
-                }
                 for (let i = 0; i < vertex.childrn.length; ++i) {
                     let child = vertex.childrn[i];
                     stack.push(child);
@@ -266,8 +258,6 @@ export class Vertex {
         }
         //
         for (let i = 0; i < roots.length; i++) {
-            if (verbose)
-                console.log("markRoots " + roots[i].descr());  // ###
             if (roots[i].color == Color.purple) {
                 roots[i].markGray();
                 newRoots.push(roots[i]);
@@ -300,9 +290,6 @@ export class Vertex {
                     continue;
                 }
                 visited.add(vertex.id);
-                if (vertex.refCountAdj != 0) {
-                    console.log("collectRoots(): reachable refCountAdj was not reset to zero: " + vertex.descr());
-                }
                 for (let i = 0; i < vertex.childrn.length; ++i) {
                     let child = vertex.childrn[i];
                     stack.push(child);
@@ -318,23 +305,17 @@ export class Vertex {
             let chs = this.children();
             for (let i = 0; i < chs.length; i++) {
                 chs[i].refCountAdj--;
-                if (verbose)
-                    console.log("markGray " + this.descr());
                 chs[i].markGray();
             }
         }
     }
 
     scan(): void {
-        if (verbose)
-            console.log("scan " + this.descr());
         if (this.color == Color.gray) {
             if (this.refCount() + this.refCountAdj > 0)
                 this.scanBlack();
             else {
                 this.color = Color.white;
-                if (verbose)
-                    console.log("scan WHITE " + this.descr());
                 let chs = this.children();
                 for (let i = 0; i < chs.length; i++)
                     chs[i].scan();
@@ -347,8 +328,6 @@ export class Vertex {
         this.color = Color.black;
         let chs = this.children();
         for (let i = 0; i < chs.length; i++) {
-            if (verbose)
-                console.log("scanBlack " + this.descr());
             if (chs[i].color != Color.black)
                 chs[i].scanBlack();
         }
@@ -356,8 +335,6 @@ export class Vertex {
 
     collectWhite(): void {
         if (this.color == Color.white && !this.buffered) {
-            if (verbose)
-                console.log("collectWhite " + this.descr());
             this.color = Color.black;
             this.refCountAdj = 0;
             let chs = this.children();

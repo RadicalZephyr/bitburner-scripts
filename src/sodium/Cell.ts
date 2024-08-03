@@ -6,14 +6,14 @@ import {
     Lambda5, Lambda5_deps, Lambda5_toFunction,
     Lambda6, Lambda6_deps, Lambda6_toFunction,
     toSources, lambda1
-} from "Lambda";
-import { Source, Vertex } from "Vertex";
-import { Transaction } from "Transaction";
-import { Lazy } from "Lazy";
-import { Listener } from "Listener";
-import { Stream, StreamWithSend } from "Stream";
-import { Operational } from "Operational";
-import { Tuple2 } from "Tuple2";
+} from "sodium/Lambda";
+import { Source, Vertex } from "sodium/Vertex";
+import { Transaction } from "sodium/Transaction";
+import { Lazy } from "sodium/Lazy";
+import { Listener } from "sodium/Listener";
+import { Stream, StreamWithSend } from "sodium/Stream";
+import { Operational } from "sodium/Operational";
+import { Tuple2 } from "sodium/Tuple2";
 
 class LazySample<A> {
     constructor(cell: Cell<A>) {

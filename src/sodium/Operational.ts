@@ -1,8 +1,8 @@
-import { Stream, StreamWithSend } from "Stream";
-import { Cell } from "Cell";
-import { Transaction } from "Transaction";
-import { Unit } from "Unit";
-import { Source, Vertex } from "Vertex";
+import { Stream, StreamWithSend } from "sodium/Stream";
+import { Cell } from "sodium/Cell";
+import { Transaction } from "sodium/Transaction";
+import { Unit } from "sodium/Unit";
+import { Source, Vertex } from "sodium/Vertex";
 
 export class Operational {
     /**

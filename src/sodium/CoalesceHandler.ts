@@ -2,10 +2,10 @@ import {
     Lambda1, Lambda1_deps, Lambda1_toFunction,
     Lambda2, Lambda2_deps, Lambda2_toFunction,
     toSources
-} from "Lambda";
-import { Transaction } from "Transaction";
-import { StreamWithSend } from "Stream";
-import { Vertex } from "Vertex";
+} from "sodium/Lambda";
+import { Transaction } from "sodium/Transaction";
+import { StreamWithSend } from "sodium/Stream";
+import { Vertex } from "sodium/Vertex";
 
 export class CoalesceHandler<A>
 {

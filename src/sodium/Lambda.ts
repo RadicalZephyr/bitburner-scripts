@@ -1,6 +1,6 @@
-import { Stream } from "Stream";
-import { Cell } from "Cell";
-import { Source } from "Vertex";
+import { Stream } from "sodium/Stream";
+import { Cell } from "sodium/Cell";
+import { Source } from "sodium/Vertex";
 
 export class Lambda1<A, B> {
     constructor(f: (a: A) => B,

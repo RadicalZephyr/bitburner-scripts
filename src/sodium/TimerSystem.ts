@@ -1,10 +1,10 @@
-import { Vertex, Source } from "Vertex";
+import { Vertex, Source } from "sodium/Vertex";
 import * as Collections from 'typescript-collections';
-import { Stream, StreamWithSend } from "Stream";
-import { StreamSink } from "StreamSink";
-import { Cell } from "Cell";
-import { CellSink } from "CellSink";
-import { Transaction } from "Transaction";
+import { Stream, StreamWithSend } from "sodium/Stream";
+import { StreamSink } from "sodium/StreamSink";
+import { Cell } from "sodium/Cell";
+import { CellSink } from "sodium/CellSink";
+import { Transaction } from "sodium/Transaction";
 
 /**
  * An interface for implementations of FRP timer systems.

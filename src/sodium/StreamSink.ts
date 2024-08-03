@@ -1,11 +1,11 @@
 import {
     Lambda1, Lambda1_deps, Lambda1_toFunction,
     Lambda2, Lambda2_deps, Lambda2_toFunction
-} from "Lambda";
-import { StreamWithSend } from "Stream";
-import { CoalesceHandler } from "CoalesceHandler";
-import { Transaction } from "Transaction";
-import { Vertex } from 'Vertex';
+} from "sodium/Lambda";
+import { StreamWithSend } from "sodium/Stream";
+import { CoalesceHandler } from "sodium/CoalesceHandler";
+import { Transaction } from "sodium/Transaction";
+import { Vertex } from 'sodium/Vertex';
 
 /**
  * A stream that allows values to be pushed into it, acting as an interface between the
