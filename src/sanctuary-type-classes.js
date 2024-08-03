@@ -224,7 +224,7 @@ var functionName = has('name', function f() { }) ?
     function functionName(f) { return f.name; } :
     /* istanbul ignore next */
     function functionName(f) {
-        var match = /function (\w*)/.exec(f);
+        var match = /function (\w*)/.match(f);
         return match == null ? '' : match[1];
     };
 
