@@ -1,5 +1,5 @@
-import * as util from './util';
-import * as arrays from './arrays';
+import * as util from 'typescript-collections/util';
+import * as arrays from 'typescript-collections/arrays';
 
 // A linked list node
 export interface ILinkedListNode<T> {

@@ -1,5 +1,5 @@
-import * as collections from './util';
-import * as arrays from './arrays';
+import * as collections from 'typescript-collections/util';
+import * as arrays from 'typescript-collections/arrays';
 
 export default class Heap<T> {
     /**

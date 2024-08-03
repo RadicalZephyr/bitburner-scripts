@@ -1,6 +1,6 @@
-import {IDictionaryPair, default as Dictionary} from './Dictionary';
+import { IDictionaryPair, default as Dictionary } from 'typescript-collections/Dictionary';
 
-import * as util from './util';
+import * as util from 'typescript-collections/util';
 
 /**
  * This class is used by the LinkedDictionary Internally
@@ -36,7 +36,7 @@ class HeadOrTailLinkedDictionaryPair<K, V> implements IDictionaryPair<null, null
 }
 
 function isHeadOrTailLinkedDictionaryPair<K, V>(p: HeadOrTailLinkedDictionaryPair<K, V> | LinkedDictionaryPair<K, V>)
-        : p is HeadOrTailLinkedDictionaryPair<K, V> {
+    : p is HeadOrTailLinkedDictionaryPair<K, V> {
     return !p.next;
 }
 

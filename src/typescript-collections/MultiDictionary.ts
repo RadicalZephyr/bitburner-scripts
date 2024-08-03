@@ -1,6 +1,6 @@
-import * as util from './util';
-import Dictionary from './Dictionary';
-import * as arrays from './arrays';
+import * as util from 'typescript-collections/util';
+import Dictionary from 'typescript-collections/Dictionary';
+import * as arrays from 'typescript-collections/arrays';
 
 export default class MultiDictionary<K, V> {
 

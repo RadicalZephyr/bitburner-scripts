@@ -1,5 +1,5 @@
-import * as util from './util';
-import LinkedList from './LinkedList';
+import * as util from 'typescript-collections/util';
+import LinkedList from 'typescript-collections/LinkedList';
 
 export default class Queue<T> {
 

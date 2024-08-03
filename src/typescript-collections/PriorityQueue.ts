@@ -1,5 +1,5 @@
-import * as util from './util';
-import Heap from './Heap';
+import * as util from 'typescript-collections/util';
+import Heap from 'typescript-collections/Heap';
 
 export default class PriorityQueue<T> {
 

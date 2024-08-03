@@ -1,4 +1,4 @@
-import * as util from './util';
+import * as util from 'typescript-collections/util';
 
 /**
  * Returns the position of the first occurrence of the specified item

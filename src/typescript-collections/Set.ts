@@ -1,8 +1,8 @@
-import * as util from './util';
+import * as util from 'typescript-collections/util';
 
-import * as arrays from './arrays';
+import * as arrays from 'typescript-collections/arrays';
 
-import Dictionary from './Dictionary';
+import Dictionary from 'typescript-collections/Dictionary';
 
 export default class Set<T> {
 

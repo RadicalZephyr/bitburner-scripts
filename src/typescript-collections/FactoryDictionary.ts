@@ -1,5 +1,5 @@
-import Dictionary from './Dictionary';
-import * as util from './util';
+import Dictionary from 'typescript-collections/Dictionary';
+import * as util from 'typescript-collections/util';
 
 export default class FactoryDictionary<K, V> extends Dictionary<K, V> {
 

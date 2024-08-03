@@ -1,5 +1,5 @@
-import * as util from './util';
-import Queue from './Queue';
+import * as util from 'typescript-collections/util';
+import Queue from 'typescript-collections/Queue';
 // Internal interface for BST
 interface BSTreeNode<T> {
     element: T;

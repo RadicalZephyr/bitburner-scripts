@@ -1,5 +1,5 @@
-import LinkedList from './LinkedList';
-import * as util from './util';
+import LinkedList from 'typescript-collections/LinkedList';
+import * as util from 'typescript-collections/util';
 
 export default class Stack<T> {
     /**

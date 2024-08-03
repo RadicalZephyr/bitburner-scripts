@@ -1,6 +1,6 @@
-import * as util from './util';
-import Dictionary from './Dictionary';
-import Set from './Set';
+import * as util from 'typescript-collections/util';
+import Dictionary from 'typescript-collections/Dictionary';
+import Set from 'typescript-collections/Set';
 
 export default class Bag<T> {
 
