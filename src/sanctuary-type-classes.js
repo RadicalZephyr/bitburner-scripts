@@ -170,15 +170,22 @@ function iterationDone(x) { return { value: x, done: true }; }
 //. `TypeClass` values may be used with [sanctuary-def][type-classes]
 //. to define parametrically polymorphic functions which verify their
 //. type-class constraints at run time.
-function TypeClass(name, url, dependencies, test) {
-    if (!(this instanceof TypeClass)) {
-        return new TypeClass(name, url, dependencies, test);
+export class TypeClass {
+    name;
+    url;
+    dependencies;
+    methods;
+    test;
+
+    constructor(name, url, dependencies, test) {
+        this.name = name;
+        this.url = url;
+        this.dependencies = dependencies;
+        this.methods = {};
+        this.test = function(x) {
+            return dependencies.every(function(d) { return d.test(x); }) && test(x);
+        };
     }
-    this.name = name;
-    this.url = url;
-    this.test = function(x) {
-        return dependencies.every(function(d) { return d.test(x); }) && test(x);
-    };
 }
 
 TypeClass['@@type'] = 'sanctuary-type-classes/TypeClass';
