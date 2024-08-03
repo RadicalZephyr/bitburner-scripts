@@ -10,7 +10,4 @@ export { Tuple2 } from "sodium/Tuple2";
 export { Unit } from "sodium/Unit";
 export { Operational } from "sodium/Operational";
 export { getTotalRegistrations, Vertex } from "sodium/Vertex";
-export { TimerSystemImpl, TimerSystem } from "sodium/TimerSystem";
-export { SecondsTimerSystem } from "sodium/SecondsTimerSystem";
-export { MillisecondsTimerSystem } from "sodium/MillisecondsTimerSystem";
 export { IOAction } from "sodium/IOAction";
