@@ -253,7 +253,7 @@ function $(_name, dependencies, requirements) {
     var version = '9.0.0';  // updated programmatically
     var keys = Object.keys(requirements);
 
-    var typeClass = TypeClass(
+    var typeClass = new TypeClass(
         'sanctuary-type-classes/' + _name,
         'https://github.com/sanctuary-js/sanctuary-type-classes/tree/v' + version
         + '#' + _name,
