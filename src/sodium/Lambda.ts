@@ -1,5 +1,5 @@
-import { Stream } from "sodium/Stream";
-import { Cell } from "sodium/Cell";
+import type { Stream } from "sodium/Stream";
+import type { Cell } from "sodium/Cell";
 import { Source } from "sodium/Vertex";
 
 export class Lambda1<A, B> {

@@ -1,5 +1,5 @@
 import { Stream, StreamWithSend } from "sodium/Stream";
-import { Cell } from "sodium/Cell";
+import type { Cell } from "sodium/Cell";
 import { Transaction } from "sodium/Transaction";
 import { Unit } from "sodium/Unit";
 import { Source, Vertex } from "sodium/Vertex";
