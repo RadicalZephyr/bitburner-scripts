@@ -16,19 +16,7 @@ export async function main(ns: NS) {
 
     let hostsMessagesWaiting = true;
 
-    Transaction.run(() => {
-        let emptyWorkerList: Worker[] = [];
-        let workerStream = workerSink;
-        let workersCell = workerStream.accum(emptyWorkerList, (w: Worker, workers: Worker[]) => [...workers, w]);
-
-        let emptyTargetList: Target[] = [];
-        let targetStream = targetSink;
-        let targetsCell = targetStream.accum(emptyTargetList, (t: Target, targets: Target[]) => [...targets, t]);
-
-        tickSink.listen(() => ns.printf("management tick"));
-        workerStream.listen((w: Worker) => ns.printf("new worker: %s", w.name));
-        targetStream.listen((t: Target) => ns.printf("new target: %s", t.name));
-    });
+    setup(workerSink, targetSink, tickSink, ns);
 
     let streamHostsToSink = makeStreamHostsToSink(ns, hostsPort, workerSink, targetSink);
 
@@ -44,6 +32,33 @@ export async function main(ns: NS) {
         tickSink.send(null);
         await ns.sleep(100);
     }
+}
+
+/** Configure the Sodium event graph.
+ *
+ * DO NOT add a `ns: NS` parameter. Using `ns` APIs inside Sodium
+ * callbacks is likely to result in "failed concurrency" errors if
+ * they happen to run at the same time as `ns.sleep` in the main loop.
+ */
+function setup(workerSink: StreamSink<Worker>, targetSink: StreamSink<Target>, tickSink: StreamSink<void>, ns: NS): void {
+    Transaction.run(() => {
+        let emptyWorkerList: Worker[] = [];
+        let workerStream = workerSink;
+        let workersCell = workerStream.accum(emptyWorkerList, (w: Worker, workers: Worker[]) => [...workers, w]);
+
+        let emptyTargetList: Target[] = [];
+        let targetStream = targetSink;
+        let targetsCell = targetStream.accum(emptyTargetList, (t: Target, targets: Target[]) => [...targets, t]);
+
+
+        // ############################################################
+        // ## Listeners
+        // ############################################################
+
+        tickSink.listen(() => ns.printf("management tick"));
+        workerStream.listen((w: Worker) => ns.printf("new worker: %s", w.name));
+        targetStream.listen((t: Target) => ns.printf("new target: %s", t.name));
+    });
 }
 
 function makeStreamHostsToSink(
