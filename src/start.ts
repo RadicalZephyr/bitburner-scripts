@@ -14,7 +14,15 @@ const CRACK_FILES: string[] = [
     "/all-hosts.js",
     "/util/ports.js",
     "/crack-all.js",
-    "/batch/manage.js"
+
+];
+
+const MANAGE_FILES: string[] = [
+    "/all-hosts.js",
+    "/util/ports.js",
+    "/batch/manage.js",
+    "sanctuary-type-identifiers.js",
+    "sanctuary-type-classes.js"
 ];
 
 function startCracker(ns: NS) {
@@ -38,7 +46,12 @@ function startCracker(ns: NS) {
 
     ns.scp(CRACK_FILES, crackHost, "home");
     ns.exec(crackScript, crackHost);
-    ns.scp(CRACK_FILES, manageHost, "home");
+
+    let sodiumFiles = ns.ls("home", "sodium");
+    let collectionsFiles = ns.ls("home", "typescript-collections");
+    let manageFiles = [...MANAGE_FILES, ...sodiumFiles, ...collectionsFiles];
+
+    ns.scp(manageFiles, manageHost, "home");
     ns.exec(manageScript, manageHost);
 }
 

@@ -1,64 +1,70 @@
-import type { NS, ProcessInfo } from "netscript";
+import type { NetscriptPort, NS, ProcessInfo } from "netscript";
 
 import { HostMsg, WorkerType, TargetType, HOSTS_PORT, HOSTS_DONE, EMPTY_SENTINEL } from "util/ports";
 
-declare const React: any;
+import { StreamSink, Transaction } from "sodium";
 
 export async function main(ns: NS) {
-    ns.disableLog('sleep');
     ns.tail();
 
     let hostsPort = ns.getPortHandle(HOSTS_PORT);
 
-    let workers = new Map();
+    const tickSink: StreamSink<void> = new StreamSink();
 
-    let targets = [];
+    const pauseHostMsgSink: StreamSink<void> = new StreamSink();
+    const hostMsgSink: StreamSink<HostMsg> = new StreamSink();
+    const hostMsgStream = hostMsgSink;
+
+    let streamHostsToSink = makeStreamHostsToSink(hostsPort, hostMsgSink, pauseHostMsgSink);
+
+    Transaction.run(() => {
+        let emptyWorkerList: Worker[] = [];
+        let workerStream = hostMsgStream
+            .filter((msg: HostMsg) => msg.type === WorkerType)
+            .map((msg: HostMsg) => new Worker(ns, msg.host));
+        let workersCell = workerStream.accum(emptyWorkerList, (w: Worker, workers: Worker[]) => [...workers, w]);
+
+        let emptyTargetList: Target[] = [];
+        let targetStream = hostMsgStream
+            .filter((msg: HostMsg) => msg.type === TargetType)
+            .map((msg: HostMsg) => new Target(ns, msg.host));
+        let targetsCell = targetStream.accum(emptyTargetList, (t: Target, targets: Target[]) => [...targets, t]);
+
+        tickSink.listen(() => ns.printf("management tick"));
+        workerStream.listen((w: Worker) => ns.printf("new worker: %s", w.name));
+        targetStream.listen((t: Target) => ns.printf("new target: %s", t.name));
+
+        pauseHostMsgSink.listen(() => {
+            hostsPort.nextWrite().then(_ => {
+                streamHostsToSink();
+            });
+        });
+    });
+
+    streamHostsToSink();
 
     while (true) {
-        let nextMsg = hostsPort.read();
-        // Check for empty value
-        if (typeof nextMsg === "string" && nextMsg === EMPTY_SENTINEL) {
-            let keepGoing = true;
-            hostsPort.nextWrite().then(_ => keepGoing = false);
-
-            while (keepGoing) {
-                manageWorkers(ns, workers, targets);
-                await ns.sleep(100);
-            }
-            continue;
-        }
-
-        // Check for the done sentinel value
-        if (nextMsg === HOSTS_DONE) {
-            break;
-        }
-
-        receiveHost(ns, nextMsg, workers, targets);
-
-        await ns.sleep(100);
-    }
-
-    while (true) {
-        manageWorkers(ns, workers, targets);
+        tickSink.send(null);
         await ns.sleep(100);
     }
 }
 
-function manageWorkers(ns: NS, workers: Map<string, Worker>, targets: Target[]) { }
+function makeStreamHostsToSink(hostsPort: NetscriptPort, hostMsgSink: StreamSink<HostMsg>, pauseHostMsgSink: StreamSink<void>) {
+    return function() {
+        // Read everything from the port until empty or getting the done signal.
+        while (true) {
+            let nextMsg = hostsPort.read();
+            if (typeof nextMsg === "string" && (nextMsg === EMPTY_SENTINEL || nextMsg === HOSTS_DONE)) {
+                break;
+            }
 
-function receiveHost(ns: NS, nextMsg: any, workers: Map<string, Worker>, targets: Target[]) {
-    if (typeof nextMsg === "object") {
-        let nextHostMsg = nextMsg as HostMsg;
-        ns.printf("new %s: %s", nextHostMsg.type, nextHostMsg.host);
-        switch (nextHostMsg.type) {
-            case WorkerType:
-                workers.set(nextHostMsg.host, new Worker(ns, nextHostMsg.host));
-                break;
-            case TargetType:
-                targets.push(new Target(ns, nextHostMsg.host));
-                break;
+            if (typeof nextMsg === "object") {
+                let nextHostMsg = nextMsg as HostMsg;
+                hostMsgSink.send(nextHostMsg);
+            }
         }
-    }
+        pauseHostMsgSink.send(null);
+    };
 }
 
 class Worker {
