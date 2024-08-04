@@ -11,49 +11,47 @@ export async function main(ns: NS) {
 
     const tickSink: StreamSink<void> = new StreamSink();
 
-    const pauseHostMsgSink: StreamSink<void> = new StreamSink();
-    const hostMsgSink: StreamSink<HostMsg> = new StreamSink();
-    const hostMsgStream = hostMsgSink;
+    const workerSink: StreamSink<Worker> = new StreamSink();
+    const targetSink: StreamSink<Target> = new StreamSink();
 
     let hostsMessagesWaiting = true;
 
     Transaction.run(() => {
         let emptyWorkerList: Worker[] = [];
-        let workerStream = hostMsgStream
-            .filter((msg: HostMsg) => msg.type === WorkerType)
-            .map((msg: HostMsg) => new Worker(ns, msg.host));
+        let workerStream = workerSink;
         let workersCell = workerStream.accum(emptyWorkerList, (w: Worker, workers: Worker[]) => [...workers, w]);
 
         let emptyTargetList: Target[] = [];
-        let targetStream = hostMsgStream
-            .filter((msg: HostMsg) => msg.type === TargetType)
-            .map((msg: HostMsg) => new Target(ns, msg.host));
+        let targetStream = targetSink;
         let targetsCell = targetStream.accum(emptyTargetList, (t: Target, targets: Target[]) => [...targets, t]);
 
         tickSink.listen(() => ns.printf("management tick"));
         workerStream.listen((w: Worker) => ns.printf("new worker: %s", w.name));
         targetStream.listen((t: Target) => ns.printf("new target: %s", t.name));
-
-        pauseHostMsgSink.listen(() => {
-            hostsPort.nextWrite().then(_ => {
-                hostsMessagesWaiting = true;
-            });
-        });
     });
 
-    let streamHostsToSink = makeStreamHostsToSink(hostsPort, hostMsgSink, pauseHostMsgSink);
+    let streamHostsToSink = makeStreamHostsToSink(ns, hostsPort, workerSink, targetSink);
 
     while (true) {
         if (hostsMessagesWaiting) {
             streamHostsToSink();
             hostsMessagesWaiting = false;
+
+            hostsPort.nextWrite().then(_ => {
+                hostsMessagesWaiting = true;
+            });
         }
         tickSink.send(null);
         await ns.sleep(100);
     }
 }
 
-function makeStreamHostsToSink(hostsPort: NetscriptPort, hostMsgSink: StreamSink<HostMsg>, pauseHostMsgSink: StreamSink<void>) {
+function makeStreamHostsToSink(
+    ns: NS,
+    hostsPort: NetscriptPort,
+    workerSink: StreamSink<Worker>,
+    targetSink: StreamSink<Target>,
+) {
     return function() {
         // Read everything from the port until empty or getting the done signal.
         while (true) {
@@ -64,10 +62,16 @@ function makeStreamHostsToSink(hostsPort: NetscriptPort, hostMsgSink: StreamSink
 
             if (typeof nextMsg === "object") {
                 let nextHostMsg = nextMsg as HostMsg;
-                hostMsgSink.send(nextHostMsg);
+                switch (nextHostMsg.type) {
+                    case WorkerType:
+                        workerSink.send(new Worker(ns, nextHostMsg.host));
+                        break;
+                    case TargetType:
+                        targetSink.send(new Target(ns, nextHostMsg.host));
+                        break;
+                }
             }
         }
-        pauseHostMsgSink.send(null);
     };
 }
 
