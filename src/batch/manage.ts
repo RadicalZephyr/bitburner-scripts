@@ -15,7 +15,7 @@ export async function main(ns: NS) {
     const hostMsgSink: StreamSink<HostMsg> = new StreamSink();
     const hostMsgStream = hostMsgSink;
 
-    let streamHostsToSink = makeStreamHostsToSink(hostsPort, hostMsgSink, pauseHostMsgSink);
+    let hostsMessagesWaiting = true;
 
     Transaction.run(() => {
         let emptyWorkerList: Worker[] = [];
@@ -36,14 +36,18 @@ export async function main(ns: NS) {
 
         pauseHostMsgSink.listen(() => {
             hostsPort.nextWrite().then(_ => {
-                streamHostsToSink();
+                hostsMessagesWaiting = true;
             });
         });
     });
 
-    streamHostsToSink();
+    let streamHostsToSink = makeStreamHostsToSink(hostsPort, hostMsgSink, pauseHostMsgSink);
 
     while (true) {
+        if (hostsMessagesWaiting) {
+            streamHostsToSink();
+            hostsMessagesWaiting = false;
+        }
         tickSink.send(null);
         await ns.sleep(100);
     }
