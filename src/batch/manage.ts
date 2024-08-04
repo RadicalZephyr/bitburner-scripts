@@ -2,7 +2,7 @@ import type { NetscriptPort, NS, ProcessInfo } from "netscript";
 
 import { HostMsg, WorkerType, TargetType, HOSTS_PORT, HOSTS_DONE, EMPTY_SENTINEL } from "util/ports";
 
-import { StreamSink, Transaction } from "sodium";
+import { Stream, StreamSink, Transaction } from "sodium";
 
 export async function main(ns: NS) {
     ns.tail();
@@ -40,14 +40,12 @@ export async function main(ns: NS) {
  * callbacks is likely to result in "failed concurrency" errors if
  * they happen to run at the same time as `ns.sleep` in the main loop.
  */
-function setup(workerSink: StreamSink<Worker>, targetSink: StreamSink<Target>, tickSink: StreamSink<void>, ns: NS): void {
+function setup(workerStream: Stream<Worker>, targetStream: Stream<Target>, tickStream: Stream<void>, ns: NS): void {
     Transaction.run(() => {
         let emptyWorkerList: Worker[] = [];
-        let workerStream = workerSink;
         let workersCell = workerStream.accum(emptyWorkerList, (w: Worker, workers: Worker[]) => [...workers, w]);
 
         let emptyTargetList: Target[] = [];
-        let targetStream = targetSink;
         let targetsCell = targetStream.accum(emptyTargetList, (t: Target, targets: Target[]) => [...targets, t]);
 
 
@@ -55,7 +53,7 @@ function setup(workerSink: StreamSink<Worker>, targetSink: StreamSink<Target>, t
         // ## Listeners
         // ############################################################
 
-        tickSink.listen(() => ns.printf("management tick"));
+        tickStream.listen(() => ns.printf("management tick"));
         workerStream.listen((w: Worker) => ns.printf("new worker: %s", w.name));
         targetStream.listen((t: Target) => ns.printf("new target: %s", t.name));
     });
