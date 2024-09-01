@@ -49,9 +49,9 @@ function setup(workerStream: Stream<Worker>, targetStream: Stream<Target>, tickS
         let targetsCell = targetStream.accum(emptyTargetList, (t: Target, targets: Target[]) => [...targets, t]);
 
 
-        // ############################################################
+        // ########################################################
         // ## Listeners
-        // ############################################################
+        // ########################################################
 
         tickStream.listen(() => ns.printf("management tick"));
         workerStream.listen((w: Worker) => ns.printf("new worker: %s", w.name));

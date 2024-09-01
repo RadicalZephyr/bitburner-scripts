@@ -1,0 +1,31 @@
+* Old Manage Script
+
+** Scan all hosts looking for relevant scripts, group them by target
+
+** Make a heap of hosts sorted by their Available Ram
+Used to distribute new tasks to the host with the most RAM.
+
+** Find targets that are currently being softened
+
+Restart weaken jobs if the remaining time to weaken is greater than
+the current time to weaken, usually only true when player hacking
+level has increased since the job was started.
+
+** Find targets that are ready to soften
+I.e. have more than 10% of security
+
+*** Spawn new weaken jobs for any
+
+** Find targets that are ready to milk
+
+** Find targets that are ready to build
+
+
+* New Manage Script
+
+** Handled by Crack All Script
+
+- Opening ports
+- Nuking host
+- Copying script files to new host
+- Sorting hosts into workers and targets
