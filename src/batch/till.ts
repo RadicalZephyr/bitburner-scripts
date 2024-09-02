@@ -1,73 +1,48 @@
 import type { NS } from "netscript";
 
-import { EMPTY_SENTINEL, TILL_PORT, SOW_PORT } from 'util/ports';
-
-const softenScript = "/batch/w.js";
-
 type SoftenPid = {
     pid: number,
     target: string,
 };
 
-export async function main(ns: NS) {
-    const serverName = ns.getHostname();
-    const maxRam = ns.getServerMaxRam(serverName);
-    const softenScriptRam = ns.getScriptRam(softenScript, serverName);
+const softenScript = "/batch/w.js";
 
-    const tillPort = ns.getPortHandle(TILL_PORT);
-    const sowPort = ns.getPortHandle(SOW_PORT);
+class WeakenInstance {
+    ns: NS;
+    target: string;
+    script: string;
+    scriptRam: number;
 
-    let softenPids: SoftenPid[] = [];
+    threads: number;
 
-    // When should these scripts quit?
-    while (true) {
-        let availableRam = maxRam - ns.getServerUsedRam(serverName);
+    hckLevel: number;
+    runTime: number;
 
-        while (availableRam < softenScriptRam) {
-            await ns.sleep(1000);
-            availableRam = maxRam - ns.getServerUsedRam(serverName);
-        }
+    pids: SoftenPid[];
 
-        let nextTarget = tillPort.read() as string;
-        if (nextTarget === EMPTY_SENTINEL) {
-            await tillPort.nextWrite();
-            continue;
-        }
+    constructor(ns: NS, target: string) {
+        this.ns = ns;
+        this.target = target;
+        this.script = softenScript;
+        this.scriptRam = ns.getScriptRam(softenScript);
 
-        let softenThreads = softenAnalyze(ns, nextTarget);
-        let totalRam = softenScriptRam * softenThreads;
+        this.threads = softenAnalyze(ns, target);
 
-        if (softenThreads === 0) {
-            sowPort.write(nextTarget);
-            continue;
-        }
+        this.hckLevel = ns.getHackingLevel();
+        this.runTime = ns.getWeakenTime(target);
 
-        if (availableRam >= totalRam) {
-            // Enough space is available, just launch the script
-            let pid = ns.run(softenScript, softenThreads, nextTarget);
-            if (pid !== 0) {
-                softenPids.push({ pid: pid, target: nextTarget });
-            }
-        } else {
-            let rounds = Math.ceil(totalRam / availableRam);
-            let maxThreads = Math.max(1, Math.floor(availableRam / softenScriptRam));
-            let pid = ns.run(softenScript, maxThreads, nextTarget, 1, rounds);
-            if (pid !== 0) {
-                softenPids.push({ pid: pid, target: nextTarget });
-            }
-        }
-
-        await ns.sleep(100);
+        this.pids = [];
     }
 }
 
 /** Calculate the number of threads needed to soften the `target` by
  * the given multiplier.
  */
-export function softenAnalyze(ns: NS, target: string): number {
+export function softenAnalyze(ns: NS, target: string, softenAmount?: number): number {
+    const _softenAmount = typeof softenAmount == "number" ? softenAmount : 1;
     const currentSecurity = ns.getServerSecurityLevel(target);
     const minSecurity = ns.getServerMinSecurityLevel(target);
-    return softenThreads(currentSecurity - minSecurity);
+    return softenThreads((currentSecurity - minSecurity) * _softenAmount);
 }
 
 /** Calculate the number of threads to soften any server by the given amount.
