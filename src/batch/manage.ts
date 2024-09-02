@@ -104,15 +104,6 @@ class Target {
     }
 }
 
-async function tick(ns: NS, state: State) {
-    state.update();
-}
-
-function tillTargets(ns: NS, targets: string[]) {
-
-}
-
-
 class State {
     ns: NS;
     options: Options;
@@ -145,4 +136,15 @@ class State {
     update() {
         this.workers.forEach(worker => worker.update());
     }
+
+    readyToTillTargets(): Target[] {
+        let hckLevel = this.ns.getHackingLevel();
+        return this.pendingTargets.filter(target => hckLevel >= target.hckLevel).sort((a, b) => a.hckLevel - b.hckLevel);
+    }
+}
+
+async function tick(ns: NS, state: State) {
+    state.update();
+
+    let readyToTillTargets = state.readyToTillTargets();
 }
