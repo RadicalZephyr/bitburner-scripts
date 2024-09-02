@@ -18,8 +18,14 @@ export async function main(ns: NS) {
         rounds = 1;
     }
 
+    let endDelay = args[3];
+    if (typeof endDelay != 'number') {
+        endDelay = 0;
+    }
+
     for (let i = 0; i < rounds; i++) {
         await ns.sleep(sleepTime);
         await ns.grow(target);
+        await ns.sleep(endDelay);
     }
 }

@@ -5,16 +5,14 @@ export interface BatchScriptInstance {
     script: string;
     threads: number;
     startTime: number;
-    runTime: number;
     endDelay: number;
-    loop: boolean;
+    rounds: number;
 };
 
 export function spawnBatchScript(ns: NS, host: string, scriptInstance: BatchScriptInstance, ...extraArgs: ScriptArg[]) {
-    const { script, threads, target, startTime, endDelay } = scriptInstance;
+    const { script, threads, target, startTime, endDelay, rounds } = scriptInstance;
     if (threads > 0) {
-        let args = [target, startTime, endDelay, ...extraArgs];
-        if (scriptInstance.loop) args.unshift('--loop');
+        let args = [target, startTime, rounds, endDelay, ...extraArgs];
 
         return ns.exec(script, host, threads, ...args);
     }
