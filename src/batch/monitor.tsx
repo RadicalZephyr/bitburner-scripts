@@ -84,8 +84,7 @@ export function countThreadsByTarget(ns: NS): Map<string, TargetThreads> {
     for (const host of hosts) {
         for (const pi of ns.ps(host)) {
 
-            // TODO: fix this to be based on current script interfaces
-            let target = pi.args[0] === '--loop' ? pi.args[1] : pi.args[0] === '--hack_percent' ? pi.args[2] : pi.args[0];
+            let target = pi.args[0];
 
             if (typeof target != 'string') continue;
 
