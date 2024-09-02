@@ -7,12 +7,11 @@ export async function main(ns: NS) {
 
     let hostsPort = ns.getPortHandle(HOSTS_PORT);
 
-    let newWorkers = [];
-    let newTargets = [];
+    let state = new State(ns);
 
     let hostsMessagesWaiting = true;
 
-    let readHostsFromPort = makeReadHostsFromPort(ns, hostsPort, newWorkers, newTargets);
+    let readHostsFromPort = makeReadHostsFromPort(ns, hostsPort, state);
 
     while (true) {
         if (hostsMessagesWaiting) {
@@ -23,17 +22,12 @@ export async function main(ns: NS) {
                 hostsMessagesWaiting = true;
             });
         }
-        await tick(ns);
+        await tick(ns, state);
         await ns.sleep(100);
     }
 }
 
-function makeReadHostsFromPort(
-    ns: NS,
-    hostsPort: NetscriptPort,
-    newWorker: Worker[],
-    newTarget: Target[],
-) {
+function makeReadHostsFromPort(ns: NS, hostsPort: NetscriptPort, state: State) {
     return function() {
         // Read everything from the port until empty or getting the done signal.
         while (true) {
@@ -46,10 +40,10 @@ function makeReadHostsFromPort(
                 let nextHostMsg = nextMsg as HostMsg;
                 switch (nextHostMsg.type) {
                     case WorkerType:
-                        newWorker.push(new Worker(ns, nextHostMsg.host));
+                        state.pushWorker(new Worker(ns, nextHostMsg.host));
                         break;
                     case TargetType:
-                        newTarget.push(new Target(ns, nextHostMsg.host));
+                        state.pushTarget(new Target(ns, nextHostMsg.host));
                         break;
                 }
             }
@@ -85,6 +79,38 @@ class Target {
     }
 }
 
-async function tick(ns: NS) {
+async function tick(ns: NS, state: State) {
 
+}
+
+function tillTargets(ns: NS, targets: string[]) {
+
+}
+
+class State {
+    ns: NS;
+    tillTargets: string[];
+    sowTargets: string[];
+    harvestTargets: string[];
+
+    pendingTargets: Target[];
+
+    workers: Worker[];
+
+    constructor(ns: NS) {
+        this.ns = ns;
+        this.tillTargets = [];
+        this.sowTargets = [];
+        this.harvestTargets = [];
+        this.pendingTargets = [];
+        this.workers = [];
+    }
+
+    pushTarget(target: Target) {
+        this.pendingTargets.push(target);
+    }
+
+    pushWorker(worker: Worker) {
+        this.workers.push(worker);
+    }
 }
