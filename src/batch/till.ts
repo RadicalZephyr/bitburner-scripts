@@ -1,5 +1,7 @@
 import type { NS } from "netscript";
 
+import type { Target } from "batch/types";
+
 type SoftenPid = {
     pid: number,
     target: string,
@@ -7,9 +9,9 @@ type SoftenPid = {
 
 const softenScript = "/batch/w.js";
 
-class WeakenInstance {
+export class WeakenInstance {
     ns: NS;
-    target: string;
+    target: Target;
     script: string;
     scriptRam: number;
 
@@ -23,16 +25,16 @@ class WeakenInstance {
 
     pids: SoftenPid[];
 
-    constructor(ns: NS, target: string) {
+    constructor(ns: NS, target: Target) {
         this.ns = ns;
         this.target = target;
         this.script = softenScript;
         this.scriptRam = ns.getScriptRam(softenScript);
 
-        this.threads = softenAnalyze(ns, target);
+        this.threads = softenAnalyze(ns, target.name);
 
         this.hckLevel = ns.getHackingLevel();
-        this.runTime = ns.getWeakenTime(target);
+        this.runTime = ns.getWeakenTime(target.name);
 
         this.pids = [];
     }

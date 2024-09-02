@@ -2,6 +2,10 @@ import type { NetscriptPort, NS, ProcessInfo } from "netscript";
 
 import { HostMsg, WorkerType, TargetType, HOSTS_PORT, HOSTS_DONE, EMPTY_SENTINEL } from "util/ports";
 
+import { WeakenInstance } from "batch/till";
+
+import { Target, Worker } from "batch/types";
+
 export async function main(ns: NS) {
     ns.tail();
 
@@ -24,22 +28,6 @@ export async function main(ns: NS) {
         }
         await tick(ns, state);
         await ns.sleep(100);
-    }
-}
-
-class Options {
-    _maxTillTargets: number;
-
-    constructor() {
-        this._maxTillTargets = 5;
-    }
-
-    get maxTillTargets(): number {
-        return this._maxTillTargets;
-    }
-
-    set setMaxTillTargets(maxTargets: number) {
-        this._maxTillTargets = maxTargets;
     }
 }
 
@@ -67,40 +55,19 @@ function makeReadHostsFromPort(ns: NS, hostsPort: NetscriptPort, state: State) {
     };
 }
 
-class Worker {
-    ns: NS;
-    name: string;
-    usedRam: number;
-    maxRam: number;
-    scripts: ProcessInfo[];
+class Options {
+    _maxTillTargets: number;
 
-    constructor(ns: NS, host: string) {
-        this.ns = ns;
-        this.name = host;
-        this.usedRam = ns.getServerUsedRam(host);
-        this.maxRam = ns.getServerMaxRam(host);
-        this.scripts = ns.ps(host);
+    constructor() {
+        this._maxTillTargets = 5;
     }
 
-    update() {
-        this.usedRam = this.ns.getServerUsedRam(this.name);
-        this.scripts = this.ns.ps(this.name);
+    get maxTillTargets(): number {
+        return this._maxTillTargets;
     }
-}
 
-class Target {
-    ns: NS;
-    name: string;
-    hckLevel: number;
-    maxMoney: number;
-    minSec: number;
-
-    constructor(ns: NS, host: string) {
-        this.ns = ns;
-        this.name = host;
-        this.hckLevel = ns.getServerRequiredHackingLevel(host);
-        this.maxMoney = ns.getServerMaxMoney(host);
-        this.minSec = ns.getServerMinSecurityLevel(host);
+    set setMaxTillTargets(maxTargets: number) {
+        this._maxTillTargets = maxTargets;
     }
 }
 
