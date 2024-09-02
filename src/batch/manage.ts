@@ -54,14 +54,21 @@ function makeReadHostsFromPort(ns: NS, hostsPort: NetscriptPort, state: State) {
 class Worker {
     ns: NS;
     name: string;
+    usedRam: number;
     maxRam: number;
     scripts: ProcessInfo[];
 
     constructor(ns: NS, host: string) {
         this.ns = ns;
         this.name = host;
+        this.usedRam = ns.getServerUsedRam(host);
         this.maxRam = ns.getServerMaxRam(host);
         this.scripts = ns.ps(host);
+    }
+
+    update() {
+        this.usedRam = this.ns.getServerUsedRam(this.name);
+        this.scripts = this.ns.ps(this.name);
     }
 }
 
@@ -80,12 +87,13 @@ class Target {
 }
 
 async function tick(ns: NS, state: State) {
-
+    state.update();
 }
 
 function tillTargets(ns: NS, targets: string[]) {
 
 }
+
 
 class State {
     ns: NS;
@@ -112,5 +120,9 @@ class State {
 
     pushWorker(worker: Worker) {
         this.workers.push(worker);
+    }
+
+    update() {
+        this.workers.forEach(worker => worker.update());
     }
 }
