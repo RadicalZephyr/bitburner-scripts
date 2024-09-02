@@ -17,6 +17,9 @@ class WeakenInstance {
 
     hckLevel: number;
     runTime: number;
+    endDelay: number;
+
+    rounds: number;
 
     pids: SoftenPid[];
 
