@@ -27,6 +27,22 @@ export async function main(ns: NS) {
     }
 }
 
+class Options {
+    _maxTillTargets: number;
+
+    constructor() {
+        this._maxTillTargets = 5;
+    }
+
+    get maxTillTargets(): number {
+        return this._maxTillTargets;
+    }
+
+    set setMaxTillTargets(maxTargets: number) {
+        this._maxTillTargets = maxTargets;
+    }
+}
+
 function makeReadHostsFromPort(ns: NS, hostsPort: NetscriptPort, state: State) {
     return function() {
         // Read everything from the port until empty or getting the done signal.
@@ -97,6 +113,7 @@ function tillTargets(ns: NS, targets: string[]) {
 
 class State {
     ns: NS;
+    options: Options;
     tillTargets: string[];
     sowTargets: string[];
     harvestTargets: string[];
@@ -107,6 +124,7 @@ class State {
 
     constructor(ns: NS) {
         this.ns = ns;
+        this.options = new Options();
         this.tillTargets = [];
         this.sowTargets = [];
         this.harvestTargets = [];
