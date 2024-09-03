@@ -2,18 +2,13 @@ import type { NS } from "netscript";
 
 import type { Target } from "batch/types";
 
-import type { BatchScriptInstance } from "batch/lib";
-
-type SoftenPid = {
-    pid: number,
-    target: string,
-};
+import type { Pid, BatchScriptInstance } from "batch/lib";
 
 const softenScript = "/batch/w.js";
 
 export class WeakenInstance implements BatchScriptInstance {
     ns: NS;
-    _target: Target;
+    target: Target;
     script: string;
     scriptRam: number;
 
@@ -25,15 +20,15 @@ export class WeakenInstance implements BatchScriptInstance {
     hckLevel: number;
     runTime: number;
 
-    pids: SoftenPid[];
+    pids: Pid[];
 
-    get target() {
-        return this._target.name;
+    get targetName() {
+        return this.target.name;
     }
 
     constructor(ns: NS, target: Target) {
         this.ns = ns;
-        this._target = target;
+        this.target = target;
         this.script = softenScript;
         this.scriptRam = ns.getScriptRam(softenScript);
 
@@ -46,6 +41,14 @@ export class WeakenInstance implements BatchScriptInstance {
         this.runTime = ns.getWeakenTime(target.name);
 
         this.pids = [];
+    }
+
+    needsMoreThreads(): boolean {
+        return this.threads > this.runningThreads();
+    }
+
+    runningThreads(): number {
+        return this.pids.reduce((sum, pid) => sum + pid.threads, 0);
     }
 }
 
