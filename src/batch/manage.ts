@@ -5,6 +5,7 @@ import { HostMsg, WorkerType, TargetType, HOSTS_PORT, HOSTS_DONE, EMPTY_SENTINEL
 import { WeakenInstance } from "batch/till";
 
 import { Target, Worker } from "batch/types";
+import { BatchScriptInstance } from "./lib";
 
 export async function main(ns: NS) {
     ns.tail();
