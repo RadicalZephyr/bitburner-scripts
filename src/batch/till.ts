@@ -10,7 +10,7 @@ export class WeakenInstance implements BatchScriptInstance {
     ns: NS;
     target: Target;
     script: string;
-    scriptRam: number;
+    _scriptRam: number;
 
     threads: number;
     startTime: number;
@@ -26,11 +26,15 @@ export class WeakenInstance implements BatchScriptInstance {
         return this.target.name;
     }
 
+    get scriptRam() {
+        return this._scriptRam;
+    }
+
     constructor(ns: NS, target: Target) {
         this.ns = ns;
         this.target = target;
         this.script = softenScript;
-        this.scriptRam = ns.getScriptRam(softenScript);
+        this._scriptRam = ns.getScriptRam(softenScript);
 
         this.threads = softenAnalyze(ns, target.name);
         this.startTime = 0;
@@ -49,6 +53,14 @@ export class WeakenInstance implements BatchScriptInstance {
 
     runningThreads(): number {
         return this.pids.reduce((sum, pid) => sum + pid.threads, 0);
+    }
+
+    neededThreads(): number {
+        return this.threads - this.runningThreads();
+    }
+
+    pushPid(pid: Pid) {
+        this.pids.push(pid);
     }
 }
 

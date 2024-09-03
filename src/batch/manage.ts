@@ -5,7 +5,7 @@ import { HostMsg, WorkerType, TargetType, HOSTS_PORT, HOSTS_DONE, EMPTY_SENTINEL
 import { WeakenInstance } from "batch/till";
 
 import { Target, Worker } from "batch/types";
-import { BatchScriptInstance } from "./lib";
+import { BatchScriptInstance, spawnScriptOnWorker } from "./lib";
 
 export async function main(ns: NS) {
     ns.tail();
@@ -106,13 +106,40 @@ class State {
     }
 
     readyToTillTargets(): Target[] {
+        function byHckLevelAndMoney(a: Target, b: Target): number {
+            let hckDiff = a.hckLevel - b.hckLevel;
+            return hckDiff != 0 ? hckDiff : a.maxMoney - b.maxMoney;
+        }
+
         let hckLevel = this.ns.getHackingLevel();
-        return this.pendingTargets.filter(target => hckLevel >= target.hckLevel).sort((a, b) => a.hckLevel - b.hckLevel);
+        return this.pendingTargets
+            .filter(target => hckLevel >= target.hckLevel)
+            .sort(byHckLevelAndMoney);
+    }
+
+    tillNewTargets() {
+        let readyToTillTargets = this.readyToTillTargets();
+
+        if (this.tillTargets.length < this.options.maxTillTargets) {
+            let newTargetsCount = this.options.maxTillTargets - this.tillTargets.length;
+            for (let i = 0; i < newTargetsCount; i++) {
+                let sTarget = readyToTillTargets.shift();
+                let weakenInstance = new WeakenInstance(this.ns, sTarget);
+                this.spawnScriptInstance(weakenInstance);
+            }
+        }
+    }
+
+    spawnScriptInstance(scriptInstance: BatchScriptInstance) {
+        while (scriptInstance.needsMoreThreads()) {
+            let nextWorker = this.workers.shift();
+            nextWorker.update();
+            spawnScriptOnWorker(this.ns, nextWorker, scriptInstance);
+        }
     }
 }
 
 async function tick(ns: NS, state: State) {
     state.update();
 
-    let readyToTillTargets = state.readyToTillTargets();
 }

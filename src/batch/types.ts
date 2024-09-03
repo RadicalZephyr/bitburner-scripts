@@ -19,6 +19,10 @@ export class Worker {
         this.usedRam = this.ns.getServerUsedRam(this.name);
         this.scripts = this.ns.ps(this.name);
     }
+
+    availableRam(): number {
+        return this.maxRam - this.usedRam;
+    }
 }
 
 export class Target {
