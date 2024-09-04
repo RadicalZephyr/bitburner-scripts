@@ -9,6 +9,8 @@ import { Target, Worker } from "batch/types";
 import { BatchScriptInstance, spawnScriptOnWorker } from "batch/lib";
 
 export async function main(ns: NS) {
+    ns.disableLog("getServerUsedRam");
+    ns.disableLog("ps");
     ns.tail();
 
     let hostsPort = ns.getPortHandle(HOSTS_PORT);
