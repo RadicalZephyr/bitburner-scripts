@@ -1,11 +1,12 @@
-import type { NetscriptPort, NS, ProcessInfo } from "netscript";
+import type { NetscriptPort, NS } from "netscript";
 
 import { HostMsg, WorkerType, TargetType, HOSTS_PORT, HOSTS_DONE, EMPTY_SENTINEL } from "util/ports";
 
 import { WeakenInstance } from "batch/till";
 
 import { Target, Worker } from "batch/types";
-import { BatchScriptInstance, spawnScriptOnWorker } from "./lib";
+
+import { BatchScriptInstance, spawnScriptOnWorker } from "batch/lib";
 
 export async function main(ns: NS) {
     ns.tail();

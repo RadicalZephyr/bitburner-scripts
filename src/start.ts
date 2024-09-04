@@ -47,9 +47,9 @@ function startCracker(ns: NS) {
     ns.scp(CRACK_FILES, crackHost, "home");
     ns.exec(crackScript, crackHost);
 
-    let sodiumFiles = ns.ls("home", "sodium");
+    let batchFiles = ns.ls("home", "batch");
     let collectionsFiles = ns.ls("home", "typescript-collections");
-    let manageFiles = [...MANAGE_FILES, ...sodiumFiles, ...collectionsFiles];
+    let manageFiles = [...MANAGE_FILES, ...batchFiles, ...collectionsFiles];
 
     ns.scp(manageFiles, manageHost, "home");
     ns.exec(manageScript, manageHost);
