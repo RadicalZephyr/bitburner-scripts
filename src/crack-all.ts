@@ -23,6 +23,10 @@ export async function main(ns: NS) {
     while (portsCracked < 5) {
         let numCrackers = countPortCrackers(ns);
 
+        if (numCrackers == portsCracked) {
+            await ns.sleep(1000);
+            continue;
+        }
         for (let i = portsCracked; i < 6 && i <= numCrackers; i++) {
             const hosts = HOSTS_BY_PORTS_REQUIRED[i];
             for (const host of hosts) {
