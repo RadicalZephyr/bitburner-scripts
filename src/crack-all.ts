@@ -2,7 +2,7 @@ import type { NS } from "netscript";
 
 import { HOSTS_BY_PORTS_REQUIRED, TARGETS_BY_PORTS_REQUIRED } from "all-hosts";
 
-import { HOSTS_PORT, HOSTS_DONE, workerMsg, targetMsg } from "util/ports";
+import { HOSTS_PORT, workerMsg, targetMsg, TARGETS_PORT, DONE_SENTINEL } from "util/ports";
 
 const HACKING_FILES = [
     "/all-hosts.js",
@@ -19,6 +19,7 @@ const HACKING_FILES = [
 export async function main(ns: NS) {
     let portsCracked = 0;
     let hostsPort = ns.getPortHandle(HOSTS_PORT);
+    let targetsPort = ns.getPortHandle(TARGETS_PORT);
 
     while (portsCracked < 5) {
         let numCrackers = countPortCrackers(ns);
@@ -41,7 +42,7 @@ export async function main(ns: NS) {
                 // SCP all hacking files appropriate to that amount of memory
                 ns.scp(HACKING_FILES, host, 'home');
 
-                // Write host name to the worker and till ports
+                // Write host name to the hosts
                 hostsPort.write(workerMsg(host));
             }
 
@@ -49,15 +50,16 @@ export async function main(ns: NS) {
             for (const target of targets) {
                 crackHost(ns, target, i);
 
-                // Write host name to the till port
-                hostsPort.write(targetMsg(target));
+                // Write host name to the targets port
+                targetsPort.write(targetMsg(target));
             }
         }
         portsCracked = numCrackers;
         await ns.sleep(1000);
     }
     // Signal that the last worker has been sent.
-    hostsPort.write(HOSTS_DONE);
+    hostsPort.write(DONE_SENTINEL);
+    targetsPort.write(DONE_SENTINEL);
 }
 
 function crackHost(ns: NS, host: string, ports: number): void {

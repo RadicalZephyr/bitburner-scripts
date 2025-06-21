@@ -1,6 +1,6 @@
 import type { NetscriptPort, NS } from "netscript";
 
-import { HostMsg, WorkerType, TargetType, readAllFromPort, HOSTS_PORT } from "util/ports";
+import { HostMsg, WorkerType, TargetType, readAllFromPort, TARGETS_PORT } from "util/ports";
 
 import { WeakenInstance } from "batch/till";
 
@@ -13,7 +13,7 @@ export async function main(ns: NS) {
     ns.disableLog("ps");
     ns.ui.openTail();
 
-    let hostsPort = ns.getPortHandle(HOSTS_PORT);
+    let targetsPort = ns.getPortHandle(TARGETS_PORT);
 
     let state = new State(ns);
 
@@ -21,10 +21,10 @@ export async function main(ns: NS) {
 
     while (true) {
         if (hostsMessagesWaiting) {
-            readHostsFromPort(ns, hostsPort, state);
+            readHostsFromPort(ns, targetsPort, state);
             hostsMessagesWaiting = false;
 
-            hostsPort.nextWrite().then(_ => {
+            targetsPort.nextWrite().then(_ => {
                 hostsMessagesWaiting = true;
             });
         }
@@ -39,7 +39,8 @@ function readHostsFromPort(ns: NS, hostsPort: NetscriptPort, state: State) {
             let nextHostMsg = nextMsg as HostMsg;
             switch (nextHostMsg.type) {
                 case WorkerType:
-                    state.pushWorker(new Worker(ns, nextHostMsg.host));
+                    // state.pushWorker(new Worker(ns, nextHostMsg.host));
+                    ns.print("WARN manager script unexpectedly received a worker host message.");
                     break;
                 case TargetType:
                     state.pushTarget(new Target(ns, nextHostMsg.host));
@@ -74,8 +75,6 @@ class State {
 
     pendingTargets: Target[];
 
-    workers: Worker[];
-
     constructor(ns: NS) {
         this.ns = ns;
         this.options = new Options();
@@ -83,19 +82,10 @@ class State {
         this.sowTargets = [];
         this.harvestTargets = [];
         this.pendingTargets = [];
-        this.workers = [];
     }
 
     pushTarget(target: Target) {
         this.pendingTargets.push(target);
-    }
-
-    pushWorker(worker: Worker) {
-        this.workers.push(worker);
-    }
-
-    update() {
-        this.workers.forEach(worker => worker.update());
     }
 
     readyToTillTargets(): Target[] {
@@ -118,21 +108,20 @@ class State {
             for (let i = 0; i < newTargetsCount; i++) {
                 let sTarget = readyToTillTargets.shift();
                 let weakenInstance = new WeakenInstance(this.ns, sTarget);
-                this.spawnScriptInstance(weakenInstance);
+                // this.spawnScriptInstance(weakenInstance);
             }
         }
     }
 
-    spawnScriptInstance(scriptInstance: BatchScriptInstance) {
-        while (scriptInstance.needsMoreThreads()) {
-            let nextWorker = this.workers.shift();
-            nextWorker.update();
-            spawnScriptOnWorker(this.ns, nextWorker, scriptInstance);
-        }
-    }
+    // spawnScriptInstance(scriptInstance: BatchScriptInstance) {
+    //     while (scriptInstance.needsMoreThreads()) {
+    //         let nextWorker = this.workers.shift();
+    //         nextWorker.update();
+    //         spawnScriptOnWorker(this.ns, nextWorker, scriptInstance);
+    //     }
+    // }
 }
 
 async function tick(ns: NS, state: State) {
-    state.update();
     state.tillNewTargets();
 }
