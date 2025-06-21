@@ -1,4 +1,4 @@
-import type { NS } from "netscript";
+import type { AutocompleteData, NS } from "netscript";
 import type { ContractData } from "all-contracts";
 
 import { walkNetworkBFS } from "util/walk";
@@ -34,10 +34,31 @@ const ALL_CONTRACT_TYPES = [
 ];
 
 export function autocomplete(data: AutocompleteData, args: string[]): string[] {
-    return ALL_CONTRACT_TYPES;
+    if (args[args.length - 1] === "--test" || args[args.length - 2] === "--test") {
+        return ALL_CONTRACT_TYPES;
+    } else {
+        return [];
+    }
 }
 
 export async function main(ns: NS) {
+    const flags = ns.flags([
+        ['test', null],
+        ['help', false],
+    ]);
+
+    const rest = flags._ as string[];
+    if (flags.help || (flags.test !== null && typeof flags.test != 'string')) {
+        ns.tprint(`
+USAGE: run ${ns.getScriptName()} [--test CONTRACT_NAME]
+
+OPTIONS
+  --help                Show this help message
+  --test CONTRACT_NAME  Test a specific contract type
+`);
+        return;
+    }
+
     let network = walkNetworkBFS(ns);
     let allHosts = Array.from(network.keys());
 
@@ -56,6 +77,11 @@ export async function main(ns: NS) {
         let files = ns.ls(host).filter(file => contractFile.test(file));
         for (const file of files) {
             let contractType = ns.codingcontract.getContractType(file, host).replace(':', '').replaceAll(' ', '-');
+
+            if (flags.test !== null && flags.test !== contractType) {
+                continue;
+            }
+
             let data = ns.codingcontract.getData(file, host);
             let contract: ContractData = { type: contractType, file: file, host: host, data: data, answer: null };
 
@@ -64,10 +90,20 @@ export async function main(ns: NS) {
                 let incompleteContractScriptName = ns.sprintf('/contracts/incomplete/%s.js', contractType)
                 if (ns.fileExists(incompleteContractScriptName)) {
                     incompleteScriptContracts.push(contract);
+
+                    if (flags.test !== null) {
+                        contractScriptName = incompleteContractScriptName;
+                    } else {
+                        // Skip running the contract if not in test
+                        // mode for this contract type.
+                        continue;
+                    }
                 } else {
                     missingScriptContracts.push(contract);
+                    // Script is missing, always skip running it
+                    // because it would fail.
+                    continue;
                 }
-                continue;
             }
 
             let pid = ns.run(contractScriptName, 1, contractPortNum, JSON.stringify(data));
@@ -91,7 +127,7 @@ export async function main(ns: NS) {
     let incompleteContractTypes = [...new Set(incompleteScriptContracts.map((c) => c.type))];
     if (incompleteContractTypes.length > 0) {
         incompleteContractTypes.sort();
-        ns.tprintf('\ncontracts with no solution: %s', JSON.stringify(incompleteContractTypes, null, 2));
+        ns.tprintf('\ncontracts with an incomplete solution: %s', JSON.stringify(incompleteContractTypes, null, 2));
     }
 
     if (missingScriptContracts.length > 0) {
