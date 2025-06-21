@@ -53,32 +53,45 @@ function isDigit(c): boolean {
     return /\d/.test(c);
 }
 
+const enum ChunkType {
+    Literal,
+    BackRef
+}
+
 function solve(data: string): string {
     let uncompressed = "";
     let i = 0;
 
+    let nextChunkType = ChunkType.Literal;
+
     while (i < data.length) {
         let len = parseInt(data[i]);
 
-        // Empty chunk
-        if (len === 0) {
-            i += 1;
-            continue;
-        }
-
-        if (isDigit(data[i + 1])) {
-            // Back reference to uncompressed data
-            let charsBack = parseInt(data[i + 1]);
-            let start = uncompressed.length - charsBack;
-            for (let j = start; j < start + len; ++j) {
-                uncompressed += uncompressed[j];
-            }
-            i += 2;
-        } else {
-            // Directly encoded data
-            i += 1;
-            uncompressed += data.substring(i, i + len);
-            i += len;
+        switch (nextChunkType) {
+            case ChunkType.Literal:
+                if (len > 0) {
+                    i += 1;
+                    uncompressed += data.substring(i, i + len);
+                    i += len;
+                } else {
+                    i += 1;
+                }
+                nextChunkType = ChunkType.BackRef;
+                break;
+            case ChunkType.BackRef:
+                if (len > 0 && isDigit(data[i + 1])) {
+                    // Back reference to uncompressed data
+                    let charsBack = parseInt(data[i + 1]);
+                    let start = uncompressed.length - charsBack;
+                    for (let j = start; j < start + len; ++j) {
+                        uncompressed += uncompressed[j];
+                    }
+                    i += 2;
+                } else {
+                    i += 1;
+                }
+                nextChunkType = ChunkType.Literal;
+                break;
         }
     }
     return uncompressed;
