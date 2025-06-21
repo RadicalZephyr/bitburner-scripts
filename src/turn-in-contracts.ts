@@ -22,7 +22,7 @@ export async function main(ns: NS) {
 
     for (const contractType in failures) {
         let contractFailures = failures[contractType];
-        ns.tprintf("failed %s contracts of type %s:", contractFailures.length);
+        ns.tprintf("failed %s contracts of type %s:", contractFailures.length, contractType);
 
         for (const contract of contractFailures) {
             ns.tprintf(" failed %s on host %s\ndata: %s\nanswer: %s", contract.file, contract.host, contract.data, contract.answer);
