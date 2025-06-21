@@ -42,7 +42,7 @@ function solve(data: number): any {
         }
     }
 
-    let product = factors.reduce((prev, cur) => prev * cur);
+    let product = factors.reduce((prev, cur) => prev * cur, 1);
 
     if (product === data) {
         return factors[factors.length - 1];
