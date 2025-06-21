@@ -60,7 +60,7 @@ Example:
         const sec = ns.getServerSecurityLevel(server);
         ns.clearLog();
         ns.print(`${server}:
- $_______: ${ns.nFormat(money, "$0.000a")} / ${ns.nFormat(maxMoney, "$0.000a")} (${(money / maxMoney * 100).toFixed(2)}%)
+ $_______: $${ns.formatNumber(money)} / $${ns.formatNumber(maxMoney)} (${ns.formatPercent(money / maxMoney)})
  security: +${(sec - minSec).toFixed(2)} (${sec.toFixed(2)} / ${minSec.toFixed(2)})
  hack____: ${ns.tFormat(ns.getHackTime(server))} (t=${Math.ceil(ns.hackAnalyzeThreads(server, money))})
  grow____: ${ns.tFormat(ns.getGrowTime(server))} (t=${buildAnalyze(ns, server, maxMoney / money)})

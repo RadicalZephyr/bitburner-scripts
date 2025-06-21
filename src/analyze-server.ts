@@ -34,7 +34,7 @@ export async function main(ns: NS) {
     ns.tprint(`
 ${server}:
     RAM        : ${usedRam} / ${maxRam} (${usedRam / maxRam * 100}%)
-    $          : ${ns.nFormat(money, "$0.000a")} / ${ns.nFormat(maxMoney, "$0.000a")} (${(money / maxMoney * 100).toFixed(2)}%)
+    $          : $${ns.formatNumber(money)} / $${ns.formatNumber(maxMoney)} (${ns.formatPercent(money / maxMoney)})
     security   : ${sec.toFixed(2)} / ${minSec.toFixed(2)} (${(sec / minSec).toFixed(2)}x)
     growth     : ${ns.getServerGrowth(server)}
     hackChance : ${(ns.hackAnalyzeChance(server) * 100).toFixed(2)}%
