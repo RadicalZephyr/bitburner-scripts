@@ -36,23 +36,39 @@ export async function main(ns: NS) {
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
 
-function solve(data: number[][]): any {
+type Range = [number, number];
+
+function solve(data: Range[]): any {
     data.sort((b, c) => b[1] - c[1]);
     data.sort((b, c) => b[0] - c[0]);
 
     return data.reduce(mergeRanges, []);
 }
 
-function mergeRanges(acc: number[][], cur: number[]): number[][] {
+function mergeRanges(acc: Range[], next: Range): Range[] {
     if (acc.length == 0) {
-        return [cur];
+        return [next];
     }
 
-    let last: number[] = acc.at(-1);
-    if (last[0] <= cur[0] && cur[0] <= last[1]) {
-        last[1] = cur[1];
+    let last: Range = acc.at(-1);
+
+    // Sorting means that `last[0] <= next[0]`, so checking if
+    // next.start < last.end means these two ranges overlap.
+    if (next[0] <= last[1]) {
+        if (last[1] < next[1]) {
+            // extend the last range if the next one has a larger
+            // endpoint
+            last[1] = next[1];
+        }
     } else {
-        acc.push(cur);
+        acc.push(next);
     }
     return acc;
 }
+
+
+// [[7,12],[2,11],[24,33],[6,14],[4,7],[4,12],[10,16],[6,8],[7,13],[13,21],[8,17],[13,17],[12,18],[10,11],[14,15],[24,25],[2,5],[22,32]]
+// [2,5],[2,11],[4,7],[4,12],[6,14],[6,8]
+
+// [[2,5],[2,11],[4,7],[4,12],[6,8],[6,14],[7,12],[7,13],[8,17],[10,11],[10,16],[12,18],[13,17],[13,21],[14,15],[22,32],[24,25],[24,33]]
+// [2,5]
