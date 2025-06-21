@@ -30,15 +30,16 @@ export async function main(ns: NS) {
     let contractData: any = JSON.parse(contractDataJSON);
     ns.tprintf('contract data: %s', JSON.stringify(contractData));
     let answer = solve(contractData);
-    ns.writePort(contractPortNum, JSON.stringify(answer));
+    ns.writePort(contractPortNum, answer);
 }
 
 const ALPHABET: string[] = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
 
-function solve(data: [string, number]): any {
+function solve(data: [string, number]): string {
     let [plaintext, n] = data;
+    let leftShift = ALPHABET.length - n;
     let upcase_plaintext = plaintext.toUpperCase();
-    return upcase_plaintext.split('').map((c) => shift(c, n)).join('');
+    return upcase_plaintext.split('').map((c) => shift(c, leftShift)).join('');
 }
 
 const A_CODE: number = "A".codePointAt(0);
