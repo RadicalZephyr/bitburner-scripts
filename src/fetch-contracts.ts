@@ -3,6 +3,40 @@ import type { ContractData } from "all-contracts";
 
 import { walkNetworkBFS } from "util/walk";
 
+const ALL_CONTRACT_TYPES = [
+    "Algorithmic-Stock-Trader-I",
+    "Algorithmic-Stock-Trader-II",
+    "Algorithmic-Stock-Trader-III",
+    "Algorithmic-Stock-Trader-IV",
+    "Array-Jumping-Game-II",
+    "Array-Jumping-Game",
+    "Compression-I-RLE-Compression",
+    "Compression-II-LZ-Decompression",
+    "Compression-III-LZ-Compression",
+    "Encryption-I-Caesar-Cipher",
+    "Encryption-II-Vigenère-Cipher",
+    "Find-All-Valid-Math-Expressions",
+    "Find-Largest-Prime-Factor",
+    "Generate-IP-Addresses",
+    "HammingCodes-Encoded-Binary-to-Integer",
+    "HammingCodes-Integer-to-Encoded-Binary",
+    "Merge-Overlapping-Intervals",
+    "Minimum-Path-Sum-in-a-Triangle",
+    "Proper-2-Coloring-of-a-Graph",
+    "Sanitize-Parentheses-in-Expression",
+    "Shortest-Path-in-a-Grid",
+    "Spiralize-Matrix",
+    "Subarray-with-Maximum-Sum",
+    "Total-Ways-to-Sum",
+    "Total-Ways-to-Sum-II",
+    "Unique-Paths-in-a-Grid-II",
+    "Unique-Paths-in-a-Grid-I"
+];
+
+export function autocomplete(data: AutocompleteData, args: string[]): string[] {
+    return ALL_CONTRACT_TYPES;
+}
+
 export async function main(ns: NS) {
     let network = walkNetworkBFS(ns);
     let allHosts = Array.from(network.keys());
