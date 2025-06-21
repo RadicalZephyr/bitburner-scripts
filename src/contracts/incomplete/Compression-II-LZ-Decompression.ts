@@ -46,9 +46,40 @@ export async function main(ns: NS) {
     let contractData: any = JSON.parse(contractDataJSON);
     ns.tprintf('contract data: %s', JSON.stringify(contractData));
     let answer = solve(contractData);
-    ns.writePort(contractPortNum, JSON.stringify(answer));
+    ns.writePort(contractPortNum, answer);
 }
 
-function solve(data: any): any {
-    return null;
+function isDigit(c): boolean {
+    return /\d/.test(c);
+}
+
+function solve(data: string): string {
+    let uncompressed = "";
+    let i = 0;
+
+    while (i < data.length) {
+        let len = parseInt(data[i]);
+
+        // Empty chunk
+        if (len === 0) {
+            i += 1;
+            continue;
+        }
+
+        if (isDigit(data[i + 1])) {
+            // Back reference to uncompressed data
+            let charsBack = parseInt(data[i + 1]);
+            let start = uncompressed.length - charsBack;
+            for (let j = start; j < start + len; ++j) {
+                uncompressed += uncompressed[j];
+            }
+            i += 2;
+        } else {
+            // Directly encoded data
+            i += 1;
+            uncompressed += data.substring(i, i + len);
+            i += len;
+        }
+    }
+    return uncompressed;
 }
