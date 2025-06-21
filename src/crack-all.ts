@@ -17,6 +17,9 @@ const HACKING_FILES = [
 ];
 
 export async function main(ns: NS) {
+    ns.disableLog("ALL");
+    ns.clearLog();
+
     let portsCracked = 0;
     let hostsPort = ns.getPortHandle(HOSTS_PORT);
     let targetsPort = ns.getPortHandle(TARGETS_PORT);
@@ -28,9 +31,12 @@ export async function main(ns: NS) {
             await ns.sleep(1000);
             continue;
         }
+        ns.printf("numCrackers: %s\nportsCracked = %s\n", numCrackers, portsCracked);
         for (let i = portsCracked; i < 6 && i <= numCrackers; i++) {
+            ns.printf("portsCracked = %s\n", portsCracked);
             const hosts = HOSTS_BY_PORTS_REQUIRED[i];
             for (const host of hosts) {
+                ns.printf("cracking host %s", host);
                 // Skip n00dles because that's probably where this
                 // script is running.
                 if (host === "n00dles") {
@@ -48,11 +54,13 @@ export async function main(ns: NS) {
 
             const targets = TARGETS_BY_PORTS_REQUIRED[i];
             for (const target of targets) {
+                ns.printf("cracking target %s", target);
                 crackHost(ns, target, i);
 
                 // Write host name to the targets port
                 targetsPort.write(targetMsg(target));
             }
+            portsCracked = i;
         }
         portsCracked = numCrackers;
         await ns.sleep(1000);
