@@ -44,6 +44,7 @@ export function autocomplete(data: AutocompleteData, args: string[]): string[] {
 export async function main(ns: NS) {
     const flags = ns.flags([
         ['test', null],
+        ['count', null],
         ['help', false],
     ]);
 
@@ -55,6 +56,7 @@ USAGE: run ${ns.getScriptName()} [--test CONTRACT_NAME]
 OPTIONS
   --help                Show this help message
   --test CONTRACT_NAME  Test a specific contract type
+  --count N             Only process N contracts
 `);
         return;
     }
@@ -71,6 +73,9 @@ OPTIONS
     let incompleteScriptContracts = [];
     let missingScriptContracts = [];
 
+    let count = 0;
+
+    outer:
     for (const host of allHosts) {
         if (host == "home") { continue; }
 
@@ -122,6 +127,14 @@ OPTIONS
             contract.answer = contractPort.read();
 
             contracts.push(contract);
+
+            if (flags.test !== null && flags.count !== null) {
+                count += 1;
+
+                if (count >= flags.count) {
+                    break outer;
+                }
+            }
         }
     }
     let incompleteContractTypes = [...new Set(incompleteScriptContracts.map((c) => c.type))];
