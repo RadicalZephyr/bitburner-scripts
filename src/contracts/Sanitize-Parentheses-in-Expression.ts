@@ -60,7 +60,7 @@ function solve(data: string): any {
             return solutions;
         }
     }
-    return [""];
+    return [data.replaceAll(/[()]/g, "")];
 }
 
 function uniqueBalancedParens(data: string, idxChoices: number[][]): string[] {
