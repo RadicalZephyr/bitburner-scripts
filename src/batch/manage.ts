@@ -1,6 +1,6 @@
 import type { NetscriptPort, NS } from "netscript";
 
-import { HostMsg, WorkerType, TargetType, HOSTS_PORT, HOSTS_DONE, EMPTY_SENTINEL } from "util/ports";
+import { HostMsg, WorkerType, TargetType, readAllFromPort, HOSTS_PORT } from "util/ports";
 
 import { WeakenInstance } from "batch/till";
 
@@ -19,11 +19,9 @@ export async function main(ns: NS) {
 
     let hostsMessagesWaiting = true;
 
-    let readHostsFromPort = makeReadHostsFromPort(ns, hostsPort, state);
-
     while (true) {
         if (hostsMessagesWaiting) {
-            readHostsFromPort();
+            readHostsFromPort(ns, hostsPort, state);
             hostsMessagesWaiting = false;
 
             hostsPort.nextWrite().then(_ => {
@@ -35,28 +33,20 @@ export async function main(ns: NS) {
     }
 }
 
-function makeReadHostsFromPort(ns: NS, hostsPort: NetscriptPort, state: State) {
-    return function() {
-        // Read everything from the port until empty or getting the done signal.
-        while (true) {
-            let nextMsg = hostsPort.read();
-            if (typeof nextMsg === "string" && (nextMsg === EMPTY_SENTINEL || nextMsg === HOSTS_DONE)) {
-                break;
-            }
-
-            if (typeof nextMsg === "object") {
-                let nextHostMsg = nextMsg as HostMsg;
-                switch (nextHostMsg.type) {
-                    case WorkerType:
-                        state.pushWorker(new Worker(ns, nextHostMsg.host));
-                        break;
-                    case TargetType:
-                        state.pushTarget(new Target(ns, nextHostMsg.host));
-                        break;
-                }
+function readHostsFromPort(ns: NS, hostsPort: NetscriptPort, state: State) {
+    for (let nextMsg of readAllFromPort(ns, hostsPort)) {
+        if (typeof nextMsg === "object") {
+            let nextHostMsg = nextMsg as HostMsg;
+            switch (nextHostMsg.type) {
+                case WorkerType:
+                    state.pushWorker(new Worker(ns, nextHostMsg.host));
+                    break;
+                case TargetType:
+                    state.pushTarget(new Target(ns, nextHostMsg.host));
+                    break;
             }
         }
-    };
+    }
 }
 
 class Options {
