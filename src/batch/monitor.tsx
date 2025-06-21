@@ -27,8 +27,8 @@ export async function main(ns: NS) {
     }
     ns.disableLog('ALL');
     ns.clearLog();
-    ns.tail();
-    ns.resizeTail(450, 30 * 6);
+    ns.ui.openTail();
+    ns.ui.resizeTail(450, 30 * 6);
 
     while (true) {
         let threadsByTarget = countThreadsByTarget(ns);

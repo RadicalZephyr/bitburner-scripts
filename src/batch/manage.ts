@@ -11,7 +11,7 @@ import { BatchScriptInstance, spawnScriptOnWorker } from "batch/lib";
 export async function main(ns: NS) {
     ns.disableLog("getServerUsedRam");
     ns.disableLog("ps");
-    ns.tail();
+    ns.ui.openTail();
 
     let hostsPort = ns.getPortHandle(HOSTS_PORT);
 
