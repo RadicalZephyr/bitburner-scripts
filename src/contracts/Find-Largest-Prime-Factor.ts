@@ -43,6 +43,10 @@ function solve(data: number): any {
             factors.push(i);
         }
     }
+    // Include the result of dividing out all the other factors as a
+    // factor, because it is. We just don't know it's a prime number
+    // because it's not in our list of primes.
+    factors.push(n);
 
     let product = factors.reduce((prev, cur) => prev * cur, 1);
 
