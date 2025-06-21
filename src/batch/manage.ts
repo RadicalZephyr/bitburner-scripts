@@ -63,7 +63,7 @@ class Options {
     _maxTillTargets: number;
 
     constructor() {
-        this._maxTillTargets = 5;
+        this._maxTillTargets = 2;
     }
 
     get maxTillTargets(): number {
@@ -144,5 +144,5 @@ class State {
 
 async function tick(ns: NS, state: State) {
     state.update();
-
+    state.tillNewTargets();
 }
