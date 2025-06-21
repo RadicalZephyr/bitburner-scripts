@@ -88,7 +88,7 @@ OPTIONS
             }
 
             let data = ns.codingcontract.getData(file, host);
-            let contract: ContractData = { type: contractType, file: file, host: host, data: data, answer: null };
+            let contract: ContractData = { type: contractType, file: file, host: host, data: JSON.stringify(data), answer: null };
 
             let contractScriptName = ns.sprintf('/contracts/%s.js', contractType)
             if (!ns.fileExists(contractScriptName)) {
