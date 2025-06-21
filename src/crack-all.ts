@@ -16,6 +16,8 @@ const HACKING_FILES = [
     "/batch/w.js"
 ];
 
+const NUKED_FILE = "nuked.js";
+
 export async function main(ns: NS) {
     ns.disableLog("ALL");
     ns.clearLog();
@@ -23,6 +25,8 @@ export async function main(ns: NS) {
     let portsCracked = 0;
     let hostsPort = ns.getPortHandle(HOSTS_PORT);
     let targetsPort = ns.getPortHandle(TARGETS_PORT);
+
+    ns.write(NUKED_FILE, "export const NUKED = true;", "w");
 
     while (portsCracked < 5) {
         let numCrackers = countPortCrackers(ns);
@@ -70,12 +74,22 @@ export async function main(ns: NS) {
     targetsPort.write(DONE_SENTINEL);
 }
 
-function crackHost(ns: NS, host: string, ports: number): void {
+/**
+ * Attempt to crack a host. Returns true if the host was actually
+   cracked, false if it was already cracked when this function was
+   called.
+ */
+function crackHost(ns: NS, host: string, ports: number): boolean {
+    if (ns.fileExists(NUKED_FILE, host)) {
+        return false
+    }
     let crackers = portOpeningProgramFns(ns);
     for (let i = 0; i < ports; i++) {
         crackers[i].fn(host);
     }
     ns.nuke(host);
+    ns.scp(NUKED_FILE, host);
+    return true;
 }
 
 function countPortCrackers(ns: NS): number {
