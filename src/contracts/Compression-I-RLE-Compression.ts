@@ -34,9 +34,33 @@ export async function main(ns: NS) {
     let contractData: any = JSON.parse(contractDataJSON);
     ns.tprintf('contract data: %s', JSON.stringify(contractData));
     let answer = solve(contractData);
-    ns.writePort(contractPortNum, JSON.stringify(answer));
+    ns.writePort(contractPortNum, answer);
 }
 
-function solve(data: any): any {
-    return null;
+function solve(data: string): string {
+    let current = null;
+    let currentLen = 0;
+
+    let encoding = "";
+
+    for (let i = 0; i < data.length; ++i) {
+        if (data[i] === current) {
+            currentLen += 1;
+            if (currentLen == 10) {
+                encoding += `${9}${current}`;
+                currentLen = 1;
+            }
+        } else {
+            if (current !== null) {
+                encoding += `${currentLen}${current}`;
+            }
+            current = data[i];
+            currentLen = 1;
+        }
+    }
+    // Add encoding for the final run
+    if (current !== null) {
+        encoding += `${currentLen}${current}`;
+    }
+    return encoding;
 }
