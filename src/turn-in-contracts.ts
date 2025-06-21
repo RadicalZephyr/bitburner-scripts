@@ -25,7 +25,7 @@ export async function main(ns: NS) {
         ns.tprintf("failed %s contracts of type %s:", contractFailures.length, contractType);
 
         for (const contract of contractFailures) {
-            ns.tprintf(" failed %s on host %s\ndata: %s\nanswer: %s", contract.file, contract.host, contract.data, contract.answer);
+            ns.tprintf(" failed %s on host %s\ndata: %s\nanswer: %s", contract.file, contract.host, JSON.stringify(contract.data), contract.answer);
         }
     }
 }
