@@ -30,10 +30,9 @@ export async function main(ns: NS) {
                 }
             }
             memMessageWaiting = false;
-            memPort.nextWrite().then(_ => {
+            await memPort.nextWrite().then(_ => {
                 memMessageWaiting = true;
             });
         }
-        await ns.sleep(100);
     }
 }
