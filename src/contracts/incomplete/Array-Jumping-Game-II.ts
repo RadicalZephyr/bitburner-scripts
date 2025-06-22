@@ -31,10 +31,10 @@ export async function main(ns: NS) {
     let contractData: any = JSON.parse(contractDataJSON);
     ns.tprintf('contract data: %s', JSON.stringify(contractData));
     let answer = solve(contractData);
-    ns.writePort(contractPortNum, JSON.stringify(answer));
+    ns.writePort(contractPortNum, answer);
 }
 
-function solve(data: any): any {
+function solve(data: number[]): number {
     let result = jump(data, 0, 0);
     return result.jumps;
 }
