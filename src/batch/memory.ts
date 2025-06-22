@@ -29,7 +29,6 @@ export async function main(ns: NS) {
         }
 
         await Promise.any([nextHostsMessage, nextMemMessage]);
-        await ns.sleep(100);
     }
 }
 
