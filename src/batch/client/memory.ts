@@ -44,7 +44,7 @@ export class MemoryClient {
         this.port = ns.getPortHandle(MEMORY_PORT);
     }
 
-    async requestAllocation(chunkSize: number, numChunks: number): Promise<HostAllocation[]> {
+    async requestOwnedAllocation(chunkSize: number, numChunks: number): Promise<HostAllocation[]> {
         let pid = this.ns.pid;
         let returnPortId = MEMORY_PORT + pid;
         let returnPort = this.ns.getPortHandle(returnPortId);
@@ -67,4 +67,6 @@ export class MemoryClient {
         }, "memoryRelease");
         return result.hosts;
     }
+
+
 }
