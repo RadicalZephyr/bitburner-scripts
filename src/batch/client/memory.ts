@@ -44,6 +44,12 @@ export class MemoryClient {
         this.port = ns.getPortHandle(MEMORY_PORT);
     }
 
+    /** Send a message to the memory allocator requesting a chunk of
+     *  memory for the current process to own.
+     *
+     * This method also registers an `atExit` handler function to send
+     * a release message to the memory allocator.
+     */
     async requestOwnedAllocation(chunkSize: number, numChunks: number): Promise<HostAllocation[]> {
         let pid = this.ns.pid;
         let returnPortId = MEMORY_PORT + pid;
@@ -67,6 +73,4 @@ export class MemoryClient {
         }, "memoryRelease");
         return result.hosts;
     }
-
-
 }
