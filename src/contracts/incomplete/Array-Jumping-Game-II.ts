@@ -64,6 +64,9 @@ function jump(a: number[], i: number, jumps: number): Result {
         // Check the next farthest square we can reach that's not a zero.
         let result = jump(a, n, jumps + 1);
         if (result.done) {
+            // TODO: we can't return here, we need to actually check
+            // all the routes, find the shortest length, and retain
+            // the actual shortest paths we found.
             return result;
         }
     }
