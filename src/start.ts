@@ -8,6 +8,7 @@ export async function main(ns: NS) {
     await ns.sleep(1000);
 
     startCracker(ns);
+    startBatchHcking(ns);
 }
 
 const CRACK_FILES: string[] = [
@@ -15,6 +16,11 @@ const CRACK_FILES: string[] = [
     "/util/ports.js",
     "/crack-all.js",
 
+];
+
+const MEMORY_FILES: string[] = [
+    "/util/ports.js",
+    "/batch/memory.js"
 ];
 
 const MANAGE_FILES: string[] = [
@@ -35,6 +41,27 @@ function startCracker(ns: NS) {
     } else {
         ns.nuke(crackHost);
     }
+
+    ns.scp(CRACK_FILES, crackHost, "home");
+    ns.exec(crackScript, crackHost);
+}
+
+function startBatchHcking(ns: NS) {
+    const memoryHost = "foodnstuff";
+    const memoryScript = "/batch/memory.js";
+    let memory = ns.getRunningScript(memoryScript, memoryHost);
+    if (memory !== null) {
+        ns.kill(memory.pid);
+    } else {
+        ns.nuke(memoryHost);
+    }
+
+    let batchFiles = ns.ls("home", "batch");
+    let memoryFiles = [...MEMORY_FILES, ...batchFiles];
+
+    ns.scp(memoryFiles, memoryHost, "home");
+    ns.exec(memoryScript, memoryHost);
+
     const manageHost = "foodnstuff";
     const manageScript = "/batch/manage.js";
     let manager = ns.getRunningScript(manageScript, manageHost);
@@ -44,10 +71,6 @@ function startCracker(ns: NS) {
         ns.nuke(manageHost);
     }
 
-    ns.scp(CRACK_FILES, crackHost, "home");
-    ns.exec(crackScript, crackHost);
-
-    let batchFiles = ns.ls("home", "batch");
     let collectionsFiles = ns.ls("home", "typescript-collections");
     let manageFiles = [...MANAGE_FILES, ...batchFiles, ...collectionsFiles];
 
