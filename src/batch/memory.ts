@@ -2,30 +2,37 @@ import type { NS, NetscriptPort } from "netscript";
 
 import { Worker } from "batch/worker";
 
-import { HostMsg, HOSTS_PORT, readAllFromPort, WorkerType } from "/util/ports";
+import { HostMsg, HOSTS_PORT, MEMORY_PORT, readAllFromPort, WorkerType } from "/util/ports";
 
 export async function main(ns: NS) {
     let hostsPort = ns.getPortHandle(HOSTS_PORT);
     let hostsMessagesWaiting = true;
+    let nextHostsMessage = nextMessage(hostsPort, hostsMessagesWaiting);
+
+    let memPort = ns.getPortHandle(MEMORY_PORT);
+    let memMessageWaiting = true;
+    let nextMemMessage = nextMessage(memPort, memMessageWaiting);
 
     let state = new State(ns);
 
     while (true) {
         if (hostsMessagesWaiting) {
             readHostsFromPort(ns, hostsPort, state);
-            hostsMessagesWaiting = false;
-
-            hostsPort.nextWrite().then(_ => {
-                hostsMessagesWaiting = true;
-            });
+            nextHostsMessage = nextMessage(hostsPort, hostsMessagesWaiting);
         }
-        await tick(ns, state);
+        if (memMessageWaiting) {
+            readMemRequestsFromPort(ns, memPort, state);
+            nextMemMessage = nextMessage(memPort, memMessageWaiting);
+        }
+
+        await Promise.any([nextHostsMessage, nextMemMessage]);
         await ns.sleep(100);
     }
 }
 
-async function tick(ns: NS, state: State) {
-
+function nextMessage(port: NetscriptPort, sentinel: boolean): Promise<void> {
+    sentinel = false;
+    return port.nextWrite().then(_ => { sentinel = true; });
 }
 
 function readHostsFromPort(ns: NS, hostsPort: NetscriptPort, state: State) {
@@ -37,6 +44,10 @@ function readHostsFromPort(ns: NS, hostsPort: NetscriptPort, state: State) {
             }
         }
     }
+}
+
+function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, state: State) {
+
 }
 
 class State {
