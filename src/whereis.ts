@@ -34,7 +34,7 @@ OPTIONS
         return;
     }
 
-    let goalHost = ns.args[0];
+    let goalHost = rest[0];
     if (typeof goalHost !== 'string' || !ns.serverExists(goalHost)) {
         ns.tprintf("goal host %s does not exist", goalHost);
         return;
