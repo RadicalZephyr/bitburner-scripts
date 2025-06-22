@@ -16,6 +16,8 @@ export const MONITOR_PORT: number = toPort("monitor");
 export const HOSTS_PORT: number = 100;
 export const TARGETS_PORT: number = 101;
 
+export const MEMORY_PORT: number = 200;
+
 export const WorkerType = "worker";
 export const TargetType = "target";
 
@@ -56,13 +58,15 @@ export async function main(ns: NS) {
         + "Sow Port: %s\n"
         + "Harvest Port: %s\n"
         + "Monitor Port: %s\n"
-        + "Hosts Port: %s\n",
-        + "Targets Port: %s\n",
+        + "Hosts Port: %s\n"
+        + "Targets Port: %s\n"
+        + "Memory Port: %s\n",
         TILL_PORT,
         SOW_PORT,
         HARVEST_PORT,
         MONITOR_PORT,
         HOSTS_PORT,
-        TARGETS_PORT
+        TARGETS_PORT,
+        MEMORY_PORT
     );
 }
