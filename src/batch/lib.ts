@@ -1,6 +1,6 @@
 import type { NS, ScriptArg } from "netscript";
 
-import type { Worker } from "batch/types";
+import type { Worker } from "batch/worker";
 
 export type Pid = {
     pid: number,

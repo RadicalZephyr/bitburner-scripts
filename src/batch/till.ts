@@ -1,6 +1,6 @@
 import type { NS } from "netscript";
 
-import type { Target } from "batch/types";
+import type { Target } from "batch/target";
 
 import type { Pid, BatchScriptInstance } from "batch/lib";
 

@@ -4,7 +4,7 @@ import { HostMsg, WorkerType, TargetType, readAllFromPort, TARGETS_PORT } from "
 
 import { WeakenInstance } from "batch/till";
 
-import { Target, Worker } from "batch/types";
+import { Target } from "batch/target";
 
 import { BatchScriptInstance, spawnScriptOnWorker } from "batch/lib";
 

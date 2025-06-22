@@ -1,6 +1,6 @@
 import type { NS, NetscriptPort } from "netscript";
 
-import { Target, Worker } from "./types";
+import { Worker } from "batch/worker";
 
 import { HostMsg, HOSTS_PORT, readAllFromPort, WorkerType } from "/util/ports";
 
