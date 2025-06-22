@@ -65,12 +65,13 @@ export class MemoryClient {
 
         let allocationId = result.allocationId;
         let memoryPort = this.port;
-        this.ns.atExit(() => {
-            memoryPort.write([
-                MessageType.Release,
-                [allocationId]
-            ]);
-        }, "memoryRelease");
+        registerAllocationOwnership(this.ns, allocationId)
         return result.hosts;
     }
+}
+
+export function registerAllocationOwnership(ns: NS, allocationId: number) {
+    ns.atExit(() => {
+        ns.writePort(MEMORY_PORT, [MessageType.Release, [allocationId]]);
+    }, "memoryRelease");
 }
