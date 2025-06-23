@@ -97,7 +97,7 @@ OPTIONS
 
             let data = ns.codingcontract.getData(file, host);
             let dataJson = JSON.stringify(data, (key, value) =>
-                typeof value === "bigint" ? JSON.rawJSON(value.toString()) : value);
+                typeof value === "bigint" ? value.toString() : value);
 
             let contract: ContractData = { type: contractType, file: file, host: host, data: dataJson, answer: null };
 
