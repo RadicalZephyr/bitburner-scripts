@@ -3,6 +3,13 @@ import type { ContractData } from "all-contracts";
 
 import { walkNetworkBFS } from "util/walk";
 
+declare global {
+    interface JSON {
+        rawJSON: ((string) => any),
+    }
+    var JSON: JSON;
+}
+
 const ALL_CONTRACT_TYPES = [
     "Algorithmic-Stock-Trader-I",
     "Algorithmic-Stock-Trader-II",
@@ -88,7 +95,10 @@ OPTIONS
             }
 
             let data = ns.codingcontract.getData(file, host);
-            let contract: ContractData = { type: contractType, file: file, host: host, data: JSON.stringify(data), answer: null };
+            let dataJson = JSON.stringify(data, (key, value) =>
+                typeof value === "bigint" ? JSON.rawJSON(value.toString()) : value);
+
+            let contract: ContractData = { type: contractType, file: file, host: host, data: dataJson, answer: null };
 
             let contractScriptName = ns.sprintf('/contracts/%s.js', contractType)
             if (!ns.fileExists(contractScriptName)) {
@@ -111,7 +121,7 @@ OPTIONS
                 }
             }
 
-            let pid = ns.run(contractScriptName, 1, contractPortNum, JSON.stringify(data));
+            let pid = ns.run(contractScriptName, 1, contractPortNum, dataJson);
             if (pid === 0) {
                 ns.tprintf('failed to run script for contract %s from host %s', contractType, contract['host']);
             }
