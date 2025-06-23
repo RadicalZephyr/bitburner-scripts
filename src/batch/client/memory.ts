@@ -3,13 +3,14 @@ import type { NS, NetscriptPort } from "netscript";
 import { MEMORY_PORT } from "/util/ports";
 
 export enum MessageType {
+    Worker,
     Request,
     Release
 }
 
 export type Message = [
     type: MessageType,
-    payload: AllocationRequest | AllocationRelease,
+    payload: string | AllocationRequest | AllocationRelease,
 ];
 
 // Compact version for use over ports if needed

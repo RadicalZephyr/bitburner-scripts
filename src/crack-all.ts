@@ -2,7 +2,8 @@ import type { NS } from "netscript";
 
 import { HOSTS_BY_PORTS_REQUIRED, TARGETS_BY_PORTS_REQUIRED } from "all-hosts";
 
-import { HOSTS_PORT, workerMsg, targetMsg, TARGETS_PORT, DONE_SENTINEL } from "util/ports";
+import { workerMsg, targetMsg, TARGETS_PORT, DONE_SENTINEL, MEMORY_PORT } from "util/ports";
+import { MessageType } from "./batch/client/memory";
 
 const HACKING_FILES = [
     "/all-hosts.js",
@@ -23,7 +24,7 @@ export async function main(ns: NS) {
     ns.clearLog();
 
     let portsCracked = 0;
-    let hostsPort = ns.getPortHandle(HOSTS_PORT);
+    let memoryPort = ns.getPortHandle(MEMORY_PORT);
     let targetsPort = ns.getPortHandle(TARGETS_PORT);
 
     ns.write(NUKED_FILE, "export const NUKED = true;", "w");
@@ -53,7 +54,7 @@ export async function main(ns: NS) {
                 ns.scp(HACKING_FILES, host, 'home');
 
                 // Write host name to the hosts
-                hostsPort.write(workerMsg(host));
+                memoryPort.write([MessageType.Worker, host]);
             }
 
             const targets = TARGETS_BY_PORTS_REQUIRED[i];
@@ -69,8 +70,7 @@ export async function main(ns: NS) {
         portsCracked = numCrackers;
         await ns.sleep(1000);
     }
-    // Signal that the last worker has been sent.
-    hostsPort.write(DONE_SENTINEL);
+    // Signal that the last target has been sent.
     targetsPort.write(DONE_SENTINEL);
 }
 

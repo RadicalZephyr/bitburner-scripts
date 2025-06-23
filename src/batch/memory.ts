@@ -2,47 +2,26 @@ import type { NS, NetscriptPort } from "netscript";
 
 import { AllocationRelease, AllocationRequest, AllocationResult, HostAllocation, Message, MessageType } from "./client/memory";
 
-import { HostMsg, HOSTS_PORT, MEMORY_PORT, readAllFromPort, WorkerType } from "/util/ports";
+import { MEMORY_PORT, readAllFromPort } from "/util/ports";
 
 
 export async function main(ns: NS) {
-    let hostsPort = ns.getPortHandle(HOSTS_PORT);
-    let hostsMessagesWaiting = true;
-    let nextHostsMessage = nextMessage(hostsPort, hostsMessagesWaiting);
-
     let memPort = ns.getPortHandle(MEMORY_PORT);
     let memMessageWaiting = true;
-    let nextMemMessage = nextMessage(memPort, memMessageWaiting);
+    let nextMemMessage = memPort.nextWrite().then(_ => { memMessageWaiting = true; });
 
     let memoryManager = new MemoryManager(ns);
-
+    ns.print("starting memory manager");
     while (true) {
-        if (hostsMessagesWaiting) {
-            readHostsFromPort(ns, hostsPort, memoryManager);
-            nextHostsMessage = nextMessage(hostsPort, hostsMessagesWaiting);
-        }
         if (memMessageWaiting) {
+            ns.print("reading memory requests");
             readMemRequestsFromPort(ns, memPort, memoryManager);
-            nextMemMessage = nextMessage(memPort, memMessageWaiting);
+            memMessageWaiting = false;
+            nextMemMessage = memPort.nextWrite().then(_ => { memMessageWaiting = true; });
+            ns.print("finished reading memory requests");
         }
-
-        await Promise.any([nextHostsMessage, nextMemMessage]);
-    }
-}
-
-function nextMessage(port: NetscriptPort, sentinel: boolean): Promise<void> {
-    sentinel = false;
-    return port.nextWrite().then(_ => { sentinel = true; });
-}
-
-function readHostsFromPort(ns: NS, hostsPort: NetscriptPort, memoryManager: MemoryManager) {
-    for (const nextMsg of readAllFromPort(ns, hostsPort)) {
-        if (typeof nextMsg === "object") {
-            let nextHostMsg = nextMsg as HostMsg;
-            if (nextHostMsg.type == WorkerType) {
-                memoryManager.pushWorker(nextHostMsg.host);
-            }
-        }
+        ns.print("waiting for next message");
+        await nextMemMessage;
     }
 }
 
@@ -50,6 +29,11 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memoryManager: 
     for (const nextMsg of readAllFromPort(ns, memPort)) {
         let msg = nextMsg as Message;
         switch (msg[0]) {
+            case MessageType.Worker:
+                let hostname = msg[1] as string
+                memoryManager.pushWorker(hostname);
+                break;
+
             case MessageType.Request:
                 let request = msg[1] as AllocationRequest;
                 ns.printf("got mem request: %s", JSON.stringify(request));
@@ -57,6 +41,7 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memoryManager: 
                 let allocation = memoryManager.allocate(request.pid, request.chunkSize, request.numChunks);
                 ns.writePort(returnPort, allocation);
                 break;
+
             case MessageType.Release:
                 let [allocationId] = msg[1] as AllocationRelease;
                 ns.printf("received release message for allocation ID: %d", allocationId);
