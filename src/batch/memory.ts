@@ -1,7 +1,5 @@
 import type { NS, NetscriptPort } from "netscript";
 
-import { Worker } from "batch/worker";
-
 import { AllocationRelease, AllocationRequest, Message, MessageType } from "./client/memory";
 
 import { HostMsg, HOSTS_PORT, MEMORY_PORT, readAllFromPort, WorkerType } from "/util/ports";
@@ -73,14 +71,96 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, state: State) {
 
 class State {
     ns: NS;
-    workers: Worker[];
+    allocationId: Generator<number, void>;
+    workers: Map<string, Worker>;
+    allocations: Map<number, Allocation>;
 
     constructor(ns: NS) {
         this.ns = ns;
-        this.workers = [];
+        this.allocationId = allocationIds();
+        this.workers = new Map();
+        this.allocations = new Map();
     }
 
     pushWorker(hostname: string) {
-        this.workers.push(new Worker(this.ns, hostname));
+        this.workers.set(hostname, new Worker(this.ns, hostname));
+    }
+}
+
+function* allocationIds() {
+    let index = 0;
+
+    while (true) {
+        yield index++;
+    }
+}
+
+class Allocation {
+    id: number;
+    pid: number;
+    chunks: AllocationChunk[];
+
+    constructor(id: number, pid: number, chunks: AllocationChunk[]) {
+        this.id = id;
+        this.pid = pid;
+        this.chunks = chunks;
+    }
+
+    get totalSize(): number {
+        return this.chunks.reduce((sum, c) => sum + c.totalSize, 0);
+    }
+}
+
+class AllocationChunk {
+    hostname: string;
+    chunkSize: number;
+    numChunks: number;
+
+    constructor(hostname: string, chunkSize: number, numChunks: number) {
+        this.hostname = hostname;
+        this.chunkSize = chunkSize;
+        this.numChunks = numChunks;
+    }
+
+    get totalSize(): number {
+        return this.chunkSize * this.numChunks;
+    }
+}
+
+class Worker {
+    ns: NS;
+    hostname: string;
+    totalRam: number;
+    reservedRam: number;
+    allocatedRam: number;
+
+    constructor(ns: NS, hostname: string) {
+        this.ns = ns;
+        this.hostname = hostname;
+        this.totalRam = ns.getServerMaxRam(hostname);
+        this.reservedRam = ns.getServerUsedRam(hostname);
+        this.allocatedRam = 0;
+    }
+
+    get usedRam(): number {
+        return this.reservedRam + this.allocatedRam;
+    }
+
+    get freeRam(): number {
+        return this.totalRam - this.usedRam;
+    }
+
+    // TODO: how do we allocate less than all of the chunks
+    allocate(chunkSize: number, numChunks: number): AllocationChunk {
+        let ram = chunkSize * numChunks;
+        if (this.freeRam >= ram) {
+            this.allocatedRam += ram;
+            return new AllocationChunk(this.hostname, chunkSize, numChunks);
+        }
+        return null;
+    }
+
+    free(ram: number): void {
+        this.allocatedRam = Math.max(0, this.allocatedRam - ram);
     }
 }
