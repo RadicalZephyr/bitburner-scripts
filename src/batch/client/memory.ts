@@ -13,12 +13,12 @@ export type Message = [
 ];
 
 // Compact version for use over ports if needed
-export type AllocationRequest = [
+export interface AllocationRequest {
     returnPort: number,
-    lifecyclePid: number,
+    pid: number,
     chunkSize: number,
     numChunks: number,
-];
+}
 
 export type AllocationRelease = [
     allocationId: number
@@ -57,7 +57,12 @@ export class MemoryClient {
         let returnPortId = MEMORY_PORT + pid;
         let returnPort = this.ns.getPortHandle(returnPortId);
 
-        let payload = [returnPortId, pid, chunkSize, numChunks] as AllocationRequest;
+        let payload = {
+            returnPort: returnPortId,
+            pid: pid,
+            chunkSize: chunkSize,
+            numChunks: numChunks
+        } as AllocationRequest;
         let request = [MessageType.Request, payload] as Message;
         while (!this.port.tryWrite(request)) {
             await this.ns.sleep(100);
