@@ -4,35 +4,34 @@ import { walkNetworkBFS } from 'util/walk';
 
 export async function main(ns: NS) {
     const options = ns.flags([
-        ['share', false],
-        ['share_percent', 0.75],
+        ['share-percent', 0.75],
         ['help', false]
     ]);
 
     if (options.help
-        || typeof options.share != 'boolean'
-        || typeof options.share_percent != 'number') {
+        || typeof options['share-percent'] != 'number') {
         ns.tprint(`
 Usage: ${ns.getScriptName()} [OPTIONS]
 
 OPTIONS
   --help          Show this help message
-  --share_percent Specify the percentage of usable hosts to share [0-1]
+  --share-percent Specify the percentage of usable hosts to share [0-1]
 `);
         return;
     }
 
     let shareScript = "/share.js";
+    let share_percent = options['share-percent'];
 
     let ownedHosts = ns.getPurchasedServers();
-    await shareHosts(ns, ownedHosts, shareScript, options.share_percent);
+    await shareHosts(ns, ownedHosts, shareScript, share_percent);
 
     let network = walkNetworkBFS(ns);
     let allHosts = Array.from(network.keys());
 
     let hosts = usableHosts(ns, allHosts);
 
-    await shareHosts(ns, hosts, shareScript, options.share_percent);
+    await shareHosts(ns, hosts, shareScript, share_percent);
 }
 
 async function shareHosts(ns: NS, hosts: string[], shareScript: string, shareAmount: number) {
