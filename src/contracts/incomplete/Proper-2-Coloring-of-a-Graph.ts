@@ -50,11 +50,15 @@ function solve(data: any): any {
     let [numVertices, edges] = data;
     let graph = new Graph(numVertices, edges);
 
-    if (colorGraphDfs(graph, 0, 0)) {
-        return graph.getColoring();
-    } else {
-        return [];
+    for (let v = 0; v < numVertices; v++) {
+        if (graph.getColor(v) === undefined) {
+            if (!colorGraphDfs(graph, v, 0)) {
+                return [];
+            }
+        }
     }
+
+    return graph.getColoring();
 }
 
 function nextColor(color: number): number {
@@ -109,8 +113,8 @@ class Graph {
         return this.vertices.map((v) => v.color !== undefined ? v.color : 0);
     }
 
-    getColor(vertex: number): Color {
-        return this.vertices.at(vertex).color;
+    getColor(vertex: number): Color | undefined {
+        return this.vertices.at(vertex)?.color;
     }
 
     colorVertex(vertex: number, color: Color) {
@@ -118,7 +122,7 @@ class Graph {
     }
 
     neighbors(vertex: number): number[] {
-        return Array.from(this.adjacency.get(vertex).keys());
+        return Array.from(this.adjacency.get(vertex) ?? []);
     }
 }
 
