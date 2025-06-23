@@ -101,16 +101,16 @@ class State {
     }
 
     tillNewTargets() {
-        let readyToTillTargets = this.readyToTillTargets();
+        // let readyToTillTargets = this.readyToTillTargets();
 
-        if (this.tillTargets.length < this.options.maxTillTargets) {
-            let newTargetsCount = this.options.maxTillTargets - this.tillTargets.length;
-            for (let i = 0; i < newTargetsCount; i++) {
-                let sTarget = readyToTillTargets.shift();
-                let weakenInstance = new WeakenInstance(this.ns, sTarget);
-                // this.spawnScriptInstance(weakenInstance);
-            }
-        }
+        // if (this.tillTargets.length < this.options.maxTillTargets) {
+        //     let newTargetsCount = this.options.maxTillTargets - this.tillTargets.length;
+        //     for (let i = 0; i < newTargetsCount; i++) {
+        //         let sTarget = readyToTillTargets.shift();
+        //         let weakenInstance = new WeakenInstance(this.ns, sTarget);
+        //         // this.spawnScriptInstance(weakenInstance);
+        //     }
+        // }
     }
 
     // spawnScriptInstance(scriptInstance: BatchScriptInstance) {
