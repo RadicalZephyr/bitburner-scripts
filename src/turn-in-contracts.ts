@@ -9,7 +9,7 @@ export async function main(ns: NS) {
         if (contract.answer !== "null") {
             let reward = ns.codingcontract.attempt(contract.answer, contract.file, contract.host);
             if (reward) {
-                ns.tprintf("solved %s, received %s", contract.type, reward);
+                ns.tprintf("solved %s, %s", contract.type, reward);
             } else {
                 if (failures[contract.type]) {
                     failures[contract.type].push(contract);
