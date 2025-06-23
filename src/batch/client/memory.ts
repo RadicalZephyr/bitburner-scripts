@@ -79,6 +79,10 @@ export class MemoryClient {
      */
     async requestOwnedAllocation(chunkSize: number, numChunks: number): Promise<HostAllocation[]> {
         let result = await this.requestTransferableAllocation(chunkSize, numChunks);
+        if (!result) {
+            return null;
+        }
+
         let allocationId = result.allocationId;
         let memoryPort = this.port;
         registerAllocationOwnership(this.ns, allocationId)
