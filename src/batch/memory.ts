@@ -6,6 +6,10 @@ import { MEMORY_PORT, readAllFromPort } from "/util/ports";
 
 
 export async function main(ns: NS) {
+    ns.disableLog("getServerUsedRam");
+    ns.disableLog("ps");
+    ns.ui.openTail();
+
     let memPort = ns.getPortHandle(MEMORY_PORT);
     let memMessageWaiting = true;
     let nextMemMessage = memPort.nextWrite().then(_ => { memMessageWaiting = true; });
@@ -31,6 +35,7 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memoryManager: 
         switch (msg[0]) {
             case MessageType.Worker:
                 let hostname = msg[1] as string
+                ns.printf("got worker hostname %s", hostname);
                 memoryManager.pushWorker(hostname);
                 break;
 
