@@ -89,6 +89,7 @@ class MemoryManager {
         }
     }
 
+    // TODO: figure out why this method is failing
     allocate(pid: number, chunkSize: number, numChunks: number): AllocationResult {
         let chunks: AllocationChunk[] = [];
         let remainingChunks = numChunks;
