@@ -33,6 +33,7 @@ const ALL_CONTRACT_TYPES = [
     "Sanitize-Parentheses-in-Expression",
     "Shortest-Path-in-a-Grid",
     "Spiralize-Matrix",
+    "Square-Root",
     "Subarray-with-Maximum-Sum",
     "Total-Ways-to-Sum",
     "Total-Ways-to-Sum-II",
