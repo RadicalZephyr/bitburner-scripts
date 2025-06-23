@@ -16,7 +16,7 @@ export async function main(ns: NS) {
                     case MessageType.Request:
                         let request = msg[1] as AllocationRequest;
                         ns.tprintf("got mem request: %s", JSON.stringify(request));
-                        let returnPort = request[0];
+                        let returnPort = request.returnPort;
                         ns.writePort(returnPort, {
                             allocationId: 12,
                             hosts: [],

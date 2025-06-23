@@ -53,7 +53,7 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memoryManager: 
             case MessageType.Request:
                 let request = msg[1] as AllocationRequest;
                 ns.printf("got mem request: %s", JSON.stringify(request));
-                let returnPort = request[0];
+                let returnPort = request.returnPort;
                 let allocation = memoryManager.allocate(request.pid, request.chunkSize, request.numChunks);
                 ns.writePort(returnPort, allocation);
                 break;
