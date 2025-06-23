@@ -1,6 +1,6 @@
 import type { NS, NetscriptPort } from "netscript";
 
-import { AllocationRelease, AllocationRequest, Message, MessageType } from "./client/memory";
+import { AllocationRelease, AllocationRequest, AllocationResult, Message, MessageType } from "./client/memory";
 
 import { HostMsg, HOSTS_PORT, MEMORY_PORT, readAllFromPort, WorkerType } from "/util/ports";
 
@@ -71,13 +71,13 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memoryManager: 
 
 class MemoryManager {
     ns: NS;
-    allocationId: Generator<number, void>;
+    nextAllocId: number;
     workers: Map<string, Worker>;
     allocations: Map<number, Allocation>;
 
     constructor(ns: NS) {
         this.ns = ns;
-        this.allocationId = allocationIds();
+        this.nextAllocId = 0;
         this.workers = new Map();
         this.allocations = new Map();
     }
@@ -85,13 +85,65 @@ class MemoryManager {
     pushWorker(hostname: string) {
         this.workers.set(hostname, new Worker(this.ns, hostname));
     }
-}
 
-function* allocationIds() {
-    let index = 0;
+    getFreeRamTotal(): number {
+        let total = 0;
+        for (const w of this.workers.values()) {
+            total += w.freeRam;
+        }
+        return total;
+    }
 
-    while (true) {
-        yield index++;
+    cleanupTerminated(): void {
+        for (const [id, allocation] of this.allocations.entries()) {
+            if (!this.ns.isRunning(allocation.pid)) {
+                this.deallocate(id);
+            }
+        }
+    }
+
+    allocate(pid: number, chunkSize: number, numChunks: number): Allocation {
+        let chunks: AllocationChunk[] = [];
+        let remainingChunks = numChunks;
+
+        for (const worker of this.workers.values()) {
+            const chunk = worker.allocate(chunkSize, remainingChunks);
+            if (chunk) {
+                chunks.push(chunk);
+                remainingChunks -= chunk.numChunks;
+            }
+
+            if (remainingChunks <= 0) break;
+        }
+
+        if (remainingChunks > 0) {
+            // Roll back partial allocations
+            for (const chunk of chunks) {
+                this.workers.get(chunk.hostname).free(chunk.totalSize);
+            }
+            return null; // Allocation failed
+        }
+
+        const id = this.nextAllocId++;
+        const allocation = new Allocation(id, pid, chunks);
+        this.allocations.set(id, allocation);
+
+        return allocation;
+    }
+
+    deallocate(id: number): boolean {
+        const allocation = this.allocations.get(id);
+        if (!allocation) return false;
+
+        for (const chunk of allocation.chunks) {
+            const worker = this.workers.get(chunk.hostname);
+            if (worker) {
+                worker.free(chunk.totalSize);
+            }
+        }
+
+        this.allocations.delete(id);
+        return true;
     }
 }
 
