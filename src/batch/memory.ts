@@ -14,15 +14,15 @@ export async function main(ns: NS) {
     let memMessageWaiting = true;
     let nextMemMessage = nextMessage(memPort, memMessageWaiting);
 
-    let state = new State(ns);
+    let memoryManager = new MemoryManager(ns);
 
     while (true) {
         if (hostsMessagesWaiting) {
-            readHostsFromPort(ns, hostsPort, state);
+            readHostsFromPort(ns, hostsPort, memoryManager);
             nextHostsMessage = nextMessage(hostsPort, hostsMessagesWaiting);
         }
         if (memMessageWaiting) {
-            readMemRequestsFromPort(ns, memPort, state);
+            readMemRequestsFromPort(ns, memPort, memoryManager);
             nextMemMessage = nextMessage(memPort, memMessageWaiting);
         }
 
@@ -35,18 +35,18 @@ function nextMessage(port: NetscriptPort, sentinel: boolean): Promise<void> {
     return port.nextWrite().then(_ => { sentinel = true; });
 }
 
-function readHostsFromPort(ns: NS, hostsPort: NetscriptPort, state: State) {
+function readHostsFromPort(ns: NS, hostsPort: NetscriptPort, memoryManager: MemoryManager) {
     for (const nextMsg of readAllFromPort(ns, hostsPort)) {
         if (typeof nextMsg === "object") {
             let nextHostMsg = nextMsg as HostMsg;
             if (nextHostMsg.type == WorkerType) {
-                state.pushWorker(nextHostMsg.host);
+                memoryManager.pushWorker(nextHostMsg.host);
             }
         }
     }
 }
 
-function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, state: State) {
+function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memoryManager: MemoryManager) {
     for (const nextMsg of readAllFromPort(ns, memPort)) {
         let msg = nextMsg as Message;
         switch (msg[0]) {
@@ -69,7 +69,7 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, state: State) {
     }
 }
 
-class State {
+class MemoryManager {
     ns: NS;
     allocationId: Generator<number, void>;
     workers: Map<string, Worker>;
