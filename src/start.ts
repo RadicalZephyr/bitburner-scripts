@@ -15,7 +15,7 @@ Usage: ${ns.getScriptName()} [OPTIONS]
 
 OPTIONS
   --share Run share script on usable hosts
-  --share_percent Specify the percentage of usable hosts to share [0-1]
+  --share-percent Specify the percentage of usable hosts to share [0-1]
 `);
         return;
     }
@@ -26,7 +26,7 @@ OPTIONS
 
     if (options.share) {
         let ownedHosts = ns.getPurchasedServers();
-        await shareHosts(ns, ownedHosts, shareScript, options.share_percent);
+        await shareHosts(ns, ownedHosts, shareScript, options["share-percent"]);
     }
 
     let hackScript = "hack.js";
@@ -37,7 +37,7 @@ OPTIONS
     let hosts = usableHosts(ns, allHosts);
 
     if (options.share) {
-        await shareHosts(ns, hosts, shareScript, options.share_percent);
+        await shareHosts(ns, hosts, shareScript, options["share-percent"]);
     }
 
     let targets = exploitableHosts(ns, allHosts);
