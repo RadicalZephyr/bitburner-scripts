@@ -60,7 +60,7 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memoryManager: 
             case MessageType.Release:
                 let [allocationId] = msg[1] as AllocationRelease;
                 ns.printf("received release message for allocation ID: %d", allocationId);
-                // TODO: actually release the allocation
+                memoryManager.deallocate(allocationId);
                 break;
         }
     }
