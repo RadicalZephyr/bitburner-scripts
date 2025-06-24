@@ -77,7 +77,7 @@ export async function launch(ns: NS, script: string, threadOrOptions?: number | 
     let scriptRam = ns.getScriptRam(script);
     let client = new MemoryClient(ns);
 
-    let totalThreads = typeof threadOrOptions === 'number' ? threadOrOptions : threadOrOptions.threads;
+    let totalThreads = typeof threadOrOptions === 'number' ? threadOrOptions : threadOrOptions.threads ?? 1;
 
     let allocation = await client.requestTransferableAllocation(scriptRam, totalThreads);
 
