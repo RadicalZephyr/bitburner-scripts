@@ -1,4 +1,4 @@
-import type { NS } from "netscript";
+import type { NS, UserInterfaceTheme } from "netscript";
 
 import { ALL_HOSTS } from "all-hosts";
 
@@ -76,12 +76,14 @@ export async function main(ns: NS) {
             }
         }
 
+        let theme = ns.ui.getTheme();
+
         ns.clearLog();
         ns.printRaw(<>
-            <ServerBlock title={"Harvesting"} targets={harvesting}></ServerBlock>
-            <ServerBlock title={"Sowing"} targets={sowing}></ServerBlock>
-            <ServerBlock title={"Tilling"} targets={tilling}></ServerBlock>
-            <ServerBlock title={"Pending"} targets={pending}></ServerBlock>
+            <ServerBlock title={"Harvesting"} targets={harvesting} theme={theme}></ServerBlock>
+            <ServerBlock title={"Sowing"} targets={sowing} theme={theme}></ServerBlock>
+            <ServerBlock title={"Tilling"} targets={tilling} theme={theme}></ServerBlock>
+            <ServerBlock title={"Pending"} targets={pending} theme={theme}></ServerBlock>
         </>);
         await ns.sleep(flags.refreshrate);
     }
@@ -213,11 +215,12 @@ function formatThreads(ns: NS, threads: number): string {
 }
 
 interface IBlockSettings {
-    title: string
-    targets: HostInfo[]
+    title: string,
+    targets: HostInfo[],
+    theme: UserInterfaceTheme,
 }
 
-export function ServerBlock({ title, targets }: IBlockSettings) {
+export function ServerBlock({ title, targets, theme }: IBlockSettings) {
     const cellStyle = { padding: "0 0.5em" };
     return (<>
         <h2>{title}</h2>
@@ -236,7 +239,7 @@ export function ServerBlock({ title, targets }: IBlockSettings) {
                     <th style={cellStyle}>thr(w)</th>
                 </tr>
             </thead>
-            {targets.map((target, idx) => <ServerRow host={target} rowIndex={idx} cellStyle={cellStyle}></ServerRow>)}
+            {targets.map((target, idx) => <ServerRow host={target} theme={theme} rowIndex={idx} cellStyle={cellStyle}></ServerRow>)}
         </table>
     </>);
 }
@@ -244,12 +247,13 @@ export function ServerBlock({ title, targets }: IBlockSettings) {
 interface IRowSettings {
     host: HostInfo,
     rowIndex: number,
-    cellStyle: any
+    cellStyle: any,
+    theme: UserInterfaceTheme,
 }
 
-function ServerRow({ host, rowIndex, cellStyle }: IRowSettings) {
+function ServerRow({ host, rowIndex, cellStyle, theme }: IRowSettings) {
     return (
-        <tr key={host.name} style={rowIndex % 2 === 1 ? { backgroundColor: "#f5f5f5" } : undefined}>
+        <tr key={host.name} style={rowIndex % 2 === 1 ? { backgroundColor: theme.welllight } : undefined}>
             <td style={cellStyle}>{host.name}</td>
             <td style={cellStyle}>{host.milkMoney}</td>
             <td style={cellStyle}>{host.moneyPerLevel}</td>
