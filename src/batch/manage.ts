@@ -2,11 +2,11 @@ import type { NetscriptPort, NS } from "netscript";
 
 import { HostMsg, WorkerType, TargetType, readAllFromPort, TARGETS_PORT } from "util/ports";
 
-import { WeakenInstance } from "batch/till";
+// import { WeakenInstance } from "batch/till";
 
 import { Target } from "batch/target";
 
-import { BatchScriptInstance, spawnScriptOnWorker } from "batch/lib";
+// import { BatchScriptInstance, spawnScriptOnWorker } from "batch/lib";
 
 export async function main(ns: NS) {
     ns.disableLog("getServerUsedRam");
