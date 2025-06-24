@@ -61,7 +61,7 @@ function startBatchHcking(ns: NS) {
 
     launch(ns, memoryScript, memoryHost, memoryFiles);
 
-    const manageHost = "n00dles";
+    const manageHost = "foodnstuff";
     const manageScript = "/batch/manage.js";
     let manager = ns.getRunningScript(manageScript, manageHost);
     if (manager !== null) {
