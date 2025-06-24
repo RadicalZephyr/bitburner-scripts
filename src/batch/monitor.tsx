@@ -218,45 +218,48 @@ interface IBlockSettings {
 }
 
 export function ServerBlock({ title, targets }: IBlockSettings) {
+    const cellStyle = { padding: "0 0.5em" };
     return (<>
         <h2>{title}</h2>
         <table>
             <thead>
                 <tr>
-                    <th>target</th>
-                    <th>$/s</th>
-                    <th>$/lvl</th>
-                    <th>lvl</th>
-                    <th>$</th>
-                    <th>⌈$⌉%</th>
-                    <th>+sec</th>
-                    <th>thr(h)</th>
-                    <th>thr(g)</th>
-                    <th>thr(w)</th>
+                    <th style={cellStyle}>target</th>
+                    <th style={cellStyle}>$/s</th>
+                    <th style={cellStyle}>$/lvl</th>
+                    <th style={cellStyle}>lvl</th>
+                    <th style={cellStyle}>$</th>
+                    <th style={cellStyle}>⌈$⌉%</th>
+                    <th style={cellStyle}>+sec</th>
+                    <th style={cellStyle}>thr(h)</th>
+                    <th style={cellStyle}>thr(g)</th>
+                    <th style={cellStyle}>thr(w)</th>
                 </tr>
             </thead>
-            {targets.map(target => <ServerRow host={target}></ServerRow>)}
+            {targets.map((target, idx) => <ServerRow host={target} rowIndex={idx} cellStyle={cellStyle}></ServerRow>)}
         </table>
     </>);
 }
 
 interface IRowSettings {
-    host: HostInfo
+    host: HostInfo,
+    rowIndex: number,
+    cellStyle: any
 }
 
-function ServerRow({ host }: IRowSettings) {
+function ServerRow({ host, rowIndex, cellStyle }: IRowSettings) {
     return (
-        <tr key={host.name}>
-            <td>{host.name}</td>
-            <td>{host.milkMoney}</td>
-            <td>{host.moneyPerLevel}</td>
-            <td>{host.hckLevel}</td>
-            <td>{host.maxMoney}</td>
-            <td>{host.moneyPercent}</td>
-            <td>{host.secPlus}</td>
-            <td>{host.threadsH}</td>
-            <td>{host.threadsG}</td>
-            <td>{host.threadsW}</td>
+        <tr key={host.name} style={rowIndex % 2 === 1 ? { backgroundColor: "#f5f5f5" } : undefined}>
+            <td style={cellStyle}>{host.name}</td>
+            <td style={cellStyle}>{host.milkMoney}</td>
+            <td style={cellStyle}>{host.moneyPerLevel}</td>
+            <td style={cellStyle}>{host.hckLevel}</td>
+            <td style={cellStyle}>{host.maxMoney}</td>
+            <td style={cellStyle}>{host.moneyPercent}</td>
+            <td style={cellStyle}>{host.secPlus}</td>
+            <td style={cellStyle}>{host.threadsH}</td>
+            <td style={cellStyle}>{host.threadsG}</td>
+            <td style={cellStyle}>{host.threadsW}</td>
         </tr>
     );
 }
