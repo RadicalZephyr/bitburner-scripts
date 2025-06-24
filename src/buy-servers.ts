@@ -1,6 +1,6 @@
 import type { NS } from "netscript";
 
-import { MEMORY_PORT, workerMessage } from "./batch/client/memory";
+import { MemoryClient } from "./batch/client/memory";
 
 const DEFAULT_SPEND = 1.0;
 const DEFAULT_MIN_RAM = 16;
@@ -45,7 +45,7 @@ OPTIONS
 
     if (options['dry-run']) return;
 
-    let memPort = ns.getPortHandle(MEMORY_PORT);
+    let memoryClient = new MemoryClient(ns);
 
     let serverLimit = ns.getPurchasedServerLimit();
     let currentServers = ns.getPurchasedServers();
@@ -64,7 +64,7 @@ OPTIONS
 
         let hostname = ns.purchaseServer(serverName(ram), ram);
         if (hostname !== "") {
-            memPort.write(workerMessage(hostname));
+            await memoryClient.newWorker(hostname);
         }
     }
 
@@ -98,7 +98,7 @@ OPTIONS
             if (upgradeResult) {
                 let newHostname = serverName(ram);
                 if (ns.renamePurchasedServer(oldHostname, newHostname)) {
-                    memPort.write(workerMessage(newHostname));
+                    await memoryClient.newWorker(newHostname);
                 }
             }
         }

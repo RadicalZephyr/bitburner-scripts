@@ -4,7 +4,7 @@ import { HOSTS_BY_PORTS_REQUIRED, TARGETS_BY_PORTS_REQUIRED } from "all-hosts";
 
 import { targetMsg, TARGETS_PORT, DONE_SENTINEL } from "util/ports";
 
-import { MEMORY_PORT, workerMessage } from "./batch/client/memory";
+import { MemoryClient } from "./batch/client/memory";
 
 const HACKING_FILES = [
     "/all-hosts.js",
@@ -25,7 +25,7 @@ export async function main(ns: NS) {
     ns.clearLog();
 
     let portsCracked = 0;
-    let memoryPort = ns.getPortHandle(MEMORY_PORT);
+    let memoryClient = new MemoryClient(ns);
     let targetsPort = ns.getPortHandle(TARGETS_PORT);
 
     ns.write(NUKED_FILE, "export const NUKED = true;", "w");
@@ -54,8 +54,8 @@ export async function main(ns: NS) {
                 // SCP all hacking files appropriate to that amount of memory
                 ns.scp(HACKING_FILES, host, 'home');
 
-                // Write host name to the hosts
-                memoryPort.write(workerMessage(host));
+                // Notify the MemoryManager there's a new worker available
+                await memoryClient.newWorker(host);
             }
 
             const targets = TARGETS_BY_PORTS_REQUIRED[i];

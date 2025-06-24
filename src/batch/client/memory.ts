@@ -38,10 +38,6 @@ export interface AllocationResult {
     hosts: HostAllocation[]
 }
 
-export function workerMessage(hostname: string): Message {
-    return [MessageType.Worker, hostname];
-}
-
 export class MemoryClient {
     ns: NS;
     port: NetscriptPort;

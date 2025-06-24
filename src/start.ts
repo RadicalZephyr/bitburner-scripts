@@ -1,6 +1,6 @@
 import type { NS } from "netscript";
 
-import { MEMORY_PORT, workerMessage } from "./batch/client/memory";
+import { MemoryClient } from "./batch/client/memory";
 
 export async function main(ns: NS) {
     await waitForExit(ns, ns.exec("/get-all-hosts.js", "home"));
@@ -12,7 +12,7 @@ export async function main(ns: NS) {
     startBatchHcking(ns);
     await ns.sleep(1000);
 
-    sendPersonalServersToMemory(ns);
+    await sendPersonalServersToMemory(ns);
     await ns.sleep(1000);
 
     startCracker(ns);
@@ -94,11 +94,11 @@ async function waitForExit(ns: NS, pid: number): Promise<void> {
     }
 }
 
-function sendPersonalServersToMemory(ns: NS) {
-    let memPort = ns.getPortHandle(MEMORY_PORT);
+async function sendPersonalServersToMemory(ns: NS) {
+    let memoryClient = new MemoryClient(ns);
     let personalServers = ns.getPurchasedServers();
 
     for (const hostname of personalServers) {
-        memPort.write(workerMessage(hostname));
+        await memoryClient.newWorker(hostname);
     }
 }
