@@ -35,7 +35,7 @@ OPTIONS
         return;
     }
 
-    ns.ui.setTailTitle(`weaken ${target}`);
+    ns.ui.setTailTitle(`till ${target}`);
 
     let expectedTime = ns.tFormat(ns.getWeakenTime(target));
 
@@ -61,7 +61,7 @@ Elapsed time: ${ns.tFormat(selfScript.onlineRunningTime * 1000)}
             await ns.sleep(1000);
         }
     }
-    ns.toast(`finished weakening ${target}!`, "success");
+    ns.toast(`finished tilling ${target}!`, "success");
 }
 
 function calculateWeakenThreads(ns: NS, target: string): number {
