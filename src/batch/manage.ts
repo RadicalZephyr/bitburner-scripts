@@ -53,11 +53,13 @@ function readHostsFromPort(ns: NS, hostsPort: NetscriptPort, manager: TargetSele
                 case MessageType.FinishedTilling:
                     ns.print(`${hostname} finished tilling`);
                     monitor.sowing(hostname);
+                    manager.finishTilling(hostname);
                     break;
 
                 case MessageType.FinishedSowing:
                     ns.print(`${hostname} finished sowing`);
                     monitor.harvesting(hostname);
+                    manager.finishSowing(hostname);
                     break;
             }
         }
@@ -126,6 +128,20 @@ class TargetSelectionManager {
             launch(this.ns, "/batch/till.js", 1, "--allocation-id", target.name);
             this.tillTargets.add(target.name);
         }
+    }
+
+    finishTilling(hostname: string) {
+        this.tillTargets.delete(hostname);
+        this.ns.print(`tilling ${hostname}`);
+        launch(this.ns, "/batch/sow.js", 1, "--allocation-id", hostname);
+        this.sowTargets.add(hostname);
+    }
+
+    finishSowing(hostname: string) {
+        this.sowTargets.delete(hostname)
+        this.ns.print(`harvesting ${hostname}`);
+        launch(this.ns, "/batch/harvest.js", 1, "--allocation-id", hostname);
+        this.harvestTargets.add(hostname);
     }
 
     updateVelocity() {
