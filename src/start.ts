@@ -19,10 +19,11 @@ export async function main(ns: NS) {
 }
 
 const CRACK_FILES: string[] = [
-    "/all-hosts.js",
-    "/util/ports.js",
     "/crack-all.js",
-
+    "/all-hosts.js",
+    "/batch/client/manage.js",
+    "/batch/client/memory.js",
+    "/util/ports.js"
 ];
 
 const MEMORY_FILES: string[] = [
