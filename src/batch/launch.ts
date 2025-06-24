@@ -91,7 +91,7 @@ export async function launch(ns: NS, script: string, threadOrOptions?: number | 
         ns.scp(script, hostname);
         let pid = ns.exec(script, hostname, threadsHere, ...args);
         if (!pid) {
-            ns.tprint("failed to spawn %d threads of %s on %s", threadsHere, script, hostname);
+            ns.tprintf("failed to spawn %d threads of %s on %s", threadsHere, script, hostname);
         } else {
             pids.push(pid);
             totalThreads -= threadsHere;
