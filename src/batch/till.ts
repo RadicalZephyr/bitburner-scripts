@@ -59,7 +59,7 @@ OPTIONS
         return;
     }
 
-    let result = await launch(ns, "/batch/w.js", threads, "--allocation-id", target, 0, 1, 0);
+    let result = await launch(ns, "/batch/w.js", threads, target, 0, 1, 0);
 
     result.allocation.releaseAtExit(ns);
 
