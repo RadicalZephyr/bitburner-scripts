@@ -2,6 +2,8 @@ import type { NS } from "netscript";
 
 import { MemoryClient } from "batch/client/memory";
 
+import { LocalStorage } from "util/localStorage";
+
 export async function main(ns: NS) {
     ns.disableLog("sleep");
 
@@ -9,6 +11,7 @@ export async function main(ns: NS) {
     ns.print("finished fetching all host info");
 
     // Sleep to let the game fully write out the all-hosts.js script
+    setConfigDefaults();
     await ns.sleep(1000);
 
     startBatchHcking(ns);
@@ -18,6 +21,16 @@ export async function main(ns: NS) {
     await ns.sleep(1000);
 
     startCracker(ns);
+}
+
+function setConfigDefaults() {
+    setConfigDefault("BATCH_INTERVAL", 200);
+}
+
+function setConfigDefault(key, defaultValue) {
+    if (!LocalStorage.getItem(key)) {
+        LocalStorage.setItem(key, defaultValue);
+    }
 }
 
 const CRACK_FILES: string[] = [
