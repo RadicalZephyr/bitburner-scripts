@@ -2,9 +2,9 @@ import type { NS } from "netscript";
 
 import { HOSTS_BY_PORTS_REQUIRED, TARGETS_BY_PORTS_REQUIRED } from "all-hosts";
 
-import { ManagerClient } from "./batch/client/manage";
+import { ManagerClient } from "batch/client/manage";
 
-import { MemoryClient } from "./batch/client/memory";
+import { MemoryClient } from "batch/client/memory";
 
 const HACKING_FILES = [
     "/all-hosts.js",

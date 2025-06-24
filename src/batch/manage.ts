@@ -1,11 +1,10 @@
 import type { NetscriptPort, NS } from "netscript";
 
+import { MANAGER_PORT, Message, MessageType } from "batch/client/manage";
+
 import { readAllFromPort } from "util/ports";
 
-import { MANAGER_PORT, Message } from "/batch/client/manage";
-
 import { Target } from "batch/target";
-import { MessageType } from "./client/manage";
 
 // import { WeakenInstance } from "batch/till";
 

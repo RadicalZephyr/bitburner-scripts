@@ -1,5 +1,5 @@
 import type { AutocompleteData, NS } from "netscript";
-import { launch } from "./launch";
+import { launch } from "batch/launch";
 
 const GROW_SCRIPT = "/batch/g.js";
 const WEAKEN_SCRIPT = "/batch/w.js";

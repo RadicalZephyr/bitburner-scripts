@@ -1,6 +1,6 @@
 import type { NS } from "netscript";
 
-import { MemoryClient } from "./batch/client/memory";
+import { MemoryClient } from "batch/client/memory";
 
 export async function main(ns: NS) {
     ns.disableLog("sleep");
