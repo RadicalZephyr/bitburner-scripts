@@ -97,7 +97,7 @@ type ServerData = {
 function formatServerInfo(ns: NS, server: string): ServerData {
     let money = ns.getServerMoneyAvailable(server);
     let maxMoney = ns.getServerMaxMoney(server);
-    let moneyPercent = (money / maxMoney * 100).toFixed(2);
+    let moneyPercent = ns.formatPercent(money / maxMoney);
     let minSec = ns.getServerMinSecurityLevel(server);
     let sec = ns.getServerSecurityLevel(server);
     return {
