@@ -39,15 +39,15 @@ export async function main(ns: NS) {
     // string we read contains quotation marks that need to be
     // stripped. We could use JSON.parse for this, but it seems
     // simpler to just directly strip the quotation marks.
-    let contractData: BigInt = BigInt(contractDataJSON.substring(1, contractDataJSON.length - 1));
+    let contractData: bigint = BigInt(contractDataJSON.substring(1, contractDataJSON.length - 1));
     ns.tprintf('contract data: %s', contractData.toString());
     let answer = solve(contractData);
     ns.writePort(contractPortNum, answer.toString());
 }
 
-function solve(data: BigInt): BigInt {
-    let S = data;
-    let s = S.toString();
+function solve(data: bigint): bigint {
+    let s = data;
+    let s_str = s.toString();
 
     // Base an estimate on the square root as such `S = a * (10 **
     // 2n)` which implies that `sqrt(S) = sqrt(a) * (10 ** n)`, where
@@ -55,9 +55,9 @@ function solve(data: BigInt): BigInt {
 
     // Calculate sqrt(a), where a is the two most significant digits
     // of s
-    let a = Math.round(Math.sqrt(JSON.parse(s.substring(0, 2))));
+    let a = Math.round(Math.sqrt(JSON.parse(s_str.substring(0, 2))));
     // Calculate n from  for the exponent
-    let n = Math.floor((s.length - 2) / 2);
+    let n = Math.floor((s_str.length - 2) / 2);
 
     let x_n = BigInt(a * (10 ** n));
 
@@ -65,8 +65,8 @@ function solve(data: BigInt): BigInt {
     // root of S using Heron's Method
     let two = BigInt(2);
 
-    while (!(x_n * x_n < S && (x_n + BigInt(1)) * (x_n + BigInt(1)) > S)) {
-        let x_n1 = (x_n + (S / x_n)) / two;
+    while (!(x_n * x_n < s && (x_n + BigInt(1)) * (x_n + BigInt(1)) > s)) {
+        let x_n1 = (x_n + (s / x_n)) / two;
         x_n = x_n1;
     }
 
