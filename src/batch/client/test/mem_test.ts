@@ -1,8 +1,8 @@
 import type { NS } from "netscript";
 
-import { AllocationRelease, AllocationRequest, Message, MessageType } from "/batch/client/memory";
+import { AllocationRelease, AllocationRequest, MEMORY_PORT, Message, MessageType } from "/batch/client/memory";
 
-import { MEMORY_PORT, readAllFromPort } from "/util/ports";
+import { readAllFromPort } from "/util/ports";
 
 export async function main(ns: NS) {
     let memPort = ns.getPortHandle(MEMORY_PORT);

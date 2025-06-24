@@ -1,8 +1,6 @@
 import type { NS } from "netscript";
 
-import { workerMessage } from "./batch/client/memory";
-
-import { MEMORY_PORT } from "./util/ports";
+import { MEMORY_PORT, workerMessage } from "./batch/client/memory";
 
 const DEFAULT_SPEND = 1.0;
 const DEFAULT_MIN_RAM = 16;

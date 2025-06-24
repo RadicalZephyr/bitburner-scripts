@@ -1,8 +1,6 @@
 import type { NS } from "netscript";
 
-import { workerMessage } from "./batch/client/memory";
-
-import { MEMORY_PORT } from "./util/ports";
+import { MEMORY_PORT, workerMessage } from "./batch/client/memory";
 
 export async function main(ns: NS) {
     await waitForExit(ns, ns.exec("/get-all-hosts.js", "home"));

@@ -1,8 +1,8 @@
 import type { NS, NetscriptPort } from "netscript";
 
-import { AllocationRelease, AllocationRequest, AllocationResult, HostAllocation, Message, MessageType } from "./client/memory";
+import { AllocationRelease, AllocationRequest, AllocationResult, HostAllocation, MEMORY_PORT, Message, MessageType } from "./client/memory";
 
-import { MEMORY_PORT, readAllFromPort } from "/util/ports";
+import { readAllFromPort } from "/util/ports";
 
 
 export async function main(ns: NS) {

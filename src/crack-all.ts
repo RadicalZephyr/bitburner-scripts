@@ -2,9 +2,9 @@ import type { NS } from "netscript";
 
 import { HOSTS_BY_PORTS_REQUIRED, TARGETS_BY_PORTS_REQUIRED } from "all-hosts";
 
-import { targetMsg, TARGETS_PORT, DONE_SENTINEL, MEMORY_PORT } from "util/ports";
+import { targetMsg, TARGETS_PORT, DONE_SENTINEL } from "util/ports";
 
-import { workerMessage } from "./batch/client/memory";
+import { MEMORY_PORT, workerMessage } from "./batch/client/memory";
 
 const HACKING_FILES = [
     "/all-hosts.js",
