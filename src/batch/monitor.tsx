@@ -33,7 +33,7 @@ export async function main(ns: NS) {
     ns.ui.resizeTail(450, 30 * 6);
 
     const monitorPort = ns.getPortHandle(MONITOR_PORT);
-    const lifecycleByHost: Record<string, Lifecycle> = {};
+    const lifecycleByHost: Map<string, Lifecycle> = new Map();
     let monitorMessagesWaiting = true;
 
     while (true) {
@@ -41,7 +41,7 @@ export async function main(ns: NS) {
             for (const nextMsg of readAllFromPort(ns, monitorPort)) {
                 if (typeof nextMsg === "object") {
                     const [phase, host] = nextMsg as MonitorMessage;
-                    lifecycleByHost[host] = phase;
+                    lifecycleByHost.set(host, phase);
                 }
             }
             monitorMessagesWaiting = false;
@@ -55,7 +55,7 @@ export async function main(ns: NS) {
         const pending: HostInfo[] = [];
 
         for (const host of ALL_HOSTS) {
-            const phase = lifecycleByHost[host] ?? Lifecycle.Pending;
+            const phase = lifecycleByHost.get(host) ?? Lifecycle.Pending;
             const info = hostInfo(ns, host, threadsByTarget.get(host), phase);
             switch (phase) {
                 case Lifecycle.Harvesting:
