@@ -3,8 +3,10 @@ import type { NS } from "netscript";
 import { MemoryClient } from "./batch/client/memory";
 
 export async function main(ns: NS) {
+    ns.disableLog("sleep");
+
     await waitForExit(ns, ns.exec("/get-all-hosts.js", "home"));
-    ns.tprint("finished fetching all host info");
+    ns.print("finished fetching all host info");
 
     // Sleep to let the game fully write out the all-hosts.js script
     await ns.sleep(1000);
