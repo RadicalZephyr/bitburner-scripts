@@ -1,10 +1,13 @@
 import type { NetscriptPort, NS } from "netscript";
 
-import { HostMsg, WorkerType, TargetType, readAllFromPort, TARGETS_PORT } from "util/ports";
+import { readAllFromPort } from "util/ports";
 
-// import { WeakenInstance } from "batch/till";
+import { MANAGER_PORT, Message } from "/batch/client/manage";
 
 import { Target } from "batch/target";
+import { MessageType } from "./client/manage";
+
+// import { WeakenInstance } from "batch/till";
 
 // import { BatchScriptInstance, spawnScriptOnWorker } from "batch/lib";
 
@@ -13,7 +16,7 @@ export async function main(ns: NS) {
     ns.disableLog("ps");
     ns.ui.openTail();
 
-    let targetsPort = ns.getPortHandle(TARGETS_PORT);
+    let targetsPort = ns.getPortHandle(MANAGER_PORT);
 
     let state = new State(ns);
 
@@ -36,14 +39,20 @@ export async function main(ns: NS) {
 function readHostsFromPort(ns: NS, hostsPort: NetscriptPort, state: State) {
     for (let nextMsg of readAllFromPort(ns, hostsPort)) {
         if (typeof nextMsg === "object") {
-            let nextHostMsg = nextMsg as HostMsg;
-            switch (nextHostMsg.type) {
-                case WorkerType:
-                    // state.pushWorker(new Worker(ns, nextHostMsg.host));
-                    ns.print("WARN manager script unexpectedly received a worker host message.");
+            let nextHostMsg = nextMsg as Message;
+            let hostname = nextHostMsg[1];
+            switch (nextHostMsg[0]) {
+                case MessageType.NewTarget:
+                    ns.print(`new target received: ${hostname}`);
+                    state.pushTarget(new Target(ns, hostname));
                     break;
-                case TargetType:
-                    state.pushTarget(new Target(ns, nextHostMsg.host));
+
+                case MessageType.FinishedTilling:
+                    ns.print(`${hostname} finished tilling`);
+                    break;
+
+                case MessageType.FinishedSowing:
+                    ns.print(`${hostname} finished sowing`);
                     break;
             }
         }

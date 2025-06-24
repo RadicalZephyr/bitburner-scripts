@@ -2,7 +2,7 @@ import type { NS } from "netscript";
 
 import { HOSTS_BY_PORTS_REQUIRED, TARGETS_BY_PORTS_REQUIRED } from "all-hosts";
 
-import { targetMsg, TARGETS_PORT, DONE_SENTINEL } from "util/ports";
+import { ManagerClient } from "./batch/client/manage";
 
 import { MemoryClient } from "./batch/client/memory";
 
@@ -26,7 +26,7 @@ export async function main(ns: NS) {
 
     let portsCracked = 0;
     let memoryClient = new MemoryClient(ns);
-    let targetsPort = ns.getPortHandle(TARGETS_PORT);
+    let managerClient = new ManagerClient(ns)
 
     ns.write(NUKED_FILE, "export const NUKED = true;", "w");
 
@@ -64,15 +64,13 @@ export async function main(ns: NS) {
                 crackHost(ns, target, i);
 
                 // Write host name to the targets port
-                targetsPort.write(targetMsg(target));
+                managerClient.newTarget(target);
             }
             portsCracked = i;
         }
         portsCracked = numCrackers;
         await ns.sleep(1000);
     }
-    // Signal that the last target has been sent.
-    targetsPort.write(DONE_SENTINEL);
 }
 
 /**
