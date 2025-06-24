@@ -44,7 +44,7 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memoryManager: 
                 let request = msg[1] as AllocationRequest;
                 ns.printf("got mem request: %s", JSON.stringify(request));
                 let returnPort = request.returnPort;
-                let allocation = memoryManager.allocate(request.pid, request.chunkSize, request.numChunks);
+                let allocation = memoryManager.allocate(request.pid, request.chunkSize, request.numChunks, request.contiguous ?? false);
                 ns.writePort(returnPort, allocation);
                 break;
 
@@ -91,11 +91,29 @@ class MemoryManager {
     }
 
     // TODO: figure out why this method is failing
-    allocate(pid: number, chunkSize: number, numChunks: number): AllocationResult {
+    allocate(pid: number, chunkSize: number, numChunks: number, contiguous: boolean = false): AllocationResult {
+        let workers = Array.from(this.workers.values());
+
+        if (contiguous) {
+            // If any worker can satisfy the full request, allocate it there.
+            for (const worker of workers) {
+                if (Math.floor(worker.freeRam / chunkSize) >= numChunks) {
+                    const chunk = worker.allocate(chunkSize, numChunks);
+                    const id = this.nextAllocId++;
+                    const allocation = new Allocation(id, pid, [chunk]);
+                    this.allocations.set(id, allocation);
+                    return allocation.asAllocationResult();
+                }
+            }
+
+            // Otherwise, sort workers by free RAM descending to minimize hosts used
+            workers.sort((a, b) => b.freeRam - a.freeRam);
+        }
+
         let chunks: AllocationChunk[] = [];
         let remainingChunks = numChunks;
 
-        for (const worker of this.workers.values()) {
+        for (const worker of workers) {
             const chunk = worker.allocate(chunkSize, remainingChunks);
             if (chunk) {
                 chunks.push(chunk);
@@ -108,7 +126,7 @@ class MemoryManager {
         if (remainingChunks > 0) {
             // Roll back partial allocations
             for (const chunk of chunks) {
-                this.workers.get(chunk.hostname).free(chunk.totalSize);
+                this.workers.get(chunk.hostname)?.free(chunk.totalSize);
             }
             return null; // Allocation failed
         }

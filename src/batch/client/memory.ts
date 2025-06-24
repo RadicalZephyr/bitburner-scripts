@@ -21,6 +21,7 @@ export interface AllocationRequest {
     pid: number,
     chunkSize: number,
     numChunks: number,
+    contiguous?: boolean,
 }
 
 export type AllocationRelease = [
@@ -59,7 +60,7 @@ export class MemoryClient {
      * `atExit` handler for releasing the allocation when the owning
      * process exits.
      */
-    async requestTransferableAllocation(chunkSize: number, numChunks: number): Promise<TransferableAllocation> {
+    async requestTransferableAllocation(chunkSize: number, numChunks: number, contiguous: boolean = false): Promise<TransferableAllocation> {
         let pid = this.ns.pid;
         let returnPortId = MEMORY_PORT + pid;
         let returnPort = this.ns.getPortHandle(returnPortId);
@@ -68,7 +69,8 @@ export class MemoryClient {
             returnPort: returnPortId,
             pid: pid,
             chunkSize: chunkSize,
-            numChunks: numChunks
+            numChunks: numChunks,
+            contiguous: contiguous
         } as AllocationRequest;
         let request = [MessageType.Request, payload] as Message;
         while (!this.port.tryWrite(request)) {
@@ -88,8 +90,8 @@ export class MemoryClient {
      * This method also registers an `atExit` handler function to send
      * a release message to the memory allocator.
      */
-    async requestOwnedAllocation(chunkSize: number, numChunks: number): Promise<HostAllocation[]> {
-        let result = await this.requestTransferableAllocation(chunkSize, numChunks);
+    async requestOwnedAllocation(chunkSize: number, numChunks: number, contiguous: boolean = false): Promise<HostAllocation[]> {
+        let result = await this.requestTransferableAllocation(chunkSize, numChunks, contiguous);
         if (!result) {
             return null;
         }
