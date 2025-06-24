@@ -50,8 +50,7 @@ function startCracker(ns: NS) {
         ns.nuke(crackHost);
     }
 
-    ns.scp(CRACK_FILES, crackHost, "home");
-    ns.exec(crackScript, crackHost);
+    launch(ns, crackScript, crackHost, CRACK_FILES);
 }
 
 function startBatchHcking(ns: NS) {
@@ -67,8 +66,7 @@ function startBatchHcking(ns: NS) {
     let batchFiles = ns.ls("home", "batch");
     let memoryFiles = [...MEMORY_FILES, ...batchFiles];
 
-    ns.scp(memoryFiles, memoryHost, "home");
-    ns.exec(memoryScript, memoryHost);
+    launch(ns, memoryScript, memoryHost, memoryFiles);
 
     const manageHost = "foodnstuff";
     const manageScript = "/batch/manage.js";
@@ -82,8 +80,7 @@ function startBatchHcking(ns: NS) {
     let collectionsFiles = ns.ls("home", "typescript-collections");
     let manageFiles = [...MANAGE_FILES, ...batchFiles, ...collectionsFiles];
 
-    ns.scp(manageFiles, manageHost, "home");
-    ns.exec(manageScript, manageHost);
+    launch(ns, manageScript, manageHost, manageFiles);
 }
 
 async function waitForExit(ns: NS, pid: number): Promise<void> {
@@ -101,5 +98,25 @@ async function sendPersonalServersToMemory(ns: NS) {
 
     for (const hostname of personalServers) {
         await memoryClient.newWorker(hostname);
+    }
+}
+
+function launch(ns: NS, script: string, hostname: string, dependencies: string[]) {
+    let files = [script, ...dependencies];
+    if (!ns.scp(files, hostname, "home")) {
+        let error = `failed to send files to ${hostname}`;
+        ns.toast(error, "error");
+        ns.print(`ERROR: ${error}`);
+        ns.ui.openTail();
+        return;
+    }
+
+    let pid = ns.exec(script, hostname);
+    if (pid === 0) {
+        let error = `failed to launch ${script} on ${hostname}`;
+        ns.toast(error, "error");
+        ns.print(`ERROR: ${error}`);
+        ns.ui.openTail();
+        return;
     }
 }
