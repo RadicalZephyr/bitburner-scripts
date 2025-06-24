@@ -6,10 +6,6 @@ import { readAllFromPort } from "util/ports";
 
 import { Target } from "batch/target";
 
-// import { WeakenInstance } from "batch/till";
-
-// import { BatchScriptInstance, spawnScriptOnWorker } from "batch/lib";
-
 export async function main(ns: NS) {
     ns.disableLog("getServerUsedRam");
     ns.disableLog("ps");
