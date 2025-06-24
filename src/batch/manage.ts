@@ -19,25 +19,25 @@ export async function main(ns: NS) {
 
     let targetsPort = ns.getPortHandle(MANAGER_PORT);
 
-    let state = new State(ns);
+    let manager = new TargetSelectionManager(ns);
 
     let hostsMessagesWaiting = true;
 
     while (true) {
         if (hostsMessagesWaiting) {
-            readHostsFromPort(ns, targetsPort, state);
+            readHostsFromPort(ns, targetsPort, manager);
             hostsMessagesWaiting = false;
 
             targetsPort.nextWrite().then(_ => {
                 hostsMessagesWaiting = true;
             });
         }
-        await tick(ns, state);
+        await tick(ns, manager);
         await ns.sleep(100);
     }
 }
 
-function readHostsFromPort(ns: NS, hostsPort: NetscriptPort, state: State) {
+function readHostsFromPort(ns: NS, hostsPort: NetscriptPort, manager: TargetSelectionManager) {
     for (let nextMsg of readAllFromPort(ns, hostsPort)) {
         if (typeof nextMsg === "object") {
             let nextHostMsg = nextMsg as Message;
@@ -45,7 +45,7 @@ function readHostsFromPort(ns: NS, hostsPort: NetscriptPort, state: State) {
             switch (nextHostMsg[0]) {
                 case MessageType.NewTarget:
                     ns.print(`new target received: ${hostname}`);
-                    state.pushTarget(new Target(ns, hostname));
+                    manager.pushTarget(new Target(ns, hostname));
                     break;
 
                 case MessageType.FinishedTilling:
@@ -60,7 +60,7 @@ function readHostsFromPort(ns: NS, hostsPort: NetscriptPort, state: State) {
     }
 }
 
-class State {
+class TargetSelectionManager {
     ns: NS;
     tillTargets: string[];
     sowTargets: string[];
@@ -89,6 +89,6 @@ class State {
 
 }
 
-async function tick(ns: NS, state: State) {
-    state.tillNewTargets();
+async function tick(ns: NS, manager: TargetSelectionManager) {
+    manager.tillNewTargets();
 }
