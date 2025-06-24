@@ -38,8 +38,8 @@ export class ManagerClient {
 
     private async sendMessage(type: MessageType, hostname: string) {
         let message = [type, hostname];
-        while (!this.port.tryWrite(newTargetMessage)) {
-            await ns.sleep(200);
+        while (!this.port.tryWrite(message)) {
+            await this.ns.sleep(200);
         }
     }
 }
