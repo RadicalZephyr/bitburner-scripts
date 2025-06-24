@@ -56,7 +56,16 @@ OPTIONS
     };
 
     ns.tprint(`${script} ${JSON.stringify(options)} ${JSON.stringify(args)}`);
-    await launch(ns, script, options, ...args);
+
+    let result = await launch(ns, script, options, ...args);
+
+    result.allocation.releaseAtExit(ns);
+
+    for (const pid of result.pids) {
+        while (ns.isRunning(pid)) {
+            await ns.sleep(1000);
+        }
+    }
 }
 
 /** Launch a script on a host with enough free memory.
@@ -90,5 +99,5 @@ export async function launch(ns: NS, script: string, threadOrOptions?: number | 
     if (totalThreads > 0) {
         ns.tprintf("failed to spawn all the requested threads. %s threads remaining", totalThreads);
     }
-    return pids;
+    return { allocation: allocation, pids: pids };
 }
