@@ -18,8 +18,8 @@ async function sendPersonalServersToMemory(ns: NS) {
 }
 
 const MEMORY_FILES: string[] = [
-    "/util/ports.js",
-    "/batch/memory.js"
+    "/batch/memory.js",
+    "/util/ports.js"
 ];
 
 const MANAGE_FILES: string[] = [
@@ -28,7 +28,25 @@ const MANAGE_FILES: string[] = [
     "/util/ports.js",
 ];
 
+const MONITOR_FILES: string[] = [
+    "/all-hosts.js",
+    "/batch/client/monitor.js",
+    "/util/ports.js",
+];
+
 function startBatchHcking(ns: NS) {
+    const monitorHost = "foodnstuff";
+    const monitorScript = "/batch/monitor.js";
+
+    let monitor = ns.getRunningScript(monitorScript, monitorHost);
+    if (monitor !== null) {
+        ns.kill(monitor.pid);
+    } else {
+        ns.nuke(monitorHost);
+    }
+
+    launch(ns, monitorScript, monitorHost, MONITOR_FILES);
+
     const memoryHost = "n00dles";
     const memoryScript = "/batch/memory.js";
     let memory = ns.getRunningScript(memoryScript, memoryHost);
