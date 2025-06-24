@@ -60,25 +60,8 @@ function readHostsFromPort(ns: NS, hostsPort: NetscriptPort, state: State) {
     }
 }
 
-class Options {
-    _maxTillTargets: number;
-
-    constructor() {
-        this._maxTillTargets = 2;
-    }
-
-    get maxTillTargets(): number {
-        return this._maxTillTargets;
-    }
-
-    set setMaxTillTargets(maxTargets: number) {
-        this._maxTillTargets = maxTargets;
-    }
-}
-
 class State {
     ns: NS;
-    options: Options;
     tillTargets: string[];
     sowTargets: string[];
     harvestTargets: string[];
@@ -87,7 +70,6 @@ class State {
 
     constructor(ns: NS) {
         this.ns = ns;
-        this.options = new Options();
         this.tillTargets = [];
         this.sowTargets = [];
         this.harvestTargets = [];
