@@ -1,5 +1,9 @@
 import type { NS } from "netscript";
 
+import { workerMessage } from "./batch/client/memory";
+
+import { MEMORY_PORT } from "./util/ports";
+
 export async function main(ns: NS) {
     await waitForExit(ns, ns.exec("/get-all-hosts.js", "home"));
     ns.tprint("finished fetching all host info");
@@ -9,6 +13,8 @@ export async function main(ns: NS) {
 
     startCracker(ns);
     startBatchHcking(ns);
+
+    sendPersonalServersToMemory(ns);
 }
 
 const CRACK_FILES: string[] = [
@@ -84,5 +90,16 @@ async function waitForExit(ns: NS, pid: number): Promise<void> {
         if (ns.getRunningScript(pid) === null) {
             break;
         }
+    }
+}
+
+async function sendPersonalServersToMemory(ns: NS) {
+    let memPort = ns.getPortHandle(MEMORY_PORT);
+    let personalServers = ns.getPurchasedServers();
+
+    await ns.sleep(500);
+
+    for (const hostname of personalServers) {
+        memPort.write(workerMessage(hostname));
     }
 }
