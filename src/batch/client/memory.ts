@@ -53,7 +53,7 @@ export class MemoryClient {
        `atExit` handler for releasing the allocation when the owning
        process exits.
      */
-    async requestTransferableAllocation(chunkSize: number, numChunks: number): Promise<AllocationResult> {
+    async requestTransferableAllocation(chunkSize: number, numChunks: number): Promise<TransferableAllocation> {
         let pid = this.ns.pid;
         let returnPortId = MEMORY_PORT + pid;
         let returnPort = this.ns.getPortHandle(returnPortId);
@@ -69,7 +69,11 @@ export class MemoryClient {
             await this.ns.sleep(100);
         }
         await returnPort.nextWrite();
-        return returnPort.read() as AllocationResult;
+        let result = returnPort.read();
+        if (!result) return null;
+
+        let allocationResult = result as AllocationResult;
+        return new TransferableAllocation(allocationResult.allocationId, allocationResult.hosts);
     }
 
     /** Send a message to the memory allocator requesting a chunk of
@@ -87,7 +91,7 @@ export class MemoryClient {
         let allocationId = result.allocationId;
         let memoryPort = this.port;
         registerAllocationOwnership(this.ns, allocationId)
-        return result.hosts;
+        return result.allocations;
     }
 }
 
@@ -95,4 +99,18 @@ export function registerAllocationOwnership(ns: NS, allocationId: number) {
     ns.atExit(() => {
         ns.writePort(MEMORY_PORT, [MessageType.Release, [allocationId]]);
     }, "memoryRelease");
+}
+
+export class TransferableAllocation {
+    allocationId: number;
+    allocations: HostAllocation[];
+
+    constructor(allocationId: number, allocations: HostAllocation[]) {
+        this.allocationId = allocationId;
+        this.allocations = allocations;
+    }
+
+    releaseAtExit(ns: NS) {
+        registerAllocationOwnership(ns, this.allocationId);
+    }
 }
