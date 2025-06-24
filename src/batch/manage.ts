@@ -5,8 +5,10 @@ import { MonitorClient } from "batch/client/monitor";
 
 import { launch } from "batch/launch";
 import { Target } from "batch/target";
+import { CONFIG } from "batch/config";
 
 import { readAllFromPort } from "util/ports";
+
 
 export async function main(ns: NS) {
     ns.disableLog("getServerUsedRam");
@@ -116,6 +118,8 @@ class TargetSelectionManager {
     }
 
     tillNewTargets() {
+        if (this.tillTargets.length >= CONFIG.maxTillTargets) return;
+
         const toTill = this.readyToTillTargets();
         for (const target of toTill) {
             this.ns.print(`tilling ${target.name}`);
