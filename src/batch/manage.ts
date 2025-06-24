@@ -3,10 +3,10 @@ import type { NetscriptPort, NS } from "netscript";
 import { MANAGER_PORT, Message, MessageType } from "batch/client/manage";
 import { MonitorClient } from "batch/client/monitor";
 
-import { readAllFromPort } from "util/ports";
 import { launch } from "batch/launch";
-
 import { Target } from "batch/target";
+
+import { readAllFromPort } from "util/ports";
 
 export async function main(ns: NS) {
     ns.disableLog("getServerUsedRam");
@@ -88,8 +88,6 @@ class TargetSelectionManager {
     }
 
     readyToTillTargets(): Target[] {
-        this.updateVelocity();
-
         // Special bootstrap case, hack level 1 -> only n00dles
         if (this.ns.getHackingLevel() === 1) {
             const idx = this.pendingTargets.findIndex(t => t.name === "n00dles");
@@ -121,12 +119,12 @@ class TargetSelectionManager {
         const toTill = this.readyToTillTargets();
         for (const target of toTill) {
             this.ns.print(`tilling ${target.name}`);
-            launch(this.ns, "/batch/till.js", 1, undefined, target.name);
+            launch(this.ns, "/batch/till.js", 1, "--allocation-id", target.name);
             this.tillTargets.push(target.name);
         }
     }
 
-    private updateVelocity() {
+    updateVelocity() {
         const now = Date.now();
         const lvl = this.ns.getHackingLevel();
         this.hackHistory.push({ time: now, level: lvl });
@@ -148,5 +146,7 @@ class TargetSelectionManager {
 }
 
 async function tick(ns: NS, manager: TargetSelectionManager) {
+    manager.updateVelocity();
+
     manager.tillNewTargets();
 }
