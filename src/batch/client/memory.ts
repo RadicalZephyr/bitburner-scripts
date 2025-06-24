@@ -53,9 +53,9 @@ export class MemoryClient {
      *  memory for the current process to own.
      *
      * This method returns the allocationId that can then be passed to
-       `#.registerAllocationOwnership` to install the appropriate
-       `atExit` handler for releasing the allocation when the owning
-       process exits.
+     * `#.registerAllocationOwnership` to install the appropriate
+     * `atExit` handler for releasing the allocation when the owning
+     * process exits.
      */
     async requestTransferableAllocation(chunkSize: number, numChunks: number): Promise<TransferableAllocation> {
         let pid = this.ns.pid;
