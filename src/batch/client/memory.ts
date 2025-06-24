@@ -8,9 +8,11 @@ export enum MessageType {
     Release
 }
 
+type Payload = string | AllocationRequest | AllocationRelease;
+
 export type Message = [
     type: MessageType,
-    payload: string | AllocationRequest | AllocationRelease,
+    payload: Payload,
 ];
 
 // Compact version for use over ports if needed
@@ -47,6 +49,10 @@ export class MemoryClient {
     constructor(ns: NS) {
         this.ns = ns;
         this.port = ns.getPortHandle(MEMORY_PORT);
+    }
+
+    async newWorker(hostname: string) {
+        await this.sendMessage(MessageType.Worker, hostname);
     }
 
     /** Send a message to the memory allocator requesting a chunk of
@@ -96,6 +102,13 @@ export class MemoryClient {
         let memoryPort = this.port;
         registerAllocationOwnership(this.ns, allocationId)
         return result.allocatedChunks;
+    }
+
+    private async sendMessage(type: MessageType, payload: Payload) {
+        let message = [type, payload];
+        while (!this.port.tryWrite(message)) {
+            await this.ns.sleep(200);
+        }
     }
 }
 
