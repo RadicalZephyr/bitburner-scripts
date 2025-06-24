@@ -29,7 +29,7 @@ const MANAGE_FILES: string[] = [
 ];
 
 function startBatchHcking(ns: NS) {
-    const memoryHost = "foodnstuff";
+    const memoryHost = "n00dles";
     const memoryScript = "/batch/memory.js";
     let memory = ns.getRunningScript(memoryScript, memoryHost);
     if (memory !== null) {
@@ -43,7 +43,7 @@ function startBatchHcking(ns: NS) {
 
     launch(ns, memoryScript, memoryHost, memoryFiles);
 
-    const manageHost = "foodnstuff";
+    const manageHost = "n00dles";
     const manageScript = "/batch/manage.js";
     let manager = ns.getRunningScript(manageScript, manageHost);
     if (manager !== null) {
@@ -67,7 +67,7 @@ const CRACK_FILES: string[] = [
 ];
 
 function startCracker(ns: NS) {
-    const crackHost = "n00dles";
+    const crackHost = "foodnstuff";
     const crackScript = "/crack-all.js";
     let cracker = ns.getRunningScript(crackScript, crackHost);
     if (cracker !== null) {
