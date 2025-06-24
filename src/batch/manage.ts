@@ -14,7 +14,9 @@ import { MessageType } from "./client/manage";
 export async function main(ns: NS) {
     ns.disableLog("getServerUsedRam");
     ns.disableLog("ps");
+    ns.disableLog("sleep");
     ns.ui.openTail();
+    ns.ui.moveTail(1010, 0);
 
     let targetsPort = ns.getPortHandle(MANAGER_PORT);
 

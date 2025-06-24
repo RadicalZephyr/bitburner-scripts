@@ -9,6 +9,7 @@ export async function main(ns: NS) {
     ns.disableLog("getServerUsedRam");
     ns.disableLog("ps");
     ns.ui.openTail();
+    ns.ui.moveTail(500, 0);
 
     let memPort = ns.getPortHandle(MEMORY_PORT);
     let memMessageWaiting = true;
