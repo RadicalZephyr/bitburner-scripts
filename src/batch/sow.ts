@@ -1,5 +1,6 @@
 import type { AutocompleteData, NS } from "netscript";
 import { launch } from "batch/launch";
+import { registerAllocationOwnership } from "/batch/client/memory";
 
 const GROW_SCRIPT = "/batch/g.js";
 const WEAKEN_SCRIPT = "/batch/w.js";
@@ -13,6 +14,7 @@ export async function main(ns: NS) {
 
     const flags = ns.flags([
         ['help', false],
+        ['allocation-id', null],
     ]);
 
     const rest = flags._ as string[];
@@ -30,6 +32,15 @@ OPTIONS
 --help           Show this help message
 `);
         return;
+    }
+
+    let allocationId = flags['allocation-id'];
+    if (allocationId !== null) {
+        if (typeof allocationId !== 'number') {
+            ns.tprint('--allocation-id must be a number');
+            return;
+        }
+        registerAllocationOwnership(ns, allocationId);
     }
 
     let target = rest[0];
@@ -53,10 +64,10 @@ OPTIONS
 
     let expectedTime = ns.tFormat(ns.getWeakenTime(target));
 
-    let weakenResult = await launch(ns, WEAKEN_SCRIPT, weakenThreads, target, 0, 1, 0);
+    let weakenResult = await launch(ns, WEAKEN_SCRIPT, weakenThreads, "--allocation-id", target, 0, 1, 0);
     weakenResult.allocation.releaseAtExit(ns);
 
-    let growResult = await launch(ns, GROW_SCRIPT, growThreads, target, 0, 1, 0);
+    let growResult = await launch(ns, GROW_SCRIPT, growThreads, "--allocation-id", target, 0, 1, 0);
     growResult.allocation.releaseAtExit(ns);
 
     let pids = [...weakenResult.pids, ...growResult.pids];
