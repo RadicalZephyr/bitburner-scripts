@@ -91,7 +91,7 @@ export class MemoryClient {
         let allocationId = result.allocationId;
         let memoryPort = this.port;
         registerAllocationOwnership(this.ns, allocationId)
-        return result.allocations;
+        return result.allocatedChunks;
     }
 }
 
@@ -103,14 +103,34 @@ export function registerAllocationOwnership(ns: NS, allocationId: number) {
 
 export class TransferableAllocation {
     allocationId: number;
-    allocations: HostAllocation[];
+    allocatedChunks: AllocationChunk[];
 
     constructor(allocationId: number, allocations: HostAllocation[]) {
         this.allocationId = allocationId;
-        this.allocations = allocations;
+        this.allocatedChunks = allocations.map(chunk => new AllocationChunk(chunk));
     }
 
     releaseAtExit(ns: NS) {
         registerAllocationOwnership(ns, this.allocationId);
+    }
+
+    totalAllocatedRam(): number {
+        return this.allocatedChunks.reduce((sum, chunk) => sum + chunk.totalSize, 0);
+    }
+}
+
+class AllocationChunk {
+    hostname: string;
+    chunkSize: number;
+    numChunks: number;
+
+    constructor(chunk: HostAllocation) {
+        this.hostname = chunk.hostname;
+        this.chunkSize = chunk.chunkSize;
+        this.numChunks = chunk.numChunks;
+    }
+
+    get totalSize(): number {
+        return this.chunkSize * this.numChunks;
     }
 }
