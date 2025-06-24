@@ -1,6 +1,6 @@
 import type { NS } from "netscript";
 
-import { LocalStorage } from "util/localStorage";
+import { CONFIG } from "batch/config";
 
 export async function main(ns: NS) {
     ns.disableLog("sleep");
@@ -9,19 +9,9 @@ export async function main(ns: NS) {
     ns.print("finished fetching all host info");
 
     // Sleep to let the game fully write out the all-hosts.js script
-    setConfigDefaults();
+    CONFIG.setDefaults();
 
     bootstrap(ns);
-}
-
-function setConfigDefaults() {
-    setConfigDefault("BATCH_INTERVAL", 200);
-}
-
-function setConfigDefault(key, defaultValue) {
-    if (!LocalStorage.getItem(key)) {
-        LocalStorage.setItem(key, defaultValue);
-    }
 }
 
 async function waitForExit(ns: NS, pid: number): Promise<void> {
