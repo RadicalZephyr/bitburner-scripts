@@ -4,6 +4,8 @@ export const MANAGER_PORT: number = 200;
 
 export enum MessageType {
     NewTarget,
+    FinishedTilling,
+    FinishedSowing,
 }
 
 export type Payload = string;
@@ -12,13 +14,6 @@ export type Message = [
     type: MessageType,
     payload: Payload,
 ];
-
-function newTargetMessage(hostname: string): Message {
-    return [
-        MessageType.NewTarget,
-        hostname
-    ];
-}
 
 export class ManagerClient {
     ns: NS;
@@ -29,8 +24,20 @@ export class ManagerClient {
         this.port = ns.getPortHandle(MANAGER_PORT);
     }
 
-    async sendNewTarget(hostname: string) {
-        let newTargetMsg = newTargetMessage(hostname);
+    async newTarget(hostname: string) {
+        await this.sendMessage(MessageType.NewTarget, hostname);
+    }
+
+    async finishedTilling(hostname: string) {
+        await this.sendMessage(MessageType.FinishedTilling, hostname);
+    }
+
+    async finishedSowing(hostname: string) {
+        await this.sendMessage(MessageType.FinishedSowing, hostname);
+    }
+
+    private async sendMessage(type: MessageType, hostname: string) {
+        let message = [type, hostname];
         while (!this.port.tryWrite(newTargetMessage)) {
             await ns.sleep(200);
         }
