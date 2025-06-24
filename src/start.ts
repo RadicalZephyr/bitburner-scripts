@@ -9,10 +9,13 @@ export async function main(ns: NS) {
     // Sleep to let the game fully write out the all-hosts.js script
     await ns.sleep(1000);
 
-    startCracker(ns);
     startBatchHcking(ns);
+    await ns.sleep(1000);
 
     sendPersonalServersToMemory(ns);
+    await ns.sleep(1000);
+
+    startCracker(ns);
 }
 
 const CRACK_FILES: string[] = [
@@ -91,11 +94,9 @@ async function waitForExit(ns: NS, pid: number): Promise<void> {
     }
 }
 
-async function sendPersonalServersToMemory(ns: NS) {
+function sendPersonalServersToMemory(ns: NS) {
     let memPort = ns.getPortHandle(MEMORY_PORT);
     let personalServers = ns.getPurchasedServers();
-
-    await ns.sleep(500);
 
     for (const hostname of personalServers) {
         memPort.write(workerMessage(hostname));
