@@ -1,0 +1,172 @@
+* Batch Hacking System Architecture
+
+Written by ChatGPT 4o in discussion with Zefira Shannon.
+
+** Overview
+
+The batch hacking system orchestrates coordinated attacks on valid
+hacking targets in Bitburner using a structured lifecycle model. It is
+designed to optimize RAM usage across all available servers by
+managing preparation, maintenance, and harvesting stages
+separately. The system uses dedicated scripts for memory allocation,
+lifecycle tracking, target evaluation, and batch execution.
+
+The architecture is modular, scalable, and adapts over time as player
+hacking skill and network resources improve.
+
+** Components
+
+*** MemoryManager
+
+Responsible for tracking available RAM across all rooted servers
+("Workers") and allocating memory to individual script batches.
+
+- Tracks each server's total, reserved, and allocated RAM.
+- Supports allocation of multi-chunk memory reservations per request.
+- Frees memory when allocations are released or scripts exit.
+- Communicates over Netscript Ports with LifecycleManagers.
+
+*** TargetSelectionManager
+
+Acts as the global coordinator for choosing which servers to attack.
+
+- Receives the list of potential targets from the nuking/init script.
+- Ranks targets based on expected profit/sec, adjusted for hack time.
+- Tracks current memory availability from MemoryManager.
+- Spawns LifecycleManager scripts for the top available targets.
+- Avoids duplication and waits for READY messages from LifecycleManagers before proceeding.
+
+*** LifecycleManager
+
+Handles the full lifecycle of a single target. Responsibilities
+include:
+
+- Querying current target state (money/security).
+- Determining active phase:
+  - `Init` for heavy Grow/Weaken needed to reach min security & max money.
+  - `Rebalance` for minor corrections post-harvest drift.
+  - `Harvest` for stable batch execution.
+- Calculating per-phase thread counts and batch timing windows.
+- Requesting memory allocations from the MemoryManager.
+- Staggering batches to avoid script overlaps (e.g. 100ms per script, 200ms per batch).
+- Monitoring phase transitions and adapting memory needs as hack level changes.
+
+*** InitPhaseManager (Optional)
+
+An early-stage singleton component (or special mode of LifecycleManager) that:
+
+- Concentrates all available memory to prepare the highest-value target.
+- Performs one-off massive weaken/grow cycles.
+- Notifies TargetSelectionManager when targets are ready to enter regular harvest mode.
+
+*** Nuker / Bootstrap Script
+
+Runs on startup and:
+
+- Discovers and nukes all accessible servers.
+- Identifies which servers are:
+  - Workers (have usable RAM),
+  - Targets (have money),
+  - Dual-role.
+- Sends worker list to the MemoryManager and target list to the TargetSelectionManager.
+
+*** Script Batch Types
+
+- **Weaken:** Used in `Init` and `Rebalance` to lower security.
+- **Grow:** Used in `Init` and `Rebalance` to raise money.
+- **Hack/Weaken/Grow/Weaken:** Used in `Harvest` for sustained income with security balancing.
+
+** Messaging Protocols
+
+*** AllocationRequest (from LifecycleManager to MemoryManager)
+
+#+BEGIN_SRC typescript
+interface AllocationRequest {
+  returnPort: number;
+  lifecyclePid: number;
+  script: string;
+  args: (string | number | boolean)[];
+  chunkSize: number;
+  numChunks: number;
+}
+#+END_SRC
+
+*** AllocationResponse (to LifecycleManager)
+#+BEGIN_SRC typescript
+interface AllocationResponse {
+  allocationId: number;
+  chunks: AllocationChunk[];
+  success: boolean;
+}
+#+END_SRC
+
+*** LifecycleStatus (to TargetSelectionManager)
+#+BEGIN_SRC typescript
+interface LifecycleStatusMessage {
+  type: 'READY' | 'FAIL' | 'DONE';
+  target: string;
+  pid: number;
+  allocationId?: number;
+  reason?: string;
+}
+#+END_SRC
+
+** Timing and Thread Calculation
+
+- Hack, Grow, and Weaken times depend on current hack level and server stats.
+- Batch runtime = max(script time) + script spacing × 3
+- Max overlapping batches = floor(batch runtime / batch spacing)
+- Threads per operation calculated using:
+  - `hackAnalyzeThreads`
+  - `growthAnalyze`
+  - Manual weaken thread estimates
+
+** Phase Definitions
+
+*** Init
+
+- Conditions: `security > min || money < ~90% max`
+- Strategy: large Grow + Weaken batches
+- Memory strategy: concentrate full available RAM
+- LifecycleManager enters Harvest mode only after target is prepped
+
+*** Rebalance
+
+- Conditions: slight deviation from min/max
+- Strategy: smaller corrective batches
+- Can overlap with Harvest for seamless adjustment
+
+*** Harvest
+
+- Conditions: `security ≈ min && money ≈ max`
+- Strategy: tightly packed staggered Hack → Weaken → Grow → Weaken batches
+- Prioritized for memory allocation by TargetSelectionManager
+
+** Logging & Debugging Practices
+
+- LifecycleManagers log phase transitions, thread counts, batch timings, and allocation success/failure.
+- TargetSelectionManager logs:
+  - Target rankings and profit/sec estimates
+  - Allocations granted and LifecycleManagers launched
+  - Failures to allocate or spawn managers
+- MemoryManager optionally logs:
+  - Total RAM pool status
+  - Current usage by allocation ID
+  - Worker-specific usage and fragmentation
+- Debug flags can be passed as script args for:
+  - Verbose logging
+  - Per-target batch visualizations
+- Errors and allocation failures are reported via port messages and optionally logged to a central debug file or terminal.
+
+** Future Enhancements
+
+- Implement a Priority Queue in TargetSelectionManager to reclaim RAM from less profitable targets when better ones become available.
+- Add support for dynamic batch sizing based on available RAM to run partial batches on overflow RAM.
+- Develop a dashboard or UI overlay (via tail window or terminal logs) to visualize:
+  - Current targets and lifecycle phases
+  - Estimated income/sec per target
+  - Number of active batches and RAM per Worker
+- Introduce more complex batch types (e.g. mini-hacks, alternating timing profiles).
+- Add lifecycle heartbeat and watchdog timers to auto-recover from hung or stuck processes.
+- Introduce Worker class tiering for faster servers (home, purchased servers) to prioritize batch launches.
+- Persist and reload target state (e.g. via a JSON file) to support long-running automation across game resets or upgrades.
