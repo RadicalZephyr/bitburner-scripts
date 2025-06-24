@@ -2,6 +2,9 @@
 
 Awesome scripts for Bitburner
 
+![A stylized digital illustration of a person in a dark hoodie sitting at a desk with multiple glowing green computer screens. The central screen displays code, while another shows a world map with data overlays. The atmosphere is dark and moody, evoking themes of hacking or cybersecurity.](https://github.com/RadicalZephyr/bitburner-scripts/blob/dev/images/hackers-whimsy.png?raw=true)
+
+
 ## Getting Started
 
 ### Using in game
