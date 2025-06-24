@@ -66,9 +66,9 @@ function readHostsFromPort(ns: NS, hostsPort: NetscriptPort, manager: TargetSele
 
 class TargetSelectionManager {
     ns: NS;
-    tillTargets: string[];
-    sowTargets: string[];
-    harvestTargets: string[];
+    tillTargets: Set<string>;
+    sowTargets: Set<string>;
+    harvestTargets: Set<string>;
 
     pendingTargets: Target[];
 
@@ -77,9 +77,9 @@ class TargetSelectionManager {
 
     constructor(ns: NS) {
         this.ns = ns;
-        this.tillTargets = [];
-        this.sowTargets = [];
-        this.harvestTargets = [];
+        this.tillTargets = new Set();
+        this.sowTargets = new Set();
+        this.harvestTargets = new Set();
         this.pendingTargets = [];
         this.hackHistory = [];
         this.velocity = 0;
@@ -118,13 +118,13 @@ class TargetSelectionManager {
     }
 
     tillNewTargets() {
-        if (this.tillTargets.length >= CONFIG.maxTillTargets) return;
+        if (this.tillTargets.size >= CONFIG.maxTillTargets) return;
 
         const toTill = this.readyToTillTargets();
         for (const target of toTill) {
             this.ns.print(`tilling ${target.name}`);
             launch(this.ns, "/batch/till.js", 1, "--allocation-id", target.name);
-            this.tillTargets.push(target.name);
+            this.tillTargets.add(target.name);
         }
     }
 
