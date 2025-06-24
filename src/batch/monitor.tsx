@@ -1,8 +1,10 @@
 import type { NS } from "netscript";
 
 import { ALL_HOSTS } from "all-hosts";
+
+import { Lifecycle, Message as MonitorMessage } from "batch/client/monitor";
+
 import { readAllFromPort, MONITOR_PORT } from "util/ports";
-import { Lifecycle, Message as MonitorMessage } from "./client/monitor";
 
 declare const React: any;
 
