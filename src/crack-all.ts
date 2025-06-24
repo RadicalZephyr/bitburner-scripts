@@ -8,8 +8,8 @@ import { MemoryClient } from "batch/client/memory";
 
 const HACKING_FILES = [
     "/all-hosts.js",
-    "/batch/client/manage",
-    "/batch/client/memory",
+    "/batch/client/manage.js",
+    "/batch/client/memory.js",
     "/util/ports.js",
     "/util/wait.js",
     "/batch/till.js",
