@@ -68,13 +68,27 @@ export async function launch(ns: NS, script: string, threadOrOptions?: number | 
     let scriptRam = ns.getScriptRam(script);
     let client = new MemoryClient(ns);
 
-    let result = await client.requestTransferableAllocation(scriptRam, 1);
+    let totalThreads = typeof threadOrOptions === 'number' ? threadOrOptions : threadOrOptions.threads;
 
-    let allocId = result[0];
-    let hosts = result[1];
-    let hostname = hosts[0].hostname;
+    let allocation = await client.requestTransferableAllocation(scriptRam, totalThreads);
 
-    // TODO: do we send the script to the host or not?
-    let pid = ns.exec(script, hostname, threadOrOptions, allocId, ...args);
-    return pid;
+    let pids = [];
+    for (const allocationChunk of allocation.allocatedChunks) {
+        let hostname = allocationChunk.hostname;
+        let threadsHere = allocationChunk.numChunks;
+
+        ns.scp(script, hostname);
+        let pid = ns.exec(script, hostname, threadsHere, ...args);
+        if (!pid) {
+            ns.tprint("failed to spawn %d threads of %s on %s", threadsHere, script, hostname);
+        } else {
+            pids.push(pid);
+            totalThreads -= threadsHere;
+        }
+    }
+
+    if (totalThreads > 0) {
+        ns.tprintf("failed to spawn all the requested threads. %s threads remaining", totalThreads);
+    }
+    return pids;
 }
