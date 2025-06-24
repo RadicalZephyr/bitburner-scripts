@@ -36,6 +36,8 @@ OPTIONS
     }
 
     ns.ui.setTailTitle(`till ${target}`);
+    ns.ui.openTail();
+    ns.ui.resizeTail(450, 80);
 
     let expectedTime = ns.tFormat(ns.getWeakenTime(target));
 

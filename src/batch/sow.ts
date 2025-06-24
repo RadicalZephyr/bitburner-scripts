@@ -40,6 +40,7 @@ OPTIONS
 
     ns.ui.setTailTitle(`sow ${target}`);
     ns.ui.openTail();
+    ns.ui.resizeTail(400, 80);
 
     let growThreads = neededGrowThreads(ns, target);
     let growSecDelta = ns.growthAnalyzeSecurity(growThreads, target);
