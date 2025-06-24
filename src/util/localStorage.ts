@@ -10,4 +10,4 @@ declare global {
     var globalThis: Global;
 }
 
-export let localStorage = globalThis.localStorage;;
+export const LocalStorage = globalThis.localStorage;;

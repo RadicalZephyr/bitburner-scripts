@@ -1,6 +1,6 @@
 import type { NS } from "netscript";
 
-import { localStorage } from "util/localStorage";
+import { LocalStorage } from "util/localStorage";
 
 export async function main(ns: NS) {
     const flags = ns.flags([
@@ -32,5 +32,5 @@ Example:
         return;
     }
 
-    localStorage.setItem(key, value);
+    LocalStorage.setItem(key, value);
 }
