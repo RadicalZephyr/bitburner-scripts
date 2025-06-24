@@ -41,8 +41,9 @@ OPTIONS
 
     let threads = calculateWeakenThreads(ns, target);
 
-    if (threads == 0) {
+    if (threads == 0 || isNaN(threads)) {
         ns.tprintf("%s security is already at minimum level", target);
+        return;
     }
 
     let result = await launch(ns, "/batch/w.js", threads, target, 0, 1, 0);
@@ -68,7 +69,7 @@ function calculateWeakenThreads(ns: NS, target: string): number {
     let curSec = ns.getServerSecurityLevel(target);
     let deltaSec = curSec - minSec;
 
-    if (deltaSec <= 0) return 0;
+    if (deltaSec <= 0 || isNaN(deltaSec)) return 0;
 
     return Math.ceil(deltaSec * 20);
 }

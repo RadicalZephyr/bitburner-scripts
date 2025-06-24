@@ -86,6 +86,8 @@ export async function launch(ns: NS, script: string, threadOrOptions?: number | 
         let hostname = allocationChunk.hostname;
         let threadsHere = allocationChunk.numChunks;
 
+        if (isNaN(threadsHere)) continue;
+
         ns.scp(script, hostname);
         let pid = ns.exec(script, hostname, threadsHere, ...args);
         if (!pid) {
