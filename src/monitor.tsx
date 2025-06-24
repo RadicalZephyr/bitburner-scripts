@@ -1,6 +1,6 @@
 import type { NS, UserInterfaceTheme } from "netscript";
 
-import { ALL_HOSTS } from "all-hosts";
+import { TARGETS_BY_PORTS_REQUIRED } from "all-hosts";
 
 
 declare const React: any;
@@ -31,11 +31,11 @@ export async function main(ns: NS) {
     ns.ui.openTail();
     ns.ui.resizeTail(450, 30 * 6);
 
-    let servers = ALL_HOSTS.filter(name => name !== "host");
     let theme = ns.ui.getTheme();
 
     while (true) {
-        let serverInfo = servers.map(server => formatServerInfo(ns, server));
+        let targets = getTargetableServers(ns, TARGETS_BY_PORTS_REQUIRED);
+        let serverInfo = targets.map(server => formatServerInfo(ns, server));
         ns.clearLog();
         ns.printRaw(<ServerTable ns={ns} servers={serverInfo} theme={theme}></ServerTable>);
         await ns.sleep(flags.refreshrate);
@@ -128,4 +128,47 @@ function buildAnalyze(ns, target, buildAmount) {
     else {
         return 0;
     }
+}
+
+const crackers = [
+    "BruteSSH.exe",
+    "FTPCrack.exe",
+    "relaySMTP.exe",
+    "HTTPWorm.exe",
+    "SQLInject.exe"
+];
+
+function countPortCrackers(ns: NS): number {
+    let numCrackers = 0;
+    for (const c of crackers) {
+        if (ns.fileExists(c, "home")) {
+            numCrackers += 1;
+        }
+    }
+    return numCrackers;
+}
+
+function getTargetableServers(ns: NS, targetsByPort: string[][]): string[] {
+    let targets = [];
+    let numCrackers = countPortCrackers(ns);
+    for (let i = 0; i < numCrackers; ++i) {
+        extend(targets, targetsByPort[i]);
+    }
+    return targets;
+}
+
+function extend<T>(array: T[], values: T[]): T[] {
+    var l2 = values.length;
+
+    if (l2 === 0)
+        return array;
+
+    var l1 = array.length;
+
+    array.length += l2;
+
+    for (var i = 0; i < l2; i++)
+        array[l1 + i] = values[i];
+
+    return array;
 }
