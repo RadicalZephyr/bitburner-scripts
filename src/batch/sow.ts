@@ -1,5 +1,6 @@
 import type { AutocompleteData, NS } from "netscript";
 import { launch } from "batch/launch";
+import { registerAllocationOwnership } from "/batch/client/memory";
 
 const GROW_SCRIPT = "/batch/g.js";
 const WEAKEN_SCRIPT = "/batch/w.js";
@@ -13,6 +14,7 @@ export async function main(ns: NS) {
 
     const flags = ns.flags([
         ['help', false],
+        ['allocation-id', null],
     ]);
 
     const rest = flags._ as string[];
@@ -30,6 +32,15 @@ OPTIONS
 --help           Show this help message
 `);
         return;
+    }
+
+    let allocationId = flags['allocation-id'];
+    if (allocationId !== null) {
+        if (typeof allocationId !== 'number') {
+            ns.tprint('--allocation-id must be a number');
+            return;
+        }
+        registerAllocationOwnership(ns, allocationId);
     }
 
     let target = rest[0];

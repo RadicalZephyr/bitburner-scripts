@@ -57,7 +57,7 @@ OPTIONS
 
     ns.tprint(`${script} ${JSON.stringify(options)} ${JSON.stringify(args)}`);
 
-    let result = await launch(ns, script, options, ...args);
+    let result = await launch(ns, script, options, undefined, ...args);
 
     result.allocation.releaseAtExit(ns);
 
@@ -73,7 +73,7 @@ OPTIONS
  * This requests a singular allocation for the script from the memory
  * manager and then runs it on the host that was allocated.
  */
-export async function launch(ns: NS, script: string, threadOrOptions?: number | RunOptions, ...args: ScriptArg[]) {
+export async function launch(ns: NS, script: string, threadOrOptions?: number | RunOptions, allocationFlag?: string, ...args: ScriptArg[]) {
     let scriptRam = ns.getScriptRam(script);
     let client = new MemoryClient(ns);
 
@@ -89,7 +89,8 @@ export async function launch(ns: NS, script: string, threadOrOptions?: number | 
         if (isNaN(threadsHere)) continue;
 
         ns.scp(script, hostname);
-        let pid = ns.exec(script, hostname, threadsHere, ...args);
+        let execArgs = allocationFlag ? [allocationFlag, allocation.allocationId, ...args] : args;
+        let pid = ns.exec(script, hostname, threadsHere, ...execArgs);
         if (!pid) {
             ns.tprintf("failed to spawn %d threads of %s on %s", threadsHere, script, hostname);
         } else {
