@@ -95,5 +95,5 @@ function growthAnalyze(ns: NS, target: string, growAmount: number): number {
 function weakenAnalyze(weakenAmount: number): number {
     if (weakenAmount <= 0) return 0;
 
-    return Math.ceil(weakenAmount * 20);
+    return Math.ceil(weakenAmount * 20) + 1;
 }
