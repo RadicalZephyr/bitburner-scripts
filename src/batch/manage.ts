@@ -3,9 +3,8 @@ import type { NetscriptPort, NS } from "netscript";
 import { MANAGER_PORT, Message, MessageType } from "batch/client/manage";
 import { MonitorClient } from "batch/client/monitor";
 
-import { launch } from "batch/launch";
-import { Target } from "batch/target";
 import { CONFIG } from "batch/config";
+import { launch } from "batch/launch";
 
 import { readAllFromPort } from "util/ports";
 
@@ -46,8 +45,8 @@ function readHostsFromPort(ns: NS, hostsPort: NetscriptPort, manager: TargetSele
             switch (nextHostMsg[0]) {
                 case MessageType.NewTarget:
                     ns.print(`new target received: ${hostname}`);
-                    manager.pushTarget(new Target(ns, hostname));
                     monitor.pending(hostname);
+                    manager.pushTarget(hostname);
                     break;
 
                 case MessageType.FinishedTilling:
@@ -72,7 +71,7 @@ class TargetSelectionManager {
     sowTargets: Set<string>;
     harvestTargets: Set<string>;
 
-    pendingTargets: Target[];
+    pendingTargets: string[];
 
     hackHistory: { time: number, level: number }[];
     velocity: number;
@@ -87,14 +86,14 @@ class TargetSelectionManager {
         this.velocity = 0;
     }
 
-    pushTarget(target: Target) {
+    pushTarget(target: string) {
         this.pendingTargets.push(target);
     }
 
-    readyToTillTargets(): Target[] {
+    readyToTillTargets(): string[] {
         // Special bootstrap case, hack level 1 -> only n00dles
         if (this.ns.getHackingLevel() === 1) {
-            const idx = this.pendingTargets.findIndex(t => t.name === "n00dles");
+            const idx = this.pendingTargets.findIndex(name => name === "n00dles");
             if (idx >= 0) {
                 return [this.pendingTargets.splice(idx, 1)[0]];
             }
@@ -110,8 +109,8 @@ class TargetSelectionManager {
 
         // Prioritize by weaken time (faster first)
         this.pendingTargets.sort((a, b) => {
-            const at = this.ns.getWeakenTime(a.name);
-            const bt = this.ns.getWeakenTime(b.name);
+            const at = this.ns.getWeakenTime(a);
+            const bt = this.ns.getWeakenTime(b);
             return at - bt;
         });
 
@@ -124,9 +123,9 @@ class TargetSelectionManager {
 
         const toTill = this.readyToTillTargets();
         for (const target of toTill) {
-            this.ns.print(`tilling ${target.name}`);
-            launch(this.ns, "/batch/till.js", 1, "--allocation-id", target.name);
-            this.tillTargets.add(target.name);
+            this.ns.print(`tilling ${target}`);
+            launch(this.ns, "/batch/till.js", 1, "--allocation-id", target);
+            this.tillTargets.add(target);
         }
     }
 
