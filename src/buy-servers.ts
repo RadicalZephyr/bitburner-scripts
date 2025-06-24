@@ -11,6 +11,7 @@ export async function main(ns: NS) {
     const options = ns.flags([
         ['spend', DEFAULT_SPEND],
         ['min', DEFAULT_MIN_RAM],
+        ['no-upgrade', false],
         ['dry-run', false],
         ['wait', false],
         ['help', false]
@@ -20,6 +21,7 @@ export async function main(ns: NS) {
         options.help
         || typeof options.spend != 'number'
         || typeof options.min != 'number'
+        || typeof options['no-upgrade'] != 'boolean'
         || typeof options['dry-run'] != 'boolean'
         || typeof options.wait != 'boolean'
     ) {
@@ -68,9 +70,18 @@ OPTIONS
         }
     }
 
-    let ramOrderedServers = currentServers.map(host => {
-        return { "host": host, ram: ns.getServerMaxRam(host) };
-    }).sort((a, b) => a.ram - b.ram).map(hostRam => hostRam.host);
+    let ramOrderedServers = currentServers
+        .map(host => {
+            return { "host": host, ram: ns.getServerMaxRam(host) };
+        })
+        .filter(h => h.ram < ram)
+        .sort((a, b) => a.ram - b.ram)
+        .map(hostRam => hostRam.host);
+
+    if (options['no-upgrade']) {
+        ns.tprint(`not upgrading existing ${ramOrderedServers.length} servers with less than ${ns.formatRam(ram)} of RAM`);
+        return;
+    }
 
     // Upgrade all current servers to the new RAM tier
     for (let i = 0; i < ramOrderedServers.length; ++i) {
