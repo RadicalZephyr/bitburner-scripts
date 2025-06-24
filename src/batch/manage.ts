@@ -1,6 +1,7 @@
 import type { NetscriptPort, NS } from "netscript";
 
 import { MANAGER_PORT, Message, MessageType } from "batch/client/manage";
+import { MonitorClient } from "batch/client/monitor";
 
 import { readAllFromPort } from "util/ports";
 
@@ -16,12 +17,13 @@ export async function main(ns: NS) {
     let targetsPort = ns.getPortHandle(MANAGER_PORT);
 
     let manager = new TargetSelectionManager(ns);
+    let monitor = new MonitorClient(ns);
 
     let hostsMessagesWaiting = true;
 
     while (true) {
         if (hostsMessagesWaiting) {
-            readHostsFromPort(ns, targetsPort, manager);
+            readHostsFromPort(ns, targetsPort, manager, monitor);
             hostsMessagesWaiting = false;
 
             targetsPort.nextWrite().then(_ => {
@@ -33,7 +35,7 @@ export async function main(ns: NS) {
     }
 }
 
-function readHostsFromPort(ns: NS, hostsPort: NetscriptPort, manager: TargetSelectionManager) {
+function readHostsFromPort(ns: NS, hostsPort: NetscriptPort, manager: TargetSelectionManager, monitor: MonitorClient) {
     for (let nextMsg of readAllFromPort(ns, hostsPort)) {
         if (typeof nextMsg === "object") {
             let nextHostMsg = nextMsg as Message;
@@ -42,14 +44,17 @@ function readHostsFromPort(ns: NS, hostsPort: NetscriptPort, manager: TargetSele
                 case MessageType.NewTarget:
                     ns.print(`new target received: ${hostname}`);
                     manager.pushTarget(new Target(ns, hostname));
+                    monitor.pending(hostname);
                     break;
 
                 case MessageType.FinishedTilling:
                     ns.print(`${hostname} finished tilling`);
+                    monitor.sowing(hostname);
                     break;
 
                 case MessageType.FinishedSowing:
                     ns.print(`${hostname} finished sowing`);
+                    monitor.harvesting(hostname);
                     break;
             }
         }
