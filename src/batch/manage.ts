@@ -4,6 +4,7 @@ import { MANAGER_PORT, Message, MessageType } from "batch/client/manage";
 import { MonitorClient } from "batch/client/monitor";
 
 import { readAllFromPort } from "util/ports";
+import { launch } from "batch/launch";
 
 import { Target } from "batch/target";
 
@@ -69,12 +70,17 @@ class TargetSelectionManager {
 
     pendingTargets: Target[];
 
+    hackHistory: { time: number, level: number }[];
+    velocity: number;
+
     constructor(ns: NS) {
         this.ns = ns;
         this.tillTargets = [];
         this.sowTargets = [];
         this.harvestTargets = [];
         this.pendingTargets = [];
+        this.hackHistory = [];
+        this.velocity = 0;
     }
 
     pushTarget(target: Target) {
@@ -82,10 +88,61 @@ class TargetSelectionManager {
     }
 
     readyToTillTargets(): Target[] {
-        return [];
+        this.updateVelocity();
+
+        // Special bootstrap case, hack level 1 -> only n00dles
+        if (this.ns.getHackingLevel() === 1) {
+            const idx = this.pendingTargets.findIndex(t => t.name === "n00dles");
+            if (idx >= 0) {
+                return [this.pendingTargets.splice(idx, 1)[0]];
+            }
+            return [];
+        }
+
+        if (Math.abs(this.velocity) > 0.05) {
+            // Still gaining hacking levels quickly, wait
+            return [];
+        }
+
+        if (this.pendingTargets.length === 0) return [];
+
+        // Prioritize by weaken time (faster first)
+        this.pendingTargets.sort((a, b) => {
+            const at = this.ns.getWeakenTime(a.name);
+            const bt = this.ns.getWeakenTime(b.name);
+            return at - bt;
+        });
+
+        // Pop one target to till
+        return [this.pendingTargets.shift()];
     }
 
     tillNewTargets() {
+        const toTill = this.readyToTillTargets();
+        for (const target of toTill) {
+            this.ns.print(`tilling ${target.name}`);
+            launch(this.ns, "/batch/till.js", 1, undefined, target.name);
+            this.tillTargets.push(target.name);
+        }
+    }
+
+    private updateVelocity() {
+        const now = Date.now();
+        const lvl = this.ns.getHackingLevel();
+        this.hackHistory.push({ time: now, level: lvl });
+        // Keep last 5 samples
+        if (this.hackHistory.length > 5) {
+            this.hackHistory.shift();
+        }
+        if (this.hackHistory.length >= 2) {
+            const first = this.hackHistory[0];
+            const last = this.hackHistory[this.hackHistory.length - 1];
+            const dt = (last.time - first.time) / 1000; // seconds
+            const dl = last.level - first.level;
+            this.velocity = dt > 0 ? dl / dt : 0;
+        } else {
+            this.velocity = 0;
+        }
     }
 
 }
