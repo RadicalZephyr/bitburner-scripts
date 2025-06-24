@@ -85,8 +85,10 @@ function crackHost(ns: NS, host: string, ports: number): boolean {
         return false
     }
     let crackers = portOpeningProgramFns(ns);
-    for (let i = 0; i < ports; i++) {
-        crackers[i].fn(host);
+    for (const cracker of crackers) {
+        if (ns.fileExists(cracker.file)) {
+            cracker.fn(host);
+        }
     }
     ns.nuke(host);
     ns.scp(NUKED_FILE, host);
