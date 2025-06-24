@@ -2,8 +2,9 @@ import type { NS } from "netscript";
 
 import { HOSTS_BY_PORTS_REQUIRED, TARGETS_BY_PORTS_REQUIRED } from "all-hosts";
 
-import { workerMsg, targetMsg, TARGETS_PORT, DONE_SENTINEL, MEMORY_PORT } from "util/ports";
-import { MessageType } from "./batch/client/memory";
+import { targetMsg, TARGETS_PORT, DONE_SENTINEL, MEMORY_PORT } from "util/ports";
+
+import { workerMessage } from "./batch/client/memory";
 
 const HACKING_FILES = [
     "/all-hosts.js",
@@ -54,7 +55,7 @@ export async function main(ns: NS) {
                 ns.scp(HACKING_FILES, host, 'home');
 
                 // Write host name to the hosts
-                memoryPort.write([MessageType.Worker, host]);
+                memoryPort.write(workerMessage(host));
             }
 
             const targets = TARGETS_BY_PORTS_REQUIRED[i];
