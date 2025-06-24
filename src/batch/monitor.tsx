@@ -1,6 +1,8 @@
 import type { NS } from "netscript";
 
 import { ALL_HOSTS } from "all-hosts";
+import { readAllFromPort, MONITOR_PORT } from "util/ports";
+import { Lifecycle, Message as MonitorMessage } from "./client/monitor";
 
 declare const React: any;
 
@@ -30,12 +32,54 @@ export async function main(ns: NS) {
     ns.ui.openTail();
     ns.ui.resizeTail(450, 30 * 6);
 
+    const monitorPort = ns.getPortHandle(MONITOR_PORT);
+    const lifecycleByHost: Record<string, Lifecycle> = {};
+    let monitorMessagesWaiting = true;
+
     while (true) {
+        if (monitorMessagesWaiting) {
+            for (const nextMsg of readAllFromPort(ns, monitorPort)) {
+                if (typeof nextMsg === "object") {
+                    const [phase, host] = nextMsg as MonitorMessage;
+                    lifecycleByHost[host] = phase;
+                }
+            }
+            monitorMessagesWaiting = false;
+            monitorPort.nextWrite().then(_ => { monitorMessagesWaiting = true; });
+        }
+
         let threadsByTarget = countThreadsByTarget(ns);
-        let targets = ALL_HOSTS.map(host => hostInfo(ns, host, threadsByTarget.get(host)));
+        const harvesting: HostInfo[] = [];
+        const sowing: HostInfo[] = [];
+        const tilling: HostInfo[] = [];
+        const pending: HostInfo[] = [];
+
+        for (const host of ALL_HOSTS) {
+            const phase = lifecycleByHost[host] ?? Lifecycle.Pending;
+            const info = hostInfo(ns, host, threadsByTarget.get(host), phase);
+            switch (phase) {
+                case Lifecycle.Harvesting:
+                    harvesting.push(info);
+                    break;
+                case Lifecycle.Sowing:
+                    sowing.push(info);
+                    break;
+                case Lifecycle.Tilling:
+                    tilling.push(info);
+                    break;
+                default:
+                    pending.push(info);
+                    break;
+            }
+        }
 
         ns.clearLog();
-        ns.printRaw(<ServerBlock title={"Hosts"} targets={targets}></ServerBlock>);
+        ns.printRaw(<>
+            <ServerBlock title={"Harvesting"} targets={harvesting}></ServerBlock>
+            <ServerBlock title={"Sowing"} targets={sowing}></ServerBlock>
+            <ServerBlock title={"Tilling"} targets={tilling}></ServerBlock>
+            <ServerBlock title={"Pending"} targets={pending}></ServerBlock>
+        </>);
         await ns.sleep(flags.refreshrate);
     }
 }
@@ -126,7 +170,7 @@ export type HostInfo = {
     threadsW: string
 }
 
-export function hostInfo(ns: NS, target: string, targetThreads: TargetThreads): HostInfo {
+export function hostInfo(ns: NS, target: string, targetThreads: TargetThreads, lifecycle?: Lifecycle): HostInfo {
     const hckLevel = ns.getServerRequiredHackingLevel(target);
     const minSec = ns.getServerMinSecurityLevel(target);
     const sec = ns.getServerSecurityLevel(target);
