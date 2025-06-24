@@ -32,11 +32,9 @@ const MEMORY_FILES: string[] = [
 ];
 
 const MANAGE_FILES: string[] = [
-    "/all-hosts.js",
+    "/batch/client/manage.js",
+    "/batch/target.js",
     "/util/ports.js",
-    "/batch/manage.js",
-    "sanctuary-type-identifiers.js",
-    "sanctuary-type-classes.js"
 ];
 
 function startCracker(ns: NS) {
