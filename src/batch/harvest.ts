@@ -42,7 +42,29 @@ OPTIONS
         return;
     }
 
-    // ns.ui.setTailTitle(`harvest ${target}`);
-    // ns.ui.openTail();
-    // ns.ui.resizeTail(400, 80);
+    // TODO: Calculate the relative start times for each of the four
+    // scripts in a batch.
+
+    // Important APIs for this:
+
+    let batchInterval = CONFIG.batchInterval;
+
+    let hScript = "/batch/h.js";
+    let hTime = ns.getHackTime(target);
+
+    let gScript = "/batch/g.js";
+    let gTime = ns.getGrowTime(target);
+
+    let wScript = "/batch/w.js";
+    let wTime = ns.getWeakenTime(target);
+
+    // Each batch consists of 4 scripts that should finish in this
+    // sequence: hack, weaken, grow, weaken. Each script in the
+    // sequence should finish running one `batchInterval` after the
+    // previous script. The first argument to each of the hScript,
+    // gScript and wScript scripts is an amount of time to sleep
+    // before running it's operation. Using the respective running
+    // times hTime, gTime, and wTime, calculate how long each script
+    // needs to sleep before starting so that they end in the correct
+    // order with the correct interval between them.
 }
