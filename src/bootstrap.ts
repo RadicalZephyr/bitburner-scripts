@@ -18,7 +18,7 @@ async function sendPersonalServersToMemory(ns: NS) {
 }
 
 const MEMORY_FILES: string[] = [
-    "/batch/memory.js",
+    "/batch/client/memory.js",
     "/util/ports.js"
 ];
 
