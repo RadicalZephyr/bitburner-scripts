@@ -1,6 +1,7 @@
 import type { AutocompleteData, NS } from "netscript";
 
-import { registerAllocationOwnership } from "./client/memory";
+import { MemoryClient, registerAllocationOwnership, TransferableAllocation } from "batch/client/memory";
+
 import { CONFIG } from "batch/config";
 import { analyzeBatchThreads, BatchThreadAnalysis } from "batch/expected_value";
 
@@ -59,7 +60,23 @@ OPTIONS
         JSON.stringify(logistics.phases, undefined, 2)
     );
 
+    let memClient = new MemoryClient(ns);
+    let allocation = await memClient.requestTransferableAllocation(logistics.batchRam, logistics.overlap);
+    if (!allocation) return;
+
+    allocation.releaseAtExit(ns, "batch");
+
+    // TODO: we should detect when the overlap changes and release
+    // some chunks of memory when it does.
+    let maxOverlap = logistics.overlap;
+    let currentBatches = 0;
+
+    let batchHost: SparseHostArray = makeBatchHostArray(allocation);
+
+    for (let i = 0; i < maxOverlap; ++i) { }
+
     while (true) {
+        let logistics = calculateBatchLogistics(ns, target);
 
         await ns.sleep(CONFIG.batchInterval);
     }
