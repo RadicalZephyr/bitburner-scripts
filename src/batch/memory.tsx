@@ -6,6 +6,32 @@ import { readAllFromPort } from "util/ports";
 
 
 export async function main(ns: NS) {
+    const flags = ns.flags([
+        ['refresh-rate', 200],
+        ['help', false],
+    ]);
+
+    let refreshRate = flags['refresh-rate'];
+    const rest = flags._ as string[];
+    if (rest.length !== 0 || flags.help || typeof refreshRate != 'number') {
+        ns.tprint(`
+USAGE: run ${ns.getScriptName()}
+
+This script handles allocating blocks of memory. A visualization of the
+reserved, allocated and free memory for each Worker host can be viewed in
+this script's log.
+
+OPTIONS
+--help           Show this help message
+--refresh-rate   Time to sleep between displaying memory usage
+
+Example:
+
+> run ${ns.getScriptName()}
+`);
+        return;
+    }
+
     ns.disableLog("getServerUsedRam");
     ns.disableLog("ps");
     ns.ui.openTail();
@@ -25,8 +51,8 @@ export async function main(ns: NS) {
             nextMemMessage = memPort.nextWrite().then(_ => { memMessageWaiting = true; });
             ns.print("finished reading memory requests");
         }
-        ns.print("waiting for next message");
-        await nextMemMessage;
+
+        await ns.sleep(refreshRate);
     }
 }
 
