@@ -2,6 +2,7 @@ import type { NS } from "netscript";
 
 import { registerAllocationOwnership } from "./client/memory";
 import { CONFIG } from "batch/config";
+import { analyzeBatchThreads } from "batch/expected_value";
 
 interface BatchTimings {
     hackStart: number;
@@ -50,7 +51,26 @@ OPTIONS
         return;
     }
 
-    const timings = calculateBatchTimings(ns, target);
+
+    const threads = analyzeBatchThreads(ns, target);
+
+    const hRam = ns.getScriptRam('/batch/h.js') * threads.hackThreads;
+    const gRam = ns.getScriptRam('/batch/g.js') * threads.growThreads;
+    const wRam = ns.getScriptRam('/batch/w.js') *
+        (threads.postHackWeakenThreads + threads.postGrowWeakenThreads);
+    const batchRam = hRam + gRam + wRam;
+
+    const batchTime = ns.getWeakenTime(target) + 2 * (CONFIG.batchInterval as number);
+    const overlap = Math.ceil(batchTime / 1000);
+    const requiredRam = batchRam * overlap;
+
+    ns.tprintf(
+        `%s: batch ram %.2fGB, overlap x%d => required %.2fGB`,
+        target,
+        batchRam,
+        overlap,
+        requiredRam,
+    );
 }
 
 /** Calculate relative start times for a full H-W-G-W batch so that each
