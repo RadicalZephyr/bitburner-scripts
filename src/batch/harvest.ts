@@ -2,13 +2,22 @@ import type { NS } from "netscript";
 
 import { registerAllocationOwnership } from "./client/memory";
 import { CONFIG } from "batch/config";
-import { analyzeBatchThreads } from "batch/expected_value";
+import { analyzeBatchThreads, BatchThreadAnalysis } from "batch/expected_value";
 
 interface BatchTimings {
     hackStart: number;
     postHackWeakenStart: number;
     growStart: number;
     postGrowWeakenStart: number;
+}
+
+interface BatchLogistics {
+    target: string;
+    batchRam: number;
+    overlap: number;
+    requiredRam: number;
+    threads: BatchThreadAnalysis;
+    timings: BatchTimings;
 }
 
 export async function main(ns: NS) {
@@ -51,7 +60,17 @@ OPTIONS
         return;
     }
 
+    let logistics = calculateBatchLogistics(ns, target);
+    ns.tprintf(
+        `%s: batch ram %s, overlap x%d => required %s`,
+        logistics.target,
+        ns.formatRam(logistics.batchRam),
+        logistics.overlap,
+        ns.formatRam(logistics.requiredRam),
+    );
+}
 
+function calculateBatchLogistics(ns: NS, target: string): BatchLogistics {
     const threads = analyzeBatchThreads(ns, target);
 
     const hRam = ns.getScriptRam('/batch/h.js') * threads.hackThreads;
@@ -60,17 +79,20 @@ OPTIONS
         (threads.postHackWeakenThreads + threads.postGrowWeakenThreads);
     const batchRam = hRam + gRam + wRam;
 
+    const timings = calculateBatchTimings(ns, target);
+
     const batchTime = ns.getWeakenTime(target) + 2 * (CONFIG.batchInterval as number);
     const overlap = Math.ceil(batchTime / 1000);
     const requiredRam = batchRam * overlap;
 
-    ns.tprintf(
-        `%s: batch ram %s, overlap x%d => required %s`,
+    return {
         target,
-        ns.formatRam(batchRam),
+        threads,
+        timings,
+        batchRam,
         overlap,
-        ns.formatRam(requiredRam),
-    );
+        requiredRam,
+    }
 }
 
 /** Calculate relative start times for a full H-W-G-W batch so that each
