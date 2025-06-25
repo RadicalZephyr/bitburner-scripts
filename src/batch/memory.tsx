@@ -338,16 +338,21 @@ function MemoryBar({ worker, theme }: MemoryBarProps) {
     const usedSeg = Math.min(segments, reservedSeg + allocSeg);
     const freeSeg = segments - usedSeg;
 
-    const bar: any[] = [];
-    for (let i = 0; i < reservedSeg && bar.length < segments; i++) {
-        bar.push(<span key={"r" + i} style={{ color: theme.hp }}>|</span>);
+    let reservedBar = "";
+    for (let i = 0; i < reservedSeg; i++) {
+        reservedBar += "|";
     }
-    for (let i = 0; i < allocSeg && bar.length < segments; i++) {
-        bar.push(<span key={"a" + i} style={{ color: theme.money }}>|</span>);
+    let allocBar = "";
+    for (let i = 0; i < allocSeg; i++) {
+        allocBar += "|";
     }
-    for (let i = 0; i < freeSeg && bar.length < segments; i++) {
-        bar.push("-");
+    let freeBar = "";
+    for (let i = 0; i < freeSeg; i++) {
+        freeBar += "-";
     }
-
-    return <>{bar}</>;
+    return <>
+        <span key="r" style={{ color: theme.hp }}>{reservedBar}</span>
+        <span key="a" style={{ color: theme.money }}>{allocBar}</span>
+        <span>{freeBar}</span>
+    </>;
 }
