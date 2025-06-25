@@ -34,8 +34,7 @@ Example:
         return;
     }
 
-    ns.disableLog("getServerUsedRam");
-    ns.disableLog("ps");
+    ns.disableLog("ALL");
     ns.ui.openTail();
     ns.ui.moveTail(500, 0);
 
