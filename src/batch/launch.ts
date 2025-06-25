@@ -11,9 +11,9 @@ function resolveImport(base: string, importPath: string): string {
         const dir = idx >= 0 ? base.slice(0, idx + 1) : "";
         return dir + importPath.slice(2);
     } else if (importPath.startsWith("/")) {
-        return importPath;
+        importPath = importPath.slice(1);
     }
-    return "/" + importPath;
+    return importPath;
 }
 
 function collectDependencies(ns: NS, file: string, visited = new Set<string>()): Set<string> {
@@ -21,7 +21,7 @@ function collectDependencies(ns: NS, file: string, visited = new Set<string>()):
     visited.add(file);
     const content = ns.read(file);
     if (typeof content === "string" && content.length > 0) {
-        const regex = /import.*? from "(.*?)";/g;
+        const regex = /^\s*import[^\n]*? from ["'](.+?)["']/gm;
         let match: RegExpExecArray | null;
         while ((match = regex.exec(content)) !== null) {
             const dep = resolveImport(file, match[1]);
