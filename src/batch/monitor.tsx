@@ -136,7 +136,7 @@ export function countThreadsByTarget(ns: NS): Map<string, TargetThreads> {
     for (const host of hosts) {
         for (const pi of ns.ps(host)) {
 
-            let target = pi.args[0];
+            let target = pi.args[0] === "--allocation-id" ? pi.args[2] : pi.args[0];
 
             if (typeof target != 'string') continue;
 
