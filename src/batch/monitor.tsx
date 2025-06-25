@@ -18,16 +18,17 @@ export async function main(ns: NS) {
 
     const rest = flags._ as string[];
     if (rest.length !== 0 || flags.help || typeof flags.refreshrate != 'number') {
-        ns.tprint(`USAGE: run ${ns.getScriptName()}
+        ns.tprint(`
+USAGE: run ${ns.getScriptName()}
 
-        This script helps visualize the money and security of all servers.
+This script helps visualize the money and security of all servers.
 
-        OPTIONS
-        --refreshrate   Time to sleep between refreshing server data
+OPTIONS
+--refreshrate   Time to sleep between refreshing server data
 
-        Example:
+Example:
 
-        > run ${ns.getScriptName()}
+> run ${ns.getScriptName()}
 `);
         return;
     }
