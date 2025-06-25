@@ -63,9 +63,9 @@ OPTIONS
         return;
     }
 
-    ns.ui.setTailTitle(`sow ${target}`);
-    ns.ui.openTail();
-    ns.ui.resizeTail(400, 80);
+    // ns.ui.setTailTitle(`sow ${target}`);
+    // ns.ui.openTail();
+    // ns.ui.resizeTail(400, 80);
 
     let expectedTime = ns.tFormat(ns.getWeakenTime(target));
 
@@ -89,7 +89,7 @@ Elapsed time:  ${ns.tFormat(selfScript.onlineRunningTime * 1000)}
         }
     }
 
-    ns.ui.closeTail();
+    // ns.ui.closeTail();
     ns.toast(`finished sowing ${target}!`, "success");
     managerClient.finishedSowing(target);
 }

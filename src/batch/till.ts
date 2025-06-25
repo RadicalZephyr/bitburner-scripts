@@ -58,9 +58,9 @@ OPTIONS
         return;
     }
 
-    ns.ui.setTailTitle(`till ${target}`);
-    ns.ui.openTail();
-    ns.ui.resizeTail(450, 80);
+    // ns.ui.setTailTitle(`till ${target}`);
+    // ns.ui.openTail();
+    // ns.ui.resizeTail(450, 80);
 
     let expectedTime = ns.tFormat(ns.getWeakenTime(target));
 
@@ -80,7 +80,7 @@ Elapsed time:  ${ns.tFormat(selfScript.onlineRunningTime * 1000)}
         }
     }
 
-    ns.ui.closeTail();
+    // ns.ui.closeTail();
     ns.toast(`finished tilling ${target}!`, "success");
     managerClient.finishedTilling(target);
 }
