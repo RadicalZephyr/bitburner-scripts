@@ -41,7 +41,7 @@ Example:
     ns.ui.moveTail(230, 0);
 
     const log: string[] = [];
-    const maxLog = 50;
+    const maxLog = 72;
     printLog = (msg: string) => {
         log.push(msg);
         if (log.length > maxLog) {
