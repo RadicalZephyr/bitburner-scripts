@@ -2,7 +2,9 @@
 
 ## Dev Environment Tips
 
-Only work on code in the `src` directory.
+- Only work on code in the `src` directory.
+- When building UI elements always use colors from the theme, which
+  can be retrieved with `ns.ui.getTheme()`.
 
 ## Testing Instructions
 
