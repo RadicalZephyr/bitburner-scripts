@@ -58,6 +58,11 @@ export async function main(ns: NS) {
         const pending: HostInfo[] = [];
 
         for (const host of ALL_HOSTS) {
+            if (host === "home"
+                || host.startsWith("pserv")
+                || ns.getServerMaxMoney(host) <= 0)
+                continue;
+
             const phase = lifecycleByHost.get(host) ?? Lifecycle.Pending;
             const info = hostInfo(ns, host, threadsByTarget.get(host), phase);
             switch (phase) {
