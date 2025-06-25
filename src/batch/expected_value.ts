@@ -39,18 +39,18 @@ export function expectedValuePerRamSecond(
 ): number {
     const maxMoney = ns.getServerMaxMoney(host);
 
-    const successfulHackValue =
-        maxMoney * ns.hackAnalyze(host);
+    const hackValue =
+        successfulHackValue(ns, host, 1);
 
     const expectedHackValue =
-        successfulHackValue * ns.hackAnalyzeChance(host);
+        hackValue * ns.hackAnalyzeChance(host);
 
     const {
         hackThreads,
         growThreads,
         postHackWeakenThreads,
         postGrowWeakenThreads,
-    } = analyzeBatchThreads(ns, host, maxMoney, successfulHackValue);
+    } = analyzeBatchThreads(ns, host);
 
     const weakenThreads = postHackWeakenThreads + postGrowWeakenThreads;
 
@@ -64,13 +64,31 @@ export function expectedValuePerRamSecond(
     return expectedHackValue / (batchTime * ramUse);
 }
 
+function successfulHackValue(
+    ns: NS,
+    host: string,
+    threads: number,
+): number {
+    const maxMoney = ns.getServerMaxMoney(host);
+
+    if (canUseFormulas(ns)) {
+        const server = ns.getServer(host);
+        const player = ns.getPlayer();
+        const percent = ns.formulas.hacking.hackPercent(server, player);
+        return threads * server.moneyMax * percent;
+    }
+
+    return threads * maxMoney * ns.hackAnalyze(host);
+}
+
 function analyzeBatchThreads(
     ns: NS,
     host: string,
-    maxMoney: number,
-    successfulHackValue: number,
 ): BatchThreadAnalysis {
-    const afterHackMoney = Math.max(0, maxMoney - successfulHackValue);
+    const maxMoney = ns.getServerMaxMoney(host);
+    const hackValue = successfulHackValue(ns, host, 1);
+
+    const afterHackMoney = Math.max(0, maxMoney - hackValue);
     const growMultiplier = maxMoney / Math.max(1, afterHackMoney);
     const growThreads = growthAnalyze(ns, host, afterHackMoney, growMultiplier);
 
