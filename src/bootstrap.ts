@@ -1,7 +1,10 @@
 import type { NS } from "netscript";
 
+import { HOSTS_BY_PORTS_REQUIRED } from "./all-hosts";
+
 import { MemoryClient } from "batch/client/memory";
 import { launch } from "./batch/launch";
+
 
 export async function main(ns: NS) {
     await startMemory(ns);
@@ -35,13 +38,10 @@ async function startMemory(ns: NS) {
 
     let memClient = new MemoryClient(ns);
 
-    const foodHost = "foodnstuff";
-    ns.nuke(foodHost)
-    memClient.newWorker(foodHost);
-
-    const sigmaHost = "sigma-cosmetics";
-    ns.nuke(sigmaHost)
-    memClient.newWorker(sigmaHost);
+    for (const worker of HOSTS_BY_PORTS_REQUIRED[0]) {
+        ns.nuke(worker);
+        memClient.newWorker(worker);
+    }
 }
 
 async function startManager(ns: NS) {

@@ -24,6 +24,7 @@ async function waitForExit(ns: NS, pid: number): Promise<void> {
 }
 
 const BOOTSTRAP_FILES = [
+    "/all-hosts.js",
     "/bootstrap.js",
     "/batch/launch.js",
     "/batch/client/memory.js"
