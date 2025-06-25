@@ -65,6 +65,7 @@ OPTIONS
             ns.tprint('--allocation-flag can only be used when launching a single thread');
             return;
         }
+        allocationFlag = "--" + allocationFlag;
     }
 
     let args = rest;
