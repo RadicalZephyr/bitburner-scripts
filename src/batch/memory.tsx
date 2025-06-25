@@ -415,12 +415,23 @@ interface LogDisplayProps {
 }
 
 function LogDisplay({ lines, theme }: LogDisplayProps) {
-    const rowStyle = (idx: number) => idx % 2 === 1 ? { backgroundColor: theme.well } : undefined;
+    const rowStyle = (idx: number) =>
+        idx % 2 === 1 ? { backgroundColor: theme.well } : {};
+
+    const lineColor = (line: string): string | undefined => {
+        if (line.startsWith("ERROR:")) return theme.error;
+        if (line.startsWith("SUCCESS:")) return theme.success;
+        if (line.startsWith("WARN:")) return theme.warning;
+        if (line.startsWith("INFO:")) return theme.info;
+        return undefined;
+    };
+
     return (
         <div style={{ fontFamily: "monospace" }}>
-            {lines.map((line, idx) =>
-                <div key={idx} style={rowStyle(idx)}>{line}</div>
-            )}
+            {lines.map((line, idx) => {
+                const style = { ...rowStyle(idx), color: lineColor(line) };
+                return <div key={idx} style={style}>{line}</div>;
+            })}
         </div>
     );
 }
