@@ -319,7 +319,7 @@ interface MemoryRowProps {
 
 function MemoryRow({ worker, rowIndex, cellStyle, theme }: MemoryRowProps) {
     return (
-        <tr key={worker.hostname} style={rowIndex % 2 === 1 ? { backgroundColor: theme.welllight } : undefined}>
+        <tr key={worker.hostname} style={rowIndex % 2 === 1 ? { backgroundColor: theme.well } : undefined}>
             <td style={{ ...cellStyle, textAlign: "left" }}>{worker.hostname}</td>
             <td style={{ ...cellStyle, textAlign: "right" }}>[<MemoryBar worker={worker} theme={theme}></MemoryBar>]</td>
         </tr>
@@ -340,10 +340,10 @@ function MemoryBar({ worker, theme }: MemoryBarProps) {
 
     const bar: any[] = [];
     for (let i = 0; i < reservedSeg && bar.length < segments; i++) {
-        bar.push(<span key={"r" + i} style={{ color: theme.infolight }}>|</span>);
+        bar.push(<span key={"r" + i} style={{ color: theme.hp }}>|</span>);
     }
     for (let i = 0; i < allocSeg && bar.length < segments; i++) {
-        bar.push(<span key={"a" + i} style={{ color: theme.primarylight }}>|</span>);
+        bar.push(<span key={"a" + i} style={{ color: theme.money }}>|</span>);
     }
     for (let i = 0; i < freeSeg && bar.length < segments; i++) {
         bar.push("-");
