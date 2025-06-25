@@ -51,11 +51,12 @@ OPTIONS
 
     let logistics = calculateBatchLogistics(ns, target);
     ns.tprintf(
-        `%s: batch ram %s, overlap x%d => required %s`,
+        `%s: batch ram %s, overlap x%d => required %s\nphases: %s`,
         logistics.target,
         ns.formatRam(logistics.batchRam),
         logistics.overlap,
         ns.formatRam(logistics.requiredRam),
+        JSON.stringify(logistics.phases, undefined, 2)
     );
 }
 
