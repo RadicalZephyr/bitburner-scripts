@@ -66,7 +66,7 @@ OPTIONS
 
     let result = await launch(ns, "/batch/w.js", threads, target, 0);
 
-    result.allocation.releaseAtExit(ns);
+    result.allocation.releaseAtExit(ns, "weaken");
 
     for (const pid of result.pids) {
         while (ns.isRunning(pid)) {
