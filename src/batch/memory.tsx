@@ -4,6 +4,8 @@ import { AllocationClaim, AllocationRelease, AllocationRequest, AllocationResult
 
 import { readAllFromPort } from "util/ports";
 
+declare const React: any;
+
 
 export async function main(ns: NS) {
     const flags = ns.flags([
@@ -52,6 +54,8 @@ Example:
             ns.print("finished reading memory requests");
         }
 
+        ns.clearLog();
+        ns.printRaw(<MemoryDisplay manager={memoryManager}></MemoryDisplay>);
         await ns.sleep(refreshRate);
     }
 }
@@ -283,4 +287,52 @@ class Worker {
     free(ram: number): void {
         this.allocatedRam = Math.max(0, this.allocatedRam - ram);
     }
+}
+
+interface MemoryDisplayProps {
+    manager: MemoryManager;
+}
+
+function MemoryDisplay({ manager }: MemoryDisplayProps) {
+    const workers = Array.from(manager.workers.values()).sort((a, b) => a.hostname.localeCompare(b.hostname));
+    return (
+        <div style={{ fontFamily: "monospace" }}>
+            {workers.map(w => <MemoryRow worker={w}></MemoryRow>)}
+        </div>
+    );
+}
+
+interface MemoryRowProps {
+    worker: Worker;
+}
+
+function MemoryRow({ worker }: MemoryRowProps) {
+    return (
+        <div>{worker.hostname} [<MemoryBar worker={worker}></MemoryBar>]</div>
+    );
+}
+
+interface MemoryBarProps {
+    worker: Worker;
+}
+
+function MemoryBar({ worker }: MemoryBarProps) {
+    const segments = 20;
+    const reservedSeg = Math.round((worker.reservedRam / worker.totalRam) * segments);
+    const allocSeg = Math.round((worker.allocatedRam / worker.totalRam) * segments);
+    const usedSeg = Math.min(segments, reservedSeg + allocSeg);
+    const freeSeg = segments - usedSeg;
+
+    const bar: any[] = [];
+    for (let i = 0; i < reservedSeg && bar.length < segments; i++) {
+        bar.push(<span key={"r" + i} style={{ color: "yellow" }}>|</span>);
+    }
+    for (let i = 0; i < allocSeg && bar.length < segments; i++) {
+        bar.push(<span key={"a" + i} style={{ color: "lime" }}>|</span>);
+    }
+    for (let i = 0; i < freeSeg && bar.length < segments; i++) {
+        bar.push("-");
+    }
+
+    return <>{bar}</>;
 }
