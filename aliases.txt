@@ -12,6 +12,8 @@ alias start="run start.js"
 alias halt="run stopworld.js"
 alias restart="run stopworld.js ; run startup.js"
 
+alias launch="run batch/launch.js"
+
 alias upgrade="run upgrade-servers.js"
 
 alias list="buy -l"
