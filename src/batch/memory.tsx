@@ -394,7 +394,7 @@ function MemoryRow({ worker, rowIndex, cellStyle, theme }: MemoryRowProps) {
     return (
         <tr key={worker.hostname} style={rowIndex % 2 === 1 ? { backgroundColor: theme.well } : undefined}>
             <td style={{ ...cellStyle, textAlign: "left" }}>{worker.hostname}</td>
-            <td style={{ ...cellStyle, textAlign: "right" }}>[<MemoryBar worker={worker} theme={theme}></MemoryBar>]</td>
+            <td style={{ ...cellStyle, textAlign: "right", minWidth: "215px" }}>[<MemoryBar worker={worker} theme={theme}></MemoryBar>]</td>
         </tr>
     );
 }
