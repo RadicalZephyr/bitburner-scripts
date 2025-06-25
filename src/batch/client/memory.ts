@@ -10,7 +10,12 @@ export enum MessageType {
     ReleaseChunks,
 }
 
-type Payload = string | AllocationRequest | AllocationRelease | AllocationClaim | AllocationChunksRelease;
+type Payload =
+    | string
+    | AllocationRequest
+    | AllocationRelease
+    | AllocationClaim
+    | AllocationChunksRelease;
 
 export type Message = [
     type: MessageType,
@@ -30,10 +35,14 @@ export type AllocationRelease = [
     allocationId: number
 ];
 
-export type AllocationClaim = [
-    allocationId: number,
-    pid: number,
-];
+export interface AllocationClaim {
+    allocationId: number;
+    pid: number;
+    hostname: string;
+    filename: string;
+    chunkSize: number;
+    numChunks: number;
+}
 
 export interface AllocationChunksRelease {
     allocationId: number,
@@ -141,7 +150,17 @@ export class MemoryClient {
 }
 
 export function registerAllocationOwnership(ns: NS, allocationId: number, name: string = "") {
-    ns.writePort(MEMORY_PORT, [MessageType.Claim, [allocationId, ns.pid]]);
+    const self = ns.self();
+    const chunkSize = ns.getScriptRam(self.filename);
+    const claim: AllocationClaim = {
+        allocationId,
+        pid: self.pid,
+        hostname: self.server,
+        filename: self.filename,
+        chunkSize,
+        numChunks: self.threads,
+    };
+    ns.writePort(MEMORY_PORT, [MessageType.Claim, claim]);
     ns.atExit(() => {
         ns.writePort(MEMORY_PORT, [MessageType.Release, [allocationId]]);
     }, "memoryRelease" + name);

@@ -27,8 +27,8 @@ export async function main(ns: NS) {
                         ns.tprintf("received release message for allocation ID: %d", allocationId);
                         break;
                     case MessageType.Claim:
-                        let [claimId, pid] = msg[1] as AllocationClaim;
-                        ns.tprintf("received claim message for allocation ID: %d -> pid %d", claimId, pid);
+                        const claim = msg[1] as AllocationClaim;
+                        ns.tprintf("received claim message for allocation ID: %d -> pid %d", claim.allocationId, claim.pid);
                         break;
 
                 }

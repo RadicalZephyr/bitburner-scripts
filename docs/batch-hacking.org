@@ -100,6 +100,22 @@ interface AllocationResponse {
 }
 #+END_SRC
 
+*** AllocationClaim (from running script to MemoryManager)
+# +BEGIN_SRC typescript
+interface AllocationClaim {
+  allocationId: number;
+  pid: number;
+  hostname: string;
+  filename: string;
+  chunkSize: number;
+  numChunks: number;
+}
+# +END_SRC
+
+Multiple claims can reference the same allocation. The MemoryManager keeps
+track of each process that owns part of an allocation and frees only the
+released portion when a script exits.
+
 *** LifecycleStatus (to TargetSelectionManager)
 #+BEGIN_SRC typescript
 interface LifecycleStatusMessage {
