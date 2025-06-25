@@ -289,33 +289,21 @@ class MemoryManager {
         return allocation.asAllocationResult();
     }
 
-    deallocate(id: number, pid?: number, hostname?: string): boolean {
+    deallocate(id: number, pid: number, hostname: string): boolean {
         const allocation = this.allocations.get(id);
         if (!allocation) return false;
 
-        if (pid !== undefined && hostname !== undefined) {
-            const idx = allocation.claims.findIndex(
-                c => c.pid === pid && c.hostname === hostname,
-            );
-            if (idx === -1) return false;
-            const claim = allocation.claims[idx];
-            this.releaseClaimInternal(allocation, claim);
-            allocation.claims.splice(idx, 1);
-            allocation.chunks = allocation.chunks.filter(c => c.numChunks > 0);
-            if (allocation.chunks.length === 0) {
-                this.allocations.delete(id);
-            }
-            return true;
+        const idx = allocation.claims.findIndex(
+            (c) => c.pid === pid && c.hostname === hostname,
+        );
+        if (idx === -1) return false;
+        const claim = allocation.claims[idx];
+        this.releaseClaimInternal(allocation, claim);
+        allocation.claims.splice(idx, 1);
+        allocation.chunks = allocation.chunks.filter((c) => c.numChunks > 0);
+        if (allocation.chunks.length === 0) {
+            this.allocations.delete(id);
         }
-
-        // Release entire allocation
-        for (const chunk of allocation.chunks) {
-            const worker = this.workers.get(chunk.hostname);
-            if (worker) {
-                worker.free(chunk.totalSize);
-            }
-        }
-        this.allocations.delete(id);
         return true;
     }
 
@@ -365,13 +353,7 @@ class MemoryManager {
         const allocation = this.allocations.get(claim.allocationId);
         if (!allocation) return false;
 
-        allocation.claims.push({
-            pid: claim.pid,
-            hostname: claim.hostname,
-            filename: claim.filename,
-            chunkSize: claim.chunkSize,
-            numChunks: claim.numChunks,
-        });
+        allocation.claims.push(claim as ClaimInfo);
 
         return true;
     }

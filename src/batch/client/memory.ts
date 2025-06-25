@@ -177,6 +177,10 @@ export class MemoryClient {
     }
 }
 
+/**
+ * Register the current script as owning an allocation and
+ * automatically release that allocation when the script exits.
+ */
 export function registerAllocationOwnership(
     ns: NS,
     allocationId: number,
