@@ -395,7 +395,7 @@ interface MemoryDisplayProps {
 }
 
 function MemoryDisplay({ manager, theme }: MemoryDisplayProps) {
-    const workers = Array.from(manager.workers.values()).sort((a, b) => a.hostname.localeCompare(b.hostname));
+    const workers = Array.from(manager.workers.values());
     const cellStyle = { padding: "0 0.5em" } as const;
     return (
         <div style={{ fontFamily: "monospace" }}>
