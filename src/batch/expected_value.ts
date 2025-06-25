@@ -1,6 +1,13 @@
 import type { AutocompleteData, NS } from "netscript";
 import { CONFIG } from "./config";
 
+export interface BatchThreadAnalysis {
+    hackThreads: number;
+    postHackWeakenThreads: number;
+    growThreads: number;
+    postGrowWeakenThreads: number;
+}
+
 export function autocomplete(data: AutocompleteData, _args: string[]): string[] {
     return data.servers;
 }
@@ -38,6 +45,31 @@ export function expectedValuePerRamSecond(
     const expectedHackValue =
         successfulHackValue * ns.hackAnalyzeChance(host);
 
+    const {
+        hackThreads,
+        growThreads,
+        postHackWeakenThreads,
+        postGrowWeakenThreads,
+    } = analyzeBatchThreads(ns, host, maxMoney, successfulHackValue);
+
+    const weakenThreads = postHackWeakenThreads + postGrowWeakenThreads;
+
+    const ramUse =
+        hackThreads * ns.getScriptRam("/batch/h.js") +
+        growThreads * ns.getScriptRam("/batch/g.js") +
+        weakenThreads * ns.getScriptRam("/batch/w.js");
+
+    const batchTime = ns.getWeakenTime(host) + 2 * spacing;
+
+    return expectedHackValue / (batchTime * ramUse);
+}
+
+function analyzeBatchThreads(
+    ns: NS,
+    host: string,
+    maxMoney: number,
+    successfulHackValue: number,
+): BatchThreadAnalysis {
     const afterHackMoney = Math.max(0, maxMoney - successfulHackValue);
     const growMultiplier = maxMoney / Math.max(1, afterHackMoney);
     const growThreads = growthAnalyze(ns, host, afterHackMoney, growMultiplier);
@@ -45,18 +77,12 @@ export function expectedValuePerRamSecond(
     const hackSecInc = ns.hackAnalyzeSecurity(1, host);
     const growSecInc = ns.growthAnalyzeSecurity(growThreads, host);
 
-    // Round up threads for both hack and grow to overestimate weaken
-    // threads needed.
-    const weakenThreads = weakenThreadsNeeded(hackSecInc) + weakenThreadsNeeded(growSecInc);
-
-    const ramUse =
-        ns.getScriptRam("/batch/h.js") +
-        growThreads * ns.getScriptRam("/batch/g.js") +
-        weakenThreads * ns.getScriptRam("/batch/w.js");
-
-    const batchTime = ns.getWeakenTime(host) + 2 * spacing;
-
-    return expectedHackValue / (batchTime * ramUse);
+    return {
+        hackThreads: 1,
+        postHackWeakenThreads: weakenThreadsNeeded(hackSecInc),
+        growThreads,
+        postGrowWeakenThreads: weakenThreadsNeeded(growSecInc),
+    };
 }
 
 function canUseFormulas(ns): boolean {
