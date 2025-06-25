@@ -4,21 +4,6 @@ import { registerAllocationOwnership } from "./client/memory";
 import { CONFIG } from "batch/config";
 import { analyzeBatchThreads, BatchThreadAnalysis } from "batch/expected_value";
 
-interface BatchTimings {
-    hackStart: number;
-    postHackWeakenStart: number;
-    growStart: number;
-    postGrowWeakenStart: number;
-}
-
-interface BatchLogistics {
-    target: string;
-    batchRam: number;
-    overlap: number;
-    requiredRam: number;
-    threads: BatchThreadAnalysis;
-    timings: BatchTimings;
-}
 
 export async function main(ns: NS) {
     ns.disableLog('ALL');
@@ -70,8 +55,18 @@ OPTIONS
     );
 }
 
+interface BatchLogistics {
+    target: string;
+    batchRam: number;
+    overlap: number;
+    requiredRam: number;
+    phases: BatchPhase[];
+}
+
 function calculateBatchLogistics(ns: NS, target: string): BatchLogistics {
     const threads = analyzeBatchThreads(ns, target);
+
+    const phases = calculateBatchPhases(ns, target, threads);
 
     const hRam = ns.getScriptRam('/batch/h.js') * threads.hackThreads;
     const gRam = ns.getScriptRam('/batch/g.js') * threads.growThreads;
@@ -79,7 +74,7 @@ function calculateBatchLogistics(ns: NS, target: string): BatchLogistics {
         (threads.postHackWeakenThreads + threads.postGrowWeakenThreads);
     const batchRam = hRam + gRam + wRam;
 
-    const timings = calculateBatchTimings(ns, target);
+
 
     const batchTime = ns.getWeakenTime(target) + 2 * (CONFIG.batchInterval as number);
     const overlap = Math.ceil(batchTime / 1000);
@@ -87,29 +82,36 @@ function calculateBatchLogistics(ns: NS, target: string): BatchLogistics {
 
     return {
         target,
-        threads,
-        timings,
         batchRam,
         overlap,
         requiredRam,
+        phases,
     }
 }
 
-/** Calculate relative start times for a full H-W-G-W batch so that each
- * script ends `CONFIG.batchInterval` milliseconds after the previous one.
+interface BatchPhase {
+    script: string;
+    start: number;
+    duration: number;
+    threads: number;
+}
+
+/** Calculate the phase order and relative start times for a full
+ * H-W-G-W batch so that each script ends `CONFIG.batchInterval`
+ * milliseconds after the previous one.
  */
-export function calculateBatchTimings(ns: NS, target: string): BatchTimings {
+export function calculateBatchPhases(ns: NS, target: string, threads: BatchThreadAnalysis): BatchPhase[] {
     const spacing = CONFIG.batchInterval as number;
 
     const hackTime = ns.getHackTime(target);
     const weakenTime = ns.getWeakenTime(target);
     const growTime = ns.getGrowTime(target);
 
-    const phases = [
-        { duration: hackTime, start: 0 },
-        { duration: weakenTime, start: 0 },
-        { duration: growTime, start: 0 },
-        { duration: weakenTime, start: 0 },
+    const phases: BatchPhase[] = [
+        { script: "h.js", start: 0, duration: hackTime, threads: threads.hackThreads },
+        { script: "w.js", start: 0, duration: weakenTime, threads: threads.postHackWeakenThreads },
+        { script: "g.js", start: 0, duration: growTime, threads: threads.growThreads },
+        { script: "w.js", start: 0, duration: weakenTime, threads: threads.postGrowWeakenThreads },
     ];
 
     let endTime = 0;
@@ -126,16 +128,10 @@ export function calculateBatchTimings(ns: NS, target: string): BatchTimings {
     let earliestStart = Math.abs(Math.min(...phases.map(p => p.start)));
 
     // Push forward all start times so earliest one is zero
-    const startTimes = [] as number[];
     for (const p of phases) {
         p.start += earliestStart;
-        startTimes.push(p.start);
     }
 
-    return {
-        hackStart: startTimes[0],
-        postHackWeakenStart: startTimes[1],
-        growStart: startTimes[2],
-        postGrowWeakenStart: startTimes[3],
-    };
+    phases.sort((a, b) => a.start - b.start);
+    return phases;
 }
