@@ -5,6 +5,8 @@ import { ALL_HOSTS } from "all-hosts";
 import { Lifecycle, Message as MonitorMessage } from "batch/client/monitor";
 
 import { readAllFromPort, MONITOR_PORT } from "util/ports";
+import { CONFIG } from "batch/config";
+import { expectedValuePerRamSecond } from "batch/expected_value";
 
 declare const React: any;
 
@@ -164,7 +166,7 @@ export function countThreadsByTarget(ns: NS): Map<string, TargetThreads> {
 export type HostInfo = {
     name: string,
     milkMoney: string
-    moneyPerLevel: string,
+    expectedValue: string,
     hckLevel: string,
     maxMoney: string,
     moneyPercent: string
@@ -184,11 +186,12 @@ export function hostInfo(ns: NS, target: string, targetThreads: TargetThreads, l
     const secPlus = sec - minSec;
 
     const milkMoney = targetThreads.harvestMoney;
+    const eValue = expectedValuePerRamSecond(ns, target, CONFIG.batchInterval) * 1000;
 
     return {
         name: target,
         milkMoney: Math.abs(milkMoney) < 0 ? '' : "$" + ns.formatNumber(milkMoney, 2),
-        moneyPerLevel: "$" + ns.formatNumber(money / hckLevel, 2),
+        expectedValue: "$" + ns.formatNumber(eValue, 2),
         hckLevel: ns.formatNumber(hckLevel, 0, 1000000, true),
         maxMoney: "$" + ns.formatNumber(money, 2),
         moneyPercent: Math.abs(moneyPercent - 100) < 0.1 ? '100.0%' : ns.formatPercent(moneyPercent / 100) + "%",
@@ -228,7 +231,7 @@ export function ServerBlock({ title, targets, theme }: IBlockSettings) {
                 <tr>
                     <th style={cellStyle}>target</th>
                     <th style={cellStyle}>$/s</th>
-                    <th style={cellStyle}>$/lvl</th>
+                    <th style={cellStyle}>E($/s)</th>
                     <th style={cellStyle}>lvl</th>
                     <th style={cellStyle}>$</th>
                     <th style={cellStyle}>⌈$⌉%</th>
@@ -255,7 +258,7 @@ function ServerRow({ host, rowIndex, cellStyle, theme }: IRowSettings) {
         <tr key={host.name} style={rowIndex % 2 === 1 ? { backgroundColor: theme.well } : undefined}>
             <td style={cellStyle}>{host.name}</td>
             <td style={cellStyle}>{host.milkMoney}</td>
-            <td style={cellStyle}>{host.moneyPerLevel}</td>
+            <td style={cellStyle}>{host.expectedValue}</td>
             <td style={cellStyle}>{host.hckLevel}</td>
             <td style={cellStyle}>{host.maxMoney}</td>
             <td style={cellStyle}>{host.moneyPercent}</td>
