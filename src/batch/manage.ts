@@ -13,6 +13,7 @@ export async function main(ns: NS) {
     ns.disableLog("ALL");
     ns.ui.openTail();
     ns.ui.moveTail(730, 0);
+    ns.print(`INFO: starting manager on ${ns.getHostname()}`);
 
     let targetsPort = ns.getPortHandle(MANAGER_PORT);
 
@@ -42,19 +43,19 @@ async function readHostsFromPort(ns: NS, hostsPort: NetscriptPort, manager: Targ
             let hostname = nextHostMsg[1];
             switch (nextHostMsg[0]) {
                 case MessageType.NewTarget:
-                    ns.print(`new target received: ${hostname}`);
+                    ns.print(`INFO: received target ${hostname}`);
                     await monitor.pending(hostname);
                     manager.pushTarget(hostname);
                     break;
 
                 case MessageType.FinishedTilling:
-                    ns.print(`${hostname} finished tilling`);
+                    ns.print(`SUCCESS: finished tilling ${hostname}`);
                     await monitor.sowing(hostname);
                     await manager.finishTilling(hostname);
                     break;
 
                 case MessageType.FinishedSowing:
-                    ns.print(`${hostname} finished sowing`);
+                    ns.print(`SUCCESS: finished sowing ${hostname}`);
                     await monitor.harvesting(hostname);
                     await manager.finishSowing(hostname);
                     break;
@@ -86,6 +87,7 @@ class TargetSelectionManager {
 
     pushTarget(target: string) {
         this.pendingTargets.push(target);
+        this.ns.print(`INFO: queued target ${target}`);
     }
 
     readyToTillTargets(): string[] {
@@ -113,15 +115,23 @@ class TargetSelectionManager {
         });
 
         // Pop one target to till
-        return [this.pendingTargets.shift()];
+        const next = this.pendingTargets.shift();
+        if (next) {
+            this.ns.print(`INFO: selecting ${next} for tilling`);
+            return [next];
+        }
+        return [];
     }
 
     async tillNewTargets() {
-        if (this.tillTargets.size >= CONFIG.maxTillTargets) return;
+        if (this.tillTargets.size >= CONFIG.maxTillTargets) {
+            this.ns.print(`WARN: till target limit ${CONFIG.maxTillTargets} reached`);
+            return;
+        }
 
         const toTill = this.readyToTillTargets();
         for (const target of toTill) {
-            this.ns.print(`tilling ${target}`);
+            this.ns.print(`INFO: launching till on ${target}`);
             await launch(this.ns, "/batch/till.js", { threads: 1, allocationFlag: "--allocation-id" }, target);
             this.tillTargets.add(target);
         }
@@ -129,14 +139,14 @@ class TargetSelectionManager {
 
     async finishTilling(hostname: string) {
         this.tillTargets.delete(hostname);
-        this.ns.print(`tilling ${hostname}`);
+        this.ns.print(`INFO: launching sow on ${hostname}`);
         await launch(this.ns, "/batch/sow.js", { threads: 1, allocationFlag: "--allocation-id" }, hostname);
         this.sowTargets.add(hostname);
     }
 
     async finishSowing(hostname: string) {
         this.sowTargets.delete(hostname)
-        this.ns.print(`harvesting ${hostname}`);
+        this.ns.print(`INFO: launching harvest on ${hostname}`);
         await launch(this.ns, "/batch/harvest.js", { threads: 1, allocationFlag: "--allocation-id" }, hostname);
         this.harvestTargets.add(hostname);
     }

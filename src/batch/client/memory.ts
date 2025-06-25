@@ -62,6 +62,10 @@ export class MemoryClient {
     }
 
     async newWorker(hostname: string) {
+        this.ns.print(
+            `INFO: registering worker ${hostname} with ` +
+            `${this.ns.formatRam(this.ns.getServerMaxRam(hostname))}`
+        );
         await this.sendMessage(MessageType.Worker, hostname);
     }
 
@@ -74,6 +78,10 @@ export class MemoryClient {
      * process exits.
      */
     async requestTransferableAllocation(chunkSize: number, numChunks: number, contiguous: boolean = false): Promise<TransferableAllocation> {
+        this.ns.print(
+            `INFO: requesting ${numChunks} x ${this.ns.formatRam(chunkSize)} ` +
+            `contiguous=${contiguous}`
+        );
         let pid = this.ns.pid;
         let returnPortId = MEMORY_PORT + pid;
         let returnPort = this.ns.getPortHandle(returnPortId);
@@ -91,10 +99,20 @@ export class MemoryClient {
         }
         await returnPort.nextWrite();
         let result = returnPort.read();
-        if (!result) return null;
+        if (!result) {
+            this.ns.print("WARN: allocation request failed");
+            return null;
+        }
 
         let allocationResult = result as AllocationResult;
-        return new TransferableAllocation(allocationResult.allocationId, allocationResult.hosts);
+        this.ns.print(
+            `SUCCESS: allocated id ${allocationResult.allocationId} ` +
+            `on ${allocationResult.hosts.length} hosts`
+        );
+        return new TransferableAllocation(
+            allocationResult.allocationId,
+            allocationResult.hosts
+        );
     }
 
     /** Send a message to the memory allocator requesting a chunk of
@@ -112,12 +130,17 @@ export class MemoryClient {
         let allocationId = result.allocationId;
         let memoryPort = this.port;
         registerAllocationOwnership(this.ns, allocationId)
+        this.ns.print(`INFO: registered atExit release for allocation ${allocationId}`);
         return result.allocatedChunks;
     }
 
     async releaseChunks(allocationId: number, numChunks: number): Promise<AllocationResult> {
         const returnPortId = MEMORY_PORT + this.ns.pid;
         const returnPort = this.ns.getPortHandle(returnPortId);
+
+        this.ns.print(
+            `INFO: releasing ${numChunks} chunks from allocation ${allocationId}`
+        );
 
         const payload: AllocationChunksRelease = {
             allocationId,
@@ -128,7 +151,10 @@ export class MemoryClient {
         await this.sendMessage(MessageType.ReleaseChunks, payload);
         await returnPort.nextWrite();
         const result = returnPort.read();
-        if (!result) return null;
+        if (!result) {
+            this.ns.print("WARN: chunk release failed");
+            return null;
+        }
         return result as AllocationResult;
     }
 
@@ -142,6 +168,7 @@ export class MemoryClient {
 
 export function registerAllocationOwnership(ns: NS, allocationId: number, name: string = "") {
     ns.writePort(MEMORY_PORT, [MessageType.Claim, [allocationId, ns.pid]]);
+    ns.print(`INFO: claiming allocation ${allocationId}`);
     ns.atExit(() => {
         ns.writePort(MEMORY_PORT, [MessageType.Release, [allocationId]]);
     }, "memoryRelease" + name);
