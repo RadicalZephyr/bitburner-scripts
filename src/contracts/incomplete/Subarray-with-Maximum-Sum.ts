@@ -28,6 +28,18 @@ export async function main(ns: NS) {
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
 
-function solve(data: any): any {
-    return null;
+function solve(data: number[]): number {
+    // Kadane's algorithm: iterate through the array keeping track of
+    // the best subarray sum that ends at the current index and the
+    // best seen so far.
+    let maxEndingHere = data[0];
+    let maxSoFar = data[0];
+
+    for (let i = 1; i < data.length; i++) {
+        const n = data[i];
+        maxEndingHere = Math.max(n, maxEndingHere + n);
+        maxSoFar = Math.max(maxSoFar, maxEndingHere);
+    }
+
+    return maxSoFar;
 }

@@ -40,6 +40,47 @@ export async function main(ns: NS) {
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
 
-function solve(data: any): any {
-    return null;
+function solve(data: number[][]): number {
+    const rows = data.length;
+    const cols = data[0].length;
+
+    // dp[r][c] holds number of ways to reach cell r,c avoiding obstacles.
+    const dp: number[][] = Array.from({ length: rows }, () => Array(cols).fill(0));
+
+    // Start position is blocked
+    if (data[0][0] === 1) {
+        return 0;
+    }
+    dp[0][0] = 1;
+
+    // Fill first column
+    for (let r = 1; r < rows; r++) {
+        if (data[r][0] === 1) {
+            dp[r][0] = 0;
+        } else {
+            dp[r][0] = dp[r - 1][0];
+        }
+    }
+
+    // Fill first row
+    for (let c = 1; c < cols; c++) {
+        if (data[0][c] === 1) {
+            dp[0][c] = 0;
+        } else {
+            dp[0][c] = dp[0][c - 1];
+        }
+    }
+
+    // Fill rest of the table
+    for (let r = 1; r < rows; r++) {
+        for (let c = 1; c < cols; c++) {
+            if (data[r][c] === 1) {
+                dp[r][c] = 0;
+            } else {
+                dp[r][c] = dp[r - 1][c] + dp[r][c - 1];
+            }
+        }
+    }
+
+    return dp[rows - 1][cols - 1];
 }
