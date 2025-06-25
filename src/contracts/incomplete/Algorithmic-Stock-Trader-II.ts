@@ -34,58 +34,17 @@ export async function main(ns: NS) {
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
 
-function solve(data: number[]): any {
-    let profitableTrades: number[][] = Array.from({ length: data.length - 1 }, (_v, _i) => []);
-    for (let i = 0; i < data.length; ++i) {
-        for (let j = i + 1; j < data.length; ++j) {
-            if (data[i] < data[j]) {
-                profitableTrades[i].push(j);
-            }
-        }
+/**
+ * Calculate the maximum profit with unlimited transactions.
+ *
+ * @param data - Array of stock prices by day
+ */
+function solve(data: number[]): number {
+    let profit = 0;
+    for (let i = 1; i < data.length; i++) {
+        const diff = data[i] - data[i - 1];
+        if (diff > 0) profit += diff;
     }
-
-    if (profitableTrades.every((trades) => trades.length == 0)) {
-        return 0;
-    }
-
-    let result = maxRemainingProfit(data, profitableTrades, 0);
-    return result.profit;
+    return profit;
 }
 
-type Result = { profit: number, trade: [number, number][] };
-
-function maxRemainingProfit(data: number[], profitableTrades: number[][], startIndex: number): Result {
-    let bestProfit = 0;
-    let bestStartIndex = startIndex;
-    let bestEndIndex = -1;
-    let bestTrades: [number, number][] = [];
-
-    if ((startIndex + 1) >= data.length) {
-        return { profit: 0, trade: [] };
-    }
-
-    // We need to check skipping days as well because sometimes it's
-    // not worth buying on the day after we sell.
-    for (; startIndex < data.length - 2; ++startIndex) {
-        for (const endIndex of profitableTrades[startIndex]) {
-            // Profit for the ith profitable trade starting at startIndex
-            let profit = data[endIndex] - data[startIndex];
-
-            // Next index is `endIndex + 1` because if we buy the same day
-            // we sell, that's the same as not selling to begin with.
-            let bestRemaining = maxRemainingProfit(data, profitableTrades, endIndex + 1);
-            let totalProfit = profit + bestRemaining.profit;
-
-            if (bestProfit < totalProfit) {
-                bestProfit = totalProfit;
-                bestEndIndex = endIndex;
-                bestStartIndex = startIndex;
-                bestTrades = bestRemaining.trade;
-            }
-        }
-    }
-    if (bestEndIndex > -1) {
-        bestTrades.push([bestEndIndex, bestStartIndex]);
-    }
-    return { profit: bestProfit, trade: bestTrades };
-}

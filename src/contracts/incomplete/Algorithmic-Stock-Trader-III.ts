@@ -45,48 +45,30 @@ type TwoTrade = {
     total: number,
 };
 
-async function solve(ns: NS, data: any): Promise<any> {
-    return null;
-    let profitableTrades: Trade[] = [];
-    for (let i = 0; i < data.length - 1; ++i) {
-        for (let j = i + 1; j < data.length; ++j) {
-            if (data[i] < data[j]) {
-                let trade = {
-                    startDay: i,
-                    endDay: j,
-                    amount: data[j] - data[i]
-                };
-                profitableTrades.push(trade);
-            }
-            await ns.sleep(10);
-        }
+/**
+ * Maximum profit with at most two transactions.
+ */
+async function solve(_ns: NS, data: number[]): Promise<number> {
+    if (data.length === 0) return 0;
+
+    const n = data.length;
+    const left: number[] = Array(n).fill(0);
+    let minPrice = data[0];
+    for (let i = 1; i < n; i++) {
+        minPrice = Math.min(minPrice, data[i]);
+        left[i] = Math.max(left[i - 1], data[i] - minPrice);
     }
 
-    if (profitableTrades.length == 0) {
-        return 0;
+    const right: number[] = Array(n).fill(0);
+    let maxPrice = data[n - 1];
+    for (let i = n - 2; i >= 0; i--) {
+        maxPrice = Math.max(maxPrice, data[i]);
+        right[i] = Math.max(right[i + 1], maxPrice - data[i]);
     }
 
-    let twoTrades: TwoTrade[] = [];
-    for (const t1 of profitableTrades) {
-        for (const t2 of profitableTrades.slice(1)) {
-            if (!isOverlapping(t1, t2)) {
-                twoTrades.push({
-                    trades: [t1, t2],
-                    total: t1.amount + t2.amount
-                });
-            }
-            await ns.sleep(10);
-        }
+    let result = 0;
+    for (let i = 0; i < n; i++) {
+        result = Math.max(result, left[i] + right[i]);
     }
-    twoTrades.sort((a, b) => b.total - a.total);
-
-    return twoTrades[0].total;
-}
-
-function isOverlapping(tradeA: Trade, tradeB: Trade): boolean {
-    // Since start is always less than end, this implies that
-    // tradeA.startDay < tradeB.startDay
-    let aLessThanB = tradeA.endDay < tradeB.startDay;
-    let bLessThanA = tradeB.endDay < tradeA.startDay;
-    return !(aLessThanB || bLessThanA);
+    return result;
 }

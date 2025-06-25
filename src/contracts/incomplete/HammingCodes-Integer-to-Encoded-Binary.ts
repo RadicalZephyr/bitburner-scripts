@@ -49,33 +49,37 @@ export async function main(ns: NS) {
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
 
-function solve(data: any): any {
-    return null;
-}
+/**
+ * Encode an integer using extended Hamming code.
+ */
+function solve(data: number): string {
+    const dataBits = data.toString(2).split("");
+    let m = dataBits.length;
+    let p = 0;
+    while ((1 << p) < m + p + 1) p++;
+    const total = m + p + 1;
+    const out = Array(total).fill("0");
 
-function hammingParity(numString: string[]): string[] {
-    let enumeratedNum: [string, number][] = numString.map((v, i) => [v, i]);
-    let parityNum = enumeratedNum.filter(([v, _i]) => v === "1").map(([_v, i]) => i).reduce((p, c) => p ^ c);
-    return toBinaryArray(parityNum);
-}
-
-function toBinaryArray(x: number): string[] {
-    return Math.abs(x).toString(2).split('');
-}
-
-function codeLength(data: string[]): number {
-    let dataLen = data.length;
-    let n = 0;
-    let codeLen = 1;
-    while (dataLen > 0) {
-        let d = dBits(n);
-        dataLen -= d;
-        codeLen += 1 + d;
-        n += 1;
+    let d = m - 1;
+    for (let i = total - 1; i >= 0; i--) {
+        if (i === 0 || (i & (i - 1)) === 0) {
+            continue; // parity bit
+        }
+        out[i] = dataBits[d--];
     }
-    return codeLen + dataLen;
+
+    for (let pIndex = 1; pIndex < total; pIndex <<= 1) {
+        let parity = 0;
+        for (let i = pIndex; i < total; i += 2 * pIndex) {
+            for (let j = i; j < i + pIndex && j < total; j++) {
+                parity ^= Number(out[j]);
+            }
+        }
+        out[pIndex] = parity.toString();
+    }
+
+    const overall = out.slice(1).reduce((a, b) => a ^ Number(b), 0);
+    out[0] = overall.toString();
+    return out.join("");
 }
 
-function dBits(n: number): number {
-    return ((2 ** (n + 1)) - 1) - (2 ** n);
-}

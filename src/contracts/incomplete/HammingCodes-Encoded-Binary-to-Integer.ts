@@ -51,6 +51,35 @@ export async function main(ns: NS) {
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
 
-function solve(data: any): any {
-    return null;
+/**
+ * Decode extended Hamming code to an integer.
+ */
+function solve(data: string): number {
+    const bits = data.split("");
+    const m = bits.length;
+
+    const parityIndices: number[] = [];
+    for (let i = 0; 2 ** i < m; i++) parityIndices.push(2 ** i);
+    parityIndices.unshift(0);
+
+    let error = 0;
+    for (let p of parityIndices.slice(1)) {
+        let parity = 0;
+        for (let i = p; i <= m; i += 2 * p) {
+            for (let j = i; j < i + p && j <= m; j++) parity ^= Number(bits[j - 1]);
+        }
+        if (parity !== Number(bits[p - 1])) error ^= p;
+    }
+    const overall = bits.reduce((a, b) => a ^ Number(b), 0);
+    if (overall !== 0 && error === 0) error = 1; // overall parity bit
+    if (error > 0) {
+        const idx = error - 1;
+        bits[idx] = bits[idx] === "0" ? "1" : "0";
+    }
+
+    const dataBits: string[] = [];
+    for (let i = 1; i <= m; i++) {
+        if (!parityIndices.includes(i)) dataBits.push(bits[i - 1]);
+    }
+    return parseInt(dataBits.join(""), 2);
 }

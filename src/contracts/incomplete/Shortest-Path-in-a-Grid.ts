@@ -56,6 +56,33 @@ export async function main(ns: NS) {
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
 
-function solve(data: any): any {
-    return null;
+/**
+ * Find shortest path in a grid using BFS.
+ */
+function solve(data: number[][]): string {
+    const rows = data.length;
+    const cols = data[0].length;
+    const dirs = [
+        [1, 0, 'D'],
+        [-1, 0, 'U'],
+        [0, 1, 'R'],
+        [0, -1, 'L'],
+    ] as const;
+    const visited = Array.from({ length: rows }, () => Array(cols).fill(false));
+    const queue: { r: number; c: number; path: string }[] = [{ r: 0, c: 0, path: '' }];
+    visited[0][0] = true;
+
+    while (queue.length) {
+        const { r, c, path } = queue.shift()!;
+        if (r === rows - 1 && c === cols - 1) return path;
+        for (const [dr, dc, ch] of dirs) {
+            const nr = r + dr;
+            const nc = c + dc;
+            if (nr >= 0 && nr < rows && nc >= 0 && nc < cols && !visited[nr][nc] && data[nr][nc] === 0) {
+                visited[nr][nc] = true;
+                queue.push({ r: nr, c: nc, path: path + ch });
+            }
+        }
+    }
+    return '';
 }

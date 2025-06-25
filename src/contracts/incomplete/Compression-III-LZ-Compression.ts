@@ -53,6 +53,58 @@ export async function main(ns: NS) {
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
 
-function solve(data: any): any {
-    return null;
+enum ChunkType {
+    Literal,
+    BackRef,
+}
+
+/**
+ * Encode the string using minimal LZ compression.
+ */
+function solve(data: string): string {
+    const memo = new Map<string, string>();
+
+    function helper(pos: number, type: ChunkType): string {
+        if (pos >= data.length) return "";
+        const key = `${pos}|${type}`;
+        const cached = memo.get(key);
+        if (cached !== undefined) return cached;
+
+        let best: string | null = null;
+
+        if (type === ChunkType.Literal) {
+            for (let len = 0; len <= 9 && pos + len <= data.length; len++) {
+                const chunk = len === 0 ? "0" : `${len}${data.slice(pos, pos + len)}`;
+                const cand = chunk + helper(pos + len, ChunkType.BackRef);
+                if (best === null || cand.length < best.length) best = cand;
+            }
+        } else {
+            for (let len = 0; len <= 9; len++) {
+                if (len === 0) {
+                    const cand = "0" + helper(pos, ChunkType.Literal);
+                    if (best === null || cand.length < best.length) best = cand;
+                } else {
+                    for (let dist = 1; dist <= 9; dist++) {
+                        if (pos - dist < 0 || pos + len > data.length) continue;
+                        let ok = true;
+                        for (let j = 0; j < len; j++) {
+                            if (data[pos + j] !== data[pos + j - dist]) {
+                                ok = false;
+                                break;
+                            }
+                        }
+                        if (!ok) continue;
+                        const chunk = `${len}${dist}`;
+                        const cand = chunk + helper(pos + len, ChunkType.Literal);
+                        if (best === null || cand.length < best.length) best = cand;
+                    }
+                }
+            }
+        }
+
+        memo.set(key, best!);
+        return best!;
+    }
+
+    return helper(0, ChunkType.Literal);
 }

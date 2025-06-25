@@ -48,6 +48,32 @@ export async function main(ns: NS) {
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
 
-function solve(data: any): any {
-    return null;
+/**
+ * Generate all expressions evaluating to the target value.
+ */
+function solve(data: [string, number]): string[] {
+    const [digits, target] = data;
+    const results: string[] = [];
+
+    function backtrack(index: number, expr: string, prev: number, value: number) {
+        if (index === digits.length) {
+            if (value === target) results.push(expr);
+            return;
+        }
+        for (let i = index + 1; i <= digits.length; i++) {
+            const part = digits.slice(index, i);
+            if (part.length > 1 && part[0] === '0') break;
+            const num = parseInt(part);
+            if (index === 0) {
+                backtrack(i, part, num, num);
+            } else {
+                backtrack(i, `${expr}+${part}`, num, value + num);
+                backtrack(i, `${expr}-${part}`, -num, value - num);
+                backtrack(i, `${expr}*${part}`, prev * num, value - prev + prev * num);
+            }
+        }
+    }
+
+    backtrack(0, "", 0, 0);
+    return results;
 }

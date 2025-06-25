@@ -34,42 +34,22 @@ export async function main(ns: NS) {
     ns.writePort(contractPortNum, answer);
 }
 
+/**
+ * Minimum number of jumps to reach the end of the array.
+ */
 function solve(data: number[]): number {
-    let result = jump(data, 0, 0);
-    return result.jumps;
-}
+    if (data.length <= 1) return 0;
 
-type Result = {
-    done: boolean,
-    jumps: number,
-};
-
-function jump(a: number[], i: number, jumps: number): Result {
-    let maxJumps = a[i];
-    let maxIndex = i + maxJumps;
-
-    // Base case, we can reach the end in one jump.
-    if (maxIndex >= (a.length - 1)) {
-        return { done: true, jumps: jumps + 1 };
-    }
-
-    // Now we know we can't directly reach the end from this start
-    // index.
-    for (let n = maxIndex; n > i; n--) {
-        // No need to check slots with zeroes, they are dead ends.
-        if (a[n] === 0) {
-            continue;
-        }
-
-        // Check the next farthest square we can reach that's not a zero.
-        let result = jump(a, n, jumps + 1);
-        if (result.done) {
-            // TODO: we can't return here, we need to actually check
-            // all the routes, find the shortest length, and retain
-            // the actual shortest paths we found.
-            return result;
+    let jumps = 0;
+    let currentEnd = 0;
+    let farthest = 0;
+    for (let i = 0; i < data.length - 1; i++) {
+        farthest = Math.max(farthest, i + data[i]);
+        if (i === currentEnd) {
+            jumps++;
+            currentEnd = farthest;
+            if (currentEnd >= data.length - 1) return jumps;
         }
     }
-    // Checked all the squares we can reach and all were dead ends.
-    return { done: false, jumps: jumps };
+    return 0;
 }

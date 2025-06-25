@@ -28,11 +28,18 @@ export async function main(ns: NS) {
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
 
-function solve(data: number[]): number {
-    data.sort((a, b) => a - b);
-    return null;
-}
-
-function countWays(nums: number[], sum: number): number {
-    return 0;
+/**
+ * Count combinations to reach target using given numbers.
+ */
+function solve(data: [number, number[]]): number {
+    const [target, nums] = data;
+    nums.sort((a, b) => a - b);
+    const dp = Array(target + 1).fill(0);
+    dp[0] = 1;
+    for (const num of nums) {
+        for (let i = num; i <= target; i++) {
+            dp[i] += dp[i - num];
+        }
+    }
+    return dp[target];
 }
