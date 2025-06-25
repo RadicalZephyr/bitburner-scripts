@@ -1,6 +1,6 @@
 import type { NS, NetscriptPort, UserInterfaceTheme } from "netscript";
 
-import { AllocationClaim, AllocationRelease, AllocationRequest, AllocationResult, HostAllocation, MEMORY_PORT, Message, MessageType } from "batch/client/memory";
+import { AllocationClaim, AllocationRelease, AllocationRequest, AllocationResult, HostAllocation, MEMORY_PORT, Message, MessageType, AllocationChunksRelease } from "batch/client/memory";
 
 import { readAllFromPort } from "util/ports";
 
@@ -87,6 +87,12 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memoryManager: 
                 let [allocationId] = msg[1] as AllocationRelease;
                 ns.printf("received release message for allocation ID: %d", allocationId);
                 memoryManager.deallocate(allocationId);
+                break;
+
+            case MessageType.ReleaseChunks:
+                let releaseInfo = msg[1] as AllocationChunksRelease;
+                ns.printf("received partial release message for allocation ID: %d", releaseInfo.allocationId);
+                memoryManager.releaseChunks(releaseInfo.allocationId, releaseInfo.numChunks);
                 break;
 
             case MessageType.Claim:
@@ -190,6 +196,36 @@ class MemoryManager {
         }
 
         this.allocations.delete(id);
+        return true;
+    }
+
+    releaseChunks(id: number, numChunks: number): boolean {
+        const allocation = this.allocations.get(id);
+        if (!allocation) return false;
+
+        let remaining = numChunks;
+        const chunks = [...allocation.chunks].sort((a, b) => {
+            const freeA = this.workers.get(a.hostname)?.freeRam ?? 0;
+            const freeB = this.workers.get(b.hostname)?.freeRam ?? 0;
+            return freeB - freeA;
+        });
+
+        for (const chunk of chunks) {
+            if (remaining <= 0) break;
+            const toFree = Math.min(remaining, chunk.numChunks);
+            const worker = this.workers.get(chunk.hostname);
+            if (worker) {
+                worker.free(chunk.chunkSize * toFree);
+            }
+            chunk.numChunks -= toFree;
+            remaining -= toFree;
+        }
+
+        allocation.chunks = allocation.chunks.filter(c => c.numChunks > 0);
+        if (allocation.chunks.length === 0) {
+            this.allocations.delete(id);
+        }
+
         return true;
     }
 

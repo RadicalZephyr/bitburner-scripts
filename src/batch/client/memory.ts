@@ -7,9 +7,10 @@ export enum MessageType {
     Request,
     Release,
     Claim,
+    ReleaseChunks,
 }
 
-type Payload = string | AllocationRequest | AllocationRelease | AllocationClaim;
+type Payload = string | AllocationRequest | AllocationRelease | AllocationClaim | AllocationChunksRelease;
 
 export type Message = [
     type: MessageType,
@@ -33,6 +34,11 @@ export type AllocationClaim = [
     allocationId: number,
     pid: number,
 ];
+
+export interface AllocationChunksRelease {
+    allocationId: number,
+    numChunks: number,
+}
 
 export interface HostAllocation {
     hostname: string,
@@ -106,6 +112,11 @@ export class MemoryClient {
         let memoryPort = this.port;
         registerAllocationOwnership(this.ns, allocationId)
         return result.allocatedChunks;
+    }
+
+    async releaseChunks(allocationId: number, numChunks: number) {
+        const payload: AllocationChunksRelease = { allocationId, numChunks };
+        await this.sendMessage(MessageType.ReleaseChunks, payload);
     }
 
     private async sendMessage(type: MessageType, payload: Payload) {
