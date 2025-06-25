@@ -1,4 +1,4 @@
-import type { NS, NetscriptPort } from "netscript";
+import type { NS, NetscriptPort, UserInterfaceTheme } from "netscript";
 
 import { AllocationClaim, AllocationRelease, AllocationRequest, AllocationResult, HostAllocation, MEMORY_PORT, Message, MessageType } from "batch/client/memory";
 
@@ -54,8 +54,9 @@ Example:
             ns.print("finished reading memory requests");
         }
 
+        const theme = ns.ui.getTheme();
         ns.clearLog();
-        ns.printRaw(<MemoryDisplay manager={memoryManager}></MemoryDisplay>);
+        ns.printRaw(<MemoryDisplay manager={memoryManager} theme={theme}></MemoryDisplay>);
         await ns.sleep(refreshRate);
     }
 }
@@ -291,32 +292,35 @@ class Worker {
 
 interface MemoryDisplayProps {
     manager: MemoryManager;
+    theme: UserInterfaceTheme;
 }
 
-function MemoryDisplay({ manager }: MemoryDisplayProps) {
+function MemoryDisplay({ manager, theme }: MemoryDisplayProps) {
     const workers = Array.from(manager.workers.values()).sort((a, b) => a.hostname.localeCompare(b.hostname));
     return (
         <div style={{ fontFamily: "monospace" }}>
-            {workers.map(w => <MemoryRow worker={w}></MemoryRow>)}
+            {workers.map(w => <MemoryRow worker={w} theme={theme}></MemoryRow>)}
         </div>
     );
 }
 
 interface MemoryRowProps {
     worker: Worker;
+    theme: UserInterfaceTheme;
 }
 
-function MemoryRow({ worker }: MemoryRowProps) {
+function MemoryRow({ worker, theme }: MemoryRowProps) {
     return (
-        <div>{worker.hostname} [<MemoryBar worker={worker}></MemoryBar>]</div>
+        <div>{worker.hostname} [<MemoryBar worker={worker} theme={theme}></MemoryBar>]</div>
     );
 }
 
 interface MemoryBarProps {
     worker: Worker;
+    theme: UserInterfaceTheme;
 }
 
-function MemoryBar({ worker }: MemoryBarProps) {
+function MemoryBar({ worker, theme }: MemoryBarProps) {
     const segments = 20;
     const reservedSeg = Math.round((worker.reservedRam / worker.totalRam) * segments);
     const allocSeg = Math.round((worker.allocatedRam / worker.totalRam) * segments);
@@ -325,10 +329,10 @@ function MemoryBar({ worker }: MemoryBarProps) {
 
     const bar: any[] = [];
     for (let i = 0; i < reservedSeg && bar.length < segments; i++) {
-        bar.push(<span key={"r" + i} style={{ color: "yellow" }}>|</span>);
+        bar.push(<span key={"r" + i} style={{ color: theme.infolight }}>|</span>);
     }
     for (let i = 0; i < allocSeg && bar.length < segments; i++) {
-        bar.push(<span key={"a" + i} style={{ color: "lime" }}>|</span>);
+        bar.push(<span key={"a" + i} style={{ color: theme.primarylight }}>|</span>);
     }
     for (let i = 0; i < freeSeg && bar.length < segments; i++) {
         bar.push("-");
