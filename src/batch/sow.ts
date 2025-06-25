@@ -49,18 +49,20 @@ OPTIONS
         return;
     }
 
-    ns.ui.setTailTitle(`sow ${target}`);
-    ns.ui.openTail();
-    ns.ui.resizeTail(400, 80);
 
     let growThreads = neededGrowThreads(ns, target);
     let growSecDelta = ns.growthAnalyzeSecurity(growThreads, target);
     let weakenThreads = weakenAnalyze(growSecDelta);
 
     if (growThreads < 1 || weakenThreads < 1) {
-        ns.tprintf(`no need to sow ${target}`);
+        ns.printf(`no need to sow ${target}`);
+        ns.toast(`finished sowing ${target}!`, "success");
         return;
     }
+
+    ns.ui.setTailTitle(`sow ${target}`);
+    ns.ui.openTail();
+    ns.ui.resizeTail(400, 80);
 
     let expectedTime = ns.tFormat(ns.getWeakenTime(target));
 
@@ -83,6 +85,8 @@ Elapsed time:  ${ns.tFormat(selfScript.onlineRunningTime * 1000)}
             await ns.sleep(1000);
         }
     }
+
+    ns.ui.closeTail();
     ns.toast(`finished sowing ${target}!`, "success");
 }
 

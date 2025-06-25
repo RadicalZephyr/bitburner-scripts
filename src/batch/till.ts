@@ -46,18 +46,20 @@ OPTIONS
         return;
     }
 
+
+    let threads = calculateWeakenThreads(ns, target);
+
+    if (threads == 0 || isNaN(threads)) {
+        ns.printf("%s security is already at minimum level", target);
+        ns.toast(`finished tilling ${target}!`, "success");
+        return;
+    }
+
     ns.ui.setTailTitle(`till ${target}`);
     ns.ui.openTail();
     ns.ui.resizeTail(450, 80);
 
     let expectedTime = ns.tFormat(ns.getWeakenTime(target));
-
-    let threads = calculateWeakenThreads(ns, target);
-
-    if (threads == 0 || isNaN(threads)) {
-        ns.tprintf("%s security is already at minimum level", target);
-        return;
-    }
 
     let result = await launch(ns, "/batch/w.js", threads, target, 0, 1, 0);
 
@@ -69,11 +71,13 @@ OPTIONS
             let selfScript = ns.self();
             ns.print(`
 Expected time: ${expectedTime}
-Elapsed time: ${ns.tFormat(selfScript.onlineRunningTime * 1000)}
+Elapsed time:  ${ns.tFormat(selfScript.onlineRunningTime * 1000)}
 `);
             await ns.sleep(1000);
         }
     }
+
+    ns.ui.closeTail();
     ns.toast(`finished tilling ${target}!`, "success");
 }
 
