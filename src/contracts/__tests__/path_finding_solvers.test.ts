@@ -2,6 +2,7 @@ import { solve as solveGridI } from "../Unique-Paths-in-a-Grid-I";
 import { solve as solveGridII } from "../Unique-Paths-in-a-Grid-II";
 import { solve as solveSpiral } from "../Spiralize-Matrix";
 import { solve as solveTriangle } from "../Minimum-Path-Sum-in-a-Triangle";
+import { solve as solveShortestGrid } from "../incomplete/Shortest-Path-in-a-Grid";
 
 import { describe, expect, test } from '@jest/globals';
 
@@ -45,5 +46,29 @@ describe("path finding contract solvers", () => {
     test("Minimum Path Sum Triangle", () => {
         const tri = [[4], [5, 1], [4, 4, 5], [4, 3, 2, 4], [5, 8, 1, 5, 8], [3, 1, 8, 1, 8, 9], [2, 1, 3, 8, 5, 5, 4], [6, 8, 9, 4, 9, 4, 4, 7]];
         expect(solveTriangle(tri)).toBe(22);
+    });
+
+    test("Shortest Path in a Grid", () => {
+        const grid1 = [
+            [0, 1, 0, 0, 0],
+            [0, 0, 0, 1, 0]
+        ];
+        expect(solveShortestGrid(grid1)).toBe("DRRURRD");
+
+        const grid2 = [
+            [0, 1],
+            [1, 0]
+        ];
+        expect(solveShortestGrid(grid2)).toBe("");
+
+        const grid3 = [
+            [0, 0, 0, 1, 0, 0, 1, 0, 0, 0],
+            [0, 0, 1, 0, 1, 1, 1, 0, 1, 1],
+            [0, 1, 0, 0, 1, 0, 1, 1, 0, 1],
+            [0, 0, 0, 0, 0, 1, 0, 0, 1, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [1, 0, 0, 1, 0, 1, 1, 1, 0, 0]
+        ];
+        expect(solveShortestGrid(grid3)).toBe("DDDDRRRRRRRRDR");
     });
 });

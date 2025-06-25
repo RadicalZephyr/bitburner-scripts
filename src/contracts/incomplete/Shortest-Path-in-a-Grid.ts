@@ -53,36 +53,55 @@ export async function main(ns: NS) {
     let contractData: any = JSON.parse(contractDataJSON);
     ns.tprintf('contract data: %s', JSON.stringify(contractData));
     let answer = solve(contractData);
-    ns.writePort(contractPortNum, JSON.stringify(answer));
+    ns.writePort(contractPortNum, answer);
 }
 
-/**
- * Find shortest path in a grid using BFS.
- */
-function solve(data: number[][]): string {
-    const rows = data.length;
-    const cols = data[0].length;
-    const dirs = [
-        [1, 0, 'D'],
-        [-1, 0, 'U'],
-        [0, 1, 'R'],
-        [0, -1, 'L'],
-    ] as const;
-    const visited = Array.from({ length: rows }, () => Array(cols).fill(false));
-    const queue: { r: number; c: number; path: string }[] = [{ r: 0, c: 0, path: '' }];
-    visited[0][0] = true;
+export function solve(data: number[][]): string {
+    // Step 1: Determine grid dimensions and the start and goal cells.
+    let numRows = data.length;
+    if (numRows === 0) {
+        return "";
+    }
+    let numCols = data[0].length;
+    let start: [number, number] = [0, 0];
+    let goal: [number, number] = [numRows - 1, numCols - 1];
 
-    while (queue.length) {
-        const { r, c, path } = queue.shift()!;
-        if (r === rows - 1 && c === cols - 1) return path;
-        for (const [dr, dc, ch] of dirs) {
-            const nr = r + dr;
-            const nc = c + dc;
-            if (nr >= 0 && nr < rows && nc >= 0 && nc < cols && !visited[nr][nc] && data[nr][nc] === 0) {
-                visited[nr][nc] = true;
-                queue.push({ r: nr, c: nc, path: path + ch });
+    // Step 2: If the start or goal is blocked we can immediately return.
+    if (data[start[0]][start[1]] === 1 || data[goal[0]][goal[1]] === 1) {
+        return "";
+    }
+
+    // Step 3: Helper for retrieving valid neighbours.
+    function neighbors([x, y]: [number, number]): [number, number, string][] {
+        let possible: [number, number, string][] = [
+            [x - 1, y, "U"],
+            [x + 1, y, "D"],
+            [x, y - 1, "L"],
+            [x, y + 1, "R"],
+        ];
+        return possible.filter(([nx, ny]) => {
+            return nx >= 0 && nx < numRows && ny >= 0 && ny < numCols && data[nx][ny] === 0;
+        });
+    }
+
+    // Step 4: Breadth first search keeping track of the path taken to each cell.
+    let queue: { pos: [number, number]; path: string }[] = [{ pos: start, path: "" }];
+    let visited = new Set<string>([start.toString()]);
+    while (queue.length > 0) {
+        let { pos, path } = queue.shift() as { pos: [number, number]; path: string };
+        if (pos[0] === goal[0] && pos[1] === goal[1]) {
+            return path;
+        }
+        for (const [nx, ny, dir] of neighbors(pos)) {
+            let key = `${nx},${ny}`;
+            if (visited.has(key)) {
+                continue;
             }
+            visited.add(key);
+            queue.push({ pos: [nx, ny], path: path + dir });
         }
     }
-    return '';
+
+    // Step 5: No path found.
+    return "";
 }

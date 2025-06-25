@@ -63,8 +63,13 @@
 - [x] Return minimal sum and document solve.
 
 # Shortest Path in a Grid
-- [x] Perform BFS from start to finish recording moves.
-- [x] Return path string or empty string if unreachable. Document solve.
+- [x] Read problem description in Shortest-Path-in-a-Grid.ts
+- [x] Determine grid size and start/end coordinates
+- [x] Skip if start or end cell is an obstacle
+- [x] Write helper to list valid neighboring cells
+- [x] Implement BFS queue that stores position and path string
+- [x] Stop when bottom-right is reached and return its path
+- [x] If queue exhausts without reaching end return empty string
 
 # Total Ways to Sum
 - [x] Compute number of integer partitions using DP excluding single term.
