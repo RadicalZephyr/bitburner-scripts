@@ -1,6 +1,6 @@
 import type { NS, NetscriptPort } from "netscript";
 
-import { AllocationRelease, AllocationRequest, AllocationResult, HostAllocation, MEMORY_PORT, Message, MessageType } from "batch/client/memory";
+import { AllocationClaim, AllocationRelease, AllocationRequest, AllocationResult, HostAllocation, MEMORY_PORT, Message, MessageType } from "batch/client/memory";
 
 import { readAllFromPort } from "util/ports";
 
@@ -52,6 +52,12 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memoryManager: 
                 let [allocationId] = msg[1] as AllocationRelease;
                 ns.printf("received release message for allocation ID: %d", allocationId);
                 memoryManager.deallocate(allocationId);
+                break;
+
+            case MessageType.Claim:
+                let [claimId, pid] = msg[1] as AllocationClaim;
+                ns.printf("received claim message for allocation ID: %d -> pid %d", claimId, pid);
+                memoryManager.claimAllocation(claimId, pid);
                 break;
         }
     }
@@ -150,6 +156,14 @@ class MemoryManager {
         }
 
         this.allocations.delete(id);
+        return true;
+    }
+
+    claimAllocation(id: number, pid: number): boolean {
+        const allocation = this.allocations.get(id);
+        if (!allocation) return false;
+
+        allocation.pid = pid;
         return true;
     }
 }

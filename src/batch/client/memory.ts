@@ -5,10 +5,11 @@ export const MEMORY_PORT: number = 200;
 export enum MessageType {
     Worker,
     Request,
-    Release
+    Release,
+    Claim,
 }
 
-type Payload = string | AllocationRequest | AllocationRelease;
+type Payload = string | AllocationRequest | AllocationRelease | AllocationClaim;
 
 export type Message = [
     type: MessageType,
@@ -26,6 +27,11 @@ export interface AllocationRequest {
 
 export type AllocationRelease = [
     allocationId: number
+];
+
+export type AllocationClaim = [
+    allocationId: number,
+    pid: number,
 ];
 
 export interface HostAllocation {
@@ -111,6 +117,7 @@ export class MemoryClient {
 }
 
 export function registerAllocationOwnership(ns: NS, allocationId: number) {
+    ns.writePort(MEMORY_PORT, [MessageType.Claim, [allocationId, ns.pid]]);
     ns.atExit(() => {
         ns.writePort(MEMORY_PORT, [MessageType.Release, [allocationId]]);
     }, "memoryRelease");
