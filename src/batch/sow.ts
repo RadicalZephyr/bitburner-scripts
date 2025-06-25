@@ -70,10 +70,10 @@ OPTIONS
     let expectedTime = ns.tFormat(ns.getWeakenTime(target));
 
     let weakenResult = await launch(ns, WEAKEN_SCRIPT, weakenThreads, target, 0, 1, 0);
-    weakenResult.allocation.releaseAtExit(ns);
+    weakenResult.allocation.releaseAtExit(ns, "weaken");
 
     let growResult = await launch(ns, GROW_SCRIPT, growThreads, target, 0, 1, 0);
-    growResult.allocation.releaseAtExit(ns);
+    growResult.allocation.releaseAtExit(ns, "grow");
 
     let pids = [...weakenResult.pids, ...growResult.pids];
 

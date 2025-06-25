@@ -116,11 +116,11 @@ export class MemoryClient {
     }
 }
 
-export function registerAllocationOwnership(ns: NS, allocationId: number) {
+export function registerAllocationOwnership(ns: NS, allocationId: number, name: string = "") {
     ns.writePort(MEMORY_PORT, [MessageType.Claim, [allocationId, ns.pid]]);
     ns.atExit(() => {
         ns.writePort(MEMORY_PORT, [MessageType.Release, [allocationId]]);
-    }, "memoryRelease");
+    }, "memoryRelease" + name);
 }
 
 export class TransferableAllocation {
@@ -132,8 +132,8 @@ export class TransferableAllocation {
         this.allocatedChunks = allocations.map(chunk => new AllocationChunk(chunk));
     }
 
-    releaseAtExit(ns: NS) {
-        registerAllocationOwnership(ns, this.allocationId);
+    releaseAtExit(ns: NS, name?: string) {
+        registerAllocationOwnership(ns, this.allocationId, name);
     }
 
     totalAllocatedRam(): number {
