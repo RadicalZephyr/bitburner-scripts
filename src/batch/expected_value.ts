@@ -76,7 +76,15 @@ function successfulHackValue(
     return threads * maxMoney * ns.hackAnalyze(host);
 }
 
-function analyzeBatchThreads(
+/**
+ * Calculate the minimal thread distribution for a HWGW batch.
+ *
+ * @param ns      - Netscript API instance
+ * @param host    - Hostname of the target server
+ * @param spacing - Delay (ms) between batch phases
+ * @returns Expected value per RAM-second
+ */
+export function analyzeBatchThreads(
     ns: NS,
     host: string,
 ): BatchThreadAnalysis {
@@ -98,10 +106,19 @@ function analyzeBatchThreads(
     };
 }
 
-function canUseFormulas(ns): boolean {
+function canUseFormulas(ns: NS): boolean {
     return ns.fileExists("Formulas.exe", "home");
 }
 
+/** Calculate the number of grow threads needed for a given multiplicative growth factor.
+ *
+ * @remarks
+ * This function returns the total decimal number of grow threads
+ * needed in order to multiply the money available on the specified
+ * server by a given multiplier, if all threads are executed at the
+ * server's current security level, regardless of how many threads are
+ * assigned to each call.
+ */
 function growthAnalyze(ns: NS, hostname: string, afterHackMoney: number, growMultiplier: number): number {
     if (canUseFormulas(ns)) {
         let server = ns.getServer(hostname);
