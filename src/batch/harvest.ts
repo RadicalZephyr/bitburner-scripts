@@ -50,7 +50,7 @@ OPTIONS
     }
 
     let logistics = calculateBatchLogistics(ns, target);
-    ns.tprintf(
+    ns.printf(
         `%s: batch ram %s, overlap x%d => required %s\nphases: %s`,
         logistics.target,
         ns.formatRam(logistics.batchRam),
@@ -58,6 +58,11 @@ OPTIONS
         ns.formatRam(logistics.requiredRam),
         JSON.stringify(logistics.phases, undefined, 2)
     );
+
+    while (true) {
+
+        await ns.sleep(CONFIG.batchInterval);
+    }
 }
 
 interface BatchLogistics {
