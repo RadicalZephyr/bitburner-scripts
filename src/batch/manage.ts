@@ -46,19 +46,19 @@ async function readHostsFromPort(ns: NS, hostsPort: NetscriptPort, manager: Targ
             switch (nextHostMsg[0]) {
                 case MessageType.NewTarget:
                     ns.print(`new target received: ${hostname}`);
-                    monitor.pending(hostname);
+                    await monitor.pending(hostname);
                     manager.pushTarget(hostname);
                     break;
 
                 case MessageType.FinishedTilling:
                     ns.print(`${hostname} finished tilling`);
-                    monitor.sowing(hostname);
+                    await monitor.sowing(hostname);
                     await manager.finishTilling(hostname);
                     break;
 
                 case MessageType.FinishedSowing:
                     ns.print(`${hostname} finished sowing`);
-                    monitor.harvesting(hostname);
+                    await monitor.harvesting(hostname);
                     await manager.finishSowing(hostname);
                     break;
             }
