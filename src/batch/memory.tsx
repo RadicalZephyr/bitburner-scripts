@@ -36,7 +36,7 @@ Example:
 
     ns.disableLog("ALL");
     ns.ui.openTail();
-    ns.ui.moveTail(500, 0);
+    ns.ui.moveTail(230, 0);
 
     let memPort = ns.getPortHandle(MEMORY_PORT);
     let memMessageWaiting = true;

@@ -34,8 +34,8 @@ export async function main(ns: NS) {
     ns.disableLog('ALL');
     ns.clearLog();
     ns.ui.openTail();
-    ns.ui.resizeTail(800, 30 * 12);
-    ns.ui.moveTail(720, 35);
+    ns.ui.resizeTail(870, 640);
+    ns.ui.moveTail(1230, 0);
 
     const monitorPort = ns.getPortHandle(MONITOR_PORT);
     const lifecycleByHost: Map<string, Lifecycle> = new Map();

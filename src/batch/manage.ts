@@ -15,7 +15,7 @@ export async function main(ns: NS) {
     ns.disableLog("sleep");
     ns.disableLog("getHackingLevel");
     ns.ui.openTail();
-    ns.ui.moveTail(1010, 0);
+    ns.ui.moveTail(730, 0);
 
     let targetsPort = ns.getPortHandle(MANAGER_PORT);
 
