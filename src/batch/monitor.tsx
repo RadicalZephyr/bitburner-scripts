@@ -142,18 +142,18 @@ export function countThreadsByTarget(ns: NS): Map<string, TargetThreads> {
 
             let targetThread = targetThreads.get(target);
 
-            if (pi.filename === '/batch/harvest.js') {
+            if (pi.filename === 'batch/harvest.js') {
                 targetThread.harvestPids.push(pi.pid);
                 targetThread.harvestMoney = ns.getScriptIncome(pi.filename, host, ...pi.args);
-            } else if (pi.filename === '/batch/sow.js') {
+            } else if (pi.filename === 'batch/sow.js') {
                 targetThread.sowPids.push(pi.pid);
-            } else if (pi.filename === '/batch/h.js') {
+            } else if (pi.filename === 'batch/h.js') {
                 targetThread.hPid.push(pi.pid);
                 targetThread.h += pi.threads;
-            } else if (pi.filename === '/batch/g.js') {
+            } else if (pi.filename === 'batch/g.js') {
                 targetThread.gPid.push(pi.pid);
                 targetThread.g += pi.threads;
-            } else if (pi.filename === '/batch/w.js') {
+            } else if (pi.filename === 'batch/w.js') {
                 targetThread.wPid.push(pi.pid);
                 targetThread.w += pi.threads;
             }
