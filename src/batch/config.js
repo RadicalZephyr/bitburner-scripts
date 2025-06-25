@@ -11,11 +11,11 @@ class Config {
     }
 
     get batchInterval() {
-        return LocalStorage.getItem(BATCH_INTERVAL);
+        return Number(LocalStorage.getItem(BATCH_INTERVAL));
     }
 
     get maxTillTargets() {
-        return LocalStorage.getItem(MAX_TILL_TARGETS);
+        return Number(LocalStorage.getItem(MAX_TILL_TARGETS));
     }
 }
 
