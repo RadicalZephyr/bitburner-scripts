@@ -54,14 +54,14 @@ Example:
     let nextMemMessage = memPort.nextWrite().then(_ => { memMessageWaiting = true; });
 
     let memoryManager = new MemoryManager(ns);
-    printLog("starting memory manager");
+    printLog(`INFO: starting memory manager on ${ns.getHostname()}`);
     while (true) {
         if (memMessageWaiting) {
-            printLog("reading memory requests");
+            printLog("INFO: reading memory requests");
             readMemRequestsFromPort(ns, memPort, memoryManager);
             memMessageWaiting = false;
             nextMemMessage = memPort.nextWrite().then(_ => { memMessageWaiting = true; });
-            printLog("finished reading memory requests");
+            printLog("INFO: finished reading memory requests");
         }
 
         const theme = ns.ui.getTheme();
@@ -87,41 +87,64 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memoryManager: 
         let msg = nextMsg as Message;
         switch (msg[0]) {
             case MessageType.Worker:
-                let hostname = msg[1] as string
-                printLog(`got worker hostname ${hostname}`);
+                const hostname = msg[1] as string;
                 memoryManager.pushWorker(hostname);
                 break;
 
             case MessageType.Request:
-                let request = msg[1] as AllocationRequest;
-                printLog(`got mem request: ${JSON.stringify(request)}`);
-                let returnPort = request.returnPort;
-                let allocation = memoryManager.allocate(request.pid, request.chunkSize, request.numChunks, request.contiguous ?? false);
+                const request = msg[1] as AllocationRequest;
+                printLog(
+                    `INFO: request pid=${request.pid} ` +
+                    `${request.numChunks}x${ns.formatRam(request.chunkSize)} ` +
+                    `contiguous=${request.contiguous ?? false}`
+                );
+                const returnPort = request.returnPort;
+                const allocation = memoryManager.allocate(
+                    request.pid,
+                    request.chunkSize,
+                    request.numChunks,
+                    request.contiguous ?? false,
+                );
                 if (allocation) {
-                    printLog(`allocated id ${allocation.allocationId} across ${allocation.hosts.length} hosts`);
+                    printLog(
+                        `SUCCESS: allocated id ${allocation.allocationId} ` +
+                        `across ${allocation.hosts.length} hosts`
+                    );
                 } else {
-                    printLog(`allocation failed, not enough space`);
+                    printLog("WARN: allocation failed, not enough space");
                 }
                 ns.writePort(returnPort, allocation);
                 break;
 
             case MessageType.Release:
-                let [allocationId] = msg[1] as AllocationRelease;
-                printLog(`received release message for allocation ID: ${allocationId}`);
-                memoryManager.deallocate(allocationId);
+                const [allocationId] = msg[1] as AllocationRelease;
+                if (memoryManager.deallocate(allocationId)) {
+                    printLog(`SUCCESS: released allocation ${allocationId}`);
+                } else {
+                    printLog(`WARN: allocation ${allocationId} not found`);
+                }
                 break;
 
             case MessageType.ReleaseChunks:
-                let releaseInfo = msg[1] as AllocationChunksRelease;
-                printLog(`received partial release message for allocation ID: ${releaseInfo.allocationId}`);
-                const result = memoryManager.releaseChunks(releaseInfo.allocationId, releaseInfo.numChunks);
+                const releaseInfo = msg[1] as AllocationChunksRelease;
+                printLog(
+                    `INFO: release ${releaseInfo.numChunks} chunks from ` +
+                    `allocation ${releaseInfo.allocationId}`
+                );
+                const result = memoryManager.releaseChunks(
+                    releaseInfo.allocationId,
+                    releaseInfo.numChunks,
+                );
                 ns.writePort(releaseInfo.returnPort, result);
                 break;
 
             case MessageType.Claim:
-                let [claimId, pid] = msg[1] as AllocationClaim;
-                printLog(`received claim message for allocation ID: ${claimId} -> pid ${pid}`);
-                memoryManager.claimAllocation(claimId, pid);
+                const [claimId, pid] = msg[1] as AllocationClaim;
+                if (memoryManager.claimAllocation(claimId, pid)) {
+                    printLog(`INFO: claimed allocation ${claimId} for pid ${pid}`);
+                } else {
+                    printLog(`WARN: failed to claim allocation ${claimId}`);
+                }
                 break;
         }
     }
@@ -142,6 +165,10 @@ class MemoryManager {
 
     pushWorker(hostname: string) {
         this.workers.set(hostname, new Worker(this.ns, hostname));
+        printLog(
+            `INFO: registered worker ${hostname} with ` +
+            `${this.ns.formatRam(this.ns.getServerMaxRam(hostname))}`
+        );
     }
 
     getFreeRamTotal(): number {
@@ -156,6 +183,7 @@ class MemoryManager {
         for (const [id, allocation] of this.allocations.entries()) {
             if (!this.ns.isRunning(allocation.pid)) {
                 this.deallocate(id);
+                printLog(`INFO: reclaimed allocation ${id} from pid ${allocation.pid}`);
             }
         }
     }
