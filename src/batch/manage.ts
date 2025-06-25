@@ -1,6 +1,7 @@
 import type { NetscriptPort, NS } from "netscript";
 
 import { MANAGER_PORT, Message, MessageType } from "batch/client/manage";
+import { registerAllocationOwnership } from "./client/memory";
 import { MonitorClient } from "batch/client/monitor";
 
 import { CONFIG } from "batch/config";
@@ -10,6 +11,20 @@ import { readAllFromPort } from "util/ports";
 
 
 export async function main(ns: NS) {
+    const flags = ns.flags([
+        ['allocation-id', -1],
+    ]);
+
+    let allocationId = flags['allocation-id'];
+    if (allocationId !== -1) {
+        if (typeof allocationId !== 'number') {
+            ns.tprint('--allocation-id must be a number');
+            return;
+        }
+        registerAllocationOwnership(ns, allocationId, "self");
+    }
+
+
     ns.disableLog("ALL");
     ns.ui.openTail();
     ns.ui.moveTail(730, 0);

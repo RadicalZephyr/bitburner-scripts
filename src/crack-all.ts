@@ -3,8 +3,7 @@ import type { NS } from "netscript";
 import { HOSTS_BY_PORTS_REQUIRED, TARGETS_BY_PORTS_REQUIRED } from "all-hosts";
 
 import { ManagerClient } from "batch/client/manage";
-
-import { MemoryClient } from "batch/client/memory";
+import { MemoryClient, registerAllocationOwnership } from "batch/client/memory";
 
 const HACKING_FILES = [
     "/all-hosts.js",
@@ -22,7 +21,22 @@ const HACKING_FILES = [
 
 const NUKED_FILE = "nuked.js";
 
+
 export async function main(ns: NS) {
+    const flags = ns.flags([
+        ['allocation-id', -1],
+    ]);
+
+    let allocationId = flags['allocation-id'];
+    if (allocationId !== -1) {
+        if (typeof allocationId !== 'number') {
+            ns.tprint('--allocation-id must be a number');
+            return;
+        }
+        registerAllocationOwnership(ns, allocationId, "self");
+    }
+
+
     ns.disableLog("ALL");
     ns.clearLog();
 

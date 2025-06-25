@@ -3,15 +3,18 @@ import type { NS, UserInterfaceTheme } from "netscript";
 import { ALL_HOSTS } from "all-hosts";
 
 import { Lifecycle, Message as MonitorMessage } from "batch/client/monitor";
+import { registerAllocationOwnership } from "./client/memory";
 
-import { readAllFromPort, MONITOR_PORT } from "util/ports";
 import { CONFIG } from "batch/config";
 import { expectedValuePerRamSecond } from "batch/expected_value";
+import { readAllFromPort, MONITOR_PORT } from "util/ports";
+
 
 declare const React: any;
 
 export async function main(ns: NS) {
     const flags = ns.flags([
+        ['allocation-id', -1],
         ['refreshrate', 200],
         ['help', false],
     ]);
@@ -32,6 +35,17 @@ Example:
 `);
         return;
     }
+
+    let allocationId = flags['allocation-id'];
+    if (allocationId !== -1) {
+        if (typeof allocationId !== 'number') {
+            ns.tprint('--allocation-id must be a number');
+            return;
+        }
+        registerAllocationOwnership(ns, allocationId, "self");
+    }
+
+
     ns.disableLog('ALL');
     ns.clearLog();
     ns.ui.openTail();
