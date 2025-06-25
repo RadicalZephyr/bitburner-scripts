@@ -2,6 +2,35 @@ import type { AutocompleteData, NS, RunOptions, ScriptArg } from "netscript";
 
 import { MemoryClient } from "./client/memory";
 
+function resolveImport(base: string, importPath: string): string {
+    if (!importPath.endsWith(".js")) {
+        importPath += ".js";
+    }
+    if (importPath.startsWith("./")) {
+        const idx = base.lastIndexOf("/");
+        const dir = idx >= 0 ? base.slice(0, idx + 1) : "";
+        return dir + importPath.slice(2);
+    } else if (importPath.startsWith("/")) {
+        return importPath;
+    }
+    return "/" + importPath;
+}
+
+function collectDependencies(ns: NS, file: string, visited = new Set<string>()): Set<string> {
+    if (visited.has(file)) return visited;
+    visited.add(file);
+    const content = ns.read(file);
+    if (typeof content === "string" && content.length > 0) {
+        const regex = /import.*? from "(.*?)";/g;
+        let match: RegExpExecArray | null;
+        while ((match = regex.exec(content)) !== null) {
+            const dep = resolveImport(file, match[1]);
+            collectDependencies(ns, dep, visited);
+        }
+    }
+    return visited;
+}
+
 export function autocomplete(data: AutocompleteData, args: string[]): string[] {
     return data.scripts;
 }
@@ -81,6 +110,7 @@ export async function launch(ns: NS, script: string, threadOrOptions?: number | 
 
     let allocation = await client.requestTransferableAllocation(scriptRam, totalThreads);
 
+    let dependencies = Array.from(collectDependencies(ns, script));
     let pids = [];
     for (const allocationChunk of allocation.allocatedChunks) {
         let hostname = allocationChunk.hostname;
@@ -88,7 +118,7 @@ export async function launch(ns: NS, script: string, threadOrOptions?: number | 
 
         if (isNaN(threadsHere)) continue;
 
-        ns.scp(script, hostname);
+        ns.scp(dependencies, hostname);
         let execArgs = allocationFlag ? [allocationFlag, allocation.allocationId, ...args] : args;
         let pid = ns.exec(script, hostname, threadsHere, ...execArgs);
         if (!pid) {
