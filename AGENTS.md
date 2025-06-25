@@ -13,6 +13,32 @@
 - Only work on code in the `src` directory.
 - When building UI elements always use colors from the theme, which
   can be retrieved with `ns.ui.getTheme()`.
+
+### Logging Tips
+
+- Prefer to format logging calls using `ns.print()` and passing in an
+  interpolation string.
+
+You can color code messages passed to `ns.print` by prefixing your
+string with one of these strings:
+
+- `"ERROR: "`: The whole string will be printed in red. Use this prefix to indicate
+  that an error has occurred.
+
+- `"SUCCESS: "`: The whole string will be printed in green, similar to the default
+  theme of the Terminal. Use this prefix to indicate that something is correct.
+
+- `"WARN: "`: The whole string will be printed in yellow. Use this prefix to
+  indicate that you or a user of your script should be careful of something.
+
+- `"INFO: "`: The whole string will be printed in purplish blue. Use this prefix to
+  remind yourself or a user of your script of something. Think of this prefix as
+  indicating an FYI (for your information).
+
+
+
+### Formatting Tips
+
 - Always format RAM values with `ns.formatRam()`
 - Always format time values with `ns.tFormat()`
 - Always format percentage values with `ns.formatPercent()`
