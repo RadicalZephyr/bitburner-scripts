@@ -2,7 +2,7 @@ alias get-bootstrap="wget https://raw.githubusercontent.com/RadicalZephyr/bitbur
 alias bootstrap="run bootstrap.js"
 
 alias crack="run BruteSSH.exe ; run FTPCrack.exe ; run HTTPWorm.exe ; run relaySMTP.exe ; run SQLInject.exe ; run NUKE.exe"
-alias whereis="run whereis.js"
+alias whereis="run whereis.js --ram-override 3.9"
 
 alias peek="scan-analyze 3"
 alias see="scan-analyze 5"

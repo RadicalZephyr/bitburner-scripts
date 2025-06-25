@@ -6,8 +6,16 @@ export function autocomplete(data: AutocompleteData, args: string[]): string[] {
     return data.servers;
 }
 
+declare global {
+    interface Global {
+        document: any;
+    }
+    var globalThis: Global;
+}
+
 export async function main(ns: NS) {
     const flags = ns.flags([
+        ['goto', false],
         ['startingHost', 'home'],
         ['help', false],
     ]);
@@ -25,6 +33,7 @@ Example:
 OPTIONS
   --help           Show this help message
   --startingHost   The host to start the search from
+  --goto           If sufficient RAM is available (+25GB) send player to SERVER_NAME
 `);
         return;
     }
@@ -68,10 +77,25 @@ OPTIONS
     if (S[0] == flags.startingHost) {
         S.shift();
     }
-    ns.tprintf("path to %s:\n  go %s",
-        goalHost,
-        S.join(" ; go ")
-    );
+
+    const goCommand = `go ${S.join(" ; go ")}`;
+
+    if (flags.goto && ns.ramOverride(28.9)) {
+        // Acquire a reference to the terminal text field
+        const terminalInput: any = globalThis.document.getElementById("terminal-input");
+        terminalInput.value = goCommand;
+
+        // Get a reference to the React event handler.
+        const handler = Object.keys(terminalInput)[1];
+
+        // Perform an onChange event to set some internal values.
+        terminalInput[handler].onChange({ target: terminalInput });
+
+        // Simulate an enter press
+        terminalInput[handler].onKeyDown({ key: 'Enter', preventDefault: (): void => null });
+    } else {
+        ns.tprintf(`path to ${goalHost}:\n ${goCommand}`);
+    }
 }
 
 /** Find the shortest paths from all hosts to the source host.
