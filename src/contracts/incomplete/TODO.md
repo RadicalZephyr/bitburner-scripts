@@ -1,0 +1,6 @@
+- [x] Review the puzzle description in `Spiralize-Matrix.ts` to understand expected behaviour.
+- [x] Add a `solve(data: number[][])` implementation that returns the matrix in spiral order.
+- [x] Use boundary indices (top, bottom, left, right) to iterate through the matrix.
+- [x] Include doc comments for the new function.
+- [x] Test `solve` using the example from the block comment and ensure it matches the expected output.
+- [x] Run `npm run build` to make sure the code compiles without TypeScript errors.

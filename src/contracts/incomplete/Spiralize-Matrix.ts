@@ -59,6 +59,44 @@ export async function main(ns: NS) {
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
 
-function solve(data: any): any {
-    return null;
+/**
+ * Return the elements of the matrix in spiral order.
+ *
+ * @param data - 2D array representing the matrix
+ */
+function solve(data: number[][]): number[] {
+    const rows = data.length;
+    if (rows === 0) return [];
+    const cols = data[0].length;
+
+    const result: number[] = [];
+    let top = 0;
+    let bottom = rows - 1;
+    let left = 0;
+    let right = cols - 1;
+
+    while (top <= bottom && left <= right) {
+        for (let col = left; col <= right; col++) {
+            result.push(data[top][col]);
+        }
+        top++;
+        for (let row = top; row <= bottom; row++) {
+            result.push(data[row][right]);
+        }
+        right--;
+        if (top <= bottom) {
+            for (let col = right; col >= left; col--) {
+                result.push(data[bottom][col]);
+            }
+            bottom--;
+        }
+        if (left <= right) {
+            for (let row = bottom; row >= top; row--) {
+                result.push(data[row][left]);
+            }
+            left++;
+        }
+    }
+
+    return result;
 }
