@@ -99,12 +99,10 @@ export class TargetThreads {
     w: number;
     wPid: number[];
 
-    mMoney: number;
-    milking: boolean;
-    mPid: number[];
+    harvestMoney: number;
+    harvestPids: number[];
 
-    building: boolean;
-    bPid: number[];
+    sowPids: number[];
 
     constructor() {
         this.h = 0;
@@ -116,12 +114,10 @@ export class TargetThreads {
         this.w = 0;
         this.wPid = [];
 
-        this.mMoney = 0;
-        this.milking = false;
-        this.mPid = [];
+        this.harvestMoney = 0;
+        this.harvestPids = [];
 
-        this.building = false;
-        this.bPid = [];
+        this.sowPids = [];
     }
 }
 
@@ -140,12 +136,10 @@ export function countThreadsByTarget(ns: NS): Map<string, TargetThreads> {
             let targetThread = targetThreads.get(target);
 
             if (pi.filename === '/batch/harvest.js') {
-                targetThread.milking = true;
-                targetThread.mPid.push(pi.pid);
-                targetThread.mMoney = ns.getScriptIncome(pi.filename, host, ...pi.args);
+                targetThread.harvestPids.push(pi.pid);
+                targetThread.harvestMoney = ns.getScriptIncome(pi.filename, host, ...pi.args);
             } else if (pi.filename === '/batch/sow.js') {
-                targetThread.building = true;
-                targetThread.bPid.push(pi.pid);
+                targetThread.sowPids.push(pi.pid);
             } else if (pi.filename === '/batch/h.js') {
                 targetThread.hPid.push(pi.pid);
                 targetThread.h += pi.threads;
@@ -184,7 +178,7 @@ export function hostInfo(ns: NS, target: string, targetThreads: TargetThreads, l
     const moneyPercent = moneyPercentage(ns, target) * 100;
     const secPlus = sec - minSec;
 
-    const milkMoney = targetThreads.mMoney;
+    const milkMoney = targetThreads.harvestMoney;
 
     return {
         name: target,
