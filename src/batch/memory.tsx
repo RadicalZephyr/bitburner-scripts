@@ -423,7 +423,7 @@ function LogDisplay({ lines, theme }: LogDisplayProps) {
         if (line.startsWith("SUCCESS:")) return theme.success;
         if (line.startsWith("WARN:")) return theme.warning;
         if (line.startsWith("INFO:")) return theme.info;
-        return undefined;
+        return theme.success;
     };
 
     return (
