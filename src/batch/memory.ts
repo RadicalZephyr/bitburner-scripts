@@ -45,6 +45,11 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memoryManager: 
                 ns.printf("got mem request: %s", JSON.stringify(request));
                 let returnPort = request.returnPort;
                 let allocation = memoryManager.allocate(request.pid, request.chunkSize, request.numChunks, request.contiguous ?? false);
+                if (allocation) {
+                    ns.printf("allocated id %d across %d hosts", allocation.allocationId, allocation.hosts.length)
+                } else {
+                    ns.printf("allocation failed, not enough space");
+                }
                 ns.writePort(returnPort, allocation);
                 break;
 
