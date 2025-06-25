@@ -1,5 +1,13 @@
 # Contributor Guide
 
+## Development instructions
+
+- After you finish coding a feature look at the code you generated for
+  possible refactorings you could do to improve the code clarity and
+  structure.
+- Always include doc comments for exported functions (except the main
+  and autocomplete functions).
+
 ## Dev Environment Tips
 
 - Only work on code in the `src` directory.
