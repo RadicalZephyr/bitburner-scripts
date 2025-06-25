@@ -17,8 +17,8 @@ export async function main(ns: NS) {
 
     let targetsPort = ns.getPortHandle(MANAGER_PORT);
 
-    let manager = new TargetSelectionManager(ns);
     let monitor = new MonitorClient(ns);
+    let manager = new TargetSelectionManager(ns, monitor);
 
     let hostsMessagesWaiting = true;
 
@@ -66,6 +66,8 @@ async function readHostsFromPort(ns: NS, hostsPort: NetscriptPort, manager: Targ
 
 class TargetSelectionManager {
     ns: NS;
+    monitor: MonitorClient;
+
     tillTargets: Set<string>;
     sowTargets: Set<string>;
     harvestTargets: Set<string>;
@@ -75,12 +77,15 @@ class TargetSelectionManager {
     hackHistory: { time: number, level: number }[];
     velocity: number;
 
-    constructor(ns: NS) {
+    constructor(ns: NS, monitor: MonitorClient) {
         this.ns = ns;
+        this.monitor = monitor;
+
+        this.pendingTargets = [];
         this.tillTargets = new Set();
         this.sowTargets = new Set();
         this.harvestTargets = new Set();
-        this.pendingTargets = [];
+
         this.hackHistory = [];
         this.velocity = 0;
     }
@@ -134,6 +139,7 @@ class TargetSelectionManager {
             this.ns.print(`INFO: launching till on ${target}`);
             await launch(this.ns, "/batch/till.js", { threads: 1, allocationFlag: "--allocation-id" }, target);
             this.tillTargets.add(target);
+            await this.monitor.tilling(target);
         }
     }
 
