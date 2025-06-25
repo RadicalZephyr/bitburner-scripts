@@ -73,6 +73,7 @@ Example:
             </div>
         );
         if (ns.self().onlineRunningTime % 1000 == 0) {
+            memoryManager.updateReserved();
             memoryManager.cleanupTerminated();
         }
         await ns.sleep(refreshRate);
@@ -154,6 +155,17 @@ class MemoryManager {
             if (!this.ns.isRunning(allocation.pid)) {
                 this.deallocate(id);
             }
+        }
+    }
+
+    /**
+     * Refresh the reserved RAM on each worker host.
+     */
+    updateReserved(): void {
+        for (const worker of this.workers.values()) {
+            const actual = this.ns.getServerUsedRam(worker.hostname);
+            const diff = actual - worker.allocatedRam;
+            worker.reservedRam = diff > 0 ? diff : 0;
         }
     }
 
