@@ -1,6 +1,7 @@
 import type { AutocompleteData, NS } from "netscript";
 import { launch } from "batch/launch";
 import { registerAllocationOwnership } from "/batch/client/memory";
+import { ManagerClient } from "./client/manage";
 
 const GROW_SCRIPT = "/batch/g.js";
 const WEAKEN_SCRIPT = "/batch/w.js";
@@ -49,6 +50,7 @@ OPTIONS
         return;
     }
 
+    let managerClient = new ManagerClient(ns);
 
     let growThreads = neededGrowThreads(ns, target);
     let growSecDelta = ns.growthAnalyzeSecurity(growThreads, target);
@@ -57,6 +59,7 @@ OPTIONS
     if (growThreads < 1 || weakenThreads < 1) {
         ns.printf(`no need to sow ${target}`);
         ns.toast(`finished sowing ${target}!`, "success");
+        managerClient.finishedSowing(target);
         return;
     }
 
@@ -88,6 +91,7 @@ Elapsed time:  ${ns.tFormat(selfScript.onlineRunningTime * 1000)}
 
     ns.ui.closeTail();
     ns.toast(`finished sowing ${target}!`, "success");
+    managerClient.finishedSowing(target);
 }
 
 function neededGrowThreads(ns: NS, target: string) {

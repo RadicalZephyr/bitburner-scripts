@@ -2,6 +2,7 @@ import type { AutocompleteData, NS } from "netscript";
 
 import { launch } from "/batch/launch";
 import { registerAllocationOwnership } from "/batch/client/memory";
+import { ManagerClient } from "./client/manage";
 
 export function autocomplete(data: AutocompleteData, _args: string[]): string[] {
     return data.servers;
@@ -46,12 +47,14 @@ OPTIONS
         return;
     }
 
+    let managerClient = new ManagerClient(ns);
 
     let threads = calculateWeakenThreads(ns, target);
 
     if (threads == 0 || isNaN(threads)) {
         ns.printf("%s security is already at minimum level", target);
         ns.toast(`finished tilling ${target}!`, "success");
+        managerClient.finishedTilling(target);
         return;
     }
 
@@ -79,6 +82,7 @@ Elapsed time:  ${ns.tFormat(selfScript.onlineRunningTime * 1000)}
 
     ns.ui.closeTail();
     ns.toast(`finished tilling ${target}!`, "success");
+    managerClient.finishedTilling(target);
 }
 
 function calculateWeakenThreads(ns: NS, target: string): number {
