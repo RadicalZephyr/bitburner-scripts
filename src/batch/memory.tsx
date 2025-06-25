@@ -92,7 +92,8 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memoryManager: 
             case MessageType.ReleaseChunks:
                 let releaseInfo = msg[1] as AllocationChunksRelease;
                 ns.printf("received partial release message for allocation ID: %d", releaseInfo.allocationId);
-                memoryManager.releaseChunks(releaseInfo.allocationId, releaseInfo.numChunks);
+                const result = memoryManager.releaseChunks(releaseInfo.allocationId, releaseInfo.numChunks);
+                ns.writePort(releaseInfo.returnPort, result);
                 break;
 
             case MessageType.Claim:
@@ -199,9 +200,9 @@ class MemoryManager {
         return true;
     }
 
-    releaseChunks(id: number, numChunks: number): boolean {
+    releaseChunks(id: number, numChunks: number): AllocationResult | null {
         const allocation = this.allocations.get(id);
-        if (!allocation) return false;
+        if (!allocation) return null;
 
         let remaining = numChunks;
         const chunks = [...allocation.chunks].sort((a, b) => {
@@ -224,9 +225,10 @@ class MemoryManager {
         allocation.chunks = allocation.chunks.filter(c => c.numChunks > 0);
         if (allocation.chunks.length === 0) {
             this.allocations.delete(id);
+            return null;
         }
 
-        return true;
+        return allocation.asAllocationResult();
     }
 
     claimAllocation(id: number, pid: number): boolean {

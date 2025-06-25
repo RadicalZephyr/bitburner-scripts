@@ -38,6 +38,7 @@ export type AllocationClaim = [
 export interface AllocationChunksRelease {
     allocationId: number,
     numChunks: number,
+    returnPort: number,
 }
 
 export interface HostAllocation {
@@ -114,9 +115,21 @@ export class MemoryClient {
         return result.allocatedChunks;
     }
 
-    async releaseChunks(allocationId: number, numChunks: number) {
-        const payload: AllocationChunksRelease = { allocationId, numChunks };
+    async releaseChunks(allocationId: number, numChunks: number): Promise<AllocationResult> {
+        const returnPortId = MEMORY_PORT + this.ns.pid;
+        const returnPort = this.ns.getPortHandle(returnPortId);
+
+        const payload: AllocationChunksRelease = {
+            allocationId,
+            numChunks,
+            returnPort: returnPortId,
+        };
+
         await this.sendMessage(MessageType.ReleaseChunks, payload);
+        await returnPort.nextWrite();
+        const result = returnPort.read();
+        if (!result) return null;
+        return result as AllocationResult;
     }
 
     private async sendMessage(type: MessageType, payload: Payload) {
