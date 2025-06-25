@@ -25,12 +25,7 @@ Example:
         ns.tprint("this key isn't a string");
         return;
     }
-
     let value = rest[1];
-    if (typeof value !== 'string') {
-        ns.tprint("value isn't a string");
-        return;
-    }
 
     LocalStorage.setItem(key, value);
 }
