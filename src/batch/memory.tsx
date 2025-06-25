@@ -113,9 +113,11 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memoryManager: 
                 break;
 
             case MessageType.Release:
-                let [allocationId] = msg[1] as AllocationRelease;
-                printLog(`received release message for allocation ID: ${allocationId}`);
-                memoryManager.deallocate(allocationId);
+                const release = msg[1] as AllocationRelease;
+                printLog(
+                    `received release message for allocation ID: ${release.allocationId} from pid ${release.pid}`,
+                );
+                memoryManager.deallocate(release.allocationId, release.pid, release.hostname);
                 break;
 
             case MessageType.ReleaseChunks:
@@ -170,7 +172,7 @@ class MemoryManager {
     cleanupTerminated(): void {
         for (const [id, allocation] of this.allocations.entries()) {
             for (const claim of [...allocation.claims]) {
-                if (!this.ns.isRunning(claim.pid)) {
+                if (!this.ns.isRunning(claim.pid, claim.hostname)) {
                     this._releaseClaim(allocation, claim);
                 }
             }
@@ -227,9 +229,20 @@ class MemoryManager {
         return allocation.asAllocationResult();
     }
 
-    deallocate(id: number): boolean {
+    deallocate(id: number, pid?: number, hostname?: string): boolean {
         const allocation = this.allocations.get(id);
         if (!allocation) return false;
+
+        if (pid !== undefined) {
+            for (const claim of [...allocation.claims]) {
+                if (claim.pid === pid && claim.hostname === hostname) {
+                    this._releaseClaim(allocation, claim);
+                }
+            }
+            if (allocation.claims.length > 0) {
+                return true;
+            }
+        }
 
         for (const chunk of allocation.chunks) {
             const worker = this.workers.get(chunk.hostname);
@@ -243,11 +256,11 @@ class MemoryManager {
         return true;
     }
 
-    releaseChunks(id: number, numChunks: number): AllocationResult | null {
+    releaseChunks(id: number, numChunks: number, pid?: number, hostname?: string): AllocationResult | null {
         const allocation = this.allocations.get(id);
         if (!allocation) return null;
 
-        this._reduceClaims(allocation, numChunks);
+        this._reduceClaims(allocation, numChunks, pid, hostname);
         this._freeChunks(allocation, numChunks);
 
         if (allocation.chunks.length === 0) {
@@ -273,14 +286,23 @@ class MemoryManager {
     }
 
     private _releaseClaim(allocation: Allocation, claim: AllocationClaimRecord) {
-        this._reduceClaims(allocation, claim.numChunks, claim.pid);
+        this._reduceClaims(allocation, claim.numChunks, claim.pid, claim.hostname);
         this._freeChunks(allocation, claim.numChunks);
     }
 
-    private _reduceClaims(allocation: Allocation, numChunks: number, pid?: number) {
+    private _reduceClaims(
+        allocation: Allocation,
+        numChunks: number,
+        pid?: number,
+        hostname?: string,
+    ) {
         let remaining = numChunks;
         for (const c of [...allocation.claims]) {
-            if (pid !== undefined && c.pid !== pid) continue;
+            if (
+                pid !== undefined &&
+                (c.pid !== pid || (hostname !== undefined && c.hostname !== hostname))
+            )
+                continue;
             if (remaining <= 0) break;
             const toRemove = Math.min(remaining, c.numChunks);
             c.numChunks -= toRemove;

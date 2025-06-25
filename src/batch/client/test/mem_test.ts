@@ -23,8 +23,12 @@ export async function main(ns: NS) {
                         });
                         break;
                     case MessageType.Release:
-                        let [allocationId] = msg[1] as AllocationRelease;
-                        ns.tprintf("received release message for allocation ID: %d", allocationId);
+                        const release = msg[1] as AllocationRelease;
+                        ns.tprintf(
+                            "received release message for allocation ID: %d from pid %d",
+                            release.allocationId,
+                            release.pid,
+                        );
                         break;
                     case MessageType.Claim:
                         const claim = msg[1] as AllocationClaim;

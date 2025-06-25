@@ -116,6 +116,15 @@ Multiple claims can reference the same allocation. The MemoryManager keeps
 track of each process that owns part of an allocation and frees only the
 released portion when a script exits.
 
+*** AllocationRelease (from running script to MemoryManager)
+# +BEGIN_SRC typescript
+interface AllocationRelease {
+  allocationId: number;
+  pid: number;
+  hostname: string;
+}
+# +END_SRC
+
 *** LifecycleStatus (to TargetSelectionManager)
 #+BEGIN_SRC typescript
 interface LifecycleStatusMessage {

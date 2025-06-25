@@ -31,9 +31,11 @@ export interface AllocationRequest {
     contiguous?: boolean,
 }
 
-export type AllocationRelease = [
-    allocationId: number
-];
+export interface AllocationRelease {
+    allocationId: number;
+    pid: number;
+    hostname: string;
+}
 
 export interface AllocationClaim {
     allocationId: number;
@@ -162,7 +164,12 @@ export function registerAllocationOwnership(ns: NS, allocationId: number, name: 
     };
     ns.writePort(MEMORY_PORT, [MessageType.Claim, claim]);
     ns.atExit(() => {
-        ns.writePort(MEMORY_PORT, [MessageType.Release, [allocationId]]);
+        const release: AllocationRelease = {
+            allocationId,
+            pid: self.pid,
+            hostname: self.server,
+        };
+        ns.writePort(MEMORY_PORT, [MessageType.Release, release]);
     }, "memoryRelease" + name);
 }
 
