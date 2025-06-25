@@ -192,7 +192,7 @@ export function hostInfo(ns: NS, target: string, targetThreads: TargetThreads, l
         moneyPerLevel: "$" + ns.formatNumber(money / hckLevel, 2),
         hckLevel: ns.formatNumber(hckLevel, 0, 1000000, true),
         maxMoney: "$" + ns.formatNumber(money, 2),
-        moneyPercent: Math.abs(moneyPercent - 100) < 0.1 ? '100.0%' : ns.formatNumber(moneyPercent / 100, 2) + "%",
+        moneyPercent: Math.abs(moneyPercent - 100) < 0.1 ? '100.0%' : ns.formatPercent(moneyPercent / 100) + "%",
         secPlus: Math.abs(secPlus) < 0.1 ? '+0.0' : "+" + ns.formatNumber(secPlus, 2),
         threadsH: formatThreads(ns, targetThreads.h),
         threadsG: formatThreads(ns, targetThreads.g),
