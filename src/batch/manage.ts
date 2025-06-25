@@ -25,7 +25,7 @@ export async function main(ns: NS) {
 
     while (true) {
         if (hostsMessagesWaiting) {
-            readHostsFromPort(ns, targetsPort, manager, monitor);
+            await readHostsFromPort(ns, targetsPort, manager, monitor);
             hostsMessagesWaiting = false;
 
             targetsPort.nextWrite().then(_ => {
@@ -37,7 +37,7 @@ export async function main(ns: NS) {
     }
 }
 
-function readHostsFromPort(ns: NS, hostsPort: NetscriptPort, manager: TargetSelectionManager, monitor: MonitorClient) {
+async function readHostsFromPort(ns: NS, hostsPort: NetscriptPort, manager: TargetSelectionManager, monitor: MonitorClient) {
     for (let nextMsg of readAllFromPort(ns, hostsPort)) {
         if (typeof nextMsg === "object") {
             let nextHostMsg = nextMsg as Message;
@@ -52,13 +52,13 @@ function readHostsFromPort(ns: NS, hostsPort: NetscriptPort, manager: TargetSele
                 case MessageType.FinishedTilling:
                     ns.print(`${hostname} finished tilling`);
                     monitor.sowing(hostname);
-                    manager.finishTilling(hostname);
+                    await manager.finishTilling(hostname);
                     break;
 
                 case MessageType.FinishedSowing:
                     ns.print(`${hostname} finished sowing`);
                     monitor.harvesting(hostname);
-                    manager.finishSowing(hostname);
+                    await manager.finishSowing(hostname);
                     break;
             }
         }
@@ -118,28 +118,28 @@ class TargetSelectionManager {
         return [this.pendingTargets.shift()];
     }
 
-    tillNewTargets() {
+    async tillNewTargets() {
         if (this.tillTargets.size >= CONFIG.maxTillTargets) return;
 
         const toTill = this.readyToTillTargets();
         for (const target of toTill) {
             this.ns.print(`tilling ${target}`);
-            launch(this.ns, "/batch/till.js", 1, "--allocation-id", target);
+            await launch(this.ns, "/batch/till.js", 1, "--allocation-id", target);
             this.tillTargets.add(target);
         }
     }
 
-    finishTilling(hostname: string) {
+    async finishTilling(hostname: string) {
         this.tillTargets.delete(hostname);
         this.ns.print(`tilling ${hostname}`);
-        launch(this.ns, "/batch/sow.js", 1, "--allocation-id", hostname);
+        await launch(this.ns, "/batch/sow.js", 1, "--allocation-id", hostname);
         this.sowTargets.add(hostname);
     }
 
-    finishSowing(hostname: string) {
+    async finishSowing(hostname: string) {
         this.sowTargets.delete(hostname)
         this.ns.print(`harvesting ${hostname}`);
-        launch(this.ns, "/batch/harvest.js", 1, "--allocation-id", hostname);
+        await launch(this.ns, "/batch/harvest.js", 1, "--allocation-id", hostname);
         this.harvestTargets.add(hostname);
     }
 
@@ -167,5 +167,5 @@ class TargetSelectionManager {
 async function tick(ns: NS, manager: TargetSelectionManager) {
     manager.updateVelocity();
 
-    manager.tillNewTargets();
+    await manager.tillNewTargets();
 }
