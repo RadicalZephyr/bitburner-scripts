@@ -10,7 +10,12 @@ export enum MessageType {
     ReleaseChunks,
 }
 
-type Payload = string | AllocationRequest | AllocationRelease | AllocationClaim | AllocationChunksRelease;
+type Payload =
+    | string
+    | AllocationRequest
+    | AllocationRelease
+    | AllocationClaim
+    | AllocationChunksRelease;
 
 export type Message = [
     type: MessageType,
@@ -26,14 +31,20 @@ export interface AllocationRequest {
     contiguous?: boolean,
 }
 
-export type AllocationRelease = [
-    allocationId: number
-];
+export interface AllocationRelease {
+    allocationId: number;
+    pid: number;
+    hostname: string;
+}
 
-export type AllocationClaim = [
-    allocationId: number,
-    pid: number,
-];
+export interface AllocationClaim {
+    allocationId: number;
+    pid: number;
+    hostname: string;
+    filename: string;
+    chunkSize: number;
+    numChunks: number;
+}
 
 export interface AllocationChunksRelease {
     allocationId: number,
@@ -166,11 +177,34 @@ export class MemoryClient {
     }
 }
 
-export function registerAllocationOwnership(ns: NS, allocationId: number, name: string = "") {
-    ns.writePort(MEMORY_PORT, [MessageType.Claim, [allocationId, ns.pid]]);
-    ns.print(`INFO: claiming allocation ${allocationId}`);
+export function registerAllocationOwnership(
+    ns: NS,
+    allocationId: number,
+    name: string = "",
+) {
+    const self = ns.self();
+    const claim: AllocationClaim = {
+        allocationId: allocationId,
+        pid: self.pid,
+        hostname: self.server,
+        filename: self.filename,
+        chunkSize: self.ramUsage,
+        numChunks: self.threads,
+    };
+    ns.writePort(MEMORY_PORT, [MessageType.Claim, claim]);
+    ns.print(
+        `INFO: claiming allocation ${allocationId} ` +
+        `pid=${claim.pid} host=${claim.hostname} ` +
+        `${claim.numChunks}x${ns.formatRam(claim.chunkSize)} ` +
+        `${claim.filename}`,
+    );
     ns.atExit(() => {
-        ns.writePort(MEMORY_PORT, [MessageType.Release, [allocationId]]);
+        const release: AllocationRelease = {
+            allocationId: allocationId,
+            pid: self.pid,
+            hostname: self.server,
+        };
+        ns.writePort(MEMORY_PORT, [MessageType.Release, release]);
     }, "memoryRelease" + name);
 }
 

@@ -67,7 +67,33 @@ interface AllocationResult {
 }
 #+END_SRC
 
-Messages to the manager are `[MessageType, hostname]` where the type is `NewTarget`, `FinishedTilling` or `FinishedSowing`.
+*** AllocationClaim (from worker script to MemoryManager)
+#+BEGIN_SRC typescript
+interface AllocationClaim {
+  allocationId: number;
+  pid: number;
+  hostname: string;
+  filename: string;
+  chunkSize: number;
+  numChunks: number;
+}
+#+END_SRC
+
+*** AllocationRelease (from worker script to MemoryManager)
+#+BEGIN_SRC typescript
+interface AllocationRelease {
+  allocationId: number;
+  pid: number;
+  hostname: string;
+}
+#+END_SRC
+MemoryManager tracks multiple claims per allocation. When a script
+exits or sends an AllocationRelease, only the claimed portion is
+released.
+
+Messages to the manager are `[MessageType, hostname]` where the type
+is `NewTarget`, `FinishedTilling` or `FinishedSowing`.
+
 
 ** Future Enhancements
 

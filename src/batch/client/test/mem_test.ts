@@ -1,6 +1,13 @@
 import type { NS } from "netscript";
 
-import { AllocationClaim, AllocationRelease, AllocationRequest, MEMORY_PORT, Message, MessageType } from "/batch/client/memory";
+import {
+    AllocationClaim,
+    AllocationRelease,
+    AllocationRequest,
+    MEMORY_PORT,
+    Message,
+    MessageType,
+} from "/batch/client/memory";
 
 import { readAllFromPort } from "/util/ports";
 
@@ -23,12 +30,22 @@ export async function main(ns: NS) {
                         });
                         break;
                     case MessageType.Release:
-                        let [allocationId] = msg[1] as AllocationRelease;
-                        ns.tprintf("received release message for allocation ID: %d", allocationId);
+                        const rel = msg[1] as AllocationRelease;
+                        ns.tprintf(
+                            "received release message for allocation ID: %d pid:%d host:%s",
+                            rel.allocationId,
+                            rel.pid,
+                            rel.hostname,
+                        );
                         break;
                     case MessageType.Claim:
-                        let [claimId, pid] = msg[1] as AllocationClaim;
-                        ns.tprintf("received claim message for allocation ID: %d -> pid %d", claimId, pid);
+                        const claim = msg[1] as AllocationClaim;
+                        ns.tprintf(
+                            "received claim message for allocation ID: %d -> pid %d host %s",
+                            claim.allocationId,
+                            claim.pid,
+                            claim.hostname,
+                        );
                         break;
 
                 }

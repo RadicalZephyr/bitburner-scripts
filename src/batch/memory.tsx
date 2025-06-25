@@ -1,10 +1,28 @@
 import type { NS, NetscriptPort, UserInterfaceTheme } from "netscript";
 
-import { AllocationClaim, AllocationRelease, AllocationRequest, AllocationResult, HostAllocation, MEMORY_PORT, Message, MessageType, AllocationChunksRelease } from "batch/client/memory";
+import {
+    AllocationClaim,
+    AllocationRelease,
+    AllocationRequest,
+    AllocationResult,
+    HostAllocation,
+    MEMORY_PORT,
+    Message,
+    MessageType,
+    AllocationChunksRelease,
+} from "batch/client/memory";
 
 import { readAllFromPort } from "util/ports";
 
 let printLog: (msg: string) => void;
+
+interface ClaimInfo {
+    pid: number;
+    hostname: string;
+    filename: string;
+    chunkSize: number;
+    numChunks: number;
+}
 
 declare const React: any;
 
@@ -118,11 +136,16 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memoryManager: 
                 break;
 
             case MessageType.Release:
-                const [allocationId] = msg[1] as AllocationRelease;
-                if (memoryManager.deallocate(allocationId)) {
-                    printLog(`SUCCESS: released allocation ${allocationId}`);
+                const release = msg[1] as AllocationRelease;
+                if (memoryManager.deallocate(release.allocationId, release.pid, release.hostname)) {
+                    printLog(
+                        `SUCCESS: released allocation ${release.allocationId} ` +
+                        `pid=${release.pid} host=${release.hostname}`
+                    );
                 } else {
-                    printLog(`WARN: allocation ${allocationId} not found`);
+                    printLog(
+                        `WARN: allocation ${release.allocationId} not found for pid ${release.pid}`
+                    );
                 }
                 break;
 
@@ -140,11 +163,16 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memoryManager: 
                 break;
 
             case MessageType.Claim:
-                const [claimId, pid] = msg[1] as AllocationClaim;
-                if (memoryManager.claimAllocation(claimId, pid)) {
-                    printLog(`INFO: claimed allocation ${claimId} for pid ${pid}`);
+                const claimInfo = msg[1] as AllocationClaim;
+                if (memoryManager.claimAllocation(claimInfo)) {
+                    printLog(
+                        `INFO: claimed allocation ${claimInfo.allocationId} ` +
+                        `pid=${claimInfo.pid} host=${claimInfo.hostname} ` +
+                        `${claimInfo.numChunks}x${ns.formatRam(claimInfo.chunkSize)} ` +
+                        `${claimInfo.filename}`
+                    );
                 } else {
-                    printLog(`WARN: failed to claim allocation ${claimId}`);
+                    printLog(`WARN: failed to claim allocation ${claimInfo.allocationId}`);
                 }
                 break;
         }
@@ -182,9 +210,23 @@ class MemoryManager {
 
     cleanupTerminated(): void {
         for (const [id, allocation] of this.allocations.entries()) {
-            if (!this.ns.isRunning(allocation.pid)) {
-                this.deallocate(id);
-                printLog(`INFO: reclaimed allocation ${id} from pid ${allocation.pid}`);
+            const remaining: ClaimInfo[] = [];
+            for (const claim of allocation.claims) {
+                if (!this.ns.isRunning(claim.pid)) {
+                    // Release the memory held by this terminated pid
+                    this.releaseClaimInternal(allocation, claim);
+                    printLog(
+                        `INFO: reclaimed allocation ${id} ` +
+                        `pid=${claim.pid} host=${claim.hostname}`,
+                    );
+                } else {
+                    remaining.push(claim);
+                }
+            }
+            allocation.claims = remaining;
+            allocation.chunks = allocation.chunks.filter(c => c.numChunks > 0);
+            if (allocation.chunks.length === 0) {
+                this.allocations.delete(id);
             }
         }
     }
@@ -247,17 +289,32 @@ class MemoryManager {
         return allocation.asAllocationResult();
     }
 
-    deallocate(id: number): boolean {
+    deallocate(id: number, pid?: number, hostname?: string): boolean {
         const allocation = this.allocations.get(id);
         if (!allocation) return false;
 
+        if (pid !== undefined && hostname !== undefined) {
+            const idx = allocation.claims.findIndex(
+                c => c.pid === pid && c.hostname === hostname,
+            );
+            if (idx === -1) return false;
+            const claim = allocation.claims[idx];
+            this.releaseClaimInternal(allocation, claim);
+            allocation.claims.splice(idx, 1);
+            allocation.chunks = allocation.chunks.filter(c => c.numChunks > 0);
+            if (allocation.chunks.length === 0) {
+                this.allocations.delete(id);
+            }
+            return true;
+        }
+
+        // Release entire allocation
         for (const chunk of allocation.chunks) {
             const worker = this.workers.get(chunk.hostname);
             if (worker) {
                 worker.free(chunk.totalSize);
             }
         }
-
         this.allocations.delete(id);
         return true;
     }
@@ -282,9 +339,20 @@ class MemoryManager {
             }
             chunk.numChunks -= toFree;
             remaining -= toFree;
+
+            let remainingFromClaims = toFree;
+            for (const claim of allocation.claims) {
+                if (remainingFromClaims <= 0) break;
+                if (claim.hostname === chunk.hostname && claim.chunkSize === chunk.chunkSize) {
+                    const reduce = Math.min(claim.numChunks, remainingFromClaims);
+                    claim.numChunks -= reduce;
+                    remainingFromClaims -= reduce;
+                }
+            }
         }
 
         allocation.chunks = allocation.chunks.filter(c => c.numChunks > 0);
+        allocation.claims = allocation.claims.filter(c => c.numChunks > 0);
         if (allocation.chunks.length === 0) {
             this.allocations.delete(id);
             return null;
@@ -293,12 +361,36 @@ class MemoryManager {
         return allocation.asAllocationResult();
     }
 
-    claimAllocation(id: number, pid: number): boolean {
-        const allocation = this.allocations.get(id);
+    claimAllocation(claim: AllocationClaim): boolean {
+        const allocation = this.allocations.get(claim.allocationId);
         if (!allocation) return false;
 
-        allocation.pid = pid;
+        allocation.claims.push({
+            pid: claim.pid,
+            hostname: claim.hostname,
+            filename: claim.filename,
+            chunkSize: claim.chunkSize,
+            numChunks: claim.numChunks,
+        });
+
         return true;
+    }
+
+    /**
+     * Release the RAM associated with a single claim without
+     * removing it from the allocation's claim list.
+     */
+    private releaseClaimInternal(allocation: Allocation, claim: ClaimInfo) {
+        const worker = this.workers.get(claim.hostname);
+        if (worker) {
+            worker.free(claim.chunkSize * claim.numChunks);
+        }
+        const chunk = allocation.chunks.find(
+            c => c.hostname === claim.hostname && c.chunkSize === claim.chunkSize,
+        );
+        if (chunk) {
+            chunk.numChunks -= claim.numChunks;
+        }
     }
 }
 
@@ -306,11 +398,13 @@ class Allocation {
     id: number;
     pid: number;
     chunks: AllocationChunk[];
+    claims: ClaimInfo[];
 
     constructor(id: number, pid: number, chunks: AllocationChunk[]) {
         this.id = id;
         this.pid = pid;
         this.chunks = chunks;
+        this.claims = [];
     }
 
     get totalSize(): number {
