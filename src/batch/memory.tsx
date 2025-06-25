@@ -127,7 +127,6 @@ class MemoryManager {
         }
     }
 
-    // TODO: figure out why this method is failing
     allocate(pid: number, chunkSize: number, numChunks: number, contiguous: boolean = false): AllocationResult {
         let workers = Array.from(this.workers.values());
 
