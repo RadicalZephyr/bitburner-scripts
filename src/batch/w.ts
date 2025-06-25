@@ -13,19 +13,5 @@ export async function main(ns: NS) {
         sleepTime = 1;
     }
 
-    let rounds = args[2];
-    if (typeof rounds != 'number') {
-        rounds = 1;
-    }
-
-    let endDelay = args[3];
-    if (typeof endDelay != 'number') {
-        endDelay = 0;
-    }
-
-    for (let i = 0; i < rounds; i++) {
-        await ns.sleep(sleepTime);
-        await ns.weaken(target);
-        await ns.sleep(endDelay);
-    }
+    await ns.weaken(target, { additionalMsec: sleepTime });
 }
