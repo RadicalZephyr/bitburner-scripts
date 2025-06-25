@@ -72,7 +72,9 @@ Example:
                 <LogDisplay lines={log} theme={theme}></LogDisplay>
             </div>
         );
-        if (ns.self().onlineRunningTime % 1000 == 0) {
+
+        // N.B. this time is seconds not milliseconds
+        if (ns.self().onlineRunningTime % 2 == 0) {
             memoryManager.updateReserved();
             memoryManager.cleanupTerminated();
         }
