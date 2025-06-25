@@ -123,7 +123,7 @@ export async function launch(ns: NS, script: string, threadOrOptions?: number | 
 
         if (isNaN(threadsHere)) continue;
 
-        ns.scp(dependencies, hostname);
+        ns.scp(dependencies, hostname, "home");
         let execArgs = allocationFlag ? [allocationFlag, allocation.allocationId, ...args] : args;
         let pid = ns.exec(script, hostname, threadsHere, ...execArgs);
         if (!pid) {
@@ -143,6 +143,8 @@ export async function launch(ns: NS, script: string, threadOrOptions?: number | 
 function collectDependencies(ns: NS, file: string, visited = new Set<string>()): Set<string> {
     if (visited.has(file)) return visited;
     visited.add(file);
+
+    ns.scp(file, ns.self().server, "home");
     const content = ns.read(file);
     if (typeof content === "string" && content.length > 0) {
         const regex = /^\s*import[^\n]*? from ["'](.+?)["']/gm;
