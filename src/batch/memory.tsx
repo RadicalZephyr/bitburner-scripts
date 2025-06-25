@@ -56,6 +56,9 @@ Example:
         const theme = ns.ui.getTheme();
         ns.clearLog();
         ns.printRaw(<MemoryDisplay manager={memoryManager} theme={theme}></MemoryDisplay>);
+        if (ns.self().onlineRunningTime % 1000 == 0) {
+            memoryManager.cleanupTerminated();
+        }
         await ns.sleep(refreshRate);
     }
 }
