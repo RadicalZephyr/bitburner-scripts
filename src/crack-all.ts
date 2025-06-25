@@ -66,7 +66,7 @@ export async function main(ns: NS) {
                 crackHost(ns, target, i);
 
                 // Write host name to the targets port
-                managerClient.newTarget(target);
+                await managerClient.newTarget(target);
             }
             portsCracked = i;
         }
