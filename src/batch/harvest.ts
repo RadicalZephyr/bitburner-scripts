@@ -51,10 +51,6 @@ OPTIONS
     }
 
     const timings = calculateBatchTimings(ns, target);
-    ns.print(`hack start: ${ns.tFormat(timings.hackStart, true)}`);
-    ns.print(`post-hack weaken start: ${ns.tFormat(timings.postHackWeakenStart, true)}`);
-    ns.print(`grow start: ${ns.tFormat(timings.growStart, true)}`);
-    ns.print(`post-grow weaken start: ${ns.tFormat(timings.postGrowWeakenStart, true)}`);
 }
 
 /** Calculate relative start times for a full H-W-G-W batch so that each
@@ -64,11 +60,8 @@ export function calculateBatchTimings(ns: NS, target: string): BatchTimings {
     const spacing = CONFIG.batchInterval as number;
 
     const hackTime = ns.getHackTime(target);
-    ns.printf("hack time: %s", ns.tFormat(hackTime, true));
     const weakenTime = ns.getWeakenTime(target);
-    ns.printf("weaken time: %s", ns.tFormat(weakenTime, true));
     const growTime = ns.getGrowTime(target);
-    ns.printf("grow time: %s", ns.tFormat(growTime, true));
 
     const phases = [
         { duration: hackTime, start: 0 },
