@@ -11,8 +11,8 @@ export async function main(ns: NS) {
     ns.disableLog('ALL');
 
     const flags = ns.flags([
+        ['allocation-id', -1],
         ['help', false],
-        ['allocation-id', null],
     ]);
 
     const rest = flags._ as string[];
@@ -32,7 +32,7 @@ OPTIONS
     }
 
     let allocationId = flags['allocation-id'];
-    if (allocationId !== null) {
+    if (allocationId !== -1) {
         if (typeof allocationId !== 'number') {
             ns.tprint('--allocation-id must be a number');
             return;
