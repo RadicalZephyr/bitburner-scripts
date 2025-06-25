@@ -1,5 +1,9 @@
 import type { AutocompleteData, NS, RunOptions, ScriptArg } from "netscript";
 
+export interface LaunchRunOptions extends RunOptions {
+    allocationFlag?: string;
+}
+
 import { MemoryClient } from "./client/memory";
 
 export function autocomplete(data: AutocompleteData, args: string[]): string[] {
@@ -57,7 +61,7 @@ OPTIONS
 
     ns.tprint(`${script} ${JSON.stringify(options)} ${JSON.stringify(args)}`);
 
-    let result = await launch(ns, script, options, undefined, ...args);
+    let result = await launch(ns, script, options, ...args);
 
     result.allocation.releaseAtExit(ns);
 
@@ -73,11 +77,19 @@ OPTIONS
  * This requests a singular allocation for the script from the memory
  * manager and then runs it on the host that was allocated.
  */
-export async function launch(ns: NS, script: string, threadOrOptions?: number | RunOptions, allocationFlag?: string, ...args: ScriptArg[]) {
+export async function launch(ns: NS, script: string, threadOrOptions?: number | LaunchRunOptions, ...args: ScriptArg[]) {
     let scriptRam = ns.getScriptRam(script);
     let client = new MemoryClient(ns);
 
-    let totalThreads = typeof threadOrOptions === 'number' ? threadOrOptions : threadOrOptions.threads ?? 1;
+    let totalThreads: number;
+    let allocationFlag: string | undefined;
+    if (typeof threadOrOptions === 'number' || typeof threadOrOptions === 'undefined') {
+        totalThreads = typeof threadOrOptions === 'number' ? threadOrOptions : 1;
+        allocationFlag = undefined;
+    } else {
+        totalThreads = threadOrOptions.threads ?? 1;
+        allocationFlag = threadOrOptions.allocationFlag;
+    }
 
     let allocation = await client.requestTransferableAllocation(scriptRam, totalThreads);
 

@@ -125,7 +125,7 @@ class TargetSelectionManager {
         const toTill = this.readyToTillTargets();
         for (const target of toTill) {
             this.ns.print(`tilling ${target}`);
-            await launch(this.ns, "/batch/till.js", 1, "--allocation-id", target);
+            await launch(this.ns, "/batch/till.js", { threads: 1, allocationFlag: "--allocation-id" }, target);
             this.tillTargets.add(target);
         }
     }
@@ -133,14 +133,14 @@ class TargetSelectionManager {
     async finishTilling(hostname: string) {
         this.tillTargets.delete(hostname);
         this.ns.print(`tilling ${hostname}`);
-        await launch(this.ns, "/batch/sow.js", 1, "--allocation-id", hostname);
+        await launch(this.ns, "/batch/sow.js", { threads: 1, allocationFlag: "--allocation-id" }, hostname);
         this.sowTargets.add(hostname);
     }
 
     async finishSowing(hostname: string) {
         this.sowTargets.delete(hostname)
         this.ns.print(`harvesting ${hostname}`);
-        await launch(this.ns, "/batch/harvest.js", 1, "--allocation-id", hostname);
+        await launch(this.ns, "/batch/harvest.js", { threads: 1, allocationFlag: "--allocation-id" }, hostname);
         this.harvestTargets.add(hostname);
     }
 
