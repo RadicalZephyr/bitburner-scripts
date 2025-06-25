@@ -15,6 +15,7 @@ export async function main(ns: NS) {
         ['threads', 1],
         ['itail', null],
         ['ram_override', null],
+        ['allocation-flag', null],
         ['help', false],
     ]);
 
@@ -22,16 +23,17 @@ export async function main(ns: NS) {
 
     if (rest.length === 0 || flags.help) {
         ns.tprint(`
-USAGE: run ${ns.getScriptName()} SCRIPT_NAME [--threads num_threads] [--ram_override ram_in_GBs] [args...]
+USAGE: run ${ns.getScriptName()} SCRIPT_NAME [--threads num_threads] [--ram_override ram_in_GBs] [--allocation-flag FLAG] [args...]
 
 Run the script at SCRIPT_NAME, getting an allocation for it from the memory
 manager and spawning the script on the returned host. Otherwise, this script
 functions exactly like the 'run' command.
 
 OPTIONS
-  --help          Show this help message
-  --threads       Number of threads to run
-  --ram_override  Override static RAM calculation
+  --help             Show this help message
+  --threads          Number of threads to run
+  --ram_override     Override static RAM calculation
+  --allocation-flag  Pass FLAG and allocation id to the spawned script
 `);
         return;
     }
@@ -53,15 +55,34 @@ OPTIONS
         return;
     }
 
+    let allocationFlag = flags['allocation-flag'];
+    if (allocationFlag !== null) {
+        if (typeof allocationFlag !== 'string') {
+            ns.tprint('--allocation-flag must be a string');
+            return;
+        }
+        if (threads !== 1) {
+            ns.tprint('--allocation-flag can only be used when launching a single thread');
+            return;
+        }
+    }
+
     let args = rest;
-    let options = {
+    let options: LaunchRunOptions = {
         threads: threads,
         ramOverride: ram_override as number
     };
+    if (allocationFlag !== null) {
+        options.allocationFlag = allocationFlag as string;
+    }
 
     ns.tprint(`${script} ${JSON.stringify(options)} ${JSON.stringify(args)}`);
 
     let result = await launch(ns, script, options, ...args);
+
+    if (allocationFlag !== null) {
+        return;
+    }
 
     result.allocation.releaseAtExit(ns);
 
