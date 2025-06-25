@@ -1,46 +1,85 @@
-import type { NS, Server, Player } from "netscript";
+import type { AutocompleteData, NS } from "netscript";
+import { CONFIG } from "./config";
+
+export function autocomplete(data: AutocompleteData, _args: string[]): string[] {
+    return data.servers;
+}
+
+export async function main(ns: NS) {
+    let target = ns.args[0];
+    if (typeof target !== 'string' || !ns.serverExists(target)) {
+        ns.tprintf("target %s does not exist", target);
+        return;
+    }
+
+    let eValue = expectedValuePerRamSecond(ns, target, CONFIG.batchInterval);
+    ns.tprint(`${target} ${eValue}`);
+}
 
 /**
  * Calculate the expected monetary value generated per RAM-second for a full
- * hacking batch.
+ * hacking batch using built-in Netscript analysis functions.
  *
  * @param ns      - Netscript API instance
- * @param server  - Target server information
- * @param player  - Player stats used for formula calculations
+ * @param host    - Hostname of the target server
  * @param spacing - Delay (ms) between batch phases
  * @returns Expected value per RAM-second
  */
 export function expectedValuePerRamSecond(
     ns: NS,
-    server: Server,
-    player: Player,
+    host: string,
     spacing: number,
 ): number {
-    const maxMoney = (server as any).maxMoney ?? server.moneyMax ?? 0;
+    const maxMoney = ns.getServerMaxMoney(host);
+
+    const successfulHackValue =
+        maxMoney * ns.hackAnalyze(host);
 
     const expectedHackValue =
-        maxMoney *
-        ns.formulas.hacking.hackPercent(server, player) *
-        ns.formulas.hacking.hackChance(server, player);
+        successfulHackValue * ns.hackAnalyzeChance(host);
 
-    const growThreads = ns.formulas.hacking.growThreads(
-        server,
-        player,
-        maxMoney - expectedHackValue,
-        maxMoney,
-    );
+    const afterHackMoney = Math.max(0, maxMoney - successfulHackValue);
+    const growMultiplier = maxMoney / Math.max(1, afterHackMoney);
+    const growThreads = growthAnalyze(ns, host, afterHackMoney, growMultiplier);
 
-    const hackingFormulas = ns.formulas.hacking as any;
-    const hackSecInc = hackingFormulas.hackSecurity(server, player, 1);
-    const growSecInc = hackingFormulas.growSecurity(server, player, growThreads);
-    const weakenThreads = (hackSecInc + growSecInc) / 0.05;
+    const hackSecInc = ns.hackAnalyzeSecurity(1, host);
+    const growSecInc = ns.growthAnalyzeSecurity(growThreads, host);
+
+    // Round up threads for both hack and grow to overestimate weaken
+    // threads needed.
+    const weakenThreads = weakenThreadsNeeded(hackSecInc) + weakenThreadsNeeded(growSecInc);
 
     const ramUse =
         ns.getScriptRam("/batch/h.js") +
         growThreads * ns.getScriptRam("/batch/g.js") +
         weakenThreads * ns.getScriptRam("/batch/w.js");
 
-    const batchTime = ns.formulas.hacking.weakenTime(server, player) + 2 * spacing;
+    const batchTime = ns.getWeakenTime(host) + 2 * spacing;
 
     return expectedHackValue / (batchTime * ramUse);
+}
+
+function canUseFormulas(ns): boolean {
+    return ns.fileExists("Formulas.exe", "home");
+}
+
+function growthAnalyze(ns: NS, hostname: string, afterHackMoney: number, growMultiplier: number): number {
+    if (canUseFormulas(ns)) {
+        let server = ns.getServer(hostname);
+        let player = ns.getPlayer();
+        server.moneyAvailable = afterHackMoney;
+        return ns.formulas.hacking.growThreads(server, player, server.moneyMax);
+    } else {
+        // N.B. from testing this calculation tracks very closely with
+        // the formulas value, _except_ as the afterHackMoney
+        // approaches zero the error grows super-linearly
+        return Math.ceil(ns.growthAnalyze(hostname, growMultiplier));
+    }
+}
+
+
+function weakenThreadsNeeded(securityDecrease: number): number {
+    // N.B. this function cannot be substited with the ns function
+    // weaken analyze because they do opposite things!
+    return Math.ceil(securityDecrease / 0.05)
 }
