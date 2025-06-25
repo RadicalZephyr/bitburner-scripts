@@ -38,7 +38,7 @@ OPTIONS
             ns.tprint('--allocation-id must be a number');
             return;
         }
-        registerAllocationOwnership(ns, allocationId);
+        registerAllocationOwnership(ns, allocationId, "self");
     }
 
     let target = rest[0];
