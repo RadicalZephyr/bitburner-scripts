@@ -57,7 +57,9 @@ export async function main(ns: NS) {
     ]);
 
     const rest = flags._ as string[];
-    if (flags.help || (flags.test !== null && typeof flags.test != 'string')) {
+    if (flags.help ||
+        (flags.test !== null && typeof flags.test != 'string') ||
+        (flags.count !== null && typeof flags.count !== 'number')) {
         ns.tprint(`
 USAGE: run ${ns.getScriptName()} [--test CONTRACT_NAME]
 
@@ -142,7 +144,7 @@ OPTIONS
             if (flags.test !== null && flags.count !== null) {
                 count += 1;
 
-                if (count >= flags.count) {
+                if (count >= (flags.count as number)) {
                     break outer;
                 }
             }
