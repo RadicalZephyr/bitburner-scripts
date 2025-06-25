@@ -6,7 +6,7 @@ const MAX_TILL_TARGETS = "MAX_TILL_TARGETS";
 
 class Config {
     setDefaults() {
-        setConfigDefault(BATCH_INTERVAL, 200);
+        setConfigDefault(BATCH_INTERVAL, 250);
         setConfigDefault(MAX_TILL_TARGETS, 2);
     }
 
