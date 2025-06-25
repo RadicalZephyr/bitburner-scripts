@@ -52,14 +52,14 @@ export function autocomplete(data: AutocompleteData, args: string[]): string[] {
 export async function main(ns: NS) {
     const flags = ns.flags([
         ['test', null],
-        ['count', null],
+        ['count', -1],
         ['help', false],
     ]);
 
     const rest = flags._ as string[];
     if (flags.help ||
         (flags.test !== null && typeof flags.test != 'string') ||
-        (flags.count !== null && typeof flags.count !== 'number')) {
+        (flags.count !== -1 && typeof flags.count !== 'number')) {
         ns.tprint(`
 USAGE: run ${ns.getScriptName()} [--test CONTRACT_NAME]
 
