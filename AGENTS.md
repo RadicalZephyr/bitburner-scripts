@@ -13,6 +13,10 @@
 - Only work on code in the `src` directory.
 - When building UI elements always use colors from the theme, which
   can be retrieved with `ns.ui.getTheme()`.
+- Always format RAM values with `ns.formatRam()`
+- Always format time values with `ns.tFormat()`
+- Always format percentage values with `ns.formatPercent()`
+- Always format money values with `ns.formatNumber()`
 
 ## Testing Instructions
 
