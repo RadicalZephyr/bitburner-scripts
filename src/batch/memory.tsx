@@ -297,21 +297,33 @@ interface MemoryDisplayProps {
 
 function MemoryDisplay({ manager, theme }: MemoryDisplayProps) {
     const workers = Array.from(manager.workers.values()).sort((a, b) => a.hostname.localeCompare(b.hostname));
+    const cellStyle = { padding: "0 0.5em" } as const;
     return (
         <div style={{ fontFamily: "monospace" }}>
-            {workers.map(w => <MemoryRow worker={w} theme={theme}></MemoryRow>)}
+            <table>
+                <tbody>
+                    {workers.map((w, idx) =>
+                        <MemoryRow worker={w} theme={theme} rowIndex={idx} cellStyle={cellStyle}></MemoryRow>
+                    )}
+                </tbody>
+            </table>
         </div>
     );
 }
 
 interface MemoryRowProps {
     worker: Worker;
+    rowIndex: number;
+    cellStyle: any;
     theme: UserInterfaceTheme;
 }
 
-function MemoryRow({ worker, theme }: MemoryRowProps) {
+function MemoryRow({ worker, rowIndex, cellStyle, theme }: MemoryRowProps) {
     return (
-        <div>{worker.hostname} [<MemoryBar worker={worker} theme={theme}></MemoryBar>]</div>
+        <tr key={worker.hostname} style={rowIndex % 2 === 1 ? { backgroundColor: theme.welllight } : undefined}>
+            <td style={{ ...cellStyle, textAlign: "left" }}>{worker.hostname}</td>
+            <td style={{ ...cellStyle, textAlign: "right" }}>[<MemoryBar worker={worker} theme={theme}></MemoryBar>]</td>
+        </tr>
     );
 }
 
