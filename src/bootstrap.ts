@@ -1,21 +1,14 @@
 import type { NS } from "netscript";
 
 import { MemoryClient } from "batch/client/memory";
+import { launch } from "./batch/launch";
 
 export async function main(ns: NS) {
-    startBatchHcking(ns);
+    await startMemory(ns);
+    await startManager(ns);
+    await startCracker(ns);
+    await startMonitor(ns);
     await sendPersonalServersToMemory(ns);
-    startCracker(ns);
-    startMonitor(ns);
-}
-
-async function sendPersonalServersToMemory(ns: NS) {
-    let memoryClient = new MemoryClient(ns);
-    let personalServers = ns.getPurchasedServers();
-
-    for (const hostname of personalServers) {
-        await memoryClient.newWorker(hostname);
-    }
 }
 
 const MEMORY_FILES: string[] = [
@@ -23,16 +16,7 @@ const MEMORY_FILES: string[] = [
     "/util/ports.js"
 ];
 
-const MANAGE_FILES: string[] = [
-    "/batch/client/manage.js",
-    "/batch/config.js",
-    "/batch/launch.js",
-    "/batch/target.js",
-    "/util/localStorage.js",
-    "/util/ports.js",
-];
-
-function startBatchHcking(ns: NS) {
+async function startMemory(ns: NS) {
     const memoryHost = "n00dles";
     const memoryScript = "/batch/memory.js";
     let memory = ns.getRunningScript(memoryScript, memoryHost);
@@ -45,79 +29,55 @@ function startBatchHcking(ns: NS) {
     let batchFiles = ns.ls("home", "batch");
     let memoryFiles = [...MEMORY_FILES, ...batchFiles];
 
-    launch(ns, memoryScript, memoryHost, memoryFiles);
+    manualLaunch(ns, memoryScript, memoryHost, memoryFiles);
 
-    const manageHost = "foodnstuff";
+    await ns.sleep(1000);
+
+    let memClient = new MemoryClient(ns);
+
+    const foodHost = "foodnstuff";
+    ns.nuke(foodHost)
+    memClient.newWorker(foodHost);
+
+    const sigmaHost = "sigma-cosmetics";
+    ns.nuke(sigmaHost)
+    memClient.newWorker(sigmaHost);
+}
+
+async function startManager(ns: NS) {
     const manageScript = "/batch/manage.js";
-    let manager = ns.getRunningScript(manageScript, manageHost);
-    if (manager !== null) {
-        ns.kill(manager.pid);
-    } else {
-        ns.nuke(manageHost);
-    }
 
-    let collectionsFiles = ns.ls("home", "typescript-collections");
-    let manageFiles = [...MANAGE_FILES, ...batchFiles, ...collectionsFiles];
-
-    launch(ns, manageScript, manageHost, manageFiles);
+    launch(ns, manageScript, {
+        threads: 1, allocationFlag: "--allocation-id"
+    });
 }
 
-const CRACK_FILES: string[] = [
-    "/crack-all.js",
-    "/all-hosts.js",
-    "/batch/client/manage.js",
-    "/batch/client/memory.js",
-    "/util/ports.js"
-];
-
-function startCracker(ns: NS) {
-    const crackHost = "sigma-cosmetics";
+async function startCracker(ns: NS) {
     const crackScript = "/crack-all.js";
-    let cracker = ns.getRunningScript(crackScript, crackHost);
-    if (cracker !== null) {
-        // TODO: Should we check if the kill succeeded?
-        ns.kill(cracker.pid);
-    } else {
-        ns.nuke(crackHost);
-    }
 
-    launch(ns, crackScript, crackHost, CRACK_FILES);
+    await launch(ns, crackScript, {
+        threads: 1, allocationFlag: "--allocation-id"
+    });
 }
 
-const MONITOR_FILES: string[] = [
-    "/all-hosts.js",
-    "/batch/client/monitor.js",
-    "/batch/expected_value.js",
-    "/util/ports.js",
-];
-
-function startMonitor(ns: NS) {
-    const monitorHost = "foodnstuff";
+async function startMonitor(ns: NS) {
     const monitorScript = "/batch/monitor.js";
 
-    let monitor = ns.getRunningScript(monitorScript, monitorHost);
-    if (monitor !== null) {
-        ns.kill(monitor.pid);
-    } else {
-        ns.nuke(monitorHost);
-    }
-
-    let hostname = monitorHost;
-    let script = monitorScript;
-    let dependencies = MONITOR_FILES;
-    let files = [script, ...dependencies];
-    if (!ns.scp(files, hostname, "home")) {
-        let error = `failed to send files to ${hostname}`;
-        ns.toast(error, "error");
-        ns.print(`ERROR: ${error}`);
-        ns.ui.openTail();
-        return;
-    }
-
-    ns.spawn(script);
+    await launch(ns, monitorScript, {
+        threads: 1, allocationFlag: "--allocation-id"
+    });
 }
 
-function launch(ns: NS, script: string, hostname: string, dependencies: string[]) {
+async function sendPersonalServersToMemory(ns: NS) {
+    let memoryClient = new MemoryClient(ns);
+    let personalServers = ns.getPurchasedServers();
+
+    for (const hostname of personalServers) {
+        await memoryClient.newWorker(hostname);
+    }
+}
+
+function manualLaunch(ns: NS, script: string, hostname: string, dependencies: string[]) {
     let files = [script, ...dependencies];
     if (!ns.scp(files, hostname, "home")) {
         let error = `failed to send files to ${hostname}`;
