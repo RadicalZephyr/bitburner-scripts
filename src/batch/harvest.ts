@@ -65,11 +65,11 @@ OPTIONS
     const requiredRam = batchRam * overlap;
 
     ns.tprintf(
-        `%s: batch ram %.2fGB, overlap x%d => required %.2fGB`,
+        `%s: batch ram %s, overlap x%d => required %s`,
         target,
-        batchRam,
+        ns.formatRam(batchRam),
         overlap,
-        requiredRam,
+        ns.formatRam(requiredRam),
     );
 }
 
