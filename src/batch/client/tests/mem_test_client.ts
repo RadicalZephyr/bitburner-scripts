@@ -21,4 +21,24 @@ export async function main(ns: NS) {
 
     const final = await client.releaseChunks(allocation.allocationId, 50);
     ns.tprintf("after releasing remaining chunks: %s", JSON.stringify(final));
+
+    const next = await client.requestTransferableAllocation(8, 300);
+    if (!next) {
+        ns.tprintf("second allocation failed");
+        return;
+    }
+
+    ns.tprintf("new allocation: %s", JSON.stringify(next));
+
+    for (let i = 0; i < 3; i++) {
+        const delay = 1000 + Math.floor(Math.random() * 2000);
+        ns.exec(
+            "/batch/client/tests/test_app.js",
+            ns.getHostname(),
+            1,
+            "--allocation-id",
+            next.allocationId,
+            delay,
+        );
+    }
 }
