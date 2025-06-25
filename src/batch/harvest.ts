@@ -51,10 +51,10 @@ OPTIONS
     }
 
     const timings = calculateBatchTimings(ns, target);
-    ns.print(`hack start: ${timings.hackStart}`);
-    ns.print(`post-hack weaken start: ${timings.postHackWeakenStart}`);
-    ns.print(`grow start: ${timings.growStart}`);
-    ns.print(`post-grow weaken start: ${timings.postGrowWeakenStart}`);
+    ns.print(`hack start: ${ns.tFormat(timings.hackStart, true)}`);
+    ns.print(`post-hack weaken start: ${ns.tFormat(timings.postHackWeakenStart, true)}`);
+    ns.print(`grow start: ${ns.tFormat(timings.growStart, true)}`);
+    ns.print(`post-grow weaken start: ${ns.tFormat(timings.postGrowWeakenStart, true)}`);
 }
 
 /** Calculate relative start times for a full H-W-G-W batch so that each
@@ -62,11 +62,13 @@ OPTIONS
  */
 export function calculateBatchTimings(ns: NS, target: string): BatchTimings {
     const spacing = CONFIG.batchInterval as number;
-    const alignment = spacing * 5;
 
     const hackTime = ns.getHackTime(target);
+    ns.printf("hack time: %s", ns.tFormat(hackTime, true));
     const weakenTime = ns.getWeakenTime(target);
+    ns.printf("weaken time: %s", ns.tFormat(weakenTime, true));
     const growTime = ns.getGrowTime(target);
+    ns.printf("grow time: %s", ns.tFormat(growTime, true));
 
     const phases = [
         { duration: hackTime, start: 0 },
@@ -81,16 +83,14 @@ export function calculateBatchTimings(ns: NS, target: string): BatchTimings {
         endTime += spacing;
     }
 
+    // Get relative end time of final instance
+    // N.B. subtract one spacing to account for final loop increment
     const relativeBatchEnd = endTime - spacing;
+
+    // Determine offset to bring most negative start time to zero
     let earliestStart = Math.abs(Math.min(...phases.map(p => p.start)));
-    let actualEnd = relativeBatchEnd + earliestStart;
 
-    if (actualEnd > alignment) {
-        const padding = alignment - (actualEnd % alignment);
-        actualEnd += padding;
-        earliestStart += padding;
-    }
-
+    // Push forward all start times so earliest one is zero
     const startTimes = [] as number[];
     for (const p of phases) {
         p.start += earliestStart;
