@@ -1,9 +1,13 @@
-import type { NS } from "netscript";
+import type { AutocompleteData, NS } from "netscript";
 
 import { registerAllocationOwnership } from "./client/memory";
 import { CONFIG } from "batch/config";
 import { analyzeBatchThreads, BatchThreadAnalysis } from "batch/expected_value";
 
+
+export function autocomplete(data: AutocompleteData, _args: string[]): string[] {
+    return data.servers;
+}
 
 export async function main(ns: NS) {
     ns.disableLog('ALL');
