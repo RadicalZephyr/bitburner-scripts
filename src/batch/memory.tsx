@@ -4,6 +4,8 @@ import { AllocationClaim, AllocationRelease, AllocationRequest, AllocationResult
 
 import { readAllFromPort } from "util/ports";
 
+let printLog: (msg: string) => void;
+
 declare const React: any;
 
 
@@ -38,24 +40,38 @@ Example:
     ns.ui.openTail();
     ns.ui.moveTail(230, 0);
 
+    const log: string[] = [];
+    const maxLog = 50;
+    printLog = (msg: string) => {
+        log.push(msg);
+        if (log.length > maxLog) {
+            log.shift();
+        }
+    };
+
     let memPort = ns.getPortHandle(MEMORY_PORT);
     let memMessageWaiting = true;
     let nextMemMessage = memPort.nextWrite().then(_ => { memMessageWaiting = true; });
 
     let memoryManager = new MemoryManager(ns);
-    ns.print("starting memory manager");
+    printLog("starting memory manager");
     while (true) {
         if (memMessageWaiting) {
-            ns.print("reading memory requests");
+            printLog("reading memory requests");
             readMemRequestsFromPort(ns, memPort, memoryManager);
             memMessageWaiting = false;
             nextMemMessage = memPort.nextWrite().then(_ => { memMessageWaiting = true; });
-            ns.print("finished reading memory requests");
+            printLog("finished reading memory requests");
         }
 
         const theme = ns.ui.getTheme();
         ns.clearLog();
-        ns.printRaw(<MemoryDisplay manager={memoryManager} theme={theme}></MemoryDisplay>);
+        ns.printRaw(
+            <div style={{ display: "flex", gap: "1em" }}>
+                <MemoryDisplay manager={memoryManager} theme={theme}></MemoryDisplay>
+                <LogDisplay lines={log} theme={theme}></LogDisplay>
+            </div>
+        );
         if (ns.self().onlineRunningTime % 1000 == 0) {
             memoryManager.cleanupTerminated();
         }
@@ -69,39 +85,39 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memoryManager: 
         switch (msg[0]) {
             case MessageType.Worker:
                 let hostname = msg[1] as string
-                ns.printf("got worker hostname %s", hostname);
+                printLog(`got worker hostname ${hostname}`);
                 memoryManager.pushWorker(hostname);
                 break;
 
             case MessageType.Request:
                 let request = msg[1] as AllocationRequest;
-                ns.printf("got mem request: %s", JSON.stringify(request));
+                printLog(`got mem request: ${JSON.stringify(request)}`);
                 let returnPort = request.returnPort;
                 let allocation = memoryManager.allocate(request.pid, request.chunkSize, request.numChunks, request.contiguous ?? false);
                 if (allocation) {
-                    ns.printf("allocated id %d across %d hosts", allocation.allocationId, allocation.hosts.length)
+                    printLog(`allocated id ${allocation.allocationId} across ${allocation.hosts.length} hosts`);
                 } else {
-                    ns.printf("allocation failed, not enough space");
+                    printLog(`allocation failed, not enough space`);
                 }
                 ns.writePort(returnPort, allocation);
                 break;
 
             case MessageType.Release:
                 let [allocationId] = msg[1] as AllocationRelease;
-                ns.printf("received release message for allocation ID: %d", allocationId);
+                printLog(`received release message for allocation ID: ${allocationId}`);
                 memoryManager.deallocate(allocationId);
                 break;
 
             case MessageType.ReleaseChunks:
                 let releaseInfo = msg[1] as AllocationChunksRelease;
-                ns.printf("received partial release message for allocation ID: %d", releaseInfo.allocationId);
+                printLog(`received partial release message for allocation ID: ${releaseInfo.allocationId}`);
                 const result = memoryManager.releaseChunks(releaseInfo.allocationId, releaseInfo.numChunks);
                 ns.writePort(releaseInfo.returnPort, result);
                 break;
 
             case MessageType.Claim:
                 let [claimId, pid] = msg[1] as AllocationClaim;
-                ns.printf("received claim message for allocation ID: %d -> pid %d", claimId, pid);
+                printLog(`received claim message for allocation ID: ${claimId} -> pid ${pid}`);
                 memoryManager.claimAllocation(claimId, pid);
                 break;
         }
@@ -347,6 +363,22 @@ function MemoryDisplay({ manager, theme }: MemoryDisplayProps) {
                     )}
                 </tbody>
             </table>
+        </div>
+    );
+}
+
+interface LogDisplayProps {
+    lines: string[];
+    theme: UserInterfaceTheme;
+}
+
+function LogDisplay({ lines, theme }: LogDisplayProps) {
+    const rowStyle = (idx: number) => idx % 2 === 1 ? { backgroundColor: theme.well } : undefined;
+    return (
+        <div style={{ fontFamily: "monospace" }}>
+            {lines.map((line, idx) =>
+                <div key={idx} style={rowStyle(idx)}>{line}</div>
+            )}
         </div>
     );
 }
