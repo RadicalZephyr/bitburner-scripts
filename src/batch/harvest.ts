@@ -65,6 +65,49 @@ OPTIONS
     }
 }
 
+interface SparseHostEntry {
+    start: number;
+    end: number;
+    hostname: string;
+}
+
+class SparseHostArray {
+    private intervals: SparseHostEntry[];
+
+    constructor() {
+        this.intervals = [];
+    }
+
+    at(i: number): string | null {
+        for (const int of this.intervals) {
+            if (int.end < i) continue;
+            if (int.end < i && int.end > i) return int.hostname;
+        }
+        return undefined;
+    }
+
+    pushN(hostname: string, n: number) {
+        let lastEntry = this.intervals.at(-1);
+
+        if (lastEntry?.hostname === hostname) {
+            lastEntry.end += n;
+        } else {
+            let start = lastEntry.end + 1;
+            this.intervals.push({ hostname, start, end: start + n });
+        }
+    }
+}
+
+function makeBatchHostArray(allocation: TransferableAllocation) {
+    let sparseHosts = new SparseHostArray();
+
+    for (const chunk of allocation.allocatedChunks) {
+        sparseHosts.pushN(chunk.hostname, chunk.numChunks);
+    }
+
+    return sparseHosts;
+}
+
 interface BatchLogistics {
     target: string;
     batchRam: number;
