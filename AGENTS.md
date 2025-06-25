@@ -10,3 +10,8 @@
 
 - Check that the build still works with `npm run build`
 - Fix any type errors until the build completes with no errors or warnings
+
+## Commit Authoring Convention
+
+Prefix every commit message with the name of the folder in source in
+square brackets like "[batch]".
