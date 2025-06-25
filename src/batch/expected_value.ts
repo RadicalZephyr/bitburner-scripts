@@ -37,14 +37,6 @@ export function expectedValuePerRamSecond(
     host: string,
     spacing: number,
 ): number {
-    const maxMoney = ns.getServerMaxMoney(host);
-
-    const hackValue =
-        successfulHackValue(ns, host, 1);
-
-    const expectedHackValue =
-        hackValue * ns.hackAnalyzeChance(host);
-
     const {
         hackThreads,
         growThreads,
@@ -60,6 +52,9 @@ export function expectedValuePerRamSecond(
         weakenThreads * ns.getScriptRam("/batch/w.js");
 
     const batchTime = ns.getWeakenTime(host) + 2 * spacing;
+
+    const hackValue = successfulHackValue(ns, host, hackThreads);
+    const expectedHackValue = hackValue * ns.hackAnalyzeChance(host);
 
     return expectedHackValue / (batchTime * ramUse);
 }
