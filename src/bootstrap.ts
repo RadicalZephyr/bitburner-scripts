@@ -24,7 +24,10 @@ const MEMORY_FILES: string[] = [
 
 const MANAGE_FILES: string[] = [
     "/batch/client/manage.js",
+    "/batch/config.js",
+    "/batch/launch.js",
     "/batch/target.js",
+    "/util/localStorage.js",
     "/util/ports.js",
 ];
 
