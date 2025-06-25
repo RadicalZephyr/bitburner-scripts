@@ -6,6 +6,7 @@ export async function main(ns: NS) {
     startBatchHcking(ns);
     await sendPersonalServersToMemory(ns);
     startCracker(ns);
+    startMonitor(ns);
 }
 
 async function sendPersonalServersToMemory(ns: NS) {
@@ -31,25 +32,7 @@ const MANAGE_FILES: string[] = [
     "/util/ports.js",
 ];
 
-const MONITOR_FILES: string[] = [
-    "/all-hosts.js",
-    "/batch/client/monitor.js",
-    "/util/ports.js",
-];
-
 function startBatchHcking(ns: NS) {
-    const monitorHost = "foodnstuff";
-    const monitorScript = "/batch/monitor.js";
-
-    let monitor = ns.getRunningScript(monitorScript, monitorHost);
-    if (monitor !== null) {
-        ns.kill(monitor.pid);
-    } else {
-        ns.nuke(monitorHost);
-    }
-
-    launch(ns, monitorScript, monitorHost, MONITOR_FILES);
-
     const memoryHost = "n00dles";
     const memoryScript = "/batch/memory.js";
     let memory = ns.getRunningScript(memoryScript, memoryHost);
@@ -88,7 +71,7 @@ const CRACK_FILES: string[] = [
 ];
 
 function startCracker(ns: NS) {
-    const crackHost = "foodnstuff";
+    const crackHost = "sigma-cosmetics";
     const crackScript = "/crack-all.js";
     let cracker = ns.getRunningScript(crackScript, crackHost);
     if (cracker !== null) {
@@ -99,6 +82,39 @@ function startCracker(ns: NS) {
     }
 
     launch(ns, crackScript, crackHost, CRACK_FILES);
+}
+
+const MONITOR_FILES: string[] = [
+    "/all-hosts.js",
+    "/batch/client/monitor.js",
+    "/batch/expected_value.js",
+    "/util/ports.js",
+];
+
+function startMonitor(ns: NS) {
+    const monitorHost = "foodnstuff";
+    const monitorScript = "/batch/monitor.js";
+
+    let monitor = ns.getRunningScript(monitorScript, monitorHost);
+    if (monitor !== null) {
+        ns.kill(monitor.pid);
+    } else {
+        ns.nuke(monitorHost);
+    }
+
+    let hostname = monitorHost;
+    let script = monitorScript;
+    let dependencies = MONITOR_FILES;
+    let files = [script, ...dependencies];
+    if (!ns.scp(files, hostname, "home")) {
+        let error = `failed to send files to ${hostname}`;
+        ns.toast(error, "error");
+        ns.print(`ERROR: ${error}`);
+        ns.ui.openTail();
+        return;
+    }
+
+    ns.spawn(script);
 }
 
 function launch(ns: NS, script: string, hostname: string, dependencies: string[]) {
