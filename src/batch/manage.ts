@@ -13,6 +13,7 @@ export async function main(ns: NS) {
     ns.disableLog("getServerUsedRam");
     ns.disableLog("ps");
     ns.disableLog("sleep");
+    ns.disableLog("getHackingLevel");
     ns.ui.openTail();
     ns.ui.moveTail(1010, 0);
 
