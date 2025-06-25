@@ -42,7 +42,7 @@ OPTIONS
         return;
     }
 
-    ns.ui.setTailTitle(`harvest ${target}`);
-    ns.ui.openTail();
-    ns.ui.resizeTail(400, 80);
+    // ns.ui.setTailTitle(`harvest ${target}`);
+    // ns.ui.openTail();
+    // ns.ui.resizeTail(400, 80);
 }
