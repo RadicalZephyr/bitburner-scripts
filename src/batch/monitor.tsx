@@ -231,7 +231,7 @@ export function ServerBlock({ title, targets, theme }: IBlockSettings) {
                 <tr>
                     <th style={cellStyle}>target</th>
                     <th style={cellStyle}>$/s</th>
-                    <th style={cellStyle}>E($/s)</th>
+                    <th style={cellStyle}>E($/GBs)</th>
                     <th style={cellStyle}>lvl</th>
                     <th style={cellStyle}>$</th>
                     <th style={cellStyle}>⌈$⌉%</th>
