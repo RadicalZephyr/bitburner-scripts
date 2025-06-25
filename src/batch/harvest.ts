@@ -1,6 +1,14 @@
 import type { NS } from "netscript";
 
 import { registerAllocationOwnership } from "./client/memory";
+import { CONFIG } from "batch/config";
+
+interface BatchTimings {
+    hackStart: number;
+    postHackWeakenStart: number;
+    growStart: number;
+    postGrowWeakenStart: number;
+}
 
 export async function main(ns: NS) {
     ns.disableLog('ALL');
@@ -42,29 +50,57 @@ OPTIONS
         return;
     }
 
-    // TODO: Calculate the relative start times for each of the four
-    // scripts in a batch.
+    const timings = calculateBatchTimings(ns, target);
+    ns.print(`hack start: ${timings.hackStart}`);
+    ns.print(`post-hack weaken start: ${timings.postHackWeakenStart}`);
+    ns.print(`grow start: ${timings.growStart}`);
+    ns.print(`post-grow weaken start: ${timings.postGrowWeakenStart}`);
+}
 
-    // Important APIs for this:
+/** Calculate relative start times for a full H-W-G-W batch so that each
+ * script ends `CONFIG.batchInterval` milliseconds after the previous one.
+ */
+export function calculateBatchTimings(ns: NS, target: string): BatchTimings {
+    const spacing = CONFIG.batchInterval as number;
+    const alignment = spacing * 5;
 
-    let batchInterval = CONFIG.batchInterval;
+    const hackTime = ns.getHackTime(target);
+    const weakenTime = ns.getWeakenTime(target);
+    const growTime = ns.getGrowTime(target);
 
-    let hScript = "/batch/h.js";
-    let hTime = ns.getHackTime(target);
+    const phases = [
+        { duration: hackTime, start: 0 },
+        { duration: weakenTime, start: 0 },
+        { duration: growTime, start: 0 },
+        { duration: weakenTime, start: 0 },
+    ];
 
-    let gScript = "/batch/g.js";
-    let gTime = ns.getGrowTime(target);
+    let endTime = 0;
+    for (const p of phases) {
+        p.start = endTime - p.duration;
+        endTime += spacing;
+    }
 
-    let wScript = "/batch/w.js";
-    let wTime = ns.getWeakenTime(target);
+    const relativeBatchEnd = endTime - spacing;
+    let earliestStart = Math.abs(Math.min(...phases.map(p => p.start)));
+    let actualEnd = relativeBatchEnd + earliestStart;
 
-    // Each batch consists of 4 scripts that should finish in this
-    // sequence: hack, weaken, grow, weaken. Each script in the
-    // sequence should finish running one `batchInterval` after the
-    // previous script. The first argument to each of the hScript,
-    // gScript and wScript scripts is an amount of time to sleep
-    // before running it's operation. Using the respective running
-    // times hTime, gTime, and wTime, calculate how long each script
-    // needs to sleep before starting so that they end in the correct
-    // order with the correct interval between them.
+    if (actualEnd > alignment) {
+        const padding = alignment - (actualEnd % alignment);
+        actualEnd += padding;
+        earliestStart += padding;
+    }
+
+    const startTimes = [] as number[];
+    for (const p of phases) {
+        p.start += earliestStart;
+        startTimes.push(p.start);
+    }
+
+    return {
+        hackStart: startTimes[0],
+        postHackWeakenStart: startTimes[1],
+        growStart: startTimes[2],
+        postGrowWeakenStart: startTimes[3],
+    };
 }
