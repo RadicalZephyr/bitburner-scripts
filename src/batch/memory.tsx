@@ -192,8 +192,8 @@ class MemoryManager {
         this.allocations = new Map();
     }
 
-    pushWorker(hostname: string) {
-        this.workers.set(hostname, new Worker(this.ns, hostname));
+    pushWorker(hostname: string, setAsideRam?: number) {
+        this.workers.set(hostname, new Worker(this.ns, hostname, setAsideRam));
         printLog(
             `INFO: registered worker ${hostname} with ` +
             `${this.ns.formatRam(this.ns.getServerMaxRam(hostname))}`
@@ -429,23 +429,25 @@ class Worker {
     ns: NS;
     hostname: string;
     totalRam: number;
+    setAsideRam: number;
     reservedRam: number;
     allocatedRam: number;
 
-    constructor(ns: NS, hostname: string) {
+    constructor(ns: NS, hostname: string, setAsideRam?: number) {
         this.ns = ns;
         this.hostname = hostname;
         this.totalRam = ns.getServerMaxRam(hostname);
+        this.setAsideRam = typeof setAsideRam == "number" && setAsideRam >= 0 ? setAsideRam : 0;
         this.reservedRam = ns.getServerUsedRam(hostname);
         this.allocatedRam = 0;
     }
 
     get usedRam(): number {
-        return this.reservedRam + this.allocatedRam;
+        return this.setAsideRam + this.reservedRam + this.allocatedRam;
     }
 
     get freeRam(): number {
-        return this.totalRam - this.usedRam;
+        return Math.max(0, this.totalRam - this.usedRam);
     }
 
     allocate(chunkSize: number, numChunks: number): AllocationChunk {
@@ -536,16 +538,19 @@ interface MemoryBarProps {
 
 function MemoryBar({ worker, theme }: MemoryBarProps) {
     const segments = 20;
+    const setAsideSeg = Math.round((worker.setAsideRam / worker.totalRam) * segments);
     const reservedSeg = Math.round((worker.reservedRam / worker.totalRam) * segments);
     const allocSeg = Math.round((worker.allocatedRam / worker.totalRam) * segments);
     const usedSeg = Math.min(segments, reservedSeg + allocSeg);
     const freeSeg = segments - usedSeg;
 
+    let setAsideBar = "|".repeat(setAsideSeg);
     let reservedBar = "|".repeat(reservedSeg);
     let allocBar = "|".repeat(allocSeg);
     let freeBar = "-".repeat(freeSeg);
 
     return <>
+        <span key="s" style={{ color: theme.infolight }}>{setAsideBar}</span>
         <span key="r" style={{ color: theme.hp }}>{reservedBar}</span>
         <span key="a" style={{ color: theme.money }}>{allocBar}</span>
         <span>{freeBar}</span>
