@@ -73,7 +73,11 @@ OPTIONS
 
     let batchHost: SparseHostArray = makeBatchHostArray(allocation);
 
-    for (let i = 0; i < maxOverlap; ++i) { }
+    // TODO: spawn the first round of batches
+    for (let i = 0; i < maxOverlap; ++i) {
+        // TODO: spawn 1 batch on batchHost.at(i)
+        await ns.sleep(CONFIG.batchInterval);
+    }
 
     while (true) {
         let logistics = calculateBatchLogistics(ns, target);
