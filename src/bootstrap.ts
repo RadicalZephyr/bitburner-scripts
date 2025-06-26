@@ -40,7 +40,7 @@ async function startMemory(ns: NS) {
 
     for (const worker of HOSTS_BY_PORTS_REQUIRED[0]) {
         ns.nuke(worker);
-        memClient.newWorker(worker);
+        await memClient.newWorker(worker);
     }
 }
 
