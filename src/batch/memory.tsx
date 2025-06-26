@@ -541,18 +541,10 @@ function MemoryBar({ worker, theme }: MemoryBarProps) {
     const usedSeg = Math.min(segments, reservedSeg + allocSeg);
     const freeSeg = segments - usedSeg;
 
-    let reservedBar = "";
-    for (let i = 0; i < reservedSeg; i++) {
-        reservedBar += "|";
-    }
-    let allocBar = "";
-    for (let i = 0; i < allocSeg; i++) {
-        allocBar += "|";
-    }
-    let freeBar = "";
-    for (let i = 0; i < freeSeg; i++) {
-        freeBar += "-";
-    }
+    let reservedBar = "|".repeat(reservedSeg);
+    let allocBar = "|".repeat(allocSeg);
+    let freeBar = "-".repeat(freeSeg);
+
     return <>
         <span key="r" style={{ color: theme.hp }}>{reservedBar}</span>
         <span key="a" style={{ color: theme.money }}>{allocBar}</span>
