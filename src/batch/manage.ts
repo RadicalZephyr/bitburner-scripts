@@ -29,8 +29,8 @@ export async function main(ns: NS) {
     }
 
     compareExpectedValue = (ta, tb) => {
-        return expectedValuePerRamSecond(ns, ta, CONFIG.batchInterval)
-            - expectedValuePerRamSecond(ns, tb, CONFIG.batchInterval);
+        return expectedValuePerRamSecond(ns, tb, CONFIG.batchInterval)
+            - expectedValuePerRamSecond(ns, ta, CONFIG.batchInterval);
     };
 
     ns.disableLog("ALL");
