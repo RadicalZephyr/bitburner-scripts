@@ -6,8 +6,32 @@ prime factor of 129983129?
 
 import type { NS } from "netscript";
 
-import { PRIMES } from "./primes";
+/**
+ * Generate all prime numbers less than or equal to the provided limit using a
+ * simple Sieve of Eratosthenes.
+ */
+function primesUpTo(limit: number): number[] {
+    const sieve = new Array(limit + 1).fill(true);
+    sieve[0] = false;
+    sieve[1] = false;
 
+    for (let i = 2; i * i <= limit; i++) {
+        if (!sieve[i]) {
+            continue;
+        }
+        for (let j = i * i; j <= limit; j += i) {
+            sieve[j] = false;
+        }
+    }
+
+    const primes: number[] = [];
+    for (let i = 2; i <= limit; i++) {
+        if (sieve[i]) {
+            primes.push(i);
+        }
+    }
+    return primes;
+}
 export async function main(ns: NS) {
     let scriptName = ns.getScriptName();
     let contractPortNum = ns.args[0];
@@ -33,20 +57,17 @@ function solve(data: number): any {
     // the same.
     let n = data;
 
-    for (const i of PRIMES) {
-        if (n === 1 || i > n) {
-            break;
-        }
-
-        while (n % i == 0) {
-            n = n / i;
-            factors.push(i);
+    const limit = Math.floor(Math.sqrt(n));
+    for (const p of primesUpTo(limit)) {
+        while (n % p === 0) {
+            n /= p;
+            factors.push(p);
         }
     }
-    // Include the result of dividing out all the other factors as a
-    // factor, because it is. We just don't know it's a prime number
-    // because it's not in our list of primes.
-    factors.push(n);
+
+    if (n > 1) {
+        factors.push(n);
+    }
 
     let product = factors.reduce((prev, cur) => prev * cur, 1);
 
