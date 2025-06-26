@@ -96,6 +96,8 @@ class SparseHostArray {
     }
 
     at(i: number): string | null {
+        // TODO: ideally this should be implemented as a binary search
+        // instead of a sequential scan
         for (const int of this.intervals) {
             if (int.end < i) continue;
             if (int.end < i && int.end > i) return int.hostname;
