@@ -56,7 +56,9 @@ export function expectedValuePerRamSecond(
     const hackValue = successfulHackValue(ns, host, hackThreads);
     const expectedHackValue = hackValue * ns.hackAnalyzeChance(host);
 
-    return expectedHackValue / (batchTime * ramUse);
+    // Scale by 1000 to get human readable values and convert units
+    // from $/GB*ms to $/GB*s
+    return 1000 * expectedHackValue / (batchTime * ramUse);
 }
 
 function successfulHackValue(

@@ -201,7 +201,7 @@ export function hostInfo(ns: NS, target: string, targetThreads: TargetThreads, l
     const secPlus = sec - minSec;
 
     const milkMoney = targetThreads.harvestMoney;
-    const eValue = expectedValuePerRamSecond(ns, target, CONFIG.batchInterval) * 1000;
+    const eValue = expectedValuePerRamSecond(ns, target, CONFIG.batchInterval);
 
     return {
         name: target,
