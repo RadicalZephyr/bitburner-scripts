@@ -191,6 +191,18 @@ class TargetSelectionManager {
         }
     }
 
+    async harvestNewTargets() {
+        this.pendingHarvestTargets.sort(compareExpectedValue);
+
+        let nextTarget = this.pendingHarvestTargets[0];
+        if (nextTarget && canHarvest(this.ns, nextTarget) && worthHarvesting(this.ns, nextTarget)) {
+            this.pendingHarvestTargets.shift();
+            this.ns.print(`INFO: launching harvest on ${nextTarget}`);
+            await launch(this.ns, "/batch/harvest.js", { threads: 1, allocationFlag: "--allocation-id" }, nextTarget);
+            this.harvestTargets.add(nextTarget);
+        }
+    }
+
     updateVelocity() {
         const now = Date.now();
         const lvl = this.ns.getHackingLevel();
@@ -216,6 +228,7 @@ async function tick(ns: NS, manager: TargetSelectionManager) {
     manager.updateVelocity();
 
     await manager.tillNewTargets();
+    await manager.harvestNewTargets();
 }
 
 function noodlesIsSpecial(ns: NS, hostname: string) {
