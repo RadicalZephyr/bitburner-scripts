@@ -74,6 +74,9 @@ Example:
 
     let memoryManager = new MemoryManager(ns);
     printLog(`INFO: starting memory manager on ${ns.getHostname()}`);
+
+    memoryManager.pushWorker("home", 32);
+
     while (true) {
         if (memMessageWaiting) {
             printLog("INFO: reading memory requests");
