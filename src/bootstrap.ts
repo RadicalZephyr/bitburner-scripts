@@ -3,7 +3,7 @@ import type { NS } from "netscript";
 import { HOSTS_BY_PORTS_REQUIRED } from "./all-hosts";
 
 import { MemoryClient } from "batch/client/memory";
-import { launch } from "./batch/launch";
+import { launch } from "batch/launch";
 
 
 export async function main(ns: NS) {
