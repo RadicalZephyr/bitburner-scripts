@@ -74,7 +74,9 @@ async function readHostsFromPort(ns: NS, hostsPort: NetscriptPort, manager: Targ
 
                 case MessageType.FinishedSowing:
                     ns.print(`SUCCESS: finished sowing ${hostname}`);
-                    await monitor.harvesting(hostname);
+                    if (noodlesIsSpecial(ns) ||
+                        (canHarvest(ns, hostname) && worthHarvesting(ns, hostname)))
+                        await monitor.harvesting(hostname);
                     await manager.finishSowing(hostname);
                     break;
             }
@@ -201,4 +203,16 @@ async function tick(ns: NS, manager: TargetSelectionManager) {
     manager.updateVelocity();
 
     await manager.tillNewTargets();
+}
+
+function noodlesIsSpecial(ns: NS, hostname: string) {
+    return hostname == "n00dles" && ns.getHackingLevel() == 1;
+}
+
+function canHarvest(ns: NS, hostname: string) {
+    return ns.getHackingLevel() >= ns.getServerRequiredHackingLevel(hostname);
+}
+
+function worthHarvesting(ns: NS, hostname: string) {
+    return expectedValuePerRamSecond(ns, hostname, CONFIG.batchInterval) > 100;
 }
