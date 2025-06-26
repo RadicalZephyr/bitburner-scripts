@@ -186,6 +186,7 @@ class TargetSelectionManager {
             this.harvestTargets.add(hostname);
         } else {
             this.ns.print(`INFO: waiting to harvest ${hostname}`);
+            this.monitor.pendingHarvesting(hostname);
             this.pendingHarvestTargets.push(hostname);
         }
     }
