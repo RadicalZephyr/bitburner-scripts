@@ -115,7 +115,7 @@ class SparseHostArray {
         if (lastEntry?.hostname === hostname) {
             lastEntry.end += n;
         } else {
-            let start = lastEntry.end + 1;
+            let start = lastEntry ? lastEntry.end + 1 : 0;
             this.intervals.push({ hostname, start, end: start + n });
         }
     }
