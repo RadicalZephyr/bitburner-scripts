@@ -2,11 +2,13 @@ import type { NS, NetscriptPort } from "netscript";
 
 import { MONITOR_PORT } from "util/ports";
 
+
 export enum Lifecycle {
     Pending,
     Tilling,
     Sowing,
     Harvesting,
+    PendingHarvesting,
     Rebalancing,
 }
 
@@ -31,6 +33,10 @@ export class MonitorClient {
 
     async sowing(hostname: string) {
         await this.send(Lifecycle.Sowing, hostname);
+    }
+
+    async pendingHarvesting(hostname: string) {
+        await this.send(Lifecycle.PendingHarvesting, hostname);
     }
 
     async harvesting(hostname: string) {

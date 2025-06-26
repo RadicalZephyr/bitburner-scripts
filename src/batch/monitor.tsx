@@ -70,6 +70,7 @@ Example:
 
         let threadsByTarget = countThreadsByTarget(ns);
         const harvesting: HostInfo[] = [];
+        const pendingHarvesting: HostInfo[] = [];
         const sowing: HostInfo[] = [];
         const tilling: HostInfo[] = [];
         const pending: HostInfo[] = [];
@@ -92,6 +93,9 @@ Example:
                 case Lifecycle.Tilling:
                     tilling.push(info);
                     break;
+                case Lifecycle.PendingHarvesting:
+                    pendingHarvesting.push(info);
+                    break;
                 default:
                     pending.push(info);
                     break;
@@ -103,6 +107,7 @@ Example:
         ns.clearLog();
         ns.printRaw(<>
             <ServerBlock title={"Harvesting"} targets={harvesting} theme={theme}></ServerBlock>
+            <ServerBlock title={"Pending Harvesting"} targets={pendingHarvesting} theme={theme}></ServerBlock>
             <ServerBlock title={"Sowing"} targets={sowing} theme={theme}></ServerBlock>
             <ServerBlock title={"Tilling"} targets={tilling} theme={theme}></ServerBlock>
             <ServerBlock title={"Pending"} targets={pending} theme={theme}></ServerBlock>
