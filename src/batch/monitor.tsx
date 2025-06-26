@@ -275,7 +275,7 @@ interface IRowSettings {
 
 function ServerRow({ host, rowIndex, cellStyle, theme }: IRowSettings) {
     return (
-        <tr key={host.name} style={rowIndex % 2 === 1 ? { backgroundColor: theme.well } : undefined}>
+        <tr key={host.name} style={rowIndex % 2 === 1 ? undefined : { backgroundColor: theme.well }}>
             <td style={cellStyle}>{host.name}</td>
             <td style={cellStyle}>{host.milkMoney}</td>
             <td style={cellStyle}>{host.expectedValue}</td>
