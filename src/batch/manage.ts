@@ -79,8 +79,6 @@ async function readHostsFromPort(ns: NS, hostsPort: NetscriptPort, manager: Targ
 
                 case MessageType.FinishedSowing:
                     ns.print(`SUCCESS: finished sowing ${hostname}`);
-                    // TODO: this should be moved into `finishSowing`
-                    await monitor.harvesting(hostname);
                     await manager.finishSowing(hostname);
                     break;
             }
@@ -184,6 +182,7 @@ class TargetSelectionManager {
             (canHarvest(this.ns, hostname) && worthHarvesting(this.ns, hostname))) {
             this.ns.print(`INFO: launching harvest on ${hostname}`);
             await launch(this.ns, "/batch/harvest.js", { threads: 1, allocationFlag: "--allocation-id" }, hostname);
+            await this.monitor.harvesting(hostname);
             this.harvestTargets.add(hostname);
         } else {
             this.ns.print(`INFO: waiting to harvest ${hostname}`);
@@ -199,6 +198,7 @@ class TargetSelectionManager {
             this.pendingHarvestTargets.shift();
             this.ns.print(`INFO: launching harvest on ${nextTarget}`);
             await launch(this.ns, "/batch/harvest.js", { threads: 1, allocationFlag: "--allocation-id" }, nextTarget);
+            await this.monitor.harvesting(nextTarget);
             this.harvestTargets.add(nextTarget);
         }
     }
