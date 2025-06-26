@@ -83,6 +83,8 @@ class TargetSelectionManager {
     ns: NS;
     monitor: MonitorClient;
 
+    allTargets: Set<string>;
+
     tillTargets: Set<string>;
     sowTargets: Set<string>;
     harvestTargets: Set<string>;
@@ -96,6 +98,8 @@ class TargetSelectionManager {
         this.ns = ns;
         this.monitor = monitor;
 
+        this.allTargets = new Set();
+
         this.pendingTargets = [];
         this.tillTargets = new Set();
         this.sowTargets = new Set();
@@ -106,6 +110,9 @@ class TargetSelectionManager {
     }
 
     pushTarget(target: string) {
+        if (this.allTargets.has(target)) return;
+
+        this.allTargets.add(target);
         this.pendingTargets.push(target);
         this.ns.print(`INFO: queued target ${target}`);
     }
