@@ -66,21 +66,38 @@ OPTIONS
 
     allocation.releaseAtExit(ns, "batch");
 
-    // TODO: we should detect when the overlap changes and release
-    // some chunks of memory when it does.
+    // Track how many batches can overlap concurrently. If the
+    // calculated overlap drops we release the extra memory back to the
+    // MemoryManager so it can be reused by other processes.
     let maxOverlap = logistics.overlap;
     let currentBatches = 0;
 
     let batchHost: SparseHostArray = makeBatchHostArray(allocation);
 
-    // TODO: spawn the first round of batches
+    // Launch one batch per allocated chunk so that the pipeline is
+    // fully populated before entering the steady state loop.
     for (let i = 0; i < maxOverlap; ++i) {
-        // TODO: spawn 1 batch on batchHost.at(i)
+        const host = batchHost.at(i);
+        spawnBatch(ns, host, target, logistics.phases);
+        currentBatches++;
         await ns.sleep(CONFIG.batchInterval);
     }
 
     while (true) {
         let logistics = calculateBatchLogistics(ns, target);
+
+        if (logistics.overlap < maxOverlap) {
+            const toRelease = maxOverlap - logistics.overlap;
+            const result = await memClient.releaseChunks(allocation.allocationId, toRelease);
+            if (result) {
+                allocation = new TransferableAllocation(result.allocationId, result.hosts);
+                batchHost = makeBatchHostArray(allocation);
+            }
+            maxOverlap = logistics.overlap;
+        }
+        const host = batchHost.at(currentBatches % maxOverlap);
+        spawnBatch(ns, host, target, logistics.phases);
+        currentBatches++;
 
         await ns.sleep(CONFIG.batchInterval);
     }
@@ -100,11 +117,19 @@ class SparseHostArray {
     }
 
     at(i: number): string | null {
-        // TODO: ideally this should be implemented as a binary search
-        // instead of a sequential scan
-        for (const int of this.intervals) {
-            if (int.end < i) continue;
-            if (int.end < i && int.end > i) return int.hostname;
+        let low = 0;
+        let high = this.intervals.length - 1;
+
+        while (low <= high) {
+            const mid = Math.floor((low + high) / 2);
+            const int = this.intervals[mid];
+            if (i < int.start) {
+                high = mid - 1;
+            } else if (i >= int.end) {
+                low = mid + 1;
+            } else {
+                return int.hostname;
+            }
         }
         return undefined;
     }
@@ -115,7 +140,7 @@ class SparseHostArray {
         if (lastEntry?.hostname === hostname) {
             lastEntry.end += n;
         } else {
-            let start = lastEntry ? lastEntry.end + 1 : 0;
+            let start = lastEntry ? lastEntry.end : 0;
             this.intervals.push({ hostname, start, end: start + n });
         }
     }
@@ -129,6 +154,22 @@ function makeBatchHostArray(allocation: TransferableAllocation) {
     }
 
     return sparseHosts;
+}
+
+function spawnBatch(ns: NS, host: string | null, target: string, phases: BatchPhase[]) {
+    if (!host) return;
+
+    const scripts = Array.from(new Set(phases.map(p => `/batch/${p.script}`)));
+    ns.scp(scripts, host, "home");
+
+    for (const phase of phases) {
+        if (phase.threads <= 0) continue;
+        const script = `/batch/${phase.script}`;
+        const pid = ns.exec(script, host, phase.threads, target, phase.start);
+        if (pid === 0) {
+            ns.print(`WARN: failed to spawn ${script} on ${host}`);
+        }
+    }
 }
 
 interface BatchLogistics {
