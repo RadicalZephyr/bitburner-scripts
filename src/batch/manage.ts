@@ -5,9 +5,12 @@ import { registerAllocationOwnership } from "./client/memory";
 import { MonitorClient } from "batch/client/monitor";
 
 import { CONFIG } from "batch/config";
+import { expectedValuePerRamSecond } from "batch/expected_value";
 import { launch } from "batch/launch";
 
 import { readAllFromPort } from "util/ports";
+
+import PriorityQueue from "typescript-collections/PriorityQueue";
 
 
 export async function main(ns: NS) {
@@ -89,7 +92,7 @@ class TargetSelectionManager {
     sowTargets: Set<string>;
     harvestTargets: Set<string>;
 
-    pendingTargets: string[];
+    pendingTargets: PriorityQueue<string>;
 
     hackHistory: { time: number, level: number }[];
     velocity: number;
@@ -100,7 +103,10 @@ class TargetSelectionManager {
 
         this.allTargets = new Set();
 
-        this.pendingTargets = [];
+        this.pendingTargets = new PriorityQueue((ta, tb) => {
+            return expectedValuePerRamSecond(ns, ta, CONFIG.batchInterval)
+                - expectedValuePerRamSecond(ns, tb, CONFIG.batchInterval);
+        });
         this.tillTargets = new Set();
         this.sowTargets = new Set();
         this.harvestTargets = new Set();
@@ -113,18 +119,15 @@ class TargetSelectionManager {
         if (this.allTargets.has(target)) return;
 
         this.allTargets.add(target);
-        this.pendingTargets.push(target);
+        this.pendingTargets.enqueue(target);
         this.ns.print(`INFO: queued target ${target}`);
     }
 
     readyToTillTargets(): string[] {
         // Special bootstrap case, hack level 1 -> only n00dles
         if (this.ns.getHackingLevel() === 1) {
-            const idx = this.pendingTargets.findIndex(name => name === "n00dles");
-            if (idx >= 0) {
-                return [this.pendingTargets.splice(idx, 1)[0]];
-            }
-            return [];
+            // TODO: this seems bad, but it's hard to get
+            return ["n00dles"];
         }
 
         if (Math.abs(this.velocity) > 0.05) {
@@ -132,17 +135,11 @@ class TargetSelectionManager {
             return [];
         }
 
-        if (this.pendingTargets.length === 0) return [];
+        if (this.pendingTargets.size() === 0) return [];
 
-        // Prioritize by weaken time (faster first)
-        this.pendingTargets.sort((a, b) => {
-            const at = this.ns.getWeakenTime(a);
-            const bt = this.ns.getWeakenTime(b);
-            return at - bt;
-        });
 
         // Pop one target to till
-        const next = this.pendingTargets.shift();
+        const next = this.pendingTargets.dequeue();
         if (next) {
             this.ns.print(`INFO: selecting ${next} for tilling`);
             return [next];
