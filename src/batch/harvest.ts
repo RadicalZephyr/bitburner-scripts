@@ -108,6 +108,9 @@ OPTIONS
         batches[batchIndex] = batchPids;
         currentBatches++;
 
+        if (currentBatches > maxOverlap) {
+            currentBatches = currentBatches % maxOverlap;
+        }
         await ns.sleep(CONFIG.batchInterval);
     }
 }
