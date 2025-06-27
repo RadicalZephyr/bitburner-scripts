@@ -403,6 +403,27 @@ class MemoryManager {
         const allocation = this.allocations.get(claim.allocationId);
         if (!allocation) return false;
 
+        const chunk = allocation.chunks.find(
+            c => c.hostname === claim.hostname && c.chunkSize === claim.chunkSize,
+        );
+        if (!chunk) {
+            printLog(
+                `WARN: claim request for allocation ${claim.allocationId} on ${claim.hostname} not found`,
+            );
+            return false;
+        }
+
+        const claimedSoFar = allocation.claims
+            .filter(c => c.hostname === claim.hostname && c.chunkSize === claim.chunkSize)
+            .reduce((sum, c) => sum + c.numChunks, 0);
+
+        if (claimedSoFar + claim.numChunks > chunk.numChunks) {
+            printLog(
+                `WARN: claim for allocation ${claim.allocationId} exceeds reserved chunks`,
+            );
+            return false;
+        }
+
         allocation.claims.push(claim as ClaimInfo);
 
         return true;
