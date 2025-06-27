@@ -54,13 +54,13 @@ function checkWorkers(ns: NS, workers: WorkerSnapshot[]): void {
 function checkAllocations(ns: NS, allocations: AllocationSnapshot[]): void {
     for (const alloc of allocations) {
         for (const host of alloc.hosts) {
-            const claims = alloc.claims
+            const claimedChunks = alloc.claims
                 .filter(c => c.hostname === host.hostname && c.chunkSize === host.chunkSize)
                 .reduce((sum, c) => sum + c.numChunks, 0);
-            if (claims > host.numChunks) {
+            if (claimedChunks > host.numChunks) {
                 ns.print(
                     `ERROR: allocation ${alloc.allocationId} on ${host.hostname} ` +
-                    `claims ${claims} > reserved ${host.numChunks}`,
+                    `claims ${claimedChunks} > reserved ${host.numChunks}`,
                 );
             }
             for (const claim of alloc.claims) {
