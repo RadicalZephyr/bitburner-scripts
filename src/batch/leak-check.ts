@@ -72,13 +72,13 @@ function checkAllocations(ns: NS, allocations: AllocationSnapshot[]): void {
                     `claims ${claimedChunks} > reserved ${host.numChunks}`,
                 );
             }
-            for (const claim of alloc.claims) {
-                let runningScript = ns.getRunningScript(claim.pid, claim.hostname);
-                if (!runningScript || runningScript.filename !== claim.filename) {
-                    ns.print(`ERROR: claimaint process ${claim.pid} running ` +
-                        `${claim.filename} on ${host.hostname} still has an ` +
-                        `active claim for ${claim.numChunks}x${ns.formatRam(claim.chunkSize)}`);
-                }
+        }
+        for (const claim of alloc.claims) {
+            let runningScript = ns.getRunningScript(claim.pid, claim.hostname);
+            if (!runningScript || runningScript.filename !== claim.filename) {
+                ns.print(`ERROR: exited claimaint process ${claim.pid} running ` +
+                    `${claim.filename} on ${claim.hostname} still has an ` +
+                    `active claim for ${claim.numChunks}x${ns.formatRam(claim.chunkSize)}`);
             }
         }
     }
