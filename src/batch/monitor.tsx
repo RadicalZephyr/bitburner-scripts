@@ -87,7 +87,7 @@ Example:
                 || ns.getServerMaxMoney(host) <= 0)
                 continue;
 
-            const info = hostInfo(ns, host, threadsByTarget.get(host));
+            const info = hostInfo(ns, host, phase, threadsByTarget.get(host));
             switch (phase) {
                 case Lifecycle.Worker:
                     break;
@@ -116,12 +116,12 @@ Example:
 
         ns.clearLog();
         ns.printRaw(<>
-            <ServerBlock title={"Harvesting"} targets={harvesting} theme={theme}></ServerBlock>
-            <ServerBlock title={"Pending Harvesting"} targets={pendingHarvesting} theme={theme}></ServerBlock>
-            <ServerBlock title={"Sowing"} targets={sowing} theme={theme}></ServerBlock>
-            <ServerBlock title={"Pending Sowing"} targets={pendingSowing} theme={theme}></ServerBlock>
-            <ServerBlock title={"Tilling"} targets={tilling} theme={theme}></ServerBlock>
-            <ServerBlock title={"Pending Tilling"} targets={pendingTilling} theme={theme}></ServerBlock>
+            <ServerBlock ns={ns} title={"Harvesting"} targets={harvesting} theme={theme}></ServerBlock>
+            <ServerBlock ns={ns} title={"Pending Harvesting"} targets={pendingHarvesting} theme={theme}></ServerBlock>
+            <ServerBlock ns={ns} title={"Sowing"} targets={sowing} theme={theme}></ServerBlock>
+            <ServerBlock ns={ns} title={"Pending Sowing"} targets={pendingSowing} theme={theme}></ServerBlock>
+            <ServerBlock ns={ns} title={"Tilling"} targets={tilling} theme={theme}></ServerBlock>
+            <ServerBlock ns={ns} title={"Pending Tilling"} targets={pendingTilling} theme={theme}></ServerBlock>
         </>);
         await ns.sleep(flags.refreshrate);
     }
@@ -142,6 +142,10 @@ export class TargetThreads {
 
     sowPids: number[];
 
+    tillPid: number | null;
+    sowPid: number | null;
+    harvestPid: number | null;
+
     constructor() {
         this.h = 0;
         this.hPid = [];
@@ -156,6 +160,10 @@ export class TargetThreads {
         this.harvestPids = [];
 
         this.sowPids = [];
+
+        this.tillPid = null;
+        this.sowPid = null;
+        this.harvestPid = null;
     }
 }
 
@@ -178,8 +186,12 @@ export function countThreadsByTarget(ns: NS, workers: string[], targets: string[
             if (pi.filename === 'batch/harvest.js') {
                 targetThread.harvestPids.push(pi.pid);
                 targetThread.harvestMoney = ns.getScriptIncome(pi.filename, host, ...pi.args);
+                targetThread.harvestPid = pi.pid;
             } else if (pi.filename === 'batch/sow.js') {
                 targetThread.sowPids.push(pi.pid);
+                targetThread.sowPid = pi.pid;
+            } else if (pi.filename === 'batch/till.js') {
+                targetThread.tillPid = pi.pid;
             } else if (pi.filename === 'batch/h.js') {
                 targetThread.hPid.push(pi.pid);
                 targetThread.h += pi.threads;
@@ -206,10 +218,12 @@ export type HostInfo = {
     secPlus: string,
     threadsH: string,
     threadsG: string,
-    threadsW: string
+    threadsW: string,
+    pid: number | null,
+    phase: Lifecycle,
 }
 
-export function hostInfo(ns: NS, target: string, targetThreads: TargetThreads): HostInfo {
+export function hostInfo(ns: NS, target: string, lifecycle: Lifecycle, targetThreads: TargetThreads): HostInfo {
     let hckLevel = ns.getServerRequiredHackingLevel(target);
     hckLevel = typeof hckLevel == "number" && !isNaN(hckLevel) ? hckLevel : 1;
     const minSec = ns.getServerMinSecurityLevel(target);
@@ -222,6 +236,24 @@ export function hostInfo(ns: NS, target: string, targetThreads: TargetThreads): 
     const harvestMoney = targetThreads.harvestMoney;
     const eValue = expectedValuePerRamSecond(ns, target);
 
+    let pid: number | null = null;
+    if (lifecycle !== undefined) {
+        switch (lifecycle) {
+            case Lifecycle.Harvesting:
+            case Lifecycle.PendingHarvesting:
+                pid = targetThreads.harvestPid;
+                break;
+            case Lifecycle.Sowing:
+            case Lifecycle.PendingSowing:
+                pid = targetThreads.sowPid;
+                break;
+            case Lifecycle.Tilling:
+            case Lifecycle.PendingTilling:
+                pid = targetThreads.tillPid;
+                break;
+        }
+    }
+
     return {
         name: target,
         harvestMoney: Math.abs(harvestMoney) < 0 ? '' : "$" + ns.formatNumber(harvestMoney, 2),
@@ -232,7 +264,9 @@ export function hostInfo(ns: NS, target: string, targetThreads: TargetThreads): 
         secPlus: Math.abs(secPlus) < 0.1 ? '+0.0' : "+" + ns.formatNumber(secPlus, 2),
         threadsH: formatThreads(ns, targetThreads.h),
         threadsG: formatThreads(ns, targetThreads.g),
-        threadsW: formatThreads(ns, targetThreads.w)
+        threadsW: formatThreads(ns, targetThreads.w),
+        pid: pid,
+        phase: lifecycle ?? Lifecycle.PendingTilling,
     };
 }
 
@@ -251,12 +285,13 @@ function formatThreads(ns: NS, threads: number): string {
 }
 
 interface IBlockSettings {
+    ns: NS,
     title: string,
     targets: HostInfo[],
     theme: UserInterfaceTheme,
 }
 
-export function ServerBlock({ title, targets, theme }: IBlockSettings) {
+export function ServerBlock({ ns, title, targets, theme }: IBlockSettings) {
     const cellStyle = { padding: "0 0.5em" };
     return (<>
         <h2>{title} - {targets.length} targets</h2>
@@ -275,23 +310,25 @@ export function ServerBlock({ title, targets, theme }: IBlockSettings) {
                     <th style={cellStyle}>thr(w)</th>
                 </tr>
             </thead>
-            {targets.map((target, idx) => <ServerRow host={target} theme={theme} rowIndex={idx} cellStyle={cellStyle}></ServerRow>)}
+            {targets.map((target, idx) => <ServerRow ns={ns} host={target} theme={theme} rowIndex={idx} cellStyle={cellStyle}></ServerRow>)}
         </table>
     </>);
 }
 
 interface IRowSettings {
+    ns: NS,
     host: HostInfo,
     rowIndex: number,
     cellStyle: any,
     theme: UserInterfaceTheme,
 }
 
-function ServerRow({ host, rowIndex, cellStyle, theme }: IRowSettings) {
+function ServerRow({ ns, host, rowIndex, cellStyle, theme }: IRowSettings) {
+    const linkStyle = { color: theme.primary, cursor: "pointer" };
+    const openTail = () => { if (typeof host.pid === "number") ns.ui.openTail(host.pid); };
     return (
         <tr key={host.name} style={rowIndex % 2 === 1 ? undefined : { backgroundColor: theme.well }}>
-            <td style={cellStyle}>{host.name}</td>
-            <td style={cellStyle}>{host.harvestMoney}</td>
+            <td style={cellStyle}><a style={linkStyle} href="#" onClick={openTail}>{host.name}</a></td>
             <td style={cellStyle}>{host.expectedValue}</td>
             <td style={cellStyle}>{host.hckLevel}</td>
             <td style={cellStyle}>{host.maxMoney}</td>
