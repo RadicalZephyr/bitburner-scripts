@@ -113,7 +113,7 @@ Example:
             <ServerBlock title={"Harvesting"} targets={harvesting} theme={theme}></ServerBlock>
             <ServerBlock title={"Pending Harvesting"} targets={pendingHarvesting} theme={theme}></ServerBlock>
             <ServerBlock title={"Sowing"} targets={sowing} theme={theme}></ServerBlock>
-            <ServerBlock title={"Pending Tilling"} targets={pendingSowing} theme={theme}></ServerBlock>
+            <ServerBlock title={"Pending Sowing"} targets={pendingSowing} theme={theme}></ServerBlock>
             <ServerBlock title={"Tilling"} targets={tilling} theme={theme}></ServerBlock>
             <ServerBlock title={"Pending Tilling"} targets={pendingTilling} theme={theme}></ServerBlock>
         </>);
