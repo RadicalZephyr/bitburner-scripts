@@ -71,8 +71,7 @@ async function readHostsFromPort(ns: NS, hostsPort: NetscriptPort, manager: Targ
             switch (nextHostMsg[0]) {
                 case MessageType.NewTarget:
                     ns.print(`INFO: received target ${hostname}`);
-                    await monitor.pending(hostname);
-                    manager.pushTarget(hostname);
+                    await manager.pushTarget(hostname);
                     break;
 
                 case MessageType.FinishedTilling:
@@ -135,7 +134,7 @@ class TargetSelectionManager {
      * - If both security and funds are optimal, queue for harvesting and notify
      *   the monitor via `pendingHarvesting()`.
      */
-    pushTarget(target: string) {
+    async pushTarget(target: string) {
         if (this.allTargets.has(target)) return;
 
         this.allTargets.add(target);
@@ -148,19 +147,20 @@ class TargetSelectionManager {
         if (curSec > minSec + 1) {
             this.ns.print(`INFO: queue till ${target}`);
             this.pendingTargets.push(target);
-            this.monitor.pending(target);
+            await this.monitor.pending(target);
             return;
         }
 
         if (curMoney < maxMoney * 0.999) {
             this.ns.print(`INFO: queue sow ${target}`);
             this.pendingSowTargets.push(target);
+            // TODO: should notify monitor this target is `pendingSowing`
             return;
         }
 
         this.ns.print(`INFO: queue harvest ${target}`);
         this.pendingHarvestTargets.push(target);
-        this.monitor.pendingHarvesting(target);
+        await this.monitor.pendingHarvesting(target);
     }
 
     async finishTilling(hostname: string) {
