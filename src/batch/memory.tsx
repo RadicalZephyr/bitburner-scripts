@@ -91,11 +91,9 @@ Example:
         let now = Date.now();
 
         if (memMessageWaiting) {
-            printLog("INFO: reading memory requests");
             readMemRequestsFromPort(ns, memPort, memoryManager);
             memMessageWaiting = false;
             nextMemMessage = memPort.nextWrite().then(_ => { memMessageWaiting = true; });
-            printLog("INFO: finished reading memory requests");
         }
 
         if (lastRender + refreshRate < now) {
