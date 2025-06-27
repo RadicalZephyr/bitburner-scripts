@@ -9,6 +9,7 @@ import {
 
 export async function main(ns: NS) {
     ns.disableLog('ALL');
+    ns.ui.openTail();
 
     const client = new MemoryClient(ns);
     const snapshot = await client.memorySnapshot();
@@ -20,6 +21,7 @@ export async function main(ns: NS) {
     checkWorkers(ns, snapshot.workers);
     checkAllocations(ns, snapshot.allocations);
     crossCheck(ns, snapshot);
+    ns.print(`finished leak check.`);
 }
 
 function checkWorkers(ns: NS, workers: WorkerSnapshot[]): void {
