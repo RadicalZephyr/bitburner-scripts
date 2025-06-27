@@ -59,16 +59,22 @@ function solve(data: bigint): bigint {
     // Calculate n from  for the exponent
     let n = Math.floor((s_str.length - 2) / 2);
 
-    let x_n = BigInt(a * (10 ** n));
+    let x_n = BigInt(a) * (10n ** BigInt(n));
 
     // Now iteratively calculate better approximations to the square
     // root of S using Heron's Method
     let two = BigInt(2);
 
-    while (!(x_n * x_n < s && (x_n + BigInt(1)) * (x_n + BigInt(1)) > s)) {
-        let x_n1 = (x_n + (s / x_n)) / two;
+    while (!(x_n * x_n < s && (x_n + 1n) * (x_n + 1n) > s)) {
+        // Exit if a perfect root is found
+        if (x_n * x_n == s) return x_n;
+        let x_n1 = (x_n + (s / x_n)) / 2n;
+        // No change in the estimate, time to exit
+        if (x_n == x_n1) break;
         x_n = x_n1;
     }
 
-    return x_n;
+    const lower = x_n;
+    const upper = x_n + 1n;
+    return (s - lower * lower) <= (upper * upper - s) ? lower : upper;
 }
