@@ -41,7 +41,8 @@ Reads lifecycle updates from `MonitorClient` via `MONITOR_PORT` and displays the
 
 - `till.js` weakens a host until its security hits minimum.
 - `sow.js` grows a host to maximum money and weakens again to maintain security.
-- `harvest.ts` currently calculates batch sizes but does not yet spawn hacking batches.
+- `harvest.ts` launches batches of hacking/weaken/grow/weaken scripts
+  precisely timed to maintain the target at max money and minimumm security.
 - `h.js`, `g.js` and `w.js` perform individual hack, grow and weaken commands.
 
 ** Messaging Protocols
@@ -93,8 +94,3 @@ released.
 
 Messages to the manager are `[MessageType, hostname]` where the type
 is `NewTarget`, `FinishedTilling` or `FinishedSowing`.
-
-
-** Future Enhancements
-
-The codebase still lacks a full harvesting loop. A future update will add real batch execution and better prioritization of targets.
