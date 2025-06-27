@@ -30,6 +30,7 @@ export type Message = [
 export interface AllocationRequest {
     returnPort: number,
     pid: number,
+    filename: string,
     chunkSize: number,
     numChunks: number,
     contiguous?: boolean,
@@ -84,6 +85,7 @@ export interface ClaimSnapshot {
 export interface AllocationSnapshot {
     allocationId: number,
     pid: number,
+    filename: string,
     hosts: HostAllocation[],
     claims: ClaimSnapshot[],
 }
@@ -150,6 +152,7 @@ export class MemoryClient {
         let payload = {
             returnPort: returnPortId,
             pid: pid,
+            filename: this.ns.getScriptName(),
             chunkSize: chunkSize,
             numChunks: numChunks,
             contiguous: contiguous,

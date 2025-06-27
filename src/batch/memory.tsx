@@ -130,7 +130,7 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memoryManager: 
             case MessageType.Request:
                 const request = msg[1] as AllocationRequest;
                 printLog(
-                    `INFO: request pid=${request.pid} ` +
+                    `INFO: request pid=${request.pid} filename=${request.filename} ` +
                     `${request.numChunks}x${ns.formatRam(request.chunkSize)} ` +
                     `contiguous=${request.contiguous ?? false} ` +
                     `coreDependent=${request.coreDependent ?? false}`
@@ -138,6 +138,7 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memoryManager: 
                 const returnPort = request.returnPort;
                 const allocation = memoryManager.allocate(
                     request.pid,
+                    request.filename,
                     request.chunkSize,
                     request.numChunks,
                     request.contiguous ?? false,
@@ -291,6 +292,7 @@ class MemoryManager {
             allocations.push({
                 allocationId: id,
                 pid: alloc.pid,
+                filename: alloc.filename,
                 hosts: alloc.chunks.map(c => c.asHostAllocation()),
                 claims: alloc.claims.map(c => ({
                     pid: c.pid,
@@ -314,6 +316,7 @@ class MemoryManager {
      */
     allocate(
         pid: number,
+        filename: string,
         chunkSize: number,
         numChunks: number,
         contiguous: boolean = false,
@@ -337,7 +340,7 @@ class MemoryManager {
                 if (Math.floor(worker.freeRam / chunkSize) >= numChunks) {
                     const chunk = worker.allocate(chunkSize, numChunks);
                     const id = this.nextAllocId++;
-                    const allocation = new Allocation(id, pid, [chunk]);
+                    const allocation = new Allocation(id, pid, filename, [chunk]);
                     this.allocations.set(id, allocation);
                     return allocation.asAllocationResult();
                 }
@@ -380,7 +383,7 @@ class MemoryManager {
         }
 
         const id = this.nextAllocId++;
-        const allocation = new Allocation(id, pid, chunks);
+        const allocation = new Allocation(id, pid, filename, chunks);
         this.allocations.set(id, allocation);
 
         return allocation.asAllocationResult();
@@ -497,12 +500,14 @@ class MemoryManager {
 class Allocation {
     id: number;
     pid: number;
+    filename: string;
     chunks: AllocationChunk[];
     claims: ClaimInfo[];
 
-    constructor(id: number, pid: number, chunks: AllocationChunk[]) {
+    constructor(id: number, pid: number, filename: string, chunks: AllocationChunk[]) {
         this.id = id;
         this.pid = pid;
+        this.filename = filename;
         this.chunks = chunks;
         this.claims = [];
     }
