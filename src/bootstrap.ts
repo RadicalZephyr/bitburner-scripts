@@ -8,8 +8,9 @@ import { launch } from "batch/launch";
 
 export async function main(ns: NS) {
     await startMemory(ns);
-    await startManager(ns);
     await startCracker(ns);
+    await ns.sleep(500);
+    await startManager(ns);
     await startMonitor(ns);
     await sendPersonalServersToMemory(ns);
 }
@@ -32,6 +33,7 @@ async function startMemory(ns: NS) {
     let batchFiles = ns.ls("home", "batch");
     let memoryFiles = [...MEMORY_FILES, ...batchFiles];
 
+    ns.nuke(memoryHost);
     manualLaunch(ns, memoryScript, memoryHost, memoryFiles);
 
     await ns.sleep(1000);
