@@ -88,12 +88,13 @@ OPTIONS
 
         if (logistics.overlap < maxOverlap) {
             const toRelease = maxOverlap - logistics.overlap;
-            const result = await memClient.releaseChunks(allocation.allocationId, toRelease);
-            if (result) {
-                allocation = new TransferableAllocation(result.allocationId, result.hosts);
-                batchHost = makeBatchHostArray(allocation);
-            }
-            maxOverlap = logistics.overlap;
+            ns.print(`necessary overlap is decreasing! could have released ${toRelease} chunks...`);
+            // const result = await memClient.releaseChunks(allocation.allocationId, toRelease);
+            // if (result) {
+            //     allocation = new TransferableAllocation(result.allocationId, result.hosts);
+            //     batchHost = makeBatchHostArray(allocation);
+            // }
+            // maxOverlap = logistics.overlap;
         }
         const host = batchHost.at(currentBatches % maxOverlap);
         spawnBatch(ns, host, target, logistics.phases);
