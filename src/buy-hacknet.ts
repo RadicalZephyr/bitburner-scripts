@@ -25,6 +25,11 @@ export async function main(ns: NS) {
         return;
     }
 
+    if (!ns.fileExists("Formulas.exe", "home")) {
+        ns.tprint("ERROR: requires Formulas.exe. Aborting");
+        return;
+    }
+
     const returnTimeSeconds = flags["return-time"] * 60;
     let budget = ns.getServerMoneyAvailable("home") * flags.spend;
     ns.print(`INFO: starting with budget $${ns.formatNumber(budget)} and payback time ${ns.tFormat(returnTimeSeconds * 1000)}`);
