@@ -15,6 +15,7 @@ export async function main(ns: NS) {
 
     const flags = ns.flags([
         ['allocation-id', -1],
+        ['max-ram', -1],
         ['help', false],
     ]);
 
@@ -31,6 +32,7 @@ Example:
 
 OPTIONS
 --help           Show this help message
+--max-ram        Limit RAM usage per batch run
 `);
         return;
     }
@@ -44,6 +46,14 @@ OPTIONS
         registerAllocationOwnership(ns, allocationId, "self");
     }
 
+    let maxRam = flags['max-ram'];
+    if (maxRam !== -1) {
+        if (typeof maxRam !== 'number' || maxRam <= 0) {
+            ns.tprint('--max-ram must be a positive number');
+            return;
+        }
+    }
+
     let target = rest[0];
     if (typeof target !== 'string' || !ns.serverExists(target)) {
         ns.tprintf("target %s does not exist", target);
@@ -51,23 +61,33 @@ OPTIONS
     }
 
     let logistics = calculateBatchLogistics(ns, target);
+    let overlapLimit = logistics.overlap;
+    if (maxRam !== -1) {
+        overlapLimit = Math.min(overlapLimit, Math.floor(maxRam / logistics.batchRam));
+    }
+    if (overlapLimit < 1) {
+        ns.tprint(`max-ram ${ns.formatRam(maxRam)} is too small for one batch`);
+        return;
+    }
+
+    const requiredRam = logistics.batchRam * overlapLimit;
     ns.printf(
         `%s: batch ram %s, overlap x%d => required %s\nphases: %s`,
         logistics.target,
         ns.formatRam(logistics.batchRam),
-        logistics.overlap,
-        ns.formatRam(logistics.requiredRam),
+        overlapLimit,
+        ns.formatRam(requiredRam),
         JSON.stringify(logistics.phases, undefined, 2)
     );
 
     let memClient = new MemoryClient(ns);
-    let allocation = await memClient.requestOwnedAllocation(logistics.batchRam, logistics.overlap);
+    let allocation = await memClient.requestOwnedAllocation(logistics.batchRam, overlapLimit);
     if (!allocation) return;
 
     // Track how many batches can overlap concurrently. If the
     // calculated overlap drops we release the extra memory back to the
     // MemoryManager so it can be reused by other processes.
-    let maxOverlap = logistics.overlap;
+    let maxOverlap = overlapLimit;
     let currentBatches = 0;
 
     let batchHost: SparseHostArray = makeBatchHostArray(allocation);
@@ -86,15 +106,17 @@ OPTIONS
     while (true) {
         let logistics = calculateBatchLogistics(ns, target);
 
-        if (logistics.overlap < maxOverlap) {
-            const toRelease = maxOverlap - logistics.overlap;
+        const desiredOverlap = Math.min(overlapLimit, logistics.overlap);
+
+        if (desiredOverlap < maxOverlap) {
+            const toRelease = maxOverlap - desiredOverlap;
             ns.print(`necessary overlap is decreasing! could have released ${toRelease} chunks...`);
             // const result = await memClient.releaseChunks(allocation.allocationId, toRelease);
             // if (result) {
             //     allocation = new TransferableAllocation(result.allocationId, result.hosts);
             //     batchHost = makeBatchHostArray(allocation);
             // }
-            // maxOverlap = logistics.overlap;
+            // maxOverlap = desiredOverlap;
         }
         let batchIndex = currentBatches % maxOverlap;
         const host = batchHost.at(batchIndex);
