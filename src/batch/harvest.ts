@@ -74,11 +74,13 @@ OPTIONS
 
     let batchHost: SparseHostArray = makeBatchHostArray(allocation);
 
+    let batches = [];
     // Launch one batch per allocated chunk so that the pipeline is
     // fully populated before entering the steady state loop.
     for (let i = 0; i < maxOverlap; ++i) {
         const host = batchHost.at(i);
-        spawnBatch(ns, host, target, logistics.phases);
+        let batchPids = spawnBatch(ns, host, target, logistics.phases);
+        batches.push(batchPids);
         currentBatches++;
         await ns.sleep(CONFIG.batchInterval);
     }
@@ -96,8 +98,13 @@ OPTIONS
             // }
             // maxOverlap = logistics.overlap;
         }
-        const host = batchHost.at(currentBatches % maxOverlap);
-        spawnBatch(ns, host, target, logistics.phases);
+        let batchIndex = currentBatches % maxOverlap;
+        const host = batchHost.at(batchIndex);
+        while (ns.isRunning(batches[batchIndex].at(-1))) {
+            await ns.sleep(10);
+        }
+        let batchPids = spawnBatch(ns, host, target, logistics.phases);
+        batches[batchIndex] = batchPids;
         currentBatches++;
 
         await ns.sleep(CONFIG.batchInterval);
