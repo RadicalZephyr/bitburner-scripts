@@ -89,9 +89,10 @@ function crossCheck(ns: NS, snapshot: MemorySnapshot): void {
             .flatMap(a => a.hosts)
             .filter(h => h.hostname === worker.hostname)
             .reduce((sum, h) => sum + h.chunkSize * h.numChunks, 0);
-        if (Math.abs(total - worker.allocatedRam) > 0.001) {
+        let usedRam = worker.setAsideRam + worker.reservedRam + worker.allocatedRam;
+        if (Math.abs(total - usedRam) > 0.001) {
             ns.print(
-                `ERROR: worker ${worker.hostname} reports ${ns.formatRam(worker.allocatedRam)} ` +
+                `ERROR: worker ${worker.hostname} reports ${ns.formatRam(usedRam)} ` +
                 `allocated but allocations total ${ns.formatRam(total)}`,
             );
         }
