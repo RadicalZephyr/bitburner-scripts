@@ -15,6 +15,7 @@ export async function main(ns: NS) {
 
     const flags = ns.flags([
         ['allocation-id', -1],
+        ['max-threads', -1],
         ['help', false],
     ]);
 
@@ -31,6 +32,7 @@ Example:
 
 OPTIONS
 --help           Show this help message
+--max-threads    Cap the number of threads spawned
 `);
         return;
     }
@@ -44,6 +46,14 @@ OPTIONS
         registerAllocationOwnership(ns, allocationId, "self");
     }
 
+    let maxThreads = flags['max-threads'];
+    if (maxThreads !== -1) {
+        if (typeof maxThreads !== 'number' || maxThreads <= 0) {
+            ns.tprint('--max-threads must be a positive number');
+            return;
+        }
+    }
+
     let target = rest[0];
     if (typeof target !== 'string' || !ns.serverExists(target)) {
         ns.tprintf("target %s does not exist", target);
@@ -53,8 +63,20 @@ OPTIONS
     let managerClient = new ManagerClient(ns);
 
     let growThreads = neededGrowThreads(ns, target);
-    let growSecDelta = ns.growthAnalyzeSecurity(growThreads, target);
-    let weakenThreads = weakenAnalyze(growSecDelta);
+    let weakenThreads: number;
+    if (maxThreads !== -1) {
+        growThreads = Math.min(growThreads, maxThreads);
+        let growSecDelta = ns.growthAnalyzeSecurity(growThreads, target);
+        weakenThreads = weakenAnalyze(growSecDelta);
+        while (growThreads + weakenThreads > maxThreads && growThreads > 0) {
+            growThreads--;
+            growSecDelta = ns.growthAnalyzeSecurity(growThreads, target);
+            weakenThreads = weakenAnalyze(growSecDelta);
+        }
+    } else {
+        let growSecDelta = ns.growthAnalyzeSecurity(growThreads, target);
+        weakenThreads = weakenAnalyze(growSecDelta);
+    }
 
     if (growThreads < 1 || weakenThreads < 1) {
         ns.printf(`no need to sow ${target}`);

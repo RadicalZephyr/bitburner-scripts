@@ -13,6 +13,7 @@ export async function main(ns: NS) {
 
     const flags = ns.flags([
         ['allocation-id', -1],
+        ['max-threads', -1],
         ['help', false],
     ]);
 
@@ -28,6 +29,7 @@ Example:
 
 OPTIONS
   --help           Show this help message
+  --max-threads    Cap the number of threads spawned
 `);
         return;
     }
@@ -41,6 +43,14 @@ OPTIONS
         registerAllocationOwnership(ns, allocationId, "self");
     }
 
+    let maxThreads = flags['max-threads'];
+    if (maxThreads !== -1) {
+        if (typeof maxThreads !== 'number' || maxThreads <= 0) {
+            ns.tprint('--max-threads must be a positive number');
+            return;
+        }
+    }
+
     let target = rest[0];
     if (typeof target !== 'string' || !ns.serverExists(target)) {
         ns.tprintf("target %s does not exist", target);
@@ -50,6 +60,9 @@ OPTIONS
     let managerClient = new ManagerClient(ns);
 
     let threads = calculateWeakenThreads(ns, target);
+    if (maxThreads !== -1) {
+        threads = Math.min(threads, maxThreads);
+    }
 
     if (threads == 0 || isNaN(threads)) {
         ns.printf("%s security is already at minimum level", target);
