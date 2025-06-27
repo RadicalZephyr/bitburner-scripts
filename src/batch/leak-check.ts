@@ -93,7 +93,7 @@ function crossCheck(ns: NS, snapshot: MemorySnapshot): void {
         if (Math.abs(total - usedRam) > 0.001) {
             ns.print(
                 `ERROR: worker ${worker.hostname} reports ${ns.formatRam(usedRam)} ` +
-                `allocated but allocations total ${ns.formatRam(total)}`,
+                `in use but allocations total ${ns.formatRam(total)}`,
             );
         }
     }
