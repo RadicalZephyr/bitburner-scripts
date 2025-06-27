@@ -77,7 +77,11 @@ Example:
 
     memoryManager.pushWorker("home", 32);
 
+    let lastRender = 0;
+
     while (true) {
+        let now = Date.now();
+
         if (memMessageWaiting) {
             printLog("INFO: reading memory requests");
             readMemRequestsFromPort(ns, memPort, memoryManager);
@@ -86,21 +90,24 @@ Example:
             printLog("INFO: finished reading memory requests");
         }
 
-        const theme = ns.ui.getTheme();
-        ns.clearLog();
-        ns.printRaw(
-            <div style={{ display: "flex", gap: "1em" }}>
-                <MemoryDisplay manager={memoryManager} theme={theme}></MemoryDisplay>
-                <LogDisplay lines={log} theme={theme}></LogDisplay>
-            </div>
-        );
+        if (lastRender + refreshRate < now) {
+            const theme = ns.ui.getTheme();
+            ns.clearLog();
+            ns.printRaw(
+                <div style={{ display: "flex", gap: "1em" }}>
+                    <MemoryDisplay manager={memoryManager} theme={theme}></MemoryDisplay>
+                    <LogDisplay lines={log} theme={theme}></LogDisplay>
+                </div>
+            );
+            lastRender = now;
+        }
 
         // N.B. this time is seconds not milliseconds
         if (ns.self().onlineRunningTime % 2 == 0) {
             memoryManager.updateReserved();
             memoryManager.cleanupTerminated();
         }
-        await ns.sleep(refreshRate);
+        await ns.sleep(50);
     }
 }
 
