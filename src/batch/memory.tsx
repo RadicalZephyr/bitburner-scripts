@@ -118,7 +118,8 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memoryManager: 
                 printLog(
                     `INFO: request pid=${request.pid} ` +
                     `${request.numChunks}x${ns.formatRam(request.chunkSize)} ` +
-                    `contiguous=${request.contiguous ?? false}`
+                    `contiguous=${request.contiguous ?? false} ` +
+                    `coreDependent=${request.coreDependent ?? false}`
                 );
                 const returnPort = request.returnPort;
                 const allocation = memoryManager.allocate(
@@ -126,6 +127,7 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memoryManager: 
                     request.chunkSize,
                     request.numChunks,
                     request.contiguous ?? false,
+                    request.coreDependent ?? false,
                 );
                 if (allocation) {
                     printLog(
@@ -245,8 +247,31 @@ class MemoryManager {
         }
     }
 
-    allocate(pid: number, chunkSize: number, numChunks: number, contiguous: boolean = false): AllocationResult {
+    /**
+     * Allocate RAM for the given pid.
+     *
+     * When `coreDependent` is true the home server is preferred for
+     * the allocation. Otherwise the manager will try to allocate on
+     * non-home servers first.
+     */
+    allocate(
+        pid: number,
+        chunkSize: number,
+        numChunks: number,
+        contiguous: boolean = false,
+        coreDependent: boolean = false,
+    ): AllocationResult {
         let workers = Array.from(this.workers.values());
+
+        workers.sort((a, b) => {
+            if (a.hostname === "home" && b.hostname !== "home") {
+                return coreDependent ? -1 : 1;
+            }
+            if (a.hostname !== "home" && b.hostname === "home") {
+                return coreDependent ? 1 : -1;
+            }
+            return 0;
+        });
 
         if (contiguous) {
             // If any worker can satisfy the full request, allocate it there.
@@ -261,7 +286,18 @@ class MemoryManager {
             }
 
             // Otherwise, sort workers by free RAM descending to minimize hosts used
-            workers.sort((a, b) => b.freeRam - a.freeRam);
+            workers.sort((a, b) => {
+                if (b.freeRam === a.freeRam) {
+                    if (a.hostname === "home" && b.hostname !== "home") {
+                        return coreDependent ? -1 : 1;
+                    }
+                    if (a.hostname !== "home" && b.hostname === "home") {
+                        return coreDependent ? 1 : -1;
+                    }
+                    return 0;
+                }
+                return b.freeRam - a.freeRam;
+            });
         }
 
         let chunks: AllocationChunk[] = [];

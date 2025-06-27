@@ -29,6 +29,7 @@ export interface AllocationRequest {
     chunkSize: number,
     numChunks: number,
     contiguous?: boolean,
+    coreDependent?: boolean,
 }
 
 export interface AllocationRelease {
@@ -87,11 +88,20 @@ export class MemoryClient {
      * `#.registerAllocationOwnership` to install the appropriate
      * `atExit` handler for releasing the allocation when the owning
      * process exits.
+     *
+     * Set `coreDependent` to `true` when the task benefits from
+     * additional home cores so the memory manager can prioritize
+     * allocating RAM from the `home` server.
      */
-    async requestTransferableAllocation(chunkSize: number, numChunks: number, contiguous: boolean = false): Promise<TransferableAllocation> {
+    async requestTransferableAllocation(
+        chunkSize: number,
+        numChunks: number,
+        contiguous: boolean = false,
+        coreDependent: boolean = false,
+    ): Promise<TransferableAllocation> {
         this.ns.print(
             `INFO: requesting ${numChunks} x ${this.ns.formatRam(chunkSize)} ` +
-            `contiguous=${contiguous}`
+            `contiguous=${contiguous} coreDependent=${coreDependent}`
         );
         let pid = this.ns.pid;
         let returnPortId = MEMORY_PORT + pid;
@@ -102,7 +112,8 @@ export class MemoryClient {
             pid: pid,
             chunkSize: chunkSize,
             numChunks: numChunks,
-            contiguous: contiguous
+            contiguous: contiguous,
+            coreDependent: coreDependent,
         } as AllocationRequest;
         let request = [MessageType.Request, payload] as Message;
         while (!this.port.tryWrite(request)) {
@@ -131,9 +142,22 @@ export class MemoryClient {
      *
      * This method also registers an `atExit` handler function to send
      * a release message to the memory allocator.
+     *
+     * When `coreDependent` is `true` the memory manager will try to
+     * satisfy the request from the `home` server first.
      */
-    async requestOwnedAllocation(chunkSize: number, numChunks: number, contiguous: boolean = false): Promise<HostAllocation[]> {
-        let result = await this.requestTransferableAllocation(chunkSize, numChunks, contiguous);
+    async requestOwnedAllocation(
+        chunkSize: number,
+        numChunks: number,
+        contiguous: boolean = false,
+        coreDependent: boolean = false,
+    ): Promise<HostAllocation[]> {
+        let result = await this.requestTransferableAllocation(
+            chunkSize,
+            numChunks,
+            contiguous,
+            coreDependent,
+        );
         if (!result) {
             return null;
         }
