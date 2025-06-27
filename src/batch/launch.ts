@@ -2,6 +2,7 @@ import type { AutocompleteData, NS, RunOptions, ScriptArg } from "netscript";
 
 export interface LaunchRunOptions extends RunOptions {
     allocationFlag?: string;
+    coreDependent?: boolean;
 }
 
 import { MemoryClient } from "./client/memory";
@@ -16,6 +17,7 @@ export async function main(ns: NS) {
         ['itail', null],
         ['ram_override', null],
         ['allocation-flag', null],
+        ['core-dependent', false],
         ['help', false],
     ]);
 
@@ -23,7 +25,7 @@ export async function main(ns: NS) {
 
     if (rest.length === 0 || flags.help) {
         ns.tprint(`
-USAGE: run ${ns.getScriptName()} SCRIPT_NAME [--threads num_threads] [--ram_override ram_in_GBs] [--allocation-flag FLAG] [args...]
+USAGE: run ${ns.getScriptName()} SCRIPT_NAME [--threads num_threads] [--ram_override ram_in_GBs] [--allocation-flag FLAG] [--core-dependent] [args...]
 
 Run the script at SCRIPT_NAME, getting an allocation for it from the memory
 manager and spawning the script on the returned host. Otherwise, this script
@@ -34,6 +36,7 @@ OPTIONS
   --threads          Number of threads to run
   --ram_override     Override static RAM calculation
   --allocation-flag  Pass FLAG and allocation id to the spawned script
+  --core-dependent   Prefer allocations from home when available
 `);
         return;
     }
@@ -68,10 +71,17 @@ OPTIONS
         allocationFlag = "--" + allocationFlag;
     }
 
+    let coreDependent = flags['core-dependent'];
+    if (typeof coreDependent !== 'boolean') {
+        ns.tprint('--core-dependent must be a boolean');
+        return;
+    }
+
     let args = rest;
     let options: LaunchRunOptions = {
         threads: threads,
-        ramOverride: ram_override as number
+        ramOverride: ram_override as number,
+        coreDependent: coreDependent,
     };
     if (allocationFlag !== null) {
         options.allocationFlag = allocationFlag as string;
@@ -105,15 +115,22 @@ export async function launch(ns: NS, script: string, threadOrOptions?: number | 
 
     let totalThreads: number;
     let allocationFlag: string | undefined;
+    let coreDependent = false;
     if (typeof threadOrOptions === 'number' || typeof threadOrOptions === 'undefined') {
         totalThreads = typeof threadOrOptions === 'number' ? threadOrOptions : 1;
         allocationFlag = undefined;
     } else {
         totalThreads = threadOrOptions.threads ?? 1;
         allocationFlag = threadOrOptions.allocationFlag;
+        coreDependent = threadOrOptions.coreDependent ?? false;
     }
 
-    let allocation = await client.requestTransferableAllocation(scriptRam, totalThreads);
+    let allocation = await client.requestTransferableAllocation(
+        scriptRam,
+        totalThreads,
+        false,
+        coreDependent,
+    );
 
     let dependencies = Array.from(collectDependencies(ns, script));
     let pids = [];
