@@ -243,6 +243,17 @@ class MemoryManager {
 
     cleanupTerminated(): void {
         for (const [id, allocation] of this.allocations.entries()) {
+            if (allocation.claims.length === 0 && !this.ns.isRunning(allocation.pid)) {
+                for (const c of allocation.chunks) {
+                    let worker = this.workers.get(c.hostname);
+                    if (worker) {
+                        worker.free(c.chunkSize * c.numChunks);
+                    }
+                }
+
+                this.allocations.delete(id);
+            }
+
             const remaining: ClaimInfo[] = [];
             for (const claim of allocation.claims) {
                 if (!this.ns.isRunning(claim.pid)) {
@@ -256,6 +267,7 @@ class MemoryManager {
                     remaining.push(claim);
                 }
             }
+
             allocation.claims = remaining;
             allocation.chunks = allocation.chunks.filter(c => c.numChunks > 0);
             if (allocation.chunks.length === 0) {
