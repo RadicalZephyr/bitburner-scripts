@@ -69,10 +69,22 @@ OPTIONS
 
     let expectedTime = ns.tFormat(ns.getWeakenTime(target));
 
-    let weakenResult = await launch(ns, WEAKEN_SCRIPT, weakenThreads, target, 0);
+    let weakenResult = await launch(
+        ns,
+        WEAKEN_SCRIPT,
+        { threads: weakenThreads, coreDependent: true },
+        target,
+        0,
+    );
     weakenResult.allocation.releaseAtExit(ns, "weaken");
 
-    let growResult = await launch(ns, GROW_SCRIPT, growThreads, target, 0);
+    let growResult = await launch(
+        ns,
+        GROW_SCRIPT,
+        { threads: growThreads, coreDependent: true },
+        target,
+        0,
+    );
     growResult.allocation.releaseAtExit(ns, "grow");
 
     let pids = [...weakenResult.pids, ...growResult.pids];

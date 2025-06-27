@@ -64,7 +64,13 @@ OPTIONS
 
     let expectedTime = ns.tFormat(ns.getWeakenTime(target));
 
-    let result = await launch(ns, "/batch/w.js", threads, target, 0);
+    let result = await launch(
+        ns,
+        "/batch/w.js",
+        { threads: threads, coreDependent: true },
+        target,
+        0,
+    );
 
     result.allocation.releaseAtExit(ns, "weaken");
 
