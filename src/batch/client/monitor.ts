@@ -6,9 +6,10 @@ import { MONITOR_PORT } from "util/ports";
 export enum Lifecycle {
     PendingTilling,
     Tilling,
+    PendingSowing,
     Sowing,
-    Harvesting,
     PendingHarvesting,
+    Harvesting,
     Rebalancing,
 }
 
@@ -29,6 +30,10 @@ export class MonitorClient {
 
     async tilling(hostname: string) {
         await this.send(Lifecycle.Tilling, hostname);
+    }
+
+    async pendingSowing(hostname: string) {
+        await this.send(Lifecycle.PendingSowing, hostname);
     }
 
     async sowing(hostname: string) {

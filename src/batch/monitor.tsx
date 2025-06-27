@@ -72,8 +72,9 @@ Example:
         const harvesting: HostInfo[] = [];
         const pendingHarvesting: HostInfo[] = [];
         const sowing: HostInfo[] = [];
+        const pendingSowing: HostInfo[] = [];
         const tilling: HostInfo[] = [];
-        const pending: HostInfo[] = [];
+        const pendingTilling: HostInfo[] = [];
 
         for (const host of ALL_HOSTS) {
             if (host === "home"
@@ -87,17 +88,20 @@ Example:
                 case Lifecycle.Harvesting:
                     harvesting.push(info);
                     break;
+                case Lifecycle.PendingHarvesting:
+                    pendingHarvesting.push(info);
+                    break;
                 case Lifecycle.Sowing:
                     sowing.push(info);
+                    break;
+                case Lifecycle.PendingSowing:
+                    pendingSowing.push(info);
                     break;
                 case Lifecycle.Tilling:
                     tilling.push(info);
                     break;
-                case Lifecycle.PendingHarvesting:
-                    pendingHarvesting.push(info);
-                    break;
                 default:
-                    pending.push(info);
+                    pendingTilling.push(info);
                     break;
             }
         }
@@ -109,8 +113,9 @@ Example:
             <ServerBlock title={"Harvesting"} targets={harvesting} theme={theme}></ServerBlock>
             <ServerBlock title={"Pending Harvesting"} targets={pendingHarvesting} theme={theme}></ServerBlock>
             <ServerBlock title={"Sowing"} targets={sowing} theme={theme}></ServerBlock>
+            <ServerBlock title={"Pending Tilling"} targets={pendingSowing} theme={theme}></ServerBlock>
             <ServerBlock title={"Tilling"} targets={tilling} theme={theme}></ServerBlock>
-            <ServerBlock title={"Pending"} targets={pending} theme={theme}></ServerBlock>
+            <ServerBlock title={"Pending Tilling"} targets={pendingTilling} theme={theme}></ServerBlock>
         </>);
         await ns.sleep(flags.refreshrate);
     }

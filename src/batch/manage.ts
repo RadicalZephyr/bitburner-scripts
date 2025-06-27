@@ -154,7 +154,7 @@ class TargetSelectionManager {
         if (curMoney < maxMoney * 0.999) {
             this.ns.print(`INFO: queue sow ${target}`);
             this.pendingSowTargets.push(target);
-            // TODO: should notify monitor this target is `pendingSowing`
+            await this.monitor.pendingSowing(target);
             return;
         }
 
