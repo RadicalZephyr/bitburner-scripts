@@ -100,7 +100,7 @@ class TargetSelectionManager {
 
     harvestTargets: Set<string>;
 
-    pendingTargets: string[];
+    pendingTillTargets: string[];
     pendingSowTargets: string[];
     pendingHarvestTargets: string[];
 
@@ -113,7 +113,7 @@ class TargetSelectionManager {
 
         this.allTargets = new Set();
 
-        this.pendingTargets = [];
+        this.pendingTillTargets = [];
         this.pendingSowTargets = [];
         this.pendingHarvestTargets = [];
 
@@ -146,7 +146,7 @@ class TargetSelectionManager {
 
         if (curSec > minSec + 1) {
             this.ns.print(`INFO: queue till ${target}`);
-            this.pendingTargets.push(target);
+            this.pendingTillTargets.push(target);
             await this.monitor.pending(target);
             return;
         }
@@ -210,11 +210,11 @@ class TargetSelectionManager {
             const canAdd = CONFIG.maxTillTargets - this.tillTargets.size;
             let candidates: string[] = [];
             if (this.ns.getHackingLevel() === 1) {
-                if (this.pendingTargets.includes("n00dles")) {
+                if (this.pendingTillTargets.includes("n00dles")) {
                     candidates = ["n00dles"];
                 }
             } else if (Math.abs(this.velocity) <= 0.05) {
-                candidates = [...this.pendingTargets];
+                candidates = [...this.pendingTillTargets];
             }
             candidates.sort(compareExpectedValue);
             for (const host of candidates.slice(0, canAdd)) {
@@ -264,7 +264,7 @@ class TargetSelectionManager {
     }
 
     private async launchTill(host: string, threads: number) {
-        this.pendingTargets = this.pendingTargets.filter(h => h !== host);
+        this.pendingTillTargets = this.pendingTillTargets.filter(h => h !== host);
         this.ns.print(`INFO: launching till on ${host}`);
         await launch(
             this.ns,
