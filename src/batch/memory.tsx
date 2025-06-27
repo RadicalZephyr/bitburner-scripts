@@ -322,6 +322,11 @@ class MemoryManager {
         contiguous: boolean = false,
         coreDependent: boolean = false,
     ): AllocationResult {
+        if (chunkSize <= 0 || numChunks <= 0) {
+            printLog("ERROR: bad allocation request, zero size");
+            return null;
+        }
+
         let workers = Array.from(this.workers.values());
 
         workers.sort((a, b) => {
