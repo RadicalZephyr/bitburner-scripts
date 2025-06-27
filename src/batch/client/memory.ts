@@ -127,8 +127,11 @@ export class MemoryClient {
         }
 
         let allocationResult = result as AllocationResult;
+        let allocatedChunkSize = allocationResult.hosts[0]?.chunkSize;
+        let allocatedNumChunks = allocationResult.hosts.reduce((sum, chunk) => sum + chunk.numChunks, 0);
         this.ns.print(
             `SUCCESS: allocated id ${allocationResult.allocationId} ` +
+            `${allocatedNumChunks}x${this.ns.formatRam(allocatedChunkSize)} ` +
             `on ${allocationResult.hosts.length} hosts`
         );
         return new TransferableAllocation(
