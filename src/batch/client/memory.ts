@@ -327,18 +327,20 @@ export class TransferableAllocation {
         this.allocatedChunks = allocations.map(chunk => new AllocationChunk(chunk));
     }
 
+    release(ns: NS) {
+        const proc = ns.self();
+        const release: AllocationRelease = {
+            allocationId: this.allocationId,
+            pid: proc.pid,
+            hostname: proc.server,
+        };
+        ns.writePort(MEMORY_PORT, [MessageType.Release, release]);
+    }
+
     releaseAtExit(ns: NS, name?: string) {
-        const self = ns.self();
-        let allocationId = this.allocationId;
-        ns.atExit(() => {
-            const release: AllocationRelease = {
-                allocationId: allocationId,
-                pid: self.pid,
-                hostname: self.server,
-            };
-            ns.writePort(MEMORY_PORT, [MessageType.Release, release]);
-        }, "memoryRelease" + name);
-        ns.print(`INFO: registered atExit release for allocation ${allocationId}`);
+        const release = this.release.bind(this, ns);
+        ns.atExit(() => { release(); }, "memoryRelease" + name);
+        ns.print(`INFO: registered atExit release for allocation ${this.allocationId}`);
     }
 
     totalAllocatedRam(): number {
