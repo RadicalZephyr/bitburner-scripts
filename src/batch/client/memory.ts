@@ -165,10 +165,18 @@ export class MemoryClient {
             return null;
         }
 
+        const self = this.ns.self();
         let allocationId = result.allocationId;
-        let memoryPort = this.port;
-        registerAllocationOwnership(this.ns, allocationId)
+        this.ns.atExit(() => {
+            const release: AllocationRelease = {
+                allocationId: allocationId,
+                pid: self.pid,
+                hostname: self.server,
+            };
+            this.ns.writePort(MEMORY_PORT, [MessageType.Release, release]);
+        }, "memoryReleaseOwned");
         this.ns.print(`INFO: registered atExit release for allocation ${allocationId}`);
+
         return result.allocatedChunks;
     }
 
