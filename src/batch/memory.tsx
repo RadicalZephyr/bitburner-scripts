@@ -379,6 +379,18 @@ class MemoryManager {
         const allocation = this.allocations.get(id);
         if (!allocation) return false;
 
+        // Released by single requesting process, release all chunks
+        if (allocation.pid === pid) {
+            for (const c of allocation.chunks) {
+                let worker = this.workers.get(c.hostname);
+                if (worker) {
+                    worker.free(c.chunkSize * c.numChunks);
+                }
+            }
+            this.allocations.delete(id);
+            return true;
+        }
+
         const idx = allocation.claims.findIndex(
             (c) => c.pid === pid && c.hostname === hostname,
         );
