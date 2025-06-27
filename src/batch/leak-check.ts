@@ -36,7 +36,7 @@ function checkWorkers(ns: NS, workers: WorkerSnapshot[]): void {
                 `snapshot ${ns.formatRam(w.totalRam)} actual ${ns.formatRam(actualTotal)}`
             );
         }
-        if (Math.abs(actualTotal - w.totalRam) > 0.0001) {
+        if (Math.abs(actualInUse - used) > 0.0001) {
             ns.print(
                 `WARN: worker ${w.hostname} is not using all allocated RAM  ` +
                 `snapshot ${ns.formatRam(used)} actual ${ns.formatRam(actualInUse)}`
