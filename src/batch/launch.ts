@@ -131,6 +131,10 @@ export async function launch(ns: NS, script: string, threadOrOptions?: number | 
         false,
         coreDependent,
     );
+    if (!allocation) {
+        ns.print(`WARN: failed to launch ${script}, could not allocate memory`);
+        return null;
+    }
 
     let dependencies = Array.from(collectDependencies(ns, script));
     let pids = [];
