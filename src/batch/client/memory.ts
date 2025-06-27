@@ -152,7 +152,7 @@ export class MemoryClient {
         let payload = {
             returnPort: returnPortId,
             pid: pid,
-            filename: this.ns.getScriptName(),
+            filename: this.ns.self().filename,
             chunkSize: chunkSize,
             numChunks: numChunks,
             contiguous: contiguous,
