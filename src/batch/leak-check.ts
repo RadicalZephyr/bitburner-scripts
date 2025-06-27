@@ -43,7 +43,9 @@ function checkWorkers(ns: NS, allocations: AllocationSnapshot[], workers: Worker
             );
 
             for (const alloc of allocations) {
-                let allocClaims = alloc.claims.filter((c) => c.hostname === w.hostname);
+                if (ns.isRunning(alloc.pid)) continue;
+
+                let allocClaims = alloc.claims.filter((c) => c.hostname === w.hostname && !ns.isRunning(c.pid));
                 if (allocClaims.length > 0) {
                     let claims = allocClaims.map(c => `\n    ${c.filename} claimed ${c.numChunks}x${ns.formatRam(c.chunkSize)}`);
                     ns.print(
@@ -56,7 +58,7 @@ function checkWorkers(ns: NS, allocations: AllocationSnapshot[], workers: Worker
                     let totalChunks = alloc.hosts.reduce((sum, h) => sum + h.numChunks, 0);
                     ns.print(
                         `INFO: allocating process ${alloc.pid} running ${alloc.filename} ` +
-                        `has an unused allocation of ${totalChunks}x${ns.formatRam(chunkSize)}`
+                        `has an unused allocation ${alloc.allocationId} of ${totalChunks}x${ns.formatRam(chunkSize)}`
                     );
                 }
             }
