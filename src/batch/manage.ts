@@ -126,12 +126,41 @@ class TargetSelectionManager {
         this.velocity = 0;
     }
 
+    /**
+     * Categorize and enqueue `target` based on its current state.
+     *
+     * - If security exceeds minimum by more than one, queue for tilling and
+     *   notify the monitor via `pending()`.
+     * - If security is acceptable but funds are below max, queue for sowing.
+     * - If both security and funds are optimal, queue for harvesting and notify
+     *   the monitor via `pendingHarvesting()`.
+     */
     pushTarget(target: string) {
         if (this.allTargets.has(target)) return;
 
         this.allTargets.add(target);
-        this.pendingTargets.push(target);
-        this.ns.print(`INFO: queued target ${target}`);
+
+        const minSec = this.ns.getServerMinSecurityLevel(target);
+        const curSec = this.ns.getServerSecurityLevel(target);
+        const maxMoney = this.ns.getServerMaxMoney(target);
+        const curMoney = this.ns.getServerMoneyAvailable(target);
+
+        if (curSec > minSec + 1) {
+            this.ns.print(`INFO: queue till ${target}`);
+            this.pendingTargets.push(target);
+            this.monitor.pending(target);
+            return;
+        }
+
+        if (curMoney < maxMoney * 0.999) {
+            this.ns.print(`INFO: queue sow ${target}`);
+            this.pendingSowTargets.push(target);
+            return;
+        }
+
+        this.ns.print(`INFO: queue harvest ${target}`);
+        this.pendingHarvestTargets.push(target);
+        this.monitor.pendingHarvesting(target);
     }
 
     async finishTilling(hostname: string) {
