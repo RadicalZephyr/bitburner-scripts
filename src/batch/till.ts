@@ -81,8 +81,6 @@ OPTIONS
         0,
     );
 
-    result.allocation.releaseAtExit(ns, "weaken");
-
     for (const pid of result.pids) {
         while (ns.isRunning(pid)) {
             ns.clearLog();
@@ -95,7 +93,7 @@ Elapsed time:  ${ns.tFormat(selfScript.onlineRunningTime * 1000)}
         }
     }
 
-    // ns.ui.closeTail();
+    result.allocation.release(ns);
     ns.toast(`finished tilling ${target}!`, "success");
     managerClient.finishedTilling(target);
 }

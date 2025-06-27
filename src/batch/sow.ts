@@ -94,7 +94,10 @@ OPTIONS
         target,
         0,
     );
-    weakenResult.allocation.releaseAtExit(ns, "weaken");
+    if (!weakenResult) {
+        ns.print(`sow failed to allocate for weaken threads`);
+        return;
+    }
 
     let growResult = await launch(
         ns,
@@ -103,7 +106,11 @@ OPTIONS
         target,
         0,
     );
-    growResult.allocation.releaseAtExit(ns, "grow");
+    if (!growResult) {
+        ns.print(`sow failed to allocate for grow threads`);
+        weakenResult.allocation.release(ns);
+        return;
+    }
 
     let pids = [...weakenResult.pids, ...growResult.pids];
 
@@ -119,7 +126,8 @@ Elapsed time:  ${ns.tFormat(selfScript.onlineRunningTime * 1000)}
         }
     }
 
-    // ns.ui.closeTail();
+    weakenResult.allocation.release(ns);
+    growResult.allocation.release(ns);
     ns.toast(`finished sowing ${target}!`, "success");
     managerClient.finishedSowing(target);
 }
