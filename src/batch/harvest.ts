@@ -261,6 +261,5 @@ export function calculateBatchPhases(ns: NS, target: string, threads: BatchThrea
         p.start += earliestStart;
     }
 
-    phases.sort((a, b) => a.start - b.start);
     return phases;
 }
