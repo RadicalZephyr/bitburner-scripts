@@ -110,8 +110,8 @@ Example:
             lastRender = now;
         }
 
-        // N.B. this time is seconds not milliseconds
         if (lastCollection + collectionRate < now) {
+            printLog("INFO: running garbage collection");
             memoryManager.updateReserved();
             memoryManager.cleanupTerminated();
             lastCollection = now;
