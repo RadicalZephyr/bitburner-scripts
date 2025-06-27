@@ -9,6 +9,7 @@ export enum MessageType {
     Claim,
     ReleaseChunks,
     Status,
+    Snapshot,
 }
 
 type Payload =
@@ -17,7 +18,8 @@ type Payload =
     | AllocationRelease
     | AllocationClaim
     | AllocationChunksRelease
-    | StatusRequest;
+    | StatusRequest
+    | SnapshotRequest;
 
 export type Message = [
     type: MessageType,
@@ -57,6 +59,38 @@ export interface AllocationChunksRelease {
 
 export interface StatusRequest {
     returnPort: number,
+}
+
+export interface SnapshotRequest {
+    returnPort: number,
+}
+
+export interface WorkerSnapshot {
+    hostname: string,
+    totalRam: number,
+    setAsideRam: number,
+    reservedRam: number,
+    allocatedRam: number,
+}
+
+export interface ClaimSnapshot {
+    pid: number,
+    hostname: string,
+    filename: string,
+    chunkSize: number,
+    numChunks: number,
+}
+
+export interface AllocationSnapshot {
+    allocationId: number,
+    pid: number,
+    hosts: HostAllocation[],
+    claims: ClaimSnapshot[],
+}
+
+export interface MemorySnapshot {
+    workers: WorkerSnapshot[],
+    allocations: AllocationSnapshot[],
 }
 
 export interface HostAllocation {
@@ -197,6 +231,27 @@ export class MemoryClient {
             return null;
         }
         return result as AllocationResult;
+    }
+
+    /**
+     * Request a snapshot of current memory allocations.
+     *
+     * @returns Structure describing workers and allocations
+     */
+    async memorySnapshot(): Promise<MemorySnapshot> {
+        const returnPortId = MEMORY_PORT + this.ns.pid;
+        const returnPort = this.ns.getPortHandle(returnPortId);
+
+        const payload: SnapshotRequest = { returnPort: returnPortId };
+        await this.sendMessage(MessageType.Snapshot, payload);
+
+        await returnPort.nextWrite();
+        const result = returnPort.read();
+        if (!result) {
+            this.ns.print("WARN: snapshot request failed");
+            return null;
+        }
+        return result as MemorySnapshot;
     }
 
     async getFreeRam(): Promise<number> {

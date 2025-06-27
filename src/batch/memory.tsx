@@ -11,6 +11,10 @@ import {
     MessageType,
     AllocationChunksRelease,
     StatusRequest,
+    SnapshotRequest,
+    WorkerSnapshot,
+    AllocationSnapshot,
+    MemorySnapshot,
 } from "batch/client/memory";
 
 import { readAllFromPort } from "util/ports";
@@ -185,6 +189,12 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memoryManager: 
                 ns.writePort(statusReq.returnPort, { freeRam });
                 break;
 
+            case MessageType.Snapshot:
+                const snapReq = msg[1] as SnapshotRequest;
+                const snapshot = memoryManager.getSnapshot();
+                ns.writePort(snapReq.returnPort, snapshot);
+                break;
+
             case MessageType.Claim:
                 const claimInfo = msg[1] as AllocationClaim;
                 if (memoryManager.claimAllocation(claimInfo)) {
@@ -263,6 +273,37 @@ class MemoryManager {
             const diff = actual - worker.allocatedRam;
             worker.reservedRam = diff > 0 ? diff : 0;
         }
+    }
+
+    getSnapshot(): MemorySnapshot {
+        const workers: WorkerSnapshot[] = [];
+        for (const w of this.workers.values()) {
+            workers.push({
+                hostname: w.hostname,
+                totalRam: w.totalRam,
+                setAsideRam: w.setAsideRam,
+                reservedRam: w.reservedRam,
+                allocatedRam: w.allocatedRam,
+            });
+        }
+
+        const allocations: AllocationSnapshot[] = [];
+        for (const [id, alloc] of this.allocations.entries()) {
+            allocations.push({
+                allocationId: id,
+                pid: alloc.pid,
+                hosts: alloc.chunks.map(c => c.asHostAllocation()),
+                claims: alloc.claims.map(c => ({
+                    pid: c.pid,
+                    hostname: c.hostname,
+                    filename: c.filename,
+                    chunkSize: c.chunkSize,
+                    numChunks: c.numChunks,
+                })),
+            });
+        }
+
+        return { workers, allocations };
     }
 
     /**
