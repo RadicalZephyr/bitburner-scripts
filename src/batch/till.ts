@@ -104,7 +104,10 @@ Elapsed time:  ${ns.tFormat(selfScript.onlineRunningTime * 1000)}
     managerClient.finishedTilling(target);
 }
 
-function calculateWeakenThreads(ns: NS, target: string): number {
+/** Calculate the number of weaken threads required to bring
+ *  `target` back to its minimum security level.
+ */
+export function calculateWeakenThreads(ns: NS, target: string): number {
     let minSec = ns.getServerMinSecurityLevel(target);
     let curSec = ns.getServerSecurityLevel(target);
     let deltaSec = curSec - minSec;

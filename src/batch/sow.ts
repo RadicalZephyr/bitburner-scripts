@@ -151,3 +151,13 @@ function weakenAnalyze(weakenAmount: number): number {
 
     return Math.ceil(weakenAmount * 20) + 1;
 }
+
+/** Calculate the grow and weaken thread counts required to fully
+ *  "sow" the given target server.
+ */
+export function calculateSowThreads(ns: NS, target: string): { growThreads: number; weakenThreads: number } {
+    const growThreads = neededGrowThreads(ns, target);
+    const growSecDelta = ns.growthAnalyzeSecurity(growThreads, target);
+    const weakenThreads = weakenAnalyze(growSecDelta);
+    return { growThreads, weakenThreads };
+}

@@ -190,7 +190,7 @@ function spawnBatch(ns: NS, host: string | null, target: string, phases: BatchPh
     return pids;
 }
 
-interface BatchLogistics {
+export interface BatchLogistics {
     target: string;
     batchRam: number;
     overlap: number;
@@ -198,7 +198,8 @@ interface BatchLogistics {
     phases: BatchPhase[];
 }
 
-function calculateBatchLogistics(ns: NS, target: string): BatchLogistics {
+/** Calculate RAM and phase information for a full harvest batch. */
+export function calculateBatchLogistics(ns: NS, target: string): BatchLogistics {
     const threads = analyzeBatchThreads(ns, target);
 
     const phases = calculateBatchPhases(ns, target, threads);

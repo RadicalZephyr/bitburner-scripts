@@ -1,16 +1,19 @@
 import type { NetscriptPort, NS } from "netscript";
 
 import { MANAGER_PORT, Message, MessageType } from "batch/client/manage";
-import { registerAllocationOwnership } from "./client/memory";
+import { MemoryClient, registerAllocationOwnership } from "./client/memory";
 import { MonitorClient } from "batch/client/monitor";
 
 import { CONFIG } from "batch/config";
 import { expectedValuePerRamSecond } from "batch/expected_value";
 import { launch } from "batch/launch";
 
+import { calculateWeakenThreads } from "./till";
+import { calculateSowThreads } from "./sow";
+import { calculateBatchLogistics } from "./harvest";
+
 import { readAllFromPort } from "util/ports";
 
-import PriorityQueue from "typescript-collections/PriorityQueue";
 
 let compareExpectedValue: (ta: string, tb: string) => number;
 
@@ -41,6 +44,7 @@ export async function main(ns: NS) {
     let targetsPort = ns.getPortHandle(MANAGER_PORT);
 
     let monitor = new MonitorClient(ns);
+    let memory = new MemoryClient(ns);
     let manager = new TargetSelectionManager(ns, monitor);
 
     let hostsMessagesWaiting = true;
@@ -54,7 +58,7 @@ export async function main(ns: NS) {
                 hostsMessagesWaiting = true;
             });
         }
-        await tick(ns, manager);
+        await tick(ns, memory, manager);
         await ns.sleep(100);
     }
 }
@@ -98,6 +102,7 @@ class TargetSelectionManager {
     harvestTargets: Set<string>;
 
     pendingTargets: string[];
+    pendingSowTargets: string[];
     pendingHarvestTargets: string[];
 
     hackHistory: { time: number, level: number }[];
@@ -110,6 +115,7 @@ class TargetSelectionManager {
         this.allTargets = new Set();
 
         this.pendingTargets = [];
+        this.pendingSowTargets = [];
         this.pendingHarvestTargets = [];
 
         this.tillTargets = new Set();
@@ -128,80 +134,17 @@ class TargetSelectionManager {
         this.ns.print(`INFO: queued target ${target}`);
     }
 
-    readyToTillTargets(): string[] {
-        // Special bootstrap case, hack level 1 -> only n00dles
-        if (this.ns.getHackingLevel() === 1) {
-            // TODO: this seems bad, but it's hard to get
-            return ["n00dles"];
-        }
-
-        if (Math.abs(this.velocity) > 0.05) {
-            // Still gaining hacking levels quickly, wait
-            return [];
-        }
-
-        if (this.pendingTargets.length === 0) return [];
-
-        // Sort by expected value
-        this.pendingTargets.sort(compareExpectedValue);
-
-        // Pop one target to till
-        const next = this.pendingTargets.shift();
-        if (next) {
-            this.ns.print(`INFO: selecting ${next} for tilling`);
-            return [next];
-        }
-        return [];
-    }
-
-    async tillNewTargets() {
-        if (this.tillTargets.size >= CONFIG.maxTillTargets) {
-            this.ns.print(`WARN: till target limit ${CONFIG.maxTillTargets} reached`);
-            return;
-        }
-
-        const toTill = this.readyToTillTargets();
-        for (const target of toTill) {
-            this.ns.print(`INFO: launching till on ${target}`);
-            await launch(this.ns, "/batch/till.js", { threads: 1, allocationFlag: "--allocation-id" }, target);
-            this.tillTargets.add(target);
-            await this.monitor.tilling(target);
-        }
-    }
-
     async finishTilling(hostname: string) {
         this.tillTargets.delete(hostname);
-        this.ns.print(`INFO: launching sow on ${hostname}`);
-        await launch(this.ns, "/batch/sow.js", { threads: 1, allocationFlag: "--allocation-id" }, hostname);
-        this.sowTargets.add(hostname);
+        this.ns.print(`INFO: queued sow on ${hostname}`);
+        this.pendingSowTargets.push(hostname);
     }
 
     async finishSowing(hostname: string) {
         this.sowTargets.delete(hostname);
-        if (noodlesIsSpecial(this.ns, hostname) ||
-            (canHarvest(this.ns, hostname) && worthHarvesting(this.ns, hostname))) {
-            this.ns.print(`INFO: launching harvest on ${hostname}`);
-            await launch(this.ns, "/batch/harvest.js", { threads: 1, allocationFlag: "--allocation-id" }, hostname);
-            await this.monitor.harvesting(hostname);
-            this.harvestTargets.add(hostname);
-        } else {
-            this.ns.print(`INFO: waiting to harvest ${hostname}`);
-            this.monitor.pendingHarvesting(hostname);
-            this.pendingHarvestTargets.push(hostname);
-        }
-    }
-
-    async harvestNewTargets() {
-        this.pendingHarvestTargets.sort(compareExpectedValue);
-
-        let nextTarget = this.pendingHarvestTargets[0];
-        if (nextTarget && canHarvest(this.ns, nextTarget) && worthHarvesting(this.ns, nextTarget)) {
-            this.pendingHarvestTargets.shift();
-            this.ns.print(`INFO: launching harvest on ${nextTarget}`);
-            await launch(this.ns, "/batch/harvest.js", { threads: 1, allocationFlag: "--allocation-id" }, nextTarget);
-            await this.monitor.harvesting(nextTarget);
-            this.harvestTargets.add(nextTarget);
-        }
+        this.ns.print(`INFO: queued harvest for ${hostname}`);
+        this.monitor.pendingHarvesting(hostname);
+        this.pendingHarvestTargets.push(hostname);
     }
 
     updateVelocity() {
@@ -223,13 +166,124 @@ class TargetSelectionManager {
         }
     }
 
+    async launchPendingTasks(freeRam: number) {
+        type Task = {
+            host: string;
+            type: "till" | "sow" | "harvest";
+            ram: number;
+            threads?: number;
+            value: number;
+        };
+
+        const tasks: Task[] = [];
+
+        if (this.tillTargets.size < CONFIG.maxTillTargets) {
+            const canAdd = CONFIG.maxTillTargets - this.tillTargets.size;
+            let candidates: string[] = [];
+            if (this.ns.getHackingLevel() === 1) {
+                if (this.pendingTargets.includes("n00dles")) {
+                    candidates = ["n00dles"];
+                }
+            } else if (Math.abs(this.velocity) <= 0.05) {
+                candidates = [...this.pendingTargets];
+            }
+            candidates.sort(compareExpectedValue);
+            for (const host of candidates.slice(0, canAdd)) {
+                const threads = calculateWeakenThreads(this.ns, host);
+                const ram = threads * this.ns.getScriptRam("/batch/w.js");
+                const value = expectedValuePerRamSecond(this.ns, host, CONFIG.batchInterval);
+                tasks.push({ host, type: "till", ram, threads, value });
+            }
+        }
+
+        for (const host of this.pendingSowTargets) {
+            const { growThreads, weakenThreads } = calculateSowThreads(this.ns, host);
+            const total = growThreads + weakenThreads;
+            const ram = growThreads * this.ns.getScriptRam("/batch/g.js") +
+                weakenThreads * this.ns.getScriptRam("/batch/w.js");
+            const value = expectedValuePerRamSecond(this.ns, host, CONFIG.batchInterval);
+            tasks.push({ host, type: "sow", ram, threads: total, value });
+        }
+
+        for (const host of this.pendingHarvestTargets) {
+            if (!canHarvest(this.ns, host) || !worthHarvesting(this.ns, host)) {
+                continue;
+            }
+            const logistics = calculateBatchLogistics(this.ns, host);
+            const ram = logistics.requiredRam;
+            const value = expectedValuePerRamSecond(this.ns, host, CONFIG.batchInterval);
+            tasks.push({ host, type: "harvest", ram, value });
+        }
+
+        tasks.sort((a, b) => b.value - a.value);
+
+        for (const t of tasks) {
+            if (t.ram > freeRam) continue;
+            freeRam -= t.ram;
+            switch (t.type) {
+                case "till":
+                    await this.launchTill(t.host, t.threads ?? 0);
+                    break;
+                case "sow":
+                    await this.launchSow(t.host, t.threads ?? 0);
+                    break;
+                case "harvest":
+                    await this.launchHarvest(t.host);
+                    break;
+            }
+        }
+    }
+
+    private async launchTill(host: string, threads: number) {
+        this.pendingTargets = this.pendingTargets.filter(h => h !== host);
+        this.ns.print(`INFO: launching till on ${host}`);
+        await launch(
+            this.ns,
+            "/batch/till.js",
+            { threads: 1, allocationFlag: "--allocation-id" },
+            host,
+            "--max-threads",
+            threads,
+        );
+        this.tillTargets.add(host);
+        await this.monitor.tilling(host);
+    }
+
+    private async launchSow(host: string, threads: number) {
+        this.pendingSowTargets = this.pendingSowTargets.filter(h => h !== host);
+        this.ns.print(`INFO: launching sow on ${host}`);
+        await launch(
+            this.ns,
+            "/batch/sow.js",
+            { threads: 1, allocationFlag: "--allocation-id" },
+            host,
+            "--max-threads",
+            threads,
+        );
+        this.sowTargets.add(host);
+        await this.monitor.sowing(host);
+    }
+
+    private async launchHarvest(host: string) {
+        this.pendingHarvestTargets = this.pendingHarvestTargets.filter(h => h !== host);
+        this.ns.print(`INFO: launching harvest on ${host}`);
+        await launch(
+            this.ns,
+            "/batch/harvest.js",
+            { threads: 1, allocationFlag: "--allocation-id" },
+            host,
+        );
+        await this.monitor.harvesting(host);
+        this.harvestTargets.add(host);
+    }
+
 }
 
-async function tick(ns: NS, manager: TargetSelectionManager) {
+async function tick(ns: NS, memory: MemoryClient, manager: TargetSelectionManager) {
     manager.updateVelocity();
 
-    await manager.tillNewTargets();
-    await manager.harvestNewTargets();
+    const freeRam = await memory.getFreeRam();
+    await manager.launchPendingTasks(freeRam);
 }
 
 function noodlesIsSpecial(ns: NS, hostname: string) {
