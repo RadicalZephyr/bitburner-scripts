@@ -232,8 +232,6 @@ export function calculateBatchLogistics(ns: NS, target: string): BatchLogistics 
         (threads.postHackWeakenThreads + threads.postGrowWeakenThreads);
     const batchRam = hRam + gRam + wRam;
 
-
-
     const batchTime = ns.getWeakenTime(target) + 2 * (CONFIG.batchInterval as number);
     const baseNetscriptOperationTime = 20;
     const batchEndingPeriod = (baseNetscriptOperationTime + CONFIG.batchInterval) * 4;

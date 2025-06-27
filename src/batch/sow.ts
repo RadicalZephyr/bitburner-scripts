@@ -85,10 +85,6 @@ OPTIONS
         return;
     }
 
-    // ns.ui.setTailTitle(`sow ${target}`);
-    // ns.ui.openTail();
-    // ns.ui.resizeTail(400, 80);
-
     let expectedTime = ns.tFormat(ns.getWeakenTime(target));
 
     let weakenResult = await launch(
