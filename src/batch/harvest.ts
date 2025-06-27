@@ -98,8 +98,11 @@ OPTIONS
         }
         let batchIndex = currentBatches % maxOverlap;
         const host = batchHost.at(batchIndex);
-        while (ns.isRunning(batches[batchIndex].at(-1))) {
-            await ns.sleep(10);
+        let lastScriptPid = batches[batchIndex].at(-1);
+        if (typeof lastScriptPid === "number") {
+            while (ns.isRunning(lastScriptPid)) {
+                await ns.sleep(10);
+            }
         }
         let batchPids = spawnBatch(ns, host, target, logistics.phases);
         batches[batchIndex] = batchPids;
