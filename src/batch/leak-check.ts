@@ -19,13 +19,13 @@ export async function main(ns: NS) {
         return;
     }
 
-    checkWorkers(ns, snapshot.workers);
+    checkWorkers(ns, snapshot.allocations, snapshot.workers);
     checkAllocations(ns, snapshot.allocations);
     crossCheck(ns, snapshot);
     ns.print(`finished leak check.`);
 }
 
-function checkWorkers(ns: NS, workers: WorkerSnapshot[]): void {
+function checkWorkers(ns: NS, allocations: AllocationSnapshot[], workers: WorkerSnapshot[]): void {
     for (const w of workers) {
         const actualTotal = ns.getServerMaxRam(w.hostname);
         const actualInUse = ns.getServerUsedRam(w.hostname);
@@ -41,6 +41,17 @@ function checkWorkers(ns: NS, workers: WorkerSnapshot[]): void {
                 `WARN: worker ${w.hostname} is not using all allocated RAM  ` +
                 `snapshot ${ns.formatRam(used)} actual ${ns.formatRam(actualInUse)}`
             );
+
+            for (const alloc of allocations) {
+                let allocClaims = alloc.claims.filter((c) => c.hostname === w.hostname);
+                if (allocClaims.length > 0) {
+                    let claims = allocClaims.map(c => `\n    ${c.filename} claimed ${c.numChunks}x${ns.formatRam(c.chunkSize)}`);
+                    ns.print(
+                        `INFO: allocating process ${alloc.pid} running ${alloc.filename}` +
+                        `\n  claims: ${claims}`
+                    );
+                }
+            }
         }
         if (used > w.totalRam + 0.0001) {
             ns.print(
