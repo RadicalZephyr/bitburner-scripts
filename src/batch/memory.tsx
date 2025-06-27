@@ -331,7 +331,7 @@ class MemoryManager {
             if (a.hostname !== "home" && b.hostname === "home") {
                 return coreDependent ? 1 : -1;
             }
-            return 0;
+            return b.freeRam - a.freeRam;
         });
 
         if (contiguous) {
@@ -345,20 +345,6 @@ class MemoryManager {
                     return allocation.asAllocationResult();
                 }
             }
-
-            // Otherwise, sort workers by free RAM descending to minimize hosts used
-            workers.sort((a, b) => {
-                if (b.freeRam === a.freeRam) {
-                    if (a.hostname === "home" && b.hostname !== "home") {
-                        return coreDependent ? -1 : 1;
-                    }
-                    if (a.hostname !== "home" && b.hostname === "home") {
-                        return coreDependent ? 1 : -1;
-                    }
-                    return 0;
-                }
-                return b.freeRam - a.freeRam;
-            });
         }
 
         let chunks: AllocationChunk[] = [];
