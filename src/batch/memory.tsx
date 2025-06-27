@@ -29,7 +29,7 @@ declare const React: any;
 
 export async function main(ns: NS) {
     const flags = ns.flags([
-        ['refresh-rate', 200],
+        ['refresh-rate', 1000],
         ['help', false],
     ]);
 
