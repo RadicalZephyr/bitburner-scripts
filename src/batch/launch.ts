@@ -38,8 +38,8 @@ OPTIONS
         return;
     }
     let script = rest.shift();
-    if (typeof script !== 'string') {
-        ns.tprint('script must be a string');
+    if (typeof script !== 'string' || !ns.fileExists(script)) {
+        ns.tprint('script must be an existing script');
         return;
     }
 
