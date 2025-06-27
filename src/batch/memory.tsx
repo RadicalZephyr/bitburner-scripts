@@ -77,7 +77,10 @@ Example:
 
     memoryManager.pushWorker("home", 32);
 
+    let collectionRate = 1000 * 10;
+
     let lastRender = 0;
+    let lastCollection = Date.now();
 
     while (true) {
         let now = Date.now();
@@ -103,9 +106,10 @@ Example:
         }
 
         // N.B. this time is seconds not milliseconds
-        if (ns.self().onlineRunningTime % 2 == 0) {
+        if (lastCollection + collectionRate < now) {
             memoryManager.updateReserved();
             memoryManager.cleanupTerminated();
+            lastCollection = now;
         }
         await ns.sleep(50);
     }
