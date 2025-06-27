@@ -165,18 +165,7 @@ export class MemoryClient {
             return null;
         }
 
-        const self = this.ns.self();
-        let allocationId = result.allocationId;
-        this.ns.atExit(() => {
-            const release: AllocationRelease = {
-                allocationId: allocationId,
-                pid: self.pid,
-                hostname: self.server,
-            };
-            this.ns.writePort(MEMORY_PORT, [MessageType.Release, release]);
-        }, "memoryReleaseOwned");
-        this.ns.print(`INFO: registered atExit release for allocation ${allocationId}`);
-
+        result.releaseAtExit(this.ns, "Owned");
         return result.allocatedChunks;
     }
 
@@ -257,7 +246,17 @@ export class TransferableAllocation {
     }
 
     releaseAtExit(ns: NS, name?: string) {
-        registerAllocationOwnership(ns, this.allocationId, name);
+        const self = ns.self();
+        let allocationId = this.allocationId;
+        ns.atExit(() => {
+            const release: AllocationRelease = {
+                allocationId: allocationId,
+                pid: self.pid,
+                hostname: self.server,
+            };
+            ns.writePort(MEMORY_PORT, [MessageType.Release, release]);
+        }, "memoryRelease" + name);
+        ns.print(`INFO: registered atExit release for allocation ${allocationId}`);
     }
 
     totalAllocatedRam(): number {
