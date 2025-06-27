@@ -43,7 +43,7 @@ function checkWorkers(ns: NS, allocations: AllocationSnapshot[], workers: Worker
             );
 
             for (const alloc of allocations) {
-                if (ns.isRunning(alloc.pid)) continue;
+                if (ns.isRunning(alloc.pid) || !alloc.hosts.find(h => h.hostname == w.hostname)) continue;
 
                 let allocClaims = alloc.claims.filter((c) => c.hostname === w.hostname && !ns.isRunning(c.pid));
                 if (allocClaims.length > 0) {
