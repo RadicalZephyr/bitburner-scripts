@@ -90,11 +90,11 @@ function crossCheck(ns: NS, snapshot: MemorySnapshot): void {
             .flatMap(a => a.hosts)
             .filter(h => h.hostname === worker.hostname)
             .reduce((sum, h) => sum + h.chunkSize * h.numChunks, 0);
-        let usedRam = worker.setAsideRam + worker.reservedRam + worker.allocatedRam;
+        let usedRam = worker.allocatedRam;
         if (Math.abs(total - usedRam) > 0.001) {
             ns.print(
                 `ERROR: worker ${worker.hostname} reports ${ns.formatRam(usedRam)} ` +
-                `in use but allocations total ${ns.formatRam(total)}`,
+                `allocated but Allocation chunks sum to ${ns.formatRam(total)}`,
             );
         }
     }
