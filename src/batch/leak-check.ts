@@ -53,6 +53,14 @@ function checkWorkers(ns: NS, workers: WorkerSnapshot[]): void {
 
 function checkAllocations(ns: NS, allocations: AllocationSnapshot[]): void {
     for (const alloc of allocations) {
+        let runningScript = ns.getRunningScript(alloc.pid);
+        if (!runningScript && alloc.claims.length === 0) {
+            let chunkSize = alloc.hosts[0]?.chunkSize;
+            let totalChunks = alloc.hosts.reduce((sum, h) => sum + h.numChunks, 0);
+            ns.print(`ERROR: allocating process ${alloc.pid} has exited and no ` +
+                `other process has claimed this allocation of ${totalChunks}x${ns.formatRam(chunkSize)}`);
+        }
+
         for (const host of alloc.hosts) {
             const claimedChunks = alloc.claims
                 .filter(c => c.hostname === host.hostname && c.chunkSize === host.chunkSize)
