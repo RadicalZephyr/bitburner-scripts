@@ -1,6 +1,6 @@
 import type { AutocompleteData, NS } from "netscript";
 
-import { MemoryClient, registerAllocationOwnership, TransferableAllocation } from "batch/client/memory";
+import { HostAllocation, MemoryClient, registerAllocationOwnership } from "batch/client/memory";
 
 import { CONFIG } from "batch/config";
 import { analyzeBatchThreads, BatchThreadAnalysis } from "batch/expected_value";
@@ -61,10 +61,8 @@ OPTIONS
     );
 
     let memClient = new MemoryClient(ns);
-    let allocation = await memClient.requestTransferableAllocation(logistics.batchRam, logistics.overlap);
+    let allocation = await memClient.requestOwnedAllocation(logistics.batchRam, logistics.overlap);
     if (!allocation) return;
-
-    allocation.releaseAtExit(ns, "batch");
 
     // Track how many batches can overlap concurrently. If the
     // calculated overlap drops we release the extra memory back to the
@@ -154,10 +152,10 @@ class SparseHostArray {
     }
 }
 
-function makeBatchHostArray(allocation: TransferableAllocation) {
+function makeBatchHostArray(allocatedChunks: HostAllocation[]) {
     let sparseHosts = new SparseHostArray();
 
-    for (const chunk of allocation.allocatedChunks) {
+    for (const chunk of allocatedChunks) {
         sparseHosts.pushN(chunk.hostname, chunk.numChunks);
     }
 
