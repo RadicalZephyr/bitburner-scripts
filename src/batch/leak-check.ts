@@ -50,6 +50,14 @@ function checkWorkers(ns: NS, allocations: AllocationSnapshot[], workers: Worker
                         `INFO: allocating process ${alloc.pid} running ${alloc.filename}` +
                         `\n  claims: ${claims}`
                     );
+                } else {
+                    let chunkSize = alloc.hosts[0]?.chunkSize;
+                    let hosts = alloc.hosts.map(h => h.hostname);
+                    let totalChunks = alloc.hosts.reduce((sum, h) => sum + h.numChunks, 0);
+                    ns.print(
+                        `INFO: allocating process ${alloc.pid} running ${alloc.filename} ` +
+                        `has an unused allocation of ${totalChunks}x${ns.formatRam(chunkSize)}`
+                    );
                 }
             }
         }
