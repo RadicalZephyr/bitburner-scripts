@@ -191,6 +191,7 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memoryManager: 
 
             case MessageType.Snapshot:
                 const snapReq = msg[1] as SnapshotRequest;
+                printLog(`INFO: processing snapshot request on port ${snapReq.returnPort}`);
                 const snapshot = memoryManager.getSnapshot();
                 ns.writePort(snapReq.returnPort, snapshot);
                 break;

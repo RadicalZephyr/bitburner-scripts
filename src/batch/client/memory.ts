@@ -243,6 +243,7 @@ export class MemoryClient {
         const returnPort = this.ns.getPortHandle(returnPortId);
 
         const payload: SnapshotRequest = { returnPort: returnPortId };
+        this.ns.print("INFO: requesting memory snapshot");
         await this.sendMessage(MessageType.Snapshot, payload);
 
         await returnPort.nextWrite();
