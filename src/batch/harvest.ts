@@ -157,20 +157,24 @@ function makeBatchHostArray(allocation: TransferableAllocation) {
     return sparseHosts;
 }
 
-function spawnBatch(ns: NS, host: string | null, target: string, phases: BatchPhase[]) {
-    if (!host) return;
+function spawnBatch(ns: NS, host: string | null, target: string, phases: BatchPhase[]): number[] {
+    if (!host) return [];
 
     const scripts = Array.from(new Set(phases.map(p => `/batch/${p.script}`)));
     ns.scp(scripts, host, "home");
 
+    let pids = [];
     for (const phase of phases) {
         if (phase.threads <= 0) continue;
         const script = `/batch/${phase.script}`;
         const pid = ns.exec(script, host, phase.threads, target, phase.start);
         if (pid === 0) {
             ns.print(`WARN: failed to spawn ${script} on ${host}`);
+        } else {
+            pids.push(pid);
         }
     }
+    return pids;
 }
 
 interface BatchLogistics {
