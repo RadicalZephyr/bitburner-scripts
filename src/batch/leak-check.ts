@@ -13,6 +13,7 @@ export async function main(ns: NS) {
 
     const client = new MemoryClient(ns);
     const snapshot = await client.memorySnapshot();
+
     if (!snapshot) {
         ns.print("WARN: failed to retrieve memory snapshot");
         return;
@@ -26,7 +27,21 @@ export async function main(ns: NS) {
 
 function checkWorkers(ns: NS, workers: WorkerSnapshot[]): void {
     for (const w of workers) {
+        const actualTotal = ns.getServerMaxRam(w.hostname);
+        const actualInUse = ns.getServerUsedRam(w.hostname);
         const used = w.setAsideRam + w.reservedRam + w.allocatedRam;
+        if (Math.abs(actualTotal - w.totalRam) > 0.0001) {
+            ns.print(
+                `ERROR: worker ${w.hostname} snapshot has incorrect total RAM ` +
+                `snapshot ${ns.formatRam(w.totalRam)} actual ${ns.formatRam(actualTotal)}`
+            );
+        }
+        if (Math.abs(actualTotal - w.totalRam) > 0.0001) {
+            ns.print(
+                `WARN: worker ${w.hostname} is not using all allocated RAM  ` +
+                `snapshot ${ns.formatRam(used)} actual ${ns.formatRam(actualInUse)}`
+            );
+        }
         if (used > w.totalRam + 0.0001) {
             ns.print(
                 `ERROR: worker ${w.hostname} uses ${ns.formatRam(used)} ` +
