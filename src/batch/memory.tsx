@@ -591,7 +591,7 @@ function MemoryBar({ worker, theme }: MemoryBarProps) {
     const setAsideSeg = Math.round((worker.setAsideRam / worker.totalRam) * segments);
     const reservedSeg = Math.round((worker.reservedRam / worker.totalRam) * segments);
     const allocSeg = Math.round((worker.allocatedRam / worker.totalRam) * segments);
-    const usedSeg = Math.min(segments, reservedSeg + allocSeg);
+    const usedSeg = Math.min(segments, setAsideSeg + reservedSeg + allocSeg);
     const freeSeg = segments - usedSeg;
 
     let setAsideBar = "|".repeat(setAsideSeg);
