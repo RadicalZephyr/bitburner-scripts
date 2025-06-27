@@ -8,6 +8,7 @@ export enum MessageType {
     Release,
     Claim,
     ReleaseChunks,
+    Status,
 }
 
 type Payload =
@@ -15,7 +16,8 @@ type Payload =
     | AllocationRequest
     | AllocationRelease
     | AllocationClaim
-    | AllocationChunksRelease;
+    | AllocationChunksRelease
+    | StatusRequest;
 
 export type Message = [
     type: MessageType,
@@ -50,6 +52,10 @@ export interface AllocationClaim {
 export interface AllocationChunksRelease {
     allocationId: number,
     numChunks: number,
+    returnPort: number,
+}
+
+export interface StatusRequest {
     returnPort: number,
 }
 
@@ -191,6 +197,23 @@ export class MemoryClient {
             return null;
         }
         return result as AllocationResult;
+    }
+
+    async getFreeRam(): Promise<number> {
+        const returnPortId = MEMORY_PORT + this.ns.pid;
+        const returnPort = this.ns.getPortHandle(returnPortId);
+
+        const payload: StatusRequest = { returnPort: returnPortId };
+        await this.sendMessage(MessageType.Status, payload);
+
+        await returnPort.nextWrite();
+        const result = returnPort.read();
+        if (!result) {
+            this.ns.print("WARN: status request failed");
+            return 0;
+        }
+        const status = result as { freeRam: number };
+        return status.freeRam;
     }
 
     private async sendMessage(type: MessageType, payload: Payload) {

@@ -10,6 +10,7 @@ import {
     Message,
     MessageType,
     AllocationChunksRelease,
+    StatusRequest,
 } from "batch/client/memory";
 
 import { readAllFromPort } from "util/ports";
@@ -176,6 +177,12 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memoryManager: 
                     releaseInfo.numChunks,
                 );
                 ns.writePort(releaseInfo.returnPort, result);
+                break;
+
+            case MessageType.Status:
+                const statusReq = msg[1] as StatusRequest;
+                const freeRam = memoryManager.getFreeRamTotal();
+                ns.writePort(statusReq.returnPort, { freeRam });
                 break;
 
             case MessageType.Claim:
