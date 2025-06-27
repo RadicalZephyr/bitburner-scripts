@@ -43,6 +43,14 @@ function bootstrap(ns: NS) {
         return;
     }
 
+    if (!ns.nuke(hostname)) {
+        let error = `failed to nuke ${hostname}`;
+        ns.toast(error, "error");
+        ns.print(`ERROR: ${error}`);
+        ns.ui.openTail();
+        return;
+    }
+
     let pid = ns.exec(script, hostname);
     if (pid === 0) {
         let error = `failed to launch ${script} on ${hostname}`;
