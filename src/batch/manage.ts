@@ -210,8 +210,8 @@ class TargetSelectionManager {
             const canAdd = CONFIG.maxTillTargets - this.tillTargets.size;
             let candidates: string[] = [];
             if (this.ns.getHackingLevel() === 1) {
-                if (this.pendingTillTargets.includes("n00dles")) {
-                    candidates = ["n00dles"];
+                if (this.pendingTillTargets.includes("n00dles") && this.pendingTillTargets.includes("foodnstuff")) {
+                    candidates = ["n00dles", "foodnstuff"];
                 }
             } else if (Math.abs(this.velocity) <= 0.05) {
                 candidates = [...this.pendingTillTargets];
