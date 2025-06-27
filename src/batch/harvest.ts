@@ -105,8 +105,10 @@ OPTIONS
             }
         }
         let batchPids = spawnBatch(ns, host, target, logistics.phases);
-        batches[batchIndex] = batchPids;
-        currentBatches++;
+        if (batchPids.length > 0) {
+            batches[batchIndex] = batchPids;
+            currentBatches++;
+        }
 
         if (currentBatches > maxOverlap) {
             currentBatches = currentBatches % maxOverlap;
