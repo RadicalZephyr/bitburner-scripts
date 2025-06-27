@@ -399,7 +399,10 @@ class MemoryManager {
         const idx = allocation.claims.findIndex(
             (c) => c.pid === pid && c.hostname === hostname,
         );
-        if (idx === -1) return false;
+        if (idx === -1) {
+            printLog("WARN: couldn't find a claim for ${pid} on ${hostname} to release");
+            return false;
+        }
         const claim = allocation.claims[idx];
         this.releaseClaimInternal(allocation, claim);
         allocation.claims.splice(idx, 1);
