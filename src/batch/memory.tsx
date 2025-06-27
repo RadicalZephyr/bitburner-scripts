@@ -19,6 +19,9 @@ import {
 
 import { readAllFromPort } from "util/ports";
 
+const toFixed = (val: number): bigint => BigInt(Math.round(val * 100));
+const fromFixed = (val: bigint): number => Number(val) / 100;
+
 let printLog: (msg: string) => void;
 
 interface ClaimInfo {
@@ -281,9 +284,9 @@ class MemoryManager {
      */
     updateReserved(): void {
         for (const worker of this.workers.values()) {
-            const actual = this.ns.getServerUsedRam(worker.hostname);
+            const actual = toFixed(this.ns.getServerUsedRam(worker.hostname));
             const diff = actual - worker.allocatedRam;
-            worker.reservedRam = diff > 0 ? diff : 0;
+            worker.reservedRam = diff > 0n ? diff : 0n;
         }
     }
 
@@ -293,9 +296,9 @@ class MemoryManager {
             workers.push({
                 hostname: w.hostname,
                 totalRam: w.totalRam,
-                setAsideRam: w.setAsideRam,
-                reservedRam: w.reservedRam,
-                allocatedRam: w.allocatedRam,
+                setAsideRam: fromFixed(w.setAsideRam),
+                reservedRam: fromFixed(w.reservedRam),
+                allocatedRam: fromFixed(w.allocatedRam),
             });
         }
 
@@ -570,21 +573,21 @@ class Worker {
     ns: NS;
     hostname: string;
     totalRam: number;
-    setAsideRam: number;
-    reservedRam: number;
-    allocatedRam: number;
+    setAsideRam: bigint;
+    reservedRam: bigint;
+    allocatedRam: bigint;
 
     constructor(ns: NS, hostname: string, setAsideRam?: number) {
         this.ns = ns;
         this.hostname = hostname;
         this.totalRam = ns.getServerMaxRam(hostname);
-        this.setAsideRam = typeof setAsideRam == "number" && setAsideRam >= 0 ? setAsideRam : 0;
-        this.reservedRam = ns.getServerUsedRam(hostname);
-        this.allocatedRam = 0;
+        this.setAsideRam = typeof setAsideRam == "number" && setAsideRam >= 0 ? toFixed(setAsideRam) : 0n;
+        this.reservedRam = toFixed(ns.getServerUsedRam(hostname));
+        this.allocatedRam = 0n;
     }
 
     get usedRam(): number {
-        return this.setAsideRam + this.reservedRam + this.allocatedRam;
+        return fromFixed(this.setAsideRam + this.reservedRam + this.allocatedRam);
     }
 
     get freeRam(): number {
@@ -598,13 +601,14 @@ class Worker {
         if (chunksToAllocate <= 0) return null;
 
         const ram = chunkSize * chunksToAllocate;
-        this.allocatedRam += ram;
+        this.allocatedRam += toFixed(ram);
 
         return new AllocationChunk(this.hostname, chunkSize, chunksToAllocate);
     }
 
     free(ram: number): void {
-        this.allocatedRam = Math.max(0, this.allocatedRam - ram);
+        const delta = toFixed(ram);
+        this.allocatedRam = this.allocatedRam >= delta ? this.allocatedRam - delta : 0n;
     }
 }
 
@@ -679,9 +683,12 @@ interface MemoryBarProps {
 
 function MemoryBar({ worker, theme }: MemoryBarProps) {
     const segments = 20;
-    const setAsideSeg = Math.round((worker.setAsideRam / worker.totalRam) * segments);
-    const reservedSeg = Math.round((worker.reservedRam / worker.totalRam) * segments);
-    const allocSeg = Math.round((worker.allocatedRam / worker.totalRam) * segments);
+    const setAside = fromFixed(worker.setAsideRam);
+    const reserved = fromFixed(worker.reservedRam);
+    const allocated = fromFixed(worker.allocatedRam);
+    const setAsideSeg = Math.round((setAside / worker.totalRam) * segments);
+    const reservedSeg = Math.round((reserved / worker.totalRam) * segments);
+    const allocSeg = Math.round((allocated / worker.totalRam) * segments);
     const usedSeg = Math.min(segments, setAsideSeg + reservedSeg + allocSeg);
     const freeSeg = segments - usedSeg;
 
