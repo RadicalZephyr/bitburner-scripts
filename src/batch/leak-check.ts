@@ -56,8 +56,9 @@ function checkAllocations(ns: NS, allocations: AllocationSnapshot[]): void {
         let runningScript = ns.getRunningScript(alloc.pid);
         if (!runningScript && alloc.claims.length === 0) {
             let chunkSize = alloc.hosts[0]?.chunkSize;
+            let hosts = alloc.hosts.map(h => h.hostname);
             let totalChunks = alloc.hosts.reduce((sum, h) => sum + h.numChunks, 0);
-            ns.print(`ERROR: allocating process ${alloc.pid} running ${alloc.filename} has exited and no ` +
+            ns.print(`ERROR: allocating process ${alloc.pid} running ${alloc.filename} on ${hosts.join(", ")} has exited and no ` +
                 `other process has claimed this allocation of ${totalChunks}x${ns.formatRam(chunkSize)}`);
         }
 
