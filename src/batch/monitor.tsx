@@ -81,7 +81,7 @@ Example:
                 || ns.getServerMaxMoney(host) <= 0)
                 continue;
 
-            const phase = lifecycleByHost.get(host) ?? Lifecycle.Pending;
+            const phase = lifecycleByHost.get(host) ?? Lifecycle.PendingTilling;
             const info = hostInfo(ns, host, threadsByTarget.get(host), phase);
             switch (phase) {
                 case Lifecycle.Harvesting:

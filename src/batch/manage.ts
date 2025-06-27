@@ -147,7 +147,7 @@ class TargetSelectionManager {
         if (curSec > minSec + 1) {
             this.ns.print(`INFO: queue till ${target}`);
             this.pendingTillTargets.push(target);
-            await this.monitor.pending(target);
+            await this.monitor.pendingTilling(target);
             return;
         }
 
