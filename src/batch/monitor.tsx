@@ -150,7 +150,7 @@ export class TargetThreads {
 
 export function countThreadsByTarget(ns: NS): Map<string, TargetThreads> {
     let purchasedServers = ns.getPurchasedServers();
-    let hosts = [...ALL_HOSTS, ...purchasedServers];
+    let hosts = ["home", ...ALL_HOSTS, ...purchasedServers];
     let targetThreads = new Map(hosts.map(h => [h, new TargetThreads()]));
 
     for (const host of hosts) {
