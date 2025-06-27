@@ -212,7 +212,9 @@ function calculateBatchLogistics(ns: NS, target: string): BatchLogistics {
 
 
     const batchTime = ns.getWeakenTime(target) + 2 * (CONFIG.batchInterval as number);
-    const overlap = Math.ceil(batchTime / 1000);
+    const baseNetscriptOperationTime = 20;
+    const batchEndingPeriod = (baseNetscriptOperationTime + CONFIG.batchInterval) * 4;
+    const overlap = Math.ceil(batchTime / batchEndingPeriod);
     const requiredRam = batchRam * overlap;
 
     return {
