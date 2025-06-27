@@ -13,6 +13,8 @@
 - Only work on code in the `src` directory.
 - When building UI elements always use colors from the theme, which
   can be retrieved with `ns.ui.getTheme()`.
+- Reference the available Netcript APIs listed in
+  `NetScriptDefinitions.d.ts`.
 
 ### Logging Tips
 
