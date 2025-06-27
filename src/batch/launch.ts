@@ -110,7 +110,7 @@ OPTIONS
  * manager and then runs it on the host that was allocated.
  */
 export async function launch(ns: NS, script: string, threadOrOptions?: number | LaunchRunOptions, ...args: ScriptArg[]) {
-    let scriptRam = ns.getScriptRam(script);
+    let scriptRam = ns.getScriptRam(script, "home");
     let client = new MemoryClient(ns);
 
     let totalThreads: number;
