@@ -108,7 +108,7 @@ OPTIONS
     );
     if (!growResult) {
         ns.print(`sow failed to allocate for grow threads`);
-        weakenResult.allocation.release(ns);
+        await weakenResult.allocation.release(ns);
         return;
     }
 
@@ -126,8 +126,8 @@ Elapsed time:  ${ns.tFormat(selfScript.onlineRunningTime * 1000)}
         }
     }
 
-    weakenResult.allocation.release(ns);
-    growResult.allocation.release(ns);
+    await weakenResult.allocation.release(ns);
+    await growResult.allocation.release(ns);
     ns.toast(`finished sowing ${target}!`, "success");
     managerClient.finishedSowing(target);
 }

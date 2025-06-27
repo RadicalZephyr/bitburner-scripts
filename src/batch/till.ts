@@ -93,7 +93,7 @@ Elapsed time:  ${ns.tFormat(selfScript.onlineRunningTime * 1000)}
         }
     }
 
-    result.allocation.release(ns);
+    await result.allocation.release(ns);
     ns.toast(`finished tilling ${target}!`, "success");
     managerClient.finishedTilling(target);
 }

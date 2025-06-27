@@ -327,14 +327,16 @@ export class TransferableAllocation {
         this.allocatedChunks = allocations.map(chunk => new AllocationChunk(chunk));
     }
 
-    release(ns: NS) {
+    async release(ns: NS) {
         const proc = ns.self();
         const release: AllocationRelease = {
             allocationId: this.allocationId,
             pid: proc.pid,
             hostname: proc.server,
         };
-        ns.writePort(MEMORY_PORT, [MessageType.Release, release]);
+        while (!ns.tryWritePort(MEMORY_PORT, [MessageType.Release, release])) {
+            await ns.sleep(100);
+        }
     }
 
     releaseAtExit(ns: NS, name?: string) {
