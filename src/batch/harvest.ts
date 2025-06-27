@@ -3,7 +3,11 @@ import type { AutocompleteData, NS } from "netscript";
 import { HostAllocation, MemoryClient, registerAllocationOwnership } from "batch/client/memory";
 
 import { CONFIG } from "batch/config";
-import { analyzeBatchThreads, BatchThreadAnalysis } from "batch/expected_value";
+import {
+    analyzeBatchThreads,
+    BatchThreadAnalysis,
+    hackThreadsForPercent,
+} from "batch/expected_value";
 
 
 export function autocomplete(data: AutocompleteData, _args: string[]): string[] {
@@ -60,7 +64,11 @@ OPTIONS
         return;
     }
 
-    let logistics = calculateBatchLogistics(ns, target);
+    let hackPercent = maxRam !== -1
+        ? maxHackPercentForRam(ns, target, maxRam)
+        : 0.25;
+
+    let logistics = calculateBatchLogistics(ns, target, hackPercent);
     let overlapLimit = logistics.overlap;
     if (maxRam !== -1) {
         overlapLimit = Math.min(overlapLimit, Math.floor(maxRam / logistics.batchRam));
@@ -104,7 +112,7 @@ OPTIONS
     }
 
     while (true) {
-        let logistics = calculateBatchLogistics(ns, target);
+        let logistics = calculateBatchLogistics(ns, target, hackPercent);
 
         const desiredOverlap = Math.min(overlapLimit, logistics.overlap);
 
@@ -220,9 +228,21 @@ export interface BatchLogistics {
     phases: BatchPhase[];
 }
 
-/** Calculate RAM and phase information for a full harvest batch. */
-export function calculateBatchLogistics(ns: NS, target: string): BatchLogistics {
-    const threads = analyzeBatchThreads(ns, target);
+/** Calculate RAM and phase information for a full harvest batch.
+ *
+ * @param ns          - Netscript API instance
+ * @param target      - Hostname of the target server
+ * @param hackPercent - Fraction of money to hack each batch (0-1)
+ */
+export function calculateBatchLogistics(
+    ns: NS,
+    target: string,
+    hackPercent?: number,
+): BatchLogistics {
+    const hackThreads = hackPercent !== undefined
+        ? hackThreadsForPercent(ns, target, hackPercent)
+        : 1;
+    const threads = analyzeBatchThreads(ns, target, hackThreads);
 
     const phases = calculateBatchPhases(ns, target, threads);
 
@@ -291,4 +311,19 @@ export function calculateBatchPhases(ns: NS, target: string, threads: BatchThrea
     }
 
     return phases;
+}
+
+function maxHackPercentForRam(ns: NS, target: string, maxRam: number): number {
+    let low = 0;
+    let high = 0.25;
+    for (let i = 0; i < 16; i++) {
+        const mid = (low + high) / 2;
+        const { batchRam } = calculateBatchLogistics(ns, target, mid);
+        if (batchRam <= maxRam) {
+            low = mid;
+        } else {
+            high = mid;
+        }
+    }
+    return low;
 }
