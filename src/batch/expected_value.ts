@@ -107,10 +107,6 @@ export function analyzeBatchThreads(
     };
 }
 
-function canUseFormulas(ns: NS): boolean {
-    return ns.fileExists("Formulas.exe", "home");
-}
-
 /** Calculate the number of grow threads needed for a given multiplicative growth factor.
  *
  * @remarks
@@ -139,4 +135,8 @@ function weakenThreadsNeeded(securityDecrease: number): number {
     // N.B. this function cannot be substited with the ns function
     // weaken analyze because they do opposite things!
     return Math.max(1, Math.ceil(securityDecrease / 0.05));
+}
+
+function canUseFormulas(ns: NS): boolean {
+    return ns.fileExists("Formulas.exe", "home");
 }
