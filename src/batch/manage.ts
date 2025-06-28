@@ -219,7 +219,7 @@ class TargetSelectionManager {
             candidates.sort(compareExpectedValue);
             for (const host of candidates.slice(0, canAdd)) {
                 const threads = calculateWeakenThreads(this.ns, host);
-                const ram = threads * this.ns.getScriptRam("/batch/w.js");
+                const ram = threads * this.ns.getScriptRam("/batch/w.js", "home");
                 const value = expectedValuePerRamSecond(this.ns, host, CONFIG.batchInterval);
                 tasks.push({ host, type: "till", ram, threads, value });
             }
@@ -228,8 +228,8 @@ class TargetSelectionManager {
         for (const host of this.pendingSowTargets) {
             const { growThreads, weakenThreads } = calculateSowThreads(this.ns, host);
             const total = growThreads + weakenThreads;
-            const ram = growThreads * this.ns.getScriptRam("/batch/g.js") +
-                weakenThreads * this.ns.getScriptRam("/batch/w.js");
+            const ram = growThreads * this.ns.getScriptRam("/batch/g.js", "home") +
+                weakenThreads * this.ns.getScriptRam("/batch/w.js", "home");
             const value = expectedValuePerRamSecond(this.ns, host, CONFIG.batchInterval);
             tasks.push({ host, type: "sow", ram, threads: total, value });
         }

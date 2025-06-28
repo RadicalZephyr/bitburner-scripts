@@ -226,9 +226,9 @@ export function calculateBatchLogistics(ns: NS, target: string): BatchLogistics 
 
     const phases = calculateBatchPhases(ns, target, threads);
 
-    const hRam = ns.getScriptRam('/batch/h.js') * threads.hackThreads;
-    const gRam = ns.getScriptRam('/batch/g.js') * threads.growThreads;
-    const wRam = ns.getScriptRam('/batch/w.js') *
+    const hRam = ns.getScriptRam('/batch/h.js', "home") * threads.hackThreads;
+    const gRam = ns.getScriptRam('/batch/g.js', "home") * threads.growThreads;
+    const wRam = ns.getScriptRam('/batch/w.js', "home") *
         (threads.postHackWeakenThreads + threads.postGrowWeakenThreads);
     const batchRam = hRam + gRam + wRam;
 

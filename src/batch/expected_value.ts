@@ -47,9 +47,9 @@ export function expectedValuePerRamSecond(
     const weakenThreads = postHackWeakenThreads + postGrowWeakenThreads;
 
     const ramUse =
-        hackThreads * ns.getScriptRam("/batch/h.js") +
-        growThreads * ns.getScriptRam("/batch/g.js") +
-        weakenThreads * ns.getScriptRam("/batch/w.js");
+        hackThreads * ns.getScriptRam("/batch/h.js", "home") +
+        growThreads * ns.getScriptRam("/batch/g.js", "home") +
+        weakenThreads * ns.getScriptRam("/batch/w.js", "home");
 
     const batchTime = ns.getWeakenTime(host) + 2 * spacing;
 

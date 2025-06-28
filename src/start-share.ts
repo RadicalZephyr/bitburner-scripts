@@ -60,7 +60,7 @@ export function availableRam(ns: NS, node: string): number {
  */
 export function numThreads(ns: NS, node: string, hackScript: string, percentage?: number): number {
     percentage = percentage ? percentage : 1.0;
-    let hackScriptRam = ns.getScriptRam(hackScript);
+    let hackScriptRam = ns.getScriptRam(hackScript, "home");
     let availableNodeRam = availableRam(ns, node);
     return Math.floor(availableNodeRam * percentage / hackScriptRam);
 }
