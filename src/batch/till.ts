@@ -47,6 +47,7 @@ OPTIONS
     if (maxThreads !== -1) {
         if (typeof maxThreads !== 'number' || maxThreads <= 0) {
             ns.tprint('--max-threads must be a positive number');
+            ns.ui.openTail();
             return;
         }
     }
