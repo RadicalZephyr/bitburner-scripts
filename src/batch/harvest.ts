@@ -294,10 +294,6 @@ export function calculateBatchPhases(ns: NS, target: string, threads: BatchThrea
         endTime += spacing;
     }
 
-    // Get relative end time of final instance
-    // N.B. subtract one spacing to account for final loop increment
-    const relativeBatchEnd = endTime - spacing;
-
     // Determine offset to bring most negative start time to zero
     let earliestStart = Math.abs(Math.min(...phases.map(p => p.start)));
 
