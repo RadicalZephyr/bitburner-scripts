@@ -24,8 +24,10 @@ export async function main(ns: NS) {
         ns.tprint(`
 USAGE: run ${ns.getScriptName()} SERVER_NAME
 
-Launch as many grow and weaken threads as needed to maximize money
-of SERVER_NAME while keeping security at a minimum.
+Continually harvest money from the target with batches of
+hack/weaken/grow/weaken scripts. Thread counts for each type of script
+are calculated to maintain the target at maximum money and minimum
+security.
 
 Example:
 > run ${ns.getScriptName()} n00dles
