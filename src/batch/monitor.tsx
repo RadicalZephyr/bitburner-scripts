@@ -197,7 +197,7 @@ export function countThreadsByTarget(ns: NS, workers: string[], targets: string[
 
 export type HostInfo = {
     name: string,
-    milkMoney: string
+    harvestMoney: string
     expectedValue: string,
     hckLevel: string,
     maxMoney: string,
@@ -218,12 +218,12 @@ export function hostInfo(ns: NS, target: string, targetThreads: TargetThreads): 
     const moneyPercent = moneyPercentage(ns, target) * 100;
     const secPlus = sec - minSec;
 
-    const milkMoney = targetThreads.harvestMoney;
+    const harvestMoney = targetThreads.harvestMoney;
     const eValue = expectedValuePerRamSecond(ns, target, CONFIG.batchInterval);
 
     return {
         name: target,
-        milkMoney: Math.abs(milkMoney) < 0 ? '' : "$" + ns.formatNumber(milkMoney, 2),
+        harvestMoney: Math.abs(harvestMoney) < 0 ? '' : "$" + ns.formatNumber(harvestMoney, 2),
         expectedValue: "$" + ns.formatNumber(eValue, 2),
         hckLevel: ns.formatNumber(hckLevel, 0, 1000000, true),
         maxMoney: "$" + ns.formatNumber(money, 2),
@@ -290,7 +290,7 @@ function ServerRow({ host, rowIndex, cellStyle, theme }: IRowSettings) {
     return (
         <tr key={host.name} style={rowIndex % 2 === 1 ? undefined : { backgroundColor: theme.well }}>
             <td style={cellStyle}>{host.name}</td>
-            <td style={cellStyle}>{host.milkMoney}</td>
+            <td style={cellStyle}>{host.harvestMoney}</td>
             <td style={cellStyle}>{host.expectedValue}</td>
             <td style={cellStyle}>{host.hckLevel}</td>
             <td style={cellStyle}>{host.maxMoney}</td>
