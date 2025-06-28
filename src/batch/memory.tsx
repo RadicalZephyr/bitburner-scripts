@@ -81,7 +81,8 @@ Example:
     let nextMemMessage = memPort.nextWrite().then(_ => { memMessageWaiting = true; });
 
     let memoryManager = new MemoryManager(ns);
-    printLog(`INFO: starting memory manager on ${ns.getHostname()}`);
+
+    printLog(`INFO: starting memory manager on ${ns.self().server}`);
 
     memoryManager.pushWorker("home", 32);
 
