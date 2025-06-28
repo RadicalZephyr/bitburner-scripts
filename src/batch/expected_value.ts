@@ -90,9 +90,9 @@ export function analyzeBatchThreads(
     host: string,
     hackThreads: number = 1,
 ): BatchThreadAnalysis {
-    const maxMoney = ns.getServerMaxMoney(host);
     const hackValue = successfulHackValue(ns, host, hackThreads);
 
+    const maxMoney = ns.getServerMaxMoney(host);
     const afterHackMoney = Math.max(0, maxMoney - hackValue);
     const growMultiplier = maxMoney / Math.max(1, afterHackMoney);
     const growThreads = growthAnalyze(ns, host, afterHackMoney, growMultiplier);
