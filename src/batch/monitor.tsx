@@ -86,7 +86,7 @@ Example:
                 || ns.getServerMaxMoney(host) <= 0)
                 continue;
 
-            const info = hostInfo(ns, host, threadsByTarget.get(host), phase);
+            const info = hostInfo(ns, host, threadsByTarget.get(host));
             switch (phase) {
                 case Lifecycle.Worker:
                     break;
@@ -204,7 +204,7 @@ export type HostInfo = {
     threadsW: string
 }
 
-export function hostInfo(ns: NS, target: string, targetThreads: TargetThreads, lifecycle?: Lifecycle): HostInfo {
+export function hostInfo(ns: NS, target: string, targetThreads: TargetThreads): HostInfo {
     let hckLevel = ns.getServerRequiredHackingLevel(target);
     hckLevel = typeof hckLevel == "number" && !isNaN(hckLevel) ? hckLevel : 1;
     const minSec = ns.getServerMinSecurityLevel(target);
