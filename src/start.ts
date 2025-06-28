@@ -10,7 +10,6 @@ export async function main(ns: NS) {
 }
 
 const BOOTSTRAP_FILES = [
-    "/all-hosts.js",
     "/bootstrap.js",
     "/batch/launch.js",
     "/batch/client/memory.js"

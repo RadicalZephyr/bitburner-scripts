@@ -1,24 +1,32 @@
 import type { NS } from "netscript";
 
-import { HOSTS_BY_PORTS_REQUIRED } from "./all-hosts";
-
 import { MemoryClient } from "batch/client/memory";
 import { launch } from "batch/launch";
 
-
 export async function main(ns: NS) {
     await startMemory(ns);
-    await startCracker(ns);
+
+    await ns.sleep(500);
+    await startDiscover(ns);
+
     await ns.sleep(500);
     await startManager(ns);
     await startMonitor(ns);
-    await startDiscover(ns);
-    await sendPersonalServersToMemory(ns);
 }
 
 const MEMORY_FILES: string[] = [
     "/batch/client/memory.js",
     "/util/ports.js"
+];
+
+const BASIC_WORKERS = [
+    "n00dles",
+    "foodnstuff",
+    "sigma-cosmetics",
+    "joesguns",
+    "hong-fang-tea",
+    "harakiri-sushi",
+    "nectar-net"
 ];
 
 async function startMemory(ns: NS) {
@@ -39,9 +47,13 @@ async function startMemory(ns: NS) {
 
     await ns.sleep(1000);
 
+    // Send the Memory daemon some bootstrapping clients
     let memClient = new MemoryClient(ns);
 
-    for (const worker of HOSTS_BY_PORTS_REQUIRED[0]) {
+    await memClient.newWorker("home");
+
+    // All of these hosts require zero open ports to nuke
+    for (const worker of BASIC_WORKERS) {
         ns.nuke(worker);
         await memClient.newWorker(worker);
     }
