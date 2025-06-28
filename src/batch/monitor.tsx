@@ -169,6 +169,10 @@ export function countThreadsByTarget(ns: NS, workers: string[], targets: string[
             if (typeof target != 'string') continue;
 
             let targetThread = targetThreads.get(target);
+            if (!targetThread) {
+                ns.tprint(`found unexpected target ${target} in script args ${pi.filename} args: ${pi.args.join(" ")}`);
+                continue;
+            }
 
             if (pi.filename === 'batch/harvest.js') {
                 targetThread.harvestPids.push(pi.pid);
