@@ -1,8 +1,11 @@
 import type { NS } from "netscript";
 
 import { walkNetworkBFS } from "util/walk";
-import { MemoryClient } from "batch/client/memory";
+
 import { ManagerClient } from "batch/client/manage";
+import { MemoryClient } from "batch/client/memory";
+import { MonitorClient } from "batch/client/monitor";
+
 
 export async function main(ns: NS) {
     ns.disableLog("sleep");
@@ -10,8 +13,9 @@ export async function main(ns: NS) {
     const discovered = new Set<string>();
     const cracked = new Set<string>();
 
-    const memClient = new MemoryClient(ns);
     const managerClient = new ManagerClient(ns);
+    const memClient = new MemoryClient(ns);
+    const monitorClient = new MonitorClient(ns);
 
     while (true) {
         const network = walkNetworkBFS(ns);
@@ -24,14 +28,14 @@ export async function main(ns: NS) {
 
             if (!cracked.has(host)) {
                 if (ns.hasRootAccess(host)) {
-                    await registerHost(ns, host, memClient, managerClient);
+                    await registerHost(ns, host, managerClient, memClient, monitorClient);
                     cracked.add(host);
                 } else {
                     const portsNeeded = ns.getServerNumPortsRequired(host);
                     if (countPortCrackers(ns) >= portsNeeded) {
                         attemptCrack(ns, host);
                         if (ns.hasRootAccess(host)) {
-                            await registerHost(ns, host, memClient, managerClient);
+                            await registerHost(ns, host, managerClient, memClient, monitorClient);
                             cracked.add(host);
                         }
                     }
@@ -43,9 +47,10 @@ export async function main(ns: NS) {
     }
 }
 
-async function registerHost(ns: NS, host: string, mem: MemoryClient, mgr: ManagerClient) {
+async function registerHost(ns: NS, host: string, mgr: ManagerClient, mem: MemoryClient, mon: MonitorClient) {
     if (ns.getServerMaxRam(host) > 0) {
         await mem.newWorker(host);
+        await mon.worker(host);
     }
     if (ns.getServerMaxMoney(host) > 0) {
         await mgr.newTarget(host);
