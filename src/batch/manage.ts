@@ -167,13 +167,14 @@ class TargetSelectionManager {
         this.tillTargets.delete(hostname);
         this.ns.print(`INFO: queued sow on ${hostname}`);
         this.pendingSowTargets.push(hostname);
+        await this.monitor.pendingSowing(hostname);
     }
 
     async finishSowing(hostname: string) {
         this.sowTargets.delete(hostname);
         this.ns.print(`INFO: queued harvest for ${hostname}`);
-        this.monitor.pendingHarvesting(hostname);
         this.pendingHarvestTargets.push(hostname);
+        await this.monitor.pendingHarvesting(hostname);
     }
 
     updateVelocity() {
