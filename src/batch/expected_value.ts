@@ -83,7 +83,6 @@ function successfulHackValue(
  *
  * @param ns      - Netscript API instance
  * @param host    - Hostname of the target server
- * @param spacing - Delay (ms) between batch phases
  * @returns Expected value per RAM-second
  */
 export function analyzeBatchThreads(
