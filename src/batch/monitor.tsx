@@ -205,7 +205,8 @@ export type HostInfo = {
 }
 
 export function hostInfo(ns: NS, target: string, targetThreads: TargetThreads, lifecycle?: Lifecycle): HostInfo {
-    const hckLevel = ns.getServerRequiredHackingLevel(target);
+    let hckLevel = ns.getServerRequiredHackingLevel(target);
+    hckLevel = typeof hckLevel == "number" && !isNaN(hckLevel) ? hckLevel : 1;
     const minSec = ns.getServerMinSecurityLevel(target);
     const sec = ns.getServerSecurityLevel(target);
 
