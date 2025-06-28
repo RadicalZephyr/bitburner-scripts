@@ -129,6 +129,19 @@ OPTIONS
                 await ns.sleep(10);
             }
         }
+
+        const actualSecurity = ns.getServerSecurityLevel(target);
+        const minSecurity = ns.getServerMinSecurityLevel(target);
+        const maxMoney = ns.getServerMaxMoney(target);
+        const actualMoney = ns.getServerMoneyAvailable(target);
+
+        if (actualSecurity > minSecurity + 0.01
+            && maxMoney - 1.0 > actualMoney) {
+            let secDelta = (actualSecurity - minSecurity).toFixed(2);
+            let moneyPercent = ns.formatPercent(actualMoney / maxMoney);
+            ns.tprint(`target ${target}: security: +${secDelta} $⌈${moneyPercent}⌉`);
+        }
+
         let batchPids = spawnBatch(ns, host, target, logistics.phases);
         if (batchPids.length > 0) {
             batches[batchIndex] = batchPids;
