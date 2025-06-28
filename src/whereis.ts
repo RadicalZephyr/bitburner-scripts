@@ -16,7 +16,7 @@ declare global {
 export async function main(ns: NS) {
     const flags = ns.flags([
         ['goto', false],
-        ['startingHost', 'home'],
+        ['startingHost', ns.self().server],
         ['help', false],
     ]);
 
