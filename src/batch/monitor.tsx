@@ -53,6 +53,7 @@ Example:
     ns.ui.moveTail(1230, 0);
 
     const monitorPort = ns.getPortHandle(MONITOR_PORT);
+    const workers: string[] = [];
     const lifecycleByHost: Map<string, Lifecycle> = new Map();
     let monitorMessagesWaiting = true;
 
@@ -61,7 +62,11 @@ Example:
             for (const nextMsg of readAllFromPort(ns, monitorPort)) {
                 if (typeof nextMsg === "object") {
                     const [phase, host] = nextMsg as MonitorMessage;
-                    lifecycleByHost.set(host, phase);
+                    if (phase === Lifecycle.Worker) {
+                        workers.push(host);
+                    } else {
+                        lifecycleByHost.set(host, phase);
+                    }
                 }
             }
             monitorMessagesWaiting = false;
@@ -85,6 +90,8 @@ Example:
             const phase = lifecycleByHost.get(host) ?? Lifecycle.PendingTilling;
             const info = hostInfo(ns, host, threadsByTarget.get(host), phase);
             switch (phase) {
+                case Lifecycle.Worker:
+                    break;
                 case Lifecycle.Harvesting:
                     harvesting.push(info);
                     break;
