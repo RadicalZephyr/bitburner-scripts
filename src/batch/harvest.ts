@@ -6,7 +6,6 @@ import { CONFIG } from "batch/config";
 import {
     analyzeBatchThreads,
     BatchThreadAnalysis,
-    hackThreadsForPercent,
 } from "batch/expected_value";
 
 
@@ -318,4 +317,37 @@ function maxHackPercentForRam(ns: NS, target: string, maxRam: number): number {
         }
     }
     return low;
+}
+
+/** Calculate the number of hack threads needed to steal the given
+ *  percentage of the target server's max money.
+ *
+ * @param ns      - Netscript API instance
+ * @param host    - Hostname of the target server
+ * @param percent - Desired money percentage to hack (0-1)
+ * @returns Required hack thread count
+ */
+export function hackThreadsForPercent(
+    ns: NS,
+    host: string,
+    percent: number,
+): number {
+    if (percent <= 0) return 0;
+
+    let hackPercent: number;
+    if (canUseFormulas(ns)) {
+        const server = ns.getServer(host);
+        const player = ns.getPlayer();
+        hackPercent = ns.formulas.hacking.hackPercent(server, player);
+    } else {
+        hackPercent = ns.hackAnalyze(host);
+    }
+
+    if (hackPercent <= 0) return 0;
+
+    return Math.ceil(percent / hackPercent);
+}
+
+function canUseFormulas(ns: NS): boolean {
+    return ns.fileExists("Formulas.exe", "home");
 }
