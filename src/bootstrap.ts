@@ -12,6 +12,7 @@ export async function main(ns: NS) {
     await ns.sleep(500);
     await startManager(ns);
     await startMonitor(ns);
+    await startDiscover(ns);
     await sendPersonalServersToMemory(ns);
 }
 
@@ -66,6 +67,14 @@ async function startMonitor(ns: NS) {
     const monitorScript = "/batch/monitor.js";
 
     await launch(ns, monitorScript, {
+        threads: 1, allocationFlag: "--allocation-id"
+    });
+}
+
+async function startDiscover(ns: NS) {
+    const discoverScript = "/batch/discover.js";
+
+    await launch(ns, discoverScript, {
         threads: 1, allocationFlag: "--allocation-id"
     });
 }
