@@ -139,5 +139,5 @@ function growthAnalyze(ns: NS, hostname: string, afterHackMoney: number, growMul
 function weakenThreadsNeeded(securityDecrease: number): number {
     // N.B. this function cannot be substited with the ns function
     // weaken analyze because they do opposite things!
-    return Math.ceil(securityDecrease / 0.05)
+    return Math.max(1, Math.ceil(securityDecrease / 0.05));
 }
