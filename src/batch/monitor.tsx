@@ -48,8 +48,8 @@ Example:
     ns.disableLog('ALL');
     ns.clearLog();
     ns.ui.openTail();
-    ns.ui.resizeTail(870, 640);
-    ns.ui.moveTail(1230, 0);
+    ns.ui.resizeTail(900, 650);
+    ns.ui.moveTail(1220, 0);
 
     const monitorPort = ns.getPortHandle(MONITOR_PORT);
     const workers: string[] = [];

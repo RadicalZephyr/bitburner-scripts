@@ -38,7 +38,7 @@ export async function main(ns: NS) {
 
     ns.disableLog("ALL");
     ns.ui.openTail();
-    ns.ui.moveTail(730, 0);
+    ns.ui.moveTail(720, 0);
     ns.print(`INFO: starting manager on ${ns.getHostname()}`);
 
     let targetsPort = ns.getPortHandle(MANAGER_PORT);
