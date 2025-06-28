@@ -113,12 +113,6 @@ OPTIONS
         if (desiredOverlap < maxOverlap) {
             const toRelease = maxOverlap - desiredOverlap;
             ns.print(`necessary overlap is decreasing! could have released ${toRelease} chunks...`);
-            // const result = await memClient.releaseChunks(allocation.allocationId, toRelease);
-            // if (result) {
-            //     allocation = new TransferableAllocation(result.allocationId, result.hosts);
-            //     batchHost = makeBatchHostArray(allocation);
-            // }
-            // maxOverlap = desiredOverlap;
         }
         let batchIndex = currentBatches % maxOverlap;
         const host = batchHost.at(batchIndex);
