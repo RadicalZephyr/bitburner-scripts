@@ -314,8 +314,8 @@ function maxHackPercentForRam(ns: NS, target: string, maxRam: number): number {
     let high = 0.25;
     for (let i = 0; i < 16; i++) {
         const mid = (low + high) / 2;
-        const { batchRam } = calculateBatchLogistics(ns, target, mid);
-        if (batchRam <= maxRam) {
+        const { batchRam, overlap } = calculateBatchLogistics(ns, target, mid);
+        if (batchRam * overlap <= maxRam) {
             low = mid;
         } else {
             high = mid;
