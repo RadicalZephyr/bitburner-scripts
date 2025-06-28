@@ -258,7 +258,7 @@ interface IBlockSettings {
 export function ServerBlock({ title, targets, theme }: IBlockSettings) {
     const cellStyle = { padding: "0 0.5em" };
     return (<>
-        <h2>{title}</h2>
+        <h2>{title} - {targets.length} targets</h2>
         <table>
             <thead>
                 <tr>
