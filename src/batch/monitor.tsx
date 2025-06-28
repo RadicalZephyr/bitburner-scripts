@@ -1,12 +1,11 @@
 import type { NS, UserInterfaceTheme } from "netscript";
 
-import { ALL_HOSTS } from "all-hosts";
-
+import { registerAllocationOwnership } from "batch/client/memory";
 import { Lifecycle, Message as MonitorMessage } from "batch/client/monitor";
-import { registerAllocationOwnership } from "./client/memory";
 
 import { CONFIG } from "batch/config";
 import { expectedValuePerRamSecond } from "batch/expected_value";
+
 import { readAllFromPort, MONITOR_PORT } from "util/ports";
 
 
@@ -73,7 +72,7 @@ Example:
             monitorPort.nextWrite().then(_ => { monitorMessagesWaiting = true; });
         }
 
-        let threadsByTarget = countThreadsByTarget(ns);
+        let threadsByTarget = countThreadsByTarget(ns, workers, Array.from(lifecycleByHost.keys()));
         const harvesting: HostInfo[] = [];
         const pendingHarvesting: HostInfo[] = [];
         const sowing: HostInfo[] = [];
@@ -81,13 +80,12 @@ Example:
         const tilling: HostInfo[] = [];
         const pendingTilling: HostInfo[] = [];
 
-        for (const host of ALL_HOSTS) {
+        for (const [host, phase] of lifecycleByHost.entries()) {
             if (host === "home"
                 || host.startsWith("pserv")
                 || ns.getServerMaxMoney(host) <= 0)
                 continue;
 
-            const phase = lifecycleByHost.get(host) ?? Lifecycle.PendingTilling;
             const info = hostInfo(ns, host, threadsByTarget.get(host), phase);
             switch (phase) {
                 case Lifecycle.Worker:
@@ -160,12 +158,10 @@ export class TargetThreads {
     }
 }
 
-export function countThreadsByTarget(ns: NS): Map<string, TargetThreads> {
-    let purchasedServers = ns.getPurchasedServers();
-    let hosts = ["home", ...ALL_HOSTS, ...purchasedServers];
-    let targetThreads = new Map(hosts.map(h => [h, new TargetThreads()]));
+export function countThreadsByTarget(ns: NS, workers: string[], targets: string[]): Map<string, TargetThreads> {
+    let targetThreads = new Map(targets.map(h => [h, new TargetThreads()]));
 
-    for (const host of hosts) {
+    for (const host of workers) {
         for (const pi of ns.ps(host)) {
 
             let target = pi.args[0] === "--allocation-id" ? pi.args[2] : pi.args[0];
