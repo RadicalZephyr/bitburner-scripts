@@ -41,7 +41,7 @@ function ServerDisplay({ servers, theme }: ServerDisplayProps) {
                             onClick={() => {
                                 sendCommand(`home ; whereis --goto  ${host}`);
                                 globalThis.setTimeout(() => sendCommand("backdoor"), 500);
-                            }
+                            }}
                             style={{ color: theme.success }}
                         >
                             {host}
@@ -64,7 +64,7 @@ export async function main(ns: NS) {
 
         for (const host of network.keys()) {
             const info = ns.getServer(host);
-            if (!info.backdoorInstalled) {
+            if (!(info.hostname === "home" || info.purchasedByPlayer || info.backdoorInstalled)) {
                 missingBackdoor.push(host);
             }
         }
