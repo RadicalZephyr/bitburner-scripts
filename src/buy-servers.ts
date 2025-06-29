@@ -11,6 +11,7 @@ export async function main(ns: NS) {
         ['min', DEFAULT_MIN_RAM],
         ['no-upgrade', false],
         ['dry-run', false],
+        ['no-rename', false],
         ['wait', false],
         ['help', false]
     ]);
@@ -21,20 +22,25 @@ export async function main(ns: NS) {
         || typeof options.min != 'number'
         || typeof options['no-upgrade'] != 'boolean'
         || typeof options['dry-run'] != 'boolean'
+        || typeof options['no-rename'] != 'boolean'
         || typeof options.wait != 'boolean'
     ) {
         ns.tprint(`
 Usage: ${ns.getScriptName()} [OPTIONS]
 
 OPTIONS
-  --min      The minimum amount of RAM to purchase servers at (default ${ns.formatRam(DEFAULT_MIN_RAM)})
-  --spend    Percentage of money to spend on upgrading (default ${ns.formatPercent(DEFAULT_SPEND)})
-  --dry-run  Print out the number and tier of servers you could buy but don't actually buy anything
-  --wait     Wait for money to become available to buy servers
-  --help     Show this help message
+  --min         The minimum amount of RAM to purchase servers at (default ${ns.formatRam(DEFAULT_MIN_RAM)})
+  --spend       Percentage of money to spend on upgrading (default ${ns.formatPercent(DEFAULT_SPEND)})
+  --dry-run     Print out the number and tier of servers you could buy but don't actually buy anything
+  --no-upgrade  Don't upgrade existing servers
+  --no-rename   Don't rename the newly purchased servers
+  --wait        Wait for money to become available to buy servers
+  --help        Show this help message
 `);
         return;
     }
+
+    const shouldRenameServers = !options['no-rename'];
 
     let upgradeSpendPercentage = options.spend;
 
@@ -97,7 +103,7 @@ OPTIONS
             let upgradeResult = ns.upgradePurchasedServer(oldHostname, ram);
             if (upgradeResult) {
                 let newHostname = serverName(ram);
-                if (ns.renamePurchasedServer(oldHostname, newHostname)) {
+                if (shouldRenameServers && ns.renamePurchasedServer(oldHostname, newHostname)) {
                     await memoryClient.newWorker(newHostname);
                 }
             }
