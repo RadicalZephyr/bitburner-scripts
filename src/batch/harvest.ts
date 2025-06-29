@@ -119,14 +119,6 @@ OPTIONS
     }
 
     while (true) {
-        let logistics = calculateBatchLogistics(ns, target, hackPercent);
-
-        const desiredOverlap = Math.min(overlapLimit, logistics.overlap);
-
-        if (desiredOverlap < maxOverlap) {
-            const toRelease = maxOverlap - desiredOverlap;
-            ns.print(`necessary overlap is decreasing! could have released ${toRelease} chunks...`);
-        }
         let batchIndex = currentBatches % maxOverlap;
         const host = batchHost.at(batchIndex);
         let lastScriptPid = batches[batchIndex].at(-1);
@@ -152,6 +144,16 @@ OPTIONS
                     `ram ${ns.formatRam(rebalance.batchRam)}`
                 );
                 phases = rebalance.phases;
+            }
+        } else {
+            let logistics = calculateBatchLogistics(ns, target, hackPercent);
+            phases = logistics.phases;
+
+            const desiredOverlap = Math.min(overlapLimit, logistics.overlap);
+
+            if (desiredOverlap < maxOverlap) {
+                const toRelease = maxOverlap - desiredOverlap;
+                ns.print(`WARN: overlap decreasing. Could release ${toRelease} chunks...`);
             }
         }
 
