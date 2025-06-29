@@ -38,7 +38,10 @@ function ServerDisplay({ servers, theme }: ServerDisplayProps) {
                     <li key={host}>
                         <a
                             href="#"
-                            onClick={() => sendCommand(`home ; whereis --goto  ${host}`)}
+                            onClick={() => {
+                                sendCommand(`home ; whereis --goto  ${host}`);
+                                globalThis.setTimeout(() => sendCommand("backdoor"), 500);
+                            }
                             style={{ color: theme.success }}
                         >
                             {host}
