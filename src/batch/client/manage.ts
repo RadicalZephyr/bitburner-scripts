@@ -6,9 +6,23 @@ export enum MessageType {
     NewTarget,
     FinishedTilling,
     FinishedSowing,
+    Heartbeat,
 }
 
-export type Payload = string;
+export enum Lifecycle {
+    Till,
+    Sow,
+    Harvest,
+}
+
+export interface Heartbeat {
+    pid: number;
+    filename: string;
+    target: string;
+    lifecycle: Lifecycle;
+}
+
+export type Payload = string | Heartbeat;
 
 export type Message = [
     type: MessageType,
@@ -36,8 +50,18 @@ export class ManagerClient {
         await this.sendMessage(MessageType.FinishedSowing, hostname);
     }
 
-    private async sendMessage(type: MessageType, hostname: string) {
-        let message = [type, hostname];
+    /**
+     * Send a heartbeat message to the manager.
+     *
+     * This allows the manager to recover running targets when it is restarted.
+     */
+    async heartbeat(pid: number, filename: string, target: string, lifecycle: Lifecycle) {
+        const hb: Heartbeat = { pid, filename, target, lifecycle };
+        await this.sendMessage(MessageType.Heartbeat, hb);
+    }
+
+    private async sendMessage(type: MessageType, payload: Payload) {
+        let message: Message = [type, payload];
         while (!this.port.tryWrite(message)) {
             await this.ns.sleep(200);
         }

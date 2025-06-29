@@ -1,6 +1,6 @@
 import type { NetscriptPort, NS } from "netscript";
 
-import { MANAGER_PORT, Message, MessageType } from "batch/client/manage";
+import { MANAGER_PORT, Message, MessageType, Heartbeat, Lifecycle } from "batch/client/manage";
 import { MonitorClient } from "batch/client/monitor";
 
 import { CONFIG } from "batch/config";
@@ -68,22 +68,26 @@ async function readHostsFromPort(ns: NS, hostsPort: NetscriptPort, manager: Targ
     for (let nextMsg of readAllFromPort(ns, hostsPort)) {
         if (typeof nextMsg === "object") {
             let nextHostMsg = nextMsg as Message;
-            let hostname = nextHostMsg[1];
+            let payload = nextHostMsg[1];
             switch (nextHostMsg[0]) {
                 case MessageType.NewTarget:
-                    ns.print(`INFO: received target ${hostname}`);
-                    await manager.pushTarget(hostname);
+                    ns.print(`INFO: received target ${payload}`);
+                    await manager.pushTarget(payload as string);
                     break;
 
                 case MessageType.FinishedTilling:
-                    ns.print(`SUCCESS: finished tilling ${hostname}`);
-                    await monitor.sowing(hostname);
-                    await manager.finishTilling(hostname);
+                    ns.print(`SUCCESS: finished tilling ${payload}`);
+                    await monitor.sowing(payload as string);
+                    await manager.finishTilling(payload as string);
                     break;
 
                 case MessageType.FinishedSowing:
-                    ns.print(`SUCCESS: finished sowing ${hostname}`);
-                    await manager.finishSowing(hostname);
+                    ns.print(`SUCCESS: finished sowing ${payload}`);
+                    await manager.finishSowing(payload as string);
+                    break;
+                case MessageType.Heartbeat:
+                    ns.print(`INFO: heartbeat from ${(payload as Heartbeat).target}`);
+                    await manager.handleHeartbeat(payload as Heartbeat);
                     break;
             }
         }
@@ -176,6 +180,33 @@ class TargetSelectionManager {
         this.ns.print(`INFO: queued harvest for ${hostname}`);
         this.pendingHarvestTargets.push(hostname);
         await this.monitor.pendingHarvesting(hostname);
+    }
+
+    /**
+     * Update internal tracking based on a heartbeat from a worker script.
+     */
+    async handleHeartbeat(hb: Heartbeat) {
+        this.allTargets.add(hb.target);
+
+        this.pendingTillTargets = this.pendingTillTargets.filter(h => h !== hb.target);
+        this.pendingSowTargets = this.pendingSowTargets.filter(h => h !== hb.target);
+        this.pendingHarvestTargets = this.pendingHarvestTargets.filter(h => h !== hb.target);
+
+        this.tillTargets.delete(hb.target);
+        this.sowTargets.delete(hb.target);
+        this.harvestTargets.delete(hb.target);
+
+        switch (hb.lifecycle) {
+            case Lifecycle.Till:
+                this.tillTargets.add(hb.target);
+                break;
+            case Lifecycle.Sow:
+                this.sowTargets.add(hb.target);
+                break;
+            case Lifecycle.Harvest:
+                this.harvestTargets.add(hb.target);
+                break;
+        }
     }
 
     updateVelocity() {

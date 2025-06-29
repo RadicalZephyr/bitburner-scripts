@@ -1,6 +1,7 @@
 import type { AutocompleteData, NS } from "netscript";
 
 import { HostAllocation, MemoryClient, registerAllocationOwnership } from "services/client/memory";
+import { ManagerClient, Lifecycle } from "batch/client/manage";
 
 import { CONFIG } from "batch/config";
 import {
@@ -67,6 +68,9 @@ OPTIONS
         return;
     }
 
+    const managerClient = new ManagerClient(ns);
+    let lastHeartbeat = 0;
+
     let hackPercent = maxRam !== -1
         ? maxHackPercentForRam(ns, target, maxRam)
         : 0.25;
@@ -116,6 +120,10 @@ OPTIONS
         let batchPids = spawnBatch(ns, host, target, logistics.phases);
         batches.push(batchPids);
         currentBatches++;
+        if (Date.now() - lastHeartbeat >= 1000) {
+            await managerClient.heartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Harvest);
+            lastHeartbeat = Date.now();
+        }
         await ns.sleep(CONFIG.batchInterval);
     }
 
@@ -166,6 +174,10 @@ OPTIONS
 
         if (currentBatches > maxOverlap) {
             currentBatches = currentBatches % maxOverlap;
+        }
+        if (Date.now() - lastHeartbeat >= 1000) {
+            await managerClient.heartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Harvest);
+            lastHeartbeat = Date.now();
         }
         await ns.sleep(CONFIG.batchInterval);
     }

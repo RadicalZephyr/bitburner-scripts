@@ -1,6 +1,6 @@
 import type { AutocompleteData, NS } from "netscript";
 
-import { ManagerClient } from "batch/client/manage";
+import { ManagerClient, Lifecycle } from "batch/client/manage";
 
 import { launch } from "batch/launch";
 
@@ -93,6 +93,7 @@ OPTIONS
 Expected time: ${expectedTime}
 Elapsed time:  ${ns.tFormat(selfScript.onlineRunningTime * 1000)}
 `);
+            await managerClient.heartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Till);
             await ns.sleep(1000);
         }
     }
