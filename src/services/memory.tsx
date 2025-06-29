@@ -683,7 +683,7 @@ interface MemoryBarProps {
 }
 
 function MemoryBar({ worker, theme }: MemoryBarProps) {
-    const segments = 30;
+    const segments = 20;
     const setAside = fromFixed(worker.setAsideRam);
     const reserved = fromFixed(worker.reservedRam);
     const allocated = fromFixed(worker.allocatedRam);
