@@ -227,13 +227,13 @@ function makeBatchHostArray(allocatedChunks: HostAllocation[]) {
 function spawnBatch(ns: NS, host: string | null, target: string, phases: BatchPhase[]): number[] {
     if (!host) return [];
 
-    const scripts = Array.from(new Set(phases.map(p => `/batch/${p.script}`)));
+    const scripts = Array.from(new Set(phases.map(p => p.script)));
     ns.scp(scripts, host, "home");
 
     let pids = [];
     for (const phase of phases) {
         if (phase.threads <= 0) continue;
-        const script = `/batch/${phase.script}`;
+        const script = phase.script;
         const pid = ns.exec(script, host, { threads: phase.threads, temporary: true }, target, phase.start);
         if (pid === 0) {
             ns.print(`WARN: failed to spawn ${script} on ${host}`);
@@ -308,10 +308,10 @@ export function calculateBatchPhases(ns: NS, target: string, threads: BatchThrea
     const growTime = ns.getGrowTime(target);
 
     const phases: BatchPhase[] = [
-        { script: "h.js", start: 0, duration: hackTime, threads: threads.hackThreads },
-        { script: "w.js", start: 0, duration: weakenTime, threads: threads.postHackWeakenThreads },
-        { script: "g.js", start: 0, duration: growTime, threads: threads.growThreads },
-        { script: "w.js", start: 0, duration: weakenTime, threads: threads.postGrowWeakenThreads },
+        { script: "/batch/h.js", start: 0, duration: hackTime, threads: threads.hackThreads },
+        { script: "/batch/w.js", start: 0, duration: weakenTime, threads: threads.postHackWeakenThreads },
+        { script: "/batch/g.js", start: 0, duration: growTime, threads: threads.growThreads },
+        { script: "/batch/w.js", start: 0, duration: weakenTime, threads: threads.postGrowWeakenThreads },
     ];
 
     return calculatePhaseStartTimes(phases);
@@ -387,9 +387,9 @@ function calculateRebalancePhases(
     const growTime = ns.getGrowTime(target);
 
     const phases: BatchPhase[] = [
-        { script: 'w.js', start: 0, duration: weakenTime, threads: weakenThreads },
-        { script: 'g.js', start: 0, duration: growTime, threads: growThreads },
-        { script: 'w.js', start: 0, duration: weakenTime, threads: postGrowThreads },
+        { script: '/batch/w.js', start: 0, duration: weakenTime, threads: weakenThreads },
+        { script: '/batch/g.js', start: 0, duration: growTime, threads: growThreads },
+        { script: '/batch/w.js', start: 0, duration: weakenTime, threads: postGrowThreads },
     ];
 
     return calculatePhaseStartTimes(phases);
