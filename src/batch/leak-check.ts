@@ -5,7 +5,7 @@ import {
     MemorySnapshot,
     WorkerSnapshot,
     AllocationSnapshot,
-} from "./client/memory";
+} from "services/client/memory";
 
 export async function main(ns: NS) {
     ns.disableLog('ALL');

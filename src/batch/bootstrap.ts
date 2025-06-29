@@ -1,6 +1,6 @@
 import type { NS } from "netscript";
 
-import { MemoryClient } from "batch/client/memory";
+import { MemoryClient } from "services/client/memory";
 import { launch } from "batch/launch";
 
 export async function main(ns: NS) {
@@ -15,7 +15,7 @@ export async function main(ns: NS) {
 }
 
 const MEMORY_FILES: string[] = [
-    "/batch/client/memory.js",
+    "/services/client/memory.js",
     "/util/ports.js"
 ];
 
@@ -31,7 +31,7 @@ const BASIC_WORKERS = [
 
 async function startMemory(ns: NS) {
     const memoryHost = "n00dles";
-    const memoryScript = "/batch/memory.js";
+    const memoryScript = "/services/memory.js";
     let memory = ns.getRunningScript(memoryScript, memoryHost);
     if (memory !== null) {
         ns.kill(memory.pid);

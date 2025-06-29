@@ -1,5 +1,6 @@
 import type { NS } from "netscript";
-import { registerAllocationOwnership } from "/batch/client/memory";
+
+import { registerAllocationOwnership } from "services/client/memory";
 
 export async function main(ns: NS) {
     const flags = ns.flags([

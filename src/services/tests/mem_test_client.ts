@@ -1,6 +1,6 @@
 import type { NS } from "netscript";
 
-import { MemoryClient } from "/batch/client/memory";
+import { MemoryClient } from "services/client/memory";
 
 export async function main(ns: NS) {
     const client = new MemoryClient(ns);

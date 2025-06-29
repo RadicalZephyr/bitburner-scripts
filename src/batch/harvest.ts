@@ -1,6 +1,6 @@
 import type { AutocompleteData, NS } from "netscript";
 
-import { HostAllocation, MemoryClient, registerAllocationOwnership } from "batch/client/memory";
+import { HostAllocation, MemoryClient, registerAllocationOwnership } from "services/client/memory";
 
 import { CONFIG } from "batch/config";
 import { analyzeBatchThreads, BatchThreadAnalysis } from "batch/expected_value";

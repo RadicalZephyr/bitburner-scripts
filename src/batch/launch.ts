@@ -5,7 +5,7 @@ export interface LaunchRunOptions extends RunOptions {
     coreDependent?: boolean;
 }
 
-import { MemoryClient } from "./client/memory";
+import { MemoryClient } from "services/client/memory";
 
 export function autocomplete(data: AutocompleteData, args: string[]): string[] {
     return data.scripts;

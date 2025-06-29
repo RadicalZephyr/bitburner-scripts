@@ -30,7 +30,7 @@ I.e. have more than 10% of security
 - Copying script files to new host
 - Sorting hosts into workers and targets
 
-** Memory Management handled by batch/memory.ts
+** Memory Management handled by services/memory.ts
 
 Receives all workers and tracks memory usage on them. Receives
 requests for allocating memory and responds with a set of hosts that

@@ -1,6 +1,6 @@
 import type { NS } from "netscript";
 
-import { MemoryClient } from "./batch/client/memory";
+import { MemoryClient } from "services/client/memory";
 
 const DEFAULT_SPEND = 1.0;
 const DEFAULT_MIN_RAM = 16;

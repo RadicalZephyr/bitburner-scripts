@@ -1,10 +1,11 @@
 import type { NS, UserInterfaceTheme } from "netscript";
 
-import { registerAllocationOwnership } from "batch/client/memory";
 import { Lifecycle, Message as MonitorMessage } from "batch/client/monitor";
 
 import { CONFIG } from "batch/config";
 import { expectedValuePerRamSecond } from "batch/expected_value";
+
+import { registerAllocationOwnership } from "services/client/memory";
 
 import { readAllFromPort, MONITOR_PORT } from "util/ports";
 

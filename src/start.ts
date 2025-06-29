@@ -5,7 +5,7 @@ import { CONFIG } from "batch/config";
 const BOOTSTRAP_FILES = [
     "/batch/bootstrap.js",
     "/batch/launch.js",
-    "/batch/client/memory.js"
+    "/services/client/memory.js"
 ];
 
 export async function main(ns: NS) {

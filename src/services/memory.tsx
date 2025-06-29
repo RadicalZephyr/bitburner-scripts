@@ -15,7 +15,7 @@ import {
     WorkerSnapshot,
     AllocationSnapshot,
     MemorySnapshot,
-} from "batch/client/memory";
+} from "services/client/memory";
 
 import { readAllFromPort } from "util/ports";
 

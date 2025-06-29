@@ -7,7 +7,7 @@ import {
     MEMORY_PORT,
     Message,
     MessageType,
-} from "/batch/client/memory";
+} from "services/client/memory";
 
 import { readAllFromPort } from "/util/ports";
 

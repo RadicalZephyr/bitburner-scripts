@@ -1,10 +1,11 @@
 import type { NS } from "netscript";
 
-import { walkNetworkBFS } from "util/walk";
-
 import { ManagerClient } from "batch/client/manage";
-import { MemoryClient } from "batch/client/memory";
 import { MonitorClient } from "batch/client/monitor";
+
+import { MemoryClient } from "services/client/memory";
+
+import { walkNetworkBFS } from "util/walk";
 
 
 export async function main(ns: NS) {
