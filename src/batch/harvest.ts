@@ -234,7 +234,7 @@ function spawnBatch(ns: NS, host: string | null, target: string, phases: BatchPh
     for (const phase of phases) {
         if (phase.threads <= 0) continue;
         const script = `/batch/${phase.script}`;
-        const pid = ns.exec(script, host, phase.threads, target, phase.start);
+        const pid = ns.exec(script, host, { threads: phase.threads, temporary: true }, target, phase.start);
         if (pid === 0) {
             ns.print(`WARN: failed to spawn ${script} on ${host}`);
         } else {
