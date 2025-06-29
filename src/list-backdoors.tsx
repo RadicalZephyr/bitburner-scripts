@@ -17,8 +17,12 @@ export function sendCommand(command: string): void {
     terminalInput.value = command;
     const handler = Object.keys(terminalInput)[1];
     terminalInput[handler].onChange({ target: terminalInput });
-    terminalInput[handler].onKeyDown({ key: "Enter", preventDefault: (): void => null });
+    function enterKey() {
+        terminalInput[handler].onKeyDown({ key: "Enter", preventDefault: (): void => null });
+    }
+    globalThis.setTimeout(enterKey, 10);
 }
+
 
 interface ServerDisplayProps {
     servers: string[];
