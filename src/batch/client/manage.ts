@@ -60,6 +60,17 @@ export class ManagerClient {
         await this.sendMessage(MessageType.Heartbeat, hb);
     }
 
+    /**
+     * Try to send a heartbeat message to the manager without waiting
+     * for space in the port.
+     *
+     * This allows the manager to recover running targets when it is restarted.
+     */
+    tryHeartbeat(pid: number, filename: string, target: string, lifecycle: Lifecycle): boolean {
+        const hb: Heartbeat = { pid, filename, target, lifecycle };
+        return this.port.tryWrite([MessageType.Heartbeat, hb]);
+    }
+
     private async sendMessage(type: MessageType, payload: Payload) {
         let message: Message = [type, payload];
         while (!this.port.tryWrite(message)) {

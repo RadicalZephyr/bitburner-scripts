@@ -175,9 +175,10 @@ OPTIONS
         if (currentBatches > maxOverlap) {
             currentBatches = currentBatches % maxOverlap;
         }
-        if (Date.now() - lastHeartbeat >= 1000) {
-            await managerClient.heartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Harvest);
-            lastHeartbeat = Date.now();
+        if (Date.now() >= lastHeartbeat + 1000 + (Math.random() * 500)) {
+            if (managerClient.tryHeartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Harvest)) {
+                lastHeartbeat = Date.now();
+            }
         }
         await ns.sleep(CONFIG.batchInterval);
     }

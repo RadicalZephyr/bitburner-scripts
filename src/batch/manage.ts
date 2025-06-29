@@ -85,6 +85,7 @@ async function readHostsFromPort(ns: NS, hostsPort: NetscriptPort, manager: Targ
                     ns.print(`SUCCESS: finished sowing ${payload}`);
                     await manager.finishSowing(payload as string);
                     break;
+
                 case MessageType.Heartbeat:
                     ns.print(`INFO: heartbeat from ${(payload as Heartbeat).target}`);
                     await manager.handleHeartbeat(payload as Heartbeat);
