@@ -7,6 +7,7 @@ import {
     analyzeBatchThreads,
     BatchThreadAnalysis,
 } from "batch/expected_value";
+import { calculateWeakenThreads } from "./till";
 
 
 export function autocomplete(data: AutocompleteData, _args: string[]): string[] {
@@ -140,14 +141,21 @@ OPTIONS
         const maxMoney = ns.getServerMaxMoney(target);
         const actualMoney = ns.getServerMoneyAvailable(target);
 
-        if (actualSecurity > minSecurity + 0.01
-            && maxMoney - 1.0 > actualMoney) {
-            let secDelta = (actualSecurity - minSecurity).toFixed(2);
-            let moneyPercent = ns.formatPercent(actualMoney / maxMoney);
-            ns.tprint(`target ${target}: security: +${secDelta} $⌈${moneyPercent}⌉`);
+        let phases = logistics.phases;
+        if (actualSecurity > minSecurity || actualMoney < maxMoney) {
+            const rebalance = calculateRebalanceBatchLogistics(ns, target, batchRam);
+            if (rebalance.batchRam <= batchRam) {
+                const secDelta = (actualSecurity - minSecurity).toFixed(2);
+                const moneyPct = ns.formatPercent(actualMoney / maxMoney);
+                ns.print(
+                    `INFO: rebalancing ${target} sec +${secDelta} money ${moneyPct} ` +
+                    `ram ${ns.formatRam(rebalance.batchRam)}`
+                );
+                phases = rebalance.phases;
+            }
         }
 
-        let batchPids = spawnBatch(ns, host, target, logistics.phases);
+        let batchPids = spawnBatch(ns, host, target, phases);
         if (batchPids.length > 0) {
             batches[batchIndex] = batchPids;
             currentBatches++;
@@ -319,6 +327,91 @@ export function calculateBatchPhases(ns: NS, target: string, threads: BatchThrea
         p.start += earliestStart;
     }
 
+    return phases;
+}
+
+interface RebalanceBatchLogistics {
+    batchRam: number;
+    phases: BatchPhase[];
+}
+
+/** Calculate threads and timings for a weaken-grow-weaken batch to
+ *  restore a server to minimum security and maximum money.
+ *
+ *  The returned batch always requires no more RAM than `maxBatchRam`.
+ */
+export function calculateRebalanceBatchLogistics(
+    ns: NS,
+    target: string,
+    maxBatchRam: number,
+): RebalanceBatchLogistics {
+    const wRam = ns.getScriptRam('/batch/w.js', 'home');
+    const gRam = ns.getScriptRam('/batch/g.js', 'home');
+
+    let weakenThreads = calculateWeakenThreads(ns, target);
+    let usedRam = weakenThreads * wRam;
+
+    if (usedRam > maxBatchRam) {
+        weakenThreads = Math.floor(maxBatchRam / wRam);
+        usedRam = weakenThreads * wRam;
+        const phases = calculateRebalancePhases(ns, target, weakenThreads, 0, 0);
+        return { batchRam: usedRam, phases };
+    }
+
+    const maxMoney = ns.getServerMaxMoney(target);
+    const currentMoney = ns.getServerMoneyAvailable(target);
+    const neededRatio = currentMoney > 0 ? maxMoney / currentMoney : maxMoney;
+    let growThreads = Math.ceil(ns.growthAnalyze(target, neededRatio));
+
+    let postGrowWeaken = Math.ceil(ns.growthAnalyzeSecurity(growThreads, target) * 20) + 1;
+
+    while (growThreads > 0) {
+        postGrowWeaken = Math.ceil(ns.growthAnalyzeSecurity(growThreads, target) * 20) + 1;
+        const totalRam = usedRam + growThreads * gRam + postGrowWeaken * wRam;
+        if (totalRam <= maxBatchRam) {
+            usedRam = totalRam;
+            break;
+        }
+        growThreads--;
+    }
+
+    if (growThreads === 0) {
+        postGrowWeaken = 0;
+        usedRam = weakenThreads * wRam;
+    }
+
+    const phases = calculateRebalancePhases(ns, target, weakenThreads, growThreads, postGrowWeaken);
+    return { batchRam: usedRam, phases };
+}
+
+function calculateRebalancePhases(
+    ns: NS,
+    target: string,
+    weakenThreads: number,
+    growThreads: number,
+    postGrowThreads: number,
+): BatchPhase[] {
+    const spacing = CONFIG.batchInterval as number;
+
+    const weakenTime = ns.getWeakenTime(target);
+    const growTime = ns.getGrowTime(target);
+
+    const phases: BatchPhase[] = [
+        { script: 'w.js', start: 0, duration: weakenTime, threads: weakenThreads },
+        { script: 'g.js', start: 0, duration: growTime, threads: growThreads },
+        { script: 'w.js', start: 0, duration: weakenTime, threads: postGrowThreads },
+    ];
+
+    let endTime = 0;
+    for (const p of phases) {
+        p.start = endTime - p.duration;
+        endTime += spacing;
+    }
+
+    const earliest = Math.abs(Math.min(...phases.map(p => p.start)));
+    for (const p of phases) {
+        p.start += earliest;
+    }
     return phases;
 }
 
