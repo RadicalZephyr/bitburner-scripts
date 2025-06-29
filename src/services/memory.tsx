@@ -416,7 +416,7 @@ class MemoryManager {
             (c) => c.pid === pid && c.hostname === hostname,
         );
         if (idx === -1) {
-            printLog("WARN: couldn't find a claim for ${pid} on ${hostname} to release");
+            printLog(`WARN: couldn't find a claim for ${pid} on ${hostname} to release`);
             return false;
         }
         const claim = allocation.claims[idx];
