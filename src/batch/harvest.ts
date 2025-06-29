@@ -8,7 +8,6 @@ import {
     BatchThreadAnalysis,
     fullBatchTime,
 } from "batch/expected_value";
-import { calculateWeakenThreads } from "./till";
 
 
 export function autocomplete(data: AutocompleteData, _args: string[]): string[] {
@@ -335,7 +334,10 @@ export function calculateRebalanceBatchLogistics(
     const wRam = ns.getScriptRam('/batch/w.js', 'home');
     const gRam = ns.getScriptRam('/batch/g.js', 'home');
 
-    let weakenThreads = calculateWeakenThreads(ns, target);
+    let minSec = ns.getServerMinSecurityLevel(target);
+    let curSec = ns.getServerSecurityLevel(target);
+    let deltaSec = curSec - minSec;
+    let weakenThreads = calculateWeakenThreads(deltaSec);
     let usedRam = weakenThreads * wRam;
 
     if (usedRam > maxBatchRam) {
@@ -350,10 +352,10 @@ export function calculateRebalanceBatchLogistics(
     const neededRatio = currentMoney > 0 ? maxMoney / currentMoney : maxMoney;
     let growThreads = Math.ceil(ns.growthAnalyze(target, neededRatio));
 
-    let postGrowWeaken = Math.ceil(ns.growthAnalyzeSecurity(growThreads, target) * 20) + 1;
+    let postGrowWeaken = calculateWeakenThreads(ns.growthAnalyzeSecurity(growThreads, target));
 
     while (growThreads > 0) {
-        postGrowWeaken = Math.ceil(ns.growthAnalyzeSecurity(growThreads, target) * 20) + 1;
+        postGrowWeaken = calculateWeakenThreads(ns.growthAnalyzeSecurity(growThreads, target));
         const totalRam = usedRam + growThreads * gRam + postGrowWeaken * wRam;
         if (totalRam <= maxBatchRam) {
             usedRam = totalRam;
@@ -369,6 +371,10 @@ export function calculateRebalanceBatchLogistics(
 
     const phases = calculateRebalancePhases(ns, target, weakenThreads, growThreads, postGrowWeaken);
     return { batchRam: usedRam, phases };
+}
+
+function calculateWeakenThreads(deltaSec: number) {
+    return Math.ceil(deltaSec * 20) + 1;
 }
 
 function calculateRebalancePhases(
