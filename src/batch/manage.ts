@@ -326,5 +326,5 @@ function canHarvest(ns: NS, hostname: string) {
 }
 
 function worthHarvesting(ns: NS, hostname: string) {
-    return expectedValuePerRamSecond(ns, hostname) > 100;
+    return expectedValuePerRamSecond(ns, hostname) > CONFIG.expectedValueThreshold;
 }
