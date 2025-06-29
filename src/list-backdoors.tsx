@@ -51,18 +51,21 @@ export async function main(ns: NS) {
     ns.clearLog();
     ns.ui.openTail();
 
-    const network = walkNetworkBFS(ns);
-    const missingBackdoor: string[] = [];
+    while (true) {
+        const network = walkNetworkBFS(ns);
+        const missingBackdoor: string[] = [];
 
-    for (const host of network.keys()) {
-        const info = ns.getServer(host);
-        if (!info.backdoorInstalled) {
-            missingBackdoor.push(host);
+        for (const host of network.keys()) {
+            const info = ns.getServer(host);
+            if (!info.backdoorInstalled) {
+                missingBackdoor.push(host);
+            }
         }
-        await ns.sleep(0);
-    }
 
-    const theme = ns.ui.getTheme();
-    ns.clearLog();
-    ns.printRaw(<ServerDisplay servers={missingBackdoor} theme={theme}></ServerDisplay>);
+        const theme = ns.ui.getTheme();
+        ns.clearLog();
+        ns.printRaw(<ServerDisplay servers={missingBackdoor} theme={theme}></ServerDisplay>);
+
+        await ns.sleep(1000);
+    }
 }
