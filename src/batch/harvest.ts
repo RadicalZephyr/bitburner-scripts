@@ -7,6 +7,7 @@ import {
     analyzeBatchThreads,
     BatchThreadAnalysis,
     fullBatchTime,
+    growthAnalyze
 } from "batch/expected_value";
 
 
@@ -347,10 +348,8 @@ export function calculateRebalanceBatchLogistics(
         return { batchRam: usedRam, phases };
     }
 
-    const maxMoney = ns.getServerMaxMoney(target);
     const currentMoney = ns.getServerMoneyAvailable(target);
-    const neededRatio = currentMoney > 0 ? maxMoney / currentMoney : maxMoney;
-    let growThreads = Math.ceil(ns.growthAnalyze(target, neededRatio));
+    let growThreads = growthAnalyze(ns, target, currentMoney);
 
     let postGrowWeaken = calculateWeakenThreads(ns.growthAnalyzeSecurity(growThreads, target));
 

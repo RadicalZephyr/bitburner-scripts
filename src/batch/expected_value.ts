@@ -93,12 +93,9 @@ export function analyzeBatchThreads(
     host: string,
     hackThreads: number = 1,
 ): BatchThreadAnalysis {
-    const hackValue = successfulHackValue(ns, host, hackThreads);
+    const afterHackMoney = successfulHackValue(ns, host, hackThreads);
 
-    const maxMoney = ns.getServerMaxMoney(host);
-    const afterHackMoney = Math.max(0, maxMoney - hackValue);
-    const growMultiplier = maxMoney / Math.max(1, afterHackMoney);
-    const growThreads = growthAnalyze(ns, host, afterHackMoney, growMultiplier);
+    const growThreads = growthAnalyze(ns, host, afterHackMoney);
 
     const hackSecInc = ns.hackAnalyzeSecurity(hackThreads, host);
     const growSecInc = ns.growthAnalyzeSecurity(growThreads, host);
@@ -120,7 +117,7 @@ export function analyzeBatchThreads(
  * server's current security level, regardless of how many threads are
  * assigned to each call.
  */
-function growthAnalyze(ns: NS, hostname: string, afterHackMoney: number, growMultiplier: number): number {
+export function growthAnalyze(ns: NS, hostname: string, afterHackMoney: number): number {
     if (canUseFormulas(ns)) {
         let server = ns.getServer(hostname);
         let player = ns.getPlayer();
@@ -130,6 +127,8 @@ function growthAnalyze(ns: NS, hostname: string, afterHackMoney: number, growMul
         // N.B. from testing this calculation tracks very closely with
         // the formulas value, _except_ as the afterHackMoney
         // approaches zero the error grows super-linearly
+        const maxMoney = ns.getServerMaxMoney(hostname);
+        const growMultiplier = maxMoney / Math.max(1, afterHackMoney);
         return Math.ceil(ns.growthAnalyze(hostname, growMultiplier));
     }
 }
