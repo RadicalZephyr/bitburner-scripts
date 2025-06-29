@@ -51,7 +51,7 @@ export function expectedValuePerRamSecond(
         growThreads * ns.getScriptRam("/batch/g.js", "home") +
         weakenThreads * ns.getScriptRam("/batch/w.js", "home");
 
-    const batchTime = ns.getWeakenTime(host) + 2 * spacing;
+    const batchTime = fullBatchTime(ns, host);
 
     const hackValue = successfulHackValue(ns, host, hackThreads);
     const expectedHackValue = hackValue * ns.hackAnalyzeChance(host);
@@ -59,6 +59,10 @@ export function expectedValuePerRamSecond(
     // Scale by 1000 to get human readable values and convert units
     // from $/GB*ms to $/GB*s
     return 1000 * expectedHackValue / (batchTime * ramUse);
+}
+
+export function fullBatchTime(ns: NS, host: string) {
+    return ns.getWeakenTime(host) + 2 * CONFIG.batchInterval;
 }
 
 function successfulHackValue(

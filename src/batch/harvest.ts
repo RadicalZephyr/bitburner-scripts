@@ -6,6 +6,7 @@ import { CONFIG } from "batch/config";
 import {
     analyzeBatchThreads,
     BatchThreadAnalysis,
+    fullBatchTime,
 } from "batch/expected_value";
 import { calculateWeakenThreads } from "./till";
 
@@ -275,7 +276,7 @@ export function calculateBatchLogistics(
         (threads.postHackWeakenThreads + threads.postGrowWeakenThreads);
     const batchRam = hRam + gRam + wRam;
 
-    const batchTime = ns.getWeakenTime(target) + 2 * (CONFIG.batchInterval as number);
+    const batchTime = fullBatchTime(ns, target);
     const baseNetscriptOperationTime = 20;
     const batchEndingPeriod = (baseNetscriptOperationTime + CONFIG.batchInterval) * 4;
     const overlap = Math.ceil(batchTime / batchEndingPeriod);
