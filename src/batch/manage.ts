@@ -33,8 +33,8 @@ export async function main(ns: NS) {
     }
 
     compareExpectedValue = (ta, tb) => {
-        return expectedValuePerRamSecond(ns, tb, CONFIG.batchInterval)
-            - expectedValuePerRamSecond(ns, ta, CONFIG.batchInterval);
+        return expectedValuePerRamSecond(ns, tb)
+            - expectedValuePerRamSecond(ns, ta);
     };
 
     ns.disableLog("ALL");
@@ -222,7 +222,7 @@ class TargetSelectionManager {
             for (const host of candidates.slice(0, canAdd)) {
                 const threads = calculateWeakenThreads(this.ns, host);
                 const ram = threads * this.ns.getScriptRam("/batch/w.js", "home");
-                const value = expectedValuePerRamSecond(this.ns, host, CONFIG.batchInterval);
+                const value = expectedValuePerRamSecond(this.ns, host);
                 tasks.push({ host, type: "till", ram, threads, value });
             }
         }
@@ -232,7 +232,7 @@ class TargetSelectionManager {
             const total = growThreads + weakenThreads;
             const ram = growThreads * this.ns.getScriptRam("/batch/g.js", "home") +
                 weakenThreads * this.ns.getScriptRam("/batch/w.js", "home");
-            const value = expectedValuePerRamSecond(this.ns, host, CONFIG.batchInterval);
+            const value = expectedValuePerRamSecond(this.ns, host);
             tasks.push({ host, type: "sow", ram, threads: total, value });
         }
 
@@ -242,7 +242,7 @@ class TargetSelectionManager {
             }
             const logistics = calculateBatchLogistics(this.ns, host);
             const ram = logistics.requiredRam;
-            const value = expectedValuePerRamSecond(this.ns, host, CONFIG.batchInterval);
+            const value = expectedValuePerRamSecond(this.ns, host);
             tasks.push({ host, type: "harvest", ram, value });
         }
 
@@ -326,5 +326,5 @@ function canHarvest(ns: NS, hostname: string) {
 }
 
 function worthHarvesting(ns: NS, hostname: string) {
-    return expectedValuePerRamSecond(ns, hostname, CONFIG.batchInterval) > 100;
+    return expectedValuePerRamSecond(ns, hostname) > 100;
 }

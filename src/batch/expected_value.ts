@@ -19,7 +19,7 @@ export async function main(ns: NS) {
         return;
     }
 
-    let eValue = expectedValuePerRamSecond(ns, target, CONFIG.batchInterval);
+    let eValue = expectedValuePerRamSecond(ns, target);
     ns.tprint(`${target} ${eValue}`);
 }
 
@@ -35,7 +35,6 @@ export async function main(ns: NS) {
 export function expectedValuePerRamSecond(
     ns: NS,
     host: string,
-    spacing: number,
 ): number {
     const {
         hackThreads,
