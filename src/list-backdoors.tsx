@@ -64,7 +64,7 @@ export async function main(ns: NS) {
 
         for (const host of network.keys()) {
             const info = ns.getServer(host);
-            if (!info.backdoorInstalled) {
+            if (!(info.hostname === "home" || info.purchasedByPlayer || info.backdoorInstalled)) {
                 missingBackdoor.push(host);
             }
         }
