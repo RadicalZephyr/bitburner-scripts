@@ -34,7 +34,7 @@ function ServerDisplay({ servers, theme }: ServerDisplayProps) {
                     <li key={host}>
                         <a
                             href="#"
-                            onClick={() => sendCommand(`connect ${host}`)}
+                            onClick={() => sendCommand(`home ; whereis --goto  ${host}`)}
                             style={{ color: theme.success }}
                         >
                             {host}
@@ -47,7 +47,9 @@ function ServerDisplay({ servers, theme }: ServerDisplayProps) {
 }
 
 export async function main(ns: NS) {
-    ns.disableLog("sleep");
+    ns.disableLog("ALL");
+    ns.clearLog();
+    ns.ui.openTail();
 
     const network = walkNetworkBFS(ns);
     const missingBackdoor: string[] = [];
