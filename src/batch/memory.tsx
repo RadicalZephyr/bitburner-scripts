@@ -683,13 +683,13 @@ interface MemoryBarProps {
 }
 
 function MemoryBar({ worker, theme }: MemoryBarProps) {
-    const segments = 20;
+    const segments = 30;
     const setAside = fromFixed(worker.setAsideRam);
     const reserved = fromFixed(worker.reservedRam);
     const allocated = fromFixed(worker.allocatedRam);
-    const setAsideSeg = Math.round((setAside / worker.totalRam) * segments);
-    const reservedSeg = Math.round((reserved / worker.totalRam) * segments);
-    const allocSeg = Math.round((allocated / worker.totalRam) * segments);
+    const setAsideSeg = calculateBarSegments(setAside, worker.totalRam, segments);
+    const reservedSeg = calculateBarSegments(reserved, worker.totalRam, segments);
+    const allocSeg = calculateBarSegments(allocated, worker.totalRam, segments);
     const usedSeg = Math.min(segments, setAsideSeg + reservedSeg + allocSeg);
     const freeSeg = segments - usedSeg;
 
@@ -704,4 +704,13 @@ function MemoryBar({ worker, theme }: MemoryBarProps) {
         <span key="a" style={{ color: theme.money }}>{allocBar}</span>
         <span>{freeBar}</span>
     </>;
+}
+
+function calculateBarSegments(segmentRam: number, totalRam: number, segments: number): number {
+    if (segmentRam > 1 && totalRam > 0) {
+        let numSegments = (segmentRam / totalRam) * segments;
+        return numSegments > 0 && numSegments < 1 ? 1 : Math.round(numSegments);
+    } else {
+        return 0;
+    }
 }
