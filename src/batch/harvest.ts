@@ -89,8 +89,13 @@ OPTIONS
         JSON.stringify(logistics.phases, undefined, 2)
     );
 
+    // Track the allocated batchRam chunk size. When we calculate a
+    // batch for rebalancing the server we need each rebalancing batch
+    // to fit within the batch size that we originally allocated
+    const batchRam = logistics.batchRam;
+
     let memClient = new MemoryClient(ns);
-    let allocation = await memClient.requestOwnedAllocation(logistics.batchRam, overlapLimit);
+    let allocation = await memClient.requestOwnedAllocation(batchRam, overlapLimit);
     if (!allocation) return;
 
     // Track how many batches can overlap concurrently. If the
