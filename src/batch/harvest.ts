@@ -303,8 +303,6 @@ interface BatchPhase {
  * milliseconds after the previous one.
  */
 export function calculateBatchPhases(ns: NS, target: string, threads: BatchThreadAnalysis): BatchPhase[] {
-    const spacing = CONFIG.batchInterval as number;
-
     const hackTime = ns.getHackTime(target);
     const weakenTime = ns.getWeakenTime(target);
     const growTime = ns.getGrowTime(target);
@@ -316,21 +314,7 @@ export function calculateBatchPhases(ns: NS, target: string, threads: BatchThrea
         { script: "w.js", start: 0, duration: weakenTime, threads: threads.postGrowWeakenThreads },
     ];
 
-    let endTime = 0;
-    for (const p of phases) {
-        p.start = endTime - p.duration;
-        endTime += spacing;
-    }
-
-    // Determine offset to bring most negative start time to zero
-    let earliestStart = Math.abs(Math.min(...phases.map(p => p.start)));
-
-    // Push forward all start times so earliest one is zero
-    for (const p of phases) {
-        p.start += earliestStart;
-    }
-
-    return phases;
+    return calculatePhaseStartTimes(phases);
 }
 
 interface RebalanceBatchLogistics {
@@ -394,8 +378,6 @@ function calculateRebalancePhases(
     growThreads: number,
     postGrowThreads: number,
 ): BatchPhase[] {
-    const spacing = CONFIG.batchInterval as number;
-
     const weakenTime = ns.getWeakenTime(target);
     const growTime = ns.getGrowTime(target);
 
@@ -404,6 +386,12 @@ function calculateRebalancePhases(
         { script: 'g.js', start: 0, duration: growTime, threads: growThreads },
         { script: 'w.js', start: 0, duration: weakenTime, threads: postGrowThreads },
     ];
+
+    return calculatePhaseStartTimes(phases);
+}
+
+function calculatePhaseStartTimes(phases: BatchPhase[]) {
+    const spacing = CONFIG.batchInterval as number;
 
     let endTime = 0;
     for (const p of phases) {
