@@ -8,6 +8,17 @@
 - Always include doc comments for exported functions (except the main
   and autocomplete functions).
 
+
+## Terminology used to classify hosts
+
+We use two terms to identify different types of hosts:
+
+- Workers: any server where `ns.getServerMaxRam(host) > 0`
+- Targets: any server where `ns.getServerMaxMoney(host) > 0`
+
+Any individual host can be both a Worker and a Target simultaneously.
+
+
 ## Dev Environment Tips
 
 - Only work on code in the `src` directory.
