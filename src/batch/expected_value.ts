@@ -142,7 +142,7 @@ export function growthAnalyze(ns: NS, hostname: string, afterHackMoney: number):
         server.moneyAvailable = afterHackMoney;
         return Math.ceil(
             ns.formulas.hacking.growThreads(server, player, server.moneyMax) /
-                mults.growth,
+            mults.growth,
         );
     } else {
         // N.B. from testing this calculation tracks very closely with
@@ -158,7 +158,7 @@ export function growthAnalyze(ns: NS, hostname: string, afterHackMoney: number):
 function weakenThreadsNeeded(securityDecrease: number): number {
     // N.B. this function cannot be substited with the ns function
     // weaken analyze because they do opposite things!
-    return Math.max(1, Math.ceil(securityDecrease / 0.05));
+    return Math.max(1, Math.ceil(securityDecrease * 20));
 }
 
 function canUseFormulas(ns: NS): boolean {
