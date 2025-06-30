@@ -84,7 +84,7 @@ async function startMonitor(ns: NS) {
 }
 
 async function startDiscover(ns: NS) {
-    const discoverScript = "/batch/discover.js";
+    const discoverScript = "/services/discover.js";
 
     await launch(ns, discoverScript, {
         threads: 1, allocationFlag: "--allocation-id"
