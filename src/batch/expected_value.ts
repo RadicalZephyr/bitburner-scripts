@@ -60,7 +60,13 @@ export function expectedValuePerRamSecond(
     return 1000 * expectedHackValue / (batchTime * ramUse);
 }
 
-export function fullBatchTime(ns: NS, host: string) {
+/** Calculate the total runtime for a full hack-weaken-grow-weaken batch.
+ *
+ * @param ns   - Netscript API instance
+ * @param host - Hostname of the target server
+ * @returns Time in milliseconds for one batch to finish
+ */
+export function fullBatchTime(ns: NS, host: string): number {
     return ns.getWeakenTime(host) + 2 * CONFIG.batchInterval;
 }
 
@@ -70,15 +76,16 @@ function successfulHackValue(
     threads: number,
 ): number {
     const maxMoney = ns.getServerMaxMoney(host);
+    const mults = ns.getHackingMultipliers();
 
     if (canUseFormulas(ns)) {
         const server = ns.getServer(host);
         const player = ns.getPlayer();
         const percent = ns.formulas.hacking.hackPercent(server, player);
-        return threads * server.moneyMax * percent;
+        return threads * server.moneyMax * percent * mults.money;
     }
 
-    return threads * maxMoney * ns.hackAnalyze(host);
+    return threads * maxMoney * ns.hackAnalyze(host) * mults.money;
 }
 
 /**
@@ -118,25 +125,30 @@ export function analyzeBatchThreads(
  * needed in order to multiply the money available on the specified
  * server by a given multiplier, if all threads are executed at the
  * server's current security level, regardless of how many threads are
- * assigned to each call.
+ * assigned to each call. The result is normalized for the player's
+ * grow thread multiplier.
  *
  * @param ns - Netscript API instance
  * @param hostname - Hostname of the target server
  * @param afterHackMoney - Remaining money after the hack completes
  */
 export function growthAnalyze(ns: NS, hostname: string, afterHackMoney: number): number {
+    const mults = ns.getHackingMultipliers();
     if (canUseFormulas(ns)) {
         let server = ns.getServer(hostname);
         let player = ns.getPlayer();
         server.moneyAvailable = afterHackMoney;
-        return ns.formulas.hacking.growThreads(server, player, server.moneyMax);
+        return Math.ceil(
+            ns.formulas.hacking.growThreads(server, player, server.moneyMax) /
+                mults.growth,
+        );
     } else {
         // N.B. from testing this calculation tracks very closely with
         // the formulas value, _except_ as the afterHackMoney
         // approaches zero the error grows super-linearly
         const maxMoney = ns.getServerMaxMoney(hostname);
         const growMultiplier = maxMoney / Math.max(1, afterHackMoney);
-        return Math.ceil(ns.growthAnalyze(hostname, growMultiplier));
+        return Math.ceil(ns.growthAnalyze(hostname, growMultiplier) / mults.growth);
     }
 }
 

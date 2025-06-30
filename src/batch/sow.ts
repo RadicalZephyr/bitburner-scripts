@@ -145,12 +145,14 @@ function neededGrowThreads(ns: NS, target: string) {
 }
 
 /** Calculate the number of threads needed to build the server by a
- * certain multiplier.
+ *  certain multiplier. The result accounts for the player's grow
+ *  thread multiplier.
  */
 function growthAnalyze(ns: NS, target: string, growAmount: number): number {
     if (growAmount <= 1) return 0;
 
-    return Math.ceil(ns.growthAnalyze(target, growAmount, 1));
+    const mults = ns.getHackingMultipliers();
+    return Math.ceil(ns.growthAnalyze(target, growAmount, 1) / mults.growth);
 }
 
 function weakenAnalyze(weakenAmount: number): number {
