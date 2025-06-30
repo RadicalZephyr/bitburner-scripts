@@ -80,7 +80,7 @@ Example:
     let memMessageWaiting = true;
     memPort.nextWrite().then(_ => { memMessageWaiting = true; });
 
-    let memoryManager = new MemoryManager(ns);
+    let memoryManager = new MemoryAllocator(ns);
 
     printLog(`INFO: starting memory manager on ${ns.self().server}`);
 
@@ -122,7 +122,7 @@ Example:
     }
 }
 
-function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memoryManager: MemoryManager) {
+function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memoryManager: MemoryAllocator) {
     for (const nextMsg of readAllFromPort(ns, memPort)) {
         let msg = nextMsg as Message;
         switch (msg[0]) {
@@ -216,7 +216,7 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memoryManager: 
     }
 }
 
-class MemoryManager {
+class MemoryAllocator {
     ns: NS;
     nextAllocId: number;
     workers: Map<string, Worker>;
@@ -614,7 +614,7 @@ class Worker {
 }
 
 interface MemoryDisplayProps {
-    manager: MemoryManager;
+    manager: MemoryAllocator;
     theme: UserInterfaceTheme;
 }
 
