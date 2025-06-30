@@ -124,8 +124,6 @@ export async function main(ns: NS) {
     const flags = ns.flags([
         ["iterations", 5],
         ["max-threads", 1],
-        ["use-formulas", false],
-        ["apply-multipliers", false],
         ["help", false],
     ]);
     const rest = flags._ as string[];
@@ -140,8 +138,6 @@ OPTIONS
   --help              Show this help message
   --iterations        Number of iterations to average (default 5)
   --max-threads       Max threads for tests (default 1)
-  --use-formulas      Include Formulas predictions
-  --apply-multipliers Apply player hacking multipliers to predictions
 `);
         return;
     }
@@ -151,10 +147,20 @@ OPTIONS
         return;
     }
 
-    const iterations = Number(flags["iterations"]);
-    const maxThreads = Number(flags["max-threads"]);
-    const useFormulas = Boolean(flags["use-formulas"]) && canUseFormulas(ns);
-    const applyMults = Boolean(flags["apply-multipliers"]);
+    const iterations = flags["iterations"];
+    if (typeof iterations !== "number" || iterations < 1) {
+        ns.tprint("--iterations must be a positive integer");
+        return;
+    }
+
+    const maxThreads = flags["max-threads"];
+    if (typeof maxThreads !== "number" || maxThreads < 1) {
+        ns.tprint("--max-threads must be a positive integer");
+        return;
+    }
+
+    const useFormulas = canUseFormulas(ns);
+    const applyMults = true;
 
     const client = new MemoryClient(ns);
     const ram = ns.getScriptRam("/batch/h.js", "home");
