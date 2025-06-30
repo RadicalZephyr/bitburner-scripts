@@ -84,16 +84,19 @@ function successfulHackValue(
 /**
  * Calculate the minimal thread distribution for a HWGW batch.
  *
- * @param ns      - Netscript API instance
- * @param host    - Hostname of the target server
- * @returns Expected value per RAM-second
+ * @param ns - Netscript API instance
+ * @param host - Hostname of the target server
+ * @param hackThreads - Number of hack threads to execute
+ * @returns Calculated thread allocation
  */
 export function analyzeBatchThreads(
     ns: NS,
     host: string,
     hackThreads: number = 1,
 ): BatchThreadAnalysis {
-    const afterHackMoney = successfulHackValue(ns, host, hackThreads);
+    const stolen = successfulHackValue(ns, host, hackThreads);
+    const maxMoney = ns.getServerMaxMoney(host);
+    const afterHackMoney = Math.max(1, maxMoney - stolen);
 
     const growThreads = growthAnalyze(ns, host, afterHackMoney);
 
@@ -116,6 +119,10 @@ export function analyzeBatchThreads(
  * server by a given multiplier, if all threads are executed at the
  * server's current security level, regardless of how many threads are
  * assigned to each call.
+ *
+ * @param ns - Netscript API instance
+ * @param hostname - Hostname of the target server
+ * @param afterHackMoney - Remaining money after the hack completes
  */
 export function growthAnalyze(ns: NS, hostname: string, afterHackMoney: number): number {
     if (canUseFormulas(ns)) {
