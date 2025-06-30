@@ -78,7 +78,7 @@ Example:
 
     let memPort = ns.getPortHandle(MEMORY_PORT);
     let memMessageWaiting = true;
-    let _nextMemMessage = memPort.nextWrite().then(_ => { memMessageWaiting = true; });
+    memPort.nextWrite().then(_ => { memMessageWaiting = true; });
 
     let memoryManager = new MemoryManager(ns);
 
@@ -97,7 +97,7 @@ Example:
         if (memMessageWaiting) {
             readMemRequestsFromPort(ns, memPort, memoryManager);
             memMessageWaiting = false;
-            _nextMemMessage = memPort.nextWrite().then(_ => { memMessageWaiting = true; });
+            memPort.nextWrite().then(_ => { memMessageWaiting = true; });
         }
 
         if (lastRender + refreshRate < now) {
