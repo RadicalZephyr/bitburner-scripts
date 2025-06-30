@@ -3,6 +3,7 @@ import type { NS } from "netscript";
 import { CONFIG } from "batch/config";
 
 const BOOTSTRAP_FILES = [
+    "/services/bootstrap.js",
     "/batch/bootstrap.js",
     "/services/launch.js",
     "/services/client/memory.js"
@@ -12,7 +13,7 @@ export async function main(ns: NS) {
     ns.disableLog("sleep");
     CONFIG.setDefaults();
 
-    let script = "/batch/bootstrap.js";
+    let script = "/bootstrap.js";
     let files = [script, ...BOOTSTRAP_FILES];
     let hostname = "foodnstuff";
 
