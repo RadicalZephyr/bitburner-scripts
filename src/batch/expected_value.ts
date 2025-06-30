@@ -64,10 +64,12 @@ export function expectedValuePerRamSecond(
  *
  * @param ns   - Netscript API instance
  * @param host - Hostname of the target server
- * @returns Time in milliseconds for one batch to finish
+ * @returns Time in milliseconds for one batch to finish, adjusted for
+ * the player's hacking speed multiplier
  */
 export function fullBatchTime(ns: NS, host: string): number {
-    return ns.getWeakenTime(host) + 2 * CONFIG.batchInterval;
+    const speedMult = ns.getHackingMultipliers().speed;
+    return ns.getWeakenTime(host) / speedMult + 2 * CONFIG.batchInterval;
 }
 
 function successfulHackValue(
