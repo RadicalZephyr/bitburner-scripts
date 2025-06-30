@@ -49,7 +49,7 @@ Example:
     ns.disableLog('ALL');
     ns.clearLog();
     ns.ui.openTail();
-    ns.ui.resizeTail(900, 650);
+    ns.ui.resizeTail(915, 650);
     ns.ui.moveTail(1220, 0);
 
     const monitorPort = ns.getPortHandle(MONITOR_PORT);

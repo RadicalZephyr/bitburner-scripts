@@ -65,7 +65,7 @@ Example:
     ns.disableLog("ALL");
     ns.ui.openTail();
     ns.ui.resizeTail(915, 560);
-    ns.ui.moveTail(1230, 650);
+    ns.ui.moveTail(1220, 650);
 
     const log: string[] = [];
     const maxLog = 72;
