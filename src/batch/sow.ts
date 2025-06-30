@@ -2,9 +2,8 @@ import type { AutocompleteData, NS } from "netscript";
 
 import { ManagerClient, Lifecycle } from "batch/client/manage";
 
-import { launch } from "batch/launch";
-
 import { registerAllocationOwnership } from "services/client/memory";
+import { launch } from "services/launch";
 
 const GROW_SCRIPT = "/batch/g.js";
 const WEAKEN_SCRIPT = "/batch/w.js";

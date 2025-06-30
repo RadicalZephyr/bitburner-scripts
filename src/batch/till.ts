@@ -2,9 +2,8 @@ import type { AutocompleteData, NS } from "netscript";
 
 import { ManagerClient, Lifecycle } from "batch/client/manage";
 
-import { launch } from "batch/launch";
-
 import { registerAllocationOwnership } from "services/client/memory";
+import { launch } from "services/launch";
 
 
 export function autocomplete(data: AutocompleteData, _args: string[]): string[] {

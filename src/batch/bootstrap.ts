@@ -1,7 +1,7 @@
 import type { NS } from "netscript";
 
 import { MemoryClient } from "services/client/memory";
-import { launch } from "batch/launch";
+import { launch } from "services/launch";
 
 export async function main(ns: NS) {
     await startMemory(ns);

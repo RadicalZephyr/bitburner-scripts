@@ -4,7 +4,7 @@ import { CONFIG } from "batch/config";
 
 const BOOTSTRAP_FILES = [
     "/batch/bootstrap.js",
-    "/batch/launch.js",
+    "/services/launch.js",
     "/services/client/memory.js"
 ];
 

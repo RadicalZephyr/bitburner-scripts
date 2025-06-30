@@ -5,13 +5,13 @@ import { MonitorClient } from "batch/client/monitor";
 
 import { CONFIG } from "batch/config";
 import { expectedValuePerRamSecond } from "batch/expected_value";
-import { launch } from "batch/launch";
 
 import { calculateWeakenThreads } from "./till";
 import { calculateSowThreads } from "./sow";
 import { calculateBatchLogistics } from "./harvest";
 
 import { MemoryClient, registerAllocationOwnership } from "services/client/memory";
+import { launch } from "services/launch";
 
 import { readAllFromPort } from "util/ports";
 
