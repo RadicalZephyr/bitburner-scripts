@@ -56,6 +56,48 @@ Example:
     const lifecycleByHost: Map<string, Lifecycle> = new Map();
     let monitorMessagesWaiting = true;
 
+    const tableSortings: Record<string, SortBy> = {
+        harvesting: {
+            key: "hckLevel",
+            dir: Dir.Desc,
+            data: [],
+        },
+        pendingHarvesting: {
+            key: "hckLevel",
+            dir: Dir.Desc,
+            data: [],
+        },
+        sowing: {
+            key: "hckLevel",
+            dir: Dir.Desc,
+            data: [],
+        },
+        pendingSowing: {
+            key: "hckLevel",
+            dir: Dir.Desc,
+            data: [],
+        },
+        tilling: {
+            key: "hckLevel",
+            dir: Dir.Desc,
+            data: [],
+        },
+        pendingTilling: {
+            key: "hckLevel",
+            dir: Dir.Desc,
+            data: [],
+        }
+    };
+
+    function setTableSorting(table: string, sortBy: string) {
+        if (tableSortings[table].key == sortBy) {
+            tableSortings[table].dir = tableSortings[table].dir === Dir.Asc ? Dir.Desc : Dir.Asc;
+        } else {
+            tableSortings[table].key = sortBy;
+            tableSortings[table].dir = Dir.Desc;
+        }
+    }
+
     while (true) {
         if (monitorMessagesWaiting) {
             for (const nextMsg of readAllFromPort(ns, monitorPort)) {
@@ -73,12 +115,13 @@ Example:
         }
 
         let threadsByTarget = countThreadsByTarget(ns, workers, Array.from(lifecycleByHost.keys()));
-        const harvesting: HostInfo[] = [];
-        const pendingHarvesting: HostInfo[] = [];
-        const sowing: HostInfo[] = [];
-        const pendingSowing: HostInfo[] = [];
-        const tilling: HostInfo[] = [];
-        const pendingTilling: HostInfo[] = [];
+
+        tableSortings.harvesting.data = [];
+        tableSortings.pendingHarvesting.data = [];
+        tableSortings.sowing.data = [];
+        tableSortings.pendingSowing.data = [];
+        tableSortings.tilling.data = [];
+        tableSortings.pendingTilling.data = [];
 
         for (const [host, phase] of lifecycleByHost.entries()) {
             if (host === "home"
@@ -91,38 +134,79 @@ Example:
                 case Lifecycle.Worker:
                     break;
                 case Lifecycle.Harvesting:
-                    harvesting.push(info);
+                    tableSortings.harvesting.data.push(info);
                     break;
                 case Lifecycle.PendingHarvesting:
-                    pendingHarvesting.push(info);
+                    tableSortings.pendingHarvesting.data.push(info);
                     break;
                 case Lifecycle.Sowing:
-                    sowing.push(info);
+                    tableSortings.sowing.data.push(info);
                     break;
                 case Lifecycle.PendingSowing:
-                    pendingSowing.push(info);
+                    tableSortings.pendingSowing.data.push(info);
                     break;
                 case Lifecycle.Tilling:
-                    tilling.push(info);
+                    tableSortings.tilling.data.push(info);
                     break;
                 default:
-                    pendingTilling.push(info);
+                    tableSortings.pendingTilling.data.push(info);
                     break;
             }
+        }
+
+        for (const phaseName in tableSortings) {
+            const phase = tableSortings[phaseName];
+            const sortKey = phase.key;
+            const phaseTargets = phase.data ?? [];
+            if (phaseTargets.length > 0 && phaseTargets[0][sortKey])
+                phaseTargets.sort(sortByFn(phase));
         }
 
         let theme = ns.ui.getTheme();
 
         ns.clearLog();
         ns.printRaw(<>
-            <ServerBlock ns={ns} title={"Harvesting"} targets={harvesting} theme={theme}></ServerBlock>
-            <ServerBlock ns={ns} title={"Pending Harvesting"} targets={pendingHarvesting} theme={theme}></ServerBlock>
-            <ServerBlock ns={ns} title={"Sowing"} targets={sowing} theme={theme}></ServerBlock>
-            <ServerBlock ns={ns} title={"Pending Sowing"} targets={pendingSowing} theme={theme}></ServerBlock>
-            <ServerBlock ns={ns} title={"Tilling"} targets={tilling} theme={theme}></ServerBlock>
-            <ServerBlock ns={ns} title={"Pending Tilling"} targets={pendingTilling} theme={theme}></ServerBlock>
+            <ServerBlock ns={ns} title={"Harvesting"} phase={tableSortings.harvesting} setTableSorting={setTableSorting.bind(null, "harvesting")} theme={theme}></ServerBlock>
+            <ServerBlock ns={ns} title={"Pending Harvesting"} phase={tableSortings.pendingHarvesting} setTableSorting={setTableSorting.bind(null, "pendingHarvesting")} theme={theme}></ServerBlock>
+            <ServerBlock ns={ns} title={"Sowing"} phase={tableSortings.sowing} setTableSorting={setTableSorting.bind(null, "sowing")} theme={theme}></ServerBlock>
+            <ServerBlock ns={ns} title={"Pending Sowing"} phase={tableSortings.pendingSowing} setTableSorting={setTableSorting.bind(null, "pendingSowing")} theme={theme}></ServerBlock>
+            <ServerBlock ns={ns} title={"Tilling"} phase={tableSortings.tilling} setTableSorting={setTableSorting.bind(null, "tilling")} theme={theme}></ServerBlock>
+            <ServerBlock ns={ns} title={"Pending Tilling"} phase={tableSortings.pendingTilling} setTableSorting={setTableSorting.bind(null, "pendingTilling")} theme={theme}></ServerBlock>
         </>);
+        ns.ui.renderTail();
         await ns.sleep(flags.refreshrate);
+    }
+}
+
+enum Dir {
+    Asc,
+    Desc,
+}
+
+interface SortBy {
+    key: string,
+    dir: Dir,
+    data: HostInfo[],
+}
+
+function sortByFn(sortBy: SortBy) {
+    const sortKey = sortBy.key;
+    if (sortBy.dir === Dir.Desc) {
+        return (a: HostInfo, b: HostInfo) => {
+            if (sortKey === "name") {
+                return b.name.localeCompare(a.name);
+            } else {
+                return b[sortKey] - a[sortKey];
+            }
+        };
+    } else {
+        return (a: HostInfo, b: HostInfo) => {
+            if (sortKey === "name") {
+                return a.name.localeCompare(b.name);
+            } else {
+                return a[sortKey] - b[sortKey];
+            }
+        };
     }
 }
 
@@ -252,32 +336,64 @@ function formatThreads(ns: NS, threads: number): string {
 interface IBlockSettings {
     ns: NS,
     title: string,
-    targets: HostInfo[],
+    phase: SortBy,
+    setTableSorting: (column: string) => void,
     theme: UserInterfaceTheme,
 }
 
-export function ServerBlock({ ns, title, targets, theme }: IBlockSettings) {
+export function ServerBlock({ ns, title, phase, setTableSorting, theme }: IBlockSettings) {
     const cellStyle = { padding: "0 0.5em" };
     return (<>
-        <h2>{title} - {targets.length} targets</h2>
+        <h2>{title} - {phase.data.length} targets</h2>
         <table>
             <thead>
                 <tr>
-                    <th style={cellStyle}>target</th>
-                    <th style={cellStyle}>$/s</th>
-                    <th style={cellStyle}>E($/GBs)</th>
-                    <th style={cellStyle}>lvl</th>
-                    <th style={cellStyle}>$</th>
-                    <th style={cellStyle}>⌈$⌉%</th>
-                    <th style={cellStyle}>+sec</th>
-                    <th style={cellStyle}>thr(h)</th>
-                    <th style={cellStyle}>thr(g)</th>
-                    <th style={cellStyle}>thr(w)</th>
+                    <th style={cellStyle}><Header sortedBy={phase} setTableSorting={setTableSorting} field={"name"}>target</Header></th>
+                    <th style={cellStyle}><Header sortedBy={phase} setTableSorting={setTableSorting} field={"harvestMoney"}>$/s</Header></th>
+                    <th style={cellStyle}><Header sortedBy={phase} setTableSorting={setTableSorting} field={"expectedValue"}>E($/GBs)</Header></th>
+                    <th style={cellStyle}><Header sortedBy={phase} setTableSorting={setTableSorting} field={"hckLevel"}>lvl</Header></th>
+                    <th style={cellStyle}><Header sortedBy={phase} setTableSorting={setTableSorting} field={"maxMoney"}>$</Header></th>
+                    <th style={cellStyle}><Header sortedBy={phase} setTableSorting={setTableSorting} field={"moneyPercent"}>⌈$⌉%</Header></th>
+                    <th style={cellStyle}><Header sortedBy={phase} setTableSorting={setTableSorting} field={"secPlus"}>+sec</Header></th>
+                    <th style={cellStyle}><Header sortedBy={phase} setTableSorting={setTableSorting} field={"threadsH"}>thr(h)</Header></th>
+                    <th style={cellStyle}><Header sortedBy={phase} setTableSorting={setTableSorting} field={"threadsG"}>thr(g)</Header></th>
+                    <th style={cellStyle}><Header sortedBy={phase} setTableSorting={setTableSorting} field={"threadsW"}>thr(w)</Header></th>
                 </tr>
             </thead>
-            {targets.map((target, idx) => <ServerRow ns={ns} host={target} theme={theme} rowIndex={idx} cellStyle={cellStyle}></ServerRow>)}
+            {phase.data.map((target, idx) => <ServerRow ns={ns} host={target} theme={theme} rowIndex={idx} cellStyle={cellStyle}></ServerRow>)}
         </table>
     </>);
+}
+
+interface IHeaderSettings {
+    children?: any,
+    field: string,
+    sortedBy: SortBy,
+    setTableSorting: (column: string) => void,
+}
+
+function Header({ children, field, sortedBy, setTableSorting }: IHeaderSettings) {
+    const dir = sortedBy.dir;
+    let decB = (<></>);
+    let decA = (<></>);
+    if (sortedBy.key === field) {
+        let arrow = (sortedBy.dir === Dir.Asc ? "⮝" : "⮟");
+        decB = <DecB arrow={arrow} />;
+        decA = <DecA arrow={arrow} />;
+    }
+    return <a href="#" onClick={() => setTableSorting(field)}>{decB}{children}{decA}</a>;
+}
+
+interface IDecSettings {
+    arrow: string,
+}
+
+function DecB({ arrow }: IDecSettings) {
+    return (<span>{arrow}&nbsp;</span>);
+}
+
+function DecA({ arrow }: IDecSettings) {
+    return (<span>&nbsp;{arrow}</span>);
 }
 
 interface IRowSettings {
