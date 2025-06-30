@@ -163,13 +163,14 @@ OPTIONS
     const applyMults = true;
 
     const client = new MemoryClient(ns);
-    const ram = ns.getScriptRam("/batch/h.js", "home");
-    const allocation = await client.requestTransferableAllocation(ram, maxThreads, true);
+
+    // The h script is slightly smaller than w or g
+    const ram = ns.getScriptRam("/batch/w.js", "home");
+    const allocation = await client.requestTransferableAllocation(ram, maxThreads * 10, true);
     if (!allocation) {
         ns.tprint("ERROR: failed to allocate memory");
         return;
     }
-    allocation.releaseAtExit(ns, "test");
 
     for (let threads = 1; threads <= maxThreads; threads++) {
         for (let i = 0; i < iterations; i++) {
