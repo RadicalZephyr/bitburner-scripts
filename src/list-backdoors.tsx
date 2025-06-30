@@ -1,4 +1,4 @@
-import type { NS, UserInterfaceTheme } from "netscript";
+import type { NS, Server, UserInterfaceTheme } from "netscript";
 
 import { walkNetworkBFS } from "util/walk";
 
@@ -64,7 +64,7 @@ export async function main(ns: NS) {
 
         for (const host of network.keys()) {
             const info = ns.getServer(host);
-            if (!(info.hostname === "home" || info.purchasedByPlayer || info.backdoorInstalled)) {
+            if (needsBackdoor(info) && canInstallBackdoor(ns, info)) {
                 missingBackdoor.push(host);
             }
         }
@@ -75,4 +75,12 @@ export async function main(ns: NS) {
 
         await ns.sleep(1000);
     }
+}
+
+function needsBackdoor(info: Server) {
+    return !(info.hostname === "home" || info.purchasedByPlayer || info.backdoorInstalled);
+}
+
+function canInstallBackdoor(ns: NS, info: Server) {
+    return ns.getHackingLevel() >= info.requiredHackingSkill;
 }
