@@ -17,27 +17,24 @@ export async function main(ns: NS) {
     let hostname = "foodnstuff";
 
     if (!ns.scp(files, hostname, "home")) {
-        let error = `failed to send files to ${hostname}`;
-        ns.toast(error, "error");
-        ns.print(`ERROR: ${error}`);
-        ns.ui.openTail();
+        reportError(ns, `failed to send files to ${hostname}`);
         return;
     }
 
     if (!ns.nuke(hostname)) {
-        let error = `failed to nuke ${hostname}`;
-        ns.toast(error, "error");
-        ns.print(`ERROR: ${error}`);
-        ns.ui.openTail();
+        reportError(ns, `failed to nuke ${hostname}`);
         return;
     }
 
     let pid = ns.exec(script, hostname);
     if (pid === 0) {
-        let error = `failed to launch ${script} on ${hostname}`;
-        ns.toast(error, "error");
-        ns.print(`ERROR: ${error}`);
-        ns.ui.openTail();
+        reportError(ns, `failed to launch ${script} on ${hostname}`);
         return;
     }
+}
+
+function reportError(ns: NS, error: string) {
+    ns.toast(error, "error");
+    ns.print(`ERROR: ${error}`);
+    ns.ui.openTail();
 }
