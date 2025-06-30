@@ -2,7 +2,6 @@ import type { NS, UserInterfaceTheme } from "netscript";
 
 import { Lifecycle, Message as MonitorMessage } from "batch/client/monitor";
 
-import { CONFIG } from "batch/config";
 import { expectedValuePerRamSecond } from "batch/expected_value";
 
 import { registerAllocationOwnership } from "services/client/memory";
