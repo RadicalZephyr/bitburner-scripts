@@ -445,7 +445,7 @@ function maxHackPercentForRam(ns: NS, target: string, maxRam: number): number {
  * @param ns      - Netscript API instance
  * @param host    - Hostname of the target server
  * @param percent - Desired money percentage to hack (0-1)
- * @returns Required hack thread count
+ * @returns Required hack thread count, adjusted for player hacking multipliers
  */
 export function hackThreadsForPercent(
     ns: NS,
@@ -462,6 +462,9 @@ export function hackThreadsForPercent(
     } else {
         hackPercent = ns.hackAnalyze(host);
     }
+
+    const mults = ns.getHackingMultipliers();
+    hackPercent *= mults.money;
 
     if (hackPercent <= 0) return 0;
 
