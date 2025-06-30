@@ -46,7 +46,7 @@ export async function main(ns: NS) {
 
     let monitor = new MonitorClient(ns);
     let memory = new MemoryClient(ns);
-    let manager = new TargetSelectionManager(ns, monitor);
+    let manager = new TargetSelector(ns, monitor);
 
     let hostsMessagesWaiting = true;
 
@@ -64,7 +64,7 @@ export async function main(ns: NS) {
     }
 }
 
-async function readHostsFromPort(ns: NS, hostsPort: NetscriptPort, manager: TargetSelectionManager, monitor: MonitorClient) {
+async function readHostsFromPort(ns: NS, hostsPort: NetscriptPort, manager: TargetSelector, monitor: MonitorClient) {
     for (let nextMsg of readAllFromPort(ns, hostsPort)) {
         if (typeof nextMsg === "object") {
             let nextHostMsg = nextMsg as Message;
@@ -95,7 +95,7 @@ async function readHostsFromPort(ns: NS, hostsPort: NetscriptPort, manager: Targ
     }
 }
 
-class TargetSelectionManager {
+class TargetSelector {
     ns: NS;
     monitor: MonitorClient;
 
@@ -342,7 +342,7 @@ class TargetSelectionManager {
 
 }
 
-async function tick(ns: NS, memory: MemoryClient, manager: TargetSelectionManager) {
+async function tick(ns: NS, memory: MemoryClient, manager: TargetSelector) {
     manager.updateVelocity();
 
     const freeRam = await memory.getFreeRam();
