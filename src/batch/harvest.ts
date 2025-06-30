@@ -313,12 +313,14 @@ interface BatchPhase {
 
 /** Calculate the phase order and relative start times for a full
  * H-W-G-W batch so that each script ends `CONFIG.batchInterval`
- * milliseconds after the previous one.
+ * milliseconds after the previous one. Durations account for the
+ * player's hacking speed multiplier.
  */
 export function calculateBatchPhases(ns: NS, target: string, threads: BatchThreadAnalysis): BatchPhase[] {
-    const hackTime = ns.getHackTime(target);
-    const weakenTime = ns.getWeakenTime(target);
-    const growTime = ns.getGrowTime(target);
+    const speedMult = ns.getHackingMultipliers().speed;
+    const hackTime = ns.getHackTime(target) / speedMult;
+    const weakenTime = ns.getWeakenTime(target) / speedMult;
+    const growTime = ns.getGrowTime(target) / speedMult;
 
     const phases: BatchPhase[] = [
         { script: "/batch/h.js", start: 0, duration: hackTime, threads: threads.hackThreads },
@@ -396,8 +398,9 @@ function calculateRebalancePhases(
     growThreads: number,
     postGrowThreads: number,
 ): BatchPhase[] {
-    const weakenTime = ns.getWeakenTime(target);
-    const growTime = ns.getGrowTime(target);
+    const speedMult = ns.getHackingMultipliers().speed;
+    const weakenTime = ns.getWeakenTime(target) / speedMult;
+    const growTime = ns.getGrowTime(target) / speedMult;
 
     const phases: BatchPhase[] = [
         { script: '/batch/w.js', start: 0, duration: weakenTime, threads: weakenThreads },

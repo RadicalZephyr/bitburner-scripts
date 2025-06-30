@@ -38,9 +38,9 @@ ${server}:
     security   : ${sec.toFixed(2)} / ${minSec.toFixed(2)} (${(sec / minSec).toFixed(2)}x)
     growth     : ${ns.getServerGrowth(server)}
     hackChance : ${(ns.hackAnalyzeChance(server) * 100).toFixed(2)}%
-    hack time  : ${ns.tFormat(ns.getHackTime(server))}
-    grow time  : ${ns.tFormat(ns.getGrowTime(server))}
-    weaken time: ${ns.tFormat(ns.getWeakenTime(server))}
+    hack time  : ${ns.tFormat(ns.getHackTime(server) / ns.getHackingMultipliers().speed)}
+    grow time  : ${ns.tFormat(ns.getGrowTime(server) / ns.getHackingMultipliers().speed)}
+    weaken time: ${ns.tFormat(ns.getWeakenTime(server) / ns.getHackingMultipliers().speed)}
     grow x2    : ${grow2x} threads
     grow x3    : ${grow3x} threads
     grow x4    : ${grow4x} threads

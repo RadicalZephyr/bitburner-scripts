@@ -87,7 +87,8 @@ OPTIONS
         return;
     }
 
-    let expectedTime = ns.tFormat(ns.getWeakenTime(target));
+    const speedMult = ns.getHackingMultipliers().speed;
+    let expectedTime = ns.tFormat(ns.getWeakenTime(target) / speedMult);
 
     let weakenResult = await launch(
         ns,
