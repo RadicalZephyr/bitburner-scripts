@@ -11,6 +11,38 @@ declare global {
     var globalThis: Global;
 }
 
+export async function main(ns: NS) {
+    ns.disableLog("ALL");
+    ns.clearLog();
+    ns.ui.openTail();
+
+    while (true) {
+        const network = walkNetworkBFS(ns);
+        const missingBackdoor: string[] = [];
+
+        for (const host of network.keys()) {
+            const info = ns.getServer(host);
+            if (needsBackdoor(info) && canInstallBackdoor(ns, info)) {
+                missingBackdoor.push(host);
+            }
+        }
+
+        const theme = ns.ui.getTheme();
+        ns.clearLog();
+        ns.printRaw(<ServerDisplay servers={missingBackdoor} theme={theme}></ServerDisplay>);
+
+        await ns.sleep(1000);
+    }
+}
+
+function needsBackdoor(info: Server) {
+    return !(info.hostname === "home" || info.purchasedByPlayer || info.backdoorInstalled);
+}
+
+function canInstallBackdoor(ns: NS, info: Server) {
+    return ns.getHackingLevel() >= info.requiredHackingSkill;
+}
+
 /** Send a command to the terminal by simulating user input. */
 export function sendCommand(command: string): void {
     const terminalInput: any = globalThis.document.getElementById("terminal-input");
@@ -51,36 +83,4 @@ function ServerDisplay({ servers, theme }: ServerDisplayProps) {
             </ul>
         </div>
     );
-}
-
-export async function main(ns: NS) {
-    ns.disableLog("ALL");
-    ns.clearLog();
-    ns.ui.openTail();
-
-    while (true) {
-        const network = walkNetworkBFS(ns);
-        const missingBackdoor: string[] = [];
-
-        for (const host of network.keys()) {
-            const info = ns.getServer(host);
-            if (needsBackdoor(info) && canInstallBackdoor(ns, info)) {
-                missingBackdoor.push(host);
-            }
-        }
-
-        const theme = ns.ui.getTheme();
-        ns.clearLog();
-        ns.printRaw(<ServerDisplay servers={missingBackdoor} theme={theme}></ServerDisplay>);
-
-        await ns.sleep(1000);
-    }
-}
-
-function needsBackdoor(info: Server) {
-    return !(info.hostname === "home" || info.purchasedByPlayer || info.backdoorInstalled);
-}
-
-function canInstallBackdoor(ns: NS, info: Server) {
-    return ns.getHackingLevel() >= info.requiredHackingSkill;
 }
