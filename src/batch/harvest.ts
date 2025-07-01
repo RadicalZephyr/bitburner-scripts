@@ -317,10 +317,9 @@ interface BatchPhase {
  * player's hacking speed multiplier.
  */
 export function calculateBatchPhases(ns: NS, target: string, threads: BatchThreadAnalysis): BatchPhase[] {
-    const speedMult = ns.getHackingMultipliers().speed;
-    const hackTime = ns.getHackTime(target) / speedMult;
-    const weakenTime = ns.getWeakenTime(target) / speedMult;
-    const growTime = ns.getGrowTime(target) / speedMult;
+    const hackTime = ns.getHackTime(target);
+    const weakenTime = ns.getWeakenTime(target);
+    const growTime = ns.getGrowTime(target);
 
     const phases: BatchPhase[] = [
         { script: "/batch/h.js", start: 0, duration: hackTime, threads: threads.hackThreads },
@@ -398,9 +397,8 @@ function calculateRebalancePhases(
     growThreads: number,
     postGrowThreads: number,
 ): BatchPhase[] {
-    const speedMult = ns.getHackingMultipliers().speed;
-    const weakenTime = ns.getWeakenTime(target) / speedMult;
-    const growTime = ns.getGrowTime(target) / speedMult;
+    const weakenTime = ns.getWeakenTime(target);
+    const growTime = ns.getGrowTime(target);
 
     const phases: BatchPhase[] = [
         { script: '/batch/w.js', start: 0, duration: weakenTime, threads: weakenThreads },
@@ -465,9 +463,6 @@ export function hackThreadsForPercent(
     } else {
         hackPercent = ns.hackAnalyze(host);
     }
-
-    const mults = ns.getHackingMultipliers();
-    hackPercent *= mults.money;
 
     if (hackPercent <= 0) return 0;
 

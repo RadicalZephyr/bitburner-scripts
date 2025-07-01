@@ -68,8 +68,7 @@ export function expectedValuePerRamSecond(
  * the player's hacking speed multiplier
  */
 export function fullBatchTime(ns: NS, host: string): number {
-    const speedMult = ns.getHackingMultipliers().speed;
-    return ns.getWeakenTime(host) / speedMult + 2 * CONFIG.batchInterval;
+    return ns.getWeakenTime(host) + 2 * CONFIG.batchInterval;
 }
 
 function successfulHackValue(
@@ -78,16 +77,15 @@ function successfulHackValue(
     threads: number,
 ): number {
     const maxMoney = ns.getServerMaxMoney(host);
-    const mults = ns.getHackingMultipliers();
 
     if (canUseFormulas(ns)) {
         const server = ns.getServer(host);
         const player = ns.getPlayer();
         const percent = ns.formulas.hacking.hackPercent(server, player);
-        return threads * server.moneyMax * percent * mults.money;
+        return threads * server.moneyMax * percent;
     }
 
-    return threads * maxMoney * ns.hackAnalyze(host) * mults.money;
+    return threads * maxMoney * ns.hackAnalyze(host);
 }
 
 /**
@@ -135,14 +133,12 @@ export function analyzeBatchThreads(
  * @param afterHackMoney - Remaining money after the hack completes
  */
 export function growthAnalyze(ns: NS, hostname: string, afterHackMoney: number): number {
-    const mults = ns.getHackingMultipliers();
     if (canUseFormulas(ns)) {
         let server = ns.getServer(hostname);
         let player = ns.getPlayer();
         server.moneyAvailable = afterHackMoney;
         return Math.ceil(
-            ns.formulas.hacking.growThreads(server, player, server.moneyMax) /
-            mults.growth,
+            ns.formulas.hacking.growThreads(server, player, server.moneyMax)
         );
     } else {
         // N.B. from testing this calculation tracks very closely with
@@ -150,7 +146,7 @@ export function growthAnalyze(ns: NS, hostname: string, afterHackMoney: number):
         // approaches zero the error grows super-linearly
         const maxMoney = ns.getServerMaxMoney(hostname);
         const growMultiplier = maxMoney / Math.max(1, afterHackMoney);
-        return Math.ceil(ns.growthAnalyze(hostname, growMultiplier) / mults.growth);
+        return Math.ceil(ns.growthAnalyze(hostname, growMultiplier));
     }
 }
 

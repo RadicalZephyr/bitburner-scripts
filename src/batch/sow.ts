@@ -87,8 +87,7 @@ OPTIONS
         return;
     }
 
-    const speedMult = ns.getHackingMultipliers().speed;
-    let expectedTime = ns.tFormat(ns.getWeakenTime(target) / speedMult);
+    let expectedTime = ns.tFormat(ns.getWeakenTime(target));
 
     let weakenResult = await launch(
         ns,
@@ -152,8 +151,7 @@ function neededGrowThreads(ns: NS, target: string) {
 function growthAnalyze(ns: NS, target: string, growAmount: number): number {
     if (growAmount <= 0) return 0;
 
-    const mults = ns.getHackingMultipliers();
-    return Math.ceil(ns.growthAnalyze(target, growAmount, 1) / mults.growth);
+    return Math.ceil(ns.growthAnalyze(target, growAmount, 1));
 }
 
 function weakenAnalyze(weakenAmount: number): number {
