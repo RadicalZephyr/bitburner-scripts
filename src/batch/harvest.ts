@@ -168,7 +168,7 @@ OPTIONS
         const actualMoney = ns.getServerMoneyAvailable(target);
 
         let phases = logistics.phases;
-        if (actualSecurity > minSecurity || actualMoney < maxMoney) {
+        if (actualSecurity > minSecurity + CONFIG.minSecTolerance || actualMoney < maxMoney * CONFIG.maxMoneyTolerance) {
             const rebalance = calculateRebalanceBatchLogistics(ns, target, batchRam);
             if (rebalance.batchRam <= batchRam) {
                 const secDelta = (actualSecurity - minSecurity).toFixed(2);

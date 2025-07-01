@@ -157,14 +157,14 @@ class TargetSelector {
         const maxMoney = this.ns.getServerMaxMoney(target);
         const curMoney = this.ns.getServerMoneyAvailable(target);
 
-        if (curSec > minSec + 0.01) {
+        if (curSec > minSec + CONFIG.minSecTolerance) {
             this.ns.print(`INFO: queue till ${target}`);
             this.pendingTillTargets.push(target);
             await this.monitor.pendingTilling(target);
             return;
         }
 
-        if (curMoney < maxMoney * 0.999) {
+        if (curMoney < maxMoney * CONFIG.maxMoneyTolerance) {
             this.ns.print(`INFO: queue sow ${target}`);
             this.pendingSowTargets.push(target);
             await this.monitor.pendingSowing(target);
