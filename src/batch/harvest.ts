@@ -412,12 +412,15 @@ function calculateRebalancePhases(
     const weakenTime = ns.getWeakenTime(target);
     const growTime = ns.getGrowTime(target);
 
-    const phases: BatchPhase[] = [
+    let phases: BatchPhase[] = [
         { script: '/batch/w.js', start: 0, duration: weakenTime, threads: weakenThreads },
         { script: '/batch/g.js', start: 0, duration: growTime, threads: growThreads },
         { script: '/batch/w.js', start: 0, duration: weakenTime, threads: postGrowThreads },
     ];
-
+    // Remove phases with zero threads so we won't fail to exec a
+    // phase. This helps ensure that the batch "done" message will
+    // always be sent and allow the harvester to continue progressing.
+    phases = phases.filter(p => p.threads > 0);
     return calculatePhaseStartTimes(phases);
 }
 
