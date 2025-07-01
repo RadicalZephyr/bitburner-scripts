@@ -107,8 +107,8 @@ export function analyzeBatchThreads(
 
     const growThreads = growthAnalyze(ns, host, afterHackMoney);
 
-    const hackSecInc = ns.hackAnalyzeSecurity(hackThreads, host);
-    const growSecInc = ns.growthAnalyzeSecurity(growThreads, host);
+    const hackSecInc = ns.hackAnalyzeSecurity(hackThreads);
+    const growSecInc = ns.growthAnalyzeSecurity(growThreads);
 
     return {
         hackThreads,
