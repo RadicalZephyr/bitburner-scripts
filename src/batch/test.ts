@@ -189,10 +189,10 @@ OPTIONS
                 (afterS - beforeS).toFixed(3),
                 predHBI.money.toFixed(2),
                 predHBI.sec.toFixed(3),
-                predHBIM.money.toFixed(2),
-                predHBIM.sec.toFixed(3),
                 predHF.money.toFixed(2),
                 predHF.sec.toFixed(3),
+                predHBIM.money.toFixed(2),
+                predHBIM.sec.toFixed(3),
                 predHFM.money.toFixed(2),
                 predHFM.sec.toFixed(3),
             ].join(",");
