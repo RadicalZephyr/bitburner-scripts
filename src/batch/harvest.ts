@@ -136,7 +136,8 @@ OPTIONS
             await managerClient.heartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Harvest);
             lastHeartbeat = Date.now();
         }
-        await ns.sleep(CONFIG.batchInterval);
+
+        await ns.sleep(logistics.endingPeriod);
     }
 
     const finishedPort = ns.getPortHandle(ns.pid);
@@ -286,6 +287,7 @@ export interface BatchLogistics {
     target: string;
     batchRam: number;
     overlap: number;
+    endingPeriod: number;
     requiredRam: number;
     phases: BatchPhase[];
 }
@@ -315,15 +317,16 @@ export function calculateBatchLogistics(
     const batchRam = hRam + gRam + wRam;
 
     const batchTime = fullBatchTime(ns, target);
-    const baseNetscriptOperationTime = 20;
-    const batchEndingPeriod = (baseNetscriptOperationTime + CONFIG.batchInterval) * 4;
-    const overlap = Math.ceil(batchTime / batchEndingPeriod);
+
+    const endingPeriod = CONFIG.batchInterval * 4;
+    const overlap = Math.ceil(batchTime / endingPeriod);
     const requiredRam = batchRam * overlap;
 
     return {
         target,
         batchRam,
         overlap,
+        endingPeriod,
         requiredRam,
         phases,
     }
