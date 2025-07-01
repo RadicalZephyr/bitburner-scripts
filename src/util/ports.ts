@@ -50,6 +50,14 @@ export function* readAllFromPort(ns: NS, port: NetscriptPort) {
     }
 }
 
+/** Generate a simple unique ID: pid‐timestamp‐rand **/
+export function makeReqId(ns: NS) {
+    const pid = ns.pid;
+    const ts = Date.now();
+    const r = Math.floor(Math.random() * 1e6);
+    return `${pid}-${ts}-${r}`;
+}
+
 export async function main(ns: NS) {
     ns.tprintf(
         "Till Port: %s\n"
