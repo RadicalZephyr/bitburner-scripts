@@ -160,7 +160,6 @@ OPTIONS
     }
 
     const useFormulas = canUseFormulas(ns);
-    const applyMults = true;
 
     const client = new MemoryClient(ns);
 
@@ -177,8 +176,10 @@ OPTIONS
             await resetServer(ns, target, allocation, maxThreads);
             const beforeM = ns.getServerMoneyAvailable(target);
             const beforeS = ns.getServerSecurityLevel(target);
-            const predHBI = predictHackBuiltIn(ns, target, threads, applyMults);
-            const predHF = useFormulas ? predictHackFormula(ns, target, threads, applyMults) : { money: NaN, sec: NaN };
+            const predHBI = predictHackBuiltIn(ns, target, threads, false);
+            const predHF = useFormulas ? predictHackFormula(ns, target, threads, false) : { money: NaN, sec: NaN };
+            const predHBIM = predictHackBuiltIn(ns, target, threads, true);
+            const predHFM = useFormulas ? predictHackFormula(ns, target, threads, true) : { money: NaN, sec: NaN };
             await runScript(ns, allocation, "/batch/h.js", threads, target);
             const afterM = ns.getServerMoneyAvailable(target);
             const afterS = ns.getServerSecurityLevel(target);
@@ -188,16 +189,22 @@ OPTIONS
                 (afterS - beforeS).toFixed(3),
                 predHBI.money.toFixed(2),
                 predHBI.sec.toFixed(3),
+                predHBIM.money.toFixed(2),
+                predHBIM.sec.toFixed(3),
                 predHF.money.toFixed(2),
                 predHF.sec.toFixed(3),
+                predHFM.money.toFixed(2),
+                predHFM.sec.toFixed(3),
             ].join(",");
             ns.write("resultsHack.txt", data + "\n", "a");
 
             await resetServer(ns, target, allocation, maxThreads);
             const gBeforeM = ns.getServerMoneyAvailable(target);
             const gBeforeS = ns.getServerSecurityLevel(target);
-            const predGBI = predictGrowBuiltIn(ns, target, threads, applyMults);
-            const predGF = useFormulas ? predictGrowFormula(ns, target, threads, applyMults) : { money: NaN, sec: NaN };
+            const predGBI = predictGrowBuiltIn(ns, target, threads, false);
+            const predGF = useFormulas ? predictGrowFormula(ns, target, threads, false) : { money: NaN, sec: NaN };
+            const predGBIM = predictGrowBuiltIn(ns, target, threads, true);
+            const predGFM = useFormulas ? predictGrowFormula(ns, target, threads, true) : { money: NaN, sec: NaN };
             await runScript(ns, allocation, "/batch/g.js", threads, target);
             const gAfterM = ns.getServerMoneyAvailable(target);
             const gAfterS = ns.getServerSecurityLevel(target);
@@ -207,8 +214,12 @@ OPTIONS
                 (gAfterS - gBeforeS).toFixed(3),
                 predGBI.money.toFixed(2),
                 predGBI.sec.toFixed(3),
+                predGBIM.money.toFixed(2),
+                predGBIM.sec.toFixed(3),
                 predGF.money.toFixed(2),
                 predGF.sec.toFixed(3),
+                predGFM.money.toFixed(2),
+                predGFM.sec.toFixed(3),
             ].join(",");
             ns.write("resultsGrow.txt", dataG + "\n", "a");
 
