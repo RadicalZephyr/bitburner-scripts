@@ -133,7 +133,7 @@ OPTIONS
         batches.push(batchPids);
         currentBatches++;
         if (Date.now() - lastHeartbeat >= 1000) {
-            await managerClient.heartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Harvest);
+            managerClient.tryHeartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Harvest);
             lastHeartbeat = Date.now();
         }
 
