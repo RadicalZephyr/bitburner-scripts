@@ -78,12 +78,12 @@ async function readHostsFromPort(ns: NS, hostsPort: NetscriptPort, manager: Targ
                 case MessageType.FinishedTilling:
                     ns.print(`SUCCESS: finished tilling ${payload}`);
                     await monitor.sowing(payload as string);
-                    await manager.finishTilling(payload as string);
+                    await manager.pushTarget(payload as string);
                     break;
 
                 case MessageType.FinishedSowing:
                     ns.print(`SUCCESS: finished sowing ${payload}`);
-                    await manager.finishSowing(payload as string);
+                    await manager.pushTarget(payload as string);
                     break;
 
                 case MessageType.Heartbeat:
@@ -167,20 +167,6 @@ class TargetSelector {
         this.ns.print(`INFO: queue harvest ${target}`);
         this.pendingHarvestTargets.push(target);
         await this.monitor.pendingHarvesting(target);
-    }
-
-    async finishTilling(hostname: string) {
-        this.tillTargets.delete(hostname);
-        this.ns.print(`INFO: queued sow on ${hostname}`);
-        this.pendingSowTargets.push(hostname);
-        await this.monitor.pendingSowing(hostname);
-    }
-
-    async finishSowing(hostname: string) {
-        this.sowTargets.delete(hostname);
-        this.ns.print(`INFO: queued harvest for ${hostname}`);
-        this.pendingHarvestTargets.push(hostname);
-        await this.monitor.pendingHarvesting(hostname);
     }
 
     /**
