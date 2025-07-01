@@ -157,7 +157,7 @@ class TargetSelector {
         const maxMoney = this.ns.getServerMaxMoney(target);
         const curMoney = this.ns.getServerMoneyAvailable(target);
 
-        if (curSec > minSec + 1) {
+        if (curSec > minSec + 0.01) {
             this.ns.print(`INFO: queue till ${target}`);
             this.pendingTillTargets.push(target);
             await this.monitor.pendingTilling(target);
