@@ -6,11 +6,17 @@ const MAX_TILL_TARGETS = "MAX_TILL_TARGETS";
 
 const EXPECTED_VALUE_THRESHOLD = "EXPECTED_VALUE_THRESHOLD";
 
+const MIN_SECURITY_TOLERANCE = "MIN_SECURITY_TOLERANCE";
+
+const MAX_MONEY_TOLERANCE = "MAX_MONEY_TOLERANCE";
+
 class Config {
     setDefaults() {
         setConfigDefault(BATCH_INTERVAL, 250);
         setConfigDefault(MAX_TILL_TARGETS, 2);
         setConfigDefault(EXPECTED_VALUE_THRESHOLD, 100);
+        setConfigDefault(MIN_SECURITY_TOLERANCE, 1);
+        setConfigDefault(MAX_MONEY_TOLERANCE, 0.99);
     }
 
     get batchInterval() {
@@ -23,6 +29,14 @@ class Config {
 
     get expectedValueThreshold() {
         return Number(LocalStorage.getItem(EXPECTED_VALUE_THRESHOLD))
+    }
+
+    get minSecTolerance() {
+        return Number(LocalStorage.getItem(MIN_SECURITY_TOLERANCE));
+    }
+
+    get maxMoneyTolerance() {
+        return Number(LocalStorage.getItem(MAX_MONEY_TOLERANCE));
     }
 }
 
