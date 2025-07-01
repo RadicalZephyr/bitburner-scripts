@@ -1,6 +1,7 @@
 import type { NS, NetscriptPort } from "netscript";
 
 export const MEMORY_PORT: number = 200;
+export const MEMORY_RESPONSE_PORT: number = 201;
 
 export enum MessageType {
     Worker,
@@ -23,8 +24,13 @@ type Payload =
 
 export type Message = [
     type: MessageType,
-    returnPortId: number,
+    requestId: string,
     payload: Payload,
+];
+
+export type Response = [
+    requestId: string,
+    response: any,
 ];
 
 // Compact version for use over ports if needed
@@ -103,13 +109,16 @@ export interface AllocationResult {
     hosts: HostAllocation[]
 }
 
+
 export class MemoryClient {
     ns: NS;
     port: NetscriptPort;
+    responsePort: NetscriptPort;
 
     constructor(ns: NS) {
         this.ns = ns;
         this.port = ns.getPortHandle(MEMORY_PORT);
+        this.responsePort = ns.getPortHandle(MEMORY_RESPONSE_PORT);
     }
 
     async newWorker(hostname: string) {
@@ -246,15 +255,35 @@ export class MemoryClient {
     }
 
     private async sendMessage(type: MessageType, payload: Payload) {
-        const returnPortId = MEMORY_PORT + this.ns.pid;
+        return await sendMessage(this.ns, this.port, this.responsePort, type, payload)
+    }
+}
 
-        let message = [type, returnPortId, payload];
-        while (!this.port.tryWrite(message)) {
-            await this.ns.sleep(200);
+/** Generate a simple unique ID: pid‐timestamp‐rand **/
+function makeReqId(ns: NS) {
+    const pid = ns.pid;
+    const ts = Date.now();
+    const r = Math.floor(Math.random() * 1e6);
+    return `${pid}-${ts}-${r}`;
+}
+
+async function sendMessage(ns: NS, port: NetscriptPort, responsePort: NetscriptPort, type: MessageType, payload: Payload) {
+    const requestId = makeReqId(ns);
+
+    let message = [type, requestId, payload];
+    while (!port.tryWrite(message)) {
+        await ns.sleep(200);
+    }
+
+    while (true) {
+        await responsePort.nextWrite();
+        let nextMessage = responsePort.peek() as Response;
+        if (nextMessage[0] === requestId) {
+            // N.B. Important to pop our message from the port so
+            // other messages can be processed!
+            responsePort.read();
+            return nextMessage[1];
         }
-        const returnPort = this.ns.getPortHandle(returnPortId);
-        await returnPort.nextWrite();
-        return returnPort.read();
     }
 }
 
@@ -262,7 +291,7 @@ export class MemoryClient {
  * Register the current script as owning an allocation and
  * automatically release that allocation when the script exits.
  */
-export function registerAllocationOwnership(
+export async function registerAllocationOwnership(
     ns: NS,
     allocationId: number,
     name: string = "",
@@ -276,7 +305,7 @@ export function registerAllocationOwnership(
         chunkSize: self.ramUsage,
         numChunks: self.threads,
     };
-    ns.writePort(MEMORY_PORT, [MessageType.Claim, claim]);
+
     ns.print(
         `INFO: claiming allocation ${allocationId} ` +
         `pid=${claim.pid} host=${claim.hostname} ` +
@@ -289,8 +318,13 @@ export function registerAllocationOwnership(
             pid: self.pid,
             hostname: self.server,
         };
-        ns.writePort(MEMORY_PORT, [MessageType.Release, release]);
+        sendMessage(ns, memPort, memResponsePort, MessageType.Release, release);
     }, "memoryRelease" + name);
+
+    let memPort = ns.getPortHandle(MEMORY_PORT);
+    let memResponsePort = ns.getPortHandle(MEMORY_RESPONSE_PORT);
+
+    await sendMessage(ns, memPort, memResponsePort, MessageType.Claim, claim);
 }
 
 export class TransferableAllocation {
@@ -309,9 +343,10 @@ export class TransferableAllocation {
             pid: proc.pid,
             hostname: proc.server,
         };
-        while (!ns.tryWritePort(MEMORY_PORT, [MessageType.Release, release])) {
-            await ns.sleep(100);
-        }
+
+        let memPort = ns.getPortHandle(MEMORY_PORT);
+        let memResponsePort = ns.getPortHandle(MEMORY_RESPONSE_PORT);
+        sendMessage(ns, memPort, memResponsePort, MessageType.Release, release);
     }
 
     releaseAtExit(ns: NS, name?: string) {

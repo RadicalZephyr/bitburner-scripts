@@ -5,6 +5,7 @@ import {
     AllocationRelease,
     AllocationRequest,
     MEMORY_PORT,
+    MEMORY_RESPONSE_PORT,
     Message,
     MessageType,
 } from "services/client/memory";
@@ -13,21 +14,26 @@ import { readAllFromPort } from "/util/ports";
 
 export async function main(ns: NS) {
     let memPort = ns.getPortHandle(MEMORY_PORT);
+    let memResponsePort = ns.getPortHandle(MEMORY_RESPONSE_PORT);
+
     let memMessageWaiting = true;
 
     while (true) {
         if (memMessageWaiting) {
             for (const nextMsg of readAllFromPort(ns, memPort)) {
                 let msg = nextMsg as Message;
-                const responsePort = msg[1];
+                const requestId = msg[1];
                 switch (msg[0]) {
                     case MessageType.Request:
                         let request = msg[2] as AllocationRequest;
                         ns.tprintf("got mem request: %s", JSON.stringify(request));
-                        ns.writePort(responsePort, {
-                            allocationId: 12,
-                            hosts: [],
-                        });
+                        memResponsePort.write([
+                            requestId,
+                            {
+                                allocationId: 12,
+                                hosts: [],
+                            }
+                        ]);
                         break;
                     case MessageType.Release:
                         const rel = msg[2] as AllocationRelease;
@@ -37,6 +43,7 @@ export async function main(ns: NS) {
                             rel.pid,
                             rel.hostname,
                         );
+                        memResponsePort.write([requestId, {}]);
                         break;
                     case MessageType.Claim:
                         const claim = msg[2] as AllocationClaim;
@@ -46,6 +53,7 @@ export async function main(ns: NS) {
                             claim.pid,
                             claim.hostname,
                         );
+                        memResponsePort.write([requestId, {}]);
                         break;
 
                 }

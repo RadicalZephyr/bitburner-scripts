@@ -13,6 +13,7 @@ import {
     WorkerSnapshot,
     AllocationSnapshot,
     MemorySnapshot,
+    MEMORY_RESPONSE_PORT,
 } from "services/client/memory";
 
 import { readAllFromPort } from "util/ports";
@@ -75,6 +76,8 @@ Example:
     };
 
     let memPort = ns.getPortHandle(MEMORY_PORT);
+    let memResponsePort = ns.getPortHandle(MEMORY_RESPONSE_PORT);
+
     let memMessageWaiting = true;
     memPort.nextWrite().then(_ => { memMessageWaiting = true; });
 
@@ -93,7 +96,7 @@ Example:
         let now = Date.now();
 
         if (memMessageWaiting) {
-            readMemRequestsFromPort(ns, memPort, memoryManager);
+            readMemRequestsFromPort(ns, memPort, memResponsePort, memoryManager);
             memMessageWaiting = false;
             memPort.nextWrite().then(_ => { memMessageWaiting = true; });
         }
@@ -120,10 +123,11 @@ Example:
     }
 }
 
-function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memoryManager: MemoryAllocator) {
+function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memResponsePort: NetscriptPort, memoryManager: MemoryAllocator) {
     for (const nextMsg of readAllFromPort(ns, memPort)) {
         let msg = nextMsg as Message;
-        const responsePort = msg[1] as number;
+        const requestId: string = msg[1] as string;
+        let payload: any;
         switch (msg[0]) {
             case MessageType.Worker:
                 const hostname = msg[2] as string;
@@ -155,7 +159,7 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memoryManager: 
                 } else {
                     printLog("WARN: allocation failed, not enough space");
                 }
-                ns.writePort(responsePort, allocation);
+                payload = allocation;
                 break;
 
             case MessageType.Release:
@@ -170,6 +174,7 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memoryManager: 
                         `WARN: allocation ${release.allocationId} not found for pid ${release.pid}`
                     );
                 }
+                payload = {};
                 break;
 
             case MessageType.ReleaseChunks:
@@ -178,22 +183,19 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memoryManager: 
                     `INFO: release ${releaseInfo.numChunks} chunks from ` +
                     `allocation ${releaseInfo.allocationId}`
                 );
-                const result = memoryManager.releaseChunks(
+                payload = memoryManager.releaseChunks(
                     releaseInfo.allocationId,
                     releaseInfo.numChunks,
                 );
-                ns.writePort(responsePort, result);
                 break;
 
             case MessageType.Status:
-                const freeRam = memoryManager.getFreeRamTotal();
-                ns.writePort(responsePort, { freeRam });
+                payload = memoryManager.getFreeRamTotal();
                 break;
 
             case MessageType.Snapshot:
-                printLog(`INFO: processing snapshot request on port ${responsePort}`);
-                const snapshot = memoryManager.getSnapshot();
-                ns.writePort(responsePort, snapshot);
+                printLog(`INFO: processing snapshot request ${requestId}`);
+                payload = memoryManager.getSnapshot();
                 break;
 
             case MessageType.Claim:
@@ -208,8 +210,10 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memoryManager: 
                 } else {
                     printLog(`WARN: failed to claim allocation ${claimInfo.allocationId}`);
                 }
+                payload = {};
                 break;
         }
+        memResponsePort.write([requestId, payload]);
     }
 }
 

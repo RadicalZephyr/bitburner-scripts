@@ -21,7 +21,7 @@ export async function main(ns: NS) {
     }
 
     const allocationId = flags["allocation-id"] as number;
-    registerAllocationOwnership(ns, allocationId);
+    await registerAllocationOwnership(ns, allocationId);
 
     const sleepTime = rest[0] as number;
     await ns.sleep(sleepTime);

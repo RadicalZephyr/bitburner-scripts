@@ -29,7 +29,7 @@ export async function main(ns: NS) {
             ns.tprint('--allocation-id must be a number');
             return;
         }
-        registerAllocationOwnership(ns, allocationId, "self");
+        await registerAllocationOwnership(ns, allocationId, "self");
     }
 
     compareExpectedValue = (ta, tb) => {
