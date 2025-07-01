@@ -113,6 +113,8 @@ OPTIONS
     let batchHost: SparseHostArray = makeBatchHostArray(allocation);
 
     let batches = [];
+
+    ns.print(`INFO: spawning initial round of ${maxOverlap} batches`);
     // Launch one batch per allocated chunk so that the pipeline is
     // fully populated before entering the steady state loop.
     for (let i = 0; i < maxOverlap; ++i) {
@@ -129,6 +131,7 @@ OPTIONS
 
     const finishedPort = ns.getPortHandle(ns.pid);
 
+    ns.printf("INFO: launched initial round, going into batch respawn loop");
     while (true) {
         let batchIndex = currentBatches % maxOverlap;
         const host = batchHost.at(batchIndex);
