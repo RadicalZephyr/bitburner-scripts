@@ -127,13 +127,17 @@ OPTIONS
         await ns.sleep(CONFIG.batchInterval);
     }
 
+    const finishedPort = ns.getPortHandle(ns.pid);
+
     while (true) {
         let batchIndex = currentBatches % maxOverlap;
         const host = batchHost.at(batchIndex);
         let lastScriptPid = batches[batchIndex].at(-1);
         if (typeof lastScriptPid === "number") {
-            while (ns.isRunning(lastScriptPid)) {
-                await ns.sleep(10);
+            await finishedPort.nextWrite();
+            let donePid = finishedPort.read();
+            if (typeof donePid === "number" && lastScriptPid !== donePid) {
+                ns.print(`expected to receive done message from ${lastScriptPid}, got ${donePid}`);
             }
         }
 
@@ -244,10 +248,12 @@ function spawnBatch(ns: NS, host: string | null, target: string, phases: BatchPh
     ns.scp(scripts, host, "home");
 
     let pids = [];
-    for (const phase of phases) {
+    for (const [idx, phase] of phases.map((phase, idx) => [idx, phase] as [number, BatchPhase])) {
         if (phase.threads <= 0) continue;
         const script = phase.script;
-        const pid = ns.exec(script, host, { threads: phase.threads, temporary: true }, target, phase.start);
+
+        let lastArg = idx === phases.length - 1 ? ns.pid : -1;
+        const pid = ns.exec(script, host, { threads: phase.threads, temporary: true }, target, phase.start, lastArg);
         if (pid === 0) {
             ns.print(`WARN: failed to spawn ${script} on ${host}`);
         } else {

@@ -13,5 +13,11 @@ export async function main(ns: NS) {
         sleepTime = 1;
     }
 
+    let donePortId = args[2];
+
     await ns.weaken(target, { additionalMsec: sleepTime });
+
+    if (typeof donePortId === 'number' && donePortId !== -1) {
+        ns.writePort(donePortId, ns.pid);
+    }
 }
