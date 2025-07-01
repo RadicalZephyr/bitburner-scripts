@@ -1,5 +1,15 @@
 import type { NS } from "netscript";
 
+declare global {
+    interface Performance {
+        mark: ((name: string) => void),
+    }
+    interface Global {
+        performance: Performance
+    }
+    var globalThis: Global;
+}
+
 export async function main(ns: NS) {
     const args = ns.args;
 
@@ -14,4 +24,5 @@ export async function main(ns: NS) {
     }
 
     await ns.hack(target, { additionalMsec: sleepTime });
+    globalThis.performance.mark("hack");
 }
