@@ -141,9 +141,16 @@ class TargetSelector {
      *   the monitor via `pendingHarvesting()`.
      */
     async pushTarget(target: string) {
-        if (this.allTargets.has(target)) return;
+        if (!this.allTargets.has(target))
+            this.allTargets.add(target);
 
-        this.allTargets.add(target);
+        this.pendingTillTargets = this.pendingTillTargets.filter(h => h !== target);
+        this.pendingSowTargets = this.pendingSowTargets.filter(h => h !== target);
+        this.pendingHarvestTargets = this.pendingHarvestTargets.filter(h => h !== target);
+
+        this.tillTargets.delete(target);
+        this.sowTargets.delete(target);
+        this.harvestTargets.delete(target);
 
         const minSec = this.ns.getServerMinSecurityLevel(target);
         const curSec = this.ns.getServerSecurityLevel(target);
