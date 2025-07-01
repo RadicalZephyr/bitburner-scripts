@@ -197,49 +197,54 @@ OPTIONS
                 predHFM.sec.toFixed(3),
             ].join(",");
             ns.write("resultsHack.txt", data + "\n", "a");
-
-            await resetServer(ns, target, allocation, maxThreads);
-            const gBeforeM = ns.getServerMoneyAvailable(target);
-            const gBeforeS = ns.getServerSecurityLevel(target);
-            const predGBI = predictGrowBuiltIn(ns, target, threads, false);
-            const predGF = useFormulas ? predictGrowFormula(ns, target, threads, false) : { money: NaN, sec: NaN };
-            const predGBIM = predictGrowBuiltIn(ns, target, threads, true);
-            const predGFM = useFormulas ? predictGrowFormula(ns, target, threads, true) : { money: NaN, sec: NaN };
-            await runScript(ns, allocation, "/batch/g.js", threads, target);
-            const gAfterM = ns.getServerMoneyAvailable(target);
-            const gAfterS = ns.getServerSecurityLevel(target);
-            const dataG = [
-                threads,
-                (gAfterM - gBeforeM).toFixed(2),
-                (gAfterS - gBeforeS).toFixed(3),
-                predGBI.money.toFixed(2),
-                predGBI.sec.toFixed(3),
-                predGBIM.money.toFixed(2),
-                predGBIM.sec.toFixed(3),
-                predGF.money.toFixed(2),
-                predGF.sec.toFixed(3),
-                predGFM.money.toFixed(2),
-                predGFM.sec.toFixed(3),
-            ].join(",");
-            ns.write("resultsGrow.txt", dataG + "\n", "a");
-
-            await resetServer(ns, target, allocation, maxThreads);
-            const wBeforeM = ns.getServerMoneyAvailable(target);
-            const wBeforeS = ns.getServerSecurityLevel(target);
-            const predW = predictWeaken(ns, threads);
-            await runScript(ns, allocation, "/batch/w.js", threads, target);
-            const wAfterM = ns.getServerMoneyAvailable(target);
-            const wAfterS = ns.getServerSecurityLevel(target);
-            const dataW = [
-                threads,
-                (wAfterM - wBeforeM).toFixed(2),
-                (wAfterS - wBeforeS).toFixed(3),
-                predW.money.toFixed(2),
-                predW.sec.toFixed(3),
-            ].join(",");
-            ns.write("resultsWeaken.txt", dataW + "\n", "a");
         }
     }
 
     await allocation.release(ns);
+}
+
+
+async function testGrow(ns: NS, target: string, allocation: TransferableAllocation, useFormulas: boolean, threads: number, maxThreads: number) {
+    await resetServer(ns, target, allocation, maxThreads);
+    const gBeforeM = ns.getServerMoneyAvailable(target);
+    const gBeforeS = ns.getServerSecurityLevel(target);
+    const predGBI = predictGrowBuiltIn(ns, target, threads, false);
+    const predGF = useFormulas ? predictGrowFormula(ns, target, threads, false) : { money: NaN, sec: NaN };
+    const predGBIM = predictGrowBuiltIn(ns, target, threads, true);
+    const predGFM = useFormulas ? predictGrowFormula(ns, target, threads, true) : { money: NaN, sec: NaN };
+    await runScript(ns, allocation, "/batch/g.js", threads, target);
+    const gAfterM = ns.getServerMoneyAvailable(target);
+    const gAfterS = ns.getServerSecurityLevel(target);
+    const dataG = [
+        threads,
+        (gAfterM - gBeforeM).toFixed(2),
+        (gAfterS - gBeforeS).toFixed(3),
+        predGBI.money.toFixed(2),
+        predGBI.sec.toFixed(3),
+        predGBIM.money.toFixed(2),
+        predGBIM.sec.toFixed(3),
+        predGF.money.toFixed(2),
+        predGF.sec.toFixed(3),
+        predGFM.money.toFixed(2),
+        predGFM.sec.toFixed(3),
+    ].join(",");
+    ns.write("resultsGrow.txt", dataG + "\n", "a");
+}
+
+async function testWeaken(ns: NS, target: string, allocation: TransferableAllocation, useFormulas: boolean, threads: number, maxThreads: number) {
+    await resetServer(ns, target, allocation, maxThreads);
+    const wBeforeM = ns.getServerMoneyAvailable(target);
+    const wBeforeS = ns.getServerSecurityLevel(target);
+    const predW = predictWeaken(ns, threads);
+    await runScript(ns, allocation, "/batch/w.js", threads, target);
+    const wAfterM = ns.getServerMoneyAvailable(target);
+    const wAfterS = ns.getServerSecurityLevel(target);
+    const dataW = [
+        threads,
+        (wAfterM - wBeforeM).toFixed(2),
+        (wAfterS - wBeforeS).toFixed(3),
+        predW.money.toFixed(2),
+        predW.sec.toFixed(3),
+    ].join(",");
+    ns.write("resultsWeaken.txt", dataW + "\n", "a");
 }
