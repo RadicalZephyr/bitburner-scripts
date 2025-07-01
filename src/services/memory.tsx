@@ -10,8 +10,6 @@ import {
     Message,
     MessageType,
     AllocationChunksRelease,
-    StatusRequest,
-    SnapshotRequest,
     WorkerSnapshot,
     AllocationSnapshot,
     MemorySnapshot,
@@ -125,21 +123,22 @@ Example:
 function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memoryManager: MemoryAllocator) {
     for (const nextMsg of readAllFromPort(ns, memPort)) {
         let msg = nextMsg as Message;
+        const responsePort = msg[1] as number;
         switch (msg[0]) {
             case MessageType.Worker:
-                const hostname = msg[1] as string;
+                const hostname = msg[2] as string;
                 memoryManager.pushWorker(hostname);
                 break;
 
             case MessageType.Request:
-                const request = msg[1] as AllocationRequest;
+                const request = msg[2] as AllocationRequest;
                 printLog(
                     `INFO: request pid=${request.pid} filename=${request.filename} ` +
                     `${request.numChunks}x${ns.formatRam(request.chunkSize)} ` +
                     `contiguous=${request.contiguous ?? false} ` +
                     `coreDependent=${request.coreDependent ?? false}`
                 );
-                const returnPort = request.returnPort;
+
                 const allocation = memoryManager.allocate(
                     request.pid,
                     request.filename,
@@ -156,11 +155,11 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memoryManager: 
                 } else {
                     printLog("WARN: allocation failed, not enough space");
                 }
-                ns.writePort(returnPort, allocation);
+                ns.writePort(responsePort, allocation);
                 break;
 
             case MessageType.Release:
-                const release = msg[1] as AllocationRelease;
+                const release = msg[2] as AllocationRelease;
                 if (memoryManager.deallocate(release.allocationId, release.pid, release.hostname)) {
                     printLog(
                         `SUCCESS: released allocation ${release.allocationId} ` +
@@ -174,7 +173,7 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memoryManager: 
                 break;
 
             case MessageType.ReleaseChunks:
-                const releaseInfo = msg[1] as AllocationChunksRelease;
+                const releaseInfo = msg[2] as AllocationChunksRelease;
                 printLog(
                     `INFO: release ${releaseInfo.numChunks} chunks from ` +
                     `allocation ${releaseInfo.allocationId}`
@@ -183,24 +182,22 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memoryManager: 
                     releaseInfo.allocationId,
                     releaseInfo.numChunks,
                 );
-                ns.writePort(releaseInfo.returnPort, result);
+                ns.writePort(responsePort, result);
                 break;
 
             case MessageType.Status:
-                const statusReq = msg[1] as StatusRequest;
                 const freeRam = memoryManager.getFreeRamTotal();
-                ns.writePort(statusReq.returnPort, { freeRam });
+                ns.writePort(responsePort, { freeRam });
                 break;
 
             case MessageType.Snapshot:
-                const snapReq = msg[1] as SnapshotRequest;
-                printLog(`INFO: processing snapshot request on port ${snapReq.returnPort}`);
+                printLog(`INFO: processing snapshot request on port ${responsePort}`);
                 const snapshot = memoryManager.getSnapshot();
-                ns.writePort(snapReq.returnPort, snapshot);
+                ns.writePort(responsePort, snapshot);
                 break;
 
             case MessageType.Claim:
-                const claimInfo = msg[1] as AllocationClaim;
+                const claimInfo = msg[2] as AllocationClaim;
                 if (memoryManager.claimAllocation(claimInfo)) {
                     printLog(
                         `INFO: claimed allocation ${claimInfo.allocationId} ` +

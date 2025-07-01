@@ -23,12 +23,12 @@ type Payload =
 
 export type Message = [
     type: MessageType,
+    returnPortId: number,
     payload: Payload,
 ];
 
 // Compact version for use over ports if needed
 export interface AllocationRequest {
-    returnPort: number,
     pid: number,
     filename: string,
     chunkSize: number,
@@ -55,15 +55,12 @@ export interface AllocationClaim {
 export interface AllocationChunksRelease {
     allocationId: number,
     numChunks: number,
-    returnPort: number,
 }
 
 export interface StatusRequest {
-    returnPort: number,
 }
 
 export interface SnapshotRequest {
-    returnPort: number,
 }
 
 export interface WorkerSnapshot {
@@ -146,11 +143,7 @@ export class MemoryClient {
             `contiguous=${contiguous} coreDependent=${coreDependent}`
         );
         let pid = this.ns.pid;
-        let returnPortId = MEMORY_PORT + pid;
-        let returnPort = this.ns.getPortHandle(returnPortId);
-
         let payload = {
-            returnPort: returnPortId,
             pid: pid,
             filename: this.ns.self().filename,
             chunkSize: chunkSize,
@@ -158,12 +151,7 @@ export class MemoryClient {
             contiguous: contiguous,
             coreDependent: coreDependent,
         } as AllocationRequest;
-        let request = [MessageType.Request, payload] as Message;
-        while (!this.port.tryWrite(request)) {
-            await this.ns.sleep(100);
-        }
-        await returnPort.nextWrite();
-        let result = returnPort.read();
+        let result = await this.sendMessage(MessageType.Request, payload);
         if (!result) {
             this.ns.print("WARN: allocation request failed");
             return null;
@@ -213,9 +201,6 @@ export class MemoryClient {
     }
 
     async releaseChunks(allocationId: number, numChunks: number): Promise<AllocationResult> {
-        const returnPortId = MEMORY_PORT + this.ns.pid;
-        const returnPort = this.ns.getPortHandle(returnPortId);
-
         this.ns.print(
             `INFO: releasing ${numChunks} chunks from allocation ${allocationId}`
         );
@@ -223,12 +208,8 @@ export class MemoryClient {
         const payload: AllocationChunksRelease = {
             allocationId,
             numChunks,
-            returnPort: returnPortId,
         };
-
-        await this.sendMessage(MessageType.ReleaseChunks, payload);
-        await returnPort.nextWrite();
-        const result = returnPort.read();
+        const result = await this.sendMessage(MessageType.ReleaseChunks, payload);
         if (!result) {
             this.ns.print("WARN: chunk release failed");
             return null;
@@ -242,15 +223,10 @@ export class MemoryClient {
      * @returns Structure describing workers and allocations
      */
     async memorySnapshot(): Promise<MemorySnapshot> {
-        const returnPortId = MEMORY_PORT + this.ns.pid;
-        const returnPort = this.ns.getPortHandle(returnPortId);
-
-        const payload: SnapshotRequest = { returnPort: returnPortId };
         this.ns.print("INFO: requesting memory snapshot");
-        await this.sendMessage(MessageType.Snapshot, payload);
 
-        await returnPort.nextWrite();
-        const result = returnPort.read();
+        const payload: SnapshotRequest = {};
+        const result = await this.sendMessage(MessageType.Snapshot, payload);
         if (!result) {
             this.ns.print("WARN: snapshot request failed");
             return null;
@@ -259,14 +235,8 @@ export class MemoryClient {
     }
 
     async getFreeRam(): Promise<number> {
-        const returnPortId = MEMORY_PORT + this.ns.pid;
-        const returnPort = this.ns.getPortHandle(returnPortId);
-
-        const payload: StatusRequest = { returnPort: returnPortId };
-        await this.sendMessage(MessageType.Status, payload);
-
-        await returnPort.nextWrite();
-        const result = returnPort.read();
+        const payload: StatusRequest = {};
+        const result = await this.sendMessage(MessageType.Status, payload);
         if (!result) {
             this.ns.print("WARN: status request failed");
             return 0;
@@ -276,10 +246,15 @@ export class MemoryClient {
     }
 
     private async sendMessage(type: MessageType, payload: Payload) {
-        let message = [type, payload];
+        const returnPortId = MEMORY_PORT + this.ns.pid;
+
+        let message = [type, returnPortId, payload];
         while (!this.port.tryWrite(message)) {
             await this.ns.sleep(200);
         }
+        const returnPort = this.ns.getPortHandle(returnPortId);
+        await returnPort.nextWrite();
+        return returnPort.read();
     }
 }
 

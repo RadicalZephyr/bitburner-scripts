@@ -19,18 +19,18 @@ export async function main(ns: NS) {
         if (memMessageWaiting) {
             for (const nextMsg of readAllFromPort(ns, memPort)) {
                 let msg = nextMsg as Message;
+                const responsePort = msg[1];
                 switch (msg[0]) {
                     case MessageType.Request:
-                        let request = msg[1] as AllocationRequest;
+                        let request = msg[2] as AllocationRequest;
                         ns.tprintf("got mem request: %s", JSON.stringify(request));
-                        let returnPort = request.returnPort;
-                        ns.writePort(returnPort, {
+                        ns.writePort(responsePort, {
                             allocationId: 12,
                             hosts: [],
                         });
                         break;
                     case MessageType.Release:
-                        const rel = msg[1] as AllocationRelease;
+                        const rel = msg[2] as AllocationRelease;
                         ns.tprintf(
                             "received release message for allocation ID: %d pid:%d host:%s",
                             rel.allocationId,
@@ -39,7 +39,7 @@ export async function main(ns: NS) {
                         );
                         break;
                     case MessageType.Claim:
-                        const claim = msg[1] as AllocationClaim;
+                        const claim = msg[2] as AllocationClaim;
                         ns.tprintf(
                             "received claim message for allocation ID: %d -> pid %d host %s",
                             claim.allocationId,
