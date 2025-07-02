@@ -1,14 +1,15 @@
 ## Project: Bitburner Stock Tracker & Trader
 
 ### 1. Overview
-A pair of Netscript 2.0 scripts for the Bitburner game:
+A new suite of Netscript 2.0 scripts for the Bitburner game:
 - **stock/tracker.ts**: Collects raw price ticks for a configurable set of
   symbols into a rolling window and persists them to the Bitburner
   filesystem. Provides a client API for requesting both raw data and
   computed indicators.
 - **stock/trader.ts**: Requests indicators from the tracker script and
   makes buy/sell decisions based on configurable thresholds and risk
-  controls.
+  controls. Provides a client API for directing trader daemon to
+  invest more funds or sell all holdings.
 
 ### 2. Architectural Components
 
@@ -78,7 +79,7 @@ Persist and load configuration values from `LocalStorage` using the
    with `TickData[]` or the computed indicator object.
   * Current window of raw tick data for all symbols.
   * All statistical indicators for all symbols.
-2. Create a class (`StockTrackerClient`) to hide details of
+2. Create a class (`TrackerClient`) to hide details of
    communication protocol.
 3. Send requests to tracker daemon on a single well-known port `TRACKER_PORT`.
 4. Multiplex responses to client on a single well-known `TRACKER_RESPONSE_PORT`.
@@ -89,7 +90,19 @@ Persist and load configuration values from `LocalStorage` using the
 3. Submit `ns.stock.buy()` or `ns.stock.sell()` orders.
 4. Log decisions to `/logs/trader.log`.
 
-#### 2.6 Stock Bootstrap Script (`src/stock/bootstrap.ts`)
+#### 2.6 Trader Client API (`src/stock/client/trader.ts`)
+1. Defines a port-based request/response protocol. Use a `MessageType`
+   enum and typed payloads mirroring
+   `src/services/client/memory.ts`. Supported messages should include:
+   * `Invest` specify an amount of liquid cash to invest.
+   * `Liquidate` instructs the trader to immediately sell all
+     holdings.
+2. Create a class (`TraderClient`) to hide details of communication
+   protocol.
+3. Send requests to trader daemon on a single well-known port `TRADER_PORT`.
+4. Multiplex responses to client on a single well-known `TRADER_RESPONSE_PORT`.
+
+#### 2.7 Stock Bootstrap Script (`src/stock/bootstrap.ts`)
 
 Similar to other `bootstrap.ts` scripts, this script should use the
 `launch` function from `src/services/launch.ts` to execute the tracker
