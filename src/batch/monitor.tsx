@@ -115,12 +115,12 @@ Example:
 
         ns.clearLog();
         ns.printRaw(<>
-            <ServerBlock title={"Harvesting"} targets={harvesting} theme={theme}></ServerBlock>
-            <ServerBlock title={"Pending Harvesting"} targets={pendingHarvesting} theme={theme}></ServerBlock>
-            <ServerBlock title={"Sowing"} targets={sowing} theme={theme}></ServerBlock>
-            <ServerBlock title={"Pending Sowing"} targets={pendingSowing} theme={theme}></ServerBlock>
-            <ServerBlock title={"Tilling"} targets={tilling} theme={theme}></ServerBlock>
-            <ServerBlock title={"Pending Tilling"} targets={pendingTilling} theme={theme}></ServerBlock>
+            <ServerBlock ns={ns} title={"Harvesting"} targets={harvesting} theme={theme}></ServerBlock>
+            <ServerBlock ns={ns} title={"Pending Harvesting"} targets={pendingHarvesting} theme={theme}></ServerBlock>
+            <ServerBlock ns={ns} title={"Sowing"} targets={sowing} theme={theme}></ServerBlock>
+            <ServerBlock ns={ns} title={"Pending Sowing"} targets={pendingSowing} theme={theme}></ServerBlock>
+            <ServerBlock ns={ns} title={"Tilling"} targets={tilling} theme={theme}></ServerBlock>
+            <ServerBlock ns={ns} title={"Pending Tilling"} targets={pendingTilling} theme={theme}></ServerBlock>
         </>);
         await ns.sleep(flags.refreshrate);
     }
@@ -197,15 +197,15 @@ export function countThreadsByTarget(ns: NS, workers: string[], targets: string[
 
 export type HostInfo = {
     name: string,
-    harvestMoney: string
-    expectedValue: string,
-    hckLevel: string,
-    maxMoney: string,
-    moneyPercent: string
-    secPlus: string,
-    threadsH: string,
-    threadsG: string,
-    threadsW: string
+    harvestMoney: number,
+    expectedValue: number,
+    hckLevel: number,
+    maxMoney: number,
+    moneyPercent: number,
+    secPlus: number,
+    threadsH: number,
+    threadsG: number,
+    threadsW: number
 }
 
 export function hostInfo(ns: NS, target: string, targetThreads: TargetThreads): HostInfo {
@@ -214,24 +214,24 @@ export function hostInfo(ns: NS, target: string, targetThreads: TargetThreads): 
     const minSec = ns.getServerMinSecurityLevel(target);
     const sec = ns.getServerSecurityLevel(target);
 
-    const money = ns.getServerMaxMoney(target);
-    const moneyPercent = moneyPercentage(ns, target) * 100;
+    const maxMoney = ns.getServerMaxMoney(target);
+    const moneyPercent = moneyPercentage(ns, target);
     const secPlus = sec - minSec;
 
     const harvestMoney = targetThreads.harvestMoney;
-    const eValue = expectedValuePerRamSecond(ns, target);
+    const expectedValue = expectedValuePerRamSecond(ns, target);
 
     return {
         name: target,
-        harvestMoney: Math.abs(harvestMoney) < 0 ? '' : "$" + ns.formatNumber(harvestMoney, 2),
-        expectedValue: "$" + ns.formatNumber(eValue, 2),
-        hckLevel: ns.formatNumber(hckLevel, 0, 1000000, true),
-        maxMoney: "$" + ns.formatNumber(money, 2),
-        moneyPercent: Math.abs(moneyPercent - 100) < 0.1 ? '100.0%' : ns.formatPercent(moneyPercent / 100),
-        secPlus: Math.abs(secPlus) < 0.1 ? '+0.0' : "+" + ns.formatNumber(secPlus, 2),
-        threadsH: formatThreads(ns, targetThreads.h),
-        threadsG: formatThreads(ns, targetThreads.g),
-        threadsW: formatThreads(ns, targetThreads.w)
+        harvestMoney,
+        expectedValue,
+        hckLevel,
+        maxMoney,
+        moneyPercent,
+        secPlus,
+        threadsH: targetThreads.h,
+        threadsG: targetThreads.g,
+        threadsW: targetThreads.w
     };
 }
 
@@ -250,12 +250,13 @@ function formatThreads(ns: NS, threads: number): string {
 }
 
 interface IBlockSettings {
+    ns: NS,
     title: string,
     targets: HostInfo[],
     theme: UserInterfaceTheme,
 }
 
-export function ServerBlock({ title, targets, theme }: IBlockSettings) {
+export function ServerBlock({ ns, title, targets, theme }: IBlockSettings) {
     const cellStyle = { padding: "0 0.5em" };
     return (<>
         <h2>{title} - {targets.length} targets</h2>
@@ -274,31 +275,40 @@ export function ServerBlock({ title, targets, theme }: IBlockSettings) {
                     <th style={cellStyle}>thr(w)</th>
                 </tr>
             </thead>
-            {targets.map((target, idx) => <ServerRow host={target} theme={theme} rowIndex={idx} cellStyle={cellStyle}></ServerRow>)}
+            {targets.map((target, idx) => <ServerRow ns={ns} host={target} theme={theme} rowIndex={idx} cellStyle={cellStyle}></ServerRow>)}
         </table>
     </>);
 }
 
 interface IRowSettings {
+    ns: NS,
     host: HostInfo,
     rowIndex: number,
     cellStyle: any,
     theme: UserInterfaceTheme,
 }
 
-function ServerRow({ host, rowIndex, cellStyle, theme }: IRowSettings) {
+function ServerRow({ ns, host, rowIndex, cellStyle, theme }: IRowSettings) {
     return (
         <tr key={host.name} style={rowIndex % 2 === 1 ? undefined : { backgroundColor: theme.well }}>
             <td style={cellStyle}>{host.name}</td>
-            <td style={cellStyle}>{host.harvestMoney}</td>
-            <td style={cellStyle}>{host.expectedValue}</td>
-            <td style={cellStyle}>{host.hckLevel}</td>
-            <td style={cellStyle}>{host.maxMoney}</td>
-            <td style={cellStyle}>{host.moneyPercent}</td>
-            <td style={cellStyle}>{host.secPlus}</td>
-            <td style={cellStyle}>{host.threadsH}</td>
-            <td style={cellStyle}>{host.threadsG}</td>
-            <td style={cellStyle}>{host.threadsW}</td>
+            <td style={cellStyle}>{`$${ns.formatNumber(host.harvestMoney, 2)}`}</td>
+            <td style={cellStyle}>{`$${ns.formatNumber(host.expectedValue, 2)}`}</td>
+            <td style={cellStyle}>{`${ns.formatNumber(host.hckLevel, 0, 1000000, true)}`}</td>
+            <td style={cellStyle}>{`$${ns.formatNumber(host.maxMoney, 2)}`}</td>
+            <td style={cellStyle}>{formatPercent(ns, host.moneyPercent)}</td>
+            <td style={cellStyle}>{formatSecurity(ns, host.secPlus)}</td>
+            <td style={cellStyle}>{formatThreads(ns, host.threadsH)}</td>
+            <td style={cellStyle}>{formatThreads(ns, host.threadsG)}</td>
+            <td style={cellStyle}>{formatThreads(ns, host.threadsW)}</td>
         </tr>
     );
+}
+
+function formatPercent(ns: NS, value: number) {
+    return Math.abs(value - 1) < 0.001 ? '100.0%' : ns.formatPercent(value);
+}
+
+function formatSecurity(ns: NS, sec: number) {
+    return Math.abs(sec) < 0.1 ? '+0.0' : `+${ns.formatNumber(sec, 2)}`;
 }
