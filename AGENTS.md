@@ -60,6 +60,7 @@ string with one of these strings:
 ## Testing Instructions
 
 - Check that the build still works with `npm run build`
+- Check that the unit tests still run with `npx jest`
 - Fix any type errors until the build completes with no errors or warnings
 
 ## Commit Authoring Convention
