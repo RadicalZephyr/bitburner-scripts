@@ -148,36 +148,35 @@ process exits.
    - Persist to FS as JSON.
 3. Implement `src/stock/client/tracker.ts`.
 4. Implement basic indicators: mean, min/max, σ.
-5. Hook tracker and trader into `src/stock/bootstrap.ts` using
+5. Unit test indicator functions using Jest unit tests in a separate file.
+6. Hook tracker and trader into `src/stock/bootstrap.ts` using
    `launch` and the memory manager.
-6. Write quick console output of stats for one symbol.
+7. Write quick console output of stats for one symbol.
 
 #### Phase 1 (Beta)
-5. Add median & percentiles.
-6. Add SMA & EMA computations.
-7. Implement `src/stock/trader.ts` skeleton:
+1. Add median & percentiles.
+2. Add SMA & EMA computations, including unit tests.
+3. Implement `src/stock/trader.ts` skeleton:
    - Request indicators for all symbols with `StockTrackerClient`.
-8. Unit tests for indicator helpers using sample data.
-9. Add simple threshold-based buy/sell using Z‑score rules.
-10. Basic risk control: max position per symbol.
+4. Unit tests for indicator helpers using sample data.
+5. Add simple threshold-based buy/sell using Z‑score rules.
+6. Basic risk control: max position per symbol.
 
 #### Phase 2 (Feature Complete)
-10. Integrate ROC & Bollinger Bands.
-11. Implement drawdown/run‑up metrics.
-12. Add percentile thresholds instead of raw min/max.
-13. Write decision logger and log file rotation.
-14. Configurable cooldown enforcement.
+1. Integrate ROC & Bollinger Bands, including unit tests.
+2. Implement drawdown/run‑up metrics.
+3. Add percentile thresholds instead of raw min/max.
+4. Write decision logger and log file rotation.
+5. Configurable cooldown enforcement.
 
 #### Phase 3 (Advanced)
-15. Backtesting harness:
+1. Backtesting harness:
    - Replay historical ticks from JSON and simulate trades.
-16. Parameter tuning: script to sweep indicator periods & thresholds.
-17. Extend to portfolio-level diversification metrics (correlations).
-18. *(Optional)* Add skewness/kurtosis and anomaly detection.
+2. Parameter tuning: script to sweep indicator periods & thresholds.
+3. Extend to portfolio-level diversification metrics (correlations).
+4. *(Optional)* Add skewness/kurtosis and anomaly detection.
 
 ### 6. Testing & Validation
-- Unit tests for each indicator (compare against known sample data). Start
-  adding these alongside Phase 1 features.
 - End-to-end test: run tracker + trader in simulation mode.
 - Backtest scripts produce P&L reports.
 
