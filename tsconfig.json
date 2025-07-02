@@ -21,7 +21,7 @@
     "baseUrl": "src/",
     "allowJs": true,
     "jsx": "react",
-    "types": [],
+    "types": ["jest"],
     "paths": {
       "/*": ["*"],
       "netscript": ["../NetScriptDefinitions.d.ts"],

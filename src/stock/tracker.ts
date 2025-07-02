@@ -1,7 +1,7 @@
 import type { NS, NetscriptPort } from "netscript";
 
 import { CONFIG } from "stock/config";
-import { computeIndicators, TickData, BasicIndicators } from "stock/indicators";
+import { computeIndicators, TickData, Indicators } from "stock/indicators";
 import {
     TRACKER_PORT,
     TRACKER_RESPONSE_PORT,
@@ -78,12 +78,16 @@ export async function main(ns: NS) {
                 }
                 ns.write(`${dataPath}${sym}.json`, JSON.stringify(buf), "w");
             }
-            const stats = computeIndicators(buffers.get(symbols[0])!);
+            const stats = computeIndicators(buffers.get(symbols[0])!, {
+                smaPeriods: [5],
+                emaPeriods: [5],
+                percentiles: [50],
+            });
             ns.print(
                 `INFO: ${symbols[0]} μ=${ns.formatNumber(stats.mean)} ` +
-                `min=${ns.formatNumber(stats.min)} ` +
-                `max=${ns.formatNumber(stats.max)} ` +
-                `σ=${ns.formatNumber(stats.std)}`
+                `median=${ns.formatNumber(stats.median)} ` +
+                `σ=${ns.formatNumber(stats.std)} ` +
+                `z=${ns.formatNumber(stats.zScore)}`
             );
         }
 
@@ -106,9 +110,13 @@ async function processMessages(
                 response = Object.fromEntries(buffers);
                 break;
             case MessageType.RequestIndicators:
-                const res: Record<string, BasicIndicators> = {};
+                const res: Record<string, Indicators> = {};
                 for (const [sym, buf] of buffers.entries()) {
-                    res[sym] = computeIndicators(buf);
+                    res[sym] = computeIndicators(buf, {
+                        smaPeriods: [5],
+                        emaPeriods: [5],
+                        percentiles: [50],
+                    });
                 }
                 response = res;
                 break;
