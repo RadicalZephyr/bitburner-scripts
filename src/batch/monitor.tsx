@@ -52,7 +52,7 @@ Example:
     ns.ui.moveTail(1220, 0);
 
     const monitorPort = ns.getPortHandle(MONITOR_PORT);
-    const workers: string[] = [];
+    const workers: string[] = ["home"];
     const lifecycleByHost: Map<string, Lifecycle> = new Map();
     let monitorMessagesWaiting = true;
 
