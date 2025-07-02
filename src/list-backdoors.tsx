@@ -30,8 +30,8 @@ export async function main(ns: NS) {
         const theme = ns.ui.getTheme();
         ns.clearLog();
         ns.printRaw(<ServerDisplay servers={missingBackdoor} theme={theme}></ServerDisplay>);
-
-        await ns.sleep(1000);
+        ns.ui.renderTail();
+        await ns.sleep(200);
     }
 }
 
