@@ -3,6 +3,7 @@ import type { AutocompleteData, NS, RunOptions, ScriptArg } from "netscript";
 export interface LaunchRunOptions extends RunOptions {
     allocationFlag?: string;
     coreDependent?: boolean;
+    dependencies?: string[];
 }
 
 import { MemoryClient } from "services/client/memory";
@@ -116,6 +117,7 @@ export async function launch(ns: NS, script: string, threadOrOptions?: number | 
     let totalThreads: number;
     let allocationFlag: string | undefined;
     let coreDependent = false;
+    let explicitDependencies = [];
     if (typeof threadOrOptions === 'number' || typeof threadOrOptions === 'undefined') {
         totalThreads = typeof threadOrOptions === 'number' ? threadOrOptions : 1;
         allocationFlag = undefined;
@@ -123,6 +125,7 @@ export async function launch(ns: NS, script: string, threadOrOptions?: number | 
         totalThreads = threadOrOptions.threads ?? 1;
         allocationFlag = threadOrOptions.allocationFlag;
         coreDependent = threadOrOptions.coreDependent ?? false;
+        explicitDependencies = threadOrOptions.dependencies ?? [];
     }
 
     let allocation = await client.requestTransferableAllocation(
@@ -144,7 +147,7 @@ export async function launch(ns: NS, script: string, threadOrOptions?: number | 
 
         if (isNaN(threadsHere)) continue;
 
-        ns.scp(dependencies, hostname, "home");
+        ns.scp([...dependencies, ...explicitDependencies], hostname, "home");
         let execArgs = allocationFlag ? [allocationFlag, allocation.allocationId, ...args] : args;
         let pid = ns.exec(script, hostname, threadsHere, ...execArgs);
         if (!pid) {
