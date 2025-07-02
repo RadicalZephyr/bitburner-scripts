@@ -14,12 +14,12 @@ const MAX_HACK_PERCENT = "MAX_HACK_PERCENT";
 
 class Config {
     setDefaults() {
-        setConfigDefault(BATCH_INTERVAL, 250);
-        setConfigDefault(MAX_TILL_TARGETS, 2);
-        setConfigDefault(EXPECTED_VALUE_THRESHOLD, 100);
-        setConfigDefault(MIN_SECURITY_TOLERANCE, 1);
-        setConfigDefault(MAX_MONEY_TOLERANCE, 0.99);
-        setConfigDefault(MAX_HACK_PERCENT, 0.5);
+        setConfigDefault(BATCH_INTERVAL, (250).toString());
+        setConfigDefault(MAX_TILL_TARGETS, (2).toString());
+        setConfigDefault(EXPECTED_VALUE_THRESHOLD, (100).toString());
+        setConfigDefault(MIN_SECURITY_TOLERANCE, (1).toString());
+        setConfigDefault(MAX_MONEY_TOLERANCE, (0.99).toFixed(2));
+        setConfigDefault(MAX_HACK_PERCENT, (0.5).toFixed(2));
     }
 
     get batchInterval() {
@@ -47,7 +47,7 @@ class Config {
     }
 }
 
-function setConfigDefault(key, defaultValue) {
+function setConfigDefault(key: string, defaultValue: string) {
     if (!LocalStorage.getItem(key)) {
         LocalStorage.setItem(key, defaultValue);
     }
