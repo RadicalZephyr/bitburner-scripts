@@ -26,9 +26,7 @@ export async function main(ns: NS) {
     ns.disableLog("ALL");
     ns.ui.openTail();
 
-    const windowSize = CONFIG.windowSize;
     const dataPath = CONFIG.dataPath;
-    const percentiles = [CONFIG.buyPercentile, CONFIG.sellPercentile];
     const symbols = ns.stock.getSymbols();
 
     const buffers = new Map<string, TickData[]>();
@@ -56,7 +54,7 @@ export async function main(ns: NS) {
 
     while (true) {
         if (waiting) {
-            await processMessages(ns, port, respPort, buffers, percentiles);
+            await processMessages(ns, port, respPort, buffers);
             waiting = false;
             port.nextWrite().then(() => { waiting = true; });
         }
@@ -65,6 +63,7 @@ export async function main(ns: NS) {
             stockUpdated = false;
             ns.stock.nextUpdate().then(() => { stockUpdated = true; });
 
+            const windowSize = CONFIG.windowSize;
             for (const sym of symbols) {
                 const tick: TickData = {
                     ts: Date.now(),
@@ -80,10 +79,12 @@ export async function main(ns: NS) {
                 }
                 ns.write(`${dataPath}${sym}.json`, JSON.stringify(buf), "w");
             }
+            const percentiles = [CONFIG.buyPercentile, CONFIG.sellPercentile];
             const stats = computeIndicators(buffers.get(symbols[0])!, {
-                smaPeriods: [5],
-                emaPeriods: [5],
-                rocPeriods: [5],
+                smaPeriods: [CONFIG.smaPeriod],
+                emaPeriods: [CONFIG.emaPeriod],
+                rocPeriods: [CONFIG.rocPeriod],
+                bollingerK: CONFIG.bollingerK,
                 percentiles,
             });
             const corr = computeCorrelations(Object.fromEntries(buffers));
@@ -110,8 +111,7 @@ async function processMessages(
     ns: NS,
     port: NetscriptPort,
     respPort: NetscriptPort,
-    buffers: Map<string, TickData[]>,
-    percentiles: number[]
+    buffers: Map<string, TickData[]>
 ) {
     for (const next of readAllFromPort(ns, port)) {
         const msg = next as Message;
@@ -125,10 +125,11 @@ async function processMessages(
                 const res: Record<string, Indicators> = {};
                 for (const [sym, buf] of buffers.entries()) {
                     res[sym] = computeIndicators(buf, {
-                        smaPeriods: [5],
-                        emaPeriods: [5],
-                        rocPeriods: [5],
-                        percentiles,
+                        smaPeriods: [CONFIG.smaPeriod],
+                        emaPeriods: [CONFIG.emaPeriod],
+                        rocPeriods: [CONFIG.rocPeriod],
+                        bollingerK: CONFIG.bollingerK,
+                        percentiles: [CONFIG.buyPercentile, CONFIG.sellPercentile],
                     });
                 }
                 response = res;

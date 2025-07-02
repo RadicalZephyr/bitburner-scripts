@@ -37,9 +37,10 @@ export function simulateTrades(
             const history = ticks[sym].slice(0, i + 1);
             if (history.length === 0) continue;
             const info = computeIndicators(history, {
-                smaPeriods: [5],
-                emaPeriods: [5],
-                rocPeriods: [5],
+                smaPeriods: [CONFIG.smaPeriod],
+                emaPeriods: [CONFIG.emaPeriod],
+                rocPeriods: [CONFIG.rocPeriod],
+                bollingerK: CONFIG.bollingerK,
                 percentiles: [params.buyPct, params.sellPct],
             });
             const now = history[history.length - 1].ts;
@@ -85,7 +86,15 @@ export function simulateTrades(
 }
 
 export async function main(ns: NS) {
-    const flags = ns.flags([["cash", 1_000_000]]);
+    const flags = ns.flags([
+        ["cash", 1_000_000],
+        ["help", false],
+    ]);
+    if (flags.help) {
+        ns.tprint(`USAGE: run ${ns.getScriptName()} [--cash CASH]`);
+        ns.tprint("Simulate trades using historical tick data.");
+        return;
+    }
     CONFIG.setDefaults();
     const dataPath = CONFIG.dataPath;
     const symbols = ns.stock.getSymbols();

@@ -52,10 +52,15 @@ Persist and load configuration values from `LocalStorage` using the
 `src/util/localStorage.ts` APIs. Use a similar structure to
 `src/batch/config.ts`.
 
-- Window size (number of ticks)
-- Indicator parameters (periods, thresholds)
-- Risk limits (max position, cooldowns)
-- Paths
+- Window size (`STOCK_WINDOW_SIZE`)
+- Indicator parameters
+  - `STOCK_SMA_PERIOD`
+  - `STOCK_EMA_PERIOD`
+  - `STOCK_ROC_PERIOD`
+  - `STOCK_BOLLINGER_K`
+  - `STOCK_BUY_PCT` / `STOCK_SELL_PCT`
+- Risk limits (`STOCK_MAX_POSITION`, `STOCK_COOLDOWN_MS`)
+- Paths (`STOCK_DATA_PATH`)
 
 #### 2.3 Tracker Script (`src/stock/tracker.ts`)
 1. On each stock update `await ns.stock.nextUpdate();`

@@ -6,6 +6,10 @@ const MAX_POSITION = "STOCK_MAX_POSITION";
 const BUY_PERCENTILE = "STOCK_BUY_PCT";
 const SELL_PERCENTILE = "STOCK_SELL_PCT";
 const COOLDOWN_MS = "STOCK_COOLDOWN_MS";
+const SMA_PERIOD = "STOCK_SMA_PERIOD";
+const EMA_PERIOD = "STOCK_EMA_PERIOD";
+const ROC_PERIOD = "STOCK_ROC_PERIOD";
+const BOLLINGER_K = "STOCK_BOLLINGER_K";
 
 /** Configuration settings for stock scripts persisted in LocalStorage. */
 class Config {
@@ -17,6 +21,10 @@ class Config {
         setConfigDefault(BUY_PERCENTILE, (10).toString());
         setConfigDefault(SELL_PERCENTILE, (90).toString());
         setConfigDefault(COOLDOWN_MS, (60000).toString());
+        setConfigDefault(SMA_PERIOD, (5).toString());
+        setConfigDefault(EMA_PERIOD, (5).toString());
+        setConfigDefault(ROC_PERIOD, (5).toString());
+        setConfigDefault(BOLLINGER_K, (2).toString());
     }
 
     get windowSize() {
@@ -41,6 +49,22 @@ class Config {
 
     get cooldownMs() {
         return Number(LocalStorage.getItem(COOLDOWN_MS));
+    }
+
+    get smaPeriod() {
+        return Number(LocalStorage.getItem(SMA_PERIOD));
+    }
+
+    get emaPeriod() {
+        return Number(LocalStorage.getItem(EMA_PERIOD));
+    }
+
+    get rocPeriod() {
+        return Number(LocalStorage.getItem(ROC_PERIOD));
+    }
+
+    get bollingerK() {
+        return Number(LocalStorage.getItem(BOLLINGER_K));
     }
 }
 

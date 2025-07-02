@@ -19,10 +19,6 @@ export async function main(ns: NS) {
     const client = new TrackerClient(ns);
     const symbols = ns.stock.getSymbols();
     const threshold = 2; // z-score threshold
-    const maxPosition = CONFIG.maxPosition;
-    const buyPct = CONFIG.buyPercentile;
-    const sellPct = CONFIG.sellPercentile;
-    const cooldownMs = CONFIG.cooldownMs;
     const lastTrade: Record<string, number> = {};
 
     const logPath = "/logs/trader.log";
@@ -53,6 +49,10 @@ export async function main(ns: NS) {
 
     while (true) {
         const indicators = (await client.requestIndicators()) as Record<string, Indicators>;
+        const maxPosition = CONFIG.maxPosition;
+        const buyPct = CONFIG.buyPercentile;
+        const sellPct = CONFIG.sellPercentile;
+        const cooldownMs = CONFIG.cooldownMs;
         for (const sym of symbols) {
             const info = indicators[sym];
             if (!info) continue;
