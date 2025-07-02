@@ -34,13 +34,16 @@ We will store the data as follows:
 
 One complication of storing our data in the Bitburner FS is that the
 data will be local to the machine where the `tracker` script is
-running. In order to safeguard this data we need to regularly
+running. In order to safeguard this data we need to regularly copy
 the entire stocks folder to the home server:
 `ns.scp(ns.ls("/stocks"), "home")`.
 
-Also, when launching the `src/stock/tracker.ts` daemon, the `/stocks/SYMBOL.json`
-data files must be sent to the host where the tracker will be run
-_before_ the tracker is run with `ns.exec`.
+The tracker daemon may be launched on a remote worker through the
+memory manager and `services/launch.ts`. When running remotely, ensure
+the `/stocks/SYMBOL.json` files are copied to that host before the
+tracker starts and synced back to `home` periodically or when the
+daemon exits. Otherwise the data will be lost if the remote worker is
+reset.
 
 #### 2.2 Configuration Module (`src/stock/config.ts`)
 
@@ -68,9 +71,11 @@ Persist and load configuration values from `LocalStorage` using the
 3. Process requests sent by `StockTrackerClient`.
 
 #### 2.4 Tracker Client API (`stock/client/tracker.ts`)
-1. Defines messaging protocol with a
-   `MessageType` enum and typed payloads as done in existing clients
-   (`src/services/client/memory.ts`) for retrieving two types of data:
+1. Defines a port-based request/response protocol. Use a `MessageType`
+   enum and typed payloads mirroring
+   `src/services/client/memory.ts`. Supported messages should include
+   `RequestTicks` and `RequestIndicators` so the tracker can respond
+   with `TickData[]` or the computed indicator object.
   * Current window of raw tick data for all symbols.
   * All statistical indicators for all symbols.
 2. Create a class (`StockTrackerClient`) to hide details of
@@ -88,7 +93,10 @@ Persist and load configuration values from `LocalStorage` using the
 
 Similar to other `bootstrap.ts` scripts, this script should use the
 `launch` function from `src/services/launch.ts` to execute the tracker
-and trader service daemons.
+and trader service daemons. The bootstrap should request RAM
+allocations with `MemoryClient` and call
+`registerAllocationOwnership` so that allocations are released when the
+process exits.
 
 ### 3. Statistical Indicators (computed per symbol each run)
 1. **Count (N)**
@@ -111,6 +119,9 @@ and trader service daemons.
 - **Cooldown**: minimum time between trades on same symbol.
 - **Transaction fee/slippage buffer**: price adjustments to avoid whipsaw.
 - **Decision log**: CSV or JSON lines with timestamp, symbol, price, indicators, action.
+- Log output should follow the `AGENTS.md` guidance: use prefixes like
+  `INFO:` and `WARN:` with `ns.print()` and format money values with
+  `ns.formatNumber()`.
 
 ### 5. Development Roadmap / TODOs
 
@@ -124,15 +135,18 @@ and trader service daemons.
    - Persist to FS as JSON.
 3. Implement `src/stock/client/tracker.ts`.
 4. Implement basic indicators: mean, min/max, σ.
-5. Write quick console output of stats for one symbol.
+5. Hook tracker and trader into `src/stock/bootstrap.ts` using
+   `launch` and the memory manager.
+6. Write quick console output of stats for one symbol.
 
 #### Phase 1 (Beta)
 5. Add median & percentiles.
 6. Add SMA & EMA computations.
 7. Implement `src/stock/trader.ts` skeleton:
    - Request indicators for all symbols with `StockTrackerClient`.
-8. Add simple threshold-based buy/sell using Z‑score rules.
-9. Basic risk control: max position per symbol.
+8. Unit tests for indicator helpers using sample data.
+9. Add simple threshold-based buy/sell using Z‑score rules.
+10. Basic risk control: max position per symbol.
 
 #### Phase 2 (Feature Complete)
 10. Integrate ROC & Bollinger Bands.
@@ -149,7 +163,8 @@ and trader service daemons.
 18. *(Optional)* Add skewness/kurtosis and anomaly detection.
 
 ### 6. Testing & Validation
-- Unit tests for each indicator (compare against known sample data).
+- Unit tests for each indicator (compare against known sample data). Start
+  adding these alongside Phase 1 features.
 - End-to-end test: run tracker + trader in simulation mode.
 - Backtest scripts produce P&L reports.
 
