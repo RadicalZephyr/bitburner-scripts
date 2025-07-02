@@ -17,7 +17,9 @@ export interface BasicIndicators {
 export interface IndicatorOptions {
     smaPeriods?: number[];
     emaPeriods?: number[];
+    rocPeriods?: number[];
     percentiles?: number[];
+    bollingerK?: number;
 }
 
 export interface Indicators extends BasicIndicators {
@@ -26,6 +28,10 @@ export interface Indicators extends BasicIndicators {
     sma: Record<number, number>;
     ema: Record<number, number>;
     percentiles: Record<number, number>;
+    roc: Record<number, number>;
+    bollinger: Record<number, { lower: number; upper: number }>;
+    maxDrawdown: number;
+    maxRunUp: number;
 }
 
 function midPrice(t: TickData): number {
@@ -66,6 +72,13 @@ function ema(values: number[], period: number): number {
     return val;
 }
 
+function roc(values: number[], period: number): number {
+    if (values.length <= period) return NaN;
+    const curr = values[values.length - 1];
+    const prev = values[values.length - 1 - period];
+    return (curr - prev) / prev;
+}
+
 /** Compute statistical indicators over a list of ticks. */
 export function computeIndicators(
     ticks: TickData[],
@@ -84,6 +97,10 @@ export function computeIndicators(
             sma: {},
             ema: {},
             percentiles: {},
+            roc: {},
+            bollinger: {},
+            maxDrawdown: 0,
+            maxRunUp: 0,
         };
     }
     const prices = ticks.map(midPrice);
@@ -109,6 +126,40 @@ export function computeIndicators(
         emaRes[p] = ema(prices, p);
     }
 
+    const rocRes: Record<number, number> = {};
+    for (const p of opts.rocPeriods ?? []) {
+        rocRes[p] = roc(prices, p);
+    }
+
+    const bollRes: Record<number, { lower: number; upper: number }> = {};
+    const bollK = opts.bollingerK ?? 2;
+    for (const p of opts.smaPeriods ?? []) {
+        if (!isNaN(smaRes[p])) {
+            bollRes[p] = {
+                lower: smaRes[p] - bollK * std,
+                upper: smaRes[p] + bollK * std,
+            };
+        }
+    }
+
+    let peak = prices[0];
+    let trough = prices[0];
+    let maxDrawdown = 0;
+    let maxRunUp = 0;
+    for (const price of prices) {
+        if (price > peak) {
+            peak = price;
+        }
+        const dd = (peak - price) / peak;
+        if (dd > maxDrawdown) maxDrawdown = dd;
+
+        if (price < trough) {
+            trough = price;
+        }
+        const ru = (price - trough) / trough;
+        if (ru > maxRunUp) maxRunUp = ru;
+    }
+
     const pctRes: Record<number, number> = {};
     const sorted = [...prices].sort((a, b) => a - b);
     for (const p of opts.percentiles ?? []) {
@@ -126,5 +177,9 @@ export function computeIndicators(
         sma: smaRes,
         ema: emaRes,
         percentiles: pctRes,
+        roc: rocRes,
+        bollinger: bollRes,
+        maxDrawdown,
+        maxRunUp,
     };
 }

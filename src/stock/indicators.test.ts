@@ -20,10 +20,22 @@ test('sma and ema', () => {
         smaPeriods: [3],
         emaPeriods: [3],
         percentiles: [10, 90],
+        rocPeriods: [2],
     });
     expect(result.median).toBeCloseTo(3);
     expect(result.sma[3]).toBeCloseTo(4);
     expect(result.ema[3]).toBeCloseTo(4.0625, 4);
     expect(result.percentiles[10]).toBeCloseTo(1.4, 2);
     expect(result.percentiles[90]).toBeCloseTo(4.6, 2);
+    expect(result.roc[2]).toBeCloseTo(0.6666, 3);
+    expect(result.bollinger[3].lower).toBeLessThan(result.sma[3]);
+    expect(result.maxDrawdown).toBeCloseTo(0, 5);
+    expect(result.maxRunUp).toBeGreaterThan(0);
+});
+
+test('drawdown and runup', () => {
+    const ticks = [t(0, 1), t(1, 2), t(2, 1), t(3, 4)];
+    const result = computeIndicators(ticks, { rocPeriods: [2] });
+    expect(result.maxDrawdown).toBeCloseTo(0.5);
+    expect(result.maxRunUp).toBeCloseTo(3);
 });

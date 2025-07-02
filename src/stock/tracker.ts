@@ -27,6 +27,7 @@ export async function main(ns: NS) {
 
     const windowSize = CONFIG.windowSize;
     const dataPath = CONFIG.dataPath;
+    const percentiles = [CONFIG.buyPercentile, CONFIG.sellPercentile];
     const symbols = ns.stock.getSymbols();
 
     const buffers = new Map<string, TickData[]>();
@@ -54,7 +55,7 @@ export async function main(ns: NS) {
 
     while (true) {
         if (waiting) {
-            await processMessages(ns, port, respPort, buffers);
+            await processMessages(ns, port, respPort, buffers, percentiles);
             waiting = false;
             port.nextWrite().then(() => { waiting = true; });
         }
@@ -81,13 +82,15 @@ export async function main(ns: NS) {
             const stats = computeIndicators(buffers.get(symbols[0])!, {
                 smaPeriods: [5],
                 emaPeriods: [5],
-                percentiles: [50],
+                rocPeriods: [5],
+                percentiles,
             });
             ns.print(
                 `INFO: ${symbols[0]} μ=${ns.formatNumber(stats.mean)} ` +
                 `median=${ns.formatNumber(stats.median)} ` +
                 `σ=${ns.formatNumber(stats.std)} ` +
-                `z=${ns.formatNumber(stats.zScore)}`
+                `z=${ns.formatNumber(stats.zScore)} ` +
+                `roc=${ns.formatPercent(stats.roc[5])}`
             );
         }
 
@@ -99,7 +102,8 @@ async function processMessages(
     ns: NS,
     port: NetscriptPort,
     respPort: NetscriptPort,
-    buffers: Map<string, TickData[]>
+    buffers: Map<string, TickData[]>,
+    percentiles: number[]
 ) {
     for (const next of readAllFromPort(ns, port)) {
         const msg = next as Message;
@@ -115,7 +119,8 @@ async function processMessages(
                     res[sym] = computeIndicators(buf, {
                         smaPeriods: [5],
                         emaPeriods: [5],
-                        percentiles: [50],
+                        rocPeriods: [5],
+                        percentiles,
                     });
                 }
                 response = res;
