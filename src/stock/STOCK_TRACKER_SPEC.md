@@ -2,37 +2,62 @@
 
 ### 1. Overview
 A pair of Netscript 2.0 scripts for the Bitburner game:
-- **tracker.js**: Collects raw price ticks for a configurable set of symbols into a rolling window and persists them to the filesystem.
-- **trader.js**: Loads historical ticks, computes indicators, and makes buy/sell decisions based on configurable thresholds and risk controls.
+- **stock/tracker.ts**: Collects raw price ticks for a configurable set of
+  symbols into a rolling window and persists them to the Bitburner
+  filesystem. Provides a client API for requesting both raw data and
+  computed indicators.
+- **stock/trader.ts**: Requests indicators from the tracker script and
+  makes buy/sell decisions based on configurable thresholds and risk
+  controls.
 
 ### 2. Architectural Components
 
 #### 2.1 Data Storage (Bitburner FS)
 - **Directory**: `/stocks/`
 - **Files per symbol**: `SYMBOL.json`
-  - Stores an array of `{ ts: number, price: number }` entries.
+  - Stores an array of `{ ts: number, askPrice: number, bidPrice: number, volatility: number, forecast: number }` entries.
   - Rolling window length (N ticks) is configurable.
 
-#### 2.2 Configuration Module (`config.js`)
+#### 2.2 Configuration Module (`config.ts`)
+
+Persist and load configuration values from `LocalStorage` using the
+`src/util/localStorage.ts` APIs. Use a similar structure to
+`src/batch/config.ts`.
+
 - List of symbols
 - Window size (number of ticks)
 - Indicator parameters (periods, thresholds)
 - Risk limits (max position, cooldowns)
 - Paths
 
-#### 2.3 Tracker Script (`tracker.js`)
-1. On each iteration (configurable interval):
-   - Fetch `ns.getStockPrice(symbol)` for each symbol.
-   - Append `{ ts: Date.now(), price }` to the in-memory buffer.
+#### 2.3 Tracker Script (`tracker.ts`)
+1. On each stock update `await ns.stock.nextUpdate();`
+   - Fetch these values for each symbol:
+     * `ns.stock.getBidPrice()`
+     * `ns.stock.getAskPrice()`
+     * `ns.stock.getVolatility()`
+     * `ns.stock.getForecast()`
+
+   - Append `{ ts: Date.now(), askPrice, bidPrice, volatility, forecast }` to the in-memory buffer.
    - Trim buffer to the last N entries.
    - Write buffer to `/stocks/SYMBOL.json`.
-
-#### 2.4 Trader Script (`trader.js`)
-1. Load ticks from each `/stocks/SYMBOL.json`.
 2. For each symbol, compute indicators (see Section 3).
-3. Compare latest values to buy/sell rules (configurable).
-4. Submit `ns.stock.buy()` or `ns.stock.sell()` orders.
-5. Log decisions to `/logs/trader.log`.
+3. Process requests sent by `StockTrackerClient`.
+
+#### 2.4 Tracker Client API (`stock/client/tracker.ts`)
+1. Defines messaging protocol types for retrieving
+  * Current window of raw tick data for all symbols.
+  * All statistical indicators for all symbols.
+2. Create a class (`StockTrackerClient`) to hide details of
+   communication protocol.
+3. Send requests to tracker daemon on a single well-known port `TRACKER_PORT`.
+4. Multiplex responses to client on a single well-known `TRACKER_RESPONSE_PORT`.
+
+#### 2.5 Trader Script (`trader.js`)
+1. Load ticks from each `/stocks/SYMBOL.json`.
+2. Compare latest values to buy/sell rules (configurable).
+3. Submit `ns.stock.buy()` or `ns.stock.sell()` orders.
+4. Log decisions to `/logs/trader.log`.
 
 ### 3. Statistical Indicators (computed per symbol each run)
 1. **Count (N)**
@@ -47,7 +72,8 @@ A pair of Netscript 2.0 scripts for the Bitburner game:
 10. **Bollinger Bands**: SMA ± k·σ (with k typically 2)
 11. **Percentiles (e.g., 10th, 90th)**
 12. **Maximum Drawdown / Run‑Up** within window
-13. *(Optional)* Skewness & Kurtosis
+13. **Skewness**
+14. **Kurtosis**
 
 ### 4. Risk Controls & Logging
 - **Max position size** per symbol & total equity percentage.
@@ -96,4 +122,3 @@ A pair of Netscript 2.0 scripts for the Bitburner game:
 
 ---
 *This spec lays out a clear, incremental path from simple tracking to a robust, parameterized trading engine.*
-
