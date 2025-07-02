@@ -13,10 +13,34 @@ A pair of Netscript 2.0 scripts for the Bitburner game:
 ### 2. Architectural Components
 
 #### 2.1 Data Storage (Bitburner FS)
+
+After considering several options for data persistence (LocalStorage,
+IndexedDB and Bitburner FS), we've chosen to use the Bitburner FS for
+the following reasons.
+
+* We are storing very simple JSON objects in relatively small amounts.
+* We want stored historical stock data to be saved in the Bitburner
+  save file so restoring an old save or moving it to a new browser
+  will contain relevant historical stock data.
+
+We will store the data as follows:
+
 - **Directory**: `/stocks/`
 - **Files per symbol**: `SYMBOL.json`
   - Stores an array of `{ ts: number, askPrice: number, bidPrice: number, volatility: number, forecast: number }` entries.
   - Rolling window length (N ticks) is configurable.
+
+##### 2.1.1 Consequences
+
+One complication of storing our data in the Bitburner FS is that the
+data will be local to the machine where the `tracker` script is
+running. In order to safeguard this data we need to regularly
+the entire stocks folder to the home server:
+`ns.scp(ns.ls("/stocks"), "home")`.
+
+Also, when launching the `src/stock/tracker.ts` daemon, the `/stocks/SYMBOL.json`
+data files must be sent to the host where the tracker will be run
+_before_ the tracker is run with `ns.exec`.
 
 #### 2.2 Configuration Module (`src/stock/config.ts`)
 
@@ -24,7 +48,6 @@ Persist and load configuration values from `LocalStorage` using the
 `src/util/localStorage.ts` APIs. Use a similar structure to
 `src/batch/config.ts`.
 
-- List of symbols
 - Window size (number of ticks)
 - Indicator parameters (periods, thresholds)
 - Risk limits (max position, cooldowns)
@@ -45,7 +68,9 @@ Persist and load configuration values from `LocalStorage` using the
 3. Process requests sent by `StockTrackerClient`.
 
 #### 2.4 Tracker Client API (`stock/client/tracker.ts`)
-1. Defines messaging protocol types for retrieving
+1. Defines messaging protocol with a
+   `MessageType` enum and typed payloads as done in existing clients
+   (`src/services/client/memory.ts`) for retrieving two types of data:
   * Current window of raw tick data for all symbols.
   * All statistical indicators for all symbols.
 2. Create a class (`StockTrackerClient`) to hide details of
@@ -58,6 +83,12 @@ Persist and load configuration values from `LocalStorage` using the
 2. Compare latest values to buy/sell rules (configurable).
 3. Submit `ns.stock.buy()` or `ns.stock.sell()` orders.
 4. Log decisions to `/logs/trader.log`.
+
+#### 2.6 Stock Bootstrap Script (`src/stock/bootstrap.ts`)
+
+Similar to other `bootstrap.ts` scripts, this script should use the
+`launch` function from `src/services/launch.ts` to execute the tracker
+and trader service daemons.
 
 ### 3. Statistical Indicators (computed per symbol each run)
 1. **Count (N)**
