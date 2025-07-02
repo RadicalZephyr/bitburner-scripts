@@ -142,7 +142,8 @@ export async function main(ns: NS) {
         cooldownMs: CONFIG.cooldownMs,
     };
     const { result, timeline } = simulateTrades(ticks, params, Number(flags.cash));
-    ns.write('/logs/backtest-pnl.json', JSON.stringify(timeline, null, 2), 'w');
+    const backtestPnlLog = '/logs/backtest-pnl.json';
+    ns.write(backtestPnlLog, JSON.stringify(timeline, null, 2), 'w');
     ns.tprint(`INFO: Backtest final value ${ns.formatNumber(result.finalValue)} with ${result.trades} trades`);
-    ns.tprint(`INFO: Wrote P&L timeline with ${timeline.length} points`);
+    ns.tprint(`INFO: Wrote P&L timeline to ${backtestPnlLog} with ${timeline.length} points`);
 }
