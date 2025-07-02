@@ -177,13 +177,14 @@ process exits.
 #### Phase 3 (Advanced)
 1. Backtesting harness:
    - Replay historical ticks from JSON and simulate trades.
+   - Output a JSON timeline of portfolio value and trade P&L to `/logs/backtest-pnl.json`.
 2. Parameter tuning: script to sweep indicator periods & thresholds.
 3. Extend to portfolio-level diversification metrics (correlations).
 4. *(Optional)* Add skewness/kurtosis and anomaly detection.
 
 ### 6. Testing & Validation
 - End-to-end test: run tracker + trader in simulation mode.
-- Backtest scripts produce P&L reports.
+- Backtest scripts produce P&L reports written to `/logs/backtest-pnl.json`.
 
 ---
 *This spec lays out a clear, incremental path from simple tracking to a robust, parameterized trading engine.*

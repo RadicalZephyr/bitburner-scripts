@@ -37,8 +37,8 @@ export async function main(ns: NS) {
                 maxPosition: CONFIG.maxPosition,
                 cooldownMs: CONFIG.cooldownMs,
             };
-            const res = simulateTrades(ticks, params, Number(flags.cash));
-            ns.tprint(`INFO: buy=${buyPct} sell=${sellPct} value=${ns.formatNumber(res.finalValue)}`);
+            const { result } = simulateTrades(ticks, params, Number(flags.cash));
+            ns.tprint(`INFO: buy=${buyPct} sell=${sellPct} value=${ns.formatNumber(result.finalValue)}`);
         }
     }
 }
