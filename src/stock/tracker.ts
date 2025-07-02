@@ -9,7 +9,7 @@ import {
     MessageType,
 } from "stock/client/tracker";
 import { registerAllocationOwnership } from "services/client/memory";
-import { readAllFromPort, EMPTY_SENTINEL, DONE_SENTINEL } from "util/ports";
+import { readAllFromPort } from "util/ports";
 
 export async function main(ns: NS) {
     const flags = ns.flags([
@@ -29,25 +29,28 @@ export async function main(ns: NS) {
     const dataPath = CONFIG.dataPath;
     const symbols = ns.stock.getSymbols();
 
-    const buffers: Record<string, TickData[]> = {};
+    const buffers = new Map<string, TickData[]>();
     for (const sym of symbols) {
         const path = `${dataPath}${sym}.json`;
+        let ticks: TickData[] = [];
         if (ns.fileExists(path)) {
             try {
                 const text = ns.read(path) as string;
-                buffers[sym] = JSON.parse(text);
+                ticks = JSON.parse(text);
             } catch {
-                buffers[sym] = [];
+                ticks = [];
             }
-        } else {
-            buffers[sym] = [];
         }
+        buffers.set(sym, ticks);
     }
 
     const port = ns.getPortHandle(TRACKER_PORT);
     const respPort = ns.getPortHandle(TRACKER_RESPONSE_PORT);
     let waiting = true;
     port.nextWrite().then(() => { waiting = true; });
+
+    let stockUpdated = false;
+    ns.stock.nextUpdate().then(() => { stockUpdated = true; });
 
     while (true) {
         if (waiting) {
@@ -56,29 +59,35 @@ export async function main(ns: NS) {
             port.nextWrite().then(() => { waiting = true; });
         }
 
-        await ns.stock.nextUpdate();
-        for (const sym of symbols) {
-            const tick: TickData = {
-                ts: Date.now(),
-                askPrice: ns.stock.getAskPrice(sym),
-                bidPrice: ns.stock.getBidPrice(sym),
-                volatility: ns.stock.getVolatility(sym),
-                forecast: ns.stock.getForecast(sym),
-            };
-            const buf = buffers[sym];
-            buf.push(tick);
-            if (buf.length > windowSize) {
-                buf.splice(0, buf.length - windowSize);
+        if (stockUpdated) {
+            stockUpdated = false;
+            ns.stock.nextUpdate().then(() => { stockUpdated = true; });
+
+            for (const sym of symbols) {
+                const tick: TickData = {
+                    ts: Date.now(),
+                    askPrice: ns.stock.getAskPrice(sym),
+                    bidPrice: ns.stock.getBidPrice(sym),
+                    volatility: ns.stock.getVolatility(sym),
+                    forecast: ns.stock.getForecast(sym),
+                };
+                const buf = buffers.get(sym)!;
+                buf.push(tick);
+                if (buf.length > windowSize) {
+                    buf.splice(0, buf.length - windowSize);
+                }
+                ns.write(`${dataPath}${sym}.json`, JSON.stringify(buf), "w");
             }
-            ns.write(`${dataPath}${sym}.json`, JSON.stringify(buf), "w");
+            const stats = computeIndicators(buffers.get(symbols[0])!);
+            ns.print(
+                `INFO: ${symbols[0]} μ=${ns.formatNumber(stats.mean)} ` +
+                `min=${ns.formatNumber(stats.min)} ` +
+                `max=${ns.formatNumber(stats.max)} ` +
+                `σ=${ns.formatNumber(stats.std)}`
+            );
         }
-        const stats = computeIndicators(buffers[symbols[0]]);
-        ns.print(
-            `INFO: ${symbols[0]} μ=${ns.formatNumber(stats.mean)} ` +
-            `min=${ns.formatNumber(stats.min)} ` +
-            `max=${ns.formatNumber(stats.max)} ` +
-            `σ=${ns.formatNumber(stats.std)}`
-        );
+
+        await ns.sleep(100);
     }
 }
 
@@ -86,25 +95,20 @@ async function processMessages(
     ns: NS,
     port: NetscriptPort,
     respPort: NetscriptPort,
-    buffers: Record<string, TickData[]>
+    buffers: Map<string, TickData[]>
 ) {
     for (const next of readAllFromPort(ns, port)) {
-        if (typeof next === "string") {
-            if (next === EMPTY_SENTINEL || next === DONE_SENTINEL) {
-                return;
-            }
-        }
         const msg = next as Message;
         const requestId = msg[1];
         let response: any = null;
         switch (msg[0]) {
             case MessageType.RequestTicks:
-                response = buffers;
+                response = Object.fromEntries(buffers);
                 break;
             case MessageType.RequestIndicators:
                 const res: Record<string, BasicIndicators> = {};
-                for (const sym of Object.keys(buffers)) {
-                    res[sym] = computeIndicators(buffers[sym]);
+                for (const [sym, buf] of buffers.entries()) {
+                    res[sym] = computeIndicators(buf);
                 }
                 response = res;
                 break;
