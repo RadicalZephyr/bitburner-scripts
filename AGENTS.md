@@ -27,6 +27,7 @@ Any individual host can be both a Worker and a Target simultaneously.
 - Reference the available Netcript APIs listed in
   `NetScriptDefinitions.d.ts`.
 
+
 ### Logging Tips
 
 - Prefer to format logging calls using `ns.print()` and passing in an
@@ -57,11 +58,54 @@ string with one of these strings:
 - Always format percentage values with `ns.formatPercent()`
 - Always format money values with `ns.formatNumber()`
 
+
+## Authoring New Scripts
+
+- Every script command-line argument, whether a flag or positional
+  argument, should be type-checked using the typescript idiom (`typeof x !=
+  "string"`). The script should return early with an error message if
+  the argument type is incorrect.
+- Every new script that is created should have a `--help` flag that is
+  shown when incorrect options are passed and displays a standard UNIX
+  style usage message describing:
+  * what the script does
+  * examples of how to use it
+  * all of the flags that the script takes
+  * any CONFIG values that the script uses
+
+Use this general structure:
+
+```typescript
+export async function main(ns: NS) {
+    const flags = ns.flags([
+        ['help', false]
+    ]);
+
+    if (flags.help) {
+        ns.tprint(`
+USAGE: run ${ns.getScriptName()}
+
+{{ description }}
+
+Example:
+  > {{ exampleUsages }}
+
+OPTIONS
+  --help   Show this help message
+`);
+        return;
+    }
+}
+
+```
+
+
 ## Testing Instructions
 
 - Check that the build still works with `npm run build`
 - Check that the unit tests still run with `npx jest`
 - Fix any type errors until the build completes with no errors or warnings
+
 
 ## Commit Authoring Convention
 
