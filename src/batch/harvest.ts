@@ -83,7 +83,7 @@ OPTIONS
 
     let hackPercent = maxRam !== -1
         ? maxHackPercentForRam(ns, target, maxRam)
-        : 0.25;
+        : CONFIG.maxHackPercent;
 
     let logistics = calculateBatchLogistics(ns, target, hackPercent);
     let overlapLimit = logistics.overlap;
@@ -458,7 +458,7 @@ function calculatePhaseStartTimes(phases: BatchPhase[]) {
 
 function maxHackPercentForRam(ns: NS, target: string, maxRam: number): number {
     let low = 0;
-    let high = 0.25;
+    let high = CONFIG.maxHackPercent;
     for (let i = 0; i < 16; i++) {
         const mid = (low + high) / 2;
         const { batchRam, overlap } = calculateBatchLogistics(ns, target, mid);

@@ -10,6 +10,8 @@ const MIN_SECURITY_TOLERANCE = "MIN_SECURITY_TOLERANCE";
 
 const MAX_MONEY_TOLERANCE = "MAX_MONEY_TOLERANCE";
 
+const MAX_HACK_PERCENT = "MAX_HACK_PERCENT";
+
 class Config {
     setDefaults() {
         setConfigDefault(BATCH_INTERVAL, 250);
@@ -17,6 +19,7 @@ class Config {
         setConfigDefault(EXPECTED_VALUE_THRESHOLD, 100);
         setConfigDefault(MIN_SECURITY_TOLERANCE, 1);
         setConfigDefault(MAX_MONEY_TOLERANCE, 0.99);
+        setConfigDefault(MAX_HACK_PERCENT, 0.5);
     }
 
     get batchInterval() {
@@ -37,6 +40,10 @@ class Config {
 
     get maxMoneyTolerance() {
         return Number(LocalStorage.getItem(MAX_MONEY_TOLERANCE));
+    }
+
+    get maxHackPercent() {
+        return Number(LocalStorage.getItem(MAX_HACK_PERCENT));
     }
 }
 
