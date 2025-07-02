@@ -86,18 +86,20 @@ Persist and load configuration values from `LocalStorage` using the
 #### MVP (Alpha)
 1. Scaffold project structure and `src/stock/config.ts`.
 2. Implement `src/stock/tracker.ts`:
-   - Read symbols & window size from config.
+   - Read window size from `src/stock/config.ts`.
+   - Fetch symbols with `ns.stock.getSymbols()`.
+   - Read existing historical data for each symbol from `/stocks/SYMBOL.json`
    - Fetch and buffer ticks.
    - Persist to FS as JSON.
-3. Implement basic indicator: mean, min/max, σ.
-4. Write quick console output of stats for one symbol.
+3. Implement `src/stock/client/tracker.ts`.
+4. Implement basic indicators: mean, min/max, σ.
+5. Write quick console output of stats for one symbol.
 
 #### Phase 1 (Beta)
 5. Add median & percentiles.
 6. Add SMA & EMA computations.
 7. Implement `src/stock/trader.ts` skeleton:
-   - Load JSON buffers.
-   - Compute and print indicators for each symbol.
+   - Request indicators for all symbols with `StockTrackerClient`.
 8. Add simple threshold-based buy/sell using Z‑score rules.
 9. Basic risk control: max position per symbol.
 
