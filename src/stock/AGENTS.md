@@ -11,3 +11,5 @@
   to wait until the next market update.
 * Every stock transaction (buying and selling) has a $200,000.00
   commission.
+* When making changes or enhancements to the design of the stock
+  tracker and trader update the spec in `STOCK_TRACKER_SPEC.md`.
