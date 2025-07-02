@@ -18,7 +18,7 @@ A pair of Netscript 2.0 scripts for the Bitburner game:
   - Stores an array of `{ ts: number, askPrice: number, bidPrice: number, volatility: number, forecast: number }` entries.
   - Rolling window length (N ticks) is configurable.
 
-#### 2.2 Configuration Module (`config.ts`)
+#### 2.2 Configuration Module (`src/stock/config.ts`)
 
 Persist and load configuration values from `LocalStorage` using the
 `src/util/localStorage.ts` APIs. Use a similar structure to
@@ -30,7 +30,7 @@ Persist and load configuration values from `LocalStorage` using the
 - Risk limits (max position, cooldowns)
 - Paths
 
-#### 2.3 Tracker Script (`tracker.ts`)
+#### 2.3 Tracker Script (`src/stock/tracker.ts`)
 1. On each stock update `await ns.stock.nextUpdate();`
    - Fetch these values for each symbol:
      * `ns.stock.getBidPrice()`
@@ -53,7 +53,7 @@ Persist and load configuration values from `LocalStorage` using the
 3. Send requests to tracker daemon on a single well-known port `TRACKER_PORT`.
 4. Multiplex responses to client on a single well-known `TRACKER_RESPONSE_PORT`.
 
-#### 2.5 Trader Script (`trader.js`)
+#### 2.5 Trader Script (`src/stock/trader.ts`)
 1. Load ticks from each `/stocks/SYMBOL.json`.
 2. Compare latest values to buy/sell rules (configurable).
 3. Submit `ns.stock.buy()` or `ns.stock.sell()` orders.
@@ -84,8 +84,8 @@ Persist and load configuration values from `LocalStorage` using the
 ### 5. Development Roadmap / TODOs
 
 #### MVP (Alpha)
-1. Scaffold project structure and `config.js`.
-2. Implement `tracker.js`:
+1. Scaffold project structure and `src/stock/config.ts`.
+2. Implement `src/stock/tracker.ts`:
    - Read symbols & window size from config.
    - Fetch and buffer ticks.
    - Persist to FS as JSON.
@@ -95,7 +95,7 @@ Persist and load configuration values from `LocalStorage` using the
 #### Phase 1 (Beta)
 5. Add median & percentiles.
 6. Add SMA & EMA computations.
-7. Implement `trader.js` skeleton:
+7. Implement `src/stock/trader.ts` skeleton:
    - Load JSON buffers.
    - Compute and print indicators for each symbol.
 8. Add simple threshold-based buy/sell using Z‑score rules.
