@@ -2,6 +2,7 @@ import type { NS, NetscriptPort } from "netscript";
 
 import { CONFIG } from "stock/config";
 import { computeIndicators, TickData, Indicators } from "stock/indicators";
+import { computeCorrelations } from "stock/indicators";
 import {
     TRACKER_PORT,
     TRACKER_RESPONSE_PORT,
@@ -85,6 +86,7 @@ export async function main(ns: NS) {
                 rocPeriods: [5],
                 percentiles,
             });
+            const corr = computeCorrelations(Object.fromEntries(buffers));
             ns.print(
                 `INFO: ${symbols[0]} μ=${ns.formatNumber(stats.mean)} ` +
                 `median=${ns.formatNumber(stats.median)} ` +
@@ -92,6 +94,12 @@ export async function main(ns: NS) {
                 `z=${ns.formatNumber(stats.zScore)} ` +
                 `roc=${ns.formatPercent(stats.roc[5])}`
             );
+            if (symbols.length > 1) {
+                ns.print(
+                    `INFO: corr ${symbols[0]}-${symbols[1]}=` +
+                        ns.formatPercent(corr[symbols[0]][symbols[1]])
+                );
+            }
         }
 
         await ns.sleep(100);

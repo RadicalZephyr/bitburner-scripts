@@ -34,6 +34,56 @@ export interface Indicators extends BasicIndicators {
     maxRunUp: number;
 }
 
+/**
+ * Compute pairwise Pearson correlation coefficients between
+ * symbol return series.
+ */
+export function computeCorrelations(
+    ticks: Record<string, TickData[]>
+): Record<string, Record<string, number>> {
+    const syms = Object.keys(ticks);
+    const returns: Record<string, number[]> = {};
+    let minLen = Infinity;
+    for (const sym of syms) {
+        const prices = ticks[sym].map(midPrice);
+        const r: number[] = [];
+        for (let i = 1; i < prices.length; i++) {
+            const prev = prices[i - 1];
+            const curr = prices[i];
+            r.push((curr - prev) / prev);
+        }
+        returns[sym] = r;
+        if (r.length < minLen) minLen = r.length;
+    }
+    const result: Record<string, Record<string, number>> = {};
+    for (const a of syms) {
+        result[a] = {};
+        for (const b of syms) {
+            if (a === b) {
+                result[a][b] = 1;
+                continue;
+            }
+            const r1 = returns[a].slice(0, minLen);
+            const r2 = returns[b].slice(0, minLen);
+            const mean1 = r1.reduce((s, x) => s + x, 0) / minLen;
+            const mean2 = r2.reduce((s, x) => s + x, 0) / minLen;
+            let cov = 0;
+            let var1 = 0;
+            let var2 = 0;
+            for (let i = 0; i < minLen; i++) {
+                const d1 = r1[i] - mean1;
+                const d2 = r2[i] - mean2;
+                cov += d1 * d2;
+                var1 += d1 * d1;
+                var2 += d2 * d2;
+            }
+            const denom = Math.sqrt(var1 * var2);
+            result[a][b] = denom === 0 ? 0 : cov / denom;
+        }
+    }
+    return result;
+}
+
 function midPrice(t: TickData): number {
     return (t.askPrice + t.bidPrice) / 2;
 }

@@ -1,4 +1,4 @@
-import { computeIndicators } from './indicators';
+import { computeIndicators, computeCorrelations } from './indicators';
 
 function t(ts: number, price: number) {
     return { ts, askPrice: price, bidPrice: price, volatility: 0, forecast: 0 };
@@ -38,4 +38,13 @@ test('drawdown and runup', () => {
     const result = computeIndicators(ticks, { rocPeriods: [2] });
     expect(result.maxDrawdown).toBeCloseTo(0.5);
     expect(result.maxRunUp).toBeCloseTo(3);
+});
+
+test('correlations', () => {
+    const seriesA = [t(0, 1), t(1, 1.1), t(2, 1.32), t(3, 1.716)];
+    const seriesB = [t(0, 1), t(1, 1.1), t(2, 1.32), t(3, 1.716)];
+    const seriesC = [t(0, 1), t(1, 0.9), t(2, 0.72), t(3, 0.504)];
+    const corr = computeCorrelations({ A: seriesA, B: seriesB, C: seriesC });
+    expect(corr.A.B).toBeCloseTo(1);
+    expect(corr.A.C).toBeLessThan(0);
 });

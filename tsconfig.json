@@ -11,6 +11,7 @@
     "module": "esnext",
     "target": "esnext",
     "moduleResolution": "node",
+    "skipLibCheck": true,
     "noImplicitReturns": true,
     "noImplicitThis": true,
     "esModuleInterop": true,
