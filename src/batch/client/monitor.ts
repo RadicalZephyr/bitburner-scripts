@@ -1,5 +1,7 @@
 import type { NS, NetscriptPort } from "netscript";
 
+import { Client, Message as ClientMessage } from "util/client";
+
 export const MONITOR_PORT = 13;
 export const MONITOR_RESPONSE_PORT = 14;
 
@@ -14,53 +16,46 @@ export enum Lifecycle {
     Rebalancing,
 }
 
-export type Message = [lifecycle: Lifecycle, host: string];
+export type MessageType = Lifecycle;
 
-export class MonitorClient {
-    ns: NS;
-    port: NetscriptPort;
+export type Payload = string;
 
+export type Message = ClientMessage<Lifecycle, string>;
+
+export class MonitorClient extends Client<MessageType, Payload, void> {
     constructor(ns: NS) {
-        this.ns = ns;
-        this.port = ns.getPortHandle(MONITOR_PORT);
+        super(ns, MONITOR_PORT, MONITOR_RESPONSE_PORT);
     }
 
     async worker(hostname: string) {
-        await this.send(Lifecycle.Worker, hostname);
+        await this.sendMessage(Lifecycle.Worker, hostname);
     }
 
     async pendingTilling(hostname: string) {
-        await this.send(Lifecycle.PendingTilling, hostname);
+        await this.sendMessage(Lifecycle.PendingTilling, hostname);
     }
 
     async tilling(hostname: string) {
-        await this.send(Lifecycle.Tilling, hostname);
+        await this.sendMessage(Lifecycle.Tilling, hostname);
     }
 
     async pendingSowing(hostname: string) {
-        await this.send(Lifecycle.PendingSowing, hostname);
+        await this.sendMessage(Lifecycle.PendingSowing, hostname);
     }
 
     async sowing(hostname: string) {
-        await this.send(Lifecycle.Sowing, hostname);
+        await this.sendMessage(Lifecycle.Sowing, hostname);
     }
 
     async pendingHarvesting(hostname: string) {
-        await this.send(Lifecycle.PendingHarvesting, hostname);
+        await this.sendMessage(Lifecycle.PendingHarvesting, hostname);
     }
 
     async harvesting(hostname: string) {
-        await this.send(Lifecycle.Harvesting, hostname);
+        await this.sendMessage(Lifecycle.Harvesting, hostname);
     }
 
     async rebalancing(hostname: string) {
-        await this.send(Lifecycle.Rebalancing, hostname);
-    }
-
-    private async send(lifecycle: Lifecycle, host: string) {
-        const message: Message = [lifecycle, host];
-        while (!this.port.tryWrite(message)) {
-            await this.ns.sleep(200);
-        }
+        await this.sendMessage(Lifecycle.Rebalancing, hostname);
     }
 }

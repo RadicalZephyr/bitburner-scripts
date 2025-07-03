@@ -102,7 +102,7 @@ Example:
         if (monitorMessagesWaiting) {
             for (const nextMsg of readAllFromPort(ns, monitorPort)) {
                 if (typeof nextMsg === "object") {
-                    const [phase, host] = nextMsg as MonitorMessage;
+                    const [phase, _, host] = nextMsg as MonitorMessage;
                     if (phase === Lifecycle.Worker) {
                         workers.push(host);
                     } else {
