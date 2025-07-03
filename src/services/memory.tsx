@@ -132,7 +132,8 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memResponsePort
             case MessageType.Worker:
                 const hostname = msg[2] as string;
                 memoryManager.pushWorker(hostname);
-                break;
+                // Don't send a response, no one is listening.
+                continue;
 
             case MessageType.Request:
                 const request = msg[2] as AllocationRequest;
@@ -174,8 +175,8 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memResponsePort
                         `WARN: allocation ${release.allocationId} not found for pid ${release.pid}`
                     );
                 }
-                payload = {};
-                break;
+                // Don't send a response, no one is listening.
+                continue;
 
             case MessageType.ReleaseChunks:
                 const releaseInfo = msg[2] as AllocationChunksRelease;
@@ -210,8 +211,8 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memResponsePort
                 } else {
                     printLog(`WARN: failed to claim allocation ${claimInfo.allocationId}`);
                 }
-                payload = {};
-                break;
+                // Don't send a response, no one is listening.
+                continue;
         }
         memResponsePort.write([requestId, payload]);
     }

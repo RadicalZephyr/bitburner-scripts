@@ -1,4 +1,12 @@
-import type { NS, NetscriptPort } from "netscript";
+import type { NS } from "netscript";
+
+import {
+    Client,
+    Message as ClientMessage,
+    Response as ClientResponse,
+    sendMessage,
+    sendMessageReceiveResponse
+} from "util/client";
 
 export const MEMORY_PORT: number = 3;
 export const MEMORY_RESPONSE_PORT: number = 4;
@@ -22,16 +30,16 @@ type Payload =
     | StatusRequest
     | SnapshotRequest;
 
-export type Message = [
-    type: MessageType,
-    requestId: string,
-    payload: Payload,
-];
+type ResponsePayload = AllocationResult | FreeRam | MemorySnapshot | null;
 
-export type Response = [
-    requestId: string,
-    response: any,
-];
+export type Message = ClientMessage<MessageType, Payload>;
+
+export type Response = ClientResponse<ResponsePayload>;
+
+
+/**************************************************/
+/** Request Types
+/**************************************************/
 
 // Compact version for use over ports if needed
 export interface AllocationRequest {
@@ -68,6 +76,11 @@ export interface StatusRequest {
 
 export interface SnapshotRequest {
 }
+
+
+/**************************************************/
+/** Response Types
+/**************************************************/
 
 export interface WorkerSnapshot {
     hostname: string,
@@ -109,16 +122,13 @@ export interface AllocationResult {
     hosts: HostAllocation[]
 }
 
+export interface FreeRam {
+    freeRam: number
+}
 
-export class MemoryClient {
-    ns: NS;
-    port: NetscriptPort;
-    responsePort: NetscriptPort;
-
+export class MemoryClient extends Client<MessageType, Payload, ResponsePayload> {
     constructor(ns: NS) {
-        this.ns = ns;
-        this.port = ns.getPortHandle(MEMORY_PORT);
-        this.responsePort = ns.getPortHandle(MEMORY_RESPONSE_PORT);
+        super(ns, MEMORY_PORT, MEMORY_RESPONSE_PORT);
     }
 
     async newWorker(hostname: string) {
@@ -160,7 +170,7 @@ export class MemoryClient {
             contiguous: contiguous,
             coreDependent: coreDependent,
         } as AllocationRequest;
-        let result = await this.sendMessage(MessageType.Request, payload);
+        let result = await this.sendMessageReceiveResponse(MessageType.Request, payload);
         if (!result) {
             this.ns.print("WARN: allocation request failed");
             return null;
@@ -218,7 +228,7 @@ export class MemoryClient {
             allocationId,
             numChunks,
         };
-        const result = await this.sendMessage(MessageType.ReleaseChunks, payload);
+        const result = await this.sendMessageReceiveResponse(MessageType.ReleaseChunks, payload);
         if (!result) {
             this.ns.print("WARN: chunk release failed");
             return null;
@@ -235,7 +245,7 @@ export class MemoryClient {
         this.ns.print("INFO: requesting memory snapshot");
 
         const payload: SnapshotRequest = {};
-        const result = await this.sendMessage(MessageType.Snapshot, payload);
+        const result = await this.sendMessageReceiveResponse(MessageType.Snapshot, payload);
         if (!result) {
             this.ns.print("WARN: snapshot request failed");
             return null;
@@ -245,45 +255,13 @@ export class MemoryClient {
 
     async getFreeRam(): Promise<number> {
         const payload: StatusRequest = {};
-        const result = await this.sendMessage(MessageType.Status, payload);
+        const result = await this.sendMessageReceiveResponse(MessageType.Status, payload);
         if (!result) {
             this.ns.print("WARN: status request failed");
             return 0;
         }
-        const status = result as { freeRam: number };
+        const status = result as FreeRam;
         return status.freeRam;
-    }
-
-    private async sendMessage(type: MessageType, payload: Payload) {
-        return await sendMessage(this.ns, this.port, this.responsePort, type, payload)
-    }
-}
-
-/** Generate a simple unique ID: pid‐timestamp‐rand **/
-function makeReqId(ns: NS) {
-    const pid = ns.pid;
-    const ts = Date.now();
-    const r = Math.floor(Math.random() * 1e6);
-    return `${pid}-${ts}-${r}`;
-}
-
-async function sendMessage(ns: NS, port: NetscriptPort, responsePort: NetscriptPort, type: MessageType, payload: Payload) {
-    const requestId = makeReqId(ns);
-
-    let message = [type, requestId, payload];
-    while (!port.tryWrite(message)) {
-        await ns.sleep(200);
-    }
-
-    while (true) {
-        await responsePort.nextWrite();
-        let nextMessage = responsePort.peek() as Response;
-        if (nextMessage[0] === requestId) {
-            // N.B. Important to pop our message from the port so
-            // other messages can be processed!
-            responsePort.read();
-            return nextMessage[1];
-        }
     }
 }
 
@@ -318,13 +296,12 @@ export async function registerAllocationOwnership(
             pid: self.pid,
             hostname: self.server,
         };
-        sendMessage(ns, memPort, memResponsePort, MessageType.Release, release);
+        sendMessage(ns, memPort, MessageType.Release, release);
     }, "memoryRelease" + name);
 
     let memPort = ns.getPortHandle(MEMORY_PORT);
-    let memResponsePort = ns.getPortHandle(MEMORY_RESPONSE_PORT);
 
-    await sendMessage(ns, memPort, memResponsePort, MessageType.Claim, claim);
+    await sendMessage(ns, memPort, MessageType.Claim, claim);
 }
 
 export class TransferableAllocation {
@@ -345,8 +322,7 @@ export class TransferableAllocation {
         };
 
         let memPort = ns.getPortHandle(MEMORY_PORT);
-        let memResponsePort = ns.getPortHandle(MEMORY_RESPONSE_PORT);
-        sendMessage(ns, memPort, memResponsePort, MessageType.Release, release);
+        sendMessage(ns, memPort, MessageType.Release, release);
     }
 
     releaseAtExit(ns: NS, name?: string) {
