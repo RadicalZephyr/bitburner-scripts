@@ -78,13 +78,12 @@ async function registerHost(
     mon: MonitorClient,
     discovery: Discovery,
 ) {
+    discovery.pushHost(host);
     if (ns.getServerMaxRam(host) > 0) {
-        discovery.pushWorker(host);
         await mem.newWorker(host);
         await mon.worker(host);
     }
     if (ns.getServerMaxMoney(host) > 0) {
-        discovery.pushTarget(host);
         await mgr.newTarget(host);
     }
 }
@@ -158,12 +157,14 @@ class Discovery {
         this._targets = new Set();
     }
 
-    pushWorker(worker: string) {
-        this._workers.add(worker);
-    }
+    pushHost(host: string) {
+        if (this.ns.getServerMaxRam(host) > 0) {
+            this._workers.add(worker);
+        }
 
-    pushTarget(target: string) {
-        this._targets.add(target);
+        if (this.ns.getServerMaxMoney(host) > 0) {
+            this._targets.add(target);
+        }
     }
 
     get workers(): string[] {
