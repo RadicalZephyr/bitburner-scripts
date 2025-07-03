@@ -1,5 +1,7 @@
 import type { NS, NetscriptPort } from "netscript";
 
+import { Client, Message as ClientMessage } from "util/client";
+
 export const MANAGER_PORT: number = 11;
 export const MANAGER_RESPONSE_PORT: number = 12;
 
@@ -25,18 +27,11 @@ export interface Heartbeat {
 
 export type Payload = string | Heartbeat;
 
-export type Message = [
-    type: MessageType,
-    payload: Payload,
-];
+export type Message = ClientMessage<MessageType, Payload>;
 
-export class ManagerClient {
-    ns: NS;
-    port: NetscriptPort;
-
+export class ManagerClient extends Client<MessageType, Payload, void> {
     constructor(ns: NS) {
-        this.ns = ns;
-        this.port = ns.getPortHandle(MANAGER_PORT);
+        super(ns, MANAGER_PORT, MANAGER_RESPONSE_PORT)
     }
 
     async newTarget(hostname: string) {
@@ -69,13 +64,6 @@ export class ManagerClient {
      */
     tryHeartbeat(pid: number, filename: string, target: string, lifecycle: Lifecycle): boolean {
         const hb: Heartbeat = { pid, filename, target, lifecycle };
-        return this.port.tryWrite([MessageType.Heartbeat, hb]);
-    }
-
-    private async sendMessage(type: MessageType, payload: Payload) {
-        let message: Message = [type, payload];
-        while (!this.port.tryWrite(message)) {
-            await this.ns.sleep(200);
-        }
+        return this.trySendMessage(MessageType.Heartbeat, hb);
     }
 }

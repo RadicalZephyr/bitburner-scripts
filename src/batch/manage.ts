@@ -68,7 +68,7 @@ async function readHostsFromPort(ns: NS, hostsPort: NetscriptPort, manager: Targ
     for (let nextMsg of readAllFromPort(ns, hostsPort)) {
         if (typeof nextMsg === "object") {
             let nextHostMsg = nextMsg as Message;
-            let payload = nextHostMsg[1];
+            let payload = nextHostMsg[2];
             switch (nextHostMsg[0]) {
                 case MessageType.NewTarget:
                     ns.print(`INFO: received target ${payload}`);
