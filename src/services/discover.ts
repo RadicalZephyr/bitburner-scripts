@@ -94,29 +94,6 @@ async function registerHost(
     }
 }
 
-type CrackProgramFn = (host: string) => void;
-
-type CrackProgram = {
-    file: string,
-    fn: CrackProgramFn,
-};
-
-function portOpeningProgramFns(ns: NS): CrackProgram[] {
-    return [
-        { file: "BruteSSH.exe", fn: ns.brutessh.bind(ns) },
-        { file: "FTPCrack.exe", fn: ns.ftpcrack.bind(ns) },
-        { file: "relaySMTP.exe", fn: ns.relaysmtp.bind(ns) },
-        { file: "HTTPWorm.exe", fn: ns.httpworm.bind(ns) },
-        { file: "SQLInject.exe", fn: ns.sqlinject.bind(ns) },
-    ];
-}
-
-function countPortCrackers(ns: NS): number {
-    return portOpeningProgramFns(ns)
-        .filter(p => ns.fileExists(p.file, "home"))
-        .length;
-}
-
 async function readRequests(
     ns: NS,
     port: NetscriptPort,
@@ -140,6 +117,29 @@ async function readRequests(
             await ns.sleep(20);
         }
     }
+}
+
+type CrackProgramFn = (host: string) => void;
+
+type CrackProgram = {
+    file: string,
+    fn: CrackProgramFn,
+};
+
+function portOpeningProgramFns(ns: NS): CrackProgram[] {
+    return [
+        { file: "BruteSSH.exe", fn: ns.brutessh.bind(ns) },
+        { file: "FTPCrack.exe", fn: ns.ftpcrack.bind(ns) },
+        { file: "relaySMTP.exe", fn: ns.relaysmtp.bind(ns) },
+        { file: "HTTPWorm.exe", fn: ns.httpworm.bind(ns) },
+        { file: "SQLInject.exe", fn: ns.sqlinject.bind(ns) },
+    ];
+}
+
+function countPortCrackers(ns: NS): number {
+    return portOpeningProgramFns(ns)
+        .filter(p => ns.fileExists(p.file, "home"))
+        .length;
 }
 
 function attemptCrack(ns: NS, host: string) {
