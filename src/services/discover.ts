@@ -1,11 +1,18 @@
-import type { NS } from "netscript";
+import type { NS, NetscriptPort } from "netscript";
 
 import { ManagerClient } from "batch/client/manage";
 import { MonitorClient } from "batch/client/monitor";
 
 import { MemoryClient } from "services/client/memory";
+import {
+    DISCOVERY_PORT,
+    DISCOVERY_RESPONSE_PORT,
+    Message,
+    MessageType,
+} from "services/client/discover";
 
 import { walkNetworkBFS } from "util/walk";
+import { readAllFromPort } from "util/ports";
 
 
 export async function main(ns: NS) {
@@ -13,10 +20,17 @@ export async function main(ns: NS) {
 
     const discovered = new Set<string>();
     const cracked = new Set<string>();
+    const workers = new Set<string>();
+    const targets = new Set<string>();
 
     const managerClient = new ManagerClient(ns);
     const memClient = new MemoryClient(ns);
     const monitorClient = new MonitorClient(ns);
+
+    const port = ns.getPortHandle(DISCOVERY_PORT);
+    const respPort = ns.getPortHandle(DISCOVERY_RESPONSE_PORT);
+    let messageWaiting = true;
+    port.nextWrite().then(() => { messageWaiting = true; });
 
     while (true) {
         const network = walkNetworkBFS(ns);
@@ -29,14 +43,14 @@ export async function main(ns: NS) {
 
             if (!cracked.has(host)) {
                 if (ns.hasRootAccess(host)) {
-                    await registerHost(ns, host, managerClient, memClient, monitorClient);
+                    await registerHost(ns, host, managerClient, memClient, monitorClient, workers, targets);
                     cracked.add(host);
                 } else {
                     const portsNeeded = ns.getServerNumPortsRequired(host);
                     if (countPortCrackers(ns) >= portsNeeded) {
                         attemptCrack(ns, host);
                         if (ns.hasRootAccess(host)) {
-                            await registerHost(ns, host, managerClient, memClient, monitorClient);
+                            await registerHost(ns, host, managerClient, memClient, monitorClient, workers, targets);
                             cracked.add(host);
                         }
                     }
@@ -44,16 +58,32 @@ export async function main(ns: NS) {
             }
         }
 
+        if (messageWaiting) {
+            await readRequests(ns, port, respPort, workers, targets);
+            messageWaiting = false;
+            port.nextWrite().then(() => { messageWaiting = true; });
+        }
+
         await ns.sleep(5000);
     }
 }
 
-async function registerHost(ns: NS, host: string, mgr: ManagerClient, mem: MemoryClient, mon: MonitorClient) {
+async function registerHost(
+    ns: NS,
+    host: string,
+    mgr: ManagerClient,
+    mem: MemoryClient,
+    mon: MonitorClient,
+    workers: Set<string>,
+    targets: Set<string>,
+) {
     if (ns.getServerMaxRam(host) > 0) {
+        workers.add(host);
         await mem.newWorker(host);
         await mon.worker(host);
     }
     if (ns.getServerMaxMoney(host) > 0) {
+        targets.add(host);
         await mgr.newTarget(host);
     }
 }
@@ -79,6 +109,31 @@ function countPortCrackers(ns: NS): number {
     return portOpeningProgramFns(ns)
         .filter(p => ns.fileExists(p.file, "home"))
         .length;
+}
+
+async function readRequests(
+    ns: NS,
+    port: NetscriptPort,
+    respPort: NetscriptPort,
+    workers: Set<string>,
+    targets: Set<string>,
+) {
+    for (const next of readAllFromPort(ns, port)) {
+        const msg = next as Message;
+        const requestId = msg[1] as string;
+        let payload: any = null;
+        switch (msg[0]) {
+            case MessageType.RequestWorkers:
+                payload = Array.from(workers);
+                break;
+            case MessageType.RequestTargets:
+                payload = Array.from(targets);
+                break;
+        }
+        while (!respPort.tryWrite([requestId, payload])) {
+            await ns.sleep(20);
+        }
+    }
 }
 
 function attemptCrack(ns: NS, host: string) {
