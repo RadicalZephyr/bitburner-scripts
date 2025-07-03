@@ -22,34 +22,44 @@ export class Client<Type, Payload, ResponsePayload> {
         this.receivePort = ns.getPortHandle(receivePort);
     }
 
-    async sendMessage(type: Type, payload: Payload): Promise<ResponsePayload> {
-        return await sendMessage(this.ns, this.sendPort, this.receivePort, type, payload);
+    async sendMessage(type: Type, payload: Payload, pollPeriod?: number): Promise<ResponsePayload> {
+        return await sendMessage(this.ns, this.sendPort, this.receivePort, type, payload, pollPeriod);
     }
 }
 
 export async function sendMessage<Type, Payload, ResponsePayload>(
     ns: NS,
-    port: NetscriptPort,
-    responsePort: NetscriptPort,
+    sendPort: NetscriptPort,
+    receivePort: NetscriptPort,
     type: Type,
-    payload: Payload
+    payload: Payload,
+    pollPeriod?: number,
 ): Promise<ResponsePayload> {
+    const _pollPeriod = pollPeriod ?? 100;
     const requestId = makeReqId(ns);
+    const message = [type, requestId, payload] as Message<Type, Payload>;
 
-
-    let message = [type, requestId, payload] as Message<Type, Payload>;
-    while (!port.tryWrite(message)) {
-        await ns.sleep(200);
+    while (!sendPort.tryWrite(message)) {
+        await ns.sleep(_pollPeriod);
     }
 
     while (true) {
-        await responsePort.nextWrite();
-        let nextMessage = responsePort.peek() as Response<ResponsePayload>;
-        if (nextMessage[0] === requestId) {
-            // N.B. Important to pop our message from the port so
-            // other messages can be processed!
-            responsePort.read();
-            return nextMessage[1];
+        // Check if port is empty, if so we can wait until nextWrite
+        if (receivePort.empty()) await receivePort.nextWrite();
+
+        // Otherwise it has messages, so spin until it's empty
+        // checking for our requestId. If our requestId isn't the
+        // first message, then it's probably coming later and other
+        // client's messages are before it in the port.
+        while (!receivePort.empty()) {
+            let nextMessage = receivePort.peek() as Response<ResponsePayload>;
+            if (nextMessage[0] === requestId) {
+                // N.B. Important to pop our message from the port so
+                // other messages can be processed!
+                receivePort.read();
+                return nextMessage[1];
+            }
+            await ns.sleep(_pollPeriod);
         }
     }
 }
