@@ -42,7 +42,7 @@ export async function main(ns: NS) {
     ns.ui.moveTail(720, 0);
     ns.print(`INFO: starting manager on ${ns.getHostname()}`);
 
-    let targetsPort = ns.getPortHandle(MANAGER_PORT);
+    let managerPort = ns.getPortHandle(MANAGER_PORT);
 
     let monitor = new MonitorClient(ns);
     let memory = new MemoryClient(ns);
@@ -52,10 +52,10 @@ export async function main(ns: NS) {
 
     while (true) {
         if (hostsMessagesWaiting) {
-            await readHostsFromPort(ns, targetsPort, manager, monitor);
+            await readHostsFromPort(ns, managerPort, manager, monitor);
             hostsMessagesWaiting = false;
 
-            targetsPort.nextWrite().then(_ => {
+            managerPort.nextWrite().then(_ => {
                 hostsMessagesWaiting = true;
             });
         }
@@ -64,8 +64,8 @@ export async function main(ns: NS) {
     }
 }
 
-async function readHostsFromPort(ns: NS, hostsPort: NetscriptPort, manager: TargetSelector, monitor: MonitorClient) {
-    for (let nextMsg of readAllFromPort(ns, hostsPort)) {
+async function readHostsFromPort(ns: NS, managerPort: NetscriptPort, manager: TargetSelector, monitor: MonitorClient) {
+    for (let nextMsg of readAllFromPort(ns, managerPort)) {
         if (typeof nextMsg === "object") {
             let nextHostMsg = nextMsg as Message;
             let payload = nextHostMsg[2];
