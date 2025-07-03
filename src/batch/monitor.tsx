@@ -4,6 +4,7 @@ import { MONITOR_PORT, Lifecycle, Message as MonitorMessage } from "batch/client
 
 import { expectedValuePerRamSecond } from "batch/expected_value";
 
+import { DiscoveryClient } from "services/client/discover";
 import { registerAllocationOwnership } from "services/client/memory";
 
 import { readAllFromPort } from "util/ports";
@@ -51,11 +52,6 @@ Example:
     ns.ui.resizeTail(915, 650);
     ns.ui.moveTail(1220, 0);
 
-    const monitorPort = ns.getPortHandle(MONITOR_PORT);
-    const workers: string[] = ["home"];
-    const lifecycleByHost: Map<string, Lifecycle> = new Map();
-    let monitorMessagesWaiting = true;
-
     const tableSortings: Record<string, SortBy> = {
         harvesting: {
             key: "hckLevel",
@@ -97,6 +93,17 @@ Example:
             tableSortings[table].dir = Dir.Desc;
         }
     }
+
+    const monitorPort = ns.getPortHandle(MONITOR_PORT);
+
+    const discoveryClient = new DiscoveryClient(ns);
+
+    const workers = await discoveryClient.requestWorkers();
+    const targets = await discoveryClient.requestTargets();
+
+    const lifecycleByHost: Map<string, Lifecycle> = new Map(targets.map(t => [t, Lifecycle.PendingTilling]));
+
+    let monitorMessagesWaiting = true;
 
     while (true) {
         if (monitorMessagesWaiting) {
