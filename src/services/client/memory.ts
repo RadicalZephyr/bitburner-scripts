@@ -5,7 +5,7 @@ import {
     Message as ClientMessage,
     Response as ClientResponse,
     sendMessage,
-    sendMessageReceiveResponse
+    trySendMessage
 } from "util/client";
 
 export const MEMORY_PORT: number = 3;
@@ -296,7 +296,8 @@ export async function registerAllocationOwnership(
             pid: self.pid,
             hostname: self.server,
         };
-        sendMessage(ns, memPort, MessageType.Release, release);
+        // TODO: This should really send a new `AllocationClaimRelease` message
+        trySendMessage(memPort, MessageType.Release, release);
     }, "memoryRelease" + name);
 
     let memPort = ns.getPortHandle(MEMORY_PORT);
