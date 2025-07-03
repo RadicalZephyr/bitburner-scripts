@@ -22,6 +22,10 @@ export class Client<Type, Payload, ResponsePayload> {
         this.receivePort = ns.getPortHandle(receivePort);
     }
 
+    trySendMessage(type: Type, payload: Payload): boolean {
+        return trySendMessage(this.sendPort, type, payload);
+    }
+
     async sendMessage(type: Type, payload: Payload, pollPeriod?: number): Promise<void> {
         return await sendMessage(this.ns, this.sendPort, type, payload, pollPeriod);
     }
@@ -29,6 +33,15 @@ export class Client<Type, Payload, ResponsePayload> {
     async sendMessageReceiveResponse(type: Type, payload: Payload, pollPeriod?: number): Promise<ResponsePayload> {
         return await sendMessageReceiveResponse(this.ns, this.sendPort, this.receivePort, type, payload, pollPeriod);
     }
+}
+
+export function trySendMessage<Type, Payload>(
+    sendPort: NetscriptPort,
+    type: Type,
+    payload: Payload,
+): boolean {
+    const message = [type, null, payload] as Message<Type, Payload>;
+    return sendPort.tryWrite(message);
 }
 
 export async function sendMessage<Type, Payload>(
