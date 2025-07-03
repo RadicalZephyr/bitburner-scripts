@@ -252,8 +252,8 @@ export class TargetThreads {
 export function countThreadsByTarget(ns: NS, workers: string[], targets: string[]): Map<string, TargetThreads> {
     let targetThreads = new Map(targets.map(h => [h, new TargetThreads()]));
 
-    for (const host of workers) {
-        for (const pi of ns.ps(host)) {
+    for (const worker of workers) {
+        for (const pi of ns.ps(worker)) {
 
             let target = pi.args[0] === "--allocation-id" ? pi.args[2] : pi.args[0];
 
@@ -266,7 +266,7 @@ export function countThreadsByTarget(ns: NS, workers: string[], targets: string[
 
             if (pi.filename === 'batch/harvest.js') {
                 targetThread.harvestPids.push(pi.pid);
-                targetThread.harvestMoney = ns.getScriptIncome(pi.filename, host, ...pi.args);
+                targetThread.harvestMoney = ns.getScriptIncome(pi.filename, worker, ...pi.args);
             } else if (pi.filename === 'batch/sow.js') {
                 targetThread.sowPids.push(pi.pid);
             } else if (pi.filename === 'batch/h.js') {
