@@ -85,7 +85,11 @@ Example:
 
     printLog(`INFO: starting memory manager on ${ns.self().server}`);
 
-    memoryManager.pushWorker("home", 32);
+    if (ns.getServerMaxRam("home") > 32) {
+        memoryManager.pushWorker("home", 32);
+    } else {
+        memoryManager.pushWorker("home", 8);
+    }
 
     let collectionRate = 1000 * 10;
 
