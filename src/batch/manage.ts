@@ -10,6 +10,7 @@ import { calculateWeakenThreads } from "./till";
 import { calculateSowThreads } from "./sow";
 import { calculateBatchLogistics } from "./harvest";
 
+import { DiscoveryClient } from "services/client/discover";
 import { MemoryClient, registerAllocationOwnership } from "services/client/memory";
 import { launch } from "services/launch";
 
@@ -44,9 +45,15 @@ export async function main(ns: NS) {
 
     let managerPort = ns.getPortHandle(MANAGER_PORT);
 
+    let discovery = new DiscoveryClient(ns);
     let monitor = new MonitorClient(ns);
     let memory = new MemoryClient(ns);
     let manager = new TargetSelector(ns, monitor);
+
+    let targets = await discovery.requestTargets();
+    for (const target of targets) {
+        manager.pushTarget(target);
+    }
 
     let hostsMessagesWaiting = true;
 
