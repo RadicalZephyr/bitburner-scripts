@@ -16,6 +16,8 @@ import {
     MEMORY_RESPONSE_PORT,
 } from "services/client/memory";
 
+import { DiscoveryClient } from "services/client/discover";
+
 import { readAllFromPort } from "util/ports";
 
 const toFixed = (val: number): bigint => BigInt(Math.round(val * 100));
@@ -89,6 +91,13 @@ Example:
         memoryManager.pushWorker("home", 32);
     } else {
         memoryManager.pushWorker("home", 8);
+    }
+
+    let discoveryClient = new DiscoveryClient(ns);
+    let workers = await discoveryClient.requestWorkers();
+
+    for (const worker of workers) {
+        memoryManager.pushWorker(worker);
     }
 
     let collectionRate = 1000 * 10;

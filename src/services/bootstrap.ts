@@ -14,6 +14,7 @@ export async function main(ns: NS) {
 }
 
 const MEMORY_FILES: string[] = [
+    "/services/client/discover.js",
     "/services/client/memory.js",
     "/util/client.js",
     "/util/ports.js"
