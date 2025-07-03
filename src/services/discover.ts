@@ -19,8 +19,8 @@ export async function main(ns: NS) {
     ns.disableLog("sleep");
 
     const cracked = new Set<string>();
-    const workers = new Set<string>();
-    const targets = new Set<string>();
+
+    const discovery = new Discovery(ns);
 
     const managerClient = new ManagerClient(ns);
     const memClient = new MemoryClient(ns);
@@ -28,6 +28,7 @@ export async function main(ns: NS) {
 
     const port = ns.getPortHandle(DISCOVERY_PORT);
     const respPort = ns.getPortHandle(DISCOVERY_RESPONSE_PORT);
+
     let messageWaiting = true;
     port.nextWrite().then(() => { messageWaiting = true; });
 
@@ -42,14 +43,14 @@ export async function main(ns: NS) {
 
                 if (!cracked.has(host)) {
                     if (ns.hasRootAccess(host)) {
-                        await registerHost(ns, host, managerClient, memClient, monitorClient, workers, targets);
+                        await registerHost(ns, host, managerClient, memClient, monitorClient, discovery);
                         cracked.add(host);
                     } else {
                         const portsNeeded = ns.getServerNumPortsRequired(host);
                         if (countPortCrackers(ns) >= portsNeeded) {
                             attemptCrack(ns, host);
                             if (ns.hasRootAccess(host)) {
-                                await registerHost(ns, host, managerClient, memClient, monitorClient, workers, targets);
+                                await registerHost(ns, host, managerClient, memClient, monitorClient, discovery);
                                 cracked.add(host);
                             }
                         }
@@ -60,7 +61,7 @@ export async function main(ns: NS) {
         }
 
         if (messageWaiting) {
-            await readRequests(ns, port, respPort, workers, targets);
+            await readRequests(ns, port, respPort, discovery);
             messageWaiting = false;
             port.nextWrite().then(() => { messageWaiting = true; });
         }
@@ -75,16 +76,15 @@ async function registerHost(
     mgr: ManagerClient,
     mem: MemoryClient,
     mon: MonitorClient,
-    workers: Set<string>,
-    targets: Set<string>,
+    discovery: Discovery,
 ) {
     if (ns.getServerMaxRam(host) > 0) {
-        workers.add(host);
+        discovery.pushWorker(host);
         await mem.newWorker(host);
         await mon.worker(host);
     }
     if (ns.getServerMaxMoney(host) > 0) {
-        targets.add(host);
+        discovery.pushTarget(host);
         await mgr.newTarget(host);
     }
 }
@@ -93,8 +93,7 @@ async function readRequests(
     ns: NS,
     port: NetscriptPort,
     respPort: NetscriptPort,
-    workers: Set<string>,
-    targets: Set<string>,
+    discovery: Discovery,
 ) {
     for (const next of readAllFromPort(ns, port)) {
         const msg = next as Message;
@@ -102,10 +101,10 @@ async function readRequests(
         let payload: any = null;
         switch (msg[0]) {
             case MessageType.RequestWorkers:
-                payload = Array.from(workers);
+                payload = discovery.workers;
                 break;
             case MessageType.RequestTargets:
-                payload = Array.from(targets);
+                payload = discovery.targets;
                 break;
         }
         while (!respPort.tryWrite([requestId, payload])) {
@@ -144,4 +143,34 @@ function attemptCrack(ns: NS, host: string) {
         }
     }
     ns.nuke(host);
+}
+
+class Discovery {
+    ns: NS;
+
+    _workers: Set<string>;
+    _targets: Set<string>;
+
+    constructor(ns: NS) {
+        this.ns = ns;
+
+        this._workers = new Set();
+        this._targets = new Set();
+    }
+
+    pushWorker(worker: string) {
+        this._workers.add(worker);
+    }
+
+    pushTarget(target: string) {
+        this._targets.add(target);
+    }
+
+    get workers(): string[] {
+        return Array.from(this._workers);
+    }
+
+    get targets(): string[] {
+        return Array.from(this._targets);
+    }
 }
