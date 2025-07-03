@@ -32,30 +32,36 @@ export async function main(ns: NS) {
     let messageWaiting = true;
     port.nextWrite().then(() => { messageWaiting = true; });
 
+    const walkRate = 1000 * 5;
+    let lastWalk = Date.now();
+
     while (true) {
-        const network = walkNetworkBFS(ns);
-        for (const host of network.keys()) {
-            if (host === "home") continue;
+        if (lastWalk + walkRate < Date.now()) {
+            const network = walkNetworkBFS(ns);
+            for (const host of network.keys()) {
+                if (host === "home") continue;
 
-            if (!discovered.has(host)) {
-                discovered.add(host);
-            }
+                if (!discovered.has(host)) {
+                    discovered.add(host);
+                }
 
-            if (!cracked.has(host)) {
-                if (ns.hasRootAccess(host)) {
-                    await registerHost(ns, host, managerClient, memClient, monitorClient, workers, targets);
-                    cracked.add(host);
-                } else {
-                    const portsNeeded = ns.getServerNumPortsRequired(host);
-                    if (countPortCrackers(ns) >= portsNeeded) {
-                        attemptCrack(ns, host);
-                        if (ns.hasRootAccess(host)) {
-                            await registerHost(ns, host, managerClient, memClient, monitorClient, workers, targets);
-                            cracked.add(host);
+                if (!cracked.has(host)) {
+                    if (ns.hasRootAccess(host)) {
+                        await registerHost(ns, host, managerClient, memClient, monitorClient, workers, targets);
+                        cracked.add(host);
+                    } else {
+                        const portsNeeded = ns.getServerNumPortsRequired(host);
+                        if (countPortCrackers(ns) >= portsNeeded) {
+                            attemptCrack(ns, host);
+                            if (ns.hasRootAccess(host)) {
+                                await registerHost(ns, host, managerClient, memClient, monitorClient, workers, targets);
+                                cracked.add(host);
+                            }
                         }
                     }
                 }
             }
+            lastWalk = Date.now();
         }
 
         if (messageWaiting) {
@@ -64,7 +70,7 @@ export async function main(ns: NS) {
             port.nextWrite().then(() => { messageWaiting = true; });
         }
 
-        await ns.sleep(5000);
+        await ns.sleep(50);
     }
 }
 
