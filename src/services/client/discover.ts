@@ -1,4 +1,4 @@
-import type { NS, NetscriptPort } from "netscript";
+import type { NS } from "netscript";
 
 import { Client, Message as ClientMessage } from "util/client";
 
@@ -10,8 +10,18 @@ export enum MessageType {
     RequestTargets,
 }
 
-export interface RequestWorkers { }
-export interface RequestTargets { }
+export interface Subscription {
+    messageType: any,
+    port: number,
+}
+
+export interface RequestWorkers {
+    pushUpdates?: Subscription,
+}
+
+export interface RequestTargets {
+    pushUpdates?: Subscription,
+}
 
 export type Payload = RequestWorkers | RequestTargets | null;
 
@@ -24,12 +34,12 @@ export class DiscoveryClient extends Client<MessageType, Payload, any> {
     }
 
     /** Request the list of known worker hosts. */
-    async requestWorkers(): Promise<string[]> {
-        return await this.sendMessageReceiveResponse(MessageType.RequestWorkers, {});
+    async requestWorkers(pushUpdates?: Subscription): Promise<string[]> {
+        return await this.sendMessageReceiveResponse(MessageType.RequestWorkers, { pushUpdates });
     }
 
     /** Request the list of known target hosts. */
-    async requestTargets(): Promise<string[]> {
-        return await this.sendMessageReceiveResponse(MessageType.RequestTargets, {});
+    async requestTargets(pushUpdates?: Subscription): Promise<string[]> {
+        return await this.sendMessageReceiveResponse(MessageType.RequestTargets, { pushUpdates });
     }
 }

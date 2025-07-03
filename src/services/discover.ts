@@ -9,10 +9,12 @@ import {
     DISCOVERY_RESPONSE_PORT,
     Message,
     MessageType,
+    Subscription,
 } from "services/client/discover";
 
-import { walkNetworkBFS } from "util/walk";
+import { trySendMessage } from "util/client";
 import { readAllFromPort } from "util/ports";
+import { walkNetworkBFS } from "util/walk";
 
 
 export async function main(ns: NS) {
@@ -97,12 +99,19 @@ async function readRequests(
     for (const next of readAllFromPort(ns, port)) {
         const msg = next as Message;
         const requestId = msg[1] as string;
+        const subscription = msg[2].pushUpdates;
         let payload: any = null;
         switch (msg[0]) {
             case MessageType.RequestWorkers:
+                if (subscription) {
+                    discovery.registerWorkerSubscriber(subscription);
+                }
                 payload = discovery.workers;
                 break;
             case MessageType.RequestTargets:
+                if (subscription) {
+                    discovery.registerTargetSubscriber(subscription);
+                }
                 payload = discovery.targets;
                 break;
         }
@@ -150,21 +159,36 @@ class Discovery {
     _workers: Set<string>;
     _targets: Set<string>;
 
+    workerSubscriptions: Subscription[];
+    targetSubscriptions: Subscription[];
+
     constructor(ns: NS) {
         this.ns = ns;
 
         this._workers = new Set();
         this._targets = new Set();
+        this.workerSubscriptions = [];
+        this.targetSubscriptions = [];
     }
 
     pushHost(host: string) {
         if (this.ns.getServerMaxRam(host) > 0) {
-            this._workers.add(worker);
+            this._workers.add(host);
+            notifySubscriptions(this.ns, host, this.workerSubscriptions);
         }
 
         if (this.ns.getServerMaxMoney(host) > 0) {
-            this._targets.add(target);
+            this._targets.add(host);
+            notifySubscriptions(this.ns, host, this.targetSubscriptions);
         }
+    }
+
+    registerWorkerSubscriber(subscription: Subscription) {
+        this.workerSubscriptions.push(subscription);
+    }
+
+    registerTargetSubscriber(subscription: Subscription) {
+        this.targetSubscriptions.push(subscription);
     }
 
     get workers(): string[] {
@@ -173,5 +197,14 @@ class Discovery {
 
     get targets(): string[] {
         return Array.from(this._targets);
+    }
+}
+
+function notifySubscriptions(ns: NS, host: string, subscriptions: Subscription[]) {
+    let remaining = [];
+    for (const sub of subscriptions) {
+        if (trySendMessage(ns.getPortHandle(sub.port), sub.messageType, host)) {
+            remaining.push(sub);
+        }
     }
 }
