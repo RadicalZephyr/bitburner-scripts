@@ -18,7 +18,6 @@ import { readAllFromPort } from "util/ports";
 export async function main(ns: NS) {
     ns.disableLog("sleep");
 
-    const discovered = new Set<string>();
     const cracked = new Set<string>();
     const workers = new Set<string>();
     const targets = new Set<string>();
@@ -40,10 +39,6 @@ export async function main(ns: NS) {
             const network = walkNetworkBFS(ns);
             for (const host of network.keys()) {
                 if (host === "home") continue;
-
-                if (!discovered.has(host)) {
-                    discovered.add(host);
-                }
 
                 if (!cracked.has(host)) {
                     if (ns.hasRootAccess(host)) {
