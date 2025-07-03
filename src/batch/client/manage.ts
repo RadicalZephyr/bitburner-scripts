@@ -1,6 +1,6 @@
 import type { NS, NetscriptPort } from "netscript";
 
-export const MANAGER_PORT: number = 101;
+export const MANAGER_PORT: number = 11;
 
 export enum MessageType {
     NewTarget,

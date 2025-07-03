@@ -1,7 +1,6 @@
 import type { NS, NetscriptPort } from "netscript";
 
-import { MONITOR_PORT } from "util/ports";
-
+export const MONITOR_PORT = 12;
 
 export enum Lifecycle {
     Worker,

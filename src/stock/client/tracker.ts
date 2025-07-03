@@ -1,7 +1,7 @@
 import type { NS, NetscriptPort } from "netscript";
 
-export const TRACKER_PORT = 300;
-export const TRACKER_RESPONSE_PORT = 301;
+export const TRACKER_PORT = 30;
+export const TRACKER_RESPONSE_PORT = 31;
 
 export enum MessageType {
     RequestTicks,

@@ -1,7 +1,7 @@
 import type { NS, NetscriptPort } from "netscript";
 
-export const MEMORY_PORT: number = 200;
-export const MEMORY_RESPONSE_PORT: number = 201;
+export const MEMORY_PORT: number = 3;
+export const MEMORY_RESPONSE_PORT: number = 4;
 
 export enum MessageType {
     Worker,

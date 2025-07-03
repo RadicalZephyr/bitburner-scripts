@@ -1,7 +1,7 @@
 import type { NS, NetscriptPort } from "netscript";
 
-export const DISCOVERY_PORT = 150;
-export const DISCOVERY_RESPONSE_PORT = 151;
+export const DISCOVERY_PORT = 1;
+export const DISCOVERY_RESPONSE_PORT = 2;
 
 export enum MessageType {
     RequestWorkers,
