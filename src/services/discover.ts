@@ -1,9 +1,5 @@
 import type { NS, NetscriptPort } from "netscript";
 
-import { ManagerClient } from "batch/client/manage";
-import { MonitorClient } from "batch/client/monitor";
-
-import { MemoryClient } from "services/client/memory";
 import {
     DISCOVERY_PORT,
     DISCOVERY_RESPONSE_PORT,
@@ -24,10 +20,6 @@ export async function main(ns: NS) {
 
     const discovery = new Discovery(ns);
 
-    const managerClient = new ManagerClient(ns);
-    const memClient = new MemoryClient(ns);
-    const monitorClient = new MonitorClient(ns);
-
     const port = ns.getPortHandle(DISCOVERY_PORT);
     const respPort = ns.getPortHandle(DISCOVERY_RESPONSE_PORT);
 
@@ -45,14 +37,14 @@ export async function main(ns: NS) {
 
                 if (!cracked.has(host)) {
                     if (ns.hasRootAccess(host)) {
-                        await registerHost(ns, host, managerClient, memClient, monitorClient, discovery);
+                        discovery.pushHost(host);
                         cracked.add(host);
                     } else {
                         const portsNeeded = ns.getServerNumPortsRequired(host);
                         if (countPortCrackers(ns) >= portsNeeded) {
                             attemptCrack(ns, host);
                             if (ns.hasRootAccess(host)) {
-                                await registerHost(ns, host, managerClient, memClient, monitorClient, discovery);
+                                discovery.pushHost(host);
                                 cracked.add(host);
                             }
                         }
@@ -69,24 +61,6 @@ export async function main(ns: NS) {
         }
 
         await ns.sleep(50);
-    }
-}
-
-async function registerHost(
-    ns: NS,
-    host: string,
-    mgr: ManagerClient,
-    mem: MemoryClient,
-    mon: MonitorClient,
-    discovery: Discovery,
-) {
-    discovery.pushHost(host);
-    if (ns.getServerMaxRam(host) > 0) {
-        await mem.newWorker(host);
-        await mon.worker(host);
-    }
-    if (ns.getServerMaxMoney(host) > 0) {
-        await mgr.newTarget(host);
     }
 }
 
