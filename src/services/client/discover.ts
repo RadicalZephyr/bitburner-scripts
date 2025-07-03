@@ -25,11 +25,11 @@ export class DiscoveryClient extends Client<MessageType, Payload, any> {
 
     /** Request the list of known worker hosts. */
     async requestWorkers(): Promise<string[]> {
-        return await this.sendMessage(MessageType.RequestWorkers, {});
+        return await this.sendMessageReceiveResponse(MessageType.RequestWorkers, {});
     }
 
     /** Request the list of known target hosts. */
     async requestTargets(): Promise<string[]> {
-        return await this.sendMessage(MessageType.RequestTargets, {});
+        return await this.sendMessageReceiveResponse(MessageType.RequestTargets, {});
     }
 }

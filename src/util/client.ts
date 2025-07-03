@@ -22,12 +22,31 @@ export class Client<Type, Payload, ResponsePayload> {
         this.receivePort = ns.getPortHandle(receivePort);
     }
 
-    async sendMessage(type: Type, payload: Payload, pollPeriod?: number): Promise<ResponsePayload> {
-        return await sendMessage(this.ns, this.sendPort, this.receivePort, type, payload, pollPeriod);
+    async sendMessage(type: Type, payload: Payload, pollPeriod?: number): Promise<void> {
+        return await sendMessage(this.ns, this.sendPort, type, payload, pollPeriod);
+    }
+
+    async sendMessageReceiveResponse(type: Type, payload: Payload, pollPeriod?: number): Promise<ResponsePayload> {
+        return await sendMessageReceiveResponse(this.ns, this.sendPort, this.receivePort, type, payload, pollPeriod);
     }
 }
 
-export async function sendMessage<Type, Payload, ResponsePayload>(
+export async function sendMessage<Type, Payload>(
+    ns: NS,
+    sendPort: NetscriptPort,
+    type: Type,
+    payload: Payload,
+    pollPeriod?: number,
+): Promise<void> {
+    const _pollPeriod = pollPeriod ?? 100;
+    const message = [type, null, payload] as Message<Type, Payload>;
+
+    while (!sendPort.tryWrite(message)) {
+        await ns.sleep(_pollPeriod);
+    }
+}
+
+export async function sendMessageReceiveResponse<Type, Payload, ResponsePayload>(
     ns: NS,
     sendPort: NetscriptPort,
     receivePort: NetscriptPort,
