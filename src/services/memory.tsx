@@ -245,6 +245,11 @@ class MemoryAllocator {
     }
 
     pushWorker(hostname: string, setAsideRam?: number) {
+        if (this.workers.has(hostname)) {
+            printLog(`INFO: received duplicate worker registration for ${hostname}`);
+            return;
+        }
+
         this.workers.set(hostname, new Worker(this.ns, hostname, setAsideRam));
         printLog(
             `INFO: registered worker ${hostname} with ` +
