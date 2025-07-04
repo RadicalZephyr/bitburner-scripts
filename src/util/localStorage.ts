@@ -23,9 +23,3 @@ export function setLocalStorage(storage: Storage) {
 }
 
 export { LocalStorage };
-
-export function setConfigDefault(key: string, defaultValue: string) {
-    if (!LocalStorage.getItem(key)) {
-        LocalStorage.setItem(key, defaultValue);
-    }
-}

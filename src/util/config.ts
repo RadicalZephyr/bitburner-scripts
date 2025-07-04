@@ -1,4 +1,11 @@
-import { LocalStorage, setConfigDefault } from "./localStorage";
+import { LocalStorage } from "./localStorage";
+
+/** Set a default value in a LocalStorage key only if it's unset. */
+export function setConfigDefault(key: string, defaultValue: string) {
+    if (!LocalStorage.getItem(key)) {
+        LocalStorage.setItem(key, defaultValue);
+    }
+}
 
 export type ConfigValue = string | boolean | number | bigint | object;
 
