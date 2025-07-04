@@ -96,7 +96,7 @@ async function readRequests(
                 payload = discovery.workers;
                 break;
             case MessageType.RequestTargets:
-                if (subscription) {
+                if (subscription && validSubscription) {
                     discovery.registerTargetSubscriber(subscription);
                 }
                 payload = discovery.targets;
@@ -208,7 +208,7 @@ class Discovery {
     }
 }
 
-function registerSubscriber(ns: NS, subscription: ClientSubscription, subscriptions: ClientSubscription[]) {
+function registerSubscriber(ns: NS, subscription: ClientSubscription, subscriptions: Subscription[]) {
     const existingSubscription = subscriptions.find(sub => sub.port === subscription.port);
     if (existingSubscription) {
         // Assume that subscriptions with the same port are for
@@ -218,6 +218,8 @@ function registerSubscriber(ns: NS, subscription: ClientSubscription, subscripti
             + `Old: ${existingSubscription.messageType} `
             + `New: ${subscription.messageType}`
         );
+        existingSubscription.messageType = subscription.messageType;
+        existingSubscription.failedNotifications = 0;
     } else {
         subscriptions.push({ failedNotifications: 0, ...subscription } as Subscription);
     }
