@@ -94,8 +94,11 @@ Example:
     }
 
     let discoveryClient = new DiscoveryClient(ns);
+
+    printLog(`INFO: requesting workers from Discover service`);
     let workers = await discoveryClient.requestWorkers();
 
+    printLog(`INFO: received workers from Discover service: ${workers.join(", ")}`);
     for (const worker of workers) {
         memoryManager.pushWorker(worker);
     }
