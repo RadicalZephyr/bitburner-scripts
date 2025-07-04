@@ -8,10 +8,11 @@ import {
     Subscription as ClientSubscription,
 } from "services/client/discover";
 
+import { CONFIG } from "services/config";
+
 import { trySendMessage } from "util/client";
 import { readAllFromPort } from "util/ports";
 import { walkNetworkBFS } from "util/walk";
-import { CONFIG } from "./config";
 
 
 export async function main(ns: NS) {

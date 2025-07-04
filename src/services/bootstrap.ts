@@ -17,8 +17,6 @@ const MEMORY_FILES: string[] = [
     "/services/client/discover.js",
     "/services/client/memory.js",
     "/util/client.js",
-    "/util/config.js",
-    "/util/localStorage.js",
     "/util/ports.js"
 ];
 
@@ -35,7 +33,10 @@ async function startMemory(ns: NS, host: string) {
 
 const DISCOVER_FILES = [
     "/services/client/discover.js",
+    "/services/config.js",
     "/util/client.js",
+    "/util/config.js",
+    "/util/localStorage.js",
     "/util/ports.js",
     "/util/walk.js"
 ];
