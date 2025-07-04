@@ -97,7 +97,7 @@ export class Config<Entries extends ReadonlyArray<readonly [string, ConfigValue]
         }
     }
 
-    registerConfig<N extends string, V extends ConfigValue>(spec: readonly [N, V]) {
+    private registerConfig<N extends string, V extends ConfigValue>(spec: readonly [N, V]) {
         let localStorageKey = this.prefix + "_" + spec[0];
         let [ser, de] = getSerDeFor(spec[1]) as SerDe<any>;
 
