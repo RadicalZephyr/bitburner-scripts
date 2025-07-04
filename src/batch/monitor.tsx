@@ -98,8 +98,8 @@ Example:
 
     const discoveryClient = new DiscoveryClient(ns);
 
-    const workers = await discoveryClient.requestWorkers();
-    const targets = await discoveryClient.requestTargets();
+    const workers = await discoveryClient.requestWorkers({ messageType: Lifecycle.Worker, port: MONITOR_PORT });
+    const targets = await discoveryClient.requestTargets({ messageType: Lifecycle.PendingTilling, port: MONITOR_PORT });
 
     const lifecycleByHost: Map<string, Lifecycle> = new Map(targets.map(t => [t, Lifecycle.PendingTilling]));
 

@@ -96,7 +96,7 @@ Example:
     let discoveryClient = new DiscoveryClient(ns);
 
     printLog(`INFO: requesting workers from Discover service`);
-    let workers = await discoveryClient.requestWorkers();
+    let workers = await discoveryClient.requestWorkers({ messageType: MessageType.Worker, port: MEMORY_PORT });
 
     printLog(`INFO: received workers from Discover service: ${workers.join(", ")}`);
     for (const worker of workers) {

@@ -51,7 +51,7 @@ export async function main(ns: NS) {
     let manager = new TargetSelector(ns, monitor);
 
     ns.print(`INFO: requesting targets from Discovery service`);
-    let targets = await discovery.requestTargets();
+    let targets = await discovery.requestTargets({ messageType: MessageType.NewTarget, port: MANAGER_PORT });
 
     ns.print(`INFO: received targets from Discovery service: ${targets.join(", ")}`);
     for (const target of targets) {
