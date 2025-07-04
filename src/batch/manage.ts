@@ -43,7 +43,8 @@ export async function main(ns: NS) {
     ns.ui.moveTail(720, 0);
     ns.print(`INFO: starting manager on ${ns.getHostname()}`);
 
-    let managerPort = ns.getPortHandle(MANAGER_PORT);
+    const managerPort = ns.getPortHandle(MANAGER_PORT);
+    const responsePort = ns.getPortHandle(MANAGER_RESPONSE_PORT);
 
     let discovery = new DiscoveryClient(ns);
     let monitor = new MonitorClient(ns);
@@ -64,15 +65,20 @@ export async function main(ns: NS) {
         if (hostsMessagesWaiting) {
             hostsMessagesWaiting = false;
             managerPort.nextWrite().then(_ => { hostsMessagesWaiting = true; });
-            await readHostsFromPort(ns, managerPort, manager, monitor);
+            await readHostsFromPort(ns, managerPort, responsePort, manager, monitor);
         }
         await tick(ns, memory, manager);
         await ns.sleep(100);
     }
 }
 
-async function readHostsFromPort(ns: NS, managerPort: NetscriptPort, manager: TargetSelector, monitor: MonitorClient) {
-    const respPort = ns.getPortHandle(MANAGER_RESPONSE_PORT);
+async function readHostsFromPort(
+    ns: NS,
+    managerPort: NetscriptPort,
+    responsePort: NetscriptPort,
+    manager: TargetSelector,
+    monitor: MonitorClient
+) {
     for (let nextMsg of readAllFromPort(ns, managerPort)) {
         if (typeof nextMsg === "object") {
             let nextHostMsg = nextMsg as Message;
@@ -101,10 +107,11 @@ async function readHostsFromPort(ns: NS, managerPort: NetscriptPort, manager: Ta
                     ns.print(`INFO: heartbeat from ${(payload as Heartbeat).target}`);
                     await manager.handleHeartbeat(payload as Heartbeat);
                     break;
+
                 case MessageType.RequestLifecycle:
                     const requestId = nextHostMsg[1] as string;
                     const snapshot = manager.snapshotLifecycle();
-                    while (!respPort.tryWrite([requestId, snapshot])) {
+                    while (!responsePort.tryWrite([requestId, snapshot])) {
                         await ns.sleep(20);
                     }
                     break;
