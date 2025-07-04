@@ -50,7 +50,10 @@ export async function main(ns: NS) {
     let memory = new MemoryClient(ns);
     let manager = new TargetSelector(ns, monitor);
 
+    ns.print(`INFO: requesting targets from Discovery service`);
     let targets = await discovery.requestTargets();
+
+    ns.print(`INFO: received targets from Discovery service: ${targets.join(", ")}`);
     for (const target of targets) {
         manager.pushTarget(target);
     }
