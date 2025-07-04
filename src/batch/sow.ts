@@ -114,6 +114,9 @@ OPTIONS
         return;
     }
 
+    // Send a Sow Heartbeat to indicate we're starting the main loop
+    await managerClient.heartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Sow);
+
     let pids = [...weakenResult.pids, ...growResult.pids];
 
     for (const pid of pids) {

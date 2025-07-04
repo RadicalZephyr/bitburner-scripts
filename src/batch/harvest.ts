@@ -114,6 +114,9 @@ OPTIONS
     let allocation = await memClient.requestOwnedAllocation(batchRam, overlapLimit);
     if (!allocation) return;
 
+    // Send a Harvest Heartbeat to indicate we're starting the main loop
+    await managerClient.heartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Harvest);
+
     // Track how many batches can overlap concurrently. If the
     // calculated overlap drops we release the extra memory back to the
     // MemoryManager so it can be reused by other processes.

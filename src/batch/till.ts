@@ -84,6 +84,9 @@ OPTIONS
         0,
     );
 
+    // Send a Till Heartbeat to indicate we're starting the main loop
+    await managerClient.heartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Till);
+
     for (const pid of result.pids) {
         while (ns.isRunning(pid)) {
             ns.clearLog();
