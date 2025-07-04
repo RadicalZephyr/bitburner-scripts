@@ -11,3 +11,9 @@ declare global {
 }
 
 export const LocalStorage = globalThis.localStorage;;
+
+export function setConfigDefault(key: string, defaultValue: string) {
+    if (!LocalStorage.getItem(key)) {
+        LocalStorage.setItem(key, defaultValue);
+    }
+}

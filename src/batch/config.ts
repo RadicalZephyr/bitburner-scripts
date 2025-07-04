@@ -1,4 +1,4 @@
-import { LocalStorage } from "util/localStorage";
+import { LocalStorage, setConfigDefault } from "util/localStorage";
 
 const BATCH_INTERVAL = "BATCH_INTERVAL";
 
@@ -44,12 +44,6 @@ class Config {
 
     get maxHackPercent() {
         return Number(LocalStorage.getItem(MAX_HACK_PERCENT));
-    }
-}
-
-function setConfigDefault(key: string, defaultValue: string) {
-    if (!LocalStorage.getItem(key)) {
-        LocalStorage.setItem(key, defaultValue);
     }
 }
 

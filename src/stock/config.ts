@@ -1,4 +1,4 @@
-import { LocalStorage } from "util/localStorage";
+import { LocalStorage, setConfigDefault } from "util/localStorage";
 
 const WINDOW_SIZE = "STOCK_WINDOW_SIZE";
 const DATA_PATH = "STOCK_DATA_PATH";
@@ -65,12 +65,6 @@ class Config {
 
     get bollingerK() {
         return Number(LocalStorage.getItem(BOLLINGER_K));
-    }
-}
-
-function setConfigDefault(key: string, value: string) {
-    if (!LocalStorage.getItem(key)) {
-        LocalStorage.setItem(key, value);
     }
 }
 
