@@ -111,11 +111,14 @@ Example:
             monitorPort.nextWrite().then(_ => { monitorMessagesWaiting = true; });
             for (const nextMsg of readAllFromPort(ns, monitorPort)) {
                 if (typeof nextMsg === "object") {
-                    const [phase, _, host] = nextMsg as MonitorMessage;
-                    if (phase === Lifecycle.Worker) {
-                        workers.push(host);
-                    } else {
-                        lifecycleByHost.set(host, phase);
+                    const [phase, _, payload] = nextMsg as MonitorMessage;
+                    const hosts = Array.isArray(payload) ? payload : [payload];
+                    for (const host of hosts) {
+                        if (phase === Lifecycle.Worker) {
+                            workers.push(host);
+                        } else {
+                            lifecycleByHost.set(host, phase);
+                        }
                     }
                 }
             }

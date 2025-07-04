@@ -25,7 +25,7 @@ export interface Heartbeat {
     lifecycle: Lifecycle;
 }
 
-export type Payload = string | Heartbeat;
+export type Payload = string | string[] | Heartbeat;
 
 export type Message = ClientMessage<MessageType, Payload>;
 

@@ -78,8 +78,11 @@ async function readHostsFromPort(ns: NS, managerPort: NetscriptPort, manager: Ta
             let payload = nextHostMsg[2];
             switch (nextHostMsg[0]) {
                 case MessageType.NewTarget:
-                    ns.print(`INFO: received target ${payload}`);
-                    await manager.pushTarget(payload as string);
+                    const targets = Array.isArray(payload) ? payload : [payload as string];
+                    ns.print(`INFO: received target ${targets.join(', ')}`);
+                    for (const t of targets) {
+                        await manager.pushTarget(t);
+                    }
                     break;
 
                 case MessageType.FinishedTilling:

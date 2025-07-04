@@ -18,9 +18,9 @@ export enum Lifecycle {
 
 export type MessageType = Lifecycle;
 
-export type Payload = string;
+export type Payload = string | string[];
 
-export type Message = ClientMessage<Lifecycle, string>;
+export type Message = ClientMessage<Lifecycle, Payload>;
 
 export class MonitorClient extends Client<MessageType, Payload, void> {
     constructor(ns: NS) {
