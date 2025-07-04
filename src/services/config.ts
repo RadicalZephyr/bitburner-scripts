@@ -1,15 +1,6 @@
-import { LocalStorage, setConfigDefault } from "util/localStorage";
+import { Config, ConfigInstance } from "util/config";
 
-const SUB_MAX_RETRIES = "DISCOVERY_SUB_MAX_RETRIES";
+const entries = [["subscriptionMaxRetries", 5]] as const;
 
-class Config {
-    setDefaults() {
-        setConfigDefault(SUB_MAX_RETRIES, (5).toString());
-    }
-
-    get subscriptionMaxRetries() {
-        return Number(LocalStorage.getItem(SUB_MAX_RETRIES));
-    }
-}
-
-export const CONFIG = new Config();
+export const CONFIG: ConfigInstance<typeof entries> =
+    new Config("DISCOVERY", entries) as ConfigInstance<typeof entries>;

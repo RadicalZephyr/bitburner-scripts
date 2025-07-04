@@ -1,50 +1,13 @@
-import { LocalStorage, setConfigDefault } from "util/localStorage";
+import { Config, ConfigInstance } from "util/config";
 
-const BATCH_INTERVAL = "BATCH_INTERVAL";
+const entries = [
+    ["batchInterval", 250],
+    ["maxTillTargets", 2],
+    ["expectedValueThreshold", 100],
+    ["minSecTolerance", 1],
+    ["maxMoneyTolerance", 0.99],
+    ["maxHackPercent", 0.5],
+] as const;
 
-const MAX_TILL_TARGETS = "MAX_TILL_TARGETS";
-
-const EXPECTED_VALUE_THRESHOLD = "EXPECTED_VALUE_THRESHOLD";
-
-const MIN_SECURITY_TOLERANCE = "MIN_SECURITY_TOLERANCE";
-
-const MAX_MONEY_TOLERANCE = "MAX_MONEY_TOLERANCE";
-
-const MAX_HACK_PERCENT = "MAX_HACK_PERCENT";
-
-class Config {
-    setDefaults() {
-        setConfigDefault(BATCH_INTERVAL, (250).toString());
-        setConfigDefault(MAX_TILL_TARGETS, (2).toString());
-        setConfigDefault(EXPECTED_VALUE_THRESHOLD, (100).toString());
-        setConfigDefault(MIN_SECURITY_TOLERANCE, (1).toString());
-        setConfigDefault(MAX_MONEY_TOLERANCE, (0.99).toFixed(2));
-        setConfigDefault(MAX_HACK_PERCENT, (0.5).toFixed(2));
-    }
-
-    get batchInterval() {
-        return Number(LocalStorage.getItem(BATCH_INTERVAL));
-    }
-
-    get maxTillTargets() {
-        return Number(LocalStorage.getItem(MAX_TILL_TARGETS));
-    }
-
-    get expectedValueThreshold() {
-        return Number(LocalStorage.getItem(EXPECTED_VALUE_THRESHOLD))
-    }
-
-    get minSecTolerance() {
-        return Number(LocalStorage.getItem(MIN_SECURITY_TOLERANCE));
-    }
-
-    get maxMoneyTolerance() {
-        return Number(LocalStorage.getItem(MAX_MONEY_TOLERANCE));
-    }
-
-    get maxHackPercent() {
-        return Number(LocalStorage.getItem(MAX_HACK_PERCENT));
-    }
-}
-
-export const CONFIG = new Config();
+export const CONFIG: ConfigInstance<typeof entries> =
+    new Config("BATCH", entries) as ConfigInstance<typeof entries>;
