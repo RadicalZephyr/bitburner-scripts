@@ -149,6 +149,7 @@ function attemptCrack(ns: NS, host: string) {
 
 interface Subscription extends ClientSubscription {
     failedNotifications: number;
+    missedUpdates: string[];
 }
 
 class Discovery {
@@ -221,20 +222,44 @@ function registerSubscriber(ns: NS, subscription: ClientSubscription, subscripti
         existingSubscription.messageType = subscription.messageType;
         existingSubscription.failedNotifications = 0;
     } else {
-        subscriptions.push({ failedNotifications: 0, ...subscription } as Subscription);
+        subscriptions.push({
+            failedNotifications: 0,
+            missedUpdates: [],
+            ...subscription
+        } as Subscription);
     }
 }
 
 function notifySubscriptions(ns: NS, hosts: string[], subscriptions: Subscription[]) {
     for (const sub of subscriptions) {
-        if (trySendMessage(ns.getPortHandle(sub.port), sub.messageType, hosts)) {
+        let hostsToSend = [...sub.missedUpdates, ...hosts];
+        if (trySendMessage(ns.getPortHandle(sub.port), sub.messageType, hostsToSend)) {
             // Reset failed notifications when we succeed in sending them
             sub.failedNotifications = 0;
+            sub.missedUpdates = [];
         } else {
             ns.print(`WARN: failed to send message ${sub.messageType} to port ${sub.port}`);
             // We retry a failing subscription a configurable number
             // of times
             sub.failedNotifications += 1;
+            extend(sub.missedUpdates, hosts);
         }
     }
 }
+
+/** Efficiently extend `array` with the given `values`. */
+function extend<T>(array: T[], values: T[]): T[] {
+    var l2 = values.length;
+
+    if (l2 === 0)
+        return array;
+
+    var l1 = array.length;
+
+    array.length += l2;
+
+    for (var i = 0; i < l2; i++)
+        array[l1 + i] = values[i];
+
+    return array;
+};
