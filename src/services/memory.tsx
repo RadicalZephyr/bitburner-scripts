@@ -233,6 +233,7 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memResponsePort
                 // Don't send a response, no one is listening.
                 continue;
         }
+        // TODO: make this more robust when the response port is full
         memResponsePort.write([requestId, payload]);
     }
 }
