@@ -27,7 +27,7 @@ export async function main(ns: NS) {
     port.nextWrite().then(() => { messageWaiting = true; });
 
     const walkRate = 1000 * 5;
-    let lastWalk = Date.now();
+    let lastWalk = 0;
 
     while (true) {
         if (lastWalk + walkRate < Date.now()) {
