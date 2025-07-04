@@ -5,6 +5,7 @@ import { MONITOR_PORT, Lifecycle, Message as MonitorMessage } from "batch/client
 import { expectedValuePerRamSecond } from "batch/expected_value";
 
 import { DiscoveryClient } from "services/client/discover";
+import { ManagerClient } from "batch/client/manage";
 import { registerAllocationOwnership } from "services/client/memory";
 
 import { readAllFromPort } from "util/ports";
@@ -97,11 +98,12 @@ Example:
     const monitorPort = ns.getPortHandle(MONITOR_PORT);
 
     const discoveryClient = new DiscoveryClient(ns);
+    const managerClient = new ManagerClient(ns);
 
     const workers = await discoveryClient.requestWorkers({ messageType: Lifecycle.Worker, port: MONITOR_PORT });
-    const targets = await discoveryClient.requestTargets({ messageType: Lifecycle.PendingTilling, port: MONITOR_PORT });
+    const snapshot = await managerClient.requestLifecycle();
 
-    const lifecycleByHost: Map<string, Lifecycle> = new Map(targets.map(t => [t, Lifecycle.PendingTilling]));
+    const lifecycleByHost: Map<string, Lifecycle> = new Map(snapshot);
 
     let monitorMessagesWaiting = true;
 

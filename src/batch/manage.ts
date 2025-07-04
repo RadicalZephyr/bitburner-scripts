@@ -1,7 +1,7 @@
 import type { NetscriptPort, NS } from "netscript";
 
-import { MANAGER_PORT, Message, MessageType, Heartbeat, Lifecycle } from "batch/client/manage";
-import { MonitorClient } from "batch/client/monitor";
+import { MANAGER_PORT, MANAGER_RESPONSE_PORT, Message, MessageType, Heartbeat, Lifecycle } from "batch/client/manage";
+import { MonitorClient, Lifecycle as MonitorLifecycle } from "batch/client/monitor";
 
 import { CONFIG } from "batch/config";
 import { expectedValuePerRamSecond } from "batch/expected_value";
@@ -72,6 +72,7 @@ export async function main(ns: NS) {
 }
 
 async function readHostsFromPort(ns: NS, managerPort: NetscriptPort, manager: TargetSelector, monitor: MonitorClient) {
+    const respPort = ns.getPortHandle(MANAGER_RESPONSE_PORT);
     for (let nextMsg of readAllFromPort(ns, managerPort)) {
         if (typeof nextMsg === "object") {
             let nextHostMsg = nextMsg as Message;
@@ -99,6 +100,13 @@ async function readHostsFromPort(ns: NS, managerPort: NetscriptPort, manager: Ta
                 case MessageType.Heartbeat:
                     ns.print(`INFO: heartbeat from ${(payload as Heartbeat).target}`);
                     await manager.handleHeartbeat(payload as Heartbeat);
+                    break;
+                case MessageType.RequestLifecycle:
+                    const requestId = nextHostMsg[1] as string;
+                    const snapshot = manager.snapshotLifecycle();
+                    while (!respPort.tryWrite([requestId, snapshot])) {
+                        await ns.sleep(20);
+                    }
                     break;
             }
         }
@@ -198,6 +206,25 @@ class TargetSelector {
                 this.harvestTargets.add(hb.target);
                 break;
         }
+    }
+
+    /**
+     * Get a snapshot of the lifecycle state for all tracked hosts.
+     *
+     * @returns Array of `[hostname, Lifecycle]` pairs for display.
+     */
+    snapshotLifecycle(): [string, MonitorLifecycle][] {
+        const result: [string, MonitorLifecycle][] = [];
+        const pushAll = (hosts: Iterable<string>, phase: MonitorLifecycle) => {
+            for (const h of hosts) result.push([h, phase]);
+        };
+        pushAll(this.pendingTillTargets, MonitorLifecycle.PendingTilling);
+        pushAll(this.tillTargets, MonitorLifecycle.Tilling);
+        pushAll(this.pendingSowTargets, MonitorLifecycle.PendingSowing);
+        pushAll(this.sowTargets, MonitorLifecycle.Sowing);
+        pushAll(this.pendingHarvestTargets, MonitorLifecycle.PendingHarvesting);
+        pushAll(this.harvestTargets, MonitorLifecycle.Harvesting);
+        return result;
     }
 
     updateVelocity() {

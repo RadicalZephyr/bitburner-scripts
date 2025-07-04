@@ -1,6 +1,7 @@
 import type { NS, NetscriptPort } from "netscript";
 
 import { Client, Message as ClientMessage } from "util/client";
+import { Lifecycle as MonitorLifecycle } from "batch/client/monitor";
 
 export const MANAGER_PORT: number = 11;
 export const MANAGER_RESPONSE_PORT: number = 12;
@@ -10,6 +11,7 @@ export enum MessageType {
     FinishedTilling,
     FinishedSowing,
     Heartbeat,
+    RequestLifecycle,
 }
 
 export enum Lifecycle {
@@ -25,11 +27,15 @@ export interface Heartbeat {
     lifecycle: Lifecycle;
 }
 
-export type Payload = string | string[] | Heartbeat;
+export interface LifecycleRequest {}
+
+export type LifecycleSnapshot = [string, MonitorLifecycle][];
+
+export type Payload = string | string[] | Heartbeat | LifecycleRequest;
 
 export type Message = ClientMessage<MessageType, Payload>;
 
-export class ManagerClient extends Client<MessageType, Payload, void> {
+export class ManagerClient extends Client<MessageType, Payload, LifecycleSnapshot> {
     constructor(ns: NS) {
         super(ns, MANAGER_PORT, MANAGER_RESPONSE_PORT)
     }
@@ -65,5 +71,18 @@ export class ManagerClient extends Client<MessageType, Payload, void> {
     tryHeartbeat(pid: number, filename: string, target: string, lifecycle: Lifecycle): boolean {
         const hb: Heartbeat = { pid, filename, target, lifecycle };
         return this.trySendMessage(MessageType.Heartbeat, hb);
+    }
+
+    /**
+     * Request a snapshot of lifecycle state for all tracked hosts.
+     *
+     * @returns Array of `[hostname, Lifecycle]` pairs describing current state.
+     */
+    async requestLifecycle(): Promise<LifecycleSnapshot> {
+        const payload: LifecycleRequest = {};
+        return await this.sendMessageReceiveResponse(
+            MessageType.RequestLifecycle,
+            payload,
+        );
     }
 }
