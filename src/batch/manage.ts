@@ -322,9 +322,8 @@ class TargetSelector {
     }
 
     private async launchTill(host: string, threads: number) {
-        this.pendingTillTargets = this.pendingTillTargets.filter(h => h !== host);
         this.ns.print(`INFO: launching till on ${host}`);
-        await launch(
+        const result = await launch(
             this.ns,
             "/batch/till.js",
             { threads: 1, allocationFlag: "--allocation-id" },
@@ -332,14 +331,16 @@ class TargetSelector {
             "--max-threads",
             threads,
         );
-        this.tillTargets.add(host);
+        if (result && result.pids.length >= 1) {
+            this.tillTargets.add(host);
+            this.pendingTillTargets = this.pendingTillTargets.filter(h => h !== host);
+        }
         await this.monitor.tilling(host);
     }
 
     private async launchSow(host: string, threads: number) {
-        this.pendingSowTargets = this.pendingSowTargets.filter(h => h !== host);
         this.ns.print(`INFO: launching sow on ${host}`);
-        await launch(
+        let result = await launch(
             this.ns,
             "/batch/sow.js",
             { threads: 1, allocationFlag: "--allocation-id" },
@@ -347,20 +348,25 @@ class TargetSelector {
             "--max-threads",
             threads,
         );
-        this.sowTargets.add(host);
+        if (result && result.pids.length >= 1) {
+            this.sowTargets.add(host);
+            this.pendingSowTargets = this.pendingSowTargets.filter(h => h !== host);
+        }
         await this.monitor.sowing(host);
     }
 
     private async launchHarvest(host: string) {
-        this.pendingHarvestTargets = this.pendingHarvestTargets.filter(h => h !== host);
         this.ns.print(`INFO: launching harvest on ${host}`);
-        await launch(
+        let result = await launch(
             this.ns,
             "/batch/harvest.js",
             { threads: 1, allocationFlag: "--allocation-id" },
             host,
         );
-        await this.monitor.harvesting(host);
+        if (result && result.pids.length >= 1) {
+            await this.monitor.harvesting(host);
+            this.pendingHarvestTargets = this.pendingHarvestTargets.filter(h => h !== host);
+        }
         this.harvestTargets.add(host);
     }
 
