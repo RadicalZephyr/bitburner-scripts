@@ -1,4 +1,16 @@
-import { Config, ConfigSpec } from "./localStorage";
+import { Config, ConfigSpec, setLocalStorage } from "./localStorage";
+
+let storage: Record<string, string> = {};
+
+beforeEach(() => {
+    storage = {};
+    const ls: Storage = {
+        getItem: (key: string) => storage[key],
+        removeItem: (key: string) => { delete storage[key]; },
+        setItem: (key: string, value: string) => { storage[key] = value; }
+    };
+    setLocalStorage(ls);
+});
 
 type ConfigKeys = "STRING" | "BOOLEAN" | "NUMBER" | "BIGINT" | "OBJECT";
 
@@ -17,5 +29,5 @@ test('configs have default values', () => {
     expect(ExampleConfig.BOOLEAN).toBe(true);
     expect(ExampleConfig.NUMBER).toBe(5);
     expect(ExampleConfig.BIGINT).toBe(10n);
-    expect(ExampleConfig.OBJECT).toBe({ a: 1, b: "hello" });
+    expect(ExampleConfig.OBJECT).toStrictEqual({ a: 1, b: "hello" });
 });

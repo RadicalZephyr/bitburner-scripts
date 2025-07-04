@@ -10,7 +10,19 @@ declare global {
     var globalThis: Global;
 }
 
-export const LocalStorage = globalThis.localStorage;;
+let LocalStorage: Storage = globalThis.localStorage;
+
+/**
+ * Override the Storage instance used by helper functions.
+ *
+ * Useful for testing outside of the Bitburner environment where
+ * `globalThis.localStorage` may not be defined.
+ */
+export function setLocalStorage(storage: Storage) {
+    LocalStorage = storage;
+}
+
+export { LocalStorage };
 
 export function setConfigDefault(key: string, defaultValue: string) {
     if (!LocalStorage.getItem(key)) {
@@ -22,9 +34,9 @@ export type SetDefaultFn = (() => void);
 
 export type HaveSerDe = string | boolean | number | bigint | object;
 
-export type ConfigSpec<T extends string> = [
-    name: T,
-    defaultValue: HaveSerDe
+export type ConfigSpec<N extends string, V extends HaveSerDe = HaveSerDe> = [
+    name: N,
+    defaultValue: V
 ];
 
 export class Config<T extends string> {
@@ -37,11 +49,15 @@ export class Config<T extends string> {
         for (const spec of configs) {
             this.registerConfig(spec);
         }
+
+        for (const setDefault of this.setDefaults) {
+            setDefault();
+        }
     }
 
-    registerConfig(spec: ConfigSpec<T>) {
-        let localStorageKey = this.prefix + "_" + spec;
-        let [ser, de] = getSerDeFor(spec[1]);
+    registerConfig<N extends string, V extends HaveSerDe>(spec: ConfigSpec<N, V>) {
+        let localStorageKey = this.prefix + "_" + spec[0];
+        let [ser, de] = getSerDeFor(spec[1]) as SerDe<any>;
 
         this.setDefaults.push(() => setConfigDefault(localStorageKey, ser(spec[1])));
 
@@ -50,12 +66,16 @@ export class Config<T extends string> {
                 return de(LocalStorage.getItem(localStorageKey));
             },
 
-            set(v: typeof spec[1]) {
+            set(v: V) {
                 LocalStorage.setItem(localStorageKey, ser(v));
             }
         }
         );
     }
+}
+
+export interface Config<T extends string> {
+    [key: string]: HaveSerDe;
 }
 
 type SerDe<T> = [
@@ -98,7 +118,3 @@ function getSerDeFor<T extends HaveSerDe>(v: T): SerDeFor<T> {
         ] as SerDeFor<T>;
     }
 }
-
-// Example usage:
-
-assert("/strings", ExampleConfig.STRING);

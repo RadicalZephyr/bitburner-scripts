@@ -4,7 +4,7 @@ const SUB_MAX_RETRIES = "DISCOVERY_SUB_MAX_RETRIES";
 
 class Config {
     setDefaults() {
-        setConfigDefault(DISCOVERY_SUB_MAX_RETRIES, (5).toString());
+        setConfigDefault(SUB_MAX_RETRIES, (5).toString());
     }
 
     get subscriptionMaxRetries() {
