@@ -33,24 +33,28 @@ export async function main(ns: NS) {
     while (true) {
         if (lastWalk + walkRate < Date.now()) {
             const network = walkNetworkBFS(ns);
+            const newlyCracked: string[] = [];
             for (const host of network.keys()) {
                 if (host === "home") continue;
 
                 if (!cracked.has(host)) {
                     if (ns.hasRootAccess(host)) {
-                        discovery.pushHost(host);
+                        newlyCracked.push(host);
                         cracked.add(host);
                     } else {
                         const portsNeeded = ns.getServerNumPortsRequired(host);
                         if (countPortCrackers(ns) >= portsNeeded) {
                             attemptCrack(ns, host);
                             if (ns.hasRootAccess(host)) {
-                                discovery.pushHost(host);
+                                newlyCracked.push(host);
                                 cracked.add(host);
                             }
                         }
                     }
                 }
+            }
+            if (newlyCracked.length > 0) {
+                discovery.pushHosts(newlyCracked);
             }
             lastWalk = Date.now();
         }
@@ -160,16 +164,29 @@ class Discovery {
         this.ns = ns;
     }
 
-    pushHost(host: string) {
-        if (this.ns.getServerMaxRam(host) > 0) {
-            this._workers.add(host);
-            notifySubscriptions(this.ns, host, this.workerSubscriptions);
+    pushHosts(hosts: string[]) {
+        const newWorkers: string[] = [];
+        const newTargets: string[] = [];
+
+        for (const host of hosts) {
+            if (this.ns.getServerMaxRam(host) > 0) {
+                this._workers.add(host);
+                newWorkers.push(host);
+            }
+
+            if (this.ns.getServerMaxMoney(host) > 0) {
+                this._targets.add(host);
+                newTargets.push(host);
+            }
+        }
+
+        if (newWorkers.length > 0) {
+            notifySubscriptions(this.ns, newWorkers, this.workerSubscriptions);
             this.workerSubscriptions = this.workerSubscriptions.filter(sub => sub.failedNotifications < CONFIG.subscriptionMaxRetries);
         }
 
-        if (this.ns.getServerMaxMoney(host) > 0) {
-            this._targets.add(host);
-            notifySubscriptions(this.ns, host, this.targetSubscriptions);
+        if (newTargets.length > 0) {
+            notifySubscriptions(this.ns, newTargets, this.targetSubscriptions);
             this.targetSubscriptions = this.targetSubscriptions.filter(sub => sub.failedNotifications < CONFIG.subscriptionMaxRetries);
         }
     }
@@ -206,9 +223,9 @@ function registerSubscriber(ns: NS, subscription: ClientSubscription, subscripti
     }
 }
 
-function notifySubscriptions(ns: NS, host: string, subscriptions: Subscription[]) {
+function notifySubscriptions(ns: NS, hosts: string[], subscriptions: Subscription[]) {
     for (const sub of subscriptions) {
-        if (trySendMessage(ns.getPortHandle(sub.port), sub.messageType, host)) {
+        if (trySendMessage(ns.getPortHandle(sub.port), sub.messageType, hosts)) {
             // Reset failed notifications when we succeed in sending them
             sub.failedNotifications = 0;
         } else {

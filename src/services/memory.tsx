@@ -146,8 +146,14 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memResponsePort
         let payload: any;
         switch (msg[0]) {
             case MessageType.Worker:
-                const hostname = msg[2] as string;
-                memoryManager.pushWorker(hostname);
+                const workerPayload = msg[2] as string | string[];
+                if (Array.isArray(workerPayload)) {
+                    for (const host of workerPayload) {
+                        memoryManager.pushWorker(host);
+                    }
+                } else {
+                    memoryManager.pushWorker(workerPayload);
+                }
                 // Don't send a response, no one is listening.
                 continue;
 

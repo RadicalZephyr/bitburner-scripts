@@ -109,11 +109,14 @@ Example:
         if (monitorMessagesWaiting) {
             for (const nextMsg of readAllFromPort(ns, monitorPort)) {
                 if (typeof nextMsg === "object") {
-                    const [phase, _, host] = nextMsg as MonitorMessage;
+                    const [phase, _, payload] = nextMsg as MonitorMessage;
+                    const hosts = Array.isArray(payload) ? payload : [payload as string];
                     if (phase === Lifecycle.Worker) {
-                        workers.push(host);
+                        workers.push(...hosts);
                     } else {
-                        lifecycleByHost.set(host, phase);
+                        for (const h of hosts) {
+                            lifecycleByHost.set(h, phase);
+                        }
                     }
                 }
             }
