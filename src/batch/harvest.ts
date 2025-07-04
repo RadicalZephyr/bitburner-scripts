@@ -215,11 +215,7 @@ interface SparseHostEntry {
 }
 
 class SparseHostArray {
-    private intervals: SparseHostEntry[];
-
-    constructor() {
-        this.intervals = [];
-    }
+    private intervals: SparseHostEntry[] = [];
 
     at(i: number): string | null {
         let low = 0;

@@ -106,36 +106,23 @@ class TargetSelector {
     ns: NS;
     monitor: MonitorClient;
 
-    allTargets: Set<string>;
+    allTargets: Set<string> = new Set();
 
-    tillTargets: Set<string>;
-    sowTargets: Set<string>;
+    tillTargets: Set<string> = new Set();
+    sowTargets: Set<string> = new Set();
 
-    harvestTargets: Set<string>;
+    harvestTargets: Set<string> = new Set();
 
-    pendingTillTargets: string[];
-    pendingSowTargets: string[];
-    pendingHarvestTargets: string[];
+    pendingTillTargets: string[] = [];
+    pendingSowTargets: string[] = [];
+    pendingHarvestTargets: string[] = [];
 
-    hackHistory: { time: number, level: number }[];
-    velocity: number;
+    hackHistory: { time: number, level: number }[] = [];
+    velocity: number = 0;
 
     constructor(ns: NS, monitor: MonitorClient) {
         this.ns = ns;
         this.monitor = monitor;
-
-        this.allTargets = new Set();
-
-        this.pendingTillTargets = [];
-        this.pendingSowTargets = [];
-        this.pendingHarvestTargets = [];
-
-        this.tillTargets = new Set();
-        this.sowTargets = new Set();
-        this.harvestTargets = new Set();
-
-        this.hackHistory = [];
-        this.velocity = 0;
     }
 
     /**

@@ -233,15 +233,12 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memResponsePort
 
 class MemoryAllocator {
     ns: NS;
-    nextAllocId: number;
-    workers: Map<string, Worker>;
-    allocations: Map<number, Allocation>;
+    nextAllocId: number = 0;
+    workers: Map<string, Worker> = new Map();
+    allocations: Map<number, Allocation> = new Map();
 
     constructor(ns: NS) {
         this.ns = ns;
-        this.nextAllocId = 0;
-        this.workers = new Map();
-        this.allocations = new Map();
     }
 
     pushWorker(hostname: string, setAsideRam?: number) {
@@ -539,14 +536,13 @@ class Allocation {
     pid: number;
     filename: string;
     chunks: AllocationChunk[];
-    claims: ClaimInfo[];
+    claims: ClaimInfo[] = [];
 
     constructor(id: number, pid: number, filename: string, chunks: AllocationChunk[]) {
         this.id = id;
         this.pid = pid;
         this.filename = filename;
         this.chunks = chunks;
-        this.claims = [];
     }
 
     get totalSize(): number {
@@ -591,7 +587,7 @@ class Worker {
     totalRam: number;
     setAsideRam: bigint;
     reservedRam: bigint;
-    allocatedRam: bigint;
+    allocatedRam: bigint = 0n;
 
     constructor(ns: NS, hostname: string, setAsideRam?: number) {
         this.ns = ns;
@@ -599,7 +595,6 @@ class Worker {
         this.totalRam = ns.getServerMaxRam(hostname);
         this.setAsideRam = typeof setAsideRam == "number" && setAsideRam >= 0 ? toFixed(setAsideRam) : 0n;
         this.reservedRam = toFixed(ns.getServerUsedRam(hostname));
-        this.allocatedRam = 0n;
     }
 
     get usedRam(): number {

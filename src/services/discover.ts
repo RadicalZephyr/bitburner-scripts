@@ -130,19 +130,14 @@ function attemptCrack(ns: NS, host: string) {
 class Discovery {
     ns: NS;
 
-    _workers: Set<string>;
-    _targets: Set<string>;
+    _workers: Set<string> = new Set();
+    _targets: Set<string> = new Set();
 
-    workerSubscriptions: Subscription[];
-    targetSubscriptions: Subscription[];
+    workerSubscriptions: Subscription[] = [];
+    targetSubscriptions: Subscription[] = [];
 
     constructor(ns: NS) {
         this.ns = ns;
-
-        this._workers = new Set();
-        this._targets = new Set();
-        this.workerSubscriptions = [];
-        this.targetSubscriptions = [];
     }
 
     pushHost(host: string) {
