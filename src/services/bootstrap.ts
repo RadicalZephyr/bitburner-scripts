@@ -22,16 +22,6 @@ const MEMORY_FILES: string[] = [
     "/util/ports.js"
 ];
 
-const BASIC_WORKERS = [
-    "n00dles",
-    "foodnstuff",
-    "sigma-cosmetics",
-    "joesguns",
-    "hong-fang-tea",
-    "harakiri-sushi",
-    "nectar-net"
-];
-
 async function startMemory(ns: NS, host: string) {
     const memoryScript = "/services/memory.js";
 
@@ -41,25 +31,6 @@ async function startMemory(ns: NS, host: string) {
     }
 
     manualLaunch(ns, memoryScript, host, MEMORY_FILES);
-
-    await ns.sleep(1000);
-
-    // Send the Memory daemon some bootstrapping clients
-    let memClient = new MemoryClient(ns);
-
-    await memClient.newWorker("home");
-
-    let personalServers = ns.getPurchasedServers();
-
-    for (const hostname of personalServers) {
-        await memClient.newWorker(hostname);
-    }
-
-    // All of these hosts require zero open ports to nuke
-    for (const worker of BASIC_WORKERS) {
-        ns.nuke(worker);
-        await memClient.newWorker(worker);
-    }
 }
 
 const DISCOVER_FILES = [
