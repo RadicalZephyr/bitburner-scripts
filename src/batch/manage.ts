@@ -62,12 +62,9 @@ export async function main(ns: NS) {
 
     while (true) {
         if (hostsMessagesWaiting) {
-            await readHostsFromPort(ns, managerPort, manager, monitor);
             hostsMessagesWaiting = false;
-
-            managerPort.nextWrite().then(_ => {
-                hostsMessagesWaiting = true;
-            });
+            managerPort.nextWrite().then(_ => { hostsMessagesWaiting = true; });
+            await readHostsFromPort(ns, managerPort, manager, monitor);
         }
         await tick(ns, memory, manager);
         await ns.sleep(100);

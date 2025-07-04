@@ -46,17 +46,15 @@ export async function main(ns: NS) {
 
     const port = ns.getPortHandle(TRACKER_PORT);
     const respPort = ns.getPortHandle(TRACKER_RESPONSE_PORT);
-    let waiting = true;
-    port.nextWrite().then(() => { waiting = true; });
 
-    let stockUpdated = false;
-    ns.stock.nextUpdate().then(() => { stockUpdated = true; });
+    let waiting = true;
+    let stockUpdated = true;
 
     while (true) {
         if (waiting) {
-            await processMessages(ns, port, respPort, buffers);
             waiting = false;
             port.nextWrite().then(() => { waiting = true; });
+            await processMessages(ns, port, respPort, buffers);
         }
 
         if (stockUpdated) {
@@ -98,7 +96,7 @@ export async function main(ns: NS) {
             if (symbols.length > 1) {
                 ns.print(
                     `INFO: corr ${symbols[0]}-${symbols[1]}=` +
-                        ns.formatPercent(corr[symbols[0]][symbols[1]])
+                    ns.formatPercent(corr[symbols[0]][symbols[1]])
                 );
             }
         }

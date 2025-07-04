@@ -107,6 +107,8 @@ Example:
 
     while (true) {
         if (monitorMessagesWaiting) {
+            monitorMessagesWaiting = false;
+            monitorPort.nextWrite().then(_ => { monitorMessagesWaiting = true; });
             for (const nextMsg of readAllFromPort(ns, monitorPort)) {
                 if (typeof nextMsg === "object") {
                     const [phase, _, host] = nextMsg as MonitorMessage;
@@ -117,8 +119,6 @@ Example:
                     }
                 }
             }
-            monitorMessagesWaiting = false;
-            monitorPort.nextWrite().then(_ => { monitorMessagesWaiting = true; });
         }
 
         let threadsByTarget = countThreadsByTarget(ns, workers, Array.from(lifecycleByHost.keys()));

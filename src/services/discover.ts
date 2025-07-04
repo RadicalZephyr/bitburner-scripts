@@ -56,9 +56,9 @@ export async function main(ns: NS) {
         }
 
         if (messageWaiting) {
-            await readRequests(ns, port, respPort, discovery);
             messageWaiting = false;
             port.nextWrite().then(() => { messageWaiting = true; });
+            await readRequests(ns, port, respPort, discovery);
         }
 
         await ns.sleep(50);
