@@ -1,7 +1,7 @@
 import { Config, ConfigInstance } from "util/config";
 
 const entries = [
-    ["batchInterval", 250],
+    ["batchInterval", 80],
     ["maxTillTargets", 2],
     ["expectedValueThreshold", 100],
     ["minSecTolerance", 1],
