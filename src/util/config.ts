@@ -1,3 +1,8 @@
+/**
+ * Utilities for defining strongly typed configuration objects backed by
+ * `LocalStorage`. The {@link Config} class exposes configuration entries as
+ * properties that transparently serialize and deserialize values when accessed.
+ */
 import { LocalStorage } from "./localStorage";
 
 /** Set a default value in a LocalStorage key only if it's unset. */
@@ -70,6 +75,13 @@ export class Config<Entries extends ReadonlyArray<readonly [string, ConfigValue]
     private readonly entries: Entries;
     private defaultSetters: SetDefaultFn[];
 
+    /**
+     * Create a new configuration container.
+     *
+     * @param prefix - String prepended to all LocalStorage keys.
+     * @param entries - List of configuration name/default value pairs. Each
+     *   entry generates a property on the instance.
+     */
     constructor(prefix: string, entries: Entries) {
         this.prefix = prefix;
         this.entries = entries;
@@ -91,6 +103,10 @@ export class Config<Entries extends ReadonlyArray<readonly [string, ConfigValue]
 
         this.defaultSetters.push(() => setConfigDefault(localStorageKey, ser(spec[1])));
 
+        /**
+         * Property representing the configuration value for `spec[0]`. Getting
+         * or setting this property interacts with LocalStorage.
+         */
         Object.defineProperty(this, spec[0], {
             get() {
                 return de(LocalStorage.getItem(localStorageKey));
@@ -103,7 +119,8 @@ export class Config<Entries extends ReadonlyArray<readonly [string, ConfigValue]
     }
 
     /**
-     * Re-apply default configuration values to LocalStorage.
+     * Re-apply default configuration values to LocalStorage. Only keys that do
+     * not yet exist will be written.
      */
     setDefaults() {
         for (const setDefault of this.defaultSetters) {
