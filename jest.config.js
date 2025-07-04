@@ -12,5 +12,5 @@ module.exports = {
     transform: {
         ...tsJestTransformCfg,
     },
-    testMatch: ['<rootDir>/src/stock/**/*.test.ts'],
+    testMatch: ['<rootDir>/src/**/*.test.ts'],
 };
