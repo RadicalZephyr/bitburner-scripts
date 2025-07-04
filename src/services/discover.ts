@@ -168,11 +168,11 @@ class Discovery {
     }
 
     registerWorkerSubscriber(subscription: Subscription) {
-        this.workerSubscriptions.push(subscription);
+        registerSubscriber(this.ns, subscription, this.workerSubscriptions);
     }
 
     registerTargetSubscriber(subscription: Subscription) {
-        this.targetSubscriptions.push(subscription);
+        registerSubscriber(this.ns, subscription, this.targetSubscriptions);
     }
 
     get workers(): string[] {
@@ -181,6 +181,21 @@ class Discovery {
 
     get targets(): string[] {
         return Array.from(this._targets);
+    }
+}
+
+function registerSubscriber(ns: NS, subscription: Subscription, subscriptions: Subscription[]) {
+    const existingSubscription = subscriptions.find(sub => sub.port === subscription.port);
+    if (existingSubscription) {
+        // Assume that subscriptions with the same port are for
+        // the same service.
+        ns.print(
+            `WARN: replacing subscription for port ${subscription.port}. `
+            + `Old: ${existingSubscription.messageType} `
+            + `New: ${subscription.messageType}`
+        );
+    } else {
+        subscriptions.push(subscription);
     }
 }
 
