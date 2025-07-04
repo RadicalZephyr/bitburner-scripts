@@ -17,6 +17,8 @@ const MEMORY_FILES: string[] = [
     "/services/client/discover.js",
     "/services/client/memory.js",
     "/util/client.js",
+    "/util/config.js",
+    "/util/localStorage.js",
     "/util/ports.js"
 ];
 

@@ -11,6 +11,7 @@ import {
 import { trySendMessage } from "util/client";
 import { readAllFromPort } from "util/ports";
 import { walkNetworkBFS } from "util/walk";
+import { CONFIG } from "./config";
 
 
 export async function main(ns: NS) {
@@ -142,14 +143,18 @@ function attemptCrack(ns: NS, host: string) {
     ns.nuke(host);
 }
 
+interface Subscription extends ClientSubscription {
+    failedNotifications: number;
+}
+
 class Discovery {
     ns: NS;
 
     _workers: Set<string> = new Set();
     _targets: Set<string> = new Set();
 
-    workerSubscriptions: ClientSubscription[] = [];
-    targetSubscriptions: ClientSubscription[] = [];
+    workerSubscriptions: Subscription[] = [];
+    targetSubscriptions: Subscription[] = [];
 
     constructor(ns: NS) {
         this.ns = ns;
@@ -159,11 +164,13 @@ class Discovery {
         if (this.ns.getServerMaxRam(host) > 0) {
             this._workers.add(host);
             notifySubscriptions(this.ns, host, this.workerSubscriptions);
+            this.workerSubscriptions = this.workerSubscriptions.filter(sub => sub.failedNotifications < CONFIG.subscriptionMaxRetries);
         }
 
         if (this.ns.getServerMaxMoney(host) > 0) {
             this._targets.add(host);
             notifySubscriptions(this.ns, host, this.targetSubscriptions);
+            this.targetSubscriptions = this.targetSubscriptions.filter(sub => sub.failedNotifications < CONFIG.subscriptionMaxRetries);
         }
     }
 
@@ -195,15 +202,20 @@ function registerSubscriber(ns: NS, subscription: ClientSubscription, subscripti
             + `New: ${subscription.messageType}`
         );
     } else {
-        subscriptions.push(subscription);
+        subscriptions.push({ failedNotifications: 0, ...subscription } as Subscription);
     }
 }
 
-function notifySubscriptions(ns: NS, host: string, subscriptions: ClientSubscription[]) {
-    let remaining = [];
+function notifySubscriptions(ns: NS, host: string, subscriptions: Subscription[]) {
     for (const sub of subscriptions) {
         if (trySendMessage(ns.getPortHandle(sub.port), sub.messageType, host)) {
-            remaining.push(sub);
+            // Reset failed notifications when we succeed in sending them
+            sub.failedNotifications = 0;
+        } else {
+            ns.print("WARN: failed to send message ${sub.messageType} to port ${sub.port}")
+            // We retry a failing subscription a configurable number
+            // of times
+            sub.failedNotifications += 1;
         }
     }
 }
