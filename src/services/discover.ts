@@ -73,11 +73,19 @@ async function readRequests(
     for (const next of readAllFromPort(ns, port)) {
         const msg = next as Message;
         const requestId = msg[1] as string;
+
+        if (typeof msg[2] !== "object" || msg[2] === null) {
+            ns.print("ERROR: discovery received malformed request payload");
+            continue;
+        }
+
         const subscription = msg[2].pushUpdates;
+        const validSubscription = isValidSubscription(subscription);
+
         let payload: any = null;
         switch (msg[0]) {
             case MessageType.RequestWorkers:
-                if (subscription) {
+                if (subscription && validSubscription) {
                     discovery.registerWorkerSubscriber(subscription);
                 }
                 payload = discovery.workers;
@@ -93,6 +101,13 @@ async function readRequests(
             await ns.sleep(20);
         }
     }
+}
+
+function isValidSubscription(subscription?: Subscription): boolean {
+    return subscription
+        && typeof subscription === "object"
+        && typeof subscription.messageType !== "undefined"
+        && typeof subscription.port === "number";
 }
 
 type CrackProgramFn = (host: string) => void;
