@@ -99,6 +99,12 @@ OPTIONS
 
 ```
 
+## Limitations of the Netscript2 Runtime Environment
+
+* There is a bug in the implementation of `NetscriptPort.nextWrite`
+  that makes it impossible to listen to two different ports from the
+  same script. This is the reason that all services listen on a single
+  port.
 
 ## Testing Instructions
 
