@@ -1,13 +1,16 @@
 import type { NS } from "netscript";
 
 import { MemoryClient } from "services/client/memory";
-import { launch } from "services/launch";
 
 export async function main(ns: NS) {
-    await startMemory(ns);
+    const host = ns.self().server;
 
+    // We start the Discovery service first because everything else
+    // needs the hosts and targets that it finds and cracks.
+    await startDiscover(ns, host);
     await ns.sleep(500);
-    await startDiscover(ns);
+
+    await startMemory(ns, host);
 }
 
 const MEMORY_FILES: string[] = [
@@ -26,18 +29,15 @@ const BASIC_WORKERS = [
     "nectar-net"
 ];
 
-async function startMemory(ns: NS) {
-    const memoryHost = "n00dles";
+async function startMemory(ns: NS, host: string) {
     const memoryScript = "/services/memory.js";
-    let memory = ns.getRunningScript(memoryScript, memoryHost);
+
+    const memory = ns.getRunningScript(memoryScript, host);
     if (memory !== null) {
         ns.kill(memory.pid);
-    } else {
-        ns.nuke(memoryHost);
     }
 
-    ns.nuke(memoryHost);
-    manualLaunch(ns, memoryScript, memoryHost, MEMORY_FILES);
+    manualLaunch(ns, memoryScript, host, MEMORY_FILES);
 
     await ns.sleep(1000);
 
@@ -59,12 +59,22 @@ async function startMemory(ns: NS) {
     }
 }
 
-async function startDiscover(ns: NS) {
+const DISCOVER_FILES = [
+    "/services/client/discover.js",
+    "/util/client.js",
+    "/util/ports.js",
+    "/util/walk.js"
+];
+
+async function startDiscover(ns: NS, host: string) {
     const discoverScript = "/services/discover.js";
 
-    await launch(ns, discoverScript, {
-        threads: 1, allocationFlag: "--allocation-id"
-    });
+    const discover = ns.getRunningScript(discoverScript, host);
+    if (discover !== null) {
+        ns.kill(discover.pid);
+    }
+
+    manualLaunch(ns, discoverScript, host, DISCOVER_FILES);
 }
 
 
@@ -79,7 +89,7 @@ function manualLaunch(ns: NS, script: string, hostname: string, dependencies: st
         return;
     }
 
-    let pid = ns.exec(script, hostname);
+    let pid = ns.run(script);
     if (pid === 0) {
         let error = `failed to launch ${script} on ${hostname}`;
         ns.toast(error, "error");
