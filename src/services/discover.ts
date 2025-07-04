@@ -5,7 +5,7 @@ import {
     DISCOVERY_RESPONSE_PORT,
     Message,
     MessageType,
-    Subscription,
+    Subscription as ClientSubscription,
 } from "services/client/discover";
 
 import { trySendMessage } from "util/client";
@@ -103,7 +103,7 @@ async function readRequests(
     }
 }
 
-function isValidSubscription(subscription?: Subscription): boolean {
+function isValidSubscription(subscription?: ClientSubscription): boolean {
     return subscription
         && typeof subscription === "object"
         && typeof subscription.messageType !== "undefined"
@@ -148,8 +148,8 @@ class Discovery {
     _workers: Set<string> = new Set();
     _targets: Set<string> = new Set();
 
-    workerSubscriptions: Subscription[] = [];
-    targetSubscriptions: Subscription[] = [];
+    workerSubscriptions: ClientSubscription[] = [];
+    targetSubscriptions: ClientSubscription[] = [];
 
     constructor(ns: NS) {
         this.ns = ns;
@@ -167,11 +167,11 @@ class Discovery {
         }
     }
 
-    registerWorkerSubscriber(subscription: Subscription) {
+    registerWorkerSubscriber(subscription: ClientSubscription) {
         registerSubscriber(this.ns, subscription, this.workerSubscriptions);
     }
 
-    registerTargetSubscriber(subscription: Subscription) {
+    registerTargetSubscriber(subscription: ClientSubscription) {
         registerSubscriber(this.ns, subscription, this.targetSubscriptions);
     }
 
@@ -184,7 +184,7 @@ class Discovery {
     }
 }
 
-function registerSubscriber(ns: NS, subscription: Subscription, subscriptions: Subscription[]) {
+function registerSubscriber(ns: NS, subscription: ClientSubscription, subscriptions: ClientSubscription[]) {
     const existingSubscription = subscriptions.find(sub => sub.port === subscription.port);
     if (existingSubscription) {
         // Assume that subscriptions with the same port are for
@@ -199,7 +199,7 @@ function registerSubscriber(ns: NS, subscription: Subscription, subscriptions: S
     }
 }
 
-function notifySubscriptions(ns: NS, host: string, subscriptions: Subscription[]) {
+function notifySubscriptions(ns: NS, host: string, subscriptions: ClientSubscription[]) {
     let remaining = [];
     for (const sub of subscriptions) {
         if (trySendMessage(ns.getPortHandle(sub.port), sub.messageType, host)) {
