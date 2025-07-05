@@ -71,8 +71,7 @@ OPTIONS
     let weakenThreads: number;
     if (maxThreads !== -1) {
         growThreads = Math.min(growThreads, maxThreads);
-        ({ growThreads, weakenThreads } = calculateSowThreadsForMaxThreads(ns, target, growThreads));
-
+        ({ weakenThreads } = calculateSowThreadsForMaxThreads(ns, target, growThreads));
     } else {
         let growSecDelta = ns.growthAnalyzeSecurity(growThreads, target);
         weakenThreads = weakenAnalyze(growSecDelta);
@@ -154,7 +153,7 @@ Elapsed time:    ${ns.tFormat(elapsed)}
 }
 
 function calculateSowThreadsForMaxThreads(ns: NS, target: string, maxThreads: number) {
-    let low = 0;
+    let low = 1;
     let high = maxThreads;
     for (let i = 0; i < 16; i++) {
         const mid = Math.floor((low + high) / 2);
@@ -172,7 +171,7 @@ function calculateSowThreadsForMaxThreads(ns: NS, target: string, maxThreads: nu
 }
 
 function calculateSowBatchThreads(ns: NS, target: string, growThreads: number) {
-    const growSecDelta = ns.growthAnalyzeSecurity(growThreads, target);
+    const growSecDelta = ns.growthAnalyzeSecurity(growThreads);
     const weakenThreads = weakenAnalyze(growSecDelta);
     return { growThreads, weakenThreads };
 }
