@@ -82,17 +82,9 @@ OPTIONS
         requestThreads,
         false,
         true,
+        true,
     );
-    while (!allocation && requestThreads > 1) {
-        requestThreads = Math.floor(requestThreads / 2);
-        await ns.sleep(1000);
-        allocation = await memClient.requestTransferableAllocation(
-            scriptRam,
-            requestThreads,
-            false,
-            true,
-        );
-    }
+
     if (!allocation) {
         ns.tprint("ERROR: failed to allocate memory for weaken threads");
         return;

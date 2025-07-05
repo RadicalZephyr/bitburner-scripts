@@ -90,16 +90,18 @@ OPTIONS
     const wRam = ns.getScriptRam(WEAKEN_SCRIPT, "home");
     const gRam = ns.getScriptRam(GROW_SCRIPT, "home");
 
-    let weakenAlloc: TransferableAllocation | null = null;
-    while (!weakenAlloc) {
-        weakenAlloc = await memClient.requestTransferableAllocation(wRam, weakenThreads, false, true);
-        if (!weakenAlloc) await ns.sleep(1000);
+    let weakenAlloc = await memClient.requestTransferableAllocation(wRam, weakenThreads, false, true, true);
+
+    if (!weakenAlloc) {
+        ns.tprint("ERROR: failed to allocate memory for weaken threads");
+        return;
     }
 
-    let growAlloc: TransferableAllocation | null = null;
-    while (!growAlloc) {
-        growAlloc = await memClient.requestTransferableAllocation(gRam, growThreads, false, true);
-        if (!growAlloc) await ns.sleep(1000);
+    let growAlloc = await memClient.requestTransferableAllocation(gRam, growThreads, false, true, true);
+
+    if (!growAlloc) {
+        ns.tprint("ERROR: failed to allocate memory for grow threads");
+        return;
     }
 
     // Send a Sow Heartbeat to indicate we're starting the main loop

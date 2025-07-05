@@ -127,7 +127,7 @@ OPTIONS
     const batchRam = logistics.batchRam;
 
     let memClient = new MemoryClient(ns);
-    let allocation = await memClient.requestOwnedAllocation(batchRam, overlapLimit);
+    let allocation = await memClient.requestOwnedAllocation(batchRam, overlapLimit, false, false, true);
     if (!allocation) return;
 
     // Send a Harvest Heartbeat to indicate we're starting the main loop

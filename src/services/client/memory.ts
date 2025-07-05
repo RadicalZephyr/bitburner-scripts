@@ -49,6 +49,7 @@ export interface AllocationRequest {
     numChunks: number,
     contiguous?: boolean,
     coreDependent?: boolean,
+    shrinkable?: boolean,
 }
 
 export interface AllocationRelease {
@@ -156,6 +157,7 @@ export class MemoryClient extends Client<MessageType, Payload, ResponsePayload> 
         numChunks: number,
         contiguous: boolean = false,
         coreDependent: boolean = false,
+        shrinkable: boolean = false,
     ): Promise<TransferableAllocation> {
         this.ns.print(
             `INFO: requesting ${numChunks} x ${this.ns.formatRam(chunkSize)} ` +
@@ -169,6 +171,7 @@ export class MemoryClient extends Client<MessageType, Payload, ResponsePayload> 
             numChunks: numChunks,
             contiguous: contiguous,
             coreDependent: coreDependent,
+            shrinkable: shrinkable,
         } as AllocationRequest;
         let result = await this.sendMessageReceiveResponse(MessageType.Request, payload);
         if (!result) {
@@ -204,12 +207,14 @@ export class MemoryClient extends Client<MessageType, Payload, ResponsePayload> 
         numChunks: number,
         contiguous: boolean = false,
         coreDependent: boolean = false,
+        shrinkable: boolean = false,
     ): Promise<HostAllocation[]> {
         let result = await this.requestTransferableAllocation(
             chunkSize,
             numChunks,
             contiguous,
             coreDependent,
+            shrinkable,
         );
         if (!result) {
             return null;

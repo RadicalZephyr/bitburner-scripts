@@ -171,6 +171,7 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memResponsePort
                     request.numChunks,
                     request.contiguous ?? false,
                     request.coreDependent ?? false,
+                    request.shrinkable ?? false,
                 );
                 if (allocation) {
                     printLog(
@@ -362,6 +363,7 @@ class MemoryAllocator {
         numChunks: number,
         contiguous: boolean = false,
         coreDependent: boolean = false,
+        shrinkable: boolean = false,
     ): AllocationResult {
         if (chunkSize <= 0 || numChunks <= 0) {
             printLog("ERROR: bad allocation request, zero size");
@@ -406,7 +408,7 @@ class MemoryAllocator {
             if (remainingChunks <= 0) break;
         }
 
-        if (remainingChunks > 0) {
+        if (chunks.length == 0 || (!shrinkable && remainingChunks > 0)) {
             // Roll back partial allocations
             for (const chunk of chunks) {
                 this.workers.get(chunk.hostname)?.free(chunk.totalSize);
