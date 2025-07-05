@@ -19,6 +19,7 @@ export async function main(ns: NS) {
         }
     }
     await clearPorts(ns);
+    ns.tprint("finished cleaning the slate");
 }
 
 
