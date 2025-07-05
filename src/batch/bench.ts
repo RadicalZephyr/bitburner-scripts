@@ -5,6 +5,61 @@ export function autocomplete(data: AutocompleteData, _args: string[]): string[] 
 }
 
 export async function main(ns: NS) {
+    const flags = ns.flags([
+        ["help", false],
+    ]);
+
+    const targets = (flags._ as string[]).filter((t) => typeof t === "string");
+    if (targets.length === 0 || flags.help) {
+        ns.tprint(`
+USAGE: run ${ns.getScriptName()} TARGET [...TARGETS]
+
+Benchmark sow thread allocation algorithms on TARGETS.
+
+OPTIONS
+  --help   Show this help message
+`);
+        return;
+    }
+
+    ns.disableLog("ALL");
+
+    const maxThreadsList = [8, 16, 32, 64, 128];
+    const algos: [
+        (ns: NS, t: string, m: number) => { n: number; growThreads: number; weakenThreads: number },
+        string
+    ][] = [
+        [calculateSowThreadsForMaxThreads1, "v1"],
+        [calculateSowThreadsForMaxThreads2, "v2"],
+        [calculateSowThreadsForMaxThreads3, "v3"],
+    ];
+
+    for (const target of targets) {
+        if (!ns.serverExists(target)) {
+            ns.print(`WARN: target ${target} does not exist`);
+            continue;
+        }
+
+        ns.print(`INFO: benchmarking ${target}`);
+
+        for (const [fn, name] of algos) {
+            const results = await benchmark(ns, fn, name, target, maxThreadsList);
+
+            const iters = results.map((r) => r.iterations);
+            const wastes = results.map((r) => r.maxThreads - r.usedThreads);
+
+            const iterMean = mean(iters);
+            const iterMed = median(iters);
+            const wasteMean = mean(wastes);
+            const wasteStd = std(wastes);
+
+            ns.print(
+                `INFO: ${target} ${name} μ=${ns.formatNumber(iterMean)} ` +
+                `median=${ns.formatNumber(iterMed)} ` +
+                `Δ=${ns.formatNumber(wasteMean)} σ=${ns.formatNumber(wasteStd)}`
+            );
+        }
+    }
 }
 
 
@@ -48,7 +103,7 @@ function calculateSowThreadsForMaxThreads1(ns: NS, target: string, maxThreads: n
         growThreads--;
         ({ weakenThreads } = calculateSowBatchThreads(ns, target, growThreads));
     }
-    return { growThreads, weakenThreads };
+    return { n, growThreads, weakenThreads };
 }
 
 function calculateSowThreadsForMaxThreads2(ns: NS, target: string, maxThreads: number) {
@@ -59,7 +114,7 @@ function calculateSowThreadsForMaxThreads2(ns: NS, target: string, maxThreads: n
         growThreads -= Math.ceil(weakenThreads / 3);
         ({ weakenThreads } = calculateSowBatchThreads(ns, target, growThreads));
     }
-    return { ns, n, growThreads, weakenThreads };
+    return { n, growThreads, weakenThreads };
 }
 
 function calculateSowThreadsForMaxThreads3(ns: NS, target: string, maxThreads: number) {
@@ -79,7 +134,7 @@ function calculateSowThreadsForMaxThreads3(ns: NS, target: string, maxThreads: n
             high = mid;
         }
     }
-    return { ns, n, ...calculateSowBatchThreads(ns, target, low) };
+    return { n, ...calculateSowBatchThreads(ns, target, low) };
 }
 
 function calculateSowBatchThreads(ns: NS, target: string, growThreads: number) {
@@ -92,4 +147,25 @@ function weakenAnalyze(weakenAmount: number): number {
     if (weakenAmount <= 0) return 0;
 
     return Math.ceil(weakenAmount * 20) + 1;
+}
+
+function mean(values: number[]): number {
+    if (values.length === 0) return 0;
+    return values.reduce((s, v) => s + v, 0) / values.length;
+}
+
+function median(values: number[]): number {
+    if (values.length === 0) return 0;
+    const sorted = [...values].sort((a, b) => a - b);
+    const mid = Math.floor(sorted.length / 2);
+    return sorted.length % 2 === 0
+        ? (sorted[mid - 1] + sorted[mid]) / 2
+        : sorted[mid];
+}
+
+function std(values: number[]): number {
+    if (values.length === 0) return 0;
+    const m = mean(values);
+    const variance = values.reduce((s, v) => s + (v - m) ** 2, 0) / values.length;
+    return Math.sqrt(variance);
 }
