@@ -322,10 +322,11 @@ class TaskSelector {
         if (this.sowTargets.size < CONFIG.maxSowTargets) {
             const canAdd = CONFIG.maxSowTargets - this.sowTargets.size;
             let candidates: string[] = [];
-            if (this.ns.getHackingLevel() === 1) {
-                if (this.pendingTillTargets.includes("n00dles") && this.pendingTillTargets.includes("foodnstuff")) {
-                    candidates = ["n00dles", "foodnstuff"];
-                }
+
+            if (this.pendingSowTargets.includes("n00dles")) {
+                candidates = ["n00dles"];
+            } else if (this.pendingSowTargets.includes("foodnstuff")) {
+                candidates = ["foodnstuff"];
             } else if (Math.abs(this.velocity) <= 0.05) {
                 candidates = [...this.pendingSowTargets];
             }
@@ -358,10 +359,11 @@ class TaskSelector {
         if (this.tillTargets.size < CONFIG.maxTillTargets) {
             const canAdd = CONFIG.maxTillTargets - this.tillTargets.size;
             let candidates: string[] = [];
-            if (this.ns.getHackingLevel() === 1) {
-                if (this.pendingTillTargets.includes("n00dles") && this.pendingTillTargets.includes("foodnstuff")) {
-                    candidates = ["n00dles", "foodnstuff"];
-                }
+
+            if (this.pendingTillTargets.includes("n00dles")) {
+                candidates = ["n00dles"];
+            } else if (this.pendingTillTargets.includes("foodnstuff")) {
+                candidates = ["foodnstuff"];
             } else if (Math.abs(this.velocity) <= 0.05) {
                 candidates = [...this.pendingTillTargets];
             }
