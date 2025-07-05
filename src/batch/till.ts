@@ -1,6 +1,6 @@
 import type { AutocompleteData, NS } from "netscript";
 
-import { ManagerClient, Lifecycle } from "batch/client/task_selector";
+import { TaskSelectorClient, Lifecycle } from "batch/client/task_selector";
 
 import { registerAllocationOwnership, MemoryClient } from "services/client/memory";
 
@@ -59,7 +59,7 @@ OPTIONS
         return;
     }
 
-    const managerClient = new ManagerClient(ns);
+    const taskSelectorClient = new TaskSelectorClient(ns);
     const memClient = new MemoryClient(ns);
     const script = "/batch/w.js";
     const scriptRam = ns.getScriptRam(script, "home");
@@ -72,7 +72,7 @@ OPTIONS
     if (maxThreadsCap === 0 || isNaN(maxThreadsCap)) {
         ns.printf("%s security is already at minimum level", target);
         ns.toast(`finished tilling ${target}!`, "success");
-        managerClient.finishedTilling(target);
+        taskSelectorClient.finishedTilling(target);
         return;
     }
 
@@ -99,7 +99,7 @@ OPTIONS
     }
 
     // Send a Till Heartbeat to indicate we're starting the main loop
-    await managerClient.heartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Till);
+    await taskSelectorClient.heartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Till);
 
     let threadsNeeded = calculateWeakenThreads(ns, target);
     const totalThreads = allocation.allocatedChunks.reduce((s, c) => s + c.numChunks, 0);
@@ -143,7 +143,7 @@ Round ends:         ${ns.tFormat(roundEnd)}
 Total expected:     ${ns.tFormat(totalExpectedEnd)}
 Elapsed time:       ${ns.tFormat(elapsed)}
 `);
-                await managerClient.heartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Till);
+                await taskSelectorClient.heartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Till);
                 await ns.sleep(1000);
             }
         }
@@ -153,7 +153,7 @@ Elapsed time:       ${ns.tFormat(elapsed)}
 
     await allocation.release(ns);
     ns.toast(`finished tilling ${target}!`, "success");
-    managerClient.finishedTilling(target);
+    taskSelectorClient.finishedTilling(target);
 }
 
 /** Calculate the number of weaken threads required to bring

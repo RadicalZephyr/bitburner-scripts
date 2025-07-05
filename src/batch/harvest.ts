@@ -1,7 +1,7 @@
 import type { AutocompleteData, NS } from "netscript";
 
 import { HostAllocation, MemoryClient, registerAllocationOwnership } from "services/client/memory";
-import { ManagerClient, Lifecycle } from "batch/client/task_selector";
+import { TaskSelectorClient, Lifecycle } from "batch/client/task_selector";
 import { PortClient } from "services/client/port";
 
 import { CONFIG } from "batch/config";
@@ -79,7 +79,7 @@ OPTIONS
         return;
     }
 
-    const managerClient = new ManagerClient(ns);
+    const taskSelectorClient = new TaskSelectorClient(ns);
     const portClient = new PortClient(ns);
     const donePortId = await portClient.requestPort();
     if (typeof donePortId !== 'number') {
@@ -131,7 +131,7 @@ OPTIONS
     if (!allocation) return;
 
     // Send a Harvest Heartbeat to indicate we're starting the main loop
-    await managerClient.heartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Harvest);
+    await taskSelectorClient.heartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Harvest);
 
     // Track how many batches can overlap concurrently. If the
     // calculated overlap drops we release the extra memory back to the
@@ -152,7 +152,7 @@ OPTIONS
         batches.push(batchPids);
         currentBatches++;
         if (Date.now() - lastHeartbeat >= 1000) {
-            managerClient.tryHeartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Harvest);
+            taskSelectorClient.tryHeartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Harvest);
             lastHeartbeat = Date.now();
         }
 
@@ -220,7 +220,7 @@ OPTIONS
             currentBatches = currentBatches % maxOverlap;
         }
         if (Date.now() >= lastHeartbeat + 1000 + (Math.random() * 500)) {
-            if (managerClient.tryHeartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Harvest)) {
+            if (taskSelectorClient.tryHeartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Harvest)) {
                 lastHeartbeat = Date.now();
             }
         }

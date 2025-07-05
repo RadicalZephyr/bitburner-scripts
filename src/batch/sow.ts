@@ -1,6 +1,6 @@
 import type { AutocompleteData, NS, ScriptArg } from "netscript";
 
-import { ManagerClient, Lifecycle } from "batch/client/task_selector";
+import { TaskSelectorClient, Lifecycle } from "batch/client/task_selector";
 
 import {
     registerAllocationOwnership,
@@ -65,7 +65,7 @@ OPTIONS
         return;
     }
 
-    let managerClient = new ManagerClient(ns);
+    let taskSelectorClient = new TaskSelectorClient(ns);
 
     let growThreads = neededGrowThreads(ns, target);
     let weakenThreads: number;
@@ -81,7 +81,7 @@ OPTIONS
     if (growThreads < 1 || weakenThreads < 1) {
         ns.printf(`no need to sow ${target}`);
         ns.toast(`finished sowing ${target}!`, "success");
-        managerClient.finishedSowing(target);
+        taskSelectorClient.finishedSowing(target);
         return;
     }
 
@@ -103,7 +103,7 @@ OPTIONS
     }
 
     // Send a Sow Heartbeat to indicate we're starting the main loop
-    await managerClient.heartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Sow);
+    await taskSelectorClient.heartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Sow);
 
     let totalGrowThreads = neededGrowThreads(ns, target);
     const totalThreads = growAlloc.allocatedChunks.reduce((s, c) => s + c.numChunks, 0);
@@ -134,7 +134,7 @@ Round ends:      ${ns.tFormat(roundEnd)}
 Total expected:  ${ns.tFormat(totalExpectedEnd)}
 Elapsed time:    ${ns.tFormat(elapsed)}
 `);
-                await managerClient.heartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Sow);
+                await taskSelectorClient.heartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Sow);
                 await ns.sleep(1000);
             }
         }
@@ -148,7 +148,7 @@ Elapsed time:    ${ns.tFormat(elapsed)}
     await weakenAlloc.release(ns);
     await growAlloc.release(ns);
     ns.toast(`finished sowing ${target}!`, "success");
-    managerClient.finishedSowing(target);
+    taskSelectorClient.finishedSowing(target);
 }
 
 function calculateSowThreadsForMaxThreads(ns: NS, target: string, maxThreads: number) {

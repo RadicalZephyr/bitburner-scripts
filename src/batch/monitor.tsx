@@ -5,7 +5,7 @@ import { MONITOR_PORT, Lifecycle, Message as MonitorMessage } from "batch/client
 import { expectedValuePerRamSecond } from "batch/expected_value";
 
 import { DiscoveryClient } from "services/client/discover";
-import { ManagerClient } from "batch/client/task_selector";
+import { TaskSelectorClient } from "batch/client/task_selector";
 import { registerAllocationOwnership } from "services/client/memory";
 
 import { extend } from "util/extend";
@@ -106,10 +106,10 @@ Example:
     const monitorPort = ns.getPortHandle(MONITOR_PORT);
 
     const discoveryClient = new DiscoveryClient(ns);
-    const managerClient = new ManagerClient(ns);
+    const taskSelectorClient = new TaskSelectorClient(ns);
 
     const workers = await discoveryClient.requestWorkers({ messageType: Lifecycle.Worker, port: MONITOR_PORT });
-    const snapshot = await managerClient.requestLifecycle();
+    const snapshot = await taskSelectorClient.requestLifecycle();
 
     const lifecycleByHost: Map<string, Lifecycle> = new Map(snapshot);
 

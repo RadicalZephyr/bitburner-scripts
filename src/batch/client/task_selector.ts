@@ -1,10 +1,10 @@
-import type { NS, NetscriptPort } from "netscript";
+import type { NS } from "netscript";
 
 import { Client, Message as ClientMessage } from "util/client";
 import { Lifecycle as MonitorLifecycle } from "batch/client/monitor";
 
-export const MANAGER_PORT: number = 11;
-export const MANAGER_RESPONSE_PORT: number = 12;
+export const TASK_SELECTOR_PORT: number = 11;
+export const TASK_SELECTOR_RESPONSE_PORT: number = 12;
 
 export enum MessageType {
     NewTarget,
@@ -27,7 +27,7 @@ export interface Heartbeat {
     lifecycle: Lifecycle;
 }
 
-export interface LifecycleRequest {}
+export interface LifecycleRequest { }
 
 export type LifecycleSnapshot = [string, MonitorLifecycle][];
 
@@ -35,9 +35,9 @@ export type Payload = string | string[] | Heartbeat | LifecycleRequest;
 
 export type Message = ClientMessage<MessageType, Payload>;
 
-export class ManagerClient extends Client<MessageType, Payload, LifecycleSnapshot> {
+export class TaskSelectorClient extends Client<MessageType, Payload, LifecycleSnapshot> {
     constructor(ns: NS) {
-        super(ns, MANAGER_PORT, MANAGER_RESPONSE_PORT)
+        super(ns, TASK_SELECTOR_PORT, TASK_SELECTOR_RESPONSE_PORT)
     }
 
     async newTarget(hostname: string) {

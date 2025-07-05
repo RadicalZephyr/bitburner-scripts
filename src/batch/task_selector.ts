@@ -1,6 +1,6 @@
 import type { NetscriptPort, NS } from "netscript";
 
-import { MANAGER_PORT, MANAGER_RESPONSE_PORT, Message, MessageType, Heartbeat, Lifecycle } from "batch/client/task_selector";
+import { TASK_SELECTOR_PORT, TASK_SELECTOR_RESPONSE_PORT, Message, MessageType, Heartbeat, Lifecycle } from "batch/client/task_selector";
 import { MonitorClient, Lifecycle as MonitorLifecycle } from "batch/client/monitor";
 
 import { CONFIG } from "batch/config";
@@ -49,8 +49,8 @@ export async function main(ns: NS) {
     ns.ui.moveTail(720, 0);
     ns.print(`INFO: starting manager on ${ns.getHostname()}`);
 
-    const managerPort = ns.getPortHandle(MANAGER_PORT);
-    const responsePort = ns.getPortHandle(MANAGER_RESPONSE_PORT);
+    const taskSelectorPort = ns.getPortHandle(TASK_SELECTOR_PORT);
+    const responsePort = ns.getPortHandle(TASK_SELECTOR_RESPONSE_PORT);
 
     let discovery = new DiscoveryClient(ns);
     let monitor = new MonitorClient(ns);
@@ -58,7 +58,7 @@ export async function main(ns: NS) {
     let manager = new TaskSelector(ns, monitor);
 
     ns.print(`INFO: requesting targets from Discovery service`);
-    let targets = await discovery.requestTargets({ messageType: MessageType.NewTarget, port: MANAGER_PORT });
+    let targets = await discovery.requestTargets({ messageType: MessageType.NewTarget, port: TASK_SELECTOR_PORT });
 
     ns.print(`INFO: received targets from Discovery service: ${targets.join(", ")}`);
     for (const target of targets) {
@@ -70,8 +70,8 @@ export async function main(ns: NS) {
     while (true) {
         if (hostsMessagesWaiting) {
             hostsMessagesWaiting = false;
-            managerPort.nextWrite().then(_ => { hostsMessagesWaiting = true; });
-            await readHostsFromPort(ns, managerPort, responsePort, manager, monitor);
+            taskSelectorPort.nextWrite().then(_ => { hostsMessagesWaiting = true; });
+            await readHostsFromPort(ns, taskSelectorPort, responsePort, manager, monitor);
         }
         await tick(ns, memory, manager);
         await ns.sleep(100);
