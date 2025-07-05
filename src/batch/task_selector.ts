@@ -296,11 +296,17 @@ class TaskSelector {
             }))
             .sort((a, b) => b.value - a.value);
 
+        let fallbackHarvest: string | null = null;
         for (const task of harvestTasks) {
             if (task.ram <= freeRam) {
                 await this.launchHarvest(task.host);
                 return;
             }
+            if (!fallbackHarvest) fallbackHarvest = task.host;
+        }
+        if (fallbackHarvest && freeRam > 0) {
+            await this.launchHarvest(fallbackHarvest, freeRam);
+            return;
         }
 
         if (this.sowTargets.size < CONFIG.maxSowTargets) {
@@ -314,6 +320,7 @@ class TaskSelector {
                 candidates = [...this.pendingSowTargets];
             }
             candidates.sort(compareLevel);
+            let fallback: string | null = null;
             for (const host of candidates.slice(0, canAdd)) {
                 const { growThreads, weakenThreads } = calculateSowThreads(this.ns, host);
                 const total = growThreads + weakenThreads;
@@ -321,6 +328,18 @@ class TaskSelector {
                     weakenThreads * this.ns.getScriptRam("/batch/w.js", "home");
                 if (ram <= freeRam) {
                     await this.launchSow(host, total);
+                    return;
+                }
+                if (!fallback) fallback = host;
+            }
+            if (fallback && freeRam > 0) {
+                const maxRamPerThread = Math.max(
+                    this.ns.getScriptRam("/batch/g.js", "home"),
+                    this.ns.getScriptRam("/batch/w.js", "home"),
+                );
+                const threads = Math.floor(freeRam / maxRamPerThread);
+                if (threads > 0) {
+                    await this.launchSow(fallback, threads);
                     return;
                 }
             }
@@ -337,11 +356,21 @@ class TaskSelector {
                 candidates = [...this.pendingTillTargets];
             }
             candidates.sort(compareLevel);
+            let fallback: string | null = null;
             for (const host of candidates.slice(0, canAdd)) {
                 const threads = calculateWeakenThreads(this.ns, host);
                 const ram = threads * this.ns.getScriptRam("/batch/w.js", "home");
                 if (ram <= freeRam) {
                     await this.launchTill(host, threads);
+                    return;
+                }
+                if (!fallback) fallback = host;
+            }
+            if (fallback && freeRam > 0) {
+                const threadRam = this.ns.getScriptRam("/batch/w.js", "home");
+                const threads = Math.floor(freeRam / threadRam);
+                if (threads > 0) {
+                    await this.launchTill(fallback, threads);
                     return;
                 }
             }
@@ -382,13 +411,14 @@ class TaskSelector {
         }
     }
 
-    private async launchHarvest(host: string) {
+    private async launchHarvest(host: string, maxRam?: number) {
         this.ns.print(`INFO: launching harvest on ${host}`);
+        let args = maxRam !== undefined ? [host, "--max-ram", maxRam] : [host];
         let result = await launch(
             this.ns,
             "/batch/harvest.js",
             { threads: 1, allocationFlag: "--allocation-id" },
-            host,
+            ...args,
         );
         if (result && result.pids.length >= 1) {
             this.pendingHarvestTargets = this.pendingHarvestTargets.filter(h => h !== host);
