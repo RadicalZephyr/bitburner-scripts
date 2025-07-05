@@ -11,25 +11,41 @@ declare global {
     var globalThis: Global;
 }
 
+const FACTION_SERVERS = [
+    "CSEC",
+    "avmnite-02h",
+    "I.I.I.I",
+    "run4theh111z",
+    "The-Cave"
+];
+
 export async function main(ns: NS) {
     ns.disableLog("ALL");
     ns.clearLog();
     ns.ui.openTail();
 
     while (true) {
+        const factionMissingBackdoor = [];
+        for (const host of FACTION_SERVERS) {
+            factionMissingBackdoor.push(host);
+        }
+
         const network = walkNetworkBFS(ns);
         const missingBackdoor: string[] = [];
 
         for (const host of network.keys()) {
             const info = ns.getServer(host);
-            if (needsBackdoor(info) && canInstallBackdoor(ns, info)) {
+            if (!FACTION_SERVERS.includes(info) && needsBackdoor(info) && canInstallBackdoor(ns, info)) {
                 missingBackdoor.push(host);
             }
         }
 
         const theme = ns.ui.getTheme();
         ns.clearLog();
-        ns.printRaw(<ServerDisplay title={"Servers"} servers={missingBackdoor} theme={theme}></ServerDisplay>);
+        ns.printRaw(<>
+            <ServerDisplay title={"Faction Servers"} servers={factionMissingBackdoor} theme={theme} />
+            <ServerDisplay title={"Servers"} servers={missingBackdoor} theme={theme} />
+        </>);
         ns.ui.renderTail();
         await ns.sleep(200);
     }
