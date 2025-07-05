@@ -5,7 +5,7 @@ import { MONITOR_PORT, Lifecycle, Message as MonitorMessage } from "batch/client
 import { expectedValuePerRamSecond } from "batch/expected_value";
 
 import { DiscoveryClient } from "services/client/discover";
-import { ManagerClient } from "batch/client/manage";
+import { ManagerClient } from "batch/client/task_selector";
 import { registerAllocationOwnership } from "services/client/memory";
 
 import { extend } from "util/extend";

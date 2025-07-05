@@ -1,6 +1,6 @@
 import type { AutocompleteData, NS, ScriptArg } from "netscript";
 
-import { ManagerClient, Lifecycle } from "batch/client/manage";
+import { ManagerClient, Lifecycle } from "batch/client/task_selector";
 
 import {
     registerAllocationOwnership,

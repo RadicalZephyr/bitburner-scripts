@@ -1,6 +1,6 @@
 import type { NetscriptPort, NS } from "netscript";
 
-import { MANAGER_PORT, MANAGER_RESPONSE_PORT, Message, MessageType, Heartbeat, Lifecycle } from "batch/client/manage";
+import { MANAGER_PORT, MANAGER_RESPONSE_PORT, Message, MessageType, Heartbeat, Lifecycle } from "batch/client/task_selector";
 import { MonitorClient, Lifecycle as MonitorLifecycle } from "batch/client/monitor";
 
 import { CONFIG } from "batch/config";

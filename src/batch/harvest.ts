@@ -1,7 +1,7 @@
 import type { AutocompleteData, NS } from "netscript";
 
 import { HostAllocation, MemoryClient, registerAllocationOwnership } from "services/client/memory";
-import { ManagerClient, Lifecycle } from "batch/client/manage";
+import { ManagerClient, Lifecycle } from "batch/client/task_selector";
 import { PortClient } from "services/client/port";
 
 import { CONFIG } from "batch/config";
