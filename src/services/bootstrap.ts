@@ -11,6 +11,7 @@ export async function main(ns: NS) {
     await ns.sleep(500);
 
     await startMemory(ns, host);
+    await startPort(ns, host);
 }
 
 const MEMORY_FILES: string[] = [
@@ -52,7 +53,22 @@ async function startDiscover(ns: NS, host: string) {
     manualLaunch(ns, discoverScript, host, DISCOVER_FILES);
 }
 
+const PORT_FILES = [
+    "/services/client/port.js",
+    "/util/client.js",
+    "/util/ports.js",
+];
 
+async function startPort(ns: NS, host: string) {
+    const portScript = "/services/port.js";
+
+    const portAllocator = ns.getRunningScript(portScript, host);
+    if (portAllocator !== null) {
+        ns.kill(portAllocator.pid);
+    }
+
+    manualLaunch(ns, portScript, host, PORT_FILES);
+}
 
 function manualLaunch(ns: NS, script: string, hostname: string, dependencies: string[]) {
     let files = [script, ...dependencies];
