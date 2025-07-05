@@ -2,6 +2,7 @@ import type { AutocompleteData, NS } from "netscript";
 
 import { HostAllocation, MemoryClient, registerAllocationOwnership } from "services/client/memory";
 import { ManagerClient, Lifecycle } from "batch/client/manage";
+import { PortClient } from "services/client/port";
 
 import { CONFIG } from "batch/config";
 import {
@@ -79,6 +80,14 @@ OPTIONS
     }
 
     const managerClient = new ManagerClient(ns);
+    const portClient = new PortClient(ns);
+    const donePortId = await portClient.requestPort();
+    if (typeof donePortId !== 'number') {
+        ns.tprint('failed to acquire a port');
+        return;
+    }
+    ns.atExit(() => { portClient.releasePort(donePortId); });
+
     let lastHeartbeat = 0;
 
     let hackPercent = maxRam !== -1
@@ -132,7 +141,7 @@ OPTIONS
     // fully populated before entering the steady state loop.
     for (let i = 0; i < maxOverlap; ++i) {
         const host = batchHost.at(i);
-        let batchPids = spawnBatch(ns, host, target, logistics.phases);
+        let batchPids = spawnBatch(ns, host, target, logistics.phases, donePortId);
         batches.push(batchPids);
         currentBatches++;
         if (Date.now() - lastHeartbeat >= 1000) {
@@ -143,7 +152,7 @@ OPTIONS
         await ns.sleep(logistics.endingPeriod);
     }
 
-    const finishedPort = ns.getPortHandle(ns.pid);
+    const finishedPort = ns.getPortHandle(donePortId);
 
     ns.printf("INFO: launched initial round, going into batch respawn loop");
     while (true) {
@@ -194,7 +203,7 @@ OPTIONS
             }
         }
 
-        let batchPids = spawnBatch(ns, host, target, phases);
+        let batchPids = spawnBatch(ns, host, target, phases, donePortId);
         if (batchPids.length > 0) {
             batches[batchIndex] = batchPids;
             currentBatches++;
@@ -260,7 +269,7 @@ function makeBatchHostArray(allocatedChunks: HostAllocation[]) {
     return sparseHosts;
 }
 
-function spawnBatch(ns: NS, host: string | null, target: string, phases: BatchPhase[]): number[] {
+function spawnBatch(ns: NS, host: string | null, target: string, phases: BatchPhase[], donePort: number): number[] {
     if (!host) return [];
 
     const scripts = Array.from(new Set(phases.map(p => p.script)));
@@ -271,7 +280,7 @@ function spawnBatch(ns: NS, host: string | null, target: string, phases: BatchPh
         if (phase.threads <= 0) continue;
         const script = phase.script;
 
-        let lastArg = idx === phases.length - 1 ? ns.pid : -1;
+        let lastArg = idx === phases.length - 1 ? donePort : -1;
         const pid = ns.exec(script, host, { threads: phase.threads, temporary: true }, target, phase.start, lastArg);
         if (pid === 0) {
             ns.print(`WARN: failed to spawn ${script} on ${host}`);
