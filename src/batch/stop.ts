@@ -23,6 +23,6 @@ Example:
         return;
     }
 
-    const scripts = ["services/discover.js", "services/memory.js", "batch/task_selector.js", "batch/monitor.js", "batch/harvest.js"];
+    const scripts = ["services/discover.js", "services/memory.js", "services/port.js", "batch/task_selector.js", "batch/monitor.js", "batch/harvest.js"];
     ns.spawn("stopworld.js", { threads: 1, spawnDelay: 0 }, ...scripts);
 }
