@@ -35,4 +35,7 @@ Example:
             ns.killall(host, true);
         }
     }
+    const message = "SUCCESS: finished stopping scripts";
+    ns.toast(message);
+    ns.tprint(message)
 }
