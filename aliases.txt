@@ -10,7 +10,7 @@ alias look="scan-analyze 10"
 
 alias start="run start.js"
 alias stop="run stopworld.js"
-alias clean-slate="run clean-slate.js"
+alias wipe="run wipe.js"
 
 alias launch="run batch/launch.js"
 
