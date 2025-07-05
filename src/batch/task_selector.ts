@@ -18,6 +18,7 @@ import { readAllFromPort } from "util/ports";
 
 
 let compareExpectedValue: (ta: string, tb: string) => number;
+let compareLevel: (ta: string, tb: string) => number;
 
 export async function main(ns: NS) {
     const flags = ns.flags([
@@ -36,6 +37,10 @@ export async function main(ns: NS) {
     compareExpectedValue = (ta, tb) => {
         return expectedValuePerRamSecond(ns, tb)
             - expectedValuePerRamSecond(ns, ta);
+    };
+    compareLevel = (ta, tb) => {
+        return ns.getServerRequiredHackingLevel(ta)
+            - ns.getServerRequiredHackingLevel(tb);
     };
 
     ns.disableLog("ALL");
@@ -275,7 +280,7 @@ class TaskSelector {
             } else if (Math.abs(this.velocity) <= 0.05) {
                 candidates = [...this.pendingTillTargets];
             }
-            candidates.sort(compareExpectedValue);
+            candidates.sort(compareLevel);
             for (const host of candidates.slice(0, canAdd)) {
                 const threads = calculateWeakenThreads(this.ns, host);
                 const ram = threads * this.ns.getScriptRam("/batch/w.js", "home");
@@ -294,7 +299,7 @@ class TaskSelector {
             } else if (Math.abs(this.velocity) <= 0.05) {
                 candidates = [...this.pendingTillTargets];
             }
-            candidates.sort(compareExpectedValue);
+            candidates.sort(compareLevel);
             for (const host of candidates.slice(0, canAdd)) {
                 const { growThreads, weakenThreads } = calculateSowThreads(this.ns, host);
                 const total = growThreads + weakenThreads;
