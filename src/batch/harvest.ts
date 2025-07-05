@@ -465,7 +465,21 @@ function calculatePhaseStartTimes(phases: BatchPhase[]) {
 }
 
 function maxHackPercentForRam(ns: NS, target: string, maxRam: number): number {
-    let low = 0;
+    const minPercent = (() => {
+        if (canUseFormulas(ns)) {
+            const server = ns.getServer(target);
+            const player = ns.getPlayer();
+            return ns.formulas.hacking.hackPercent(server, player);
+        }
+        return ns.hackAnalyze(target);
+    })();
+
+    const { batchRam: minBatchRam, overlap: minOverlap } =
+        calculateBatchLogistics(ns, target, minPercent);
+
+    if (minBatchRam * minOverlap > maxRam) return 0;
+
+    let low = minPercent;
     let high = CONFIG.maxHackPercent;
     for (let i = 0; i < 16; i++) {
         const mid = (low + high) / 2;
