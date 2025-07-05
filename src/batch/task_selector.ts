@@ -291,14 +291,14 @@ class TaskSelector {
             .filter(h => canHarvest(this.ns, h) && worthHarvesting(this.ns, h))
             .map(h => ({
                 host: h,
-                ram: calculateBatchLogistics(this.ns, h).requiredRam,
                 value: expectedValuePerRamSecond(this.ns, h),
+                ...calculateBatchLogistics(this.ns, h)
             }))
             .sort((a, b) => b.value - a.value);
 
         let fallbackHarvest: string | null = null;
         for (const task of harvestTasks) {
-            if (task.ram <= freeRam) {
+            if (task.requiredRam * task.overlap <= freeRam) {
                 await this.launchHarvest(task.host);
                 return;
             }
