@@ -76,20 +76,26 @@ OPTIONS
         return;
     }
 
+    let requestThreads = maxThreadsCap;
     let allocation = await memClient.requestTransferableAllocation(
         scriptRam,
-        maxThreadsCap,
+        requestThreads,
         false,
         true,
     );
-    while (!allocation) {
+    while (!allocation && requestThreads > 1) {
+        requestThreads = Math.floor(requestThreads / 2);
         await ns.sleep(1000);
         allocation = await memClient.requestTransferableAllocation(
             scriptRam,
-            maxThreadsCap,
+            requestThreads,
             false,
             true,
         );
+    }
+    if (!allocation) {
+        ns.tprint("ERROR: failed to allocate memory for weaken threads");
+        return;
     }
 
     // Send a Till Heartbeat to indicate we're starting the main loop
@@ -97,8 +103,17 @@ OPTIONS
 
     let threadsNeeded = calculateWeakenThreads(ns, target);
     const totalThreads = allocation.allocatedChunks.reduce((s, c) => s + c.numChunks, 0);
+    const roundTime = ns.getWeakenTime(target);
+    const startTime = Date.now();
+    let round = 0;
 
     while (threadsNeeded > 0) {
+        round += 1;
+        const roundsRemaining = Math.ceil(threadsNeeded / totalThreads);
+        const totalRounds = (round - 1) + roundsRemaining;
+        const roundEnd = startTime + round * roundTime;
+        const totalExpectedEnd = startTime + totalRounds * roundTime;
+
         const spawnThreads = Math.min(threadsNeeded, totalThreads);
         const pids: number[] = [];
         let remaining = spawnThreads;
@@ -114,15 +129,15 @@ OPTIONS
             }
             remaining -= t;
         }
-
-        const expectedTime = ns.tFormat(ns.getWeakenTime(target));
         for (const pid of pids) {
             while (ns.isRunning(pid)) {
                 ns.clearLog();
-                const selfScript = ns.self();
+                const elapsed = Date.now() - startTime;
                 ns.print(`
-Expected time: ${expectedTime}
-Elapsed time:  ${ns.tFormat(selfScript.onlineRunningTime * 1000)}
+Round ${round} of ${totalRounds}
+Round ends:         ${ns.tFormat(roundEnd - startTime)}
+Total expected:     ${ns.tFormat(totalExpectedEnd - startTime)}
+Elapsed time:       ${ns.tFormat(elapsed)}
 `);
                 await managerClient.heartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Till);
                 await ns.sleep(1000);
