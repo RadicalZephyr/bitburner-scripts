@@ -26,7 +26,10 @@ Any individual host can be both a Worker and a Target simultaneously.
   can be retrieved with `ns.ui.getTheme()`.
 - Reference the available Netcript APIs listed in
   `NetScriptDefinitions.d.ts`.
-
+- When using `Config` values we should never cache the config value in
+  a variable. These values can be updated by the user and we always
+  want to use the current value. This lets the user affect the
+  behavior of running scripts without having to restart them.
 
 ### Logging Tips
 
