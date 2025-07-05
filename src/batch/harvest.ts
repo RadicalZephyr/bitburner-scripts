@@ -482,7 +482,7 @@ function maxHackPercentForRam(ns: NS, target: string, maxRam: number): number {
     const { batchRam: minBatchRam, overlap: minOverlap } =
         calculateBatchLogistics(ns, target, minPercent);
 
-    if (minBatchRam * minOverlap > maxRam) return 0;
+    if (minBatchRam * minOverlap > maxRam) return minPercent;
 
     let low = minPercent;
     let high = CONFIG.maxHackPercent;
