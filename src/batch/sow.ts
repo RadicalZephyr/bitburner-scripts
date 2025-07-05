@@ -190,7 +190,7 @@ function runAllocation(
         if (remaining <= 0) break;
         const t = Math.min(chunk.numChunks, remaining);
         ns.scp(script, chunk.hostname, "home");
-        const pid = ns.exec(script, chunk.hostname, t, ...args);
+        const pid = ns.exec(script, chunk.hostname, { threads: t, temporary: true }, ...args);
         if (pid === 0) {
             ns.print(`WARN: failed to exec ${script} on ${chunk.hostname}`);
         } else {

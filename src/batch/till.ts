@@ -116,7 +116,7 @@ OPTIONS
             if (remaining <= 0) break;
             const t = Math.min(chunk.numChunks, remaining);
             ns.scp(script, chunk.hostname, "home");
-            const pid = ns.exec(script, chunk.hostname, t, target, 0);
+            const pid = ns.exec(script, chunk.hostname, { threads: t, temporary: true }, target, 0);
             if (pid) {
                 pids.push(pid);
             } else {
