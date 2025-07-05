@@ -68,7 +68,7 @@ OPTIONS
             await ns.sleep(1000);
         }
 
-        let hostname = ns.purchaseServer(serverName(ram), ram);
+        let hostname = ns.purchaseServer(serverName(ram, i), ram);
         if (hostname !== "") {
             await memoryClient.newWorker(hostname);
         }
@@ -102,7 +102,7 @@ OPTIONS
             }
             let upgradeResult = ns.upgradePurchasedServer(oldHostname, ram);
             if (upgradeResult) {
-                let newHostname = serverName(ram);
+                let newHostname = serverName(ram, i);
                 if (shouldRenameServers && ns.renamePurchasedServer(oldHostname, newHostname)) {
                     await memoryClient.newWorker(newHostname);
                 }
@@ -112,8 +112,8 @@ OPTIONS
     }
 }
 
-function serverName(ram: number) {
-    return "pserv" + formatGigaBytes(ram);
+function serverName(ram: number, i: number) {
+    return `pserv-${formatGigaBytes(ram)}-${i + 1}`;
 }
 
 function formatGigaBytes(value: number): string {
