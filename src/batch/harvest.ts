@@ -96,6 +96,8 @@ OPTIONS
 
     if (maxRam !== -1 && hackPercent === 0) {
         ns.tprint(`max-ram ${ns.formatRam(maxRam)} is too small for one batch`);
+        let logistics = calculateBatchLogistics(ns, target);
+        ns.tprint(`Minimal batch:\n${JSON.stringify(logistics, null, 2)}`);
         return;
     }
 
