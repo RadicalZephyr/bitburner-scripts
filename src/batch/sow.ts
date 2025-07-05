@@ -71,13 +71,8 @@ OPTIONS
     let weakenThreads: number;
     if (maxThreads !== -1) {
         growThreads = Math.min(growThreads, maxThreads);
-        let growSecDelta = ns.growthAnalyzeSecurity(growThreads, target);
-        weakenThreads = weakenAnalyze(growSecDelta);
-        while (growThreads + weakenThreads > maxThreads && growThreads > 0) {
-            growThreads--;
-            growSecDelta = ns.growthAnalyzeSecurity(growThreads, target);
-            weakenThreads = weakenAnalyze(growSecDelta);
-        }
+        ({ growThreads, weakenThreads } = calculateSowThreadsForMaxThreads(ns, target, growThreads));
+
     } else {
         let growSecDelta = ns.growthAnalyzeSecurity(growThreads, target);
         weakenThreads = weakenAnalyze(growSecDelta);
@@ -139,6 +134,30 @@ OPTIONS
     await growAlloc.release(ns);
     ns.toast(`finished sowing ${target}!`, "success");
     managerClient.finishedSowing(target);
+}
+
+function calculateSowThreadsForMaxThreads(ns: NS, target: string, maxThreads: number) {
+    let low = 0;
+    let high = maxThreads;
+    for (let i = 0; i < 16; i++) {
+        const mid = Math.floor((low + high) / 2);
+        const { growThreads, weakenThreads } = calculateSowBatchThreads(ns, target, mid);
+        if (growThreads + weakenThreads === maxThreads) {
+            low = mid;
+            break;
+        } else if (growThreads + weakenThreads < maxThreads) {
+            low = mid;
+        } else {
+            high = mid;
+        }
+    }
+    return calculateSowBatchThreads(ns, target, low);
+}
+
+function calculateSowBatchThreads(ns: NS, target: string, growThreads: number) {
+    const growSecDelta = ns.growthAnalyzeSecurity(growThreads, target);
+    const weakenThreads = weakenAnalyze(growSecDelta);
+    return { growThreads, weakenThreads };
 }
 
 function runAllocation(
