@@ -4,9 +4,15 @@
 
 - After you finish coding a feature look at the code you generated for
   possible refactorings you could do to improve the code clarity and
-  structure.
-- Always include doc comments for exported functions (except the main
-  and autocomplete functions).
+  structure. Try to simplify the code produced instead of adding
+  complexity. When it makes sense reduce duplicated code by
+  introducing new helper methods.
+- Always include JSDoc formatted doc comments for exported functions
+  (except the main and autocomplete functions). These functions should
+  document the arguments and return values using standard
+  formatting. And a clear but concise description of the function. The
+  length of the doc comment should be inversely proportional to the
+  length and complexity of the function.
 
 
 ## Terminology used to classify hosts
@@ -39,18 +45,13 @@ Any individual host can be both a Worker and a Target simultaneously.
 You can color code messages passed to `ns.print` by prefixing your
 string with one of these strings:
 
-- `"ERROR: "`: The whole string will be printed in red. Use this prefix to indicate
-  that an error has occurred.
+- `"ERROR: "`: The whole string will be printed in red. Use this prefix to indicate that an error has occurred.
 
-- `"SUCCESS: "`: The whole string will be printed in green, similar to the default
-  theme of the Terminal. Use this prefix to indicate that something is correct.
+- `"SUCCESS: "`: The whole string will be printed in green, similar to the default theme of the Terminal. Use this prefix to indicate that something is correct.
 
-- `"WARN: "`: The whole string will be printed in yellow. Use this prefix to
-  indicate that you or a user of your script should be careful of something.
+- `"WARN: "`: The whole string will be printed in yellow. Use this prefix to indicate that you or a user of your script should be careful of something.
 
-- `"INFO: "`: The whole string will be printed in purplish blue. Use this prefix to
-  remind yourself or a user of your script of something. Think of this prefix as
-  indicating an FYI (for your information).
+- `"INFO: "`: The whole string will be printed in purplish blue. Use this prefix to remind yourself or a user of your script of something. Think of this prefix as indicating an FYI (for your information).
 
 
 
@@ -64,13 +65,8 @@ string with one of these strings:
 
 ## Authoring New Scripts
 
-- Every script command-line argument, whether a flag or positional
-  argument, should be type-checked using the typescript idiom (`typeof x !=
-  "string"`). The script should return early with an error message if
-  the argument type is incorrect.
-- Every new script that is created should have a `--help` flag that is
-  shown when incorrect options are passed and displays a standard UNIX
-  style usage message describing:
+- Every script command-line argument, whether a flag or positional argument, should be type-checked using the typescript idiom (`typeof x != "string"`). The script should return early with an error message if the argument type is incorrect.
+- Every new script that is created should have a `--help` flag that is shown when incorrect options are passed and displays a standard UNIX style usage message describing:
   * what the script does
   * examples of how to use it
   * all of the flags that the script takes
@@ -119,4 +115,6 @@ OPTIONS
 ## Commit Authoring Convention
 
 Prefix every commit message with the name of the folder in source in
-square brackets like "[batch]".
+square brackets like "[batch]". If a commit touches files in multiple
+directories use the folder name that the commit is most conceptually
+linked to.
