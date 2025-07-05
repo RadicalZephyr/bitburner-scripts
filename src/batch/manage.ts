@@ -49,7 +49,7 @@ export async function main(ns: NS) {
     let discovery = new DiscoveryClient(ns);
     let monitor = new MonitorClient(ns);
     let memory = new MemoryClient(ns);
-    let manager = new TargetSelector(ns, monitor);
+    let manager = new TaskSelector(ns, monitor);
 
     ns.print(`INFO: requesting targets from Discovery service`);
     let targets = await discovery.requestTargets({ messageType: MessageType.NewTarget, port: MANAGER_PORT });
@@ -76,7 +76,7 @@ async function readHostsFromPort(
     ns: NS,
     managerPort: NetscriptPort,
     responsePort: NetscriptPort,
-    manager: TargetSelector,
+    manager: TaskSelector,
     monitor: MonitorClient
 ) {
     for (let nextMsg of readAllFromPort(ns, managerPort)) {
@@ -120,7 +120,7 @@ async function readHostsFromPort(
     }
 }
 
-class TargetSelector {
+class TaskSelector {
     ns: NS;
     monitor: MonitorClient;
 
@@ -372,7 +372,7 @@ class TargetSelector {
 
 }
 
-async function tick(ns: NS, memory: MemoryClient, manager: TargetSelector) {
+async function tick(ns: NS, memory: MemoryClient, manager: TaskSelector) {
     manager.updateVelocity();
 
     const freeRam = await memory.getFreeRam();
