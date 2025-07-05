@@ -16,7 +16,12 @@ import { launch } from "services/launch";
 
 import { readAllFromPort } from "util/ports";
 
-const HEARTBEAT_TIMEOUT_MS = CONFIG.heartbeatTimeoutMs;
+interface PendingLaunch {
+    pid: number;
+    host: string;
+    type: "till" | "sow" | "harvest";
+    time: number;
+}
 
 
 let compareExpectedValue: (ta: string, tb: string) => number;
@@ -143,7 +148,7 @@ class TaskSelector {
     pendingSowTargets: string[] = [];
     pendingHarvestTargets: string[] = [];
 
-    pendingLaunches: { pid: number; host: string; type: "till" | "sow" | "harvest"; time: number }[] = [];
+    pendingLaunches: PendingLaunch[] = [];
 
     hackHistory: { time: number, level: number }[] = [];
     velocity: number = 0;
@@ -266,9 +271,9 @@ class TaskSelector {
 
     private async checkPendingLaunches() {
         const now = Date.now();
-        const stillWaiting: typeof this.pendingLaunches = [];
+        const stillWaiting: PendingLaunch[] = [];
         for (const launch of this.pendingLaunches) {
-            if (now - launch.time > HEARTBEAT_TIMEOUT_MS && !this.ns.isRunning(launch.pid)) {
+            if (now - launch.time > CONFIG.heartbeatTimeoutMs && !this.ns.isRunning(launch.pid)) {
                 this.ns.print(`WARN: launch of ${launch.type} on ${launch.host} failed`);
                 await this.pushTarget(launch.host);
             } else {
@@ -282,17 +287,44 @@ class TaskSelector {
         await this.checkPendingLaunches();
         if (this.pendingLaunches.length > 0) return;
 
-        type Task = {
-            host: string;
-            type: "till" | "sow" | "harvest";
-            ram: number;
-            threads?: number;
-            value: number;
-        };
+        const harvestTasks = [...this.pendingHarvestTargets]
+            .filter(h => canHarvest(this.ns, h) && worthHarvesting(this.ns, h))
+            .map(h => ({
+                host: h,
+                ram: calculateBatchLogistics(this.ns, h).requiredRam,
+                value: expectedValuePerRamSecond(this.ns, h),
+            }))
+            .sort((a, b) => b.value - a.value);
 
-        const harvestTasks: Task[] = [];
-        const sowTasks: Task[] = [];
-        const tillTasks: Task[] = [];
+        for (const task of harvestTasks) {
+            if (task.ram <= freeRam) {
+                await this.launchHarvest(task.host);
+                return;
+            }
+        }
+
+        if (this.sowTargets.size < CONFIG.maxSowTargets) {
+            const canAdd = CONFIG.maxSowTargets - this.sowTargets.size;
+            let candidates: string[] = [];
+            if (this.ns.getHackingLevel() === 1) {
+                if (this.pendingTillTargets.includes("n00dles") && this.pendingTillTargets.includes("foodnstuff")) {
+                    candidates = ["n00dles", "foodnstuff"];
+                }
+            } else if (Math.abs(this.velocity) <= 0.05) {
+                candidates = [...this.pendingSowTargets];
+            }
+            candidates.sort(compareLevel);
+            for (const host of candidates.slice(0, canAdd)) {
+                const { growThreads, weakenThreads } = calculateSowThreads(this.ns, host);
+                const total = growThreads + weakenThreads;
+                const ram = growThreads * this.ns.getScriptRam("/batch/g.js", "home") +
+                    weakenThreads * this.ns.getScriptRam("/batch/w.js", "home");
+                if (ram <= freeRam) {
+                    await this.launchSow(host, total);
+                    return;
+                }
+            }
+        }
 
         if (this.tillTargets.size < CONFIG.maxTillTargets) {
             const canAdd = CONFIG.maxTillTargets - this.tillTargets.size;
@@ -308,57 +340,9 @@ class TaskSelector {
             for (const host of candidates.slice(0, canAdd)) {
                 const threads = calculateWeakenThreads(this.ns, host);
                 const ram = threads * this.ns.getScriptRam("/batch/w.js", "home");
-                const value = expectedValuePerRamSecond(this.ns, host);
-                tillTasks.push({ host, type: "till", ram, threads, value });
-            }
-        }
-
-        if (this.sowTargets.size < CONFIG.maxSowTargets) {
-            const canAdd = CONFIG.maxSowTargets - this.sowTargets.size;
-            let candidates: string[] = [];
-            if (this.ns.getHackingLevel() === 1) {
-                if (this.pendingTillTargets.includes("n00dles") && this.pendingTillTargets.includes("foodnstuff")) {
-                    candidates = ["n00dles", "foodnstuff"];
-                }
-            } else if (Math.abs(this.velocity) <= 0.05) {
-                candidates = [...this.pendingTillTargets];
-            }
-            candidates.sort(compareLevel);
-            for (const host of candidates.slice(0, canAdd)) {
-                const { growThreads, weakenThreads } = calculateSowThreads(this.ns, host);
-                const total = growThreads + weakenThreads;
-                const ram = growThreads * this.ns.getScriptRam("/batch/g.js", "home") +
-                    weakenThreads * this.ns.getScriptRam("/batch/w.js", "home");
-                const value = expectedValuePerRamSecond(this.ns, host);
-                sowTasks.push({ host, type: "sow", ram, threads: total, value });
-            }
-        }
-
-        for (const host of this.pendingHarvestTargets) {
-            if (!canHarvest(this.ns, host) || !worthHarvesting(this.ns, host)) {
-                continue;
-            }
-            const logistics = calculateBatchLogistics(this.ns, host);
-            const ram = logistics.requiredRam;
-            const value = expectedValuePerRamSecond(this.ns, host);
-            harvestTasks.push({ host, type: "harvest", ram, value });
-        }
-        const groups = [harvestTasks, sowTasks, tillTasks];
-        for (const group of groups) {
-            group.sort((a, b) => b.value - a.value);
-            for (const t of group) {
-                if (t.ram > freeRam) continue;
-                freeRam -= t.ram;
-                switch (t.type) {
-                    case "till":
-                        await this.launchTill(t.host, t.threads ?? 0);
-                        return;
-                    case "sow":
-                        await this.launchSow(t.host, t.threads ?? 0);
-                        return;
-                    case "harvest":
-                        await this.launchHarvest(t.host);
-                        return;
+                if (ram <= freeRam) {
+                    await this.launchTill(host, threads);
+                    return;
                 }
             }
         }
