@@ -179,6 +179,10 @@ OPTIONS
             if (typeof donePid === "number" && lastScriptPid !== donePid) {
                 ns.print(`INFO: expected to receive done message from ${lastScriptPid}, got ${donePid}`);
             }
+        } else {
+            ns.print(`WARN: lastScriptPid was not a number, did scripts fail to launch?`);
+            // Safety sleep to avoid hanging
+            await ns.sleep(10);
         }
 
         const actualSecurity = ns.getServerSecurityLevel(target);
