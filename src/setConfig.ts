@@ -1,11 +1,23 @@
-import type { NS } from "netscript";
+import type { NS, AutocompleteData } from "netscript";
 
-import { LocalStorage } from "util/localStorage";
+import { CONFIG as BatchConfig } from 'batch/config';
+import { CONFIG as ServiceConfig } from 'services/config';
+import { CONFIG as StockConfig } from 'stock/config';
+
+export function autocomplete(_data: AutocompleteData, args: string[]): string[] {
+    return allConfigValues();
+}
 
 export async function main(ns: NS) {
     const flags = ns.flags([
+        ['show', false],
         ['help', false]
     ]);
+
+    if (flags.show) {
+        ns.tprint(`All config values: ${allConfigValues().join(", ")}`);
+        return;
+    }
 
     const rest = flags._ as string[];
     if (rest.length !== 2 || flags.help) {
@@ -27,5 +39,22 @@ Example:
     }
     let value = rest[1];
 
-    LocalStorage.setItem(key, value);
+    for (const config of [BatchConfig, ServiceConfig, StockConfig]) {
+        if (Object.hasOwn(config, key)) {
+            const prev = config[key];
+            config[key] = value;
+            ns.tprint(`Config ${config.prefix}_${key} changed from ${prev} to ${config[key]}`);
+        }
+    }
+}
+
+const commonKeys: Set<string> = new Set(["prefix", "entries", "defaultSetters"]);
+
+function allConfigValues(): string[] {
+    const allKeys = [
+        ...Object.keys(BatchConfig),
+        ...Object.keys(ServiceConfig),
+        ...Object.keys(StockConfig),
+    ];
+    return allKeys.filter((k: string) => !commonKeys.has(k));
 }
