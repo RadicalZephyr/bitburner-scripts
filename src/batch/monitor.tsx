@@ -51,7 +51,8 @@ Example:
     ns.disableLog('ALL');
     ns.clearLog();
     ns.ui.openTail();
-    ns.ui.resizeTail(915, 650);
+    ns.ui.setTailTitle("Monitor");
+    ns.ui.resizeTail(930, 650);
     ns.ui.moveTail(1220, 0);
 
     const tableSortings: Record<string, SortBy> = {

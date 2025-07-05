@@ -65,7 +65,8 @@ Example:
 
     ns.disableLog("ALL");
     ns.ui.openTail();
-    ns.ui.resizeTail(915, 560);
+    ns.ui.setTailTitle("Memory Allocator");
+    ns.ui.resizeTail(930, 560);
     ns.ui.moveTail(1220, 650);
 
     const log: string[] = [];
