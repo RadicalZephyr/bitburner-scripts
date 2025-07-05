@@ -103,20 +103,23 @@ OPTIONS
 
     let threadsNeeded = calculateWeakenThreads(ns, target);
     const totalThreads = allocation.allocatedChunks.reduce((s, c) => s + c.numChunks, 0);
-    const roundTime = ns.getWeakenTime(target);
-    const startTime = Date.now();
+
     let round = 0;
 
     while (threadsNeeded > 0) {
         round += 1;
         const roundsRemaining = Math.ceil(threadsNeeded / totalThreads);
         const totalRounds = (round - 1) + roundsRemaining;
-        const roundEnd = startTime + round * roundTime;
-        const totalExpectedEnd = startTime + totalRounds * roundTime;
+
+        const roundTime = ns.getWeakenTime(target);
+        const roundStart = ns.self().onlineRunningTime * 1000;
+        const roundEnd = roundStart + roundTime;
+        const totalExpectedEnd = roundStart + (roundsRemaining * roundTime);
 
         const spawnThreads = Math.min(threadsNeeded, totalThreads);
         const pids: number[] = [];
         let remaining = spawnThreads;
+
         for (const chunk of allocation.allocatedChunks) {
             if (remaining <= 0) break;
             const t = Math.min(chunk.numChunks, remaining);
@@ -129,14 +132,15 @@ OPTIONS
             }
             remaining -= t;
         }
+
         for (const pid of pids) {
             while (ns.isRunning(pid)) {
                 ns.clearLog();
-                const elapsed = Date.now() - startTime;
+                const elapsed = ns.self().onlineRunningTime * 1000;
                 ns.print(`
 Round ${round} of ${totalRounds}
-Round ends:         ${ns.tFormat(roundEnd - startTime)}
-Total expected:     ${ns.tFormat(totalExpectedEnd - startTime)}
+Round ends:         ${ns.tFormat(roundEnd)}
+Total expected:     ${ns.tFormat(totalExpectedEnd)}
 Elapsed time:       ${ns.tFormat(elapsed)}
 `);
                 await managerClient.heartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Till);
