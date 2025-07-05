@@ -2,8 +2,7 @@ import type { AutocompleteData, NS } from "netscript";
 
 import { ManagerClient, Lifecycle } from "batch/client/manage";
 
-import { registerAllocationOwnership } from "services/client/memory";
-import { launch } from "services/launch";
+import { registerAllocationOwnership, MemoryClient } from "services/client/memory";
 
 
 export function autocomplete(data: AutocompleteData, _args: string[]): string[] {
@@ -60,47 +59,80 @@ OPTIONS
         return;
     }
 
-    let managerClient = new ManagerClient(ns);
+    const managerClient = new ManagerClient(ns);
+    const memClient = new MemoryClient(ns);
+    const script = "/batch/w.js";
+    const scriptRam = ns.getScriptRam(script, "home");
 
-    let threads = calculateWeakenThreads(ns, target);
+    let maxThreadsCap = calculateWeakenThreads(ns, target);
     if (maxThreads !== -1) {
-        threads = Math.min(threads, maxThreads);
+        maxThreadsCap = Math.min(maxThreadsCap, maxThreads);
     }
 
-    if (threads == 0 || isNaN(threads)) {
+    if (maxThreadsCap === 0 || isNaN(maxThreadsCap)) {
         ns.printf("%s security is already at minimum level", target);
         ns.toast(`finished tilling ${target}!`, "success");
         managerClient.finishedTilling(target);
         return;
     }
 
-    let expectedTime = ns.tFormat(ns.getWeakenTime(target));
-
-    let result = await launch(
-        ns,
-        "/batch/w.js",
-        { threads: threads, coreDependent: true },
-        target,
-        0,
+    let allocation = await memClient.requestTransferableAllocation(
+        scriptRam,
+        maxThreadsCap,
+        false,
+        true,
     );
+    while (!allocation) {
+        await ns.sleep(1000);
+        allocation = await memClient.requestTransferableAllocation(
+            scriptRam,
+            maxThreadsCap,
+            false,
+            true,
+        );
+    }
 
     // Send a Till Heartbeat to indicate we're starting the main loop
     await managerClient.heartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Till);
 
-    for (const pid of result.pids) {
-        while (ns.isRunning(pid)) {
-            ns.clearLog();
-            let selfScript = ns.self();
-            ns.print(`
+    let threadsNeeded = calculateWeakenThreads(ns, target);
+    const totalThreads = allocation.allocatedChunks.reduce((s, c) => s + c.numChunks, 0);
+
+    while (threadsNeeded > 0) {
+        const spawnThreads = Math.min(threadsNeeded, totalThreads);
+        const pids: number[] = [];
+        let remaining = spawnThreads;
+        for (const chunk of allocation.allocatedChunks) {
+            if (remaining <= 0) break;
+            const t = Math.min(chunk.numChunks, remaining);
+            ns.scp(script, chunk.hostname, "home");
+            const pid = ns.exec(script, chunk.hostname, t, target, 0);
+            if (pid) {
+                pids.push(pid);
+            } else {
+                ns.tprintf("failed to spawn %d threads on %s", t, chunk.hostname);
+            }
+            remaining -= t;
+        }
+
+        const expectedTime = ns.tFormat(ns.getWeakenTime(target));
+        for (const pid of pids) {
+            while (ns.isRunning(pid)) {
+                ns.clearLog();
+                const selfScript = ns.self();
+                ns.print(`
 Expected time: ${expectedTime}
 Elapsed time:  ${ns.tFormat(selfScript.onlineRunningTime * 1000)}
 `);
-            await managerClient.heartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Till);
-            await ns.sleep(1000);
+                await managerClient.heartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Till);
+                await ns.sleep(1000);
+            }
         }
+
+        threadsNeeded = calculateWeakenThreads(ns, target);
     }
 
-    await result.allocation.release(ns);
+    await allocation.release(ns);
     ns.toast(`finished tilling ${target}!`, "success");
     managerClient.finishedTilling(target);
 }
