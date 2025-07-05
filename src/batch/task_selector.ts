@@ -284,13 +284,25 @@ class TaskSelector {
             }
         }
 
-        for (const host of this.pendingSowTargets) {
-            const { growThreads, weakenThreads } = calculateSowThreads(this.ns, host);
-            const total = growThreads + weakenThreads;
-            const ram = growThreads * this.ns.getScriptRam("/batch/g.js", "home") +
-                weakenThreads * this.ns.getScriptRam("/batch/w.js", "home");
-            const value = expectedValuePerRamSecond(this.ns, host);
-            tasks.push({ host, type: "sow", ram, threads: total, value });
+        if (this.sowTargets.size < CONFIG.maxSowTargets) {
+            const canAdd = CONFIG.maxSowTargets - this.sowTargets.size;
+            let candidates: string[] = [];
+            if (this.ns.getHackingLevel() === 1) {
+                if (this.pendingTillTargets.includes("n00dles") && this.pendingTillTargets.includes("foodnstuff")) {
+                    candidates = ["n00dles", "foodnstuff"];
+                }
+            } else if (Math.abs(this.velocity) <= 0.05) {
+                candidates = [...this.pendingTillTargets];
+            }
+            candidates.sort(compareExpectedValue);
+            for (const host of candidates.slice(0, canAdd)) {
+                const { growThreads, weakenThreads } = calculateSowThreads(this.ns, host);
+                const total = growThreads + weakenThreads;
+                const ram = growThreads * this.ns.getScriptRam("/batch/g.js", "home") +
+                    weakenThreads * this.ns.getScriptRam("/batch/w.js", "home");
+                const value = expectedValuePerRamSecond(this.ns, host);
+                tasks.push({ host, type: "sow", ram, threads: total, value });
+            }
         }
 
         for (const host of this.pendingHarvestTargets) {

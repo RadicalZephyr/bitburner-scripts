@@ -3,6 +3,7 @@ import { Config, ConfigInstance } from "util/config";
 const entries = [
     ["batchInterval", 80],
     ["maxTillTargets", 2],
+    ["maxSowTargets", 2],
     ["expectedValueThreshold", 100],
     ["minSecTolerance", 1],
     ["maxMoneyTolerance", 0.99],
