@@ -185,12 +185,12 @@ Example:
 
         ns.clearLog();
         ns.printRaw(<>
-            <ServerBlock ns={ns} title={"Harvesting"} phase={tableSortings.harvesting} setTableSorting={setTableSorting.bind(null, "harvesting")} theme={theme}></ServerBlock>
-            <ServerBlock ns={ns} title={"Pending Harvesting"} phase={tableSortings.pendingHarvesting} setTableSorting={setTableSorting.bind(null, "pendingHarvesting")} theme={theme}></ServerBlock>
-            <ServerBlock ns={ns} title={"Sowing"} phase={tableSortings.sowing} setTableSorting={setTableSorting.bind(null, "sowing")} theme={theme}></ServerBlock>
-            <ServerBlock ns={ns} title={"Pending Sowing"} phase={tableSortings.pendingSowing} setTableSorting={setTableSorting.bind(null, "pendingSowing")} theme={theme}></ServerBlock>
-            <ServerBlock ns={ns} title={"Tilling"} phase={tableSortings.tilling} setTableSorting={setTableSorting.bind(null, "tilling")} theme={theme}></ServerBlock>
-            <ServerBlock ns={ns} title={"Pending Tilling"} phase={tableSortings.pendingTilling} setTableSorting={setTableSorting.bind(null, "pendingTilling")} theme={theme}></ServerBlock>
+            <ServerBlock ns={ns} queuePidsForTail={queuePidsForTail} title={"Harvesting"} phase={tableSortings.harvesting} setTableSorting={setTableSorting.bind(null, "harvesting")} theme={theme}></ServerBlock>
+            <ServerBlock ns={ns} queuePidsForTail={queuePidsForTail} title={"Pending Harvesting"} phase={tableSortings.pendingHarvesting} setTableSorting={setTableSorting.bind(null, "pendingHarvesting")} theme={theme}></ServerBlock>
+            <ServerBlock ns={ns} queuePidsForTail={queuePidsForTail} title={"Sowing"} phase={tableSortings.sowing} setTableSorting={setTableSorting.bind(null, "sowing")} theme={theme}></ServerBlock>
+            <ServerBlock ns={ns} queuePidsForTail={queuePidsForTail} title={"Pending Sowing"} phase={tableSortings.pendingSowing} setTableSorting={setTableSorting.bind(null, "pendingSowing")} theme={theme}></ServerBlock>
+            <ServerBlock ns={ns} queuePidsForTail={queuePidsForTail} title={"Tilling"} phase={tableSortings.tilling} setTableSorting={setTableSorting.bind(null, "tilling")} theme={theme}></ServerBlock>
+            <ServerBlock ns={ns} queuePidsForTail={queuePidsForTail} title={"Pending Tilling"} phase={tableSortings.pendingTilling} setTableSorting={setTableSorting.bind(null, "pendingTilling")} theme={theme}></ServerBlock>
         </>);
         ns.ui.renderTail();
 
@@ -376,10 +376,11 @@ interface IBlockSettings {
     title: string,
     phase: SortBy,
     setTableSorting: (column: string) => void,
+    queuePidsForTail: (pids: number[]) => void;
     theme: UserInterfaceTheme,
 }
 
-export function ServerBlock({ ns, title, phase, setTableSorting, theme }: IBlockSettings) {
+export function ServerBlock({ ns, title, phase, setTableSorting, queuePidsForTail, theme }: IBlockSettings) {
     const cellStyle = { padding: "0 0.5em" };
     return (<>
         <h2>{title} - {phase.data.length} targets</h2>
@@ -398,7 +399,7 @@ export function ServerBlock({ ns, title, phase, setTableSorting, theme }: IBlock
                     <th style={cellStyle}><Header sortedBy={phase} setTableSorting={setTableSorting} field={"threadsW"}>thr(w)</Header></th>
                 </tr>
             </thead>
-            {phase.data.map((target, idx) => <ServerRow ns={ns} host={target} theme={theme} rowIndex={idx} cellStyle={cellStyle}></ServerRow>)}
+            {phase.data.map((target, idx) => <ServerRow ns={ns} host={target} theme={theme} queuePidsForTail={queuePidsForTail} rowIndex={idx} cellStyle={cellStyle}></ServerRow>)}
         </table>
     </>);
 }
@@ -439,13 +440,14 @@ interface IRowSettings {
     host: HostInfo,
     rowIndex: number,
     cellStyle: any,
+    queuePidsForTail: (pids: number[]) => void;
     theme: UserInterfaceTheme,
 }
 
-function ServerRow({ ns, host, rowIndex, cellStyle, theme }: IRowSettings) {
+function ServerRow({ ns, host, rowIndex, cellStyle, queuePidsForTail, theme }: IRowSettings) {
     return (
         <tr key={host.name} style={rowIndex % 2 === 1 ? undefined : { backgroundColor: theme.well }}>
-            <td style={cellStyle}>{host.name}</td>
+            <td style={cellStyle}><Hostname host={host} theme={theme} queuePidsForTail={queuePidsForTail} /></td>
             <td style={cellStyle}>{`$${ns.formatNumber(host.harvestMoney, 2)}`}</td>
             <td style={cellStyle}>{`$${ns.formatNumber(host.expectedValue, 2)}`}</td>
             <td style={cellStyle}>{`${ns.formatNumber(host.hckLevel, 0, 1000000, true)}`}</td>
@@ -457,6 +459,16 @@ function ServerRow({ ns, host, rowIndex, cellStyle, theme }: IRowSettings) {
             <td style={cellStyle}>{formatThreads(ns, host.threadsW)}</td>
         </tr>
     );
+}
+
+interface IHostnameSettings {
+    host: HostInfo;
+    queuePidsForTail: (pids: number[]) => void;
+    theme: UserInterfaceTheme;
+}
+
+function Hostname({ host, queuePidsForTail, theme }: IHostnameSettings) {
+    return (<a style={{ color: theme.primarylight }} href="#" onClick={() => queuePidsForTail(host.pids)}>{host.name}</a>)
 }
 
 function formatPercent(ns: NS, value: number) {
