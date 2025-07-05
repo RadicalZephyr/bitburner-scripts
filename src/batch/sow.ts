@@ -102,32 +102,47 @@ OPTIONS
         if (!growAlloc) await ns.sleep(1000);
     }
 
-    const expectedTime = ns.tFormat(ns.getWeakenTime(target));
-
     // Send a Sow Heartbeat to indicate we're starting the main loop
     await managerClient.heartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Sow);
 
-    let growNeeded = growThreads;
-    let weakenNeeded = weakenThreads;
+    let totalGrowThreads = neededGrowThreads(ns, target);
+    const totalThreads = growAlloc.allocatedChunks.reduce((s, c) => s + c.numChunks, 0);
 
-    while (growNeeded > 0) {
-        const growPids = runAllocation(ns, growAlloc, GROW_SCRIPT, growNeeded, target, 0);
-        const weakenPids = runAllocation(ns, weakenAlloc, WEAKEN_SCRIPT, weakenNeeded, target, 0);
+    let round = 0;
+
+    while (growThreads > 0) {
+        round += 1;
+        const roundsRemaining = Math.ceil(totalGrowThreads / totalThreads);
+        const totalRounds = (round - 1) + roundsRemaining;
+
+        const roundTime = ns.getWeakenTime(target);
+        const roundStart = ns.self().onlineRunningTime * 1000;
+        const roundEnd = roundStart + roundTime;
+        const totalExpectedEnd = roundStart + (roundsRemaining * roundTime);
+
+        const growPids = runAllocation(ns, growAlloc, GROW_SCRIPT, growThreads, target, 0);
+        const weakenPids = runAllocation(ns, weakenAlloc, WEAKEN_SCRIPT, weakenThreads, target, 0);
         const pids = [...growPids, ...weakenPids];
 
         for (const pid of pids) {
             while (ns.isRunning(pid)) {
                 ns.clearLog();
-                const selfScript = ns.self();
-                ns.print(`\nExpected time: ${expectedTime}\nElapsed time:  ${ns.tFormat(selfScript.onlineRunningTime * 1000)}`);
+                const elapsed = ns.self().onlineRunningTime * 1000;
+                ns.print(`
+Round ${round} of ${totalRounds}
+Round ends:      ${ns.tFormat(roundEnd)}
+Total expected:  ${ns.tFormat(totalExpectedEnd)}
+Elapsed time:    ${ns.tFormat(elapsed)}
+`);
                 await managerClient.heartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Sow);
                 await ns.sleep(1000);
             }
         }
 
-        growNeeded = Math.min(neededGrowThreads(ns, target), growThreads);
-        const growSec = ns.growthAnalyzeSecurity(growNeeded, target);
-        weakenNeeded = Math.min(weakenAnalyze(growSec), weakenThreads);
+        totalGrowThreads = neededGrowThreads(ns, target);
+        growThreads = Math.min(totalGrowThreads, growThreads);
+        const growSec = ns.growthAnalyzeSecurity(growThreads, target);
+        weakenThreads = Math.min(weakenAnalyze(growSec), weakenThreads);
     }
 
     await weakenAlloc.release(ns);
