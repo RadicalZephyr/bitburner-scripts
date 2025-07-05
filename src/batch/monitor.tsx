@@ -8,6 +8,7 @@ import { DiscoveryClient } from "services/client/discover";
 import { ManagerClient } from "batch/client/manage";
 import { registerAllocationOwnership } from "services/client/memory";
 
+import { extend } from "util/extend";
 import { readAllFromPort } from "util/ports";
 
 
@@ -93,6 +94,12 @@ Example:
             tableSortings[table].key = sortBy;
             tableSortings[table].dir = Dir.Desc;
         }
+    }
+
+    const openTailQueue: number[] = [];
+
+    function queuePidsForTail(pids: number[]) {
+        extend(openTailQueue, pids);
     }
 
     const monitorPort = ns.getPortHandle(MONITOR_PORT);
@@ -186,6 +193,12 @@ Example:
             <ServerBlock ns={ns} title={"Pending Tilling"} phase={tableSortings.pendingTilling} setTableSorting={setTableSorting.bind(null, "pendingTilling")} theme={theme}></ServerBlock>
         </>);
         ns.ui.renderTail();
+
+        for (const pid of openTailQueue) {
+            ns.ui.openTail(pid);
+        }
+        // Clear the queue after we process it
+        openTailQueue.length = 0;
         await ns.sleep(flags.refreshrate);
     }
 }
