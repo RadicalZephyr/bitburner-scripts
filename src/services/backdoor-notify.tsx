@@ -22,12 +22,24 @@ const FACTION_SERVERS = [
 export async function main(ns: NS) {
     ns.disableLog("ALL");
     ns.clearLog();
-    ns.ui.openTail();
+
+    let tailOpen = false;
 
     while (true) {
         const factionMissingBackdoor = [];
         for (const host of FACTION_SERVERS) {
-            factionMissingBackdoor.push(host);
+            const info = ns.getServer(host);
+            if (needsBackdoor(info) && canInstallBackdoor(ns, info)) {
+                factionMissingBackdoor.push(host);
+                if (!tailOpen) {
+                    tailOpen = true;
+                    ns.ui.openTail();
+                }
+            }
+        }
+        if (tailOpen && factionMissingBackdoor.length === 0) {
+            tailOpen = false;
+            ns.ui.closeTail();
         }
 
         const network = walkNetworkBFS(ns);
@@ -35,7 +47,7 @@ export async function main(ns: NS) {
 
         for (const host of network.keys()) {
             const info = ns.getServer(host);
-            if (!FACTION_SERVERS.includes(info) && needsBackdoor(info) && canInstallBackdoor(ns, info)) {
+            if (!FACTION_SERVERS.includes(host) && needsBackdoor(info) && canInstallBackdoor(ns, info)) {
                 missingBackdoor.push(host);
             }
         }
