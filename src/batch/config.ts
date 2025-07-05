@@ -8,6 +8,7 @@ const entries = [
     ["minSecTolerance", 1],
     ["maxMoneyTolerance", 0.99],
     ["maxHackPercent", 0.5],
+    ["heartbeatTimeoutMs", 3000],
 ] as const;
 
 export const CONFIG: ConfigInstance<typeof entries> =
