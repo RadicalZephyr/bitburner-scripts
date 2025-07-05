@@ -94,6 +94,11 @@ OPTIONS
         ? maxHackPercentForRam(ns, target, maxRam)
         : CONFIG.maxHackPercent;
 
+    if (maxRam !== -1 && hackPercent === 0) {
+        ns.tprint(`max-ram ${ns.formatRam(maxRam)} is too small for one batch`);
+        return;
+    }
+
     let logistics = calculateBatchLogistics(ns, target, hackPercent);
     let overlapLimit = logistics.overlap;
     if (maxRam !== -1) {
