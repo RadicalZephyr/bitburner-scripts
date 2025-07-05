@@ -36,7 +36,7 @@ async function clearPorts(ns: NS) {
     }
 }
 
-const hudScripts = new Set(["batch/manage.js", "batch/monitor.js", "services/memory.js"]);
+const hudScripts = new Set(["batch/task_selector.js", "batch/monitor.js", "services/memory.js"]);
 
 function closeBatchHUDs(ns: NS, procs: ProcessInfo[]) {
     for (const p of procs) {
