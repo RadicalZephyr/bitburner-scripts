@@ -71,7 +71,7 @@ export type SetDefaultFn = (() => void);
  * LocalStorage on construction and can be reapplied with `setDefaults()`.
  */
 export class Config<Entries extends ReadonlyArray<readonly [string, ConfigValue]>> {
-    private readonly prefix: string;
+    private readonly _prefix: string;
     private readonly entries: Entries;
     private defaultSetters: SetDefaultFn[];
 
@@ -83,12 +83,16 @@ export class Config<Entries extends ReadonlyArray<readonly [string, ConfigValue]
      *   entry generates a property on the instance.
      */
     constructor(prefix: string, entries: Entries) {
-        this.prefix = prefix;
+        this._prefix = prefix;
         this.entries = entries;
         this.defaultSetters = [];
 
         this.defineProperties();
         this.setDefaults();
+    }
+
+    get prefix(): string {
+        return this.prefix;
     }
 
     private defineProperties() {
@@ -98,7 +102,7 @@ export class Config<Entries extends ReadonlyArray<readonly [string, ConfigValue]
     }
 
     private registerConfig<N extends string, V extends ConfigValue>(spec: readonly [N, V]) {
-        let localStorageKey = this.prefix + "_" + spec[0];
+        let localStorageKey = this._prefix + "_" + spec[0];
         let [ser, de] = getSerDeFor(spec[1]) as SerDe<any>;
 
         this.defaultSetters.push(() => setConfigDefault(localStorageKey, ser(spec[1])));
