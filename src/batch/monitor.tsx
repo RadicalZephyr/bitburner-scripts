@@ -233,9 +233,10 @@ export class TargetThreads {
     wPid: number[];
 
     harvestMoney: number;
-    harvestPids: number[];
 
+    harvestPids: number[];
     sowPids: number[];
+    tillPids: number[];
 
     constructor() {
         this.h = 0;
@@ -249,8 +250,8 @@ export class TargetThreads {
 
         this.harvestMoney = 0;
         this.harvestPids = [];
-
         this.sowPids = [];
+        this.tillPids = [];
     }
 }
 
@@ -274,6 +275,8 @@ export function countThreadsByTarget(ns: NS, workers: string[], targets: string[
                 targetThread.harvestMoney = ns.getScriptIncome(pi.filename, worker, ...pi.args);
             } else if (pi.filename === 'batch/sow.js') {
                 targetThread.sowPids.push(pi.pid);
+            } else if (pi.filename === 'batch/till.js') {
+                targetThread.tillPids.push(pi.pid);
             } else if (pi.filename === 'batch/h.js') {
                 targetThread.hPid.push(pi.pid);
                 targetThread.h += pi.threads;
