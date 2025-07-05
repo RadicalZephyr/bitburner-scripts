@@ -24,15 +24,15 @@ OPTIONS
 
     ns.disableLog("ALL");
 
-    const maxThreadsList = [8, 16, 32, 64, 128];
+    const maxThreadsList = [8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384];
     const algos: [
         (ns: NS, t: string, m: number) => { n: number; growThreads: number; weakenThreads: number },
         string
     ][] = [
-        [calculateSowThreadsForMaxThreads1, "v1"],
-        [calculateSowThreadsForMaxThreads2, "v2"],
-        [calculateSowThreadsForMaxThreads3, "v3"],
-    ];
+            [calculateSowThreadsForMaxThreads1, "v1"],
+            [calculateSowThreadsForMaxThreads2, "v2"],
+            [calculateSowThreadsForMaxThreads3, "v3"],
+        ];
 
     for (const target of targets) {
         if (!ns.serverExists(target)) {
@@ -58,6 +58,7 @@ OPTIONS
                 `median=${ns.formatNumber(iterMed)} ` +
                 `Δ=${ns.formatNumber(wasteMean)} σ=${ns.formatNumber(wasteStd)}`
             );
+            await ns.sleep(10);
         }
     }
 }
