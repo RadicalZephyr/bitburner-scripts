@@ -92,7 +92,7 @@ export class Config<Entries extends ReadonlyArray<readonly [string, ConfigValue]
     }
 
     get prefix(): string {
-        return this.prefix;
+        return this._prefix;
     }
 
     private defineProperties() {
