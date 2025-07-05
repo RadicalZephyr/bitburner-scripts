@@ -295,6 +295,9 @@ export function countThreadsByTarget(ns: NS, workers: string[], targets: string[
 
 export type HostInfo = {
     name: string,
+
+    pids: number[],
+
     harvestMoney: number,
     expectedValue: number,
     hckLevel: number,
@@ -307,6 +310,12 @@ export type HostInfo = {
 }
 
 export function hostInfo(ns: NS, target: string, targetThreads: TargetThreads): HostInfo {
+    const pids = [
+        ...targetThreads.harvestPids,
+        ...targetThreads.sowPids,
+        ...targetThreads.tillPids
+    ];
+
     let hckLevel = ns.getServerRequiredHackingLevel(target);
     hckLevel = typeof hckLevel == "number" && !isNaN(hckLevel) ? hckLevel : 1;
     const minSec = ns.getServerMinSecurityLevel(target);
@@ -321,6 +330,8 @@ export function hostInfo(ns: NS, target: string, targetThreads: TargetThreads): 
 
     return {
         name: target,
+        pids,
+
         harvestMoney,
         expectedValue,
         hckLevel,
