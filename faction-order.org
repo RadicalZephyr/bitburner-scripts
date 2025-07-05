@@ -1,6 +1,21 @@
-* Tian Di Hui
+* Convenience Order
+
+** Tian Di Hui
   - SNA (bonus reputation)
   - No lack of focus penalty
-* Sector-12 : BruteSSH & start with $1m
-* Chongqing
+** Sector-12 : BruteSSH & start with $1m
+** Chongqing
   - +40% hacking exp
+
+* Thinking
+
+With an operational and (hopefully) scalable batch hacking system the
+main blocker to rapidly installing augments and boosting stats is
+gaining the reputation needed to buy them with factions.
+
+For this reason, I think Tian Di Hui is perhaps the META for which
+faction to target first, because most of the augments they sell relate
+to increased company and faction reputation gain.
+
+Most of the other easily accessible factions (city factions, hacker
+groups) have almost no augments that boost reputation gain.
