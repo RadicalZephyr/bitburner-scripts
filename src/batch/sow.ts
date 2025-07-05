@@ -1,9 +1,12 @@
-import type { AutocompleteData, NS } from "netscript";
+import type { AutocompleteData, NS, ScriptArg } from "netscript";
 
 import { ManagerClient, Lifecycle } from "batch/client/manage";
 
-import { registerAllocationOwnership } from "services/client/memory";
-import { launch } from "services/launch";
+import {
+    registerAllocationOwnership,
+    MemoryClient,
+    TransferableAllocation,
+} from "services/client/memory";
 
 const GROW_SCRIPT = "/batch/g.js";
 const WEAKEN_SCRIPT = "/batch/w.js";
@@ -87,55 +90,79 @@ OPTIONS
         return;
     }
 
-    let expectedTime = ns.tFormat(ns.getWeakenTime(target));
+    const memClient = new MemoryClient(ns);
 
-    let weakenResult = await launch(
-        ns,
-        WEAKEN_SCRIPT,
-        { threads: weakenThreads, coreDependent: true },
-        target,
-        0,
-    );
-    if (!weakenResult) {
-        ns.print(`sow failed to allocate for weaken threads`);
-        return;
+    const wRam = ns.getScriptRam(WEAKEN_SCRIPT, "home");
+    const gRam = ns.getScriptRam(GROW_SCRIPT, "home");
+
+    let weakenAlloc: TransferableAllocation | null = null;
+    while (!weakenAlloc) {
+        weakenAlloc = await memClient.requestTransferableAllocation(wRam, weakenThreads, false, true);
+        if (!weakenAlloc) await ns.sleep(1000);
     }
 
-    let growResult = await launch(
-        ns,
-        GROW_SCRIPT,
-        { threads: growThreads, coreDependent: true },
-        target,
-        0,
-    );
-    if (!growResult) {
-        ns.print(`sow failed to allocate for grow threads`);
-        await weakenResult.allocation.release(ns);
-        return;
+    let growAlloc: TransferableAllocation | null = null;
+    while (!growAlloc) {
+        growAlloc = await memClient.requestTransferableAllocation(gRam, growThreads, false, true);
+        if (!growAlloc) await ns.sleep(1000);
     }
+
+    const expectedTime = ns.tFormat(ns.getWeakenTime(target));
 
     // Send a Sow Heartbeat to indicate we're starting the main loop
     await managerClient.heartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Sow);
 
-    let pids = [...weakenResult.pids, ...growResult.pids];
+    let growNeeded = growThreads;
+    let weakenNeeded = weakenThreads;
 
-    for (const pid of pids) {
-        while (ns.isRunning(pid)) {
-            ns.clearLog();
-            let selfScript = ns.self();
-            ns.print(`
-Expected time: ${expectedTime}
-Elapsed time:  ${ns.tFormat(selfScript.onlineRunningTime * 1000)}
-`);
-            await managerClient.heartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Sow);
-            await ns.sleep(1000);
+    while (growNeeded > 0) {
+        const growPids = runAllocation(ns, growAlloc, GROW_SCRIPT, growNeeded, target, 0);
+        const weakenPids = runAllocation(ns, weakenAlloc, WEAKEN_SCRIPT, weakenNeeded, target, 0);
+        const pids = [...growPids, ...weakenPids];
+
+        for (const pid of pids) {
+            while (ns.isRunning(pid)) {
+                ns.clearLog();
+                const selfScript = ns.self();
+                ns.print(`\nExpected time: ${expectedTime}\nElapsed time:  ${ns.tFormat(selfScript.onlineRunningTime * 1000)}`);
+                await managerClient.heartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Sow);
+                await ns.sleep(1000);
+            }
         }
+
+        growNeeded = Math.min(neededGrowThreads(ns, target), growThreads);
+        const growSec = ns.growthAnalyzeSecurity(growNeeded, target);
+        weakenNeeded = Math.min(weakenAnalyze(growSec), weakenThreads);
     }
 
-    await weakenResult.allocation.release(ns);
-    await growResult.allocation.release(ns);
+    await weakenAlloc.release(ns);
+    await growAlloc.release(ns);
     ns.toast(`finished sowing ${target}!`, "success");
     managerClient.finishedSowing(target);
+}
+
+function runAllocation(
+    ns: NS,
+    allocation: TransferableAllocation,
+    script: string,
+    threads: number,
+    ...args: ScriptArg[]
+): number[] {
+    let remaining = threads;
+    let pids: number[] = [];
+    for (const chunk of allocation.allocatedChunks) {
+        if (remaining <= 0) break;
+        const t = Math.min(chunk.numChunks, remaining);
+        ns.scp(script, chunk.hostname, "home");
+        const pid = ns.exec(script, chunk.hostname, t, ...args);
+        if (pid === 0) {
+            ns.print(`WARN: failed to exec ${script} on ${chunk.hostname}`);
+        } else {
+            pids.push(pid);
+        }
+        remaining -= t;
+    }
+    return pids;
 }
 
 function neededGrowThreads(ns: NS, target: string) {
