@@ -1,4 +1,4 @@
-import type { NS } from "netscript";
+import type { NS, ProcessInfo } from "netscript";
 
 import { walkNetworkBFS } from 'util/walk';
 
@@ -9,6 +9,8 @@ export async function main(ns: NS) {
     let allHosts = new Set(network.keys());
 
     for (const host of allHosts) {
+        closeBatchHUDs(ns, ns.ps(host));
+
         ns.killall(host, true);
 
         let files = ns.ls(host, ".js");
@@ -30,6 +32,16 @@ async function clearPorts(ns: NS) {
         ns.clearPort(i);
         if (i % 500 === 0) {
             await ns.sleep(10);
+        }
+    }
+}
+
+const hudScripts = new Set(["batch/manage.js", "batch/monitor.js", "services/memory.js"]);
+
+function closeBatchHUDs(ns: NS, procs: ProcessInfo[]) {
+    for (const p of procs) {
+        if (hudScripts.has(p.filename)) {
+            ns.ui.closeTail(p.pid);
         }
     }
 }
