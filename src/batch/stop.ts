@@ -24,5 +24,5 @@ Example:
     }
 
     const scripts = ["services/discover.js", "services/memory.js", "batch/task_selector.js", "batch/monitor.js", "batch/harvest.js"];
-    ns.spawn("stopworld.js", 1, ...scripts);
+    ns.spawn("stopworld.js", { threads: 1, spawnDelay: 0 }, ...scripts);
 }
