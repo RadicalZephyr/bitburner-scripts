@@ -1,0 +1,54 @@
+// You are given a ~200 digit BigInt. Find the square root of this
+// number, to the nearest integer.
+export async function main(ns) {
+    let scriptName = ns.getScriptName();
+    let contractPortNum = ns.args[0];
+    if (typeof contractPortNum !== 'number') {
+        ns.tprintf('%s contract run with non-number answer port argument', scriptName);
+        return;
+    }
+    let contractDataJSON = ns.args[1];
+    if (typeof contractDataJSON !== 'string') {
+        ns.tprintf('%s contract run with non-string data argument. Must be a JSON string of the contract data.', scriptName);
+        return;
+    }
+    // N.B. In order to prevent BitBurner from automatically
+    // destroying the bigint by parsing it as a number and truncating
+    // it, the numeric string needs to be double quoted, so the actual
+    // string we read contains quotation marks that need to be
+    // stripped. We could use JSON.parse for this, but it seems
+    // simpler to just directly strip the quotation marks.
+    let contractData = BigInt(contractDataJSON.substring(1, contractDataJSON.length - 1));
+    ns.tprintf('contract data: %s', contractData.toString());
+    let answer = solve(contractData);
+    ns.writePort(contractPortNum, answer.toString());
+}
+function solve(data) {
+    let s = data;
+    let s_str = s.toString();
+    // Base an estimate on the square root as such `S = a * (10 **
+    // 2n)` which implies that `sqrt(S) = sqrt(a) * (10 ** n)`, where
+    // `1 <= a < 100`
+    // Calculate sqrt(a), where a is the two most significant digits
+    // of s
+    let a = Math.round(Math.sqrt(JSON.parse(s_str.substring(0, 2))));
+    // Calculate n from  for the exponent
+    let n = Math.floor((s_str.length - 2) / 2);
+    let x_n = BigInt(a) * (10n ** BigInt(n));
+    // Now iteratively calculate better approximations to the square
+    // root of S using Heron's Method
+    let two = BigInt(2);
+    while (!(x_n * x_n < s && (x_n + 1n) * (x_n + 1n) > s)) {
+        // Exit if a perfect root is found
+        if (x_n * x_n == s)
+            return x_n;
+        let x_n1 = (x_n + (s / x_n)) / 2n;
+        // No change in the estimate, time to exit
+        if (x_n == x_n1)
+            break;
+        x_n = x_n1;
+    }
+    const lower = x_n;
+    const upper = x_n + 1n;
+    return (s - lower * lower) <= (upper * upper - s) ? lower : upper;
+}

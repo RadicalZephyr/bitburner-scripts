@@ -1,17 +1,29 @@
-import { walkNetworkBFS } from "./walk-network.js";
-const scripts = {
-    'grow': '/batch/grow.js',
-    'hack': '/batch/hack.js',
-    'weaken': '/batch/weaken.js'
-};
-const scriptList = [scripts.grow, scripts.hack, scripts.weaken];
+const BOOTSTRAP_SCRIPTS = [
+    "/services/bootstrap.js",
+    "/batch/bootstrap.js"
+];
 export async function main(ns) {
-    let network = walkNetworkBFS(ns);
-    let hostNames = Array.from(network.keys()).filter(h => h !== 'home');
-    // Deploy all batch scripts to all servers
-    for (const host of hostNames) {
-        await ns.scp(scriptList, host);
+    for (const script of BOOTSTRAP_SCRIPTS) {
+        let pid = ns.run(script);
+        if (pid === 0) {
+            reportError(ns, `failed to launch ${script}`);
+        }
     }
-    let hosts = hostNames.map(h => ns.getServer(h));
-    ns.run('/batch/manage.js', 1, JSON.stringify(hosts));
+}
+function reportError(ns, error) {
+    ns.toast(error, "error");
+    ns.print(`ERROR: ${error}`);
+    ns.ui.openTail();
+}
+export async function dynamicBootstrap(_ns) {
+    let ns = _ns;
+    let currentDynamicRam = ns.ramOverride();
+    ;
+    for (const script of BOOTSTRAP_SCRIPTS) {
+        let scriptRam = ns.getScriptRam(script);
+        currentDynamicRam = ns.ramOverride(Math.max(currentDynamicRam, scriptRam));
+        let mod = await ns.dynamicImport(script);
+        await mod.main(ns);
+        await ns.sleep(10);
+    }
 }

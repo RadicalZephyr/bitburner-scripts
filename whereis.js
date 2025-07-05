@@ -1,24 +1,35 @@
-import { walkNetworkBFS } from "./walk-network.js";
+import { walkNetworkBFS } from 'util/walk';
 export function autocomplete(data, args) {
     return data.servers;
 }
 export async function main(ns) {
     const flags = ns.flags([
-        ['startingHost', 'home'],
+        ['goto', false],
+        ['startingHost', ns.self().server],
         ['help', false],
     ]);
-    if (flags._.length === 0 || flags.help) {
-        ns.tprint("This script prints the path between two servers in the network.");
-        ns.tprint(`USAGE: run ${ns.getScriptName()} SERVER_NAME`);
-        ns.tprint("Example:");
-        ns.tprint(`> run ${ns.getScriptName()} n00dles`);
+    const rest = flags._;
+    if (rest.length === 0 || flags.help || typeof flags.startingHost != 'string') {
+        ns.tprint(`
+USAGE: run ${ns.getScriptName()} SERVER_NAME
+
+This script prints the path between two servers in the network.
+
+Example:
+  > run ${ns.getScriptName()} n00dles
+
+OPTIONS
+  --help           Show this help message
+  --startingHost   The host to start the search from
+  --goto           If sufficient RAM is available (+25GB) send player to SERVER_NAME
+`);
         return;
     }
     if (!ns.serverExists(flags.startingHost)) {
         ns.tprintf("start host %s does not exist", flags.startingHost);
         return;
     }
-    let goalHost = ns.args[0];
+    let goalHost = rest[0];
     if (typeof goalHost !== 'string' || !ns.serverExists(goalHost)) {
         ns.tprintf("goal host %s does not exist", goalHost);
         return;
@@ -48,7 +59,21 @@ export async function main(ns) {
     if (S[0] == flags.startingHost) {
         S.shift();
     }
-    ns.tprintf("path to %s:\ngo %s", goalHost, S.join(" ; go "));
+    const goCommand = `go ${S.join(" ; go ")}`;
+    if (flags.goto && ns.ramOverride(28.9)) {
+        // Acquire a reference to the terminal text field
+        const terminalInput = globalThis.document.getElementById("terminal-input");
+        terminalInput.value = goCommand;
+        // Get a reference to the React event handler.
+        const handler = Object.keys(terminalInput)[1];
+        // Perform an onChange event to set some internal values.
+        terminalInput[handler].onChange({ target: terminalInput });
+        // Simulate an enter press
+        terminalInput[handler].onKeyDown({ key: 'Enter', preventDefault: () => null });
+    }
+    else {
+        ns.tprintf(`path to ${goalHost}:\n ${goCommand}`);
+    }
 }
 /** Find the shortest paths from all hosts to the source host.
  *

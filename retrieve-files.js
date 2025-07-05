@@ -1,10 +1,7 @@
-import { walkNetworkBFS } from "./walk-network.js";
-/** @param {NS} ns */
+import { walkNetworkBFS } from "util/walk";
 export async function main(ns) {
     let network = walkNetworkBFS(ns);
     let allHosts = Array.from(network.keys());
-    let contractFileLocations = "contract-locations.txt";
-    await ns.write(contractFileLocations, "", "w");
     let scriptFile = /\.(js|script)/;
     let textFile = /\.txt/;
     let litFile = /\.lit/;
@@ -24,11 +21,12 @@ export async function main(ns) {
                 qualifiedNames.push(file);
             }
             else {
-                await ns.write(contractFileLocations, `${file} on ${host}\n`, "a");
+                // Must be a contract, this script doesn't handle
+                // those files anymore.
             }
         }
         if (qualifiedNames.length > 0) {
-            await ns.scp(qualifiedNames, host, "home");
+            ns.scp(qualifiedNames, "home", host);
         }
     }
 }
