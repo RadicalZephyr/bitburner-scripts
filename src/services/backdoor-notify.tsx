@@ -29,7 +29,7 @@ export async function main(ns: NS) {
 
         const theme = ns.ui.getTheme();
         ns.clearLog();
-        ns.printRaw(<ServerDisplay servers={missingBackdoor} theme={theme}></ServerDisplay>);
+        ns.printRaw(<ServerDisplay title={"Servers"} servers={missingBackdoor} theme={theme}></ServerDisplay>);
         ns.ui.renderTail();
         await ns.sleep(200);
     }
@@ -57,14 +57,15 @@ export function sendCommand(command: string): void {
 
 
 interface ServerDisplayProps {
+    title: string;
     servers: string[];
     theme: UserInterfaceTheme;
 }
 
-function ServerDisplay({ servers, theme }: ServerDisplayProps) {
+function ServerDisplay({ title, servers, theme }: ServerDisplayProps) {
     return (
         <div>
-            <h2>Servers missing backdoors: {servers.length}</h2>
+            <h2>{title} missing backdoors: {servers.length}</h2>
             <ul>
                 {servers.map((host) => (
                     <li key={host}>
