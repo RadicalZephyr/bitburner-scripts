@@ -21,6 +21,7 @@ export async function main(ns: NS) {
     const cracked = new Set<string>();
 
     const discovery = new Discovery(ns);
+    discovery.pushHosts(["home"]);
 
     const port = ns.getPortHandle(DISCOVERY_PORT);
     const respPort = ns.getPortHandle(DISCOVERY_RESPONSE_PORT);
