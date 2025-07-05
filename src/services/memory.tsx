@@ -211,7 +211,7 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memResponsePort
                 break;
 
             case MessageType.Status:
-                payload = memoryManager.getFreeRamTotal();
+                payload = { freeRam: memoryManager.getFreeRamTotal() };
                 break;
 
             case MessageType.Snapshot:
