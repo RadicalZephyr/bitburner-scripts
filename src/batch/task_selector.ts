@@ -296,9 +296,10 @@ class TaskSelector {
             }))
             .sort((a, b) => b.value - a.value);
 
+        const harvestScriptRam = this.ns.getScriptRam("/batch/harvest.js", "home");
         let fallbackHarvest: string | null = null;
         for (const task of harvestTasks) {
-            if (task.requiredRam * task.overlap <= freeRam) {
+            if (harvestScriptRam + task.requiredRam * task.overlap <= freeRam) {
                 await this.launchHarvest(task.host);
                 return;
             }
@@ -320,13 +321,14 @@ class TaskSelector {
                 candidates = [...this.pendingSowTargets];
             }
             candidates.sort(compareLevel);
+            const sowScriptRam = this.ns.getScriptRam("/batch/sow.js", "home");
             let fallback: string | null = null;
             for (const host of candidates.slice(0, canAdd)) {
                 const { growThreads, weakenThreads } = calculateSowThreads(this.ns, host);
                 const total = growThreads + weakenThreads;
                 const ram = growThreads * this.ns.getScriptRam("/batch/g.js", "home") +
                     weakenThreads * this.ns.getScriptRam("/batch/w.js", "home");
-                if (ram <= freeRam) {
+                if (sowScriptRam + ram <= freeRam) {
                     await this.launchSow(host, total);
                     return;
                 }
@@ -356,11 +358,12 @@ class TaskSelector {
                 candidates = [...this.pendingTillTargets];
             }
             candidates.sort(compareLevel);
+            const tillScriptRam = this.ns.getScriptRam("/batch/till.js", "home");
             let fallback: string | null = null;
             for (const host of candidates.slice(0, canAdd)) {
                 const threads = calculateWeakenThreads(this.ns, host);
                 const ram = threads * this.ns.getScriptRam("/batch/w.js", "home");
-                if (ram <= freeRam) {
+                if (tillScriptRam + ram <= freeRam) {
                     await this.launchTill(host, threads);
                     return;
                 }
