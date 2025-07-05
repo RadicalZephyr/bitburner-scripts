@@ -13,7 +13,7 @@ export async function main(ns: NS) {
         ns.tprint("Sweep parameter combinations for backtesting.");
         return;
     }
-    CONFIG.setDefaults();
+
     const dataPath = CONFIG.dataPath;
     const symbols = ns.stock.getSymbols();
     const ticks: Record<string, TickData[]> = {};

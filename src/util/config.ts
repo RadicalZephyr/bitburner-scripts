@@ -122,7 +122,7 @@ export class Config<Entries extends ReadonlyArray<readonly [string, ConfigValue]
      * Re-apply default configuration values to LocalStorage. Only keys that do
      * not yet exist will be written.
      */
-    setDefaults() {
+    private setDefaults() {
         for (const setDefault of this.defaultSetters) {
             setDefault();
         }

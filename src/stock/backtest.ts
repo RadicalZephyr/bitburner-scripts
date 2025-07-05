@@ -121,7 +121,7 @@ export async function main(ns: NS) {
         ns.tprint("Simulate trades using historical tick data.");
         return;
     }
-    CONFIG.setDefaults();
+
     const dataPath = CONFIG.dataPath;
     const symbols = ns.stock.getSymbols();
     const ticks: Record<string, TickData[]> = {};

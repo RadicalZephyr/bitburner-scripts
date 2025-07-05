@@ -22,7 +22,6 @@ export async function main(ns: NS) {
         await registerAllocationOwnership(ns, allocationId, "tracker");
     }
 
-    CONFIG.setDefaults();
     ns.disableLog("ALL");
     ns.ui.openTail();
 

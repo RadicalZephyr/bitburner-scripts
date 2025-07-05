@@ -14,8 +14,6 @@ export async function main(ns: NS) {
         await registerAllocationOwnership(ns, allocationId, "trader");
     }
 
-    CONFIG.setDefaults();
-
     const client = new TrackerClient(ns);
     const symbols = ns.stock.getSymbols();
     const threshold = 2; // z-score threshold

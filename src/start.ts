@@ -12,7 +12,6 @@ const BOOTSTRAP_FILES = [
 
 export async function main(ns: NS) {
     ns.disableLog("sleep");
-    CONFIG.setDefaults();
 
     let script = "/bootstrap.js";
     let files = [script, ...BOOTSTRAP_FILES];
