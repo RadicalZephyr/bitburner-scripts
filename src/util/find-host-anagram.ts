@@ -1,4 +1,4 @@
-import type { AutocompleteData, NS } from "netscript";
+import type { AutocompleteData, NS, ScriptArg } from "netscript";
 
 import { walkNetworkBFS } from 'util/walk';
 
@@ -11,7 +11,7 @@ export async function main(ns: NS) {
         ['help', false],
     ]);
 
-    const rest = flags._;
+    const rest = flags._ as ScriptArg[];
     if (rest.length === 0 || flags.help) {
         ns.tprint(`
 USAGE: run ${ns.getScriptName()} ANAGRAM
@@ -47,10 +47,10 @@ OPTIONS
         };
     });
 
-    const found = sortedHostNames.find(sh => sh.ana == needle);
+    const found = sortedHostNames.filter(sh => sh.ana == needle).map(sh => sh.hostname);
 
-    if (found)
-        ns.tprint(`found ${found.hostname} is an anagram for ${key}`);
+    if (found.length > 0)
+        ns.tprint(`${found.length} hosts are an anagram for ${key}: ${found.join(", ")}`);
     else
         ns.tprint(`no anagrams found for ${key}`);
 }
