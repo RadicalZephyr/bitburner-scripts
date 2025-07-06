@@ -236,6 +236,12 @@ interface MemoryDisplayProps {
     theme: UserInterfaceTheme;
 }
 
+/**
+ * Display memory usage for each worker host.
+ *
+ * @param manager - The allocator to read usage from.
+ * @param theme - The UI theme.
+ */
 function MemoryDisplay({ manager, theme }: MemoryDisplayProps) {
     const workers = Array.from(manager.workers.values());
     const cellStyle = { padding: "0 0.5em" } as const;
@@ -257,6 +263,12 @@ interface LogDisplayProps {
     theme: UserInterfaceTheme;
 }
 
+/**
+ * Show recent log lines in a styled list.
+ *
+ * @param lines - Log messages to display.
+ * @param theme - The UI theme.
+ */
 function LogDisplay({ lines, theme }: LogDisplayProps) {
     const rowStyle = (idx: number) =>
         idx % 2 === 1 ? { backgroundColor: theme.well } : {};

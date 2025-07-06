@@ -2,9 +2,21 @@ import type { NS } from "netscript";
 
 import { HostAllocation, AllocationResult, MemorySnapshot, WorkerSnapshot, AllocationSnapshot, AllocationClaim } from "services/client/memory";
 
-/** Convert a float value to a fixed bigint representation. */
+/**
+ * Convert a floating point RAM value to a fixed point bigint
+ * representation.
+ *
+ * @param val - The value to convert.
+ * @returns The bigint representation.
+ */
 export const toFixed = (val: number): bigint => BigInt(Math.round(val * 100));
-/** Convert a bigint fixed representation back to a number. */
+
+/**
+ * Convert a fixed point bigint representation back into a number.
+ *
+ * @param val - The bigint value.
+ * @returns The numeric RAM value.
+ */
 export const fromFixed = (val: bigint): number => Number(val) / 100;
 
 export interface ClaimInfo {
