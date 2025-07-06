@@ -392,6 +392,7 @@ export class Worker {
     ns: NS;
     hostname: string;
     totalRam: number;
+    totalRamStr: string;
     setAsideRam: bigint;
     reservedRam: bigint;
     allocatedRam: bigint = 0n;
@@ -400,6 +401,7 @@ export class Worker {
         this.ns = ns;
         this.hostname = hostname;
         this.totalRam = ns.getServerMaxRam(hostname);
+        this.totalRamStr = ns.formatRam(this.totalRam, 0);
         this.setAsideRam = typeof setAsideRam == "number" && setAsideRam >= 0 ? toFixed(setAsideRam) : 0n;
         this.reservedRam = toFixed(ns.getServerUsedRam(hostname));
     }
