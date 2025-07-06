@@ -24,6 +24,7 @@ test('allocate and release', () => {
     const alloc = new MemoryAllocator(ns);
     alloc.pushWorker('h1');
     alloc.pushWorker('h2');
+
     const res = alloc.allocate(1, 'test.js', 8, 3);
     expect(res).not.toBeNull();
     expect(res!.hosts.length).toBe(1);
@@ -38,6 +39,7 @@ test('claim and release chunks', () => {
     const ns = makeNS(hosts, procs);
     const alloc = new MemoryAllocator(ns);
     alloc.pushWorker('h1');
+
     const res = alloc.allocate(1, 'a.js', 4, 4);
     expect(res).not.toBeNull();
     const claimOk = alloc.claimAllocation({ allocationId: res!.allocationId, pid: 2, hostname: 'h1', filename: 'b.js', chunkSize: 4, numChunks: 2 });
@@ -54,6 +56,7 @@ test('garbage collect terminated processes', () => {
     const ns = makeNS(hosts, procs);
     const alloc = new MemoryAllocator(ns);
     alloc.pushWorker('h1');
+
     const res = alloc.allocate(1, 'dead.js', 4, 2);
     expect(res).not.toBeNull();
     alloc.cleanupTerminated();
@@ -66,6 +69,7 @@ test('contiguous vs non-contiguous allocation', () => {
     const alloc = new MemoryAllocator(ns);
     alloc.pushWorker('h1');
     alloc.pushWorker('h2');
+
     const contig = alloc.allocate(1, 'c.js', 4, 3, true);
     expect(contig!.hosts.length).toBe(1);
     expect(contig!.hosts[0].hostname).toBe('h1');
@@ -81,6 +85,7 @@ test('core dependent prioritizes home', () => {
     const alloc = new MemoryAllocator(ns);
     alloc.pushWorker('home');
     alloc.pushWorker('h1');
+
     const normal = alloc.allocate(1, 'd.js', 4, 1);
     expect(normal!.hosts[0].hostname).toBe('h1');
     const core = alloc.allocate(1, 'd.js', 4, 1, false, true);
@@ -93,6 +98,7 @@ test('shrinkable allocation uses partial capacity', () => {
     const alloc = new MemoryAllocator(ns);
     alloc.pushWorker('h1');
     alloc.pushWorker('h2');
+
     const res = alloc.allocate(1, 'e.js', 4, 8, false, false, true);
     expect(res).not.toBeNull();
     const total = res!.hosts.reduce((s, h) => s + h.numChunks, 0);
@@ -104,6 +110,7 @@ test('updateReserved adjusts reserved RAM', () => {
     const ns = makeNS(hosts, {});
     const alloc = new MemoryAllocator(ns);
     alloc.pushWorker('h1');
+
     const res = alloc.allocate(1, 'f.js', 4, 4);
     expect(res).not.toBeNull();
     hosts.h1.used = 20;
@@ -117,6 +124,7 @@ test('edge cases', () => {
     const ns = makeNS(hosts, {});
     const alloc = new MemoryAllocator(ns);
     alloc.pushWorker('h1');
+
     expect(alloc.deallocate(999, 1, 'h1')).toBe(false);
     const res = alloc.allocate(1, 'g.js', 4, 2);
     expect(res).not.toBeNull();
