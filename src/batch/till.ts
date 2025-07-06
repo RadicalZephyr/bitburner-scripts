@@ -125,16 +125,16 @@ OPTIONS
             remaining -= t;
         }
 
-        const sendHb = () => Promise.resolve(
-            taskSelectorClient.tryHeartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Till),
-        );
-        nextHeartbeat = await awaitRound(
-            ns,
-            pids,
-            info,
-            nextHeartbeat,
-            sendHb,
-        );
+        const sendHb = () =>
+            Promise.resolve(
+                taskSelectorClient.tryHeartbeat(
+                    ns.pid,
+                    ns.getScriptName(),
+                    target,
+                    Lifecycle.Till,
+                ),
+            );
+        nextHeartbeat = await awaitRound(ns, pids, info, nextHeartbeat, sendHb);
 
         threadsNeeded = calculateWeakenThreads(ns, target);
     }

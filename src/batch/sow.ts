@@ -126,14 +126,16 @@ OPTIONS
         const weakenPids = runAllocation(ns, weakenAlloc, WEAKEN_SCRIPT, weakenThreads, target, 0);
         const pids = [...growPids, ...weakenPids];
 
-        const sendHb = () => taskSelectorClient.heartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Sow);
-        nextHeartbeat = await awaitRound(
-            ns,
-            pids,
-            info,
-            nextHeartbeat,
-            sendHb,
-        );
+        const sendHb = () =>
+            Promise.resolve(
+                taskSelectorClient.tryHeartbeat(
+                    ns.pid,
+                    ns.getScriptName(),
+                    target,
+                    Lifecycle.Sow,
+                ),
+            );
+        nextHeartbeat = await awaitRound(ns, pids, info, nextHeartbeat, sendHb);
 
         totalGrowThreads = neededGrowThreads(ns, target);
         growThreads = Math.min(totalGrowThreads, growThreads);
