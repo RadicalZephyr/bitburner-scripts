@@ -127,8 +127,10 @@ OPTIONS
     const batchRam = logistics.batchRam;
 
     let memClient = new MemoryClient(ns);
-    let allocation = await memClient.requestOwnedAllocation(batchRam, overlapLimit, false, false, true);
+    let allocation = await memClient.requestTransferableAllocation(batchRam, overlapLimit, false, false, true);
     if (!allocation) return;
+
+    allocation.releaseAtExit(ns);
 
     // Send a Harvest Heartbeat to indicate we're starting the main loop
     await taskSelectorClient.heartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Harvest);
@@ -136,10 +138,10 @@ OPTIONS
     // Track how many batches can overlap concurrently. If the
     // calculated overlap drops we release the extra memory back to the
     // MemoryManager so it can be reused by other processes.
-    let maxOverlap = allocation.reduce((s, c) => s + c.numChunks, 0);
+    let maxOverlap = allocation.allocatedChunks.reduce((s, c) => s + c.numChunks, 0);
     let currentBatches = 0;
 
-    let batchHost: SparseHostArray = makeBatchHostArray(allocation);
+    let batchHost: SparseHostArray = makeBatchHostArray(allocation.allocatedChunks);
 
     let batches = [];
 
