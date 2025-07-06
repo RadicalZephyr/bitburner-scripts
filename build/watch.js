@@ -67,7 +67,9 @@ async function initTypeScript() {
  * Watch phase only.
  */
 async function watchTypeScript() {
-    chokidar.watch(`${src}/**/*.ts`).on('unlink', async (p) => {
+    chokidar.watch(src, {
+        ignored: (path, stats) => stats?.isFile() && !path.endsWith('.ts'),
+    }).on('unlink', async (p) => {
         // called on *.ts file get deleted
         const relative = path.relative(src, p).replace(/\.ts$/, '.js');
         const distFile = path.resolve(dist, relative);
