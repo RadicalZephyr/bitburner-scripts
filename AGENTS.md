@@ -13,7 +13,9 @@
   formatting. And a clear but concise description of the function. The
   length of the doc comment should be inversely proportional to the
   length and complexity of the function.
-
+- Imports should never include the file extension and should be full
+  paths specified relative to the `src/` directory. So
+  `src/batch/sow.ts` would be referenced as `batch/sow`.
 
 ## Terminology used to classify hosts
 
