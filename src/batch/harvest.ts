@@ -151,7 +151,7 @@ OPTIONS
         let batchPids = spawnBatch(ns, host, target, logistics.phases, donePortId);
         batches.push(batchPids);
         currentBatches++;
-        if (Date.now() - lastHeartbeat >= 1000) {
+        if (Date.now() >= lastHeartbeat + CONFIG.heartbeatCadence) {
             taskSelectorClient.tryHeartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Harvest);
             lastHeartbeat = Date.now();
         }
@@ -223,7 +223,7 @@ OPTIONS
         if (currentBatches > maxOverlap) {
             currentBatches = currentBatches % maxOverlap;
         }
-        if (Date.now() >= lastHeartbeat + 1000 + (Math.random() * 500)) {
+        if (Date.now() >= lastHeartbeat + CONFIG.heartbeatCadence + (Math.random() * 500)) {
             if (taskSelectorClient.tryHeartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Harvest)) {
                 lastHeartbeat = Date.now();
             }

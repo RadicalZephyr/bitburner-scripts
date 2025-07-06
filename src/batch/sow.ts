@@ -8,6 +8,8 @@ import {
     TransferableAllocation,
 } from "services/client/memory";
 
+import { CONFIG } from "batch/config";
+
 const GROW_SCRIPT = "/batch/g.js";
 const WEAKEN_SCRIPT = "/batch/w.js";
 
@@ -110,6 +112,7 @@ OPTIONS
     const totalThreads = growAlloc.allocatedChunks.reduce((s, c) => s + c.numChunks, 0);
 
     let round = 0;
+    let lastHeartbeat = 0;
 
     while (growThreads > 0) {
         round += 1;
@@ -135,7 +138,9 @@ Round ends:      ${ns.tFormat(roundEnd)}
 Total expected:  ${ns.tFormat(totalExpectedEnd)}
 Elapsed time:    ${ns.tFormat(elapsed)}
 `);
-                await taskSelectorClient.heartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Sow);
+                if (Date.now() >= lastHeartbeat + CONFIG.heartbeatCadence + (Math.random() * 500)) {
+                    await taskSelectorClient.heartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Sow);
+                }
                 await ns.sleep(1000);
             }
         }

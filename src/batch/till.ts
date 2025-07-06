@@ -4,6 +4,7 @@ import { TaskSelectorClient, Lifecycle } from "batch/client/task_selector";
 
 import { registerAllocationOwnership, MemoryClient } from "services/client/memory";
 
+import { CONFIG } from "batch/config";
 
 export function autocomplete(data: AutocompleteData, _args: string[]): string[] {
     return data.servers;
@@ -97,6 +98,7 @@ OPTIONS
     const totalThreads = allocation.allocatedChunks.reduce((s, c) => s + c.numChunks, 0);
 
     let round = 0;
+    let lastHeartbeat = 0;
 
     while (threadsNeeded > 0) {
         round += 1;
@@ -135,7 +137,11 @@ Round ends:         ${ns.tFormat(roundEnd)}
 Total expected:     ${ns.tFormat(totalExpectedEnd)}
 Elapsed time:       ${ns.tFormat(elapsed)}
 `);
-                await taskSelectorClient.heartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Till);
+                if (Date.now() >= lastHeartbeat + CONFIG.heartbeatCadence + (Math.random() * 500)) {
+                    if (taskSelectorClient.tryHeartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Till)) {
+                        lastHeartbeat = Date.now();
+                    }
+                }
                 await ns.sleep(1000);
             }
         }
