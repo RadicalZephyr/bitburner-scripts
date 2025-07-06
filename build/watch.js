@@ -85,9 +85,26 @@ async function watchTypeScript() {
  */
 async function syncTypeScript() {
     await initTypeScript();
-    return watchTypeScript();
+    return await watchTypeScript();
 }
 
-console.log('Start watching static and ts files...');
-syncStatic();
-syncTypeScript();
+async function main() {
+    console.log('Start watching static and ts files...');
+
+    const staticWatcher = await syncStatic();    // returns the sync-directory watcher
+    const tsWatcher = await syncTypeScript(); // returns the chokidar watcher
+
+    // Graceful shutdown
+    process.on('SIGINT', async () => {
+        await Promise.allSettled([
+            staticWatcher?.close?.(),
+            tsWatcher?.close?.(),
+        ]);
+        process.exit(0);
+    });
+}
+
+main().catch(err => {
+    console.error(err);
+    process.exit(1);
+});
