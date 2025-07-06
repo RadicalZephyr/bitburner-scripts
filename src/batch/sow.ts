@@ -140,6 +140,7 @@ Elapsed time:    ${ns.tFormat(elapsed)}
 `);
                 if (Date.now() >= lastHeartbeat + CONFIG.heartbeatCadence + (Math.random() * 500)) {
                     await taskSelectorClient.heartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Sow);
+                    lastHeartbeat = Date.now();
                 }
                 await ns.sleep(1000);
             }
