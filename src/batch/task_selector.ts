@@ -346,7 +346,7 @@ class TaskSelector {
             }
 
             const minimalSowRam = sowScriptRam + gRam + wRam;
-            if (fallback && freeRam >= minimalSowRam) {
+            if (fallback && freeRam > minimalSowRam) {
                 const maxRamPerThread = Math.max(gRam, wRam);
                 const threads = Math.floor(freeRam / maxRamPerThread);
                 if (threads > 0) {
@@ -381,7 +381,7 @@ class TaskSelector {
             }
 
             const minimalTillRam = tillScriptRam + wRam;
-            if (fallback && freeRam >= minimalTillRam) {
+            if (fallback && freeRam > minimalTillRam) {
                 const threadRam = wRam;
                 const threads = Math.floor(freeRam / threadRam);
                 if (threads > 0) {
