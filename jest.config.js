@@ -8,6 +8,8 @@ module.exports = {
     testEnvironment: 'node',
     moduleNameMapper: {
         '^(.*)\\.js$': '$1',
+        '^services/(.*)$': '<rootDir>/src/services/$1',
+        '^util/(.*)$': '<rootDir>/src/util/$1',
     },
     transform: {
         ...tsJestTransformCfg,

@@ -23,7 +23,7 @@ import { readAllFromPort } from "util/ports";
 const toFixed = (val: number): bigint => BigInt(Math.round(val * 100));
 const fromFixed = (val: bigint): number => Number(val) / 100;
 
-let printLog: (msg: string) => void;
+let printLog: (msg: string) => void = () => {};
 
 interface ClaimInfo {
     pid: number;
@@ -240,7 +240,7 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memResponsePort
     }
 }
 
-class MemoryAllocator {
+export class MemoryAllocator {
     ns: NS;
     nextAllocId: number = 0;
     workers: Map<string, Worker> = new Map();
