@@ -11,7 +11,7 @@ export async function main(ns: NS) {
         ['help', false],
     ]);
 
-    const rest = flags._ as string[];
+    const rest = flags._;
     if (rest.length === 0 || flags.help) {
         ns.tprint(`
 USAGE: run ${ns.getScriptName()} ANAGRAM
@@ -28,7 +28,11 @@ OPTIONS
         return;
     }
 
-    const key = rest[0].toString();
+    const key = rest[0];
+    if (typeof key != "string") {
+        ns.tprint("ERROR: ANAGRAM must be a string");
+        return;
+    }
 
     let network = walkNetworkBFS(ns);
     let allHosts = [...network.keys()];
