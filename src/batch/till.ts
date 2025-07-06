@@ -5,7 +5,7 @@ import { TaskSelectorClient, Lifecycle } from "batch/client/task_selector";
 import { registerAllocationOwnership, MemoryClient } from "services/client/memory";
 
 import { CONFIG } from "batch/config";
-import { awaitRound } from "batch/progress";
+import { awaitRound, calculateRoundInfo, RoundInfo } from "batch/progress";
 
 export function autocomplete(data: AutocompleteData, _args: string[]): string[] {
     return data.servers;
@@ -99,17 +99,14 @@ OPTIONS
     const totalThreads = allocation.allocatedChunks.reduce((s, c) => s + c.numChunks, 0);
 
     let round = 0;
-    let lastHeartbeat = 0;
+    let nextHeartbeat = Date.now() + CONFIG.heartbeatCadence + Math.random() * 500;
 
     while (threadsNeeded > 0) {
         round += 1;
         const roundsRemaining = Math.ceil(threadsNeeded / totalThreads);
         const totalRounds = (round - 1) + roundsRemaining;
 
-        const roundTime = ns.getWeakenTime(target);
-        const roundStart = ns.self().onlineRunningTime * 1000;
-        const roundEnd = roundStart + roundTime;
-        const totalExpectedEnd = roundStart + (roundsRemaining * roundTime);
+        const info: RoundInfo = calculateRoundInfo(ns, target, round, totalRounds, roundsRemaining);
 
         const spawnThreads = Math.min(threadsNeeded, totalThreads);
         const pids: number[] = [];
@@ -131,14 +128,11 @@ OPTIONS
         const sendHb = () => Promise.resolve(
             taskSelectorClient.tryHeartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Till),
         );
-        lastHeartbeat = await awaitRound(
+        nextHeartbeat = await awaitRound(
             ns,
             pids,
-            round,
-            totalRounds,
-            roundEnd,
-            totalExpectedEnd,
-            lastHeartbeat,
+            info,
+            nextHeartbeat,
             sendHb,
         );
 

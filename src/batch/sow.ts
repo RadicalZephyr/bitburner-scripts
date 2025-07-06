@@ -9,7 +9,7 @@ import {
 } from "services/client/memory";
 
 import { CONFIG } from "batch/config";
-import { awaitRound } from "batch/progress";
+import { awaitRound, calculateRoundInfo, RoundInfo } from "batch/progress";
 
 const GROW_SCRIPT = "/batch/g.js";
 const WEAKEN_SCRIPT = "/batch/w.js";
@@ -113,31 +113,25 @@ OPTIONS
     const totalThreads = growAlloc.allocatedChunks.reduce((s, c) => s + c.numChunks, 0);
 
     let round = 0;
-    let lastHeartbeat = 0;
+    let nextHeartbeat = Date.now() + CONFIG.heartbeatCadence + Math.random() * 500;
 
     while (growThreads > 0) {
         round += 1;
         const roundsRemaining = Math.ceil(totalGrowThreads / totalThreads);
         const totalRounds = (round - 1) + roundsRemaining;
 
-        const roundTime = ns.getWeakenTime(target);
-        const roundStart = ns.self().onlineRunningTime * 1000;
-        const roundEnd = roundStart + roundTime;
-        const totalExpectedEnd = roundStart + (roundsRemaining * roundTime);
+        const info: RoundInfo = calculateRoundInfo(ns, target, round, totalRounds, roundsRemaining);
 
         const growPids = runAllocation(ns, growAlloc, GROW_SCRIPT, growThreads, target, 0);
         const weakenPids = runAllocation(ns, weakenAlloc, WEAKEN_SCRIPT, weakenThreads, target, 0);
         const pids = [...growPids, ...weakenPids];
 
         const sendHb = () => taskSelectorClient.heartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Sow);
-        lastHeartbeat = await awaitRound(
+        nextHeartbeat = await awaitRound(
             ns,
             pids,
-            round,
-            totalRounds,
-            roundEnd,
-            totalExpectedEnd,
-            lastHeartbeat,
+            info,
+            nextHeartbeat,
             sendHb,
         );
 

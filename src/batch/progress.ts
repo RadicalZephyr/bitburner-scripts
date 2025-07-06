@@ -2,6 +2,37 @@ import type { NS } from "netscript";
 
 import { CONFIG } from "batch/config";
 
+export interface RoundInfo {
+    round: number;
+    totalRounds: number;
+    roundEnd: number;
+    totalExpectedEnd: number;
+}
+
+/**
+ * Compute batch round timing information.
+ *
+ * @param ns              - Netscript API instance
+ * @param target          - Host being attacked
+ * @param round           - Current round number
+ * @param totalRounds     - Total number of expected rounds
+ * @param roundsRemaining - Remaining rounds including the current one
+ * @returns Calculated round data
+ */
+export function calculateRoundInfo(
+    ns: NS,
+    target: string,
+    round: number,
+    totalRounds: number,
+    roundsRemaining: number,
+): RoundInfo {
+    const roundTime = ns.getWeakenTime(target);
+    const roundStart = ns.self().onlineRunningTime * 1000;
+    const roundEnd = roundStart + roundTime;
+    const totalExpectedEnd = roundStart + roundsRemaining * roundTime;
+    return { round, totalRounds, roundEnd, totalExpectedEnd };
+}
+
 /**
  * Wait for all provided processes to finish while displaying progress.
  *
@@ -9,24 +40,18 @@ import { CONFIG } from "batch/config";
  * milliseconds have elapsed. The callback result controls whether the
  * heartbeat timestamp is updated.
  *
- * @param ns                - Netscript API instance
- * @param pids              - List of running process ids
- * @param round             - Current round number
- * @param totalRounds       - Total number of expected rounds
- * @param roundEnd          - Timestamp when this round is expected to end
- * @param totalExpectedEnd  - Expected finish time of all remaining rounds
- * @param lastHeartbeat     - Timestamp of the previous heartbeat
- * @param sendHeartbeat     - Callback to send a heartbeat message
- * @returns Updated timestamp of the last heartbeat
+ * @param ns            - Netscript API instance
+ * @param pids          - List of running process ids
+ * @param info          - Round progress details
+ * @param nextHeartbeat - Timestamp when the next heartbeat should be sent
+ * @param sendHeartbeat - Callback to send a heartbeat message
+ * @returns The timestamp for the subsequent heartbeat
  */
 export async function awaitRound(
     ns: NS,
     pids: number[],
-    round: number,
-    totalRounds: number,
-    roundEnd: number,
-    totalExpectedEnd: number,
-    lastHeartbeat: number,
+    info: RoundInfo,
+    nextHeartbeat: number,
     sendHeartbeat: () => Promise<boolean | void>,
 ): Promise<number> {
     for (const pid of pids) {
@@ -34,20 +59,20 @@ export async function awaitRound(
             ns.clearLog();
             const elapsed = ns.self().onlineRunningTime * 1000;
             ns.print(`
-Round ${round} of ${totalRounds}
-Round ends:      ${ns.tFormat(roundEnd)}
-Total expected:  ${ns.tFormat(totalExpectedEnd)}
+Round ${info.round} of ${info.totalRounds}
+Total expected:  ${ns.tFormat(info.totalExpectedEnd)}
+Round ends:      ${ns.tFormat(info.roundEnd)}
 Elapsed time:    ${ns.tFormat(elapsed)}
 `);
-            if (Date.now() >= lastHeartbeat + CONFIG.heartbeatCadence + (Math.random() * 500)) {
+            if (Date.now() >= nextHeartbeat) {
                 const result = await sendHeartbeat();
                 if (result !== false) {
-                    lastHeartbeat = Date.now();
+                    nextHeartbeat = Date.now() + CONFIG.heartbeatCadence + Math.random() * 500;
                 }
             }
             await ns.sleep(1000);
         }
     }
 
-    return lastHeartbeat;
+    return nextHeartbeat;
 }
