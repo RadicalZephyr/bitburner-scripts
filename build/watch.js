@@ -67,18 +67,20 @@ async function initTypeScript() {
  * Watch phase only.
  */
 async function watchTypeScript() {
-    chokidar.watch(src, {
-        ignored: (path, stats) => stats?.isFile() && !path.endsWith('.ts'),
-    }).on('unlink', async (p) => {
-        // called on *.ts file get deleted
-        const relative = path.relative(src, p).replace(/\.ts$/, '.js');
-        const distFile = path.resolve(dist, relative);
-        // if distFile exists, delete it
-        if (fs.existsSync(distFile)) {
-            await fs.promises.unlink(distFile);
-            console.log(`${normalize(relative)} deleted`);
-        }
-    });
+    return chokidar
+        .watch(src, {
+            ignored: (filePath, stats) => stats?.isFile() && !filePath.endsWith('.ts'),
+        })
+        .on('unlink', async (p) => {
+            // called on *.ts file get deleted
+            const relative = path.relative(src, p).replace(/\.ts$/, '.js');
+            const distFile = path.resolve(dist, relative);
+            // if distFile exists, delete it
+            if (fs.existsSync(distFile)) {
+                await fs.promises.unlink(distFile);
+                console.log(`${normalize(relative)} deleted`);
+            }
+        });
 }
 
 /**
