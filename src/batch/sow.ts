@@ -9,6 +9,7 @@ import {
 } from "services/client/memory";
 
 import { CONFIG } from "batch/config";
+import { awaitRound } from "batch/progress";
 
 const GROW_SCRIPT = "/batch/g.js";
 const WEAKEN_SCRIPT = "/batch/w.js";
@@ -128,23 +129,17 @@ OPTIONS
         const weakenPids = runAllocation(ns, weakenAlloc, WEAKEN_SCRIPT, weakenThreads, target, 0);
         const pids = [...growPids, ...weakenPids];
 
-        for (const pid of pids) {
-            while (ns.isRunning(pid)) {
-                ns.clearLog();
-                const elapsed = ns.self().onlineRunningTime * 1000;
-                ns.print(`
-Round ${round} of ${totalRounds}
-Round ends:      ${ns.tFormat(roundEnd)}
-Total expected:  ${ns.tFormat(totalExpectedEnd)}
-Elapsed time:    ${ns.tFormat(elapsed)}
-`);
-                if (Date.now() >= lastHeartbeat + CONFIG.heartbeatCadence + (Math.random() * 500)) {
-                    await taskSelectorClient.heartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Sow);
-                    lastHeartbeat = Date.now();
-                }
-                await ns.sleep(1000);
-            }
-        }
+        const sendHb = () => taskSelectorClient.heartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Sow);
+        lastHeartbeat = await awaitRound(
+            ns,
+            pids,
+            round,
+            totalRounds,
+            roundEnd,
+            totalExpectedEnd,
+            lastHeartbeat,
+            sendHb,
+        );
 
         totalGrowThreads = neededGrowThreads(ns, target);
         growThreads = Math.min(totalGrowThreads, growThreads);

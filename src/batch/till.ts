@@ -5,6 +5,7 @@ import { TaskSelectorClient, Lifecycle } from "batch/client/task_selector";
 import { registerAllocationOwnership, MemoryClient } from "services/client/memory";
 
 import { CONFIG } from "batch/config";
+import { awaitRound } from "batch/progress";
 
 export function autocomplete(data: AutocompleteData, _args: string[]): string[] {
     return data.servers;
@@ -127,24 +128,19 @@ OPTIONS
             remaining -= t;
         }
 
-        for (const pid of pids) {
-            while (ns.isRunning(pid)) {
-                ns.clearLog();
-                const elapsed = ns.self().onlineRunningTime * 1000;
-                ns.print(`
-Round ${round} of ${totalRounds}
-Round ends:         ${ns.tFormat(roundEnd)}
-Total expected:     ${ns.tFormat(totalExpectedEnd)}
-Elapsed time:       ${ns.tFormat(elapsed)}
-`);
-                if (Date.now() >= lastHeartbeat + CONFIG.heartbeatCadence + (Math.random() * 500)) {
-                    if (taskSelectorClient.tryHeartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Till)) {
-                        lastHeartbeat = Date.now();
-                    }
-                }
-                await ns.sleep(1000);
-            }
-        }
+        const sendHb = () => Promise.resolve(
+            taskSelectorClient.tryHeartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Till),
+        );
+        lastHeartbeat = await awaitRound(
+            ns,
+            pids,
+            round,
+            totalRounds,
+            roundEnd,
+            totalExpectedEnd,
+            lastHeartbeat,
+            sendHb,
+        );
 
         threadsNeeded = calculateWeakenThreads(ns, target);
     }
