@@ -96,7 +96,7 @@ OPTIONS
     await taskSelectorClient.heartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Till);
 
     let threadsNeeded = calculateWeakenThreads(ns, target);
-    const totalThreads = allocation.allocatedChunks.reduce((s, c) => s + c.numChunks, 0);
+    const totalThreads = allocation.numChunks;
 
     let round = 0;
     let nextHeartbeat = Date.now() + CONFIG.heartbeatCadence + Math.random() * 500;

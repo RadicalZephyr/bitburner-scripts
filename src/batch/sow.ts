@@ -110,7 +110,7 @@ OPTIONS
     await taskSelectorClient.heartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Sow);
 
     let totalGrowThreads = neededGrowThreads(ns, target);
-    const totalThreads = growAlloc.allocatedChunks.reduce((s, c) => s + c.numChunks, 0);
+    const totalThreads = growAlloc.numChunks;
 
     let round = 0;
     let nextHeartbeat = Date.now() + CONFIG.heartbeatCadence + Math.random() * 500;

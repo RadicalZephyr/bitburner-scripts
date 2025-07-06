@@ -319,6 +319,10 @@ export class TransferableAllocation {
         this.allocatedChunks = allocations.map(chunk => new AllocationChunk(chunk));
     }
 
+    get numChunks(): number {
+        return this.allocatedChunks.reduce((s, c) => s + c.numChunks, 0);
+    }
+
     async release(ns: NS) {
         const proc = ns.self();
         const release: AllocationRelease = {

@@ -138,7 +138,7 @@ OPTIONS
     // Track how many batches can overlap concurrently. If the
     // calculated overlap drops we release the extra memory back to the
     // MemoryManager so it can be reused by other processes.
-    let maxOverlap = allocation.allocatedChunks.reduce((s, c) => s + c.numChunks, 0);
+    let maxOverlap = allocation.numChunks;
     let currentBatches = 0;
 
     let batchHost: SparseHostArray = makeBatchHostArray(allocation.allocatedChunks);
