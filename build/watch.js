@@ -5,6 +5,15 @@ const fg = require('fast-glob');
 const chokidar = require('chokidar');
 const { src, dist, allowedFiletypes } = require('./config');
 
+// Do not exit the watcher on unexpected errors
+process.on('uncaughtException', (err) => {
+    console.error(err);
+});
+
+process.on('unhandledRejection', (err) => {
+    console.error(err);
+});
+
 /** Format dist path for printing */
 function normalize(p) {
     return p.replace(/\\/g, '/');
@@ -56,7 +65,13 @@ async function initTypeScript() {
             !fs.existsSync(srcFile) &&
             !fs.existsSync(srcFile.replace(/\.js$/, '.ts'))
         ) {
-            await fs.promises.unlink(distFile);
+            try {
+                await fs.promises.unlink(distFile);
+            } catch (err) {
+                if (err.code !== 'ENOENT') {
+                    throw err;
+                }
+            }
             console.log(`${normalize(relative)} deleted`);
         }
     }
@@ -77,7 +92,13 @@ async function watchTypeScript() {
             const distFile = path.resolve(dist, relative);
             // if distFile exists, delete it
             if (fs.existsSync(distFile)) {
-                await fs.promises.unlink(distFile);
+                try {
+                    await fs.promises.unlink(distFile);
+                } catch (err) {
+                    if (err.code !== 'ENOENT') {
+                        throw err;
+                    }
+                }
                 console.log(`${normalize(relative)} deleted`);
             }
         });
