@@ -21,13 +21,18 @@ server.
 
 ### Developing
 
-1. Install dependencies with `npm install`
-2. Use `npm run watch` to rebuild on changes
-3. Run Bitburner and under Options > Remote API make sure `Hostname:
-   localhost` and `Port: 12525` are set correctly.
-4. Hit connect once the watch build finishes!
+1. Install [Deno](https://deno.land/).
+2. Run `deno task watch` to rebuild and sync on changes.
+3. Start Bitburner and under Options > Remote API set `Hostname` to
+   `localhost` and `Port` to `12525` then connect once the watch build
+   finishes.
 
-Now your scripts will be updated every time a change is detected.
+Use `deno task build` to create the `dist/` output and `deno task test`
+to run unit tests. Manual synchronization is available with
+`deno task sync`, though the watch task handles syncing for you.
+
+Please see `AGENTS.md` for contributor guidelines, including JSDoc
+comments and commit message prefixes.
 
 # Interesting things to remember
 
