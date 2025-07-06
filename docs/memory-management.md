@@ -45,3 +45,17 @@ This would probably look something like
 This approach is so complex that it would make correctly using this
 API quite unlikely which is probably worse than just not freeing
 memory.
+
+## Module layout
+
+The allocator service is now split into distinct modules:
+
+- `allocator.ts` implements the `MemoryAllocator` class and related helper
+  types. It manages the RAM accounting and exposes methods for allocation,
+  claiming, releasing and garbage collection.
+- `memory.tsx` contains the daemon that uses `MemoryAllocator` to
+  respond to port requests. It also updates the UI and performs periodic
+  cleanup.
+
+This separation keeps the allocator logic testable while the daemon file
+focuses on orchestration and rendering.
