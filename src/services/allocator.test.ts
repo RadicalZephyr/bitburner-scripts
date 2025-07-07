@@ -199,7 +199,7 @@ test('claim deallocation frees claimed memory', () => {
     const id = res!.allocationId;
     expect(alloc.claimAllocation({ allocationId: id, pid: 2, hostname: 'h1', filename: 'c.js', chunkSize: 4, numChunks: 2 })).toBe(true);
 
-    expect(alloc.deallocate(id, 2, 'h1')).toBe(true);
+    expect(alloc.releaseClaim(id, 2, 'h1')).toBe(true);
     const snap = alloc.getSnapshot();
     expect(snap.allocations[0].hosts).toEqual([
         { hostname: 'h1', chunkSize: 4, numChunks: 2 },
