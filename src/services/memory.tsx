@@ -2,6 +2,7 @@ import type { NS, NetscriptPort, UserInterfaceTheme } from "netscript";
 
 import {
     AllocationClaim,
+    AllocationClaimRelease,
     AllocationRelease,
     AllocationRequest,
     AllocationResult,
@@ -185,6 +186,21 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memResponsePort
                 } else {
                     printLog(
                         `WARN: allocation ${release.allocationId} not found for pid ${release.pid}`
+                    );
+                }
+                // Don't send a response, no one is listening.
+                continue;
+
+            case MessageType.ClaimRelease:
+                const claimRel = msg[2] as AllocationClaimRelease;
+                if (memoryManager.releaseClaim(claimRel.allocationId, claimRel.pid, claimRel.hostname)) {
+                    printLog(
+                        `SUCCESS: released claim for ${claimRel.allocationId} ` +
+                        `pid=${claimRel.pid} host=${claimRel.hostname}`
+                    );
+                } else {
+                    printLog(
+                        `WARN: claim for allocation ${claimRel.allocationId} not found for pid ${claimRel.pid}`
                     );
                 }
                 // Don't send a response, no one is listening.

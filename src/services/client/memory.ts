@@ -16,6 +16,7 @@ export enum MessageType {
     Request,
     Release,
     Claim,
+    ClaimRelease,
     ReleaseChunks,
     Status,
     Snapshot,
@@ -26,6 +27,7 @@ type Payload =
     | AllocationRequest
     | AllocationRelease
     | AllocationClaim
+    | AllocationClaimRelease
     | AllocationChunksRelease
     | StatusRequest
     | SnapshotRequest;
@@ -65,6 +67,12 @@ export interface AllocationClaim {
     filename: string;
     chunkSize: number;
     numChunks: number;
+}
+
+export interface AllocationClaimRelease {
+    allocationId: number;
+    pid: number;
+    hostname: string;
 }
 
 export interface AllocationChunksRelease {
@@ -337,13 +345,12 @@ export async function registerAllocationOwnership(
         `${claim.filename}`,
     );
     ns.atExit(() => {
-        const release: AllocationRelease = {
+        const release: AllocationClaimRelease = {
             allocationId: allocationId,
             pid: self.pid,
             hostname: self.server,
         };
-        // TODO: This should really send a new `AllocationClaimRelease` message
-        trySendMessage(memPort, MessageType.Release, release);
+        trySendMessage(memPort, MessageType.ClaimRelease, release);
     }, "memoryRelease" + name);
 
     let memPort = ns.getPortHandle(MEMORY_PORT);

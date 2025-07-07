@@ -222,7 +222,7 @@ export class MemoryAllocator {
         // Released by single requesting process, release all chunks
         if (allocation.pid === pid) {
             for (const c of allocation.chunks) {
-                let worker = this.workers.get(c.hostname);
+                const worker = this.workers.get(c.hostname);
                 if (worker) {
                     worker.free(c.chunkSize * c.numChunks);
                 }
@@ -231,17 +231,26 @@ export class MemoryAllocator {
             return true;
         }
 
+        return this.releaseClaim(id, pid, hostname);
+    }
+
+    releaseClaim(id: number, pid: number, hostname: string): boolean {
+        const allocation = this.allocations.get(id);
+        if (!allocation) return false;
+
         const idx = allocation.claims.findIndex(
-            (c) => c.pid === pid && c.hostname === hostname,
+            c => c.pid === pid && c.hostname === hostname,
         );
         if (idx === -1) {
-            this.printLog(`WARN: couldn't find a claim for ${pid} on ${hostname} to release`);
+            this.printLog(
+                `WARN: couldn't find a claim for ${pid} on ${hostname} to release`,
+            );
             return false;
         }
         const claim = allocation.claims[idx];
         this.releaseClaimInternal(allocation, claim);
         allocation.claims.splice(idx, 1);
-        allocation.chunks = allocation.chunks.filter((c) => c.numChunks > 0);
+        allocation.chunks = allocation.chunks.filter(c => c.numChunks > 0);
         if (allocation.chunks.length === 0) {
             this.allocations.delete(id);
         }
