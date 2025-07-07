@@ -56,6 +56,9 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Test
+        run: npm exec jest
+
       - name: Package output
         if: github.ref_type == 'branch' && github.ref_name == 'main'
         run: zip ${{ env.ARTIFACT_FILE }} dist/**/*.js dist/*.js
