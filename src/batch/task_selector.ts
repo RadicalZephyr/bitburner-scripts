@@ -24,8 +24,12 @@ interface PendingLaunch {
 }
 
 
-let compareExpectedValue: (ta: string, tb: string) => number;
-let compareLevel: (ta: string, tb: string) => number;
+function makeCompareLevel(ns: NS): (ta: string, tb: string) => number {
+    return (ta, tb) => {
+        return ns.getServerRequiredHackingLevel(ta)
+            - ns.getServerRequiredHackingLevel(tb);
+    };
+}
 
 export async function main(ns: NS) {
     const flags = ns.flags([
@@ -40,15 +44,6 @@ export async function main(ns: NS) {
         }
         await registerAllocationOwnership(ns, allocationId, "self");
     }
-
-    compareExpectedValue = (ta, tb) => {
-        return expectedValuePerRamSecond(ns, tb)
-            - expectedValuePerRamSecond(ns, ta);
-    };
-    compareLevel = (ta, tb) => {
-        return ns.getServerRequiredHackingLevel(ta)
-            - ns.getServerRequiredHackingLevel(tb);
-    };
 
     ns.disableLog("ALL");
     ns.ui.openTail();
@@ -330,7 +325,7 @@ class TaskSelector {
             } else if (Math.abs(this.velocity) <= 0.05) {
                 candidates = [...this.pendingSowTargets];
             }
-            candidates.sort(compareLevel);
+            candidates.sort(makeCompareLevel(this.ns));
 
 
             let fallback: string | null = null;
@@ -367,7 +362,7 @@ class TaskSelector {
             } else if (Math.abs(this.velocity) <= 0.05) {
                 candidates = [...this.pendingTillTargets];
             }
-            candidates.sort(compareLevel);
+            candidates.sort(makeCompareLevel(this.ns));
 
             let fallback: string | null = null;
             for (const host of candidates.slice(0, canAdd)) {
