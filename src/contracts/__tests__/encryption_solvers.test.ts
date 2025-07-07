@@ -1,6 +1,8 @@
 import { solve as solveCaesar } from "../Encryption-I-Caesar-Cipher";
 import { solve as solveVigenere } from "../Encryption-II-Vigenère-Cipher";
 
+import { describe, expect, test } from '@jest/globals';
+
 describe("encryption contract solvers", () => {
 
     test("Caesar Cipher", () => {

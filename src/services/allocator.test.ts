@@ -1,5 +1,7 @@
 import type { NS } from "netscript";
 
+import { describe, expect, test } from '@jest/globals';
+
 import { MemoryAllocator } from "./allocator";
 
 type ProcMap = Record<number, boolean>;

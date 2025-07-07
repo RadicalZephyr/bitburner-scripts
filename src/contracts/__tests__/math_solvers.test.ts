@@ -4,6 +4,8 @@ import { solve as solveSubarray } from "../Subarray-with-Maximum-Sum";
 import { solve as solveSumII } from "../Total-Ways-to-Sum-II";
 import { solve as solveSum } from "../Total-Ways-to-Sum";
 
+import { describe, expect, test } from '@jest/globals';
+
 describe("contract solvers", () => {
 
     test("Largest Prime Factor", () => {

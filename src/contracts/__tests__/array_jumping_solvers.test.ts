@@ -1,6 +1,8 @@
 import { solve as solveAJG2 } from "../Array-Jumping-Game-II";
 import { solve as solveAJG } from "../Array-Jumping-Game";
 
+import { describe, expect, test } from '@jest/globals';
+
 describe("array jumping contract solvers", () => {
 
     test("Array Jumping Game II", () => {

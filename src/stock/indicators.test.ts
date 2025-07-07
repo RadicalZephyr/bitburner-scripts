@@ -1,5 +1,7 @@
 import { computeIndicators, computeCorrelations } from './indicators';
 
+import { describe, expect, test } from '@jest/globals';
+
 function t(ts: number, price: number) {
     return { ts, askPrice: price, bidPrice: price, volatility: 0, forecast: 0 };
 }

@@ -3,6 +3,8 @@ import { solve as solveAST2 } from "../Algorithmic-Stock-Trader-II";
 import { solve as solveAST3 } from "../Algorithmic-Stock-Trader-III";
 import { solve as solveAST4 } from "../Algorithmic-Stock-Trader-IV";
 
+import { describe, expect, test } from '@jest/globals';
+
 describe("algorithmic stock trader solvers", () => {
     test("Algorithmic Stock Trader I", () => {
         expect(solveAST1([72, 148, 128, 33, 71, 9, 2, 163, 155, 107, 2, 98])).toBe(161);

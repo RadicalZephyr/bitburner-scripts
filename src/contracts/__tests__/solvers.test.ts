@@ -4,6 +4,7 @@ import { solve as solveMerge } from "../Merge-Overlapping-Intervals";
 import { solve as solveColor } from "../Proper-2-Coloring-of-a-Graph";
 import { solve as solveParens } from "../Sanitize-Parentheses-in-Expression";
 
+import { describe, expect, test } from '@jest/globals';
 
 describe("contract solvers", () => {
 

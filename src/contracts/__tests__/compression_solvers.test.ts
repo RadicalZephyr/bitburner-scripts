@@ -1,6 +1,8 @@
 import { solve as solveRLE } from "../Compression-I-RLE-Compression";
 import { solve as solveLZ } from "../Compression-II-LZ-Decompression";
 
+import { describe, expect, test } from '@jest/globals';
+
 describe("compression contract solvers", () => {
 
     test("RLE Compression", () => {
