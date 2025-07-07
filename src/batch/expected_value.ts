@@ -1,5 +1,5 @@
 import type { AutocompleteData, NS } from "netscript";
-import { CONFIG } from "./config";
+import { CONFIG } from "batch/config";
 
 export interface BatchThreadAnalysis {
     hackThreads: number;
