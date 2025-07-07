@@ -153,7 +153,8 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memResponsePort
                     `INFO: request pid=${request.pid} filename=${request.filename} ` +
                     `${request.numChunks}x${ns.formatRam(request.chunkSize)} ` +
                     `contiguous=${request.contiguous ?? false} ` +
-                    `coreDependent=${request.coreDependent ?? false}`
+                    `coreDependent=${request.coreDependent ?? false} ` +
+                    `longRunning=${request.longRunning ?? false}`
                 );
 
                 const allocation = memoryManager.allocate(
@@ -164,6 +165,7 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memResponsePort
                     request.contiguous ?? false,
                     request.coreDependent ?? false,
                     request.shrinkable ?? false,
+                    request.longRunning ?? false,
                 );
                 if (allocation) {
                     printLog(

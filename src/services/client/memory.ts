@@ -52,6 +52,7 @@ export interface AllocationRequest {
     contiguous?: boolean,
     coreDependent?: boolean,
     shrinkable?: boolean,
+    longRunning?: boolean,
 }
 
 export interface AllocationRelease {
@@ -141,11 +142,13 @@ export interface FreeRam {
  * contiguous:    Request a single contiguous allocation if possible
  * coreDependent: Request allocation on servers with a higher core count
  * shrinkable:    Signal that an allocation of fewer chunks than requested is okay
+ * longRunning:   Prefer non-home servers for long running tasks
  */
 export interface AllocOptions {
     contiguous?: boolean;
     coreDependent?: boolean;
     shrinkable?: boolean;
+    longRunning?: boolean;
 }
 
 export class MemoryClient extends Client<MessageType, Payload, ResponsePayload> {
@@ -194,10 +197,12 @@ export class MemoryClient extends Client<MessageType, Payload, ResponsePayload> 
         const contiguous = options?.contiguous ?? false;
         const coreDependent = options?.coreDependent ?? false;
         const shrinkable = options?.shrinkable ?? false;
+        const longRunning = options?.longRunning ?? false;
 
         this.ns.print(
             `INFO: requesting ${numChunks} x ${this.ns.formatRam(chunkSize)} ` +
-            `contiguous=${contiguous} coreDependent=${coreDependent} shrinkable=${shrinkable}`
+            `contiguous=${contiguous} coreDependent=${coreDependent} ` +
+            `shrinkable=${shrinkable} longRunning=${longRunning}`
         );
         let pid = this.ns.pid;
         let payload = {
@@ -208,6 +213,7 @@ export class MemoryClient extends Client<MessageType, Payload, ResponsePayload> 
             contiguous: contiguous,
             coreDependent: coreDependent,
             shrinkable: shrinkable,
+            longRunning: longRunning,
         } as AllocationRequest;
         let result = await this.sendMessageReceiveResponse(MessageType.Request, payload);
         if (!result) {

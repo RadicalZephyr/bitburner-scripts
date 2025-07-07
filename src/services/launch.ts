@@ -3,6 +3,7 @@ import type { AutocompleteData, NS, RunOptions, ScriptArg } from "netscript";
 export interface LaunchRunOptions extends RunOptions {
     allocationFlag?: string;
     coreDependent?: boolean;
+    longRunning?: boolean;
     dependencies?: string[];
 }
 
@@ -19,6 +20,7 @@ export async function main(ns: NS) {
         ['ram_override', null],
         ['allocation-flag', null],
         ['core-dependent', false],
+        ['long-running', false],
         ['help', false],
     ]);
 
@@ -26,7 +28,7 @@ export async function main(ns: NS) {
 
     if (rest.length === 0 || flags.help) {
         ns.tprint(`
-USAGE: run ${ns.getScriptName()} SCRIPT_NAME [--threads num_threads] [--ram_override ram_in_GBs] [--allocation-flag FLAG] [--core-dependent] [args...]
+USAGE: run ${ns.getScriptName()} SCRIPT_NAME [--threads num_threads] [--ram_override ram_in_GBs] [--allocation-flag FLAG] [--core-dependent] [--long-running] [args...]
 
 Run the script at SCRIPT_NAME, getting an allocation for it from the memory
 manager and spawning the script on the returned host. Otherwise, this script
@@ -38,6 +40,7 @@ OPTIONS
   --ram_override     Override static RAM calculation
   --allocation-flag  Pass FLAG and allocation id to the spawned script
   --core-dependent   Prefer allocations from home when available
+  --long-running     Prefer non-home servers when allocating
 `);
         return;
     }
@@ -78,11 +81,18 @@ OPTIONS
         return;
     }
 
+    let longRunning = flags['long-running'];
+    if (typeof longRunning !== 'boolean') {
+        ns.tprint('--long-running must be a boolean');
+        return;
+    }
+
     let args = rest;
     let options: LaunchRunOptions = {
         threads: threads,
         ramOverride: ram_override as number,
         coreDependent: coreDependent,
+        longRunning: longRunning,
     };
     if (allocationFlag !== null) {
         options.allocationFlag = allocationFlag as string;
@@ -109,6 +119,8 @@ OPTIONS
  *
  * This requests a singular allocation for the script from the memory
  * manager and then runs it on the host that was allocated.
+ * The `longRunning` option signals that the allocation should avoid
+ * the home server when possible.
  */
 export async function launch(ns: NS, script: string, threadOrOptions?: number | LaunchRunOptions, ...args: ScriptArg[]) {
     let scriptRam = ns.getScriptRam(script, "home");
@@ -117,6 +129,7 @@ export async function launch(ns: NS, script: string, threadOrOptions?: number | 
     let totalThreads: number;
     let allocationFlag: string | undefined;
     let coreDependent = false;
+    let longRunning = false;
     let explicitDependencies = [];
     if (typeof threadOrOptions === 'number' || typeof threadOrOptions === 'undefined') {
         totalThreads = typeof threadOrOptions === 'number' ? threadOrOptions : 1;
@@ -125,6 +138,7 @@ export async function launch(ns: NS, script: string, threadOrOptions?: number | 
         totalThreads = threadOrOptions.threads ?? 1;
         allocationFlag = threadOrOptions.allocationFlag;
         coreDependent = threadOrOptions.coreDependent ?? false;
+        longRunning = threadOrOptions.longRunning ?? false;
         explicitDependencies = threadOrOptions.dependencies ?? [];
     }
 
@@ -134,6 +148,7 @@ export async function launch(ns: NS, script: string, threadOrOptions?: number | 
         {
             contiguous: false,
             coreDependent,
+            longRunning,
         }
     );
     if (!allocation) {

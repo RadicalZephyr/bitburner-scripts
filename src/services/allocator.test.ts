@@ -10,12 +10,13 @@ type HostInfo = { max: number; used: number };
 
 type HostMap = Record<string, HostInfo>;
 
-function makeNS(hosts: HostMap, procs: ProcMap): NS {
+function makeNS(hosts: HostMap, procs: ProcMap, purchased: string[] = []): NS {
     return {
         getServerMaxRam: (h: string) => hosts[h].max,
         getServerUsedRam: (h: string) => hosts[h].used,
         isRunning: (pid: number) => procs[pid] ?? false,
         formatRam: (ram: number) => `${ram}`,
+        getPurchasedServers: () => purchased,
     } as unknown as NS;
 }
 
@@ -92,6 +93,18 @@ test('core dependent prioritizes home', () => {
     expect(normal!.hosts[0].hostname).toBe('h1');
     const core = alloc.allocate(1, 'd.js', 4, 1, false, true);
     expect(core!.hosts[0].hostname).toBe('home');
+});
+
+test('longRunning prefers non-purchased servers', () => {
+    const hosts = { home: { max: 8, used: 0 }, n1: { max: 16, used: 0 }, p1: { max: 16, used: 0 } };
+    const ns = makeNS(hosts, {}, ['p1']);
+    const alloc = new MemoryAllocator(ns);
+    alloc.pushWorker('home');
+    alloc.pushWorker('n1');
+    alloc.pushWorker('p1');
+
+    const res = alloc.allocate(1, 'lr.js', 4, 1, false, false, false, true);
+    expect(res!.hosts[0].hostname).toBe('n1');
 });
 
 test('shrinkable allocation uses partial capacity', () => {

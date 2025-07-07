@@ -144,10 +144,12 @@ export class MemoryAllocator {
     /**
      * Allocate RAM for the given pid.
      *
-     * When `coreDependent` is true the home server is preferred for
-     * the allocation. Otherwise the manager will try to allocate on
-     * non-home servers first.
-     */
+ * When `coreDependent` is true the home server is preferred for
+ * the allocation. Otherwise the manager will try to allocate on
+ * non-home servers first. When `longRunning` is true the allocator
+ * avoids using the home server and prioritizes non-purchased hosts
+ * before purchased servers.
+ */
     allocate(
         pid: number,
         filename: string,
@@ -156,6 +158,7 @@ export class MemoryAllocator {
         contiguous: boolean = false,
         coreDependent: boolean = false,
         shrinkable: boolean = false,
+        longRunning: boolean = false,
     ): AllocationResult {
         if (chunkSize <= 0 || numChunks <= 0) {
             this.printLog("ERROR: bad allocation request, zero size");
@@ -164,7 +167,18 @@ export class MemoryAllocator {
 
         let workers = Array.from(this.workers.values());
 
+        const purchased = new Set(this.ns.getPurchasedServers());
+
         workers.sort((a, b) => {
+            if (longRunning) {
+                const prio = (w: { hostname: string }) =>
+                    w.hostname === "home" ? 2 : purchased.has(w.hostname) ? 1 : 0;
+                const pa = prio(a);
+                const pb = prio(b);
+                if (pa !== pb) return pa - pb;
+                return b.freeRam - a.freeRam;
+            }
+
             if (a.hostname === "home" && b.hostname !== "home") {
                 return coreDependent ? -1 : 1;
             }
