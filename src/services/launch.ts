@@ -131,8 +131,10 @@ export async function launch(ns: NS, script: string, threadOrOptions?: number | 
     let allocation = await client.requestTransferableAllocation(
         scriptRam,
         totalThreads,
-        false,
-        coreDependent,
+        {
+            contiguous: false,
+            coreDependent,
+        }
     );
     if (!allocation) {
         ns.print(`WARN: failed to launch ${script}, could not allocate memory`);

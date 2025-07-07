@@ -127,6 +127,19 @@ export interface FreeRam {
     freeRam: number
 }
 
+/**
+ * Optional flags to request specific allocation strategies.
+ *
+ * contiguous:    Request a single contigiuous allocation if possible
+ * coreDependent: Request allocation on servers with a higher core count
+ * shrinkable:    Signal that an allocation of fewer chunks than requested is okay
+ */
+export interface AllocOptions {
+    contiguous?: boolean;
+    coreDependent?: boolean;
+    shrinkable?: boolean;
+}
+
 export class MemoryClient extends Client<MessageType, Payload, ResponsePayload> {
     constructor(ns: NS) {
         super(ns, MEMORY_PORT, MEMORY_RESPONSE_PORT);
@@ -157,23 +170,26 @@ export class MemoryClient extends Client<MessageType, Payload, ResponsePayload> 
      * additional home cores so the memory manager can prioritize
      * allocating RAM from the `home` server.
      *
+     * @see AllocOptions for details about flags that affect
+     * allocation strategy.
+     *
      * @param chunkSize Size in GB of the smallest chunk usable
      * @param numChunks The requested number of chunks
-     * @param contiguous
-     * @param coreDependent
-     * @param shrinkable
+     * @param options   Requests about how the MemoryAllocator chooses chunks
      * @returns
      */
     async requestTransferableAllocation(
         chunkSize: number,
         numChunks: number,
-        contiguous: boolean = false,
-        coreDependent: boolean = false,
-        shrinkable: boolean = false,
+        options?: AllocOptions,
     ): Promise<TransferableAllocation> {
+        const contiguous = options?.contiguous ?? false;
+        const coreDependent = options?.coreDependent ?? false;
+        const shrinkable = options?.shrinkable ?? false;
+
         this.ns.print(
             `INFO: requesting ${numChunks} x ${this.ns.formatRam(chunkSize)} ` +
-            `contiguous=${contiguous} coreDependent=${coreDependent}`
+            `contiguous=${contiguous} coreDependent=${coreDependent} shrinkable=${shrinkable}`
         );
         let pid = this.ns.pid;
         let payload = {
@@ -211,29 +227,23 @@ export class MemoryClient extends Client<MessageType, Payload, ResponsePayload> 
      * This method also registers an `atExit` handler function to send
      * a release message to the memory allocator.
      *
-     * When `coreDependent` is `true` the memory manager will try to
-     * satisfy the request from the `home` server first.
+     * @see AllocOptions for details about flags that affect
+     * allocation strategy.
      *
      * @param chunkSize Size in GB of the smallest chunk usable
      * @param numChunks The requested number of chunks
-     * @param contiguous
-     * @param coreDependent
-     * @param shrinkable
+     * @param options   Requests about how the MemoryAllocator chooses chunks
      * @returns
      */
     async requestOwnedAllocation(
         chunkSize: number,
         numChunks: number,
-        contiguous: boolean = false,
-        coreDependent: boolean = false,
-        shrinkable: boolean = false,
+        options?: AllocOptions,
     ): Promise<HostAllocation[]> {
         let result = await this.requestTransferableAllocation(
             chunkSize,
             numChunks,
-            contiguous,
-            coreDependent,
-            shrinkable,
+            options,
         );
         if (!result) {
             return null;

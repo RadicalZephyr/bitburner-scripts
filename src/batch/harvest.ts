@@ -127,7 +127,7 @@ OPTIONS
     const batchRam = logistics.batchRam;
 
     let memClient = new MemoryClient(ns);
-    let allocation = await memClient.requestTransferableAllocation(batchRam, overlapLimit, false, false, true);
+    let allocation = await memClient.requestTransferableAllocation(batchRam, overlapLimit, { shrinkable: true });
     if (!allocation) return;
 
     allocation.releaseAtExit(ns);

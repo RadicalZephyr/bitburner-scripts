@@ -82,9 +82,10 @@ OPTIONS
     let allocation = await memClient.requestTransferableAllocation(
         scriptRam,
         requestThreads,
-        false,
-        true,
-        true,
+        {
+            coreDependent: true,
+            shrinkable: true,
+        }
     );
 
     if (!allocation) {

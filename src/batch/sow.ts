@@ -92,14 +92,15 @@ OPTIONS
     const wRam = ns.getScriptRam(WEAKEN_SCRIPT, "home");
     const gRam = ns.getScriptRam(GROW_SCRIPT, "home");
 
-    let weakenAlloc = await memClient.requestTransferableAllocation(wRam, weakenThreads, false, true, true);
+    const allocOptions = { coreDependent: true, shrinkable: true };
+    let weakenAlloc = await memClient.requestTransferableAllocation(wRam, weakenThreads, allocOptions);
 
     if (!weakenAlloc) {
         ns.tprint("ERROR: failed to allocate memory for weaken threads");
         return;
     }
 
-    let growAlloc = await memClient.requestTransferableAllocation(gRam, growThreads, false, true, true);
+    let growAlloc = await memClient.requestTransferableAllocation(gRam, growThreads, allocOptions);
 
     if (!growAlloc) {
         ns.tprint("ERROR: failed to allocate memory for grow threads");
