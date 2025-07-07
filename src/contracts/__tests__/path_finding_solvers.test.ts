@@ -2,7 +2,7 @@ import { solve as solveGridI } from "../Unique-Paths-in-a-Grid-I";
 import { solve as solveGridII } from "../Unique-Paths-in-a-Grid-II";
 import { solve as solveSpiral } from "../Spiralize-Matrix";
 import { solve as solveTriangle } from "../Minimum-Path-Sum-in-a-Triangle";
-import { solve as solveShortestGrid } from "../incomplete/Shortest-Path-in-a-Grid";
+import { solve as solveShortestGrid } from "../Shortest-Path-in-a-Grid";
 
 import { describe, expect, test } from '@jest/globals';
 
