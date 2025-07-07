@@ -33,7 +33,7 @@ export async function main(ns) {
     let answer = solve(contractData);
     ns.writePort(contractPortNum, answer);
 }
-function solve(data) {
+export function solve(data) {
     let current = null;
     let currentLen = 0;
     let encoding = "";

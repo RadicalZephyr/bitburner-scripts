@@ -3,7 +3,7 @@
  * `LocalStorage`. The {@link Config} class exposes configuration entries as
  * properties that transparently serialize and deserialize values when accessed.
  */
-import { LocalStorage } from "./localStorage";
+import { LocalStorage } from "util/localStorage";
 /** Set a default value in a LocalStorage key only if it's unset. */
 export function setConfigDefault(key, defaultValue) {
     if (!LocalStorage.getItem(key)) {

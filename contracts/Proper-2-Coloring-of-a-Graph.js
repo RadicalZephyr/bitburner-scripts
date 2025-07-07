@@ -42,7 +42,7 @@ export async function main(ns) {
     let answer = solve(contractData);
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
-function solve(data) {
+export function solve(data) {
     let [numVertices, edges] = data;
     let graph = new Graph(numVertices, edges);
     for (let v = 0; v < numVertices; v++) {

@@ -1,5 +1,7 @@
 import { TaskSelectorClient, Lifecycle } from "batch/client/task_selector";
 import { registerAllocationOwnership, MemoryClient } from "services/client/memory";
+import { CONFIG } from "batch/config";
+import { awaitRound, calculateRoundInfo } from "batch/progress";
 export function autocomplete(data, _args) {
     return data.servers;
 }
@@ -62,7 +64,10 @@ OPTIONS
         return;
     }
     let requestThreads = maxThreadsCap;
-    let allocation = await memClient.requestTransferableAllocation(scriptRam, requestThreads, false, true, true);
+    let allocation = await memClient.requestTransferableAllocation(scriptRam, requestThreads, {
+        coreDependent: true,
+        shrinkable: true,
+    });
     if (!allocation) {
         ns.tprint("ERROR: failed to allocate memory for weaken threads");
         return;
@@ -70,16 +75,14 @@ OPTIONS
     // Send a Till Heartbeat to indicate we're starting the main loop
     await taskSelectorClient.heartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Till);
     let threadsNeeded = calculateWeakenThreads(ns, target);
-    const totalThreads = allocation.allocatedChunks.reduce((s, c) => s + c.numChunks, 0);
+    const totalThreads = allocation.numChunks;
     let round = 0;
+    let nextHeartbeat = Date.now() + CONFIG.heartbeatCadence + Math.random() * 500;
     while (threadsNeeded > 0) {
         round += 1;
         const roundsRemaining = Math.ceil(threadsNeeded / totalThreads);
         const totalRounds = (round - 1) + roundsRemaining;
-        const roundTime = ns.getWeakenTime(target);
-        const roundStart = ns.self().onlineRunningTime * 1000;
-        const roundEnd = roundStart + roundTime;
-        const totalExpectedEnd = roundStart + (roundsRemaining * roundTime);
+        const info = calculateRoundInfo(ns, target, round, totalRounds, roundsRemaining);
         const spawnThreads = Math.min(threadsNeeded, totalThreads);
         const pids = [];
         let remaining = spawnThreads;
@@ -97,20 +100,8 @@ OPTIONS
             }
             remaining -= t;
         }
-        for (const pid of pids) {
-            while (ns.isRunning(pid)) {
-                ns.clearLog();
-                const elapsed = ns.self().onlineRunningTime * 1000;
-                ns.print(`
-Round ${round} of ${totalRounds}
-Round ends:         ${ns.tFormat(roundEnd)}
-Total expected:     ${ns.tFormat(totalExpectedEnd)}
-Elapsed time:       ${ns.tFormat(elapsed)}
-`);
-                await taskSelectorClient.heartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Till);
-                await ns.sleep(1000);
-            }
-        }
+        const sendHb = () => Promise.resolve(taskSelectorClient.tryHeartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Till));
+        nextHeartbeat = await awaitRound(ns, pids, info, nextHeartbeat, sendHb);
         threadsNeeded = calculateWeakenThreads(ns, target);
     }
     await allocation.release(ns);

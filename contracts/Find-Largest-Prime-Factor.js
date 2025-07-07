@@ -44,7 +44,7 @@ export async function main(ns) {
     let answer = solve(contractData);
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
-function solve(data) {
+export function solve(data) {
     let factors = [];
     // copy so we can make sure the product of the factorization is
     // the same.

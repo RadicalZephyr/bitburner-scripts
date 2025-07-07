@@ -48,7 +48,7 @@ export async function main(ns) {
 function isDigit(c) {
     return /\d/.test(c);
 }
-function solve(data) {
+export function solve(data) {
     let uncompressed = "";
     let i = 0;
     let nextChunkType = 0 /* ChunkType.Literal */;

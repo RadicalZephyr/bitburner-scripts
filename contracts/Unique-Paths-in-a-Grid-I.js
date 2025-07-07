@@ -72,7 +72,7 @@ export async function main(ns) {
  * 1 3 6 10
  *
  */
-function solve(data) {
+export function solve(data) {
     let [numRows, numCols] = data;
     let pathsTable = new Paths(numRows, numCols);
     pathsTable.fillTable();

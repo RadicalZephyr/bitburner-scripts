@@ -36,7 +36,7 @@ export async function main(ns) {
     let answer = solve(contractData);
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
-function solve(data) {
+export function solve(data) {
     const rows = data.length;
     const cols = data[0].length;
     // dp[r][c] holds number of ways to reach cell r,c avoiding obstacles.

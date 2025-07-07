@@ -53,7 +53,7 @@ export async function main(ns) {
     ns.writePort(contractPortNum, answer);
 }
 const A_CODE = 'A'.charCodeAt(0);
-function solve(data) {
+export function solve(data) {
     let [plaintext, keyword] = data;
     let fullKey = extendKey(plaintext.length, keyword);
     let cipher = "";

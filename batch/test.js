@@ -141,7 +141,7 @@ OPTIONS
     const client = new MemoryClient(ns);
     // The h script is slightly smaller than w or g
     const ram = ns.getScriptRam("/batch/w.js", "home");
-    const allocation = await client.requestTransferableAllocation(ram, maxThreads * 10, true);
+    const allocation = await client.requestTransferableAllocation(ram, maxThreads * 10, { contiguous: true });
     if (!allocation) {
         ns.tprint("ERROR: failed to allocate memory");
         return;

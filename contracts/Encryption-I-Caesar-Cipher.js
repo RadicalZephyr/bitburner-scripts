@@ -30,7 +30,7 @@ export async function main(ns) {
     ns.writePort(contractPortNum, answer);
 }
 const ALPHABET = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
-function solve(data) {
+export function solve(data) {
     let [plaintext, n] = data;
     let leftShift = ALPHABET.length - n;
     let upcase_plaintext = plaintext.toUpperCase();

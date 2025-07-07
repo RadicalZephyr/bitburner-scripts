@@ -10,6 +10,7 @@ export async function main(ns) {
 const MEMORY_FILES = [
     "/services/client/discover.js",
     "/services/client/memory.js",
+    "/services/allocator.js",
     "/util/client.js",
     "/util/ports.js"
 ];

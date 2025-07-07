@@ -23,7 +23,7 @@ export async function main(ns) {
     let answer = solve(contractData);
     ns.writePort(contractPortNum, answer.toString());
 }
-function solve(data) {
+export function solve(data) {
     let s = data;
     let s_str = s.toString();
     // Base an estimate on the square root as such `S = a * (10 **

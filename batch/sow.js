@@ -1,5 +1,7 @@
 import { TaskSelectorClient, Lifecycle } from "batch/client/task_selector";
 import { registerAllocationOwnership, MemoryClient, } from "services/client/memory";
+import { CONFIG } from "batch/config";
+import { awaitRound, calculateRoundInfo } from "batch/progress";
 const GROW_SCRIPT = "/batch/g.js";
 const WEAKEN_SCRIPT = "/batch/w.js";
 export function autocomplete(data, _args) {
@@ -54,7 +56,7 @@ OPTIONS
     let weakenThreads;
     if (maxThreads !== -1) {
         growThreads = Math.min(growThreads, maxThreads);
-        ({ growThreads, weakenThreads } = calculateSowThreadsForMaxThreads(ns, target, growThreads));
+        ({ weakenThreads } = calculateSowThreadsForMaxThreads(ns, growThreads));
     }
     else {
         let growSecDelta = ns.growthAnalyzeSecurity(growThreads, target);
@@ -69,12 +71,13 @@ OPTIONS
     const memClient = new MemoryClient(ns);
     const wRam = ns.getScriptRam(WEAKEN_SCRIPT, "home");
     const gRam = ns.getScriptRam(GROW_SCRIPT, "home");
-    let weakenAlloc = await memClient.requestTransferableAllocation(wRam, weakenThreads, false, true, true);
+    const allocOptions = { coreDependent: true, shrinkable: true };
+    let weakenAlloc = await memClient.requestTransferableAllocation(wRam, weakenThreads, allocOptions);
     if (!weakenAlloc) {
         ns.tprint("ERROR: failed to allocate memory for weaken threads");
         return;
     }
-    let growAlloc = await memClient.requestTransferableAllocation(gRam, growThreads, false, true, true);
+    let growAlloc = await memClient.requestTransferableAllocation(gRam, growThreads, allocOptions);
     if (!growAlloc) {
         ns.tprint("ERROR: failed to allocate memory for grow threads");
         return;
@@ -82,33 +85,19 @@ OPTIONS
     // Send a Sow Heartbeat to indicate we're starting the main loop
     await taskSelectorClient.heartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Sow);
     let totalGrowThreads = neededGrowThreads(ns, target);
-    const totalThreads = growAlloc.allocatedChunks.reduce((s, c) => s + c.numChunks, 0);
+    const totalThreads = growAlloc.numChunks;
     let round = 0;
+    let nextHeartbeat = Date.now() + CONFIG.heartbeatCadence + Math.random() * 500;
     while (growThreads > 0) {
         round += 1;
         const roundsRemaining = Math.ceil(totalGrowThreads / totalThreads);
         const totalRounds = (round - 1) + roundsRemaining;
-        const roundTime = ns.getWeakenTime(target);
-        const roundStart = ns.self().onlineRunningTime * 1000;
-        const roundEnd = roundStart + roundTime;
-        const totalExpectedEnd = roundStart + (roundsRemaining * roundTime);
+        const info = calculateRoundInfo(ns, target, round, totalRounds, roundsRemaining);
         const growPids = runAllocation(ns, growAlloc, GROW_SCRIPT, growThreads, target, 0);
         const weakenPids = runAllocation(ns, weakenAlloc, WEAKEN_SCRIPT, weakenThreads, target, 0);
         const pids = [...growPids, ...weakenPids];
-        for (const pid of pids) {
-            while (ns.isRunning(pid)) {
-                ns.clearLog();
-                const elapsed = ns.self().onlineRunningTime * 1000;
-                ns.print(`
-Round ${round} of ${totalRounds}
-Round ends:      ${ns.tFormat(roundEnd)}
-Total expected:  ${ns.tFormat(totalExpectedEnd)}
-Elapsed time:    ${ns.tFormat(elapsed)}
-`);
-                await taskSelectorClient.heartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Sow);
-                await ns.sleep(1000);
-            }
-        }
+        const sendHb = () => Promise.resolve(taskSelectorClient.tryHeartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Sow));
+        nextHeartbeat = await awaitRound(ns, pids, info, nextHeartbeat, sendHb);
         totalGrowThreads = neededGrowThreads(ns, target);
         growThreads = Math.min(totalGrowThreads, growThreads);
         const growSec = ns.growthAnalyzeSecurity(growThreads, target);
@@ -119,12 +108,12 @@ Elapsed time:    ${ns.tFormat(elapsed)}
     ns.toast(`finished sowing ${target}!`, "success");
     taskSelectorClient.finishedSowing(target);
 }
-function calculateSowThreadsForMaxThreads(ns, target, maxThreads) {
-    let low = 0;
+function calculateSowThreadsForMaxThreads(ns, maxThreads) {
+    let low = 1;
     let high = maxThreads;
     for (let i = 0; i < 16; i++) {
         const mid = Math.floor((low + high) / 2);
-        const { growThreads, weakenThreads } = calculateSowBatchThreads(ns, target, mid);
+        const { growThreads, weakenThreads } = calculateSowBatchThreads(ns, mid);
         if (growThreads + weakenThreads === maxThreads) {
             low = mid;
             break;
@@ -136,10 +125,10 @@ function calculateSowThreadsForMaxThreads(ns, target, maxThreads) {
             high = mid;
         }
     }
-    return calculateSowBatchThreads(ns, target, low);
+    return calculateSowBatchThreads(ns, low);
 }
-function calculateSowBatchThreads(ns, target, growThreads) {
-    const growSecDelta = ns.growthAnalyzeSecurity(growThreads, target);
+function calculateSowBatchThreads(ns, growThreads) {
+    const growSecDelta = ns.growthAnalyzeSecurity(growThreads);
     const weakenThreads = weakenAnalyze(growSecDelta);
     return { growThreads, weakenThreads };
 }

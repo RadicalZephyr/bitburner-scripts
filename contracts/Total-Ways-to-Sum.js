@@ -27,10 +27,7 @@ export async function main(ns) {
     let answer = solve(contractData);
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
-/**
- * Count integer partitions of n using DP (excluding the single term).
- */
-function solve(n) {
+export function solve(n) {
     const ways = Array(n + 1).fill(0);
     ways[0] = 1;
     for (let i = 1; i <= n; i++) {

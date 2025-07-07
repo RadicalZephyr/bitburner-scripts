@@ -55,12 +55,7 @@ export async function main(ns) {
     let answer = solve(contractData);
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
-/**
- * Return the elements of the matrix in spiral order.
- *
- * @param data - 2D array representing the matrix
- */
-function solve(data) {
+export function solve(data) {
     const rows = data.length;
     if (rows === 0)
         return [];

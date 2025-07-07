@@ -1,0 +1,99 @@
+/* Shortest Path in a Grid
+
+You are located in the top-left corner of the following grid:
+
+  [[0,0,0,1,0,0,1,0,0,0],
+   [0,0,1,0,1,1,1,0,1,1],
+   [0,1,0,0,1,0,1,1,0,1],
+   [0,0,0,0,0,1,0,0,1,0],
+   [0,0,0,0,0,0,0,0,0,0],
+   [1,0,0,1,0,1,1,1,0,0]]
+
+You are trying to find the shortest path to the bottom-right corner of
+the grid, but there are obstacles on the grid that you cannot move
+onto. These obstacles are denoted by '1', while empty spaces are
+denoted by 0.
+
+Determine the shortest path from start to finish, if one exists. The
+answer should be given as a string of UDLR characters, indicating the
+moves along the path
+
+NOTE: If there are multiple equally short paths, any of them is
+accepted as answer. If there is no path, the answer should be an empty
+string.  NOTE: The data returned for this contract is an 2D array of
+numbers representing the grid.
+
+Examples:
+
+    [[0,1,0,0,0],
+     [0,0,0,1,0]]
+
+Answer: 'DRRURRD'
+
+    [[0,1],
+     [1,0]]
+
+Answer: ''
+ */
+export async function main(ns) {
+    let scriptName = ns.getScriptName();
+    let contractPortNum = ns.args[0];
+    if (typeof contractPortNum !== 'number') {
+        ns.tprintf('%s contract run with non-number answer port argument', scriptName);
+        return;
+    }
+    let contractDataJSON = ns.args[1];
+    if (typeof contractDataJSON !== 'string') {
+        ns.tprintf('%s contract run with non-string data argument. Must be a JSON string containing file, host and contract data.', scriptName);
+        return;
+    }
+    let contractData = JSON.parse(contractDataJSON);
+    ns.tprintf('contract data: %s', JSON.stringify(contractData));
+    let answer = solve(contractData);
+    ns.writePort(contractPortNum, answer);
+}
+export function solve(data) {
+    // Step 1: Determine grid dimensions and the start and goal cells.
+    let numRows = data.length;
+    if (numRows === 0) {
+        return "";
+    }
+    let numCols = data[0].length;
+    let start = [0, 0];
+    let goal = [numRows - 1, numCols - 1];
+    // Step 2: If the start or goal is blocked we can immediately return.
+    if (data[start[0]][start[1]] === 1 || data[goal[0]][goal[1]] === 1) {
+        return "";
+    }
+    // Step 3: Helper for retrieving valid neighbours.
+    function neighbors([x, y]) {
+        let possible = [
+            [x - 1, y, "U"],
+            [x + 1, y, "D"],
+            [x, y - 1, "L"],
+            [x, y + 1, "R"],
+        ];
+        return possible.filter(([nx, ny]) => {
+            return nx >= 0 && nx < numRows && ny >= 0 && ny < numCols && data[nx][ny] === 0;
+        });
+    }
+    // Step 4: Breadth first search keeping track of the path taken to each cell.
+    let queue = [{ pos: start, path: "" }];
+    let visited = new Set([start.toString()]);
+    while (queue.length > 0) {
+        let { pos, path } = queue.shift();
+        if (pos[0] === goal[0] && pos[1] === goal[1]) {
+            return path;
+        }
+        for (const [nx, ny, dir] of neighbors(pos)) {
+            let key = `${nx},${ny}`;
+            if (visited.has(key)) {
+                continue;
+            }
+            visited.add(key);
+            queue.push({ pos: [nx, ny], path: path + dir });
+        }
+    }
+    // Step 5: No path found.
+    return "";
+}

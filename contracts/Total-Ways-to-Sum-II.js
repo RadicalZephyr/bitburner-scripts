@@ -24,10 +24,7 @@ export async function main(ns) {
     let answer = solve(contractData);
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
-/**
- * Count combinations to reach target using given numbers.
- */
-function solve(data) {
+export function solve(data) {
     const [target, nums] = data;
     nums.sort((a, b) => a - b);
     const dp = Array(target + 1).fill(0);

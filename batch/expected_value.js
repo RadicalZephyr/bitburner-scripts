@@ -1,4 +1,4 @@
-import { CONFIG } from "./config";
+import { CONFIG } from "batch/config";
 export function autocomplete(data, _args) {
     return data.servers;
 }

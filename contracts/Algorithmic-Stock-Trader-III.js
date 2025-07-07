@@ -33,7 +33,7 @@ export async function main(ns) {
 /**
  * Maximum profit with at most two transactions.
  */
-async function solve(_ns, data) {
+export async function solve(_ns, data) {
     if (data.length === 0)
         return 0;
     const n = data.length;

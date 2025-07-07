@@ -2,9 +2,9 @@ import { TASK_SELECTOR_PORT, TASK_SELECTOR_RESPONSE_PORT, MessageType, Lifecycle
 import { MonitorClient, Lifecycle as MonitorLifecycle } from "batch/client/monitor";
 import { CONFIG } from "batch/config";
 import { expectedValuePerRamSecond } from "batch/expected_value";
-import { calculateWeakenThreads } from "./till";
-import { calculateSowThreads } from "./sow";
-import { calculateBatchLogistics } from "./harvest";
+import { calculateWeakenThreads } from "batch/till";
+import { calculateSowThreads } from "batch/sow";
+import { calculateBatchLogistics } from "batch/harvest";
 import { DiscoveryClient } from "services/client/discover";
 import { MemoryClient, registerAllocationOwnership } from "services/client/memory";
 import { launch } from "services/launch";
@@ -239,26 +239,34 @@ class TaskSelector {
             ...calculateBatchLogistics(this.ns, h)
         }))
             .sort((a, b) => b.value - a.value);
+        const harvestScriptRam = this.ns.getScriptRam("/batch/harvest.js", "home");
+        const sowScriptRam = this.ns.getScriptRam("/batch/sow.js", "home");
+        const tillScriptRam = this.ns.getScriptRam("/batch/till.js", "home");
+        const hRam = this.ns.getScriptRam("/batch/h.js", "home");
+        const gRam = this.ns.getScriptRam("/batch/g.js", "home");
+        const wRam = this.ns.getScriptRam("/batch/w.js", "home");
         let fallbackHarvest = null;
         for (const task of harvestTasks) {
-            if (task.requiredRam * task.overlap <= freeRam) {
+            if (harvestScriptRam + task.requiredRam * task.overlap <= freeRam) {
                 await this.launchHarvest(task.host);
                 return;
             }
             if (!fallbackHarvest)
                 fallbackHarvest = task.host;
         }
-        if (fallbackHarvest && freeRam > 0) {
+        const minimalHarvestRam = hRam + gRam + 2 * wRam;
+        if (fallbackHarvest && freeRam > minimalHarvestRam) {
             await this.launchHarvest(fallbackHarvest, freeRam);
             return;
         }
         if (this.sowTargets.size < CONFIG.maxSowTargets) {
             const canAdd = CONFIG.maxSowTargets - this.sowTargets.size;
             let candidates = [];
-            if (this.ns.getHackingLevel() === 1) {
-                if (this.pendingTillTargets.includes("n00dles") && this.pendingTillTargets.includes("foodnstuff")) {
-                    candidates = ["n00dles", "foodnstuff"];
-                }
+            if (this.pendingSowTargets.includes("n00dles")) {
+                candidates = ["n00dles"];
+            }
+            else if (this.pendingSowTargets.includes("foodnstuff")) {
+                candidates = ["foodnstuff"];
             }
             else if (Math.abs(this.velocity) <= 0.05) {
                 candidates = [...this.pendingSowTargets];
@@ -268,17 +276,17 @@ class TaskSelector {
             for (const host of candidates.slice(0, canAdd)) {
                 const { growThreads, weakenThreads } = calculateSowThreads(this.ns, host);
                 const total = growThreads + weakenThreads;
-                const ram = growThreads * this.ns.getScriptRam("/batch/g.js", "home") +
-                    weakenThreads * this.ns.getScriptRam("/batch/w.js", "home");
-                if (ram <= freeRam) {
+                const ram = growThreads * gRam + weakenThreads * wRam;
+                if (sowScriptRam + ram <= freeRam) {
                     await this.launchSow(host, total);
                     return;
                 }
                 if (!fallback)
                     fallback = host;
             }
-            if (fallback && freeRam > 0) {
-                const maxRamPerThread = Math.max(this.ns.getScriptRam("/batch/g.js", "home"), this.ns.getScriptRam("/batch/w.js", "home"));
+            const minimalSowRam = sowScriptRam + gRam + wRam;
+            if (fallback && freeRam > minimalSowRam) {
+                const maxRamPerThread = Math.max(gRam, wRam);
                 const threads = Math.floor(freeRam / maxRamPerThread);
                 if (threads > 0) {
                     await this.launchSow(fallback, threads);
@@ -289,10 +297,11 @@ class TaskSelector {
         if (this.tillTargets.size < CONFIG.maxTillTargets) {
             const canAdd = CONFIG.maxTillTargets - this.tillTargets.size;
             let candidates = [];
-            if (this.ns.getHackingLevel() === 1) {
-                if (this.pendingTillTargets.includes("n00dles") && this.pendingTillTargets.includes("foodnstuff")) {
-                    candidates = ["n00dles", "foodnstuff"];
-                }
+            if (this.pendingTillTargets.includes("n00dles")) {
+                candidates = ["n00dles"];
+            }
+            else if (this.pendingTillTargets.includes("foodnstuff")) {
+                candidates = ["foodnstuff"];
             }
             else if (Math.abs(this.velocity) <= 0.05) {
                 candidates = [...this.pendingTillTargets];
@@ -301,16 +310,17 @@ class TaskSelector {
             let fallback = null;
             for (const host of candidates.slice(0, canAdd)) {
                 const threads = calculateWeakenThreads(this.ns, host);
-                const ram = threads * this.ns.getScriptRam("/batch/w.js", "home");
-                if (ram <= freeRam) {
+                const ram = threads * wRam;
+                if (tillScriptRam + ram <= freeRam) {
                     await this.launchTill(host, threads);
                     return;
                 }
                 if (!fallback)
                     fallback = host;
             }
-            if (fallback && freeRam > 0) {
-                const threadRam = this.ns.getScriptRam("/batch/w.js", "home");
+            const minimalTillRam = tillScriptRam + wRam;
+            if (fallback && freeRam > minimalTillRam) {
+                const threadRam = wRam;
                 const threads = Math.floor(freeRam / threadRam);
                 if (threads > 0) {
                     await this.launchTill(fallback, threads);

@@ -86,17 +86,18 @@ OPTIONS
     // to fit within the batch size that we originally allocated
     const batchRam = logistics.batchRam;
     let memClient = new MemoryClient(ns);
-    let allocation = await memClient.requestOwnedAllocation(batchRam, overlapLimit, false, false, true);
+    let allocation = await memClient.requestTransferableAllocation(batchRam, overlapLimit, { shrinkable: true });
     if (!allocation)
         return;
+    allocation.releaseAtExit(ns);
     // Send a Harvest Heartbeat to indicate we're starting the main loop
     await taskSelectorClient.heartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Harvest);
     // Track how many batches can overlap concurrently. If the
     // calculated overlap drops we release the extra memory back to the
     // MemoryManager so it can be reused by other processes.
-    let maxOverlap = allocation.reduce((s, c) => s + c.numChunks, 0);
+    let maxOverlap = allocation.numChunks;
     let currentBatches = 0;
-    let batchHost = makeBatchHostArray(allocation);
+    let batchHost = makeBatchHostArray(allocation.allocatedChunks);
     let batches = [];
     ns.print(`INFO: spawning initial round of ${maxOverlap} batches`);
     // Launch one batch per allocated chunk so that the pipeline is
@@ -106,7 +107,7 @@ OPTIONS
         let batchPids = spawnBatch(ns, host, target, logistics.phases, donePortId);
         batches.push(batchPids);
         currentBatches++;
-        if (Date.now() - lastHeartbeat >= 1000) {
+        if (Date.now() >= lastHeartbeat + CONFIG.heartbeatCadence) {
             taskSelectorClient.tryHeartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Harvest);
             lastHeartbeat = Date.now();
         }
@@ -169,7 +170,7 @@ OPTIONS
         if (currentBatches > maxOverlap) {
             currentBatches = currentBatches % maxOverlap;
         }
-        if (Date.now() >= lastHeartbeat + 1000 + (Math.random() * 500)) {
+        if (Date.now() >= lastHeartbeat + CONFIG.heartbeatCadence + (Math.random() * 500)) {
             if (taskSelectorClient.tryHeartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Harvest)) {
                 lastHeartbeat = Date.now();
             }

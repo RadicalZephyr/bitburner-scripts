@@ -7,6 +7,7 @@ const entries = [
     ["minSecTolerance", 1],
     ["maxMoneyTolerance", 0.99],
     ["maxHackPercent", 0.5],
+    ["heartbeatCadence", 2000],
     ["heartbeatTimeoutMs", 3000],
 ];
 export const CONFIG = new Config("BATCH", entries);

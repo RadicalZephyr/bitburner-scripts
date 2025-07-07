@@ -32,7 +32,7 @@ export async function main(ns) {
     let answer = solve(contractData);
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
-function solve(data) {
+export function solve(data) {
     data.sort((b, c) => b[1] - c[1]);
     data.sort((b, c) => b[0] - c[0]);
     return data.reduce(mergeRanges, []);

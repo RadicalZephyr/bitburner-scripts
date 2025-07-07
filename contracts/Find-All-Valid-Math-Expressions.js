@@ -44,10 +44,7 @@ export async function main(ns) {
     let answer = solve(contractData);
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
-/**
- * Generate all expressions evaluating to the target value.
- */
-function solve(data) {
+export function solve(data) {
     const [digits, target] = data;
     const results = [];
     function backtrack(index, expr, prev, value) {
