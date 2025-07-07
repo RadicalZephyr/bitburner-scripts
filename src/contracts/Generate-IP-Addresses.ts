@@ -37,7 +37,7 @@ export async function main(ns: NS) {
 
 export let data = "2261743611";
 
-function solve(data: string): any {
+export function solve(data: string): any {
     if (data.length < 4 || data.length > 12) {
         // Only strings between 4 and 12 characters can be valid Ip
         // Addresses

@@ -35,7 +35,7 @@ export async function main(ns: NS) {
 
 const ALPHABET: string[] = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
 
-function solve(data: [string, number]): string {
+export function solve(data: [string, number]): string {
     let [plaintext, n] = data;
     let leftShift = ALPHABET.length - n;
     let upcase_plaintext = plaintext.toUpperCase();

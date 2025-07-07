@@ -40,7 +40,7 @@ export async function main(ns: NS) {
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
 
-function solve(data: string): any {
+export function solve(data: string): any {
     if (areParensBalanced(data)) {
         return [data];
     }

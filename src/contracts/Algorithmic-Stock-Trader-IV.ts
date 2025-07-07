@@ -43,7 +43,7 @@ export async function main(ns: NS) {
 /**
  * Maximum profit with at most k transactions.
  */
-async function solve(_ns: NS, data1: [number, number[]]): Promise<number> {
+export async function solve(_ns: NS, data1: [number, number[]]): Promise<number> {
     let [k, stocks] = data1;
     if (stocks.length === 0 || k === 0) return 0;
 

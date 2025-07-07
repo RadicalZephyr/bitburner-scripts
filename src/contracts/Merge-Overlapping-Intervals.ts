@@ -38,7 +38,7 @@ export async function main(ns: NS) {
 
 type Range = [number, number];
 
-function solve(data: Range[]): any {
+export function solve(data: Range[]): any {
     data.sort((b, c) => b[1] - c[1]);
     data.sort((b, c) => b[0] - c[0]);
 

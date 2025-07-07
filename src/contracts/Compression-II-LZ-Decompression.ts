@@ -58,7 +58,7 @@ const enum ChunkType {
     BackRef
 }
 
-function solve(data: string): string {
+export function solve(data: string): string {
     let uncompressed = "";
     let i = 0;
 

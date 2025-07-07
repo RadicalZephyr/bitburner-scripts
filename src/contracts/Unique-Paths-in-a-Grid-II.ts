@@ -40,7 +40,7 @@ export async function main(ns: NS) {
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
 
-function solve(data: number[][]): number {
+export function solve(data: number[][]): number {
     const rows = data.length;
     const cols = data[0].length;
 

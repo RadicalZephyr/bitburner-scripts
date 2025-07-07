@@ -45,7 +45,7 @@ export async function main(ns: NS) {
     ns.writePort(contractPortNum, answer.toString());
 }
 
-function solve(data: bigint): bigint {
+export function solve(data: bigint): bigint {
     let s = data;
     let s_str = s.toString();
 

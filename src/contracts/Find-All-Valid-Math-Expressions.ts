@@ -48,10 +48,7 @@ export async function main(ns: NS) {
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
 
-/**
- * Generate all expressions evaluating to the target value.
- */
-function solve(data: [string, number]): string[] {
+export function solve(data: [string, number]): string[] {
     const [digits, target] = data;
     const results: string[] = [];
 

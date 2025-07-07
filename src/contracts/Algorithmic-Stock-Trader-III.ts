@@ -48,7 +48,7 @@ type TwoTrade = {
 /**
  * Maximum profit with at most two transactions.
  */
-async function solve(_ns: NS, data: number[]): Promise<number> {
+export async function solve(_ns: NS, data: number[]): Promise<number> {
     if (data.length === 0) return 0;
 
     const n = data.length;

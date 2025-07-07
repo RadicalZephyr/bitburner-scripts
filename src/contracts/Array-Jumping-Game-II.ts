@@ -34,10 +34,7 @@ export async function main(ns: NS) {
     ns.writePort(contractPortNum, answer);
 }
 
-/**
- * Minimum number of jumps to reach the end of the array.
- */
-function solve(data: number[]): number {
+export function solve(data: number[]): number {
     if (data.length <= 1) return 0;
 
     let jumps = 0;

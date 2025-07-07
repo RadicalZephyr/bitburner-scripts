@@ -34,12 +34,7 @@ export async function main(ns: NS) {
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
 
-/**
- * Calculate the maximum profit with unlimited transactions.
- *
- * @param data - Array of stock prices by day
- */
-function solve(data: number[]): number {
+export function solve(data: number[]): number {
     let profit = 0;
     for (let i = 1; i < data.length; i++) {
         const diff = data[i] - data[i - 1];

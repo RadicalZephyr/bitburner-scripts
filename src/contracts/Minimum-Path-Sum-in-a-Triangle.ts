@@ -47,10 +47,7 @@ export async function main(ns: NS) {
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
 
-/**
- * Compute minimum path sum from top to bottom of a triangle.
- */
-function solve(data: number[][]): number {
+export function solve(data: number[][]): number {
     const dp = data[data.length - 1].slice();
     for (let row = data.length - 2; row >= 0; row--) {
         for (let col = 0; col < data[row].length; col++) {

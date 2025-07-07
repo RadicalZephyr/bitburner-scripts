@@ -37,7 +37,7 @@ type Trade = {
     amount: number
 };
 
-function solve(data: number[]): any {
+export function solve(data: number[]): any {
     let profitableTrades: Trade[] = [];
     for (let i = 0; i < data.length - 1; ++i) {
         for (let j = i + 1; j < data.length; ++j) {

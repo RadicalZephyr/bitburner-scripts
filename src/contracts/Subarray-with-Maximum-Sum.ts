@@ -28,7 +28,7 @@ export async function main(ns: NS) {
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
 
-function solve(data: number[]): number {
+export function solve(data: number[]): number {
     // Kadane's algorithm: iterate through the array keeping track of
     // the best subarray sum that ends at the current index and the
     // best seen so far.

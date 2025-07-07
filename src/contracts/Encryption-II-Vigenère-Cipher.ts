@@ -58,7 +58,7 @@ export async function main(ns: NS) {
 
 const A_CODE: number = 'A'.charCodeAt(0);
 
-function solve(data: [string, string]): any {
+export function solve(data: [string, string]): any {
     let [plaintext, keyword] = data;
     let fullKey = extendKey(plaintext.length, keyword);
 

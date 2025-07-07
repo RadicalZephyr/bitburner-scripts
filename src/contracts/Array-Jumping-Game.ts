@@ -35,7 +35,7 @@ export async function main(ns: NS) {
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
 
-function solve(data: number[]): any {
+export function solve(data: number[]): any {
     return jump(data, 0) ? 1 : 0;
 }
 

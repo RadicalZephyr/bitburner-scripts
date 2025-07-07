@@ -37,7 +37,7 @@ export async function main(ns: NS) {
     ns.writePort(contractPortNum, answer);
 }
 
-function solve(data: string): string {
+export function solve(data: string): string {
     let current = null;
     let currentLen = 0;
 
