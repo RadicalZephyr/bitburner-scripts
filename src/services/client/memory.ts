@@ -130,7 +130,7 @@ export interface FreeRam {
 /**
  * Optional flags to request specific allocation strategies.
  *
- * contiguous:    Request a single contigiuous allocation if possible
+ * contiguous:    Request a single contiguous allocation if possible
  * coreDependent: Request allocation on servers with a higher core count
  * shrinkable:    Signal that an allocation of fewer chunks than requested is okay
  */
