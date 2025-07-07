@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "lib": ["ES2022"],
+    "jsx": "react-jsx",
+    "strict": true,
+    "baseUrl": "./src",
+    "paths": {
+      "*": ["*"],
+      "netscript": ["../NetScriptDefinitions.d.ts"],
+      "@react": ["lib/react.ts"]
+    }
+  },
+  "imports": {
+    "netscript": "./NetScriptDefinitions.d.ts",
+    "batch/": "./src/batch/",
+    "contracts/": "./src/contracts/",
+    "lib/": "./src/lib/",
+    "services/": "./src/services/",
+    "stock/": "./src/stock/",
+    "typescript-collections/": "./src/typescript-collections/",
+    "util/": "./src/util/",
+    "@react": "./src/lib/react.ts"
+  },
+  "tasks": {
+    "build": "deno run -A tools/build.ts",
+    "watch": "deno run -A tools/watch.ts",
+    "test": "deno test -A",
+    "sync": "bitburner-filesync"
+  }
+}

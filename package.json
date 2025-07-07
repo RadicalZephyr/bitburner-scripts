@@ -2,16 +2,7 @@
   "name": "radz-bitburner-scripts",
   "version": "0.1.0",
   "description": "My awesome scripts for automating Bitburner",
-  "scripts": {
-    "build": "tsc",
-    "clean": "find dist -depth ! -name 'dist' ! -name .gitkeep -delete",
-    "watch:init": "node build/init.js",
-    "watch:transpile": "tsc -w --preserveWatchOutput",
-    "watch:local": "node build/watch.js",
-    "watch:remote": "bitburner-filesync",
-    "watch:all": "concurrently npm:watch:transpile npm:watch:local npm:watch:remote",
-    "watch": "npm run watch:init && npm run watch:all"
-  },
+  "scripts": {},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/RadicalZephyr/bitburner-scripts.git"

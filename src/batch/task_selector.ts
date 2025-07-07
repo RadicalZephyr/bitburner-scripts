@@ -6,9 +6,9 @@ import { MonitorClient, Lifecycle as MonitorLifecycle } from "batch/client/monit
 import { CONFIG } from "batch/config";
 import { expectedValuePerRamSecond } from "batch/expected_value";
 
-import { calculateWeakenThreads } from "./till";
-import { calculateSowThreads } from "./sow";
-import { calculateBatchLogistics } from "./harvest";
+import { calculateWeakenThreads } from "batch/till";
+import { calculateSowThreads } from "batch/sow";
+import { calculateBatchLogistics } from "batch/harvest";
 
 import { DiscoveryClient } from "services/client/discover";
 import { MemoryClient, registerAllocationOwnership } from "services/client/memory";
