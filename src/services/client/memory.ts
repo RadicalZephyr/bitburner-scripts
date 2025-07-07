@@ -132,6 +132,11 @@ export class MemoryClient extends Client<MessageType, Payload, ResponsePayload> 
         super(ns, MEMORY_PORT, MEMORY_RESPONSE_PORT);
     }
 
+    /**
+     * Notify the MemoryAllocator of a new Worker host.
+     *
+     * @param hostname
+     */
     async newWorker(hostname: string) {
         this.ns.print(
             `INFO: registering worker ${hostname} with ` +
@@ -140,8 +145,8 @@ export class MemoryClient extends Client<MessageType, Payload, ResponsePayload> 
         await this.sendMessage(MessageType.Worker, hostname);
     }
 
-    /** Send a message to the memory allocator requesting a chunk of
-     *  memory for the current process to own.
+    /**
+     * Request a chunk of memory for the current process to transfer.
      *
      * This method returns the allocationId that can then be passed to
      * `#.registerAllocationOwnership` to install the appropriate
@@ -151,6 +156,13 @@ export class MemoryClient extends Client<MessageType, Payload, ResponsePayload> 
      * Set `coreDependent` to `true` when the task benefits from
      * additional home cores so the memory manager can prioritize
      * allocating RAM from the `home` server.
+     *
+     * @param chunkSize Size in GB of the smallest chunk usable
+     * @param numChunks The requested number of chunks
+     * @param contiguous
+     * @param coreDependent
+     * @param shrinkable
+     * @returns
      */
     async requestTransferableAllocation(
         chunkSize: number,
@@ -193,14 +205,21 @@ export class MemoryClient extends Client<MessageType, Payload, ResponsePayload> 
         );
     }
 
-    /** Send a message to the memory allocator requesting a chunk of
-     *  memory for the current process to own.
+    /**
+     *  Request a chunk of memory for the current process to own.
      *
      * This method also registers an `atExit` handler function to send
      * a release message to the memory allocator.
      *
      * When `coreDependent` is `true` the memory manager will try to
      * satisfy the request from the `home` server first.
+     *
+     * @param chunkSize Size in GB of the smallest chunk usable
+     * @param numChunks The requested number of chunks
+     * @param contiguous
+     * @param coreDependent
+     * @param shrinkable
+     * @returns
      */
     async requestOwnedAllocation(
         chunkSize: number,
@@ -224,6 +243,13 @@ export class MemoryClient extends Client<MessageType, Payload, ResponsePayload> 
         return result.allocatedChunks;
     }
 
+    /**
+     * Signal the MemoryAllocator that this allocation can shrink by the given amount
+     *
+     * @param allocationId The ID for the allocation
+     * @param numChunks    The number of chunks that can be released
+     * @returns            An allocation result describing the new set of chunks allocated to this ID
+     */
     async releaseChunks(allocationId: number, numChunks: number): Promise<AllocationResult> {
         this.ns.print(
             `INFO: releasing ${numChunks} chunks from allocation ${allocationId}`
@@ -258,6 +284,11 @@ export class MemoryClient extends Client<MessageType, Payload, ResponsePayload> 
         return result as MemorySnapshot;
     }
 
+    /**
+     * Request the current total free RAM across all workers.
+     *
+     * @returns Total free RAM across all workers
+     */
     async getFreeRam(): Promise<number> {
         const payload: StatusRequest = {};
         const result = await this.sendMessageReceiveResponse(MessageType.Status, payload);
