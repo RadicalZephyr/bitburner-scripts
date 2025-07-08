@@ -10,6 +10,7 @@ const entries = [
     ["maxHackPercent", 0.5],
     ["heartbeatCadence", 2000],
     ["heartbeatTimeoutMs", 3000],
+    ["hackLevelVelocityThreshold", 0.05]
 ] as const;
 
 export const CONFIG: ConfigInstance<typeof entries> =

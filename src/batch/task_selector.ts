@@ -322,7 +322,7 @@ class TaskSelector {
                 candidates = ["n00dles"];
             } else if (this.pendingSowTargets.includes("foodnstuff")) {
                 candidates = ["foodnstuff"];
-            } else if (Math.abs(this.velocity) <= 0.05) {
+            } else if (Math.abs(this.velocity) <= CONFIG.hackLevelVelocityThreshold) {
                 candidates = [...this.pendingSowTargets];
             }
             candidates.sort(makeCompareLevel(this.ns));
@@ -359,7 +359,7 @@ class TaskSelector {
                 candidates = ["n00dles"];
             } else if (this.pendingTillTargets.includes("foodnstuff")) {
                 candidates = ["foodnstuff"];
-            } else if (Math.abs(this.velocity) <= 0.05) {
+            } else if (Math.abs(this.velocity) <= CONFIG.hackLevelVelocityThreshold) {
                 candidates = [...this.pendingTillTargets];
             }
             candidates.sort(makeCompareLevel(this.ns));
