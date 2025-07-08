@@ -10,16 +10,27 @@ export async function main(ns: NS) {
 
     let infiltrations = ns.infiltration.getPossibleLocations().map((loc: any) => ns.infiltration.getInfiltration(loc.name));
 
-    infiltrations.sort((a, b) => a.startingSecurityLevel - b.startingSecurityLevel);
+    const augInfiltrations = infiltrations.map(augmentInfiltration).sort((a, b) => a.expPerAction - b.expPerAction);
 
     let theme = ns.ui.getTheme();
 
     ns.clearLog();
-    ns.printRaw(<LocationBlock infiltrations={infiltrations} theme={theme}></LocationBlock>);
+    ns.printRaw(<LocationBlock infiltrations={augInfiltrations} theme={theme}></LocationBlock>);
+}
+
+function augmentInfiltration(i: InfiltrationLocation): RatedInfiltrationLoc {
+    return {
+        expPerAction: i.reward.SoARep / i.maxClearanceLevel,
+        ...i
+    };
+}
+
+interface RatedInfiltrationLoc extends InfiltrationLocation {
+    expPerAction: number;
 }
 
 interface IBlockSettings {
-    infiltrations: InfiltrationLocation[],
+    infiltrations: RatedInfiltrationLoc[],
     theme: UserInterfaceTheme,
 }
 
@@ -29,10 +40,11 @@ function LocationBlock({ infiltrations, theme }: IBlockSettings) {
         <h2>Infiltration Locations </h2>
         <table>
             <thead>
+                <th style={cellStyle}>Difficulty</th>
                 <th style={cellStyle}>Start Sec Lvl</th>
                 <th style={cellStyle}>Max Clearance Lvl</th>
-                <th style={cellStyle}>Difficulty</th>
                 <th style={cellStyle}>Reward</th>
+                <th style={cellStyle}>XP/Action</th>
                 <th style={cellStyle}>City</th>
                 <th style={cellStyle}>Name</th>
             </thead>
@@ -47,7 +59,7 @@ function LocationBlock({ infiltrations, theme }: IBlockSettings) {
 
 interface IRowSettings {
     rowIndex: number,
-    infiltration: InfiltrationLocation,
+    infiltration: RatedInfiltrationLoc,
     cellStyle: any,
     theme: UserInterfaceTheme,
 }
@@ -55,10 +67,11 @@ interface IRowSettings {
 function LocationRow({ rowIndex, infiltration: location, cellStyle, theme }: IRowSettings) {
     return (
         <tr key={location.location.name} style={rowIndex % 2 === 1 ? undefined : { backgroundColor: theme.well }}>
+            <td style={cellStyle}>{location.difficulty.toFixed(2)}</td>
             <td style={cellStyle}>{location.startingSecurityLevel}</td>
             <td style={cellStyle}>{location.maxClearanceLevel}</td>
-            <td style={cellStyle}>{location.difficulty.toFixed(2)}</td>
             <td style={cellStyle}>{location.reward.SoARep.toFixed(2)}</td>
+            <td style={cellStyle}>{location.expPerAction.toFixed(2)}</td>
             <td style={cellStyle}>{location.location.city}</td>
             <td style={cellStyle}>{location.location.name}</td>
         </tr>
