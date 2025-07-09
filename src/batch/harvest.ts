@@ -167,7 +167,7 @@ OPTIONS
     while (true) {
         let batchIndex = currentBatches % maxOverlap;
         const host = batchHost.at(batchIndex);
-        let lastScriptPid = batches[batchIndex].at(-1);
+        let lastScriptPid = batches[batchIndex]?.at(-1);
         if (typeof lastScriptPid === "number") {
             let missedMessages = 0;
             while (finishedPort.read() !== "NULL PORT DATA") {
