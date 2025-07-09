@@ -43,8 +43,9 @@ Reads lifecycle updates from `MonitorClient` via `MONITOR_PORT` and displays the
 - `sow.js` grows a host to maximum money and weakens again to maintain security.
 - `harvest.ts` launches batches of hacking/weaken/grow/weaken scripts
   precisely timed to maintain the target at max money and minimumm security.
-- When RAM is limited via `--max-ram`, `harvest.ts` runs those phases
-  sequentially instead of overlapping.
+- When RAM is limited via `--max-ram`, `harvest.ts` falls back to a
+  sequential mode. Phases run one after another using a shared memory
+  pool and repeat indefinitely.
 - `h.js`, `g.js` and `w.js` perform individual hack, grow and weaken commands.
 
 ** Messaging Protocols

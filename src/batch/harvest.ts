@@ -46,7 +46,7 @@ Continually harvest money from the target with batches of
 hack/weaken/grow/weaken scripts. Thread counts for each type of script
 are calculated to maintain the target at maximum money and minimum
 security. When --max-ram is too small for overlapping batches the
-phases run sequentially.
+phases run sequentially in a continuous loop.
 
 Example:
 > run ${ns.getScriptName()} n00dles
@@ -315,10 +315,12 @@ function spawnBatch(ns: NS, host: string | null, target: string, phases: BatchPh
 }
 
 /**
- * Execute the provided batch phases one after another.
+ * Execute the provided batch phases one after another in a loop.
  *
- * Memory is allocated for a single phase at a time. Each phase is
- * launched and waited for before the next begins.
+ * Memory is allocated once using the largest script RAM cost as the
+ * chunk size. The resulting allocation may not provide enough chunks
+ * for all threads of a phase, so phases run in multiple waves when
+ * needed.
  *
  * @param ns      - Netscript API instance
  * @param target  - Hostname of the target server
@@ -332,45 +334,70 @@ export async function runSequentialBatch(
     client: MemoryClient,
 ): Promise<void> {
     const total = phases.length;
+
+    const chunkSize = phases.reduce(
+        (s, p) => Math.max(s, ns.getScriptRam(p.script, "home")),
+        0,
+    );
+    const maxThreads = phases.reduce((m, p) => Math.max(m, p.threads), 0);
+
+    const alloc = await client.requestTransferableAllocation(
+        chunkSize,
+        maxThreads,
+        { coreDependent: true, shrinkable: true },
+    );
+    if (!alloc) {
+        ns.tprint("ERROR: failed to allocate sequential batch memory");
+        return;
+    }
+    alloc.releaseAtExit(ns);
+
     let nextHb = Date.now() + CONFIG.heartbeatCadence + Math.random() * 500;
 
-    for (let idx = 0; idx < phases.length; idx++) {
-        const phase = phases[idx];
-        if (phase.threads <= 0) continue;
+    while (true) {
+        for (let idx = 0; idx < phases.length; idx++) {
+            const phase = phases[idx];
+            if (phase.threads <= 0) continue;
 
-        const ram = ns.getScriptRam(phase.script, "home");
-        const alloc = await client.requestTransferableAllocation(ram, phase.threads, { coreDependent: true });
-        if (!alloc) {
-            ns.tprint(`ERROR: failed to allocate memory for ${phase.script}`);
-            return;
-        }
+            let remaining = phase.threads;
+            while (remaining > 0) {
+                let wave = Math.min(remaining, alloc.numChunks);
+                const pids: number[] = [];
+                let toSpawn = wave;
+                for (const chunk of alloc.allocatedChunks) {
+                    if (toSpawn <= 0) break;
+                    const t = Math.min(chunk.numChunks, toSpawn);
+                    ns.scp(phase.script, chunk.hostname, "home");
+                    const pid = ns.exec(
+                        phase.script,
+                        chunk.hostname,
+                        { threads: t, temporary: true },
+                        target,
+                        0,
+                    );
+                    if (pid !== 0) {
+                        pids.push(pid);
+                    } else {
+                        ns.print(
+                            `WARN: failed to exec ${phase.script} on ${chunk.hostname}`,
+                        );
+                    }
+                    toSpawn -= t;
+                }
 
-        let remaining = phase.threads;
-        const pids: number[] = [];
-        for (const chunk of alloc.allocatedChunks) {
-            if (remaining <= 0) break;
-            const t = Math.min(chunk.numChunks, remaining);
-            ns.scp(phase.script, chunk.hostname, "home");
-            const pid = ns.exec(phase.script, chunk.hostname, { threads: t, temporary: true }, target, 0);
-            if (pid !== 0) {
-                pids.push(pid);
-            } else {
-                ns.print(`WARN: failed to exec ${phase.script} on ${chunk.hostname}`);
+                const remainingDur = phases.slice(idx).reduce((s, p) => s + p.duration, 0);
+                const start = Date.now();
+                const info: RoundInfo = {
+                    round: idx + 1,
+                    totalRounds: total,
+                    roundEnd: start + phase.duration,
+                    totalExpectedEnd: start + remainingDur,
+                };
+
+                nextHb = await awaitRound(ns, pids, info, nextHb, () => Promise.resolve());
+                remaining -= wave;
             }
-            remaining -= t;
         }
-
-        const remainingDur = phases.slice(idx).reduce((s, p) => s + p.duration, 0);
-        const start = Date.now();
-        const info: RoundInfo = {
-            round: idx + 1,
-            totalRounds: total,
-            roundEnd: start + phase.duration,
-            totalExpectedEnd: start + remainingDur,
-        };
-
-        nextHb = await awaitRound(ns, pids, info, nextHb, () => Promise.resolve());
-        await alloc.release(ns);
     }
 }
 
