@@ -107,6 +107,8 @@ Example:
     while (true) {
         let now = Date.now();
 
+        memoryManager.checkHomeForRamIncreas();
+
         if (memMessageWaiting) {
             memMessageWaiting = false;
             memPort.nextWrite().then(_ => { memMessageWaiting = true; });

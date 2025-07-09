@@ -55,6 +55,13 @@ export class MemoryAllocator {
         );
     }
 
+    checkHomeForRamIncreas() {
+        if (this.workers.has("home")) {
+            let home = this.workers.get("home");
+            home.updateRam();
+        }
+    }
+
     getFreeRamTotal(): number {
         let total = 0;
         for (const w of this.workers.values()) {
@@ -510,5 +517,10 @@ export class Worker {
     free(ram: number): void {
         const delta = toFixed(ram);
         this.allocatedRam = this.allocatedRam >= delta ? this.allocatedRam - delta : 0n;
+    }
+
+    updateRam() {
+        this.totalRam = this.ns.getServerMaxRam(this.hostname);
+        this.totalRamStr = this.ns.formatRam(this.totalRam, 0);
     }
 }
