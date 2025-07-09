@@ -7,7 +7,8 @@ const BOOTSTRAP_FILES = [
     "/batch/bootstrap.js",
     "/services/launch.js",
     "/services/client/memory.js",
-    "/util/client.js"
+    "/util/client.js",
+    "/util/dependencies.js"
 ];
 
 export async function main(ns: NS) {
