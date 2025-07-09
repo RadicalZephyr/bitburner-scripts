@@ -298,7 +298,7 @@ async function spawnBatch(ns: NS, host: string | null, target: string, phases: B
         let retryCount = 0;
         while (true) {
             if (retryCount > CONFIG.harvestRetryMax) {
-                ns.tprint(`ERROR: harvest repeatedly failed to exec ${script} on ${host}`);
+                ns.print(`ERROR: harvest repeatedly failed to exec ${script} on ${host}`);
                 ns.ui.openTail();
                 return pids;
             }
