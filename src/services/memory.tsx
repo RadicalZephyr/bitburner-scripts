@@ -215,7 +215,6 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memResponsePort
                     growReq.coreDependent ?? false,
                     growReq.shrinkable ?? true,
                     growReq.longRunning ?? false,
-                    growReq.numChunks,
                     growReq.port,
                 );
                 if (growAlloc) {
