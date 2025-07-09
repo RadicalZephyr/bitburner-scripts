@@ -294,11 +294,16 @@ function spawnBatch(ns: NS, host: string | null, target: string, phases: BatchPh
         const script = phase.script;
 
         let lastArg = idx === phases.length - 1 ? donePort : -1;
-        const pid = ns.exec(script, host, { threads: phase.threads, temporary: true }, target, phase.start, lastArg);
-        if (pid === 0) {
-            ns.print(`WARN: failed to spawn ${script} on ${host}`);
-        } else {
-            pids.push(pid);
+
+        while (true) {
+            const pid = ns.exec(script, host, { threads: phase.threads, temporary: true }, target, phase.start, lastArg);
+            if (pid === 0) {
+                ns.print(`WARN: failed to spawn ${script} on ${host}, trying again`);
+                await ns.sleep(10);
+            } else {
+                pids.push(pid);
+                break;
+            }
         }
     }
     return pids;
