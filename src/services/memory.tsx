@@ -303,9 +303,11 @@ async function growAllocations(ns: NS, memoryManager: MemoryAllocator) {
         const newChunks = memoryManager.growAllocation(alloc, missing);
         if (newChunks.length === 0) continue;
 
-        const chunkSize = ns.formatRam(newChunks[0]?.chunkSize ?? 0);
+        const firstChunk = newChunks[0];
+        const host = firstChunk.hostname;
+        const chunkSize = ns.formatRam(firstChunk?.chunkSize ?? 0);
         const totalChunks = newChunks.reduce((s, c) => s + c.numChunks, 0);
-        printLog(`INFO: growing allocation ${alloc.id} by ${totalChunks}x${chunkSize}`);
+        printLog(`INFO: growing allocation ${alloc.id} by ${totalChunks}x${chunkSize} from ${host}`);
 
         const port = ns.getPortHandle(alloc.notifyPort);
         while (!port.tryWrite(newChunks)) {
