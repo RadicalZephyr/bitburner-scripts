@@ -55,7 +55,7 @@ export class MemoryAllocator {
         );
     }
 
-    checkHomeForRamIncreas() {
+    checkHomeForRamIncrease() {
         if (this.workers.has("home")) {
             let home = this.workers.get("home");
             home.updateRam();
