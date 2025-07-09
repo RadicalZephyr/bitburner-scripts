@@ -3,6 +3,7 @@ import type { AutocompleteData, NS } from "netscript";
 import { HostAllocation, MemoryClient, registerAllocationOwnership } from "services/client/memory";
 import { TaskSelectorClient, Lifecycle } from "batch/client/task_selector";
 import { PortClient } from "services/client/port";
+import { awaitRound, calculateRoundInfo, RoundInfo } from "batch/progress";
 
 import { CONFIG } from "batch/config";
 import {
@@ -44,7 +45,8 @@ USAGE: run ${ns.getScriptName()} SERVER_NAME
 Continually harvest money from the target with batches of
 hack/weaken/grow/weaken scripts. Thread counts for each type of script
 are calculated to maintain the target at maximum money and minimum
-security.
+security. When --max-ram is too small for overlapping batches the
+phases run sequentially.
 
 Example:
 > run ${ns.getScriptName()} n00dles
@@ -102,6 +104,14 @@ OPTIONS
     }
 
     let logistics = calculateBatchLogistics(ns, target, hackPercent);
+
+    if (maxRam !== -1 && maxRam < logistics.requiredRam) {
+        ns.print(`WARN: running sequential harvest due to RAM limit`);
+        const memClient = new MemoryClient(ns);
+        await runSequentialBatch(ns, target, logistics.phases, memClient);
+        return;
+    }
+
     let overlapLimit = logistics.overlap;
     if (maxRam !== -1) {
         overlapLimit = Math.min(overlapLimit, Math.floor(maxRam / logistics.batchRam));
@@ -302,6 +312,66 @@ function spawnBatch(ns: NS, host: string | null, target: string, phases: BatchPh
         }
     }
     return pids;
+}
+
+/**
+ * Execute the provided batch phases one after another.
+ *
+ * Memory is allocated for a single phase at a time. Each phase is
+ * launched and waited for before the next begins.
+ *
+ * @param ns      - Netscript API instance
+ * @param target  - Hostname of the target server
+ * @param phases  - Batch phases to run
+ * @param client  - Memory client used to request allocations
+ */
+export async function runSequentialBatch(
+    ns: NS,
+    target: string,
+    phases: BatchPhase[],
+    client: MemoryClient,
+): Promise<void> {
+    const total = phases.length;
+    let nextHb = Date.now() + CONFIG.heartbeatCadence + Math.random() * 500;
+
+    for (let idx = 0; idx < phases.length; idx++) {
+        const phase = phases[idx];
+        if (phase.threads <= 0) continue;
+
+        const ram = ns.getScriptRam(phase.script, "home");
+        const alloc = await client.requestTransferableAllocation(ram, phase.threads, { coreDependent: true });
+        if (!alloc) {
+            ns.tprint(`ERROR: failed to allocate memory for ${phase.script}`);
+            return;
+        }
+
+        let remaining = phase.threads;
+        const pids: number[] = [];
+        for (const chunk of alloc.allocatedChunks) {
+            if (remaining <= 0) break;
+            const t = Math.min(chunk.numChunks, remaining);
+            ns.scp(phase.script, chunk.hostname, "home");
+            const pid = ns.exec(phase.script, chunk.hostname, { threads: t, temporary: true }, target, 0);
+            if (pid !== 0) {
+                pids.push(pid);
+            } else {
+                ns.print(`WARN: failed to exec ${phase.script} on ${chunk.hostname}`);
+            }
+            remaining -= t;
+        }
+
+        const remainingDur = phases.slice(idx).reduce((s, p) => s + p.duration, 0);
+        const start = Date.now();
+        const info: RoundInfo = {
+            round: idx + 1,
+            totalRounds: total,
+            roundEnd: start + phase.duration,
+            totalExpectedEnd: start + remainingDur,
+        };
+
+        nextHb = await awaitRound(ns, pids, info, nextHb, () => Promise.resolve());
+        await alloc.release(ns);
+    }
 }
 
 export interface BatchLogistics {
