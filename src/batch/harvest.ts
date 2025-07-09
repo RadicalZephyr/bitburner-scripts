@@ -11,6 +11,7 @@ import {
     fullBatchTime,
     growthAnalyze
 } from "batch/expected_value";
+import { BatchLogistics, BatchPhase, calculatePhaseStartTimes } from "batch/phase";
 
 declare global {
     interface Performance {
@@ -317,15 +318,6 @@ async function spawnBatch(ns: NS, host: string | null, target: string, phases: B
     return pids;
 }
 
-export interface BatchLogistics {
-    target: string;
-    batchRam: number;
-    overlap: number;
-    endingPeriod: number;
-    requiredRam: number;
-    phases: BatchPhase[];
-}
-
 /** Calculate RAM and phase information for a full harvest batch.
  *
  * @param ns          - Netscript API instance
@@ -364,13 +356,6 @@ export function calculateBatchLogistics(
         requiredRam,
         phases,
     }
-}
-
-interface BatchPhase {
-    script: string;
-    start: number;
-    duration: number;
-    threads: number;
 }
 
 /** Calculate the phase order and relative start times for a full
@@ -472,22 +457,6 @@ function calculateRebalancePhases(
     // always be sent and allow the harvester to continue progressing.
     phases = phases.filter(p => p.threads > 0);
     return calculatePhaseStartTimes(phases);
-}
-
-function calculatePhaseStartTimes(phases: BatchPhase[]) {
-    const spacing = CONFIG.batchInterval as number;
-
-    let endTime = 0;
-    for (const p of phases) {
-        p.start = endTime - p.duration;
-        endTime += spacing;
-    }
-
-    const earliest = Math.abs(Math.min(...phases.map(p => p.start)));
-    for (const p of phases) {
-        p.start += earliest;
-    }
-    return phases;
 }
 
 function maxHackPercentForRam(ns: NS, target: string, maxRam: number): number {
