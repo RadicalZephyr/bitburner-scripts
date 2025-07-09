@@ -121,7 +121,7 @@ Example:
     while (true) {
         let now = Date.now();
 
-        memoryManager.checkHomeForRamIncreas();
+        memoryManager.checkHomeForRamIncrease();
 
         if (memMessageWaiting) {
             memMessageWaiting = false;
