@@ -1,3 +1,5 @@
+import type { NS } from "netscript";
+
 import { CONFIG } from "batch/config";
 
 export interface BatchPhase {
@@ -58,4 +60,49 @@ export function calculatePhaseStartTimes(phases: BatchPhase[]) {
         p.start += earliest;
     }
     return phases;
+}
+
+
+/**
+ * Exec all phases in a batch on host
+ *
+ * @param ns - The NS object
+ * @param host - Host to run the batch on
+ * @param phases - Phases to exec
+ * @param donePort - Port where the last phase should send a "complete" message
+ * @returns array of pids of all phases
+ */
+export async function spawnBatch(ns: NS, host: string | null, target: string, phases: BatchPhase[], donePort: number): Promise<number[]> {
+    if (!host) return [];
+
+    const scripts = Array.from(new Set(phases.map(p => p.script)));
+    ns.scp(scripts, host, "home");
+
+    let pids = [];
+    for (const [idx, phase] of phases.map((phase, idx) => [idx, phase] as [number, BatchPhase])) {
+        if (phase.threads <= 0) continue;
+        const script = phase.script;
+
+        let lastArg = idx === phases.length - 1 ? donePort : -1;
+
+        let retryCount = 0;
+        while (true) {
+            if (retryCount > CONFIG.harvestRetryMax) {
+                ns.print(`ERROR: harvest repeatedly failed to exec ${script} on ${host}`);
+                ns.ui.openTail();
+                return pids;
+            }
+
+            const pid = ns.exec(script, host, { threads: phase.threads, temporary: true }, target, phase.start, lastArg);
+            if (pid === 0) {
+                retryCount += 1;
+                ns.print(`WARN: failed to exec ${script} on ${host}, trying again`);
+                await ns.sleep(CONFIG.harvestRetryWait);
+            } else {
+                pids.push(pid);
+                break;
+            }
+        }
+    }
+    return pids;
 }
