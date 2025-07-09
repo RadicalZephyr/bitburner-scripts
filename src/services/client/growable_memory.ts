@@ -79,7 +79,6 @@ export class GrowableAllocation extends TransferableAllocation {
     private ns: NS;
     private portId: number;
     private port: NetscriptPort;
-    private chunks: HostAllocation[];
     private running = true;
 
     constructor(ns: NS, allocationId: number, chunks: HostAllocation[], port: number) {
@@ -96,7 +95,7 @@ export class GrowableAllocation extends TransferableAllocation {
             for (const msg of readAllFromPort(this.ns, this.port)) {
                 const chunks = msg as HostAllocation[];
                 if (Array.isArray(chunks)) {
-                    mergeChunks(this.chunks, chunks);
+                    mergeChunks(this.allocatedChunks, chunks);
                 }
             }
             await nextWrite;
@@ -149,7 +148,7 @@ export class GrowableAllocation extends TransferableAllocation {
 
         const dependencies = Array.from(collectDependencies(this.ns, script));
         const pids: number[] = [];
-        for (const chunk of this.chunks) {
+        for (const chunk of this.allocatedChunks) {
             if (totalThreads <= 0) break;
             const threadsHere = Math.min(chunk.numChunks, totalThreads);
             if (threadsHere <= 0) continue;
