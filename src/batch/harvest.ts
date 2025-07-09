@@ -298,7 +298,7 @@ function spawnBatch(ns: NS, host: string | null, target: string, phases: BatchPh
         let retryCount = 0;
         while (true) {
             if (retryCount > CONFIG.harvestRetryMax) {
-                ns.tprint(`ERROR: harvest repeatedly failed to spawn ${script} on ${host}`);
+                ns.tprint(`ERROR: harvest repeatedly failed to exec ${script} on ${host}`);
                 ns.ui.openTail();
                 return pids;
             }
@@ -306,7 +306,7 @@ function spawnBatch(ns: NS, host: string | null, target: string, phases: BatchPh
             const pid = ns.exec(script, host, { threads: phase.threads, temporary: true }, target, phase.start, lastArg);
             if (pid === 0) {
                 retryCount += 1;
-                ns.print(`WARN: failed to spawn ${script} on ${host}, trying again`);
+                ns.print(`WARN: failed to exec ${script} on ${host}, trying again`);
                 await ns.sleep(10);
             } else {
                 pids.push(pid);
