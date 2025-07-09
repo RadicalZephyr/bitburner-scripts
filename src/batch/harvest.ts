@@ -12,9 +12,7 @@ import {
     fullBatchTime,
     growthAnalyze
 } from "batch/expected_value";
-import { BatchLogistics, BatchPhase, calculatePhaseStartTimes } from "batch/phase";
-
-import { collectDependencies } from "util/dependencies";
+import { BatchLogistics, BatchPhase, calculatePhaseStartTimes, spawnBatch } from "batch/phase";
 
 
 export function autocomplete(data: AutocompleteData, _args: string[]): string[] {
@@ -269,42 +267,6 @@ function makeBatchHostArray(allocatedChunks: HostAllocation[]) {
     }
 
     return sparseHosts;
-}
-
-async function spawnBatch(ns: NS, host: string | null, target: string, phases: BatchPhase[], donePort: number, allocId: number): Promise<number[]> {
-    if (!host) return [];
-
-    const scripts = Array.from(new Set(phases.map(p => p.script)));
-    let dependencies = scripts.map(script => collectDependencies(ns, script)).reduce((c, s) => c.union(s));
-    ns.scp([...scripts, ...dependencies], host, "home");
-
-    let pids = [];
-    for (const [idx, phase] of phases.map((phase, idx) => [idx, phase] as [number, BatchPhase])) {
-        if (phase.threads <= 0) continue;
-        const script = phase.script;
-
-        let lastArg = idx === phases.length - 1 ? donePort : -1;
-
-        let retryCount = 0;
-        while (true) {
-            if (retryCount > CONFIG.harvestRetryMax) {
-                ns.print(`ERROR: harvest repeatedly failed to exec ${script} on ${host}`);
-                ns.ui.openTail();
-                return pids;
-            }
-
-            const pid = ns.exec(script, host, { threads: phase.threads, temporary: true }, target, phase.start, lastArg, TAG_ARG, allocId);
-            if (pid === 0) {
-                retryCount += 1;
-                ns.print(`WARN: failed to exec ${script} on ${host}, trying again`);
-                await ns.sleep(CONFIG.harvestRetryWait);
-            } else {
-                pids.push(pid);
-                break;
-            }
-        }
-    }
-    return pids;
 }
 
 /** Calculate RAM and phase information for a full harvest batch.
