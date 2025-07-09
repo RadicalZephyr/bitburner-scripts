@@ -86,6 +86,7 @@ export class GrowableAllocation extends TransferableAllocation {
         this.ns = ns;
         this.portId = port;
         this.port = ns.getPortHandle(port);
+        this.startPolling();
     }
 
     private async startPolling() {
