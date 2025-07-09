@@ -47,7 +47,7 @@ export class GrowableMemoryClient extends MemoryClient {
 
         const contiguous = options?.contiguous ?? false;
         const coreDependent = options?.coreDependent ?? false;
-        const shrinkable = options?.shrinkable ?? false;
+        const shrinkable = options?.shrinkable ?? true;
         const longRunning = options?.longRunning ?? false;
 
         const payload: GrowableAllocationRequest = {
