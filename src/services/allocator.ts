@@ -191,6 +191,8 @@ export class MemoryAllocator {
         coreDependent: boolean = false,
         shrinkable: boolean = false,
         longRunning: boolean = false,
+        requestedChunks?: number,
+        notifyPort?: number,
     ): AllocationResult {
         if (chunkSize <= 0 || numChunks <= 0) {
             this.printLog("ERROR: bad allocation request, zero size");
@@ -226,7 +228,14 @@ export class MemoryAllocator {
                 if (Math.floor(worker.freeRam / chunkSize) >= numChunks) {
                     const chunk = worker.allocate(chunkSize, numChunks);
                     const id = this.nextAllocId++;
-                    const allocation = new Allocation(id, pid, filename, [chunk]);
+                    const allocation = new Allocation(
+                        id,
+                        pid,
+                        filename,
+                        [chunk],
+                        requestedChunks ?? numChunks,
+                        notifyPort,
+                    );
                     this.allocations.set(id, allocation);
                     return allocation.asAllocationResult();
                 }
@@ -255,7 +264,14 @@ export class MemoryAllocator {
         }
 
         const id = this.nextAllocId++;
-        const allocation = new Allocation(id, pid, filename, chunks);
+        const allocation = new Allocation(
+            id,
+            pid,
+            filename,
+            chunks,
+            requestedChunks ?? numChunks,
+            notifyPort,
+        );
         this.allocations.set(id, allocation);
 
         return allocation.asAllocationResult();
@@ -267,7 +283,7 @@ export class MemoryAllocator {
 
         const chunk = new AllocationChunk(info.hostname, info.chunkSize, info.numChunks);
         const id = this.nextAllocId++;
-        const allocation = new Allocation(id, info.pid, info.filename, [chunk]);
+        const allocation = new Allocation(id, info.pid, info.filename, [chunk], info.numChunks);
         this.allocations.set(id, allocation);
 
         worker.allocatedRam += toFixed(info.chunkSize * info.numChunks);
@@ -360,6 +376,38 @@ export class MemoryAllocator {
         return allocation.asAllocationResult();
     }
 
+    /**
+     * Attempt to add additional chunks to an existing allocation.
+     *
+     * @param allocation - Allocation to grow
+     * @param numChunks  - Desired number of additional chunks
+     * @returns           Details about the newly allocated chunks
+     */
+    growAllocation(allocation: Allocation, numChunks: number): HostAllocation[] {
+        const chunkSize = allocation.chunks[0]?.chunkSize;
+        if (!chunkSize || numChunks <= 0) return [];
+
+        let remaining = numChunks;
+        const workers = Array.from(this.workers.values()).sort(
+            (a, b) => b.freeRam - a.freeRam,
+        );
+        const chunks: AllocationChunk[] = [];
+
+        for (const worker of workers) {
+            if (remaining <= 0) break;
+            const chunk = worker.allocate(chunkSize, remaining);
+            if (chunk) {
+                chunks.push(chunk);
+                remaining -= chunk.numChunks;
+            }
+        }
+
+        if (chunks.length > 0) {
+            allocation.chunks.push(...chunks);
+        }
+        return chunks.map(c => c.asHostAllocation());
+    }
+
     claimAllocation(claim: AllocationClaim): boolean {
         const allocation = this.allocations.get(claim.allocationId);
         if (!allocation) return false;
@@ -422,12 +470,23 @@ class Allocation {
     filename: string;
     chunks: AllocationChunk[];
     claims: ClaimInfo[] = [];
+    requestedChunks: number;
+    notifyPort?: number;
 
-    constructor(id: number, pid: number, filename: string, chunks: AllocationChunk[]) {
+    constructor(
+        id: number,
+        pid: number,
+        filename: string,
+        chunks: AllocationChunk[],
+        requestedChunks: number,
+        notifyPort?: number,
+    ) {
         this.id = id;
         this.pid = pid;
         this.filename = filename;
         this.chunks = chunks;
+        this.requestedChunks = requestedChunks;
+        this.notifyPort = notifyPort;
     }
 
     get totalSize(): number {
