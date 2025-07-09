@@ -339,7 +339,7 @@ export async function runSequentialBatch(
         (s, p) => Math.max(s, ns.getScriptRam(p.script, "home")),
         0,
     );
-    const maxThreads = phases.reduce((m, p) => Math.max(m, p.threads), 0);
+    const maxThreads = phases.reduce((m, p) => m + p.threads, 0);
 
     const alloc = await client.requestTransferableAllocation(
         chunkSize,
