@@ -102,6 +102,7 @@ export class GrowableAllocation extends TransferableAllocation {
         }
     }
 
+    /** Explicitly poll for growth messages. */
     pollGrowth() {
         for (const msg of readAllFromPort(this.ns, this.port)) {
             const chunks = msg as HostAllocation[];
