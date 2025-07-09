@@ -91,20 +91,15 @@ export class GrowableAllocation extends TransferableAllocation {
     }
 
     private async startPolling() {
-        let waiting = true;
-        this.port.nextWrite().then(() => { waiting = true; });
         while (this.running) {
-            if (waiting) {
-                waiting = false;
-                this.port.nextWrite().then(() => { waiting = true; });
-                for (const msg of readAllFromPort(this.ns, this.port)) {
-                    const chunks = msg as HostAllocation[];
-                    if (Array.isArray(chunks)) {
-                        mergeChunks(this.chunks, chunks);
-                    }
+            const nextWrite = this.port.nextWrite();
+            for (const msg of readAllFromPort(this.ns, this.port)) {
+                const chunks = msg as HostAllocation[];
+                if (Array.isArray(chunks)) {
+                    mergeChunks(this.chunks, chunks);
                 }
             }
-            await this.ns.sleep(50);
+            await nextWrite;
         }
     }
 
