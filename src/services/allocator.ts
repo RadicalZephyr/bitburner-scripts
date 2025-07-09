@@ -166,7 +166,6 @@ export class MemoryAllocator {
         coreDependent: boolean = false,
         shrinkable: boolean = false,
         longRunning: boolean = false,
-        requestedChunks?: number,
         notifyPort?: number,
     ): AllocationResult {
         if (chunkSize <= 0 || numChunks <= 0) {
@@ -208,7 +207,7 @@ export class MemoryAllocator {
                         pid,
                         filename,
                         [chunk],
-                        requestedChunks ?? numChunks,
+                        numChunks,
                         notifyPort,
                     );
                     this.allocations.set(id, allocation);
@@ -244,7 +243,7 @@ export class MemoryAllocator {
             pid,
             filename,
             chunks,
-            requestedChunks ?? numChunks,
+            numChunks,
             notifyPort,
         );
         this.allocations.set(id, allocation);
