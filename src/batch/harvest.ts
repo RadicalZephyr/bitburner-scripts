@@ -133,7 +133,7 @@ OPTIONS
     allocation.releaseAtExit(ns);
 
     // Send a Harvest Heartbeat to indicate we're starting the main loop
-    await taskSelectorClient.heartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Harvest);
+    taskSelectorClient.tryHeartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Harvest);
 
     // Track how many batches can overlap concurrently. If the
     // calculated overlap drops we release the extra memory back to the

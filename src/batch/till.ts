@@ -94,7 +94,7 @@ OPTIONS
     }
 
     // Send a Till Heartbeat to indicate we're starting the main loop
-    await taskSelectorClient.heartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Till);
+    taskSelectorClient.tryHeartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Till);
 
     let threadsNeeded = calculateWeakenThreads(ns, target);
     const totalThreads = allocation.numChunks;

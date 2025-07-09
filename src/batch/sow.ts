@@ -108,7 +108,7 @@ OPTIONS
     }
 
     // Send a Sow Heartbeat to indicate we're starting the main loop
-    await taskSelectorClient.heartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Sow);
+    taskSelectorClient.tryHeartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Sow);
 
     let totalGrowThreads = neededGrowThreads(ns, target);
     const totalThreads = growAlloc.numChunks;
