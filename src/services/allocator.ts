@@ -48,6 +48,12 @@ export class MemoryAllocator {
         this.printLog = printLog ?? (() => null);
     }
 
+    /**
+     * Add a new worker to allocate memory on.
+     *
+     * @param hostname    - Host name of new worker
+     * @param setAsideRam - Amount of RAM to reserve for player use
+     */
     pushWorker(hostname: string, setAsideRam?: number) {
         if (this.workers.has(hostname)) {
             this.printLog(`INFO: received duplicate worker registration for ${hostname}`);
@@ -69,6 +75,7 @@ export class MemoryAllocator {
         );
     }
 
+    /** Check if the home server has increased in RAM. */
     checkHomeForRamIncrease() {
         if (this.workers.has("home")) {
             let home = this.workers.get("home");
@@ -76,6 +83,10 @@ export class MemoryAllocator {
         }
     }
 
+    /**
+     * Query total free RAM across all workers.
+     * @returns Total free RAM across all workers in GB
+     */
     getFreeRamTotal(): number {
         let total = 0;
         for (const w of this.workers.values()) {
@@ -84,6 +95,7 @@ export class MemoryAllocator {
         return total;
     }
 
+    /** Check for allocations belonging to terminated processes. */
     cleanupTerminated(): void {
         for (const [id, allocation] of this.allocations.entries()) {
             if (allocation.claims.length === 0 && !this.ns.isRunning(allocation.pid)) {
@@ -148,6 +160,12 @@ export class MemoryAllocator {
         }
     }
 
+    /**
+     * Copy a snapshot of the current internal state. Primarily for
+     * use by the leak checker utility.
+     *
+     * @returns Full snapshot of current memory allocation state
+     */
     getSnapshot(): MemorySnapshot {
         const workers: WorkerSnapshot[] = [];
         for (const w of this.workers.values()) {
@@ -183,12 +201,12 @@ export class MemoryAllocator {
     /**
      * Allocate RAM for the given pid.
      *
- * When `coreDependent` is true the home server is preferred for
- * the allocation. Otherwise the manager will try to allocate on
- * non-home servers first. When `longRunning` is true the allocator
- * avoids using the home server and prioritizes non-purchased hosts
- * before purchased servers.
- */
+     * When `coreDependent` is true the home server is preferred for
+     * the allocation. Otherwise the manager will try to allocate on
+     * non-home servers first. When `longRunning` is true the allocator
+     * avoids using the home server and prioritizes non-purchased hosts
+     * before purchased servers.
+     */
     allocate(
         pid: number,
         filename: string,
@@ -283,6 +301,13 @@ export class MemoryAllocator {
         return allocation.asAllocationResult();
     }
 
+    /**
+     * Register an artificial allocation for a process that wasn't
+     * allocated before starting.
+     *
+     * @param info - Details of the allocation to register
+     * @returns AllocationResult
+     */
     registerAllocation(info: AllocationRegister): AllocationResult {
         const worker = this.workers.get(info.hostname);
         if (!worker) return null;
@@ -298,6 +323,14 @@ export class MemoryAllocator {
         return allocation.asAllocationResult();
     }
 
+    /**
+     * Free an allocation.
+     *
+     * @param id       - Allocation ID
+     * @param pid      - PID of process initiating deallocation
+     * @param hostname - Hostname where process initiating deallocation is running
+     * @returns Indicates whether deallocation succeeded
+     */
     deallocate(id: number, pid: number, hostname: string): boolean {
         const allocation = this.allocations.get(id);
         if (!allocation) return false;
@@ -317,6 +350,14 @@ export class MemoryAllocator {
         return this.releaseClaim(id, pid, hostname);
     }
 
+    /**
+     * Release a claim on an allocation.
+     *
+     * @param id       - Allocation ID
+     * @param pid      - PID of process initiating deallocation
+     * @param hostname - Hostname where process initiating deallocation is running
+     * @returns Indicates whether claim release succeeded
+     */
     releaseClaim(id: number, pid: number, hostname: string): boolean {
         const allocation = this.allocations.get(id);
         if (!allocation) return false;
@@ -340,6 +381,13 @@ export class MemoryAllocator {
         return true;
     }
 
+    /**
+     * Release a number of chunks from an allocation.
+     *
+     * @param id        - Allocation ID
+     * @param numChunks - The number of chunks to release
+     * @returns The new allocation details after releasing the chunks
+     */
     releaseChunks(id: number, numChunks: number): AllocationResult | null {
         const allocation = this.allocations.get(id);
         if (!allocation) return null;
@@ -570,6 +618,13 @@ export class Worker {
         this.reservedRam = diff > 0n ? diff : 0n;
     }
 
+    /**
+     * Attempt to allocate some memory on this Worker.
+     *
+     * @param chunkSize - Size in GB of the chunks to allocate
+     * @param numChunks - Number of chunks to allocate
+     * @returns Description of the allocation on this Worker or null if allocation failed
+     */
     allocate(chunkSize: number, numChunks: number): AllocationChunk {
         const maxAllocatableChunks = Math.floor(this.freeRam / chunkSize);
         const chunksToAllocate = Math.min(numChunks, maxAllocatableChunks);
@@ -582,11 +637,17 @@ export class Worker {
         return new AllocationChunk(this.hostname, chunkSize, chunksToAllocate);
     }
 
+    /**
+     * Free some memory on this worker.
+     *
+     * @param ram - Total RAM to free on this worker
+     */
     free(ram: number): void {
         const delta = toFixed(ram);
         this.allocatedRam = this.allocatedRam >= delta ? this.allocatedRam - delta : 0n;
     }
 
+    /** Update server's total RAM. */
     updateRam() {
         this.totalRam = this.ns.getServerMaxRam(this.hostname);
         this.totalRamStr = this.ns.formatRam(this.totalRam, 0);
