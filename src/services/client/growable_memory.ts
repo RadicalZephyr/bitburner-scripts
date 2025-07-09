@@ -86,7 +86,6 @@ export class GrowableAllocation extends TransferableAllocation {
         this.ns = ns;
         this.portId = port;
         this.port = ns.getPortHandle(port);
-        this.startPolling();
     }
 
     private async startPolling() {
@@ -99,6 +98,15 @@ export class GrowableAllocation extends TransferableAllocation {
                 }
             }
             await nextWrite;
+        }
+    }
+
+    pollGrowth() {
+        for (const msg of readAllFromPort(this.ns, this.port)) {
+            const chunks = msg as HostAllocation[];
+            if (Array.isArray(chunks)) {
+                mergeChunks(this.allocatedChunks, chunks);
+            }
         }
     }
 
