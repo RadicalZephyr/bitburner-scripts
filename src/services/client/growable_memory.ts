@@ -1,4 +1,4 @@
-import type { NS } from "netscript";
+import type { NetscriptPort, NS } from "netscript";
 
 import {
     MemoryClient,
@@ -15,11 +15,13 @@ import { PortClient } from "services/client/port";
  * Allocation that can receive additional memory chunks.
  */
 export class GrowableAllocation extends TransferableAllocation {
-    port: number;
+    ns: NS;
+    port: NetscriptPort;
 
-    constructor(allocationId: number, hosts: HostAllocation[], port: number) {
+    constructor(ns: NS, allocationId: number, hosts: HostAllocation[], port: number) {
         super(allocationId, hosts);
-        this.port = port;
+        this.ns = ns;
+        this.port = ns.getPortHandle(port);
     }
 }
 
@@ -72,6 +74,6 @@ export class GrowableMemoryClient extends MemoryClient {
             return null;
         }
         const allocation = result as AllocationResult;
-        return new GrowableAllocation(allocation.allocationId, allocation.hosts, port);
+        return new GrowableAllocation(this.ns, allocation.allocationId, allocation.hosts, port);
     }
 }
