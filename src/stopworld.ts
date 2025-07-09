@@ -1,6 +1,10 @@
-import type { NS } from "netscript";
+import type { NS, AutocompleteData } from "netscript";
 
 import { walkNetworkBFS } from 'util/walk';
+
+export function autocomplete(data: AutocompleteData, _args: string[]): string[] {
+    return data.scripts;
+}
 
 export async function main(ns: NS) {
     const flags = ns.flags([
