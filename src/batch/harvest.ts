@@ -150,7 +150,7 @@ OPTIONS
     // fully populated before entering the steady state loop.
     for (let i = 0; i < maxOverlap; ++i) {
         const host = batchHost.at(i);
-        let batchPids = spawnBatch(ns, host, target, logistics.phases, donePortId);
+        let batchPids = await spawnBatch(ns, host, target, logistics.phases, donePortId);
         batches.push(batchPids);
         currentBatches++;
         if (Date.now() >= lastHeartbeat + CONFIG.heartbeatCadence) {
@@ -216,7 +216,7 @@ OPTIONS
             }
         }
 
-        let batchPids = spawnBatch(ns, host, target, phases, donePortId);
+        let batchPids = await spawnBatch(ns, host, target, phases, donePortId);
         if (batchPids.length > 0) {
             batches[batchIndex] = batchPids;
             currentBatches++;
@@ -282,7 +282,7 @@ function makeBatchHostArray(allocatedChunks: HostAllocation[]) {
     return sparseHosts;
 }
 
-function spawnBatch(ns: NS, host: string | null, target: string, phases: BatchPhase[], donePort: number): number[] {
+async function spawnBatch(ns: NS, host: string | null, target: string, phases: BatchPhase[], donePort: number): Promise<number[]> {
     if (!host) return [];
 
     const scripts = Array.from(new Set(phases.map(p => p.script)));
