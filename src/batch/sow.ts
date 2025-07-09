@@ -218,6 +218,25 @@ function weakenAnalyze(weakenAmount: number): number {
     return Math.ceil(weakenAmount * 20) + 1;
 }
 
+function weakenAnalyzeSecurity(weakenThreads: number) {
+    return -0.05 * weakenThreads;
+}
+
+function calculateMinimalSowBatch(ns: NS) {
+    const growSecDelta = ns.growthAnalyzeSecurity(1);
+    const weakenSecDelta = -weakenAnalyzeSecurity(1);
+
+    if (growSecDelta == weakenSecDelta) {
+        return { growThreads: 1, weakenThreads: 1 };
+    } else if (growSecDelta > weakenSecDelta) {
+        const weakenPerGrow = Math.ceil(growSecDelta / weakenSecDelta);
+        return { growThreads: 1, weakenThreads: weakenPerGrow };
+    } else {
+        const growPerWeaken = Math.floor(weakenSecDelta / growSecDelta);
+        return { growThreads: growPerWeaken, weakenThreads: 1 };
+    }
+}
+
 function calculateSowBatchThreads(ns: NS, growThreads: number) {
     const growSecDelta = ns.growthAnalyzeSecurity(growThreads);
     const weakenThreads = weakenAnalyze(growSecDelta);
