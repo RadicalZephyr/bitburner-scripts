@@ -5,6 +5,7 @@ import {
     AllocationClaimRelease,
     AllocationRelease,
     AllocationRequest,
+    GrowableAllocationRequest,
     AllocationResult,
     HostAllocation,
     MEMORY_PORT,
@@ -100,6 +101,8 @@ Example:
 
     let lastRender = 0;
     let lastCollection = Date.now();
+    let lastGrowCheck = 0;
+    const growCheckRate = 1000;
 
     while (true) {
         let now = Date.now();
@@ -127,6 +130,11 @@ Example:
             memoryManager.updateReserved();
             memoryManager.cleanupTerminated();
             lastCollection = now;
+        }
+
+        if (lastGrowCheck + growCheckRate < now) {
+            await growAllocations(ns, memoryManager);
+            lastGrowCheck = now;
         }
         await ns.sleep(50);
     }
@@ -176,6 +184,35 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memResponsePort
                     printLog("WARN: allocation failed, not enough space");
                 }
                 payload = allocation;
+                break;
+
+            case MessageType.GrowableRequest:
+                const growReq = msg[2] as GrowableAllocationRequest;
+                printLog(
+                    `INFO: growable request pid=${growReq.pid} filename=${growReq.filename} ` +
+                    `${growReq.numChunks}x${ns.formatRam(growReq.chunkSize)}`
+                );
+                const growAlloc = memoryManager.allocate(
+                    growReq.pid,
+                    growReq.filename,
+                    growReq.chunkSize,
+                    growReq.numChunks,
+                    growReq.contiguous ?? false,
+                    growReq.coreDependent ?? false,
+                    growReq.shrinkable ?? true,
+                    growReq.longRunning ?? false,
+                    growReq.numChunks,
+                    growReq.port,
+                );
+                if (growAlloc) {
+                    printLog(
+                        `SUCCESS: allocated id ${growAlloc.allocationId} ` +
+                        `across ${growAlloc.hosts.length} hosts`
+                    );
+                } else {
+                    printLog("WARN: growable allocation failed");
+                }
+                payload = growAlloc;
                 break;
 
             case MessageType.Release:
@@ -246,6 +283,26 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memResponsePort
         }
         // TODO: make this more robust when the response port is full
         memResponsePort.write([requestId, payload]);
+    }
+}
+
+async function growAllocations(ns: NS, memoryManager: MemoryAllocator) {
+    if (memoryManager.getFreeRamTotal() <= 0) return;
+    for (const alloc of memoryManager.allocations.values()) {
+        if (alloc.notifyPort === undefined) continue;
+        const current = alloc.chunks.reduce((s, c) => s + c.numChunks, 0);
+        const missing = alloc.requestedChunks - current;
+        if (missing <= 0) continue;
+
+        const newChunks = memoryManager.growAllocation(alloc, missing);
+        if (newChunks.length === 0) continue;
+
+        const port = ns.getPortHandle(alloc.notifyPort);
+        for (const chunk of newChunks) {
+            while (!port.tryWrite(chunk)) {
+                await ns.sleep(20);
+            }
+        }
     }
 }
 
