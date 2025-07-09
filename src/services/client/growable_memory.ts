@@ -14,6 +14,8 @@ import {
 } from "services/client/memory";
 import { PortClient } from "services/client/port";
 
+import { CONFIG } from "services/config";
+
 import { sendMessage } from "util/client";
 import { readAllFromPort } from "util/ports";
 import { collectDependencies } from "util/dependencies";
@@ -165,17 +167,29 @@ export class GrowableAllocation extends TransferableAllocation {
 
             this.ns.scp([...dependencies, ...explicitDependencies], chunk.hostname, "home");
             const execArgs = allocationFlag ? [allocationFlag, this.allocationId, ...args] : args;
-            const pid = this.ns.exec(script, chunk.hostname, threadsHere, ...execArgs);
-            if (pid) {
-                pids.push(pid);
-                totalThreads -= threadsHere;
-            } else {
-                this.ns.tprintf("failed to spawn %d threads of %s on %s", threadsHere, script, chunk.hostname);
+
+            let retryCount = 0;
+            while (true) {
+                if (retryCount > CONFIG.launchRetryMax) {
+                    this.ns.print(`ERROR: GrowableAllocation.launch repeatedly failed to exec ${script} on ${chunk.hostname}`);
+                    this.ns.ui.openTail();
+                    return pids;
+                }
+
+                const pid = this.ns.exec(script, chunk.hostname, threadsHere, ...execArgs);
+                if (pid) {
+                    pids.push(pid);
+                    totalThreads -= threadsHere;
+                    break;
+                } else {
+                    this.ns.printf(`WARN: failed to spawn ${threadsHere} threads of ${script} on ${chunk.hostname} trying again`);
+                    await this.ns.sleep(10);
+                }
             }
         }
 
         if (totalThreads > 0) {
-            this.ns.tprintf("failed to spawn all the requested threads. %s threads remaining", totalThreads);
+            this.ns.printf("ERROR: failed to spawn all the requested threads. %s threads remaining", totalThreads);
         }
         return pids;
     }
