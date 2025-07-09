@@ -14,6 +14,7 @@ export const MEMORY_RESPONSE_PORT: number = 4;
 export enum MessageType {
     Worker,
     Request,
+    GrowableRequest,
     Release,
     Claim,
     ClaimRelease,
@@ -26,6 +27,7 @@ export enum MessageType {
 type Payload =
     | string
     | AllocationRequest
+    | GrowableAllocationRequest
     | AllocationRelease
     | AllocationClaim
     | AllocationClaimRelease
@@ -55,6 +57,10 @@ export interface AllocationRequest {
     coreDependent?: boolean,
     shrinkable?: boolean,
     longRunning?: boolean,
+}
+
+export interface GrowableAllocationRequest extends AllocationRequest {
+    port: number,
 }
 
 export interface AllocationRelease {
