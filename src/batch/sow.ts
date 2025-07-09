@@ -9,6 +9,7 @@ import {
 } from "services/client/memory";
 
 import { CONFIG } from "batch/config";
+import { BatchLogistics, BatchPhase, calculatePhaseStartTimes } from "batch/phase";
 import { awaitRound, calculateRoundInfo, RoundInfo } from "batch/progress";
 import { TAG_ARG } from "/services/client/memory_tag";
 
@@ -220,6 +221,54 @@ function weakenAnalyze(weakenAmount: number): number {
 
 function weakenAnalyzeSecurity(weakenThreads: number) {
     return -0.05 * weakenThreads;
+}
+
+interface SowBatchLogistics extends BatchLogistics {
+    totalBatches: number;
+}
+
+function calculateSowBatchLogistics(ns: NS, target: string): SowBatchLogistics {
+    const threads = calculateMinimalSowBatch(ns);
+
+    const gRam = ns.getScriptRam('/batch/g.js', "home") * threads.growThreads;
+    const wRam = ns.getScriptRam('/batch/w.js', "home") * threads.weakenThreads;
+    const batchRam = gRam + wRam;
+
+    const totalGrowThreads = neededGrowThreads(ns, target);
+
+    const totalBatches = Math.ceil(totalGrowThreads / threads.growThreads);
+
+    const phases = calculateSowPhases(ns, target, threads);
+
+    const batchTime = ns.getWeakenTime(target);
+    const endingPeriod = CONFIG.batchInterval * 3;
+    const overlap = Math.ceil(batchTime / endingPeriod);
+    const requiredRam = batchRam * overlap;
+
+    return {
+        target,
+        totalBatches,
+        batchRam,
+        overlap,
+        endingPeriod,
+        requiredRam,
+        phases
+    };
+}
+
+interface SowThreads {
+    growThreads: number;
+    weakenThreads: number;
+}
+
+function calculateSowPhases(ns: NS, target: string, threads: SowThreads): BatchPhase[] {
+    const growTime = ns.getGrowTime(target);
+    const weakenTime = ns.getWeakenTime(target);
+    const phases: BatchPhase[] = [
+        { script: "/batch/g.js", start: 0, duration: growTime, threads: threads.growThreads },
+        { script: "/batch/w.js", start: 0, duration: weakenTime, threads: threads.weakenThreads }
+    ];
+    return calculatePhaseStartTimes(phases);
 }
 
 function calculateMinimalSowBatch(ns: NS) {
