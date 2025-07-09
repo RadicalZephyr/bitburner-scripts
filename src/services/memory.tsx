@@ -314,14 +314,20 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memResponsePort
 
 async function growAllocations(ns: NS, memoryManager: MemoryAllocator) {
     if (memoryManager.getFreeRamTotal() <= 0) return;
+
     for (const alloc of memoryManager.allocations.values()) {
         if (alloc.notifyPort === undefined) continue;
+
         const current = alloc.chunks.reduce((s, c) => s + c.numChunks, 0);
         const missing = alloc.requestedChunks - current;
         if (missing <= 0) continue;
 
         const newChunks = memoryManager.growAllocation(alloc, missing);
         if (newChunks.length === 0) continue;
+
+        const chunkSize = ns.formatRam(newChunks[0]?.chunkSize ?? 0);
+        const totalChunks = newChunks.reduce((s, c) => s + c.numChunks, 0);
+        printLog(`INFO: growing allocation ${alloc.id} by ${totalChunks}x${chunkSize}`);
 
         const port = ns.getPortHandle(alloc.notifyPort);
         while (!port.tryWrite(newChunks)) {
