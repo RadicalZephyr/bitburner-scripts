@@ -1,0 +1,77 @@
+* Gang Management Principles
+
+** Gang Basics
+
+*** Mechanics
+
+Gangs have two types: hacking or combat. This effects the tasks that
+gang members can engage in, the primary stat needed and how important
+territory warfare is.
+
+Gangs can recruit, level up, and equip members. Recruiting more
+members requires exponentially increasing amounts of respect. You can
+level up members with special training tasks for each of 3 stat
+groups:
+
+ - Hacking
+ - Combat
+ - Charisma
+
+Gangs have several key stats:
+
+ - Respect: needed for recruiting members, getting equipment
+            discounts, and gaining faction reputation.
+ - Wanted Level: Reduces respect and money gain rates.
+ - Power: Affects territory warfare win chance and equipment discounts.
+
+*** Tasks
+
+Gang members can be assigned tasks. Each task has a
+difficulty. Hacking gang tasks primarily need high hacking skill,
+combat gangs primarily need high combat skill.
+
+We can divide member tasks into three categories:
+
+ - training
+ - heating
+ - cooling
+
+All tasks earn the member a certain amount of xp/s.
+
+**** Heating Tasks
+
+Heating tasks earn some amount of money/s and/or respect/s for the
+gang. They also cause the gang's wanted level to increase at some
+rate. All of these values are dependent on the members level in the
+relevant skills. Increased level increases the amount of money/s and
+respect/s and decreases the amount of wanted level gained per second.
+
+**** Cooling Task
+
+Each gang type has one cooling task that produces money and
+_decreases_ wanted level. Cooling tasks do not generate respect!
+
+
+*** Equipment
+
+You can equip gang members with equipment to give them stat level and
+xp bonuses. There are four categories of ephemeral equipment. This
+equipment is lost every time a gang member is ascended.
+
+You can also buy gang members augmentations which are retained through
+ascensions.
+
+*** Ascending Members
+
+Gang members can get permanent bonuses to their skill levels and
+experience gain rates by "Ascending". Experience gathered since their
+last ascension is turned into a small multiplier.
+
+
+** Current management script
+
+The current management strategy is centered around earning money and
+leveling up gang members.
+
+One task of each type is chosen based on the gang type. The gang is
+partitioned based on a default
