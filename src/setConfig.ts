@@ -1,6 +1,7 @@
 import type { NS, AutocompleteData } from "netscript";
 
 import { CONFIG as BatchConfig } from 'batch/config';
+import { CONFIG as GangConfig } from 'gang/config';
 import { CONFIG as ServiceConfig } from 'services/config';
 import { CONFIG as StockConfig } from 'stock/config';
 
@@ -39,7 +40,7 @@ Example:
     }
     let value = rest[1];
 
-    for (const config of [BatchConfig, ServiceConfig, StockConfig]) {
+    for (const config of [BatchConfig, GangConfig, ServiceConfig, StockConfig]) {
         if (Object.hasOwn(config, key)) {
             const prev = config[key];
             config[key] = value;
@@ -48,11 +49,12 @@ Example:
     }
 }
 
-const commonKeys: Set<string> = new Set(["prefix", "entries", "defaultSetters"]);
+const commonKeys: Set<string> = new Set(["_prefix", "prefix", "entries", "defaultSetters"]);
 
 function allConfigValues(): string[] {
     const allKeys = [
         ...Object.keys(BatchConfig),
+        ...Object.keys(GangConfig),
         ...Object.keys(ServiceConfig),
         ...Object.keys(StockConfig),
     ];
