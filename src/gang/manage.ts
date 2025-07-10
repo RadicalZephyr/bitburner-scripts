@@ -30,15 +30,13 @@ Example:
   > run ${ns.getScriptName()}
 
 CONFIG VALUES
-  GANG_ASCEND_THRESHOLD   Ascension multiplier required to ascend
-  GANG_TRAINING_PERCENT   Fraction of members training
-  GANG_MAX_WANTED_PENALTY Maximum wanted penalty before cooling
-  GANG_MIN_WANTED_LEVEL   Wanted level where heating resumes
-  GANG_JOB_CHECK_INTERVAL Delay between evaluations`);
+  GANG_ascendThreshold   Ascension multiplier required to ascend
+  GANG_trainingPercent   Fraction of members training
+  GANG_maxWantedPenalty  Maximum wanted penalty before cooling
+  GANG_minWantedLevel    Wanted level where heating resumes
+  GANG_jobCheckInterval  Delay between evaluations`);
         return;
     }
-
-    CONFIG.setDefaults();
 
     if (!ns.gang.inGang()) {
         ns.tprint("No gang to manage.");
@@ -67,7 +65,7 @@ CONFIG VALUES
         }
 
         const info = ns.gang.getGangInformation();
-        if (info.wantedPenalty > CONFIG.maxPenalty && info.wantedLevelGainRate > 0) {
+        if (info.wantedPenalty > CONFIG.maxWantedPenalty && info.wantedLevelGainRate > 0) {
             numHeating--;
         } else if (info.wantedLevel < CONFIG.minWantedLevel && info.wantedLevelGainRate < 0) {
             numHeating++;
