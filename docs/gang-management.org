@@ -159,3 +159,16 @@ Members are periodically split into three groups:
 
 Each iteration ends with a sleep for `GANG_jobCheckInterval` before the
 next evaluation cycle begins.
+
+** Potential improvements
+
+The current script handles basic recruitment, ascension, and task scheduling. We can extend it with the richer capabilities exposed by `ns.gang`:
+
+- automatically re-buy gear and augmentations using `purchaseEquipment` when funds allow
+- analyze task efficiencies with `getTaskStats` to better match members to activities
+- continuously equip members with permanent augmentations for sustained growth
+- toggle territory warfare with `setTerritoryWarfare` when `getChanceToWinClash` is favorable
+- fine tune wanted level control using `getGangInformation` and more granular task splits
+- prioritize ascensions by evaluating each member with `getAscensionResult`
+- track member deaths and re-equip them to keep power high
+
