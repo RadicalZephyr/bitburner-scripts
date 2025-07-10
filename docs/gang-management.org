@@ -126,5 +126,10 @@ last ascension is turned into a small multiplier.
 The current management strategy is centered around earning money and
 leveling up gang members.
 
-One task of each type is chosen based on the gang type. The gang is
-partitioned based on a default
+New members are recruited when possible and current members are
+rotated through training, earning money with a heating task or
+reducing wanted with a cooling task.
+
+Every tick we check the gang member with the lowest ascension
+multiplier, and if their ascension result would exceed the configured
+threshold they are ascended.
