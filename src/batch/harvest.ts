@@ -3,6 +3,7 @@ import type { AutocompleteData, NS } from "netscript";
 import { HostAllocation, MemoryClient, registerAllocationOwnership } from "services/client/memory";
 import { TaskSelectorClient, Lifecycle } from "batch/client/task_selector";
 import { PortClient } from "services/client/port";
+import { awaitRound, calculateRoundInfo, RoundInfo } from "batch/progress";
 
 import { CONFIG } from "batch/config";
 import {
@@ -44,7 +45,8 @@ USAGE: run ${ns.getScriptName()} SERVER_NAME
 Continually harvest money from the target with batches of
 hack/weaken/grow/weaken scripts. Thread counts for each type of script
 are calculated to maintain the target at maximum money and minimum
-security.
+security. When --max-ram is too small for overlapping batches the
+phases run sequentially in a continuous loop.
 
 Example:
 > run ${ns.getScriptName()} n00dles
@@ -102,6 +104,14 @@ OPTIONS
     }
 
     let logistics = calculateBatchLogistics(ns, target, hackPercent);
+
+    if (maxRam !== -1 && maxRam < logistics.requiredRam) {
+        ns.print(`WARN: running sequential harvest due to RAM limit`);
+        const memClient = new MemoryClient(ns);
+        await runSequentialBatch(ns, target, logistics.phases, memClient);
+        return;
+    }
+
     let overlapLimit = logistics.overlap;
     if (maxRam !== -1) {
         overlapLimit = Math.min(overlapLimit, Math.floor(maxRam / logistics.batchRam));
@@ -315,6 +325,93 @@ async function spawnBatch(ns: NS, host: string | null, target: string, phases: B
         }
     }
     return pids;
+}
+
+/**
+ * Execute the provided batch phases one after another in a loop.
+ *
+ * Memory is allocated once using the largest script RAM cost as the
+ * chunk size. The resulting allocation may not provide enough chunks
+ * for all threads of a phase, so phases run in multiple waves when
+ * needed.
+ *
+ * @param ns      - Netscript API instance
+ * @param target  - Hostname of the target server
+ * @param phases  - Batch phases to run
+ * @param client  - Memory client used to request allocations
+ */
+export async function runSequentialBatch(
+    ns: NS,
+    target: string,
+    phases: BatchPhase[],
+    client: MemoryClient,
+): Promise<void> {
+    const total = phases.length;
+
+    const chunkSize = phases.reduce(
+        (s, p) => Math.max(s, ns.getScriptRam(p.script, "home")),
+        0,
+    );
+    const maxThreads = phases.reduce((m, p) => m + p.threads, 0);
+
+    const alloc = await client.requestTransferableAllocation(
+        chunkSize,
+        maxThreads,
+        { coreDependent: true, shrinkable: true },
+    );
+    if (!alloc) {
+        ns.tprint("ERROR: failed to allocate sequential batch memory");
+        return;
+    }
+    alloc.releaseAtExit(ns);
+
+    let nextHb = Date.now() + CONFIG.heartbeatCadence + Math.random() * 500;
+
+    while (true) {
+        for (let idx = 0; idx < phases.length; idx++) {
+            const phase = phases[idx];
+            if (phase.threads <= 0) continue;
+
+            let remaining = phase.threads;
+            while (remaining > 0) {
+                let wave = Math.min(remaining, alloc.numChunks);
+                const pids: number[] = [];
+                let toSpawn = wave;
+                for (const chunk of alloc.allocatedChunks) {
+                    if (toSpawn <= 0) break;
+                    const t = Math.min(chunk.numChunks, toSpawn);
+                    ns.scp(phase.script, chunk.hostname, "home");
+                    const pid = ns.exec(
+                        phase.script,
+                        chunk.hostname,
+                        { threads: t, temporary: true },
+                        target,
+                        0,
+                    );
+                    if (pid !== 0) {
+                        pids.push(pid);
+                    } else {
+                        ns.print(
+                            `WARN: failed to exec ${phase.script} on ${chunk.hostname}`,
+                        );
+                    }
+                    toSpawn -= t;
+                }
+
+                const remainingDur = phases.slice(idx).reduce((s, p) => s + p.duration, 0);
+                const start = Date.now();
+                const info: RoundInfo = {
+                    round: idx + 1,
+                    totalRounds: total,
+                    roundEnd: start + phase.duration,
+                    totalExpectedEnd: start + remainingDur,
+                };
+
+                nextHb = await awaitRound(ns, pids, info, nextHb, () => Promise.resolve());
+                remaining -= wave;
+            }
+        }
+    }
 }
 
 export interface BatchLogistics {
