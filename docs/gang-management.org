@@ -126,6 +126,10 @@ last ascension is turned into a small multiplier.
 The current management strategy is centered around earning money and
 leveling up gang members.
 
+The script keeps a short list of Norse-themed names and recruits a new
+member whenever one is available, cycling through the list until it is
+exhausted.
+
 New members are recruited when possible and current members are
 rotated through training, earning money with a heating task or
 reducing wanted with a cooling task.
@@ -133,3 +137,25 @@ reducing wanted with a cooling task.
 Every tick we check the gang member with the lowest ascension
 multiplier, and if their ascension result would exceed the configured
 threshold they are ascended.
+
+The management loop implemented in `src/gang/manage.ts` also adjusts how
+many members perform heating tasks based on the gang's wanted level.
+If the penalty from wanted level grows above `GANG_maxWantedPenalty` the
+script shifts one member from heating to cooling. When wanted level is
+low and decreasing, heating duty is increased again until `GANG_minWantedLevel`
+is reached.
+
+Members are periodically split into three groups:
+
+ - *ascending* :: the lowest multiplier member is ascended when the
+                  predicted ascension gain exceeds
+                  `GANG_ascendThreshold`.
+ - *training* :: a fraction of the gang equal to `GANG_trainingPercent`
+                 is always assigned to the appropriate training task
+                 (`Train Hacking` or `Train Combat`).
+ - *working* :: remaining members are divided between the heating and
+                cooling tasks (`Money Laundering`/`Strongarm Civilians`
+                or `Ethical Hacking`/`Vigilante Justice`).
+
+Each iteration ends with a sleep for `GANG_jobCheckInterval` before the
+next evaluation cycle begins.
