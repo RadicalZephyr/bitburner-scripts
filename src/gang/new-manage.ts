@@ -1,4 +1,4 @@
-import type { NS } from "netscript";
+import type { GangGenInfo, NS } from "netscript";
 
 import { CONFIG } from "gang/config";
 
@@ -48,10 +48,45 @@ GANG_jobCheckInterval  Delay between evaluations
         return;
     }
 
+    const gangTracker = new GangTracker(ns);
+
     let deltaT = 0;
     while (true) {
 
-
+        gangTracker.tick();
         deltaT = await ns.gang.nextUpdate();
+    }
+}
+
+type GangStat = keyof GangGenInfo;
+type ResolveFn = (value: number) => void;
+
+interface GangListener {
+    stat: GangStat;
+    threshold: number;
+    resolve: ResolveFn;
+}
+
+class GangTracker {
+    ns: NS;
+    listeners: GangListener[] = [];
+
+    constructor(ns: NS) {
+        this.ns = ns;
+    }
+
+    listenTo(stat: GangStat, threshold: number, resolve: ResolveFn) {
+        this.listeners.push({ stat, threshold, resolve });
+    }
+
+    tick() {
+        const gangInfo: GangGenInfo = this.ns.gang.getGangInformation();
+
+        for (const l of this.listeners) {
+            const stat = gangInfo[l.stat];
+            if (typeof stat === "number" && stat >= l.threshold) {
+                l.resolve(stat);
+            }
+        }
     }
 }
