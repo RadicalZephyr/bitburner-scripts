@@ -96,8 +96,8 @@ function compareBy(condition: Condition): (a: number, b: number) => boolean {
     }
 }
 
-type MemberStat = keyof GangMemberInfo;
-type GangStat = keyof GangGenInfo;
+type MemberStat = keyof Omit<GangMemberInfo, "name" | "task" | "upgrades" | "augmentations" | "expGain">;
+type GangStat = keyof Omit<GangGenInfo, "faction" | "isHacking" | "territoryWarfareEngaged">;
 
 type ResolveFn = (value: number) => void;
 
