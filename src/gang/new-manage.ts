@@ -115,12 +115,36 @@ interface StatListener<T> {
     resolve: ResolveFn;
 }
 
-class GangTracker {
+class StatTracker<Type> {
+    listeners: StatListener<keyof PickByType<Type, number>>[] = [];
+
+    when(stat: keyof PickByType<Type, number>, condition: Condition, threshold: number) {
+        const { promise, resolve } = Promise.withResolvers();
+        this.listeners.push({ stat, condition, threshold, resolve });
+        return promise;
+    }
+
+    update(next: Type) {
+        let remaining = [];
+        for (const l of this.listeners) {
+            const stat = next[l.stat];
+            const compare = compareBy(l.condition);
+            if (typeof stat === "number" && compare(stat, l.threshold)) {
+                l.resolve(stat);
+            } else {
+                remaining.push(l);
+            }
+        }
+        this.listeners = remaining;
+    }
+}
+
+class GangTracker extends StatTracker<GangGenInfo> {
     ns: NS;
     members: Record<string, MemberTracker> = {};
-    listeners: StatListener<GangStatNames>[] = [];
 
     constructor(ns: NS) {
+        super();
         this.ns = ns;
         const members = ns.gang.getMemberNames();
         for (const name of members) {
@@ -132,22 +156,9 @@ class GangTracker {
         this.members[name] = new MemberTracker(this.ns, name);
     }
 
-    when(stat: GangStatNames, condition: Condition, threshold: number) {
-        const { promise, resolve } = Promise.withResolvers();
-        this.listeners.push({ stat, condition, threshold, resolve });
-        return promise;
-    }
-
     tick(deltaT?: number) {
         const gangInfo: GangGenInfo = this.ns.gang.getGangInformation();
-
-        for (const l of this.listeners) {
-            const stat = gangInfo[l.stat];
-            const compare = compareBy(l.condition);
-            if (typeof stat === "number" && compare(stat, l.threshold)) {
-                l.resolve(stat);
-            }
-        }
+        this.update(gangInfo);
 
         for (const name in this.members) {
             this.members[name].tick(deltaT);
@@ -155,33 +166,20 @@ class GangTracker {
     }
 }
 
-class MemberTracker {
+class MemberTracker extends StatTracker<GangMemberInfo> {
     ns: NS;
     name: string;
     info: GangMemberInfo;
-    listeners: StatListener<MemberStatNames>[] = [];
 
     constructor(ns: NS, name: string) {
+        super();
         this.ns = ns;
         this.name = name;
         this.info = ns.gang.getMemberInformation(name);
     }
 
-    when(stat: MemberStatNames, condition: Condition, threshold: number) {
-        const { promise, resolve } = Promise.withResolvers();
-        this.listeners.push({ stat, condition, threshold, resolve });
-        return promise;
-    }
-
     tick(deltaT: number) {
         this.info = this.ns.gang.getMemberInformation(this.name)
-
-        for (const l of this.listeners) {
-            const stat = this.info[l.stat];
-            const compare = compareBy(l.condition);
-            if (typeof stat === "number" && compare(stat, l.threshold)) {
-                l.resolve(stat);
-            }
-        }
+        this.update(this.info);
     }
 }
