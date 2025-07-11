@@ -68,6 +68,7 @@ CONFIG VALUES
             const name = availableNames[nameIndex++];
             if (ns.gang.recruitMember(name)) {
                 memberNames.push(name);
+                gangTracker.pushMember(name);
             }
         }
 
@@ -104,6 +105,10 @@ class GangTracker {
         for (const name of members) {
             this.members[name] = new MemberTracker(ns, name);
         }
+    }
+
+    pushMember(name: string) {
+        this.members[name] = new MemberTracker(this.ns, name);
     }
 
     whenGreater(stat: GangStat, threshold: number) {
