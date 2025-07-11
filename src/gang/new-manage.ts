@@ -48,6 +48,13 @@ CONFIG VALUES
         return;
     }
 
+    if (!ns.gang.inGang()) {
+        ns.tprint("No gang to manage.");
+        return;
+    }
+
+    const isHackingGang = ns.gang.getGangInformation().isHacking;
+
     const gangTracker = new GangTracker(ns);
 
     let deltaT = 0;
