@@ -62,8 +62,6 @@ CONFIG VALUES
 
     const gangTracker = new GangTracker(ns);
 
-    printWantedHigh(ns, gangTracker);
-
     let deltaT = 0;
     while (true) {
         if (ns.gang.canRecruitMember() && nameIndex < availableNames.length) {
@@ -157,17 +155,5 @@ class MemberTracker {
                 l.resolve(stat);
             }
         }
-    }
-}
-
-async function printWantedHigh(ns: NS, gangTracker: GangTracker) {
-    let running = true;
-    ns.atExit(() => {
-        running = false;
-    }, "cleanup-printWantedHigh");
-
-    while (running) {
-        const wantedLevel = await gangTracker.whenGreater("wantedLevel", 1.1);
-        ns.tprint(`wanted level rising: ${wantedLevel}`);
     }
 }
