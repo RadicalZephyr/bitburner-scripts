@@ -1,15 +1,5 @@
 import type { NS } from "netscript";
 
-declare global {
-    interface Performance {
-        mark: ((name: string) => void),
-    }
-    interface Global {
-        performance: Performance
-    }
-    var globalThis: Global;
-}
-
 export async function main(ns: NS) {
     const args = ns.args;
 
@@ -26,7 +16,6 @@ export async function main(ns: NS) {
     let donePortId = args[2];
 
     await ns.weaken(target, { additionalMsec: sleepTime });
-    globalThis.performance.mark("weaken");
 
     if (typeof donePortId === 'number' && donePortId !== -1) {
         ns.writePort(donePortId, ns.pid);
