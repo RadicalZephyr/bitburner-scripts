@@ -79,11 +79,27 @@ CONFIG VALUES
     }
 }
 
+enum Condition {
+    GreaterThan,
+    LessThan,
+}
+
+function compareBy(condition: Condition): (a: number, b: number) => boolean {
+    switch (condition) {
+        case Condition.GreaterThan:
+            return (a, b) => a > b;
+        case Condition.LessThan:
+            return (a, b) => a < b;
+    }
+    return (a, b) => a > b;
+}
+
 type GangStat = keyof GangGenInfo;
 type ResolveFn = (value: number) => void;
 
 interface GangListener {
     stat: GangStat;
+    condition: Condition;
     threshold: number;
     resolve: ResolveFn;
 }
@@ -92,6 +108,7 @@ type MemberStat = keyof GangMemberInfo;
 
 interface MemberListener {
     stat: MemberStat;
+    condition: Condition;
     threshold: number;
     resolve: ResolveFn;
 }
@@ -113,9 +130,9 @@ class GangTracker {
         this.members[name] = new MemberTracker(this.ns, name);
     }
 
-    whenGreater(stat: GangStat, threshold: number) {
+    when(stat: GangStat, condition: Condition, threshold: number) {
         const { promise, resolve } = Promise.withResolvers();
-        this.listeners.push({ stat, threshold, resolve });
+        this.listeners.push({ stat, condition, threshold, resolve });
         return promise;
     }
 
@@ -124,7 +141,8 @@ class GangTracker {
 
         for (const l of this.listeners) {
             const stat = gangInfo[l.stat];
-            if (typeof stat === "number" && stat >= l.threshold) {
+            const compare = compareBy(l.condition);
+            if (typeof stat === "number" && compare(stat, l.threshold)) {
                 l.resolve(stat);
             }
         }
@@ -147,9 +165,9 @@ class MemberTracker {
         this.info = ns.gang.getMemberInformation(name);
     }
 
-    whenGreater(stat: MemberStat, threshold: number) {
+    when(stat: MemberStat, condition: Condition, threshold: number) {
         const { promise, resolve } = Promise.withResolvers();
-        this.listeners.push({ stat, threshold, resolve });
+        this.listeners.push({ stat, condition, threshold, resolve });
         return promise;
     }
 
@@ -158,7 +176,8 @@ class MemberTracker {
 
         for (const l of this.listeners) {
             const stat = this.info[l.stat];
-            if (typeof stat === "number" && stat >= l.threshold) {
+            const compare = compareBy(l.condition);
+            if (typeof stat === "number" && compare(stat, l.threshold)) {
                 l.resolve(stat);
             }
         }
