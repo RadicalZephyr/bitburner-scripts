@@ -119,6 +119,14 @@ export class StatTracker<Type> {
             this.velocityListeners = notifyListeners(velocity, this.velocityListeners);
         }
     }
+
+    /**
+     * Reset the history. Useful for after an ascension so velocity
+     * isn't calculated as massively negative.
+     */
+    reset() {
+        this.history.length = 0;
+    }
 }
 
 function computeVelocity<Type>(first: Sample<Type>, last: Sample<Type>): Sample<Type> {
