@@ -90,8 +90,10 @@ function compareBy(condition: Condition): (a: number, b: number) => boolean {
             return (a, b) => a > b;
         case Condition.LessThan:
             return (a, b) => a < b;
+        default:
+            const _exhaustiveCheck: never = condition;
+            return _exhaustiveCheck;
     }
-    return (a, b) => a > b;
 }
 
 type MemberStat = keyof GangMemberInfo;
