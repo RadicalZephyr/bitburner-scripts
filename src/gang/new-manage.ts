@@ -100,15 +100,6 @@ type PickByType<T, U> = Pick<T, {
     [K in keyof T]: T[K] extends U ? K : never
 }[keyof T]>;
 
-type ResolveFn = (value: number) => void;
-
-interface StatListener<T> {
-    stat: T;
-    condition: Condition;
-    threshold: number;
-    resolve: ResolveFn;
-}
-
 function pickByType<T, V>(
     obj: T,
     isV: (x: unknown) => x is V
@@ -131,6 +122,15 @@ function sample<T>(obj: T): Sample<T> {
         t: Date.now(),
         ...pickByType(obj, (v): v is number => typeof v === 'number')
     };
+}
+
+type ResolveFn = (value: number) => void;
+
+interface StatListener<T> {
+    stat: T;
+    condition: Condition;
+    threshold: number;
+    resolve: ResolveFn;
 }
 
 class StatTracker<Type> {
