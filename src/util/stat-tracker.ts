@@ -52,6 +52,9 @@ interface StatListener<T> {
     resolve: ResolveFn;
 }
 
+/**
+ * A class that allows you to register for changes in a value or it's velocity.
+ */
 export class StatTracker<Type> {
     historyLen: number;
     history: Sample<Type>[] = [];
@@ -63,12 +66,32 @@ export class StatTracker<Type> {
         this.historyLen = typeof historyLen === 'number' && historyLen >= 2 ? historyLen : 3;
     }
 
+    /**
+     * Watches the value of the given field, resolving when it the
+     * comparing the value to the threshold satisfies the
+     * condition.
+     *
+     * @param stat      - Which value to watch
+     * @param condition - The condition to signal on
+     * @param threshold - The threshold to compare the value to
+     * @returns A promise that resolves when the condition is true, with the value when it became true.
+     */
     when(stat: keyof PickByType<Type, number>, condition: Condition, threshold: number) {
         const { promise, resolve } = Promise.withResolvers();
         this.listeners.push({ stat, condition, threshold, resolve });
         return promise;
     }
 
+    /**
+     * Watches the velocity of the given field, resolving when it the
+     * comparing the velocity to the threshold satisfies the
+     * condition.
+     *
+     * @param stat      - Which value to watch
+     * @param condition - The condition to signal on
+     * @param threshold - The threshold to compare the value to
+     * @returns A promise that resolves when the condition is true, with the value when it became true.
+     */
     whenVelocity(stat: keyof PickByType<Type, number>, condition: Condition, threshold: number) {
         const { promise, resolve } = Promise.withResolvers();
         this.velocityListeners.push({ stat, condition, threshold, resolve });
@@ -76,6 +99,12 @@ export class StatTracker<Type> {
 
     }
 
+    /**
+     * Add the next sample to the tracker, notifying any listeners.
+     *
+     * @param next - Update with the next sample
+     * @param t    - Pass the timestamp for this sample, for testing purposes
+     */
     update(next: Type, t?: number) {
         const s = sample(next, t);
 
