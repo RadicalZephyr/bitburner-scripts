@@ -169,7 +169,7 @@ async function trainMember(ns: NS, name: string, tracker: MemberTracker) {
     let running = true;
     ns.atExit(() => {
         running = false;
-    }, "trainMember-cleanup");
+    }, `trainMember-${name}-cleanup`);
 
     while (running) {
         await setTask(ns, name, "Train Hacking");
