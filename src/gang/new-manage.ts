@@ -172,6 +172,8 @@ async function trainMember(ns: NS, name: string, tracker: MemberTracker) {
     }, `trainMember-${name}-cleanup`);
 
     while (running) {
+        buyEquipment(ns, name);
+
         await setTask(ns, name, "Train Hacking");
         await tracker.whenVelocity("hack", Condition.LessThan, CONFIG.hackTrainVelocity);
 
@@ -194,4 +196,16 @@ async function setTask(ns: NS, name: string, task: string) {
         ns.ui.openTail();
     }
     await ns.gang.nextUpdate();
+}
+
+function buyEquipment(ns: NS, name: string) {
+    const allEquipment = ns.gang.getEquipmentNames();
+
+    for (const e of allEquipment) {
+        const type = ns.gang.getEquipmentType(e);
+        // Skip augments
+        if (type === "Augments") continue;
+
+        ns.gang.purchaseEquipment(name, e);
+    }
 }
