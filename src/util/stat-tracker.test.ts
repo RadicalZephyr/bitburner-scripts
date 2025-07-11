@@ -50,3 +50,32 @@ test('when resolves for less than condition', async () => {
 
     await expect(promise).resolves.toBe(3);
 });
+
+test('whenVelocity resolves for greater than condition', async () => {
+    const tracker = new StatTracker<Example>();
+    const promise = tracker.whenVelocity('a', Condition.GreaterThan, 5);
+
+    tracker.update(makeExample(0), 0);
+    tracker.update(makeExample(0), 500);
+    expect(tracker.velocityListeners.length).toBe(1);
+
+    tracker.update(makeExample(10), 1000);
+
+    await expect(promise).resolves.toBeCloseTo(10);
+    expect(tracker.velocityListeners.length).toBe(0);
+});
+
+test('whenVelocity resolves for less than condition', async () => {
+    const tracker = new StatTracker<Example>();
+    const promise = tracker.whenVelocity('a', Condition.LessThan, 5);
+
+    tracker.update(makeExample(0), 0);
+    tracker.update(makeExample(10), 500);
+    expect(tracker.velocityListeners.length).toBe(1);
+
+    tracker.update(makeExample(10), 1000);
+    tracker.update(makeExample(10), 1500);
+
+    await expect(promise).resolves.toBeCloseTo(0);
+    expect(tracker.velocityListeners.length).toBe(0);
+});

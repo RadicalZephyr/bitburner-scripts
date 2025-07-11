@@ -36,9 +36,9 @@ function pickByType<T, V>(
 
 type Sample<Type> = { t: number } & PickByType<Type, number>;
 
-function sample<T>(obj: T): Sample<T> {
+function sample<T>(obj: T, t?: number): Sample<T> {
     return {
-        t: Date.now(),
+        t: t ?? Date.now(),
         ...pickByType(obj, (v): v is number => typeof v === 'number')
     };
 }
@@ -55,10 +55,12 @@ interface StatListener<T> {
 export class StatTracker<Type> {
     historyLen: number;
     history: Sample<Type>[] = [];
+
     listeners: StatListener<keyof PickByType<Type, number>>[] = [];
+    velocityListeners: StatListener<keyof PickByType<Type, number>>[] = [];
 
     constructor(historyLen?: number) {
-        this.historyLen = historyLen ?? 3;
+        this.historyLen = typeof historyLen === 'number' && historyLen >= 2 ? historyLen : 3;
     }
 
     when(stat: keyof PickByType<Type, number>, condition: Condition, threshold: number) {
@@ -67,9 +69,15 @@ export class StatTracker<Type> {
         return promise;
     }
 
+    whenVelocity(stat: keyof PickByType<Type, number>, condition: Condition, threshold: number) {
+        const { promise, resolve } = Promise.withResolvers();
+        this.velocityListeners.push({ stat, condition, threshold, resolve });
+        return promise;
 
-    update(next: Type) {
-        const s = sample(next);
+    }
+
+    update(next: Type, t?: number) {
+        const s = sample(next, t);
 
         this.listeners = notifyListeners(s, this.listeners);
 
@@ -77,8 +85,22 @@ export class StatTracker<Type> {
         if (this.history.length > this.historyLen)
             this.history.shift();
 
-        this.listeners = notifyListeners(s, this.listeners);
+        if (this.history.length > 2) {
+            const velocity = computeVelocity(this.history.at(-1), this.history.at(0));
+            this.velocityListeners = notifyListeners(velocity, this.velocityListeners);
+        }
     }
+}
+
+function computeVelocity<Type>(first: Sample<Type>, last: Sample<Type>): Sample<Type> {
+    const deltaT = (last.t - first.t) / 1000;
+    const velocity = {} as Sample<Type>;
+    for (const key in first) {
+        if (key === 't') continue;
+
+        velocity[key] = (last[key] - first[key]) / deltaT;
+    }
+    return velocity;
 }
 
 function notifyListeners<Type>(s: Sample<Type>, listeners: StatListener<keyof PickByType<Type, number>>[]) {
