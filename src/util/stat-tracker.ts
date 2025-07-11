@@ -15,7 +15,7 @@ function compareBy(condition: Condition): (a: number, b: number) => boolean {
     }
 }
 
-type PickByType<T, U> = Pick<T, {
+export type PickByType<T, U> = Pick<T, {
     [K in keyof T]: T[K] extends U ? K : never
 }[keyof T]>;
 
