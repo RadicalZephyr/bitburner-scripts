@@ -53,12 +53,23 @@ CONFIG VALUES
         return;
     }
 
+    const memberNames = ns.gang.getMemberNames();
+    const currentNames = new Set(memberNames);
+    const availableNames = NAMES.filter(n => !currentNames.has(n));
+    let nameIndex = 0;
+
     const isHackingGang = ns.gang.getGangInformation().isHacking;
 
     const gangTracker = new GangTracker(ns);
 
     let deltaT = 0;
     while (true) {
+        if (ns.gang.canRecruitMember() && nameIndex < availableNames.length) {
+            const name = availableNames[nameIndex++];
+            if (ns.gang.recruitMember(name)) {
+                memberNames.push(name);
+            }
+        }
 
         gangTracker.tick();
         deltaT = await ns.gang.nextUpdate();
