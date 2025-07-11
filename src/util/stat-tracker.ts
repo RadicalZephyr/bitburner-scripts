@@ -67,22 +67,30 @@ export class StatTracker<Type> {
         return promise;
     }
 
+
     update(next: Type) {
-        const stats = sample(next);
-        this.history.push(stats);
+        const s = sample(next);
+
+        this.listeners = notifyListeners(s, this.listeners);
+
+        this.history.push(s);
         if (this.history.length > this.historyLen)
             this.history.shift();
 
-        let remaining = [];
-        for (const l of this.listeners) {
-            const stat = stats[l.stat];
-            const compare = compareBy(l.condition);
-            if (typeof stat === "number" && compare(stat, l.threshold)) {
-                l.resolve(stat);
-            } else {
-                remaining.push(l);
-            }
-        }
-        this.listeners = remaining;
+        this.listeners = notifyListeners(s, this.listeners);
     }
+}
+
+function notifyListeners<Type>(s: Sample<Type>, listeners: StatListener<keyof PickByType<Type, number>>[]) {
+    let remaining = [];
+    for (const l of listeners) {
+        const stat = s[l.stat];
+        const compare = compareBy(l.condition);
+        if (typeof stat === "number" && compare(stat, l.threshold)) {
+            l.resolve(stat);
+        } else {
+            remaining.push(l);
+        }
+    }
+    return remaining;
 }
