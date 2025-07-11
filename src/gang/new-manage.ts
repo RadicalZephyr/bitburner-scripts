@@ -66,6 +66,10 @@ CONFIG VALUES
 
     gangTracker.tick();
 
+    for (const name of ns.gang.getMemberNames()) {
+        trainMember(ns, name, gangTracker.member(name));
+    }
+
     let deltaT = 0;
     while (true) {
         if (ns.gang.canRecruitMember() && nameIndex < availableNames.length) {
@@ -92,6 +96,10 @@ class GangTracker extends StatTracker<GangGenInfo> {
         for (const name of members) {
             this.members[name] = new MemberTracker(ns, name);
         }
+    }
+
+    member(name: string): MemberTracker {
+        return this.members[name];
     }
 
     pushMember(name: string) {
@@ -149,5 +157,33 @@ class MemberTracker {
         if (this.ascension) {
             this.ascensionTracker.update(this.ascension);
         }
+    }
+}
+
+async function trainMember(ns: NS, name: string, tracker: MemberTracker) {
+    let running = true;
+    ns.atExit(() => {
+        running = false;
+    }, "trainMember-cleanup");
+
+    while (running) {
+        setTask(ns, name, "Train Hacking");
+        await tracker.whenVelocity("hack", Condition.LessThan, CONFIG.hackTrainVelocity);
+
+        setTask(ns, name, "Train Combat");
+        await tracker.whenVelocity("dex", Condition.LessThan, CONFIG.hackTrainVelocity);
+
+        setTask(ns, name, "Train Charisma");
+        await tracker.whenVelocity("cha", Condition.LessThan, CONFIG.hackTrainVelocity);
+
+        ns.gang.ascendMember(name);
+        await ns.gang.nextUpdate();
+    }
+}
+
+function setTask(ns: NS, name: string, task: string) {
+    if (!ns.gang.setMemberTask(name, task)) {
+        ns.print(`ERROR: invalid task ${task} set for ${name}`);
+        ns.ui.openTail();
     }
 }

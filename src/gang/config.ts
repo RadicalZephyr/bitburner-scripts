@@ -5,7 +5,10 @@ const entries = [
     ["trainingPercent", 4 / 12],
     ["maxWantedPenalty", 0.05],
     ["minWantedLevel", 10],
-    ["jobCheckInterval", 5000]
+    ["jobCheckInterval", 5000],
+    ["hackTrainVelocity", 1],
+    ["combatTrainVelocity", 1],
+    ["charismaTrainVelocity", 1],
 ] as const;
 
 export const CONFIG: ConfigInstance<typeof entries> =
