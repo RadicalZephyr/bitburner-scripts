@@ -62,6 +62,8 @@ CONFIG VALUES
 
     const gangTracker = new GangTracker(ns);
 
+    gangTracker.tick();
+
     let deltaT = 0;
     while (true) {
         if (ns.gang.canRecruitMember() && nameIndex < availableNames.length) {
@@ -72,8 +74,8 @@ CONFIG VALUES
             }
         }
 
-        gangTracker.tick();
         deltaT = await ns.gang.nextUpdate();
+        gangTracker.tick(deltaT);
     }
 }
 
@@ -117,7 +119,7 @@ class GangTracker {
         return promise;
     }
 
-    tick() {
+    tick(deltaT?: number) {
         const gangInfo: GangGenInfo = this.ns.gang.getGangInformation();
 
         for (const l of this.listeners) {
@@ -128,7 +130,7 @@ class GangTracker {
         }
 
         for (const name in this.members) {
-            this.members[name].tick();
+            this.members[name].tick(deltaT);
         }
     }
 }
@@ -151,7 +153,7 @@ class MemberTracker {
         return promise;
     }
 
-    tick() {
+    tick(deltaT: number) {
         this.info = this.ns.gang.getMemberInformation(this.name)
 
         for (const l of this.listeners) {
