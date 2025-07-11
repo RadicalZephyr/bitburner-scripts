@@ -94,20 +94,13 @@ function compareBy(condition: Condition): (a: number, b: number) => boolean {
     return (a, b) => a > b;
 }
 
+type MemberStat = keyof GangMemberInfo;
 type GangStat = keyof GangGenInfo;
+
 type ResolveFn = (value: number) => void;
 
-interface GangListener {
-    stat: GangStat;
-    condition: Condition;
-    threshold: number;
-    resolve: ResolveFn;
-}
-
-type MemberStat = keyof GangMemberInfo;
-
-interface MemberListener {
-    stat: MemberStat;
+interface StatListener<T> {
+    stat: T;
     condition: Condition;
     threshold: number;
     resolve: ResolveFn;
@@ -116,7 +109,7 @@ interface MemberListener {
 class GangTracker {
     ns: NS;
     members: Record<string, MemberTracker> = {};
-    listeners: GangListener[] = [];
+    listeners: StatListener<GangStat>[] = [];
 
     constructor(ns: NS) {
         this.ns = ns;
@@ -157,7 +150,7 @@ class MemberTracker {
     ns: NS;
     name: string;
     info: GangMemberInfo;
-    listeners: MemberListener[] = [];
+    listeners: StatListener<MemberStat>[] = [];
 
     constructor(ns: NS, name: string) {
         this.ns = ns;
