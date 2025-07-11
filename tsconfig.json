@@ -7,7 +7,7 @@
   ],
   "exclude": ["src/lib/react.ts", "src/**/*.test.ts"],
   "compilerOptions": {
-    "lib": ["ES2022"],
+    "lib": ["esnext"],
     "module": "esnext",
     "target": "esnext",
     "moduleResolution": "node",
