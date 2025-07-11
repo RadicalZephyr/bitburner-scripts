@@ -96,8 +96,15 @@ function compareBy(condition: Condition): (a: number, b: number) => boolean {
     }
 }
 
-type MemberStat = keyof Omit<GangMemberInfo, "name" | "task" | "upgrades" | "augmentations" | "expGain">;
-type GangStat = keyof Omit<GangGenInfo, "faction" | "isHacking" | "territoryWarfareEngaged">;
+type PickByType<T, U> = Pick<T, {
+    [K in keyof T]: T[K] extends U ? K : never
+}[keyof T]>;
+
+type MemberStats = PickByType<GangMemberInfo, number>;
+type MemberStatNames = keyof MemberStats;
+
+type GangStats = PickByType<GangGenInfo, number>;
+type GangStatNames = keyof GangStats;
 
 type ResolveFn = (value: number) => void;
 
@@ -111,7 +118,7 @@ interface StatListener<T> {
 class GangTracker {
     ns: NS;
     members: Record<string, MemberTracker> = {};
-    listeners: StatListener<GangStat>[] = [];
+    listeners: StatListener<GangStatNames>[] = [];
 
     constructor(ns: NS) {
         this.ns = ns;
@@ -125,7 +132,7 @@ class GangTracker {
         this.members[name] = new MemberTracker(this.ns, name);
     }
 
-    when(stat: GangStat, condition: Condition, threshold: number) {
+    when(stat: GangStatNames, condition: Condition, threshold: number) {
         const { promise, resolve } = Promise.withResolvers();
         this.listeners.push({ stat, condition, threshold, resolve });
         return promise;
@@ -152,7 +159,7 @@ class MemberTracker {
     ns: NS;
     name: string;
     info: GangMemberInfo;
-    listeners: StatListener<MemberStat>[] = [];
+    listeners: StatListener<MemberStatNames>[] = [];
 
     constructor(ns: NS, name: string) {
         this.ns = ns;
@@ -160,7 +167,7 @@ class MemberTracker {
         this.info = ns.gang.getMemberInformation(name);
     }
 
-    when(stat: MemberStat, condition: Condition, threshold: number) {
+    when(stat: MemberStatNames, condition: Condition, threshold: number) {
         const { promise, resolve } = Promise.withResolvers();
         this.listeners.push({ stat, condition, threshold, resolve });
         return promise;
