@@ -1,4 +1,4 @@
-import type { GangGenInfo, NS } from "netscript";
+import type { GangGenInfo, GangMemberInfo, NS } from "netscript";
 
 import { CONFIG } from "gang/config";
 
@@ -22,7 +22,7 @@ const NAMES = [
 
     "Eiru",
     "Miranda",
-];
+] as const;
 
 export async function main(ns: NS) {
     const flags = ns.flags([
@@ -87,12 +87,25 @@ interface GangListener {
     resolve: ResolveFn;
 }
 
+type MemberStat = keyof GangMemberInfo;
+
+interface MemberListener {
+    stat: MemberStat;
+    threshold: number;
+    resolve: ResolveFn;
+}
+
 class GangTracker {
     ns: NS;
+    members: Record<string, MemberTracker> = {};
     listeners: GangListener[] = [];
 
     constructor(ns: NS) {
         this.ns = ns;
+        const members = ns.gang.getMemberNames();
+        for (const name of members) {
+            this.members[name] = new MemberTracker(ns, name);
+        }
     }
 
     whenGreater(stat: GangStat, threshold: number) {
@@ -106,6 +119,40 @@ class GangTracker {
 
         for (const l of this.listeners) {
             const stat = gangInfo[l.stat];
+            if (typeof stat === "number" && stat >= l.threshold) {
+                l.resolve(stat);
+            }
+        }
+
+        for (const name in this.members) {
+            this.members[name].tick();
+        }
+    }
+}
+
+class MemberTracker {
+    ns: NS;
+    name: string;
+    info: GangMemberInfo;
+    listeners: MemberListener[] = [];
+
+    constructor(ns: NS, name: string) {
+        this.ns = ns;
+        this.name = name;
+        this.info = ns.gang.getMemberInformation(name);
+    }
+
+    whenGreater(stat: MemberStat, threshold: number) {
+        const { promise, resolve } = Promise.withResolvers();
+        this.listeners.push({ stat, threshold, resolve });
+        return promise;
+    }
+
+    tick() {
+        this.info = this.ns.gang.getMemberInformation(this.name)
+
+        for (const l of this.listeners) {
+            const stat = this.info[l.stat];
             if (typeof stat === "number" && stat >= l.threshold) {
                 l.resolve(stat);
             }
