@@ -2,6 +2,8 @@ import type { NS } from "netscript";
 
 import { MemoryClient } from "services/client/memory";
 
+import { collectDependencies } from "util/dependencies";
+
 export async function main(ns: NS) {
     const host = ns.self().server;
 
@@ -14,14 +16,6 @@ export async function main(ns: NS) {
     await startPort(ns, host);
 }
 
-const MEMORY_FILES: string[] = [
-    "/services/client/discover.js",
-    "/services/client/memory.js",
-    "/services/allocator.js",
-    "/util/client.js",
-    "/util/ports.js"
-];
-
 async function startMemory(ns: NS, host: string) {
     const memoryScript = "/services/memory.js";
 
@@ -30,18 +24,8 @@ async function startMemory(ns: NS, host: string) {
         ns.kill(memory.pid);
     }
 
-    manualLaunch(ns, memoryScript, host, MEMORY_FILES);
+    manualLaunch(ns, memoryScript, host);
 }
-
-const DISCOVER_FILES = [
-    "/services/client/discover.js",
-    "/services/config.js",
-    "/util/client.js",
-    "/util/config.js",
-    "/util/localStorage.js",
-    "/util/ports.js",
-    "/util/walk.js"
-];
 
 async function startDiscover(ns: NS, host: string) {
     const discoverScript = "/services/discover.js";
@@ -51,14 +35,8 @@ async function startDiscover(ns: NS, host: string) {
         ns.kill(discover.pid);
     }
 
-    manualLaunch(ns, discoverScript, host, DISCOVER_FILES);
+    manualLaunch(ns, discoverScript, host);
 }
-
-const PORT_FILES = [
-    "/services/client/port.js",
-    "/util/client.js",
-    "/util/ports.js",
-];
 
 async function startPort(ns: NS, host: string) {
     const portScript = "/services/port.js";
@@ -68,10 +46,11 @@ async function startPort(ns: NS, host: string) {
         ns.kill(portAllocator.pid);
     }
 
-    manualLaunch(ns, portScript, host, PORT_FILES);
+    manualLaunch(ns, portScript, host);
 }
 
-function manualLaunch(ns: NS, script: string, hostname: string, dependencies: string[]) {
+function manualLaunch(ns: NS, script: string, hostname: string) {
+    let dependencies = collectDependencies(ns, script);
     let files = [script, ...dependencies];
     if (!ns.scp(files, hostname, "home")) {
         let error = `failed to send files to ${hostname}`;

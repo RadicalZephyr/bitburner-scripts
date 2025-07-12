@@ -2,20 +2,14 @@ import type { NS } from "netscript";
 
 import { CONFIG } from "batch/config";
 
-const BOOTSTRAP_FILES = [
-    "/services/bootstrap.js",
-    "/batch/bootstrap.js",
-    "/services/launch.js",
-    "/services/client/memory.js",
-    "/util/client.js",
-    "/util/dependencies.js"
-];
+import { collectDependencies } from "util/dependencies";
 
 export async function main(ns: NS) {
     ns.disableLog("sleep");
 
     let script = "/bootstrap.js";
-    let files = [script, ...BOOTSTRAP_FILES];
+    let dependencies = collectDependencies(ns, script);
+    let files = [script, ...dependencies];
     let hostname = "foodnstuff";
 
     if (!ns.scp(files, hostname, "home")) {
