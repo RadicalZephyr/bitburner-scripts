@@ -24,6 +24,14 @@ interface PendingLaunch {
     time: number;
 }
 
+interface LaunchedTask {
+    pid: number;
+    host: string;
+    type: "till" | "sow" | "harvest";
+    max: number | undefined;
+    expectedTime: number | undefined;
+}
+
 
 function makeCompareLevel(ns: NS): (ta: string, tb: string) => number {
     return (ta, tb) => {
@@ -150,6 +158,7 @@ class TaskSelector {
     pendingHarvestTargets: string[] = [];
 
     pendingLaunches: PendingLaunch[] = [];
+    launchedTasks: LaunchedTask[] = [];
 
     hackHistory: { time: number, level: number }[] = [];
     velocity: number = 0;
@@ -268,6 +277,23 @@ class TaskSelector {
         } else {
             this.velocity = 0;
         }
+    }
+
+    private estimateTillTime(host: string, threads: number): number {
+        const weaken = calculateWeakenThreads(this.ns, host);
+        if (threads <= 0) return 0;
+        const rounds = Math.ceil(weaken / threads);
+        return rounds * this.ns.getWeakenTime(host);
+    }
+
+    private estimateSowTime(host: string, threads: number): number {
+        const maxMoney = this.ns.getServerMaxMoney(host);
+        const curMoney = this.ns.getServerMoneyAvailable(host);
+        const ratio = curMoney > 0 ? maxMoney / curMoney : maxMoney;
+        const growThreads = Math.ceil(this.ns.growthAnalyze(host, ratio, 1));
+        if (threads <= 0) return 0;
+        const rounds = Math.ceil(growThreads / threads);
+        return rounds * this.ns.getWeakenTime(host);
     }
 
     private async checkPendingLaunches() {
@@ -409,7 +435,10 @@ class TaskSelector {
         );
         if (result && result.pids.length >= 1) {
             this.pendingTillTargets = this.pendingTillTargets.filter(h => h !== host);
-            this.pendingLaunches.push({ pid: result.pids[0], host, type: "till", time: Date.now() });
+            const expected = this.estimateTillTime(host, threads);
+            const pid = result.pids[0];
+            this.pendingLaunches.push({ pid, host, type: "till", time: Date.now() });
+            this.launchedTasks.push({ pid, host, type: "till", max: threads, expectedTime: expected });
             await this.monitor.tilling(host);
         }
     }
@@ -430,7 +459,10 @@ class TaskSelector {
         );
         if (result && result.pids.length >= 1) {
             this.pendingSowTargets = this.pendingSowTargets.filter(h => h !== host);
-            this.pendingLaunches.push({ pid: result.pids[0], host, type: "sow", time: Date.now() });
+            const expected = this.estimateSowTime(host, threads);
+            const pid = result.pids[0];
+            this.pendingLaunches.push({ pid, host, type: "sow", time: Date.now() });
+            this.launchedTasks.push({ pid, host, type: "sow", max: threads, expectedTime: expected });
             await this.monitor.sowing(host);
         }
     }
@@ -450,7 +482,9 @@ class TaskSelector {
         );
         if (result && result.pids.length >= 1) {
             this.pendingHarvestTargets = this.pendingHarvestTargets.filter(h => h !== host);
-            this.pendingLaunches.push({ pid: result.pids[0], host, type: "harvest", time: Date.now() });
+            const pid = result.pids[0];
+            this.pendingLaunches.push({ pid, host, type: "harvest", time: Date.now() });
+            this.launchedTasks.push({ pid, host, type: "harvest", max: maxRam, expectedTime: undefined });
             await this.monitor.harvesting(host);
         }
     }
