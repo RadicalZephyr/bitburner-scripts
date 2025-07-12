@@ -5,7 +5,7 @@
     "src/**/*.tsx",
     "src/**/*.js"
   ],
-  "exclude": ["src/lib/react.ts", "src/**/*.test.ts"],
+  "exclude": ["src/lib/react.ts", "src/jest-shim.ts", "src/**/*.test.ts"],
   "compilerOptions": {
     "lib": ["esnext"],
     "module": "esnext",
