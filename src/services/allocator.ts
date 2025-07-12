@@ -438,6 +438,9 @@ export class Worker {
     updateTotalRam() {
         this.totalRam = this.ns.getServerMaxRam(this.hostname);
         this.totalRamStr = this.ns.formatRam(this.totalRam, 0);
+        if (this.hostname === "home" && this.totalRam > 32) {
+            this.setAsideRam = toFixed(32);
+        }
     }
 
     updateReservedRam() {
