@@ -48,6 +48,10 @@ export class MemoryAllocator {
             return;
         }
 
+        if (hostname.startsWith('pserv') && setAsideRam === undefined && this.ns.getServerMaxRam(hostname) > 1024) {
+            setAsideRam = 8;
+        }
+
         this.workers.set(hostname, new Worker(this.ns, hostname, setAsideRam));
         this.printLog(
             `INFO: registered worker ${hostname} with ` +
