@@ -31,7 +31,7 @@ export async function main(ns: NS) {
         ["help", false],
     ]);
 
-    if (flags.help) {
+    if (typeof flags.help !== 'boolean' || flags.help) {
         ns.tprint(`
 USAGE: run ${ns.getScriptName()}
 
