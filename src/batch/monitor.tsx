@@ -10,6 +10,7 @@ import { registerAllocationOwnership } from "services/client/memory";
 
 import { extend } from "util/extend";
 import { readAllFromPort } from "util/ports";
+import { HUD_HEIGHT, HUD_WIDTH, STATUS_WINDOW_WIDTH } from "/util/ui";
 
 
 declare const React: any;
@@ -52,8 +53,10 @@ Example:
     ns.clearLog();
     ns.ui.openTail();
     ns.ui.setTailTitle("Monitor");
-    ns.ui.resizeTail(930, 650);
-    ns.ui.moveTail(1220, 0);
+    ns.ui.resizeTail(HUD_WIDTH, HUD_HEIGHT);
+
+    const [ww, wh] = ns.ui.windowSize();
+    ns.ui.moveTail(ww - (HUD_WIDTH + STATUS_WINDOW_WIDTH), 0);
 
     const tableSortings: Record<string, SortBy> = {
         harvesting: {

@@ -1,5 +1,7 @@
 import type { NS } from "netscript";
 
+import { STATUS_WINDOW_WIDTH, STATUS_WINDOW_HEIGHT } from "util/ui";
+
 declare const React: any;
 
 export async function main(ns: NS) {
@@ -8,9 +10,7 @@ export async function main(ns: NS) {
     ns.ui.setTailTitle("Karma");
     ns.ui.setTailFontSize(500);
 
-
-    const WIDTH = 180;
-    ns.ui.resizeTail(WIDTH, 100);
+    ns.ui.resizeTail(STATUS_WINDOW_WIDTH, 100);
 
     const cellStyle = {
         padding: "0 0.5em",
@@ -18,10 +18,8 @@ export async function main(ns: NS) {
     } as const;
 
     while (true) {
-        const working = true;
-        const tailY = working ? 320 : 450;
         const [ww, wh] = ns.ui.windowSize();
-        ns.ui.moveTail(ww - WIDTH, tailY);
+        ns.ui.moveTail(ww - STATUS_WINDOW_WIDTH, STATUS_WINDOW_HEIGHT);
 
         const player = ns.getPlayer();
 

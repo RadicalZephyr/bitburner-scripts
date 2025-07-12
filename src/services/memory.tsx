@@ -22,6 +22,7 @@ import { DiscoveryClient } from "services/client/discover";
 import { fromFixed, ClaimInfo, MemoryAllocator, Worker } from "services/allocator";
 
 import { readAllFromPort } from "util/ports";
+import { HUD_HEIGHT, HUD_WIDTH, STATUS_WINDOW_WIDTH } from "/util/ui";
 
 declare const React: any;
 
@@ -58,8 +59,10 @@ Example:
     ns.disableLog("ALL");
     ns.ui.openTail();
     ns.ui.setTailTitle("Memory Allocator");
-    ns.ui.resizeTail(930, 560);
-    ns.ui.moveTail(1220, 650);
+    ns.ui.resizeTail(HUD_WIDTH, HUD_HEIGHT);
+
+    const [ww, wh] = ns.ui.windowSize();
+    ns.ui.moveTail(ww - ((2 * HUD_WIDTH) + STATUS_WINDOW_WIDTH), 0);
 
     const log: string[] = [];
     const maxLog = 72;
