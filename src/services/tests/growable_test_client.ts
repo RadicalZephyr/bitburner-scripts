@@ -8,7 +8,7 @@ export async function main(ns: NS) {
     ns.tprintf(`free ram: ${ns.formatRam(freeRam)}`);
 
     const chunks = Math.floor((freeRam - 8) / 8);
-    const firstAlloc = await client.requestTransferableAllocation(8, chunks);
+    const firstAlloc = await client.requestTransferableAllocation(8, chunks, { shrinkable: true });
     if (!firstAlloc) {
         ns.tprintf("first allocation failed");
         return;
