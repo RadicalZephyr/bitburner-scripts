@@ -41,11 +41,9 @@ Example:
   > run ${ns.getScriptName()}
 
 CONFIG VALUES
-  GANG_ascendThreshold   Ascension multiplier required to ascend
-  GANG_trainingPercent   Fraction of members training
-  GANG_maxWantedPenalty  Maximum wanted penalty before cooling
-  GANG_minWantedLevel    Wanted level where heating resumes
-  GANG_jobCheckInterval  Delay between evaluations
+  GANG_hackTrainVelocity      The threshold for when we're done hack training
+  GANG_combatTrainVelocity    The threshold for when we're done combat training
+  GANG_charismaTrainVelocity  The threshold for when we're done charisma training
 `);
         return;
     }
@@ -178,10 +176,10 @@ async function trainMember(ns: NS, name: string, tracker: MemberTracker) {
         await tracker.whenVelocity("hack", Condition.LessThan, () => CONFIG.hackTrainVelocity);
 
         await setTask(ns, name, "Train Combat");
-        await tracker.whenVelocity("dex", Condition.LessThan, () => CONFIG.hackTrainVelocity);
+        await tracker.whenVelocity("dex", Condition.LessThan, () => CONFIG.combatTrainVelocity);
 
         await setTask(ns, name, "Train Charisma");
-        await tracker.whenVelocity("cha", Condition.LessThan, () => CONFIG.hackTrainVelocity);
+        await tracker.whenVelocity("cha", Condition.LessThan, () => CONFIG.charismaTrainVelocity);
 
         if (ns.gang.ascendMember(name))
             tracker.reset();
