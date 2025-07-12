@@ -25,11 +25,6 @@ export async function main(ns: NS) {
         return;
     }
 
-    if (!ns.fileExists("Formulas.exe", "home")) {
-        ns.tprint("ERROR: requires Formulas.exe. Aborting");
-        return;
-    }
-
     const returnTimeSeconds = flags["return-time"] * 60;
     let budget = ns.getServerMoneyAvailable("home") * flags.spend;
     ns.print(`INFO: starting with budget $${ns.formatNumber(budget)} and payback time ${ns.tFormat(returnTimeSeconds * 1000)}`);
@@ -37,7 +32,11 @@ export async function main(ns: NS) {
     const prodMult = ns.getHacknetMultipliers().production;
 
     function moneyGain(level: number, ram: number, cores: number): number {
-        return ns.formulas.hacknetNodes.moneyGainRate(level, ram, cores, prodMult);
+        if (ns.fileExists("Formulas.exe", "home")) {
+            return ns.formulas.hacknetNodes.moneyGainRate(level, ram, cores, prodMult);
+        } else {
+            return calculateMoneyGainRate(level, ram, cores, prodMult);
+        }
     }
 
     while (true) {
@@ -148,3 +147,11 @@ export async function main(ns: NS) {
     }
 }
 
+function calculateMoneyGainRate(level: number, ram: number, cores: number, mult: number = 1): number {
+    const gainPerLevel = 1.5;
+
+    const levelMult = level * gainPerLevel;
+    const ramMult = Math.pow(1.035, ram - 1);
+    const coresMult = (cores + 5) / 6;
+    return levelMult * ramMult * coresMult * mult;
+}
