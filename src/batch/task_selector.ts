@@ -398,7 +398,11 @@ class TaskSelector {
         const result = await launch(
             this.ns,
             "/batch/till.js",
-            { threads: 1, allocationFlag: "--allocation-id" },
+            {
+                threads: 1,
+                longRunning: true,
+                allocationFlag: "--allocation-id"
+            },
             host,
             "--max-threads",
             threads,
@@ -415,7 +419,11 @@ class TaskSelector {
         let result = await launch(
             this.ns,
             "/batch/sow.js",
-            { threads: 1, allocationFlag: "--allocation-id" },
+            {
+                threads: 1,
+                longRunning: true,
+                allocationFlag: "--allocation-id"
+            },
             host,
             "--max-threads",
             threads,
@@ -433,7 +441,11 @@ class TaskSelector {
         let result = await launch(
             this.ns,
             "/batch/harvest.js",
-            { threads: 1, allocationFlag: "--allocation-id" },
+            {
+                threads: 1,
+                longRunning: true,
+                allocationFlag: "--allocation-id"
+            },
             ...args,
         );
         if (result && result.pids.length >= 1) {
