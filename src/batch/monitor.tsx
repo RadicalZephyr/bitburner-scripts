@@ -480,5 +480,5 @@ function formatPercent(ns: NS, value: number) {
 }
 
 function formatSecurity(ns: NS, sec: number) {
-    return Math.abs(sec) < 0.1 ? '+0.0' : `+${ns.formatNumber(sec, 2)}`;
+    return ns.sprintf("%+6.2f", sec);
 }
