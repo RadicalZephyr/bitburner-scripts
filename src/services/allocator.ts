@@ -103,6 +103,7 @@ export class MemoryAllocator {
      */
     updateReserved(): void {
         for (const worker of this.workers.values()) {
+            worker.updateTotalRam();
             const actual = toFixed(this.ns.getServerUsedRam(worker.hostname));
             const diff = actual - worker.allocatedRam;
             worker.reservedRam = diff > 0n ? diff : 0n;
@@ -423,8 +424,7 @@ export class Worker {
     constructor(ns: NS, hostname: string, setAsideRam?: number) {
         this.ns = ns;
         this.hostname = hostname;
-        this.totalRam = ns.getServerMaxRam(hostname);
-        this.totalRamStr = ns.formatRam(this.totalRam, 0);
+        this.updateTotalRam();
         this.setAsideRam = typeof setAsideRam == "number" && setAsideRam >= 0 ? toFixed(setAsideRam) : 0n;
         this.reservedRam = toFixed(ns.getServerUsedRam(hostname));
     }
@@ -435,6 +435,11 @@ export class Worker {
 
     get freeRam(): number {
         return Math.max(0, this.totalRam - this.usedRam);
+    }
+
+    updateTotalRam() {
+        this.totalRam = this.ns.getServerMaxRam(this.hostname);
+        this.totalRamStr = this.ns.formatRam(this.totalRam, 0);
     }
 
     allocate(chunkSize: number, numChunks: number): AllocationChunk {
