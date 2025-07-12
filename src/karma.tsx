@@ -1,6 +1,6 @@
 import type { NS } from "netscript";
 
-import { STATUS_WINDOW_WIDTH, STATUS_WINDOW_HEIGHT } from "util/ui";
+import { STATUS_WINDOW_WIDTH, STATUS_WINDOW_HEIGHT, KARMA_HEIGHT } from "util/ui";
 
 declare const React: any;
 
@@ -10,7 +10,7 @@ export async function main(ns: NS) {
     ns.ui.setTailTitle("Karma");
     ns.ui.setTailFontSize(500);
 
-    ns.ui.resizeTail(STATUS_WINDOW_WIDTH, 100);
+    ns.ui.resizeTail(STATUS_WINDOW_WIDTH, KARMA_HEIGHT);
 
     const cellStyle = {
         padding: "0 0.5em",

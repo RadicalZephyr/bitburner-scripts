@@ -15,6 +15,7 @@ import { MemoryClient, registerAllocationOwnership } from "services/client/memor
 import { launch } from "services/launch";
 
 import { readAllFromPort } from "util/ports";
+import { HUD_HEIGHT, KARMA_HEIGHT } from "/util/ui";
 
 interface PendingLaunch {
     pid: number;
@@ -48,7 +49,12 @@ export async function main(ns: NS) {
     ns.disableLog("ALL");
     ns.ui.openTail();
     ns.ui.setTailTitle("Task Selector");
-    ns.ui.moveTail(720, 0);
+
+    const WIDTH = 500;
+    ns.ui.resizeTail(WIDTH, 500);
+
+    const [ww, wh] = ns.ui.windowSize();
+    ns.ui.moveTail(ww - WIDTH, HUD_HEIGHT + KARMA_HEIGHT);
     ns.print(`INFO: starting manager on ${ns.getHostname()}`);
 
     const taskSelectorPort = ns.getPortHandle(TASK_SELECTOR_PORT);
