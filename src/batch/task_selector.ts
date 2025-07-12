@@ -17,19 +17,16 @@ import { launch } from "services/launch";
 import { readAllFromPort } from "util/ports";
 import { HUD_HEIGHT, KARMA_HEIGHT } from "/util/ui";
 
-interface PendingLaunch {
-    pid: number;
-    host: string;
-    type: "till" | "sow" | "harvest";
-    time: number;
-}
-
 interface LaunchedTask {
     pid: number;
     host: string;
     type: "till" | "sow" | "harvest";
     max: number | undefined;
     expectedTime: number | undefined;
+}
+
+interface PendingTask extends LaunchedTask {
+    time: number;
 }
 
 
@@ -157,7 +154,7 @@ class TaskSelector {
     pendingSowTargets: string[] = [];
     pendingHarvestTargets: string[] = [];
 
-    pendingLaunches: PendingLaunch[] = [];
+    pendingTasks: PendingTask[] = [];
     launchedTasks: LaunchedTask[] = [];
 
     hackHistory: { time: number, level: number }[] = [];
@@ -217,7 +214,11 @@ class TaskSelector {
      * Update internal tracking based on a heartbeat from a worker script.
      */
     async handleHeartbeat(hb: Heartbeat) {
-        this.pendingLaunches = this.pendingLaunches.filter(pl => pl.pid !== hb.pid);
+        const idx = this.pendingTasks.findIndex(pl => pl.pid === hb.pid);
+        if (idx !== -1) {
+            const [task] = this.pendingTasks.splice(idx, 1);
+            this.launchedTasks.push(task);
+        }
         this.allTargets.add(hb.target);
 
         this.pendingTillTargets = this.pendingTillTargets.filter(h => h !== hb.target);
@@ -296,10 +297,10 @@ class TaskSelector {
         return rounds * this.ns.getWeakenTime(host);
     }
 
-    private async checkPendingLaunches() {
+    private async checkPendingTasks() {
         const now = Date.now();
-        const stillWaiting: PendingLaunch[] = [];
-        for (const launch of this.pendingLaunches) {
+        const stillWaiting: PendingTask[] = [];
+        for (const launch of this.pendingTasks) {
             if (now - launch.time > CONFIG.heartbeatTimeoutMs && !this.ns.isRunning(launch.pid)) {
                 this.ns.print(`WARN: launch of ${launch.type} on ${launch.host} failed`);
                 await this.pushTarget(launch.host);
@@ -307,12 +308,12 @@ class TaskSelector {
                 stillWaiting.push(launch);
             }
         }
-        this.pendingLaunches = stillWaiting;
+        this.pendingTasks = stillWaiting;
     }
 
     async launchPendingTasks(freeRam: number) {
-        await this.checkPendingLaunches();
-        if (this.pendingLaunches.length > 0) return;
+        await this.checkPendingTasks();
+        if (this.pendingTasks.length > 0) return;
 
         const harvestTasks = [...this.pendingHarvestTargets]
             .filter(h => canHarvest(this.ns, h) && worthHarvesting(this.ns, h))
@@ -437,8 +438,8 @@ class TaskSelector {
             this.pendingTillTargets = this.pendingTillTargets.filter(h => h !== host);
             const expected = this.estimateTillTime(host, threads);
             const pid = result.pids[0];
-            this.pendingLaunches.push({ pid, host, type: "till", time: Date.now() });
-            this.launchedTasks.push({ pid, host, type: "till", max: threads, expectedTime: expected });
+            const task: PendingTask = { pid, host, type: "till", max: threads, expectedTime: expected, time: Date.now() };
+            this.pendingTasks.push(task);
             await this.monitor.tilling(host);
         }
     }
@@ -461,8 +462,8 @@ class TaskSelector {
             this.pendingSowTargets = this.pendingSowTargets.filter(h => h !== host);
             const expected = this.estimateSowTime(host, threads);
             const pid = result.pids[0];
-            this.pendingLaunches.push({ pid, host, type: "sow", time: Date.now() });
-            this.launchedTasks.push({ pid, host, type: "sow", max: threads, expectedTime: expected });
+            const task: PendingTask = { pid, host, type: "sow", max: threads, expectedTime: expected, time: Date.now() };
+            this.pendingTasks.push(task);
             await this.monitor.sowing(host);
         }
     }
@@ -483,8 +484,8 @@ class TaskSelector {
         if (result && result.pids.length >= 1) {
             this.pendingHarvestTargets = this.pendingHarvestTargets.filter(h => h !== host);
             const pid = result.pids[0];
-            this.pendingLaunches.push({ pid, host, type: "harvest", time: Date.now() });
-            this.launchedTasks.push({ pid, host, type: "harvest", max: maxRam, expectedTime: undefined });
+            const task: PendingTask = { pid, host, type: "harvest", max: maxRam, expectedTime: undefined, time: Date.now() };
+            this.pendingTasks.push(task);
             await this.monitor.harvesting(host);
         }
     }
