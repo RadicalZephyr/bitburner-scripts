@@ -1,9 +1,18 @@
 import type { NS } from "netscript";
 
-const BOOTSTRAP_SCRIPTS = [
-    "/services/bootstrap.js",
-    "/batch/bootstrap.js"
-];
+import { main as serviceBootstrap } from "services/bootstrap";
+import { main as batchBootstrap } from "batch/bootstrap";
+
+export async function main(ns: NS) {
+    await serviceBootstrap(ns);
+    await batchBootstrap(ns);
+}
+
+function reportError(ns: NS, error: string) {
+    ns.toast(error, "error");
+    ns.print(`ERROR: ${error}`);
+    ns.ui.openTail();
+}
 
 interface DynImportNS extends NS {
     dynamicImport: (script: string) => Promise<any>;
@@ -13,20 +22,10 @@ interface ImportedScript {
     main: (ns: NS) => Promise<void>;
 }
 
-export async function main(ns: NS) {
-    for (const script of BOOTSTRAP_SCRIPTS) {
-        let pid = ns.run(script);
-        if (pid === 0) {
-            reportError(ns, `failed to launch ${script}`);
-        }
-    }
-}
-
-function reportError(ns: NS, error: string) {
-    ns.toast(error, "error");
-    ns.print(`ERROR: ${error}`);
-    ns.ui.openTail();
-}
+const BOOTSTRAP_SCRIPTS = [
+    "/services/bootstrap.js",
+    "/batch/bootstrap.js"
+];
 
 export async function dynamicBootstrap(_ns: NS) {
     let ns = _ns as DynImportNS;
