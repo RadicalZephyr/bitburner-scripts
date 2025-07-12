@@ -79,3 +79,22 @@ test('whenVelocity resolves for less than condition', async () => {
     await expect(promise).resolves.toBeCloseTo(0);
     expect(tracker.velocityListeners.length).toBe(0);
 });
+
+
+test('threshold can be updated', async () => {
+    const tracker = new StatTracker<Example>();
+    let threshold = 5;
+    const promise = tracker.when('a', Condition.LessThan, () => threshold);
+
+    tracker.update(makeExample(7));
+    expect(tracker.listeners.length).toBe(1);
+    threshold = 2;
+
+    tracker.update(makeExample(3));
+    expect(tracker.listeners.length).toBe(1);
+
+    tracker.update(makeExample(1));
+    expect(tracker.listeners.length).toBe(0);
+
+    await expect(promise).resolves.toBe(1);
+});

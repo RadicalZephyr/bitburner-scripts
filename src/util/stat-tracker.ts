@@ -3,6 +3,8 @@ export enum Condition {
     LessThan,
 }
 
+export type Threshold = number | (() => number);
+
 function compareBy(condition: Condition): (a: number, b: number) => boolean {
     switch (condition) {
         case Condition.GreaterThan:
@@ -48,7 +50,7 @@ type ResolveFn = (value: number) => void;
 interface StatListener<T> {
     stat: T;
     condition: Condition;
-    threshold: number;
+    threshold: Threshold;
     resolve: ResolveFn;
 }
 
@@ -76,7 +78,7 @@ export class StatTracker<Type> {
      * @param threshold - The threshold to compare the value to
      * @returns A promise that resolves when the condition is true, with the value when it became true.
      */
-    when(stat: keyof PickByType<Type, number>, condition: Condition, threshold: number) {
+    when(stat: keyof PickByType<Type, number>, condition: Condition, threshold: Threshold) {
         const { promise, resolve } = Promise.withResolvers();
         this.listeners.push({ stat, condition, threshold, resolve });
         return promise;
@@ -92,7 +94,7 @@ export class StatTracker<Type> {
      * @param threshold - The threshold to compare the value to
      * @returns A promise that resolves when the condition is true, with the value when it became true.
      */
-    whenVelocity(stat: keyof PickByType<Type, number>, condition: Condition, threshold: number) {
+    whenVelocity(stat: keyof PickByType<Type, number>, condition: Condition, threshold: Threshold) {
         const { promise, resolve } = Promise.withResolvers();
         this.velocityListeners.push({ stat, condition, threshold, resolve });
         return promise;
@@ -145,7 +147,8 @@ function notifyListeners<Type>(s: Sample<Type>, listeners: StatListener<keyof Pi
     for (const l of listeners) {
         const stat = s[l.stat];
         const compare = compareBy(l.condition);
-        if (typeof stat === "number" && compare(stat, l.threshold)) {
+        const threshold = typeof l.threshold === 'function' ? l.threshold() : l.threshold;
+        if (typeof stat === "number" && compare(stat, threshold)) {
             l.resolve(stat);
         } else {
             remaining.push(l);
