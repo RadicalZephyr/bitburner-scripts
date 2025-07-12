@@ -2,7 +2,7 @@ import type { GangGenInfo, GangMemberAscension, GangMemberInfo, NS } from "netsc
 
 import { CONFIG } from "gang/config";
 
-import { Condition, PickByType, StatTracker } from "util/stat-tracker";
+import { Condition, PickByType, StatTracker, Threshold } from "util/stat-tracker";
 
 const MAX_GANG_MEMBERS = 12;
 
@@ -133,19 +133,19 @@ class MemberTracker {
         this.ascension = this.ns.gang.getAscensionResult(this.name);
     }
 
-    when(stat: keyof PickByType<GangMemberInfo, number>, condition: Condition, threshold: number) {
+    when(stat: keyof PickByType<GangMemberInfo, number>, condition: Condition, threshold: Threshold) {
         return this.infoTracker.when(stat, condition, threshold);
     }
 
-    whenVelocity(stat: keyof PickByType<GangMemberInfo, number>, condition: Condition, threshold: number) {
+    whenVelocity(stat: keyof PickByType<GangMemberInfo, number>, condition: Condition, threshold: Threshold) {
         return this.infoTracker.whenVelocity(stat, condition, threshold);
     }
 
-    whenAscension(stat: keyof PickByType<GangMemberAscension, number>, condition: Condition, threshold: number) {
+    whenAscension(stat: keyof PickByType<GangMemberAscension, number>, condition: Condition, threshold: Threshold) {
         return this.ascensionTracker.when(stat, condition, threshold);
     }
 
-    whenAscensionVelocity(stat: keyof PickByType<GangMemberAscension, number>, condition: Condition, threshold: number) {
+    whenAscensionVelocity(stat: keyof PickByType<GangMemberAscension, number>, condition: Condition, threshold: Threshold) {
         return this.ascensionTracker.whenVelocity(stat, condition, threshold);
     }
 
@@ -175,13 +175,13 @@ async function trainMember(ns: NS, name: string, tracker: MemberTracker) {
         buyEquipment(ns, name);
 
         await setTask(ns, name, "Train Hacking");
-        await tracker.whenVelocity("hack", Condition.LessThan, CONFIG.hackTrainVelocity);
+        await tracker.whenVelocity("hack", Condition.LessThan, () => CONFIG.hackTrainVelocity);
 
         await setTask(ns, name, "Train Combat");
-        await tracker.whenVelocity("dex", Condition.LessThan, CONFIG.hackTrainVelocity);
+        await tracker.whenVelocity("dex", Condition.LessThan, () => CONFIG.hackTrainVelocity);
 
         await setTask(ns, name, "Train Charisma");
-        await tracker.whenVelocity("cha", Condition.LessThan, CONFIG.hackTrainVelocity);
+        await tracker.whenVelocity("cha", Condition.LessThan, () => CONFIG.hackTrainVelocity);
 
         if (ns.gang.ascendMember(name))
             tracker.reset();
