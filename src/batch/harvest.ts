@@ -284,6 +284,7 @@ async function spawnBatch(ns: NS, host: string | null, target: string, phases: B
 
         let lastArg = idx === phases.length - 1 ? donePort : -1;
 
+        let threads = phase.threads;
         let retryCount = 0;
         while (true) {
             if (retryCount > CONFIG.harvestRetryMax) {
@@ -295,7 +296,8 @@ async function spawnBatch(ns: NS, host: string | null, target: string, phases: B
             const pid = ns.exec(script, host, { threads: phase.threads, temporary: true }, target, phase.start, lastArg);
             if (pid === 0) {
                 retryCount += 1;
-                ns.print(`WARN: failed to exec ${script} on ${host}, trying again`);
+                ns.print(`WARN: failed to exec ${script} on ${host}, trying again with fewer threads`);
+                threads = Math.ceil((3 * threads) / 4);
                 await ns.sleep(CONFIG.harvestRetryWait);
             } else {
                 pids.push(pid);
