@@ -104,9 +104,7 @@ export class MemoryAllocator {
     updateReserved(): void {
         for (const worker of this.workers.values()) {
             worker.updateTotalRam();
-            const actual = toFixed(this.ns.getServerUsedRam(worker.hostname));
-            const diff = actual - worker.allocatedRam;
-            worker.reservedRam = diff > 0n ? diff : 0n;
+            worker.updateReservedRam();
         }
     }
 
@@ -440,6 +438,12 @@ export class Worker {
     updateTotalRam() {
         this.totalRam = this.ns.getServerMaxRam(this.hostname);
         this.totalRamStr = this.ns.formatRam(this.totalRam, 0);
+    }
+
+    updateReservedRam() {
+        const actual = toFixed(this.ns.getServerUsedRam(this.hostname));
+        const diff = actual - this.allocatedRam;
+        this.reservedRam = diff > 0n ? diff : 0n;
     }
 
     allocate(chunkSize: number, numChunks: number): AllocationChunk {
