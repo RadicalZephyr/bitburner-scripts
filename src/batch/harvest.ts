@@ -307,7 +307,7 @@ async function spawnBatch(ns: NS, host: string | null, target: string, phases: B
             if (pid === 0) {
                 retryCount += 1;
                 ns.print(`WARN: failed to exec ${script} on ${host}, trying again`);
-                await ns.sleep(10);
+                await ns.sleep(CONFIG.harvestRetryWait);
             } else {
                 pids.push(pid);
                 break;
