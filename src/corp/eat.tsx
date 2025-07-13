@@ -1,5 +1,7 @@
 import type { NS, UserInterfaceTheme } from "netscript";
 
+import { CONFIG } from "corp/config";
+
 declare var React: any;
 
 export async function main(ns: NS) {
@@ -35,7 +37,7 @@ function startEating() {
             globalThis.clearInterval(intervalId);
             eating = false;
         }
-    }, 100);
+    }, CONFIG.noodleEatingInterval);
 }
 
 function findEatNoodlesButton() {
