@@ -1,18 +1,6 @@
-import { CityName, type NS } from "netscript";
+import type { NS } from "netscript";
 
-const CORPORATION_NAME = "Turtle Vision";
-const AGRI_DIVISION = "Sift & Sow Farms";
-const CHEM_DIVISION = "Ruwen's Runic Elixirs";
-const TOBACCO_DIVISION = "Leaf it to Lylan";
-
-const CITIES = [
-    CityName.Aevum,
-    CityName.Chongqing,
-    CityName.Sector12,
-    CityName.NewTokyo,
-    CityName.Ishima,
-    CityName.Volhaven
-];
+import { AGRI_DIVISION, CITIES, CORPORATION_NAME } from "corp/constants";
 
 export async function main(ns: NS) {
     const flags = ns.flags([
