@@ -3,15 +3,6 @@ type TimerHandler = string | Function;
 type SetInterval = (handler: TimerHandler, timeout?: number, ...args: any[]) => number;
 type SetTimeout = (handler: TimerHandler, timeout?: number, ...args: any[]) => number;
 
-interface Timing {
-    setInterval: SetInterval;
-    setTimeout: SetTimeout;
-}
-
-declare global {
-    var globalThis: Timing;
-}
-
 /**
  * Sleep for at least ms milliseconds.
  *

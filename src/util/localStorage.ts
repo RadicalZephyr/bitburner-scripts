@@ -1,15 +1,3 @@
-declare global {
-    interface Storage {
-        getItem: ((keyName: string) => string),
-        removeItem: ((keyName: string) => void),
-        setItem: ((keyName: string, keyValue: string) => void)
-    }
-    interface Global {
-        localStorage: Storage
-    }
-    var globalThis: Global;
-}
-
 let LocalStorage: Storage = globalThis.localStorage;
 
 /**

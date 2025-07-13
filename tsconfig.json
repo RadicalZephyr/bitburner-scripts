@@ -7,7 +7,7 @@
   ],
   "exclude": ["src/lib/react.ts", "src/jest-shim.ts", "src/**/*.test.ts"],
   "compilerOptions": {
-    "lib": ["esnext"],
+    "lib": ["esnext", "dom"],
     "module": "esnext",
     "target": "esnext",
     "moduleResolution": "node",

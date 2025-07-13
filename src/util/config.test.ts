@@ -1,11 +1,16 @@
 import { Config, ConfigInstance } from "./config";
-import { setLocalStorage } from "./localStorage";
+import { LocalStorage, setLocalStorage } from "./localStorage";
 
 let storage: Record<string, string> = {};
 
 beforeEach(() => {
     storage = {};
     const ls: Storage = {
+        get length() {
+            return Object.keys(storage).length;
+        },
+        clear: () => { storage = {}; },
+        key: (index: number) => Object.keys(storage)[index],
         getItem: (key: string) => storage[key],
         removeItem: (key: string) => { delete storage[key]; },
         setItem: (key: string, value: string) => { storage[key] = value; }

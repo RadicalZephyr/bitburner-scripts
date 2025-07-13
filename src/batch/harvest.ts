@@ -12,17 +12,6 @@ import {
     growthAnalyze
 } from "batch/expected_value";
 
-declare global {
-    interface Performance {
-        mark: ((name: string) => void),
-    }
-    interface Global {
-        performance: Performance
-    }
-    var globalThis: Global;
-}
-
-
 export function autocomplete(data: AutocompleteData, _args: string[]): string[] {
     return data.servers;
 }
