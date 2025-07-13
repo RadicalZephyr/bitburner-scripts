@@ -16,4 +16,5 @@ export async function main(ns: NS) {
         corp.purchaseWarehouse(AGRI_DIVISION, city);
         ns.tprint(`purchased a warehouse for ${AGRI_DIVISION} in ${city}`);
     }
+    ns.tprint('now run corp/init/hire.js');
 }
