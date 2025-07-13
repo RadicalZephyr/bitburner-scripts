@@ -61,12 +61,12 @@ interface IEatItProps {
 }
 
 function EatIt({ theme }: IEatItProps) {
-    const buttonStyle = { backgroundColor: theme.well, padding: "2em", margin: "0.5em" };
+    const buttonClass = "MuiButtonBase-root MuiButton-root MuiButton-text MuiButton-textPrimary MuiButton-sizeMedium MuiButton-textSizeMedium MuiButton-root MuiButton-text MuiButton-textPrimary MuiButton-sizeMedium MuiButton-textSizeMedium css-u8jh2y";
     return (
         <>
             <h1>Eat All The Noodles!</h1>
-            <a href="#" style={{ color: theme.successlight, ...buttonStyle }} onClick={() => startEating()}>Eat it!</a>
-            <a href="#" style={{ color: theme.errorlight, ...buttonStyle }} onClick={() => stopEating()}>STOP!</a>
+            <button class={buttonClass} style={{ color: theme.successlight }} onClick={() => startEating()}>Eat it!<span class="MuiTouchRipple-root css-w0pj6f"></span></button>
+            <button class={buttonClass} style={{ color: theme.errorlight }} onClick={() => stopEating()}>STOP!<span class="MuiTouchRipple-root css-w0pj6f"></span></button>
         </>
     );
 }
