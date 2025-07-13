@@ -1,29 +1,31 @@
 import type { NS, Office } from "netscript";
 
-import { AGRI_DIVISION, CITIES, CORPORATION_NAME } from "corp/constants";
-
 export async function main(ns: NS) {
-    const corp = ns.corporation;
+    const corpNS = ns.corporation;
 
-    if (!corp.hasCorporation()) {
+    if (!corpNS.hasCorporation()) {
         ns.tprint("you must start a corporation first!");
         return;
     }
 
-    const agriDiv = corp.getDivision(AGRI_DIVISION);
+    const corp = corpNS.getCorporation();
 
-    for (const city of agriDiv.cities) {
-        const office = corp.getOffice(AGRI_DIVISION, city);
-        manageOfficeHappiness(ns, office);
+    for (const div of corp.divisions) {
+        const agriDiv = corpNS.getDivision(div);
+
+        for (const city of agriDiv.cities) {
+            const office = corpNS.getOffice(div, city);
+            manageOfficeHappiness(ns, div, office);
+        }
     }
 
-    await corp.nextUpdate();
+    await corpNS.nextUpdate();
     while (true) {
-        await corp.nextUpdate();
+        await corpNS.nextUpdate();
     }
 }
 
-async function manageOfficeHappiness(ns: NS, office: Office) {
+async function manageOfficeHappiness(ns: NS, division: string, office: Office) {
     let running = true;
     ns.atExit(() => {
         running = false;
@@ -31,7 +33,7 @@ async function manageOfficeHappiness(ns: NS, office: Office) {
 
     const corp = ns.corporation;
     while (running) {
-        ns.tprint(`managing ${AGRI_DIVISION} office in ${office.city}`);
+        ns.tprint(`managing ${division} office in ${office.city}`);
         await corp.nextUpdate();
     }
 }
