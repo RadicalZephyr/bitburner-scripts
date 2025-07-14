@@ -20,10 +20,16 @@ export async function main(ns: NS) {
         flags.spend < 0 ||
         flags.spend > 1
     ) {
-        ns.tprint(`Usage: run ${ns.getScriptName()} [--return-time HOURS] [--spend 0-1] [--help]\n` +
-            ` --return-time  Desired payback time window (default ${DEFAULT_RETURN_TIME} hours)\n` +
-            ` --spend        Portion of money to spend (default ${ns.formatPercent(DEFAULT_SPEND)})\n` +
-            ` --help         Display this message`);
+        ns.tprint(`
+Usage: run ${ns.getScriptName()} [--return-time HOURS] [--spend 0-1] [--help]
+
+Buy hacknet nodes/servers and upgrades that can pay for themselves within a time limit.
+
+OPTIONS
+  --return-time  Desired payback time window (default ${DEFAULT_RETURN_TIME} hours)
+  --spend        Portion of money to spend (default ${ns.formatPercent(DEFAULT_SPEND)})
+  --help         Display this message
+`);
         return;
     }
 
