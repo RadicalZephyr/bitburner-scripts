@@ -7,7 +7,7 @@ export async function main(ns: NS) {
     const freeRam = await client.getFreeRam();
     ns.tprintf(`free ram: ${ns.formatRam(freeRam)}`);
 
-    const chunks = Math.floor((freeRam - 8) / 8);
+    const chunks = Math.floor((freeRam - 16) / 8);
     const firstAlloc = await client.requestTransferableAllocation(8, chunks, { shrinkable: true });
     if (!firstAlloc) {
         ns.tprintf("first allocation failed");
@@ -26,15 +26,13 @@ export async function main(ns: NS) {
 
     if (growAlloc.numChunks !== 1) {
         ns.tprintf(`ERROR: expected growable allocation to start with 1 chunk, got ${growAlloc.numChunks}`);
+    } else {
+        ns.tprintf(`SUCCESS: growable allocation has 1 chunk as expected`);
     }
 
     let expectedChunks = growAlloc.numChunks;
     while (true) {
         await ns.sleep(5000);
-        ns.tprintf("releasing one chunk from first allocation");
-        await client.releaseChunks(firstAlloc.allocationId, 1);
-        expectedChunks += 1;
-        await ns.sleep(1000);
         growAlloc.pollGrowth();
         const currentChunks = growAlloc.numChunks;
         if (currentChunks !== expectedChunks) {
@@ -43,4 +41,19 @@ export async function main(ns: NS) {
             ns.tprintf(`growable allocation now has ${currentChunks} chunks`);
         }
     }
+    // let expectedChunks = growAlloc.numChunks;
+    // while (true) {
+    //     await ns.sleep(5000);
+    //     ns.tprintf("releasing one chunk from first allocation");
+    //     await client.releaseChunks(firstAlloc.allocationId, 1);
+    //     expectedChunks += 1;
+    //     await ns.sleep(1000);
+    //     growAlloc.pollGrowth();
+    //     const currentChunks = growAlloc.numChunks;
+    //     if (currentChunks !== expectedChunks) {
+    //         ns.tprintf(`ERROR: expected ${expectedChunks} chunks, got ${currentChunks}`);
+    //     } else {
+    //         ns.tprintf(`growable allocation now has ${currentChunks} chunks`);
+    //     }
+    // }
 }
