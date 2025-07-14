@@ -4,6 +4,7 @@ import { CONFIG as BatchConfig } from 'batch/config';
 import { CONFIG as GangConfig } from 'gang/config';
 import { CONFIG as ServiceConfig } from 'services/config';
 import { CONFIG as StockConfig } from 'stock/config';
+import { CONFIG as HacknetConfig } from 'hacknet/config';
 
 export function autocomplete(_data: AutocompleteData, args: string[]): string[] {
     return allConfigValues();
@@ -40,7 +41,7 @@ Example:
     }
     let value = rest[1];
 
-    for (const config of [BatchConfig, GangConfig, ServiceConfig, StockConfig]) {
+    for (const config of [BatchConfig, GangConfig, ServiceConfig, StockConfig, HacknetConfig]) {
         if (Object.hasOwn(config, key)) {
             const prev = config[key];
             config[key] = value;
@@ -57,6 +58,7 @@ function allConfigValues(): string[] {
         ...Object.keys(GangConfig),
         ...Object.keys(ServiceConfig),
         ...Object.keys(StockConfig),
+        ...Object.keys(HacknetConfig)
     ];
     return allKeys.filter((k: string) => !commonKeys.has(k));
 }
