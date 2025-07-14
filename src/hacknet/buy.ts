@@ -43,14 +43,15 @@ OPTIONS
     };
 
     while (true) {
-        const candidates = [newNodeCandidate(ns)];
+        const currentGain = calculateCurrentGain(ns);
+        const candidates = [newNodeCandidate(ns, currentGain)];
 
         const numNodes = ns.hacknet.numNodes();
 
         for (let i = 0; i < numNodes; i++) {
-            candidates.push(upgradeLevelCandidate(ns, i));
-            candidates.push(upgradeRamCandidate(ns, i));
-            candidates.push(upgradeCoreCandidate(ns, i));
+            candidates.push(upgradeLevelCandidate(ns, i, currentGain));
+            candidates.push(upgradeRamCandidate(ns, i, currentGain));
+            candidates.push(upgradeCoreCandidate(ns, i, currentGain));
         }
 
         const allCandidates = candidates.map(c => upgradeDescription(ns, c)).join("\n  ");
@@ -66,6 +67,16 @@ OPTIONS
 
         await ns.sleep(0);
     }
+}
+
+function calculateCurrentGain(ns: NS): number {
+    const numNodes = ns.hacknet.numNodes();
+    let total = 0;
+    for (let i = 0; i < numNodes; i++) {
+        const stats = ns.hacknet.getNodeStats(i);
+        total += stats.production;
+    }
+    return total;
 }
 
 function calculateMoneyGainRate(level: number, ram: number, cores: number, mult: number = 1): number {
@@ -152,10 +163,10 @@ function bestCandidate(best: UpgradeCandidate, candidate: UpgradeCandidate): Upg
     return candidate.cost < best.cost ? candidate : best;
 }
 
-function newNodeCandidate(ns: NS): UpgradeCandidate {
+function newNodeCandidate(ns: NS, baseGain: number): UpgradeCandidate {
     const cost = ns.hacknet.getPurchaseNodeCost();
     const newNodeGain = moneyGain(ns, 1, 1, 1);
-    const paybackTime = cost / newNodeGain;
+    const paybackTime = cost / (baseGain + newNodeGain);
     return {
         index: null,
         type: "node",
@@ -164,12 +175,12 @@ function newNodeCandidate(ns: NS): UpgradeCandidate {
     };
 }
 
-function upgradeLevelCandidate(ns: NS, index: number): UpgradeCandidate {
+function upgradeLevelCandidate(ns: NS, index: number, baseGain: number): UpgradeCandidate {
     const stats = ns.hacknet.getNodeStats(index);
     const cost = ns.hacknet.getLevelUpgradeCost(index, 1);
     const currentGain = moneyGain(ns, stats.level, stats.ram, stats.cores);
     const gain = moneyGain(ns, stats.level + 1, stats.ram, stats.cores);
-    const paybackTime = cost / (gain - currentGain);
+    const paybackTime = cost / (baseGain + gain - currentGain);
     return {
         index,
         type: "level",
@@ -178,12 +189,12 @@ function upgradeLevelCandidate(ns: NS, index: number): UpgradeCandidate {
     };
 }
 
-function upgradeRamCandidate(ns: NS, index: number): UpgradeCandidate {
+function upgradeRamCandidate(ns: NS, index: number, baseGain: number): UpgradeCandidate {
     const stats = ns.hacknet.getNodeStats(index);
     const cost = ns.hacknet.getRamUpgradeCost(index, 1);
     const currentGain = moneyGain(ns, stats.level, stats.ram, stats.cores);
     const gain = moneyGain(ns, stats.level, stats.ram + 1, stats.cores);
-    const paybackTime = cost / (gain - currentGain);
+    const paybackTime = cost / (baseGain + gain - currentGain);
     return {
         index,
         type: "ram",
@@ -192,12 +203,12 @@ function upgradeRamCandidate(ns: NS, index: number): UpgradeCandidate {
     };
 }
 
-function upgradeCoreCandidate(ns: NS, index: number): UpgradeCandidate {
+function upgradeCoreCandidate(ns: NS, index: number, baseGain: number): UpgradeCandidate {
     const stats = ns.hacknet.getNodeStats(index);
     const cost = ns.hacknet.getCoreUpgradeCost(index, 1);
     const currentGain = moneyGain(ns, stats.level, stats.ram, stats.cores);
     const gain = moneyGain(ns, stats.level, stats.ram, stats.cores + 1);
-    const paybackTime = cost / (gain - currentGain);
+    const paybackTime = cost / (baseGain + gain - currentGain);
     return {
         index,
         type: "core",
