@@ -285,43 +285,45 @@ interface Budget {
 }
 
 function purchaseCandidate(ns: NS, budget: Budget, candidate: UpgradeCandidate) {
-    let bestIndex = candidate.index;
-    let bestType = candidate.type;
-    let bestCost = candidate.cost;
-    let bestPayback = candidate.paybackTime;
+    let hacknetType = ns.hacknet.hashCapacity() > 0 ? "server" : "node";
 
-    switch (bestType) {
+    switch (candidate.type) {
         case "node": {
             const index = ns.hacknet.purchaseNode();
             if (index !== -1) {
-                budget.remaining -= bestCost;
-                ns.print(`SUCCESS: purchased hacknet-node-${index} for $${ns.formatNumber(bestCost)} payback ${ns.tFormat(bestPayback * 1000)}`);
+                budget.remaining -= candidate.cost;
+                ns.print(`SUCCESS: purchased hacknet-${hacknetType}-${index} for $${ns.formatNumber(candidate.cost)} payback ${ns.tFormat(candidate.paybackTime * 1000)}`);
             } else {
-                ns.print(`WARN: failed to purchase node`);
+                ns.print(`WARN: failed to purchase ${hacknetType}`);
                 return;
             }
             break;
         }
         case "level": {
-            if (ns.hacknet.upgradeLevel(bestIndex, 1)) {
-                budget.remaining -= bestCost;
-                ns.print(`SUCCESS: upgraded level of node-${bestIndex} for $${ns.formatNumber(bestCost)} payback ${ns.tFormat(bestPayback * 1000)}`);
+            if (ns.hacknet.upgradeLevel(candidate.index, 1)) {
+                budget.remaining -= candidate.cost;
+                printUpgrade(ns, candidate);
             }
             break;
         }
         case "ram": {
-            if (ns.hacknet.upgradeRam(bestIndex, 1)) {
-                budget.remaining -= bestCost;
-                ns.print(`SUCCESS: upgraded ram of node-${bestIndex} for $${ns.formatNumber(bestCost)} payback ${ns.tFormat(bestPayback * 1000)}`);
+            if (ns.hacknet.upgradeRam(candidate.index, 1)) {
+                budget.remaining -= candidate.cost;
+                printUpgrade(ns, candidate);
             }
             break;
         }
         case "core": {
-            if (ns.hacknet.upgradeCore(bestIndex, 1)) {
-                budget.remaining -= bestCost;
-                ns.print(`SUCCESS: upgraded cores of node-${bestIndex} for $${ns.formatNumber(bestCost)} payback ${ns.tFormat(bestPayback * 1000)}`);
+            if (ns.hacknet.upgradeCore(candidate.index, 1)) {
+                budget.remaining -= candidate.cost;
+                printUpgrade(ns, candidate);
             }
             break;
         }
     }
+}
+
+function printUpgrade(ns: NS, upgrade: UpgradeCandidate) {
+    let hacknetType = ns.hacknet.hashCapacity() > 0 ? "server" : "node";
+    ns.print(`SUCCESS: upgraded ${upgrade.type} of hacknet-${hacknetType}-${upgrade.index} for $${ns.formatNumber(upgrade.cost)} payback ${ns.tFormat(upgrade.paybackTime * 1000)}`);
 }
