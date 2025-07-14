@@ -29,26 +29,7 @@ export async function main(ns: NS) {
     let budget = ns.getServerMoneyAvailable("home") * flags.spend;
     ns.print(`INFO: starting with budget $${ns.formatNumber(budget)} and payback time ${ns.tFormat(returnTimeSeconds * 1000)}`);
 
-    const prodMult = ns.getHacknetMultipliers().production;
-
-    function moneyGain(level: number, ram: number, cores: number): number {
-        if (ns.fileExists("Formulas.exe", "home")) {
-            return ns.formulas.hacknetNodes.moneyGainRate(level, ram, cores, prodMult);
-        } else {
-            return calculateMoneyGainRate(level, ram, cores, prodMult);
-        }
-    }
-
-    function hashGain(level: number, ram: number, cores: number): number {
-        if (ns.fileExists("Formulas.exe", "home")) {
-            return ns.formulas.hacknetServers.hashGainRate(level, 0, ram, cores, prodMult);
-        } else {
-            return calculateHashGainRate(level, 0, ram, cores, prodMult);
-        }
-    }
-
-    const hashCapacity = ns.hacknet.hashCapacity();
-    const gainFn = hashCapacity > 0 ? hashGain : moneyGain;
+    const moneyGain = getMoneyGainFn(ns);
 
     while (true) {
         let bestIndex = -1;
@@ -182,4 +163,32 @@ function calculateHashToMoneyExchange(ns: NS, hashes: number): number {
 
     const cost = ns.hacknet.hashCost("Sell for Money");
     return hashes * SELL_HASH_VALUE / cost;
+}
+
+function getMoneyGainFn(ns: NS) {
+    function moneyGain(level: number, ram: number, cores: number): number {
+        const prodMult = ns.getHacknetMultipliers().production;
+        if (ns.fileExists("Formulas.exe", "home")) {
+            return ns.formulas.hacknetNodes.moneyGainRate(level, ram, cores, prodMult);
+        } else {
+            return calculateMoneyGainRate(level, ram, cores, prodMult);
+        }
+    }
+
+    function hashGain(level: number, ram: number, cores: number): number {
+        const prodMult = ns.getHacknetMultipliers().production;
+        if (ns.fileExists("Formulas.exe", "home")) {
+            return ns.formulas.hacknetServers.hashGainRate(level, 0, ram, cores, prodMult);
+        } else {
+            return calculateHashGainRate(level, 0, ram, cores, prodMult);
+        }
+    }
+
+    function hashMoneyGain(level: number, ram: number, cores: number): number {
+        const hashes = hashGain(level, ram, cores);
+        return calculateHashToMoneyExchange(ns, hashes);
+    }
+
+    const hashCapacity = ns.hacknet.hashCapacity();
+    return hashCapacity > 0 ? hashMoneyGain : moneyGain;
 }
