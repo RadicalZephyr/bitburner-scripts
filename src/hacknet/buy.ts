@@ -60,7 +60,7 @@ OPTIONS
 
         ns.print(`found best candidate: ${upgradeDescription(ns, best)}`);
 
-        if (best.cost > budget.remaining) break;
+        if (best.cost > budget.remaining || best.paybackTime > returnTimeSeconds) break;
 
         purchaseCandidate(ns, budget, best);
 
