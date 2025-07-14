@@ -53,7 +53,12 @@ OPTIONS
             candidates.push(upgradeCoreCandidate(ns, i));
         }
 
+        const allCandidates = candidates.map(c => upgradeDescription(ns, c)).join("\n  ");
+        ns.print(`all candidates:\n  ${allCandidates}`);
+
         const best = candidates.reduce((best, next) => bestCandidate(best, next));
+
+        ns.print(`found best candidate: ${upgradeDescription(ns, best)}`);
 
         if (best.cost > budget.remaining) break;
 
@@ -214,7 +219,7 @@ function purchaseCandidate(ns: NS, budget: Budget, candidate: UpgradeCandidate) 
             const index = ns.hacknet.purchaseNode();
             if (index !== -1) {
                 budget.remaining -= candidate.cost;
-                ns.print(`SUCCESS: purchased hacknet-${hacknetType}-${index} for $${ns.formatNumber(candidate.cost)} payback ${ns.tFormat(candidate.paybackTime * 1000)}`);
+                ns.print(`SUCCESS: purchased ${upgradeDescription(ns, candidate)}`);
             } else {
                 ns.print(`WARN: failed to purchase ${hacknetType}`);
                 return;
@@ -247,5 +252,15 @@ function purchaseCandidate(ns: NS, budget: Budget, candidate: UpgradeCandidate) 
 
 function printUpgrade(ns: NS, upgrade: UpgradeCandidate) {
     let hacknetType = ns.hacknet.hashCapacity() > 0 ? "server" : "node";
-    ns.print(`SUCCESS: upgraded ${upgrade.type} of hacknet-${hacknetType}-${upgrade.index} for $${ns.formatNumber(upgrade.cost)} payback ${ns.tFormat(upgrade.paybackTime * 1000)}`);
+    ns.print(`SUCCESS: upgraded ${upgradeDescription(ns, upgrade)}`);
+}
+
+function upgradeDescription(ns: NS, upgrade: UpgradeCandidate): string {
+    let hacknetType = ns.hacknet.hashCapacity() > 0 ? "server" : "node";
+    let numNodes = ns.hacknet.numNodes();
+
+    if (upgrade.type === "node") {
+        return `hacknet-${hacknetType}-${numNodes} for $${ns.formatNumber(upgrade.cost)} payback ${ns.tFormat(upgrade.paybackTime * 1000)}`;
+    }
+    return `${upgrade.type} of hacknet-${hacknetType}-${upgrade.index} for $${ns.formatNumber(upgrade.cost)} payback ${ns.tFormat(upgrade.paybackTime * 1000)}`;
 }
