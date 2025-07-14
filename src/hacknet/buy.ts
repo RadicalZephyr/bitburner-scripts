@@ -2,7 +2,7 @@ import type { NS } from "netscript";
 
 import { CONFIG } from "hacknet/config";
 
-const DEFAULT_RETURN_TIME = 60;
+const DEFAULT_RETURN_TIME = 2;
 const DEFAULT_SPEND = 1;
 
 export async function main(ns: NS) {
@@ -20,14 +20,14 @@ export async function main(ns: NS) {
         flags.spend < 0 ||
         flags.spend > 1
     ) {
-        ns.tprint(`Usage: run ${ns.getScriptName()} [--return-time MINUTES] [--spend 0-1] [--help]\n` +
-            ` --return-time  Desired payback time window (default ${DEFAULT_RETURN_TIME} minutes)\n` +
+        ns.tprint(`Usage: run ${ns.getScriptName()} [--return-time HOURS] [--spend 0-1] [--help]\n` +
+            ` --return-time  Desired payback time window (default ${DEFAULT_RETURN_TIME} hours)\n` +
             ` --spend        Portion of money to spend (default ${ns.formatPercent(DEFAULT_SPEND)})\n` +
             ` --help         Display this message`);
         return;
     }
 
-    const returnTimeSeconds = flags["return-time"] * 60;
+    const returnTimeSeconds = flags["return-time"] * 60 * 60;
     let budget = ns.getServerMoneyAvailable("home") * flags.spend;
     ns.print(`INFO: starting with budget $${ns.formatNumber(budget)} and payback time ${ns.tFormat(returnTimeSeconds * 1000)}`);
 
