@@ -60,9 +60,9 @@ export async function awaitRound(
             const elapsed = ns.self().onlineRunningTime * 1000;
             ns.print(`
 Round ${info.round} of ${info.totalRounds}
+Elapsed time:    ${ns.tFormat(elapsed)}
 Round ends:      ${ns.tFormat(info.roundEnd)}
 Total expected:  ${ns.tFormat(info.totalExpectedEnd)}
-Elapsed time:    ${ns.tFormat(elapsed)}
 `);
             if (Date.now() >= nextHeartbeat) {
                 const result = await sendHeartbeat();
