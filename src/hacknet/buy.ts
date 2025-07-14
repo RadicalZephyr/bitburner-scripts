@@ -1,5 +1,7 @@
 import type { NS } from "netscript";
 
+import { CONFIG } from "hacknet/config";
+
 const DEFAULT_RETURN_TIME = 60;
 const DEFAULT_SPEND = 1;
 
@@ -191,4 +193,30 @@ function getMoneyGainFn(ns: NS) {
 
     const hashCapacity = ns.hacknet.hashCapacity();
     return hashCapacity > 0 ? hashMoneyGain : moneyGain;
+}
+
+type UpgradeType = "node" | "level" | "ram" | "core" | null;
+
+interface UpgradeCandidate {
+    /** Index of the hacknet node, if applicable. */
+    index: number | null;
+
+    /** Type of the upgrade. */
+    type: UpgradeType;
+
+    /** Cost of the upgrade in dollars */
+    cost: number;
+
+    /** Time to the upgrade will take to pay for itself in seconds. */
+    paybackTime: number;
+}
+
+function bestCandidate(best: UpgradeCandidate, candidate: UpgradeCandidate): UpgradeCandidate {
+    const delta = candidate.paybackTime - best.paybackTime;
+
+    if (Math.abs(delta) > CONFIG.paybackTimeTolerance) {
+        return candidate.paybackTime < best.paybackTime ? candidate : best;
+    }
+
+    return candidate.cost < best.cost ? candidate : best;
 }
