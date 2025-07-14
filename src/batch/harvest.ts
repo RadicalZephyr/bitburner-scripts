@@ -12,6 +12,8 @@ import {
     growthAnalyze
 } from "batch/expected_value";
 
+import { collectDependencies } from "util/dependencies";
+
 export function autocomplete(data: AutocompleteData, _args: string[]): string[] {
     return data.servers;
 }
@@ -275,7 +277,8 @@ async function spawnBatch(ns: NS, host: string | null, target: string, phases: B
     if (!host) return [];
 
     const scripts = Array.from(new Set(phases.map(p => p.script)));
-    ns.scp(scripts, host, "home");
+    let dependencies = scripts.map(script => collectDependencies(ns, script)).reduce((c, s) => c.union(s));
+    ns.scp([...scripts, ...dependencies], host, "home");
 
     let pids = [];
     for (const [idx, phase] of phases.map((phase, idx) => [idx, phase] as [number, BatchPhase])) {

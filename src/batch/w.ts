@@ -1,7 +1,11 @@
-import type { NS } from "netscript";
+import type { NS, ScriptArg } from "netscript";
+
+import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 
 export async function main(ns: NS) {
-    const args = ns.args;
+    const flags = ns.flags(MEM_TAG_FLAGS);
+
+    const args = flags._ as ScriptArg[];
 
     const target = args[0];
     if (typeof target != 'string') {
