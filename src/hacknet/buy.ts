@@ -167,32 +167,32 @@ function calculateHashToMoneyExchange(ns: NS, hashes: number): number {
     return hashes * SELL_HASH_VALUE / cost;
 }
 
+function nodeMoneyGain(ns: NS, level: number, ram: number, cores: number): number {
+    const prodMult = ns.getHacknetMultipliers().production;
+    if (ns.fileExists("Formulas.exe", "home")) {
+        return ns.formulas.hacknetNodes.moneyGainRate(level, ram, cores, prodMult);
+    } else {
+        return calculateMoneyGainRate(level, ram, cores, prodMult);
+    }
+}
+
+function hashGain(ns: NS, level: number, ram: number, cores: number): number {
+    const prodMult = ns.getHacknetMultipliers().production;
+    if (ns.fileExists("Formulas.exe", "home")) {
+        return ns.formulas.hacknetServers.hashGainRate(level, 0, ram, cores, prodMult);
+    } else {
+        return calculateHashGainRate(level, 0, ram, cores, prodMult);
+    }
+}
+
+function hashMoneyGain(ns: NS, level: number, ram: number, cores: number): number {
+    const hashes = hashGain(ns, level, ram, cores);
+    return calculateHashToMoneyExchange(ns, hashes);
+}
+
 function getMoneyGainFn(ns: NS) {
-    function moneyGain(level: number, ram: number, cores: number): number {
-        const prodMult = ns.getHacknetMultipliers().production;
-        if (ns.fileExists("Formulas.exe", "home")) {
-            return ns.formulas.hacknetNodes.moneyGainRate(level, ram, cores, prodMult);
-        } else {
-            return calculateMoneyGainRate(level, ram, cores, prodMult);
-        }
-    }
-
-    function hashGain(level: number, ram: number, cores: number): number {
-        const prodMult = ns.getHacknetMultipliers().production;
-        if (ns.fileExists("Formulas.exe", "home")) {
-            return ns.formulas.hacknetServers.hashGainRate(level, 0, ram, cores, prodMult);
-        } else {
-            return calculateHashGainRate(level, 0, ram, cores, prodMult);
-        }
-    }
-
-    function hashMoneyGain(level: number, ram: number, cores: number): number {
-        const hashes = hashGain(level, ram, cores);
-        return calculateHashToMoneyExchange(ns, hashes);
-    }
-
     const hashCapacity = ns.hacknet.hashCapacity();
-    return hashCapacity > 0 ? hashMoneyGain : moneyGain;
+    return hashCapacity > 0 ? hashMoneyGain.bind(null, ns) : nodeMoneyGain.bind(null, ns);
 }
 
 type UpgradeType = "node" | "level" | "ram" | "core" | null;
