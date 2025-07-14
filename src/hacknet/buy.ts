@@ -39,6 +39,17 @@ export async function main(ns: NS) {
         }
     }
 
+    function hashGain(level: number, ram: number, cores: number): number {
+        if (ns.fileExists("Formulas.exe", "home")) {
+            return ns.formulas.hacknetServers.hashGainRate(level, 0, ram, cores, prodMult);
+        } else {
+            return calculateHashGainRate(level, 0, ram, cores, prodMult);
+        }
+    }
+
+    const hashCapacity = ns.hacknet.hashCapacity();
+    const gainFn = hashCapacity > 0 ? hashGain : moneyGain;
+
     while (true) {
         let bestIndex = -1;
         let bestType: "node" | "level" | "ram" | "core" | null = null;
@@ -154,4 +165,15 @@ function calculateMoneyGainRate(level: number, ram: number, cores: number, mult:
     const ramMult = Math.pow(1.035, ram - 1);
     const coresMult = (cores + 5) / 6;
     return levelMult * ramMult * coresMult * mult;
+}
+
+function calculateHashGainRate(level: number, ramUsed: number, maxRam: number, cores: number, mult: number = 1): number {
+    const HASHES_PER_LEVEL = 0.001;
+    const baseGain = HASHES_PER_LEVEL * level;
+    const ramMultiplier = Math.pow(1.07, Math.log2(maxRam));
+    const coreMultiplier = 1 + (cores - 1) / 5;
+    const ramRatio = 1 - ramUsed / maxRam;
+
+    return baseGain * ramMultiplier * coreMultiplier * ramRatio * mult;
+    return 0;
 }
