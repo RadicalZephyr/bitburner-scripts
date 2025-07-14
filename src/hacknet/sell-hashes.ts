@@ -1,4 +1,5 @@
 import type { NS } from "netscript";
+import { CONFIG } from "./config";
 
 export async function main(ns: NS) {
     const flags = ns.flags([
@@ -23,7 +24,7 @@ OPTIONS
 
     do {
         if (flags.continue)
-            await ns.sleep(10000);
+            await ns.sleep(CONFIG.sellSleepTime);
 
         const currentHashes = ns.hacknet.numHashes();
 
