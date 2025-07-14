@@ -2,32 +2,38 @@ import type { NS } from "netscript";
 
 export async function main(ns: NS) {
     const flags = ns.flags([
+        ["continue", false],
         ["help", false],
     ]);
 
     const hashCapacity = ns.hacknet.hashCapacity();
-    if (flags.help || hashCapacity === 0) {
+    if (flags.help || typeof flags.continue !== 'boolean' || hashCapacity === 0) {
         ns.tprint(`
 Usage: run ${ns.getScriptName()} [--help]
 
 Sell all the hashes for cash. Only works with Hacknet Servers not nodes.
 
 OPTIONS
-  --help         Display this message
+  --continue  Continue to sell hashes perpetually
+  --help      Display this message
 `);
         return;
 
     }
 
-    const currentHashes = ns.hacknet.numHashes();
+    do {
+        if (flags.continue)
+            await ns.sleep(10000);
 
-    const cost = ns.hacknet.hashCost("Sell for Money");
+        const currentHashes = ns.hacknet.numHashes();
 
-    const numToSell = Math.floor(currentHashes / cost);
+        const cost = ns.hacknet.hashCost("Sell for Money");
 
-    ns.hacknet.spendHashes("Sell for Money", "", numToSell);
+        const numToSell = Math.floor(currentHashes / cost);
 
-    const value = numToSell * 1000000;
-    ns.tprint(`sold ${numToSell * cost} hashes for $${ns.formatNumber(value)}`);
+        ns.hacknet.spendHashes("Sell for Money", "", numToSell);
 
+        const value = numToSell * 1000000;
+        ns.print(`sold ${numToSell * cost} hashes for $${ns.formatNumber(value)}`);
+    } while (flags.continue);
 }
