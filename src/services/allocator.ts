@@ -52,6 +52,10 @@ export class MemoryAllocator {
             setAsideRam = 8;
         }
 
+        if (hostname.startsWith('hacknet-server') && setAsideRam === undefined) {
+            setAsideRam = this.ns.getServerMaxRam(hostname);
+        }
+
         this.workers.set(hostname, new Worker(this.ns, hostname, setAsideRam));
         this.printLog(
             `INFO: registered worker ${hostname} with ` +
