@@ -166,6 +166,10 @@ function bestCandidate(best: UpgradeCandidate, candidate: UpgradeCandidate): Upg
 function newNodeCandidate(ns: NS, baseGain: number): UpgradeCandidate {
     const cost = ns.hacknet.getPurchaseNodeCost();
     const newNodeGain = moneyGain(ns, 1, 1, 1);
+    // TODO: this is a terrible way to estimate the potential value of
+    // buying a new node, because the upgrades for it will be vastly
+    // cheaper than for existing nodes. We need to change this to
+    // determine how many upgrades we can buy with our budget.
     const paybackTime = cost / (baseGain + newNodeGain);
     return {
         index: null,
