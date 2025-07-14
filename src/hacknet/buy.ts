@@ -28,114 +28,30 @@ export async function main(ns: NS) {
     }
 
     const returnTimeSeconds = flags["return-time"] * 60 * 60;
-    let budget = ns.getServerMoneyAvailable("home") * flags.spend;
-    ns.print(`INFO: starting with budget $${ns.formatNumber(budget)} and payback time ${ns.tFormat(returnTimeSeconds * 1000)}`);
+    let totalSpend = ns.getServerMoneyAvailable("home") * flags.spend;
+    ns.print(`INFO: starting with budget $${ns.formatNumber(totalSpend)} and payback time ${ns.tFormat(returnTimeSeconds * 1000)}`);
 
-    const moneyGain = getMoneyGainFn(ns);
+    let budget: Budget = {
+        total: totalSpend,
+        remaining: totalSpend
+    };
 
     while (true) {
-        let bestIndex = -1;
-        let bestType: "node" | "level" | "ram" | "core" | null = null;
-        let bestCost = Infinity;
-        let bestPayback = Infinity;
+        const candidates = [newNodeCandidate(ns)];
 
         const numNodes = ns.hacknet.numNodes();
 
-        const newNodeCost = ns.hacknet.getPurchaseNodeCost();
-        const newNodeGain = moneyGain(1, 1, 1);
-        if (newNodeCost <= budget) {
-            const payback = newNodeCost / newNodeGain;
-            if (payback <= returnTimeSeconds && payback < bestPayback) {
-                bestIndex = -1;
-                bestType = "node";
-                bestCost = newNodeCost;
-                bestPayback = payback;
-            }
-        }
-
         for (let i = 0; i < numNodes; i++) {
-            const stats = ns.hacknet.getNodeStats(i);
-            const currentGain = moneyGain(stats.level, stats.ram, stats.cores);
-
-            const levelCost = ns.hacknet.getLevelUpgradeCost(i, 1);
-            if (levelCost <= budget && levelCost !== Infinity) {
-                const gain = moneyGain(stats.level + 1, stats.ram, stats.cores);
-                const payback = levelCost / (gain - currentGain);
-                if (payback <= returnTimeSeconds && payback < bestPayback) {
-                    bestIndex = i;
-                    bestType = "level";
-                    bestCost = levelCost;
-                    bestPayback = payback;
-                }
-            }
-
-            const ramCost = ns.hacknet.getRamUpgradeCost(i, 1);
-            if (ramCost <= budget && ramCost !== Infinity) {
-                const gain = moneyGain(stats.level, stats.ram * 2, stats.cores);
-                const payback = ramCost / (gain - currentGain);
-                if (payback <= returnTimeSeconds && payback < bestPayback) {
-                    bestIndex = i;
-                    bestType = "ram";
-                    bestCost = ramCost;
-                    bestPayback = payback;
-                }
-            }
-
-            const coreCost = ns.hacknet.getCoreUpgradeCost(i, 1);
-            if (coreCost <= budget && coreCost !== Infinity) {
-                const gain = moneyGain(stats.level, stats.ram, stats.cores + 1);
-                const payback = coreCost / (gain - currentGain);
-                if (payback <= returnTimeSeconds && payback < bestPayback) {
-                    bestIndex = i;
-                    bestType = "core";
-                    bestCost = coreCost;
-                    bestPayback = payback;
-                }
-            }
+            candidates.push(upgradeLevelCandidate(ns, i));
+            candidates.push(upgradeRamCandidate(ns, i));
+            candidates.push(upgradeCoreCandidate(ns, i));
         }
 
-        if (!bestType) {
-            break;
-        }
+        const best = candidates.reduce((best, next) => bestCandidate(best, next));
 
-        if (bestCost > budget) {
-            break;
-        }
+        if (best.cost > budget.remaining) break;
 
-        switch (bestType) {
-            case "node": {
-                const index = ns.hacknet.purchaseNode();
-                if (index !== -1) {
-                    budget -= bestCost;
-                    ns.print(`SUCCESS: purchased hacknet-node-${index} for $${ns.formatNumber(bestCost)} payback ${ns.tFormat(bestPayback * 1000)}`);
-                } else {
-                    ns.print(`WARN: failed to purchase node`);
-                    return;
-                }
-                break;
-            }
-            case "level": {
-                if (ns.hacknet.upgradeLevel(bestIndex, 1)) {
-                    budget -= bestCost;
-                    ns.print(`SUCCESS: upgraded level of node-${bestIndex} for $${ns.formatNumber(bestCost)} payback ${ns.tFormat(bestPayback * 1000)}`);
-                }
-                break;
-            }
-            case "ram": {
-                if (ns.hacknet.upgradeRam(bestIndex, 1)) {
-                    budget -= bestCost;
-                    ns.print(`SUCCESS: upgraded ram of node-${bestIndex} for $${ns.formatNumber(bestCost)} payback ${ns.tFormat(bestPayback * 1000)}`);
-                }
-                break;
-            }
-            case "core": {
-                if (ns.hacknet.upgradeCore(bestIndex, 1)) {
-                    budget -= bestCost;
-                    ns.print(`SUCCESS: upgraded cores of node-${bestIndex} for $${ns.formatNumber(bestCost)} payback ${ns.tFormat(bestPayback * 1000)}`);
-                }
-                break;
-            }
-        }
+        purchaseCandidate(ns, budget, best);
 
         await ns.sleep(0);
     }
