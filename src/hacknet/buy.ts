@@ -175,5 +175,11 @@ function calculateHashGainRate(level: number, ramUsed: number, maxRam: number, c
     const ramRatio = 1 - ramUsed / maxRam;
 
     return baseGain * ramMultiplier * coreMultiplier * ramRatio * mult;
-    return 0;
+}
+
+function calculateHashToMoneyExchange(ns: NS, hashes: number): number {
+    const SELL_HASH_VALUE = 1_000_000;
+
+    const cost = ns.hacknet.hashCost("Sell for Money");
+    return hashes * SELL_HASH_VALUE / cost;
 }
