@@ -190,9 +190,13 @@ function hashMoneyGain(ns: NS, level: number, ram: number, cores: number): numbe
     return calculateHashToMoneyExchange(ns, hashes);
 }
 
-function getMoneyGainFn(ns: NS) {
+function moneyGain(ns: NS, level: number, ram: number, cores: number) {
     const hashCapacity = ns.hacknet.hashCapacity();
-    return hashCapacity > 0 ? hashMoneyGain.bind(null, ns) : nodeMoneyGain.bind(null, ns);
+    return hashCapacity > 0 ? hashMoneyGain(ns, level, ram, cores) : nodeMoneyGain(ns, level, ram, cores);
+}
+
+function getMoneyGainFn(ns: NS) {
+    return moneyGain.bind(null, ns);
 }
 
 type UpgradeType = "node" | "level" | "ram" | "core" | null;
