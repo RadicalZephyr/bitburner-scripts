@@ -4,13 +4,6 @@ import { walkNetworkBFS } from "util/walk";
 
 declare const React: any;
 
-declare global {
-    interface Global {
-        document: any;
-    }
-    var globalThis: Global;
-}
-
 const FACTION_SERVERS = [
     "CSEC",
     "avmnite-02h",
@@ -73,7 +66,7 @@ function canInstallBackdoor(ns: NS, info: Server) {
 
 /** Send a command to the terminal by simulating user input. */
 export function sendCommand(command: string): void {
-    const terminalInput: any = globalThis.document.getElementById("terminal-input");
+    const terminalInput: any = globalThis["terminal-input"];
     terminalInput.value = command;
     const handler = Object.keys(terminalInput)[1];
     terminalInput[handler].onChange({ target: terminalInput });

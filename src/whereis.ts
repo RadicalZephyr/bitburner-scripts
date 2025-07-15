@@ -6,13 +6,6 @@ export function autocomplete(data: AutocompleteData, args: string[]): string[] {
     return data.servers;
 }
 
-declare global {
-    interface Global {
-        document: any;
-    }
-    var globalThis: Global;
-}
-
 export async function main(ns: NS) {
     const flags = ns.flags([
         ['goto', false],
@@ -80,9 +73,9 @@ OPTIONS
 
     const goCommand = `go ${S.join(" ; go ")}`;
 
-    if (flags.goto && ns.ramOverride(28.9)) {
+    if (flags.goto) {
         // Acquire a reference to the terminal text field
-        const terminalInput: any = globalThis.document.getElementById("terminal-input");
+        const terminalInput: any = globalThis["terminal-input"];
         terminalInput.value = goCommand;
 
         // Get a reference to the React event handler.
