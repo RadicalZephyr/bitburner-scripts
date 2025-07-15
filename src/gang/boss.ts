@@ -1,5 +1,27 @@
 import type { NS } from "netscript";
 
+interface Thresholds {
+    trainLevel: number;
+    ascendMult: number;
+}
+
+const thresholdsByCount: Record<number, Thresholds> = {
+    3: { trainLevel: 100, ascendMult: 0.05 },
+    6: { trainLevel: 500, ascendMult: 0.10 },
+    9: { trainLevel: 2000, ascendMult: 0.15 },
+    12: { trainLevel: 10000, ascendMult: 0.2 },
+};
+
+function getThresholds(n: number): Thresholds {
+    let result: Thresholds = thresholdsByCount[3];
+    for (const key of Object.keys(thresholdsByCount).map(Number).sort((a, b) => a - b)) {
+        if (n >= key) result = thresholdsByCount[key];
+    }
+    return result;
+}
+
+type MemberState = "bootstrapping" | "ready";
+
 const MAX_MEMBERS = 12;
 
 const NAMES = [
@@ -54,6 +76,11 @@ OPTIONS
     const availableNames = NAMES.filter(n => !currentNames.has(n));
     let nameIndex = 0;
 
+    const memberState: Record<string, MemberState> = {};
+    for (const name of currentNames) {
+        memberState[name] = "ready";
+    }
+
     const trainingTask = ns.gang.getGangInformation().isHacking ?
         "Train Hacking" : "Train Combat";
 
@@ -67,11 +94,36 @@ OPTIONS
             const name = availableNames[nameIndex++];
             if (ns.gang.recruitMember(name)) {
                 currentNames.add(name);
+                memberState[name] = "bootstrapping";
             }
         }
 
+        const thresholds = getThresholds(ns.gang.getMemberNames().length);
+
         for (const name of ns.gang.getMemberNames()) {
-            ns.gang.setMemberTask(name, trainingTask);
+            if (!(name in memberState)) memberState[name] = "bootstrapping";
+
+            if (memberState[name] === "bootstrapping") {
+                ns.gang.setMemberTask(name, trainingTask);
+                const result = ns.gang.getAscensionResult(name);
+                if (result) {
+                    const maxGain = Math.max(
+                        result.hack,
+                        result.str,
+                        result.def,
+                        result.dex,
+                        result.agi,
+                        result.cha,
+                    );
+
+                    if (maxGain >= thresholds.ascendMult) {
+                        ns.gang.ascendMember(name);
+                        memberState[name] = "ready";
+                    }
+                }
+            } else {
+                ns.gang.setMemberTask(name, trainingTask);
+            }
         }
 
         await ns.gang.nextUpdate();
