@@ -1,5 +1,19 @@
-import type { NS, GangMemberInfo } from "netscript";
+import type { GangMemberInfo, NS } from "netscript";
+
 import type { RoleProfiles } from "gang/task-analyzer";
+
+function normalize(v: Record<string, number>): Record<string, number> {
+    const sum = Object.values(v).reduce((a, b) => a + b, 0);
+    const result: Record<string, number> = {};
+    for (const k in v) result[k] = sum === 0 ? 0 : v[k] / sum;
+    return result;
+}
+
+function distance(a: Record<string, number>, b: Record<string, number>): number {
+    let d = 0;
+    for (const k in a) d += (a[k] - b[k]) ** 2;
+    return Math.sqrt(d);
+}
 
 function memberVector(info: GangMemberInfo) {
     const combat = info.str + info.def + info.dex + info.agi;
@@ -28,11 +42,7 @@ export function selectTrainingTask(info: GangMemberInfo, profiles: RoleProfiles)
     let bestDist = Infinity;
     for (const role of Object.keys(profiles) as (keyof RoleProfiles)[]) {
         const p = profileVector(profiles[role]);
-        const dist = Math.sqrt(
-            Math.pow(m.hack - p.hack, 2) +
-            Math.pow(m.combat - p.combat, 2) +
-            Math.pow(m.cha - p.cha, 2)
-        );
+        const dist = distance(m, p);
         if (dist < bestDist) {
             bestDist = dist;
             bestRole = role;
@@ -52,13 +62,17 @@ export function selectTrainingTask(info: GangMemberInfo, profiles: RoleProfiles)
 }
 
 /**
- * Assign training tasks for the given members based on role profiles.
+ * Assign training tasks for members by comparing their stats to role profiles.
  *
  * @param ns - Netscript API
- * @param memberNames - Names of members to assign
- * @param profiles - Role profile weight vectors
+ * @param memberNames - Names of members in training phase
+ * @param profiles - Map of role profiles from {@link TaskAnalyzer}
  */
-export function assignTrainingTasks(ns: NS, memberNames: string[], profiles: RoleProfiles) {
+export function assignTrainingTasks(
+    ns: NS,
+    memberNames: string[],
+    profiles: RoleProfiles,
+) {
     for (const name of memberNames) {
         const info = ns.gang.getMemberInformation(name);
         const task = selectTrainingTask(info, profiles);

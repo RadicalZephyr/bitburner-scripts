@@ -1,12 +1,18 @@
 import type { GangGenInfo, GangMemberInfo, GangTaskStats, NS } from "netscript";
-import { pickByType, PickByType } from "/util/stat-tracker";
+import { pickByType, PickByType } from "util/stat-tracker";
+
 
 /**
  * Helper for analyzing gang tasks to determine optimal assignments.
  */
-export type Role = "bootstrapping" | "respectGrind" | "moneyGrind" | "warfare" | "cooling";
+export type Role =
+    | "bootstrapping"
+    | "respectGrind"
+    | "moneyGrind"
+    | "warfare"
+    | "cooling";
 
-export interface WeightVector {
+export interface RoleProfile {
     hackWeight: number;
     strWeight: number;
     defWeight: number;
@@ -15,7 +21,7 @@ export interface WeightVector {
     chaWeight: number;
 }
 
-export type RoleProfiles = Record<Role, WeightVector>;
+export type RoleProfiles = Record<Role, RoleProfile>;
 
 export class TaskAnalyzer {
     private ns: NS;
@@ -29,16 +35,25 @@ export class TaskAnalyzer {
     bestCoolingTasks: GangTaskStats[] = [];
     coolingTaskList: GangTaskStats[] = [];
     private profiles: RoleProfiles = {
-        bootstrapping: defaultVector(),
-        respectGrind: defaultVector(),
-        moneyGrind: defaultVector(),
-        warfare: defaultVector(),
-        cooling: defaultVector(),
+        bootstrapping: emptyProfile(),
+        respectGrind: emptyProfile(),
+        moneyGrind: emptyProfile(),
+        warfare: emptyProfile(),
+        cooling: emptyProfile(),
     };
 
     constructor(ns: NS) {
         this.ns = ns;
         this.refresh();
+    }
+
+    /**
+     * Get the averaged stat weight profiles for each role.
+     *
+     * @returns Map of role to average weight profile
+     */
+    roleProfiles(): RoleProfiles {
+        return this.profiles;
     }
 
     /** Refresh task statistics and recompute rankings. */
@@ -145,15 +160,30 @@ export class TaskAnalyzer {
             };
         }
     }
+}
 
-    /**
-     * Get the averaged weight vectors for each gang role.
-     *
-     * @returns Object mapping role names to average weight vectors
-     */
-    roleProfiles(): RoleProfiles {
-        return this.profiles;
+function emptyProfile(): RoleProfile {
+    return { hackWeight: 0, strWeight: 0, defWeight: 0, dexWeight: 0, agiWeight: 0, chaWeight: 0 };
+}
+
+function averageWeights(tasks: GangTaskStats[]): RoleProfile {
+    const profile = emptyProfile();
+    if (tasks.length === 0) return profile;
+    for (const t of tasks) {
+        profile.hackWeight += t.hackWeight;
+        profile.strWeight += t.strWeight;
+        profile.defWeight += t.defWeight;
+        profile.dexWeight += t.dexWeight;
+        profile.agiWeight += t.agiWeight;
+        profile.chaWeight += t.chaWeight;
     }
+    profile.hackWeight /= tasks.length;
+    profile.strWeight /= tasks.length;
+    profile.defWeight /= tasks.length;
+    profile.dexWeight /= tasks.length;
+    profile.agiWeight /= tasks.length;
+    profile.chaWeight /= tasks.length;
+    return profile;
 }
 
 function calculateMoneyGain(ns: NS, gang: GangGenInfo, member: GangMemberInfo, task: GangTaskStats): number {
@@ -239,6 +269,6 @@ function calculateWantedPenalty(gang: GangGenInfo): number {
     return gang.respect / (gang.respect + gang.wantedLevel);
 }
 
-function defaultVector(): WeightVector {
+function defaultVector(): RoleProfile {
     return { hackWeight: 0, strWeight: 0, defWeight: 0, dexWeight: 0, agiWeight: 0, chaWeight: 0 };
 }

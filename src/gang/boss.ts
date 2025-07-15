@@ -1,4 +1,5 @@
-import type { NS, GangMemberInfo } from "netscript";
+import type { GangMemberInfo, NS } from "netscript";
+
 import { TaskAnalyzer } from "gang/task-analyzer";
 import { wantedTaskBalancer } from "gang/task-balancer";
 import { assignTrainingTasks } from "gang/training-focus-manager";
@@ -90,15 +91,11 @@ OPTIONS
     for (const name of currentNames) {
         memberState[name] = "bootstrapping";
     }
-
     const trackers: Record<string, StatTracker<GangMemberInfo>> = {};
-    for (const name of currentNames) {
-        trackers[name] = new StatTracker();
-    }
-
 
     while (true) {
         ns.print(`INFO: starting next tick`);
+
         if (
             ns.gang.canRecruitMember() &&
             ns.gang.getGangInformation().respect >= ns.gang.respectForNextRecruit() &&
@@ -114,16 +111,20 @@ OPTIONS
             }
         }
 
-        const thresholds = getThresholds(ns.gang.getMemberNames().length);
+        const count = ns.gang.getMemberNames().length;
+        const thresholds = getThresholds(count);
         const ready: string[] = [];
         const training: string[] = [];
 
         for (const name of ns.gang.getMemberNames()) {
             ns.print(`INFO: assigning current task for ${name}`);
-            const memberInfo = ns.gang.getMemberInformation(name);
 
             if (!(name in memberState)) memberState[name] = "bootstrapping";
             ns.print(`INFO: ${name} is ${memberState[name]}`);
+
+            if (!trackers[name]) trackers[name] = new StatTracker<GangMemberInfo>();
+            const memberInfo = ns.gang.getMemberInformation(name);
+            trackers[name].update(memberInfo);
 
             if (memberState[name] === "bootstrapping") {
                 const maxLevel = Math.max(
@@ -172,11 +173,10 @@ OPTIONS
                 ready.push(name);
             }
 
-            trackers[name] = trackers[name] || new StatTracker<GangMemberInfo>();
-            trackers[name].update(memberInfo);
-            if (trackers[name].history.length >= 2) {
-                const first = trackers[name].history[0];
-                const last = trackers[name].history[trackers[name].history.length - 1];
+            const hist = trackers[name].history;
+            if (hist.length >= 2) {
+                const first = hist[0];
+                const last = hist[hist.length - 1];
                 const dt = (last.t - first.t) / 1000;
                 const sumFirst = first.hack + first.str + first.def + first.dex + first.agi + first.cha;
                 const sumLast = last.hack + last.str + last.def + last.dex + last.agi + last.cha;

@@ -125,6 +125,7 @@ interface GangTaskStats { /* … see prompt for full fields … */ }
    - Periodically fetch task stats via `ns.gang.getTaskNames()` + `ns.gang.getTaskStats()`.
    - Separate by `isHacking` and `isCombat`, compute per-second yields incorporating current territory bonus.
    - Generate sorted lists: `bestMoneyTasks`, `bestRespectTasks`, `bestWarTasks`.
+   - Provide `roleProfiles()` returning averaged stat-weight profiles for common roles.
 
 2. **TaskBalancer**
    - Fetch `GangGenInfo` to compute:
@@ -180,8 +181,8 @@ interface GangTaskStats { /* … see prompt for full fields … */ }
    - For each member:
      1. Fetch `ns.gang.getMemberInformation(name)` & available gear via `ns.gang.getEquipmentNames()` + `ns.gang.getEquipmentStats(equip)`.
      2. Compute **ROI**: `cost / gainRate` (level/sec for training, money/sec for working).
-    3. If `ROI <= maxROITime` for current role, call `ns.gang.purchaseEquipment(name, equip)`.
-   - Uses `CONFIG.maxROITime` per role.
+     3. If `ROI <= maxROITime` for current role, call `ns.gang.purchaseEquipment(name, equip)`.
+   - Exposes `computeROI()` helper used in unit tests.
 
 4. **Velocity-Based Ascension**
 
