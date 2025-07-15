@@ -26,10 +26,14 @@ export async function main(ns: NS) {
 }
 
 function checkWorkers(ns: NS, allocations: AllocationSnapshot[], workers: WorkerSnapshot[]): void {
+    const selfDetails = ns.self();
+    const selfHost = selfDetails.server;
+    const selfRam = selfDetails.ramUsage;
+
     for (const w of workers) {
         const actualTotal = ns.getServerMaxRam(w.hostname);
         const actualInUse = ns.getServerUsedRam(w.hostname);
-        const used = w.setAsideRam + w.reservedRam + w.allocatedRam;
+        const used = w.reservedRam + w.allocatedRam + (w.hostname === selfHost ? selfRam : 0);
         if (Math.abs(actualTotal - w.totalRam) > 0.0001) {
             ns.print(
                 `ERROR: worker ${w.hostname} snapshot has incorrect total RAM ` +
