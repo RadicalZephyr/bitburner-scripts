@@ -1,4 +1,4 @@
-import type { GangMemberInfo, GangTaskStats, NS } from "netscript";
+import type { GangGenInfo, GangMemberInfo, GangTaskStats, NS } from "netscript";
 import { pickByType, PickByType } from "/util/stat-tracker";
 
 /**
@@ -32,8 +32,8 @@ export class TaskAnalyzer {
         const respect = new Map<GangTaskStats, number>();
 
         for (const task of this.tasks) {
-            money.set(task, this.ns.formulas.gang.moneyGain(gangInfo, avgMember, task));
-            respect.set(task, this.ns.formulas.gang.respectGain(gangInfo, avgMember, task));
+            money.set(task, calculateMoneyGain(this.ns, gangInfo, avgMember, task));
+            respect.set(task, calculateRespectGain(this.ns, gangInfo, avgMember, task));
         }
 
         const moneySort = (a: GangTaskStats, b: GangTaskStats) =>
@@ -75,4 +75,59 @@ export class TaskAnalyzer {
         const firstMemberNonNumber = pickByType(firstMember, (v): v is any => typeof v !== 'number');
         return { ...firstMemberNonNumber, ...avg };
     }
+}
+
+function calculateMoneyGain(ns: NS, gang: GangGenInfo, member: GangMemberInfo, task: GangTaskStats): number {
+    if (ns.fileExists("Formulas.exe", "home"))
+        return ns.formulas.gang.moneyGain(gang, member, task)
+    else
+        return estimateMoneyGain(gang, member, task);
+}
+
+function estimateMoneyGain(gang: GangGenInfo, member: GangMemberInfo, task: GangTaskStats): number {
+    if (task.baseMoney === 0) return 0;
+    let statWeight =
+        (task.hackWeight / 100) * member.hack +
+        (task.strWeight / 100) * member.str +
+        (task.defWeight / 100) * member.def +
+        (task.dexWeight / 100) * member.dex +
+        (task.agiWeight / 100) * member.agi +
+        (task.chaWeight / 100) * member.cha;
+
+    statWeight -= 3.2 * task.difficulty;
+    if (statWeight <= 0) return 0;
+    const territoryMult = Math.max(0.005, Math.pow(gang.territory * 100, task.territory.money) / 100);
+    if (isNaN(territoryMult) || territoryMult <= 0) return 0;
+    const respectMult = calculateWantedPenalty(gang);
+    const territoryPenalty = (0.2 * gang.territory + 0.8);
+    return Math.pow(5 * task.baseMoney * statWeight * territoryMult * respectMult, territoryPenalty);
+}
+
+function calculateRespectGain(ns: NS, gang: GangGenInfo, member: GangMemberInfo, task: GangTaskStats): number {
+    if (ns.fileExists("Formulas.exe", "home"))
+        return ns.formulas.gang.respectGain(gang, member, task)
+    else
+        return estimateRespectGain(gang, member, task);
+}
+
+function estimateRespectGain(gang: GangGenInfo, member: GangMemberInfo, task: GangTaskStats): number {
+    if (task.baseRespect === 0) return 0;
+    let statWeight =
+        (task.hackWeight / 100) * member.hack +
+        (task.strWeight / 100) * member.str +
+        (task.defWeight / 100) * member.def +
+        (task.dexWeight / 100) * member.dex +
+        (task.agiWeight / 100) * member.agi +
+        (task.chaWeight / 100) * member.cha;
+    statWeight -= 4 * task.difficulty;
+    if (statWeight <= 0) return 0;
+    const territoryMult = Math.max(0.005, Math.pow(gang.territory * 100, task.territory.respect) / 100);
+    const territoryPenalty = (0.2 * gang.territory + 0.8);
+    if (isNaN(territoryMult) || territoryMult <= 0) return 0;
+    const respectMult = calculateWantedPenalty(gang);
+    return Math.pow(11 * task.baseRespect * statWeight * territoryMult * respectMult, territoryPenalty);
+}
+
+function calculateWantedPenalty(gang: GangGenInfo): number {
+    return gang.respect / (gang.respect + gang.wantedLevel);
 }
