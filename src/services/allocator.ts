@@ -1,6 +1,7 @@
-import type { NS } from "netscript";
+import type { NS, ProcessInfo } from "netscript";
 
 import { HostAllocation, AllocationResult, MemorySnapshot, WorkerSnapshot, AllocationSnapshot, AllocationClaim, AllocationRegister } from "services/client/memory";
+import { TAG_ARG } from "services/client/memory_tag";
 
 /**
  * Convert a floating point RAM value to a fixed point bigint
@@ -25,6 +26,11 @@ export interface ClaimInfo {
     filename: string;
     chunkSize: number;
     numChunks: number;
+}
+
+function hasAllocTag(proc: ProcessInfo): boolean {
+    const idx = proc.args.indexOf(TAG_ARG);
+    return idx !== -1 && typeof proc.args[idx + 1] === "number";
 }
 
 export type LogFn = (line: string) => void;
@@ -112,7 +118,16 @@ export class MemoryAllocator {
     updateReserved(): void {
         for (const worker of this.workers.values()) {
             worker.updateTotalRam();
-            worker.updateReservedRam();
+            const procs = this.ns.ps(worker.hostname);
+            let allocRam = 0n;
+            let foreignRam = 0n;
+            for (const p of procs) {
+                const ram = toFixed((p as any).ramUsage ?? 0);
+                if (hasAllocTag(p)) allocRam += ram;
+                else if (this.isRegistered(p.pid)) allocRam += ram;
+                else foreignRam += ram;
+            }
+            worker.reservedRam = foreignRam;
         }
     }
 
@@ -380,6 +395,14 @@ export class MemoryAllocator {
         if (chunk) {
             chunk.numChunks -= claim.numChunks;
         }
+    }
+
+    private isRegistered(pid: number): boolean {
+        for (const alloc of this.allocations.values()) {
+            if (alloc.pid === pid) return true;
+            if (alloc.claims.some(c => c.pid === pid)) return true;
+        }
+        return false;
     }
 }
 

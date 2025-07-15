@@ -1,4 +1,4 @@
-import type { NS } from "netscript";
+import type { NS, ProcessInfo } from "netscript";
 
 import { describe, expect, test } from '@jest/globals';
 
@@ -10,11 +10,19 @@ type HostInfo = { max: number; used: number };
 
 type HostMap = Record<string, HostInfo>;
 
-function makeNS(hosts: HostMap, procs: ProcMap, purchased: string[] = []): NS {
+type ProcList = Record<string, ProcessInfo[]>;
+
+function makeNS(
+    hosts: HostMap,
+    procs: ProcMap,
+    purchased: string[] = [],
+    psMap: ProcList = {},
+): NS {
     return {
         getServerMaxRam: (h: string) => hosts[h].max,
         getServerUsedRam: (h: string) => hosts[h].used,
         isRunning: (pid: number) => procs[pid] ?? false,
+        ps: (host?: string) => (host ? psMap[host] ?? [] : []),
         formatRam: (ram: number) => `${ram}`,
         getPurchasedServers: () => purchased,
     } as unknown as NS;
@@ -122,7 +130,20 @@ test('shrinkable allocation uses partial capacity', () => {
 
 test('updateReserved adjusts reserved RAM', () => {
     const hosts = { h1: { max: 32, used: 0 } };
-    const ns = makeNS(hosts, {});
+    const psMap = {
+        h1: [{
+            filename: 'x.js',
+            threads: 1,
+            args: [],
+            pid: 99,
+            temporary: false,
+            parent: 0,
+            ramUsage: 4,
+            server: 'h1',
+            tailProperties: null,
+        } as unknown as ProcessInfo],
+    };
+    const ns = makeNS(hosts, {}, [], psMap);
     const alloc = new MemoryAllocator(ns);
     alloc.pushWorker('h1');
 
@@ -172,7 +193,20 @@ test('releaseChunks across hosts updates state', () => {
 
 test('updateReserved reflects manual host usage changes', () => {
     const hosts = { h1: { max: 32, used: 0 } };
-    const ns = makeNS(hosts, {});
+    const psMap: ProcList = {
+        h1: [{
+            filename: 'y.js',
+            threads: 1,
+            args: [],
+            pid: 99,
+            temporary: false,
+            parent: 0,
+            ramUsage: 4,
+            server: 'h1',
+            tailProperties: null,
+        } as unknown as ProcessInfo],
+    };
+    const ns = makeNS(hosts, {}, [], psMap);
     const alloc = new MemoryAllocator(ns);
     alloc.pushWorker('h1');
 
@@ -182,6 +216,7 @@ test('updateReserved reflects manual host usage changes', () => {
     let worker = Array.from(alloc.workers.values())[0];
     expect(worker.reservedRam).toBe(BigInt(400));
     hosts.h1.used = 6;
+    psMap.h1 = [];
     alloc.updateReserved();
     worker = Array.from(alloc.workers.values())[0];
     expect(worker.reservedRam).toBe(0n);
