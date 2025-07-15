@@ -122,7 +122,7 @@ export class MemoryAllocator {
             let allocRam = 0n;
             let foreignRam = 0n;
             for (const p of procs) {
-                const ram = toFixed((p as any).ramUsage ?? 0);
+                const ram = toFixed(this.ns.getScriptRam(p.filename, worker.hostname));
                 if (hasAllocTag(p)) allocRam += ram;
                 else if (this.isRegistered(p.pid)) allocRam += ram;
                 else foreignRam += ram;

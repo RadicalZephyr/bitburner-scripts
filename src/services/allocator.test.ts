@@ -12,13 +12,17 @@ type HostMap = Record<string, HostInfo>;
 
 type ProcList = Record<string, ProcessInfo[]>;
 
+type FileMap = Record<string, number>;
+
 function makeNS(
     hosts: HostMap,
     procs: ProcMap,
     purchased: string[] = [],
     psMap: ProcList = {},
+    files: FileMap = {},
 ): NS {
     return {
+        getScriptRam: (f: string) => files[f] ?? 0,
         getServerMaxRam: (h: string) => hosts[h].max,
         getServerUsedRam: (h: string) => hosts[h].used,
         isRunning: (pid: number) => procs[pid] ?? false,
@@ -138,12 +142,12 @@ test('updateReserved adjusts reserved RAM', () => {
             pid: 99,
             temporary: false,
             parent: 0,
-            ramUsage: 4,
             server: 'h1',
             tailProperties: null,
         } as unknown as ProcessInfo],
     };
-    const ns = makeNS(hosts, {}, [], psMap);
+    const files = { 'x.js': 4 };
+    const ns = makeNS(hosts, {}, [], psMap, files);
     const alloc = new MemoryAllocator(ns);
     alloc.pushWorker('h1');
 
@@ -206,7 +210,8 @@ test('updateReserved reflects manual host usage changes', () => {
             tailProperties: null,
         } as unknown as ProcessInfo],
     };
-    const ns = makeNS(hosts, {}, [], psMap);
+    const files = { 'y.js': 4 };
+    const ns = makeNS(hosts, {}, [], psMap, files);
     const alloc = new MemoryAllocator(ns);
     alloc.pushWorker('h1');
 
