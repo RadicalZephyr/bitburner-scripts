@@ -37,7 +37,9 @@ export function purchaseBestGear(ns: NS, memberName: string, role: string, money
         const cost = ns.gang.getEquipmentCost(equip);
 
         const roi = computeROI(cost, gainRate);
+        ns.print(`INFO: ROI on buying ${equip} is ${ns.tFormat(roi * 1000)}`);
         if (roi <= limit) {
+            ns.print(`SUCCESS: buying ${memberName} ${equip}`);
             ns.gang.purchaseEquipment(memberName, equip);
         }
     }
