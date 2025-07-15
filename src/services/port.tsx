@@ -7,6 +7,7 @@ import {
     MessageType,
     PortRelease,
 } from "services/client/port";
+import { MemoryClient } from "services/client/memory";
 
 import { readAllFromPort } from "util/ports";
 
@@ -20,6 +21,11 @@ export async function main(ns: NS) {
     const respPort = ns.getPortHandle(PORT_ALLOCATOR_RESPONSE_PORT);
 
     const allocator = new PortAllocator(ns);
+
+    const memClient = new MemoryClient(ns);
+
+    const self = ns.self();
+    memClient.registerAllocation(self.server, self.ramUsage, 1);
 
     let waiting = true;
     port.nextWrite().then(() => { waiting = true; });
