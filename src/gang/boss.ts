@@ -72,9 +72,13 @@ OPTIONS
         return;
     }
 
+    ns.disableLog("ALL");
+
     const currentNames = new Set(ns.gang.getMemberNames());
     const availableNames = NAMES.filter(n => !currentNames.has(n));
     let nameIndex = 0;
+
+    ns.print(`Current members: ${Array.from(currentNames).join(", ")}`);
 
     const memberState: Record<string, MemberState> = {};
     for (const name of currentNames) {
@@ -85,6 +89,7 @@ OPTIONS
         "Train Hacking" : "Train Combat";
 
     while (true) {
+        ns.print(`INFO: starting next tick`);
         if (
             ns.gang.canRecruitMember() &&
             ns.gang.getGangInformation().respect >= ns.gang.respectForNextRecruit() &&
@@ -93,6 +98,7 @@ OPTIONS
         ) {
             const name = availableNames[nameIndex++];
             if (ns.gang.recruitMember(name)) {
+                ns.print(`SUCCESS: recruited ${name}!`);
                 currentNames.add(name);
                 memberState[name] = "bootstrapping";
             }
@@ -101,12 +107,24 @@ OPTIONS
         const thresholds = getThresholds(ns.gang.getMemberNames().length);
 
         for (const name of ns.gang.getMemberNames()) {
+            ns.print(`INFO: assigning current task for ${name}`);
+
             if (!(name in memberState)) memberState[name] = "bootstrapping";
+            ns.print(`INFO: ${name} is ${memberState[name]}`);
 
             if (memberState[name] === "bootstrapping") {
                 ns.gang.setMemberTask(name, trainingTask);
                 const result = ns.gang.getAscensionResult(name);
                 if (result) {
+                    ns.print(`INFO: ascension gains ` +
+                        `hck: ${result.hack} ` +
+                        `str: ${result.str} ` +
+                        `def: ${result.def} ` +
+                        `dex: ${result.dex} ` +
+                        `agi: ${result.agi} ` +
+                        `cha: ${result.cha} ` +
+                        `for ${name}`
+                    );
                     const maxGain = Math.max(
                         result.hack,
                         result.str,
@@ -117,6 +135,7 @@ OPTIONS
                     );
 
                     if (maxGain >= thresholds.ascendMult) {
+                        ns.print(`SUCCESS: ascending ${name}!`);
                         ns.gang.ascendMember(name);
                         memberState[name] = "ready";
                     }
