@@ -127,6 +127,16 @@ export class MemoryAllocator {
                 else if (this.isRegistered(p.pid)) allocRam += ram;
                 else foreignRam += ram;
             }
+            if (allocRam > worker.allocatedRam) {
+                const allocRamStr = this.ns.formatRam(fromFixed(allocRam));
+                const workerAllocRamStr = this.ns.formatRam(fromFixed(worker.allocatedRam));
+                this.printLog(
+                    `WARN: ${worker.hostname} has more in use RAM ` +
+                    `attributed to allocations (${allocRamStr}) ` +
+                    `than total allocated RAM (${workerAllocRamStr})`
+                );
+            }
+
             worker.reservedRam = foreignRam;
         }
     }
