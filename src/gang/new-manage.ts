@@ -6,7 +6,7 @@ import { Condition, PickByType, StatTracker, Threshold } from "util/stat-tracker
 
 const MAX_GANG_MEMBERS = 12;
 
-const NAMES = [
+export const NAMES = [
     "Hamma",
     "Ruwen",
 
