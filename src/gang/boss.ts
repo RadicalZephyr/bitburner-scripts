@@ -1,7 +1,26 @@
 import type { NS } from "netscript";
-import { NAMES } from "gang/new-manage";
 
 const MAX_MEMBERS = 12;
+
+const NAMES = [
+    "Hamma",
+    "Ruwen",
+
+    "Sift",
+    "Lylan",
+
+    "Overlord",
+    "Uruziel",
+
+    "Kysandra",
+    "Tremain",
+
+    "Madda",
+    "Padda",
+
+    "Eiru",
+    "Miranda",
+] as const;
 
 /**
  * Recruit and train gang members up to the maximum allowed.
