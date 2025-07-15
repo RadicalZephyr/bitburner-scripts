@@ -1,22 +1,20 @@
-Here’s a proposed, phase-by-phase roadmap to evolve your gang manager from a bare-bones recruiter/trainer into a fully dynamic, ROI-driven lifecycle controller:
-
----
-
 ## **Phase 0 (MVP): Recruit & Train**
 
 **Goal:** Automatically fill all 12 slots and push every member into your chosen training task.
 
 * **RecruitmentManager**
 
-  * Watch `ns.gang.getMemberNames()` → if count < 12 and Respect ≥ nextRecruitReq\[count+1], call `ns.gang.createMember()`.
+  * Watch `ns.gang.getMemberNames()` → if count < 12 and check
+    `ns.gang.canRecruitMember()` if so, call `ns.gang.createMember()`.
+
 * **TrainingAssignment**
 
   * On each tick, for each member:
 
     * If state === `"training"` → assign your fastest-XP training task (e.g. “Train Combat”).
+
 * **Config**
 
-  * `recruitReqByCount: number[]` → map of members to required Respect.
   * `trainingTask: string`.
 
 **Deliverable:** TypeScript module that fills slots and assigns everyone to `trainingTask` every tick.
