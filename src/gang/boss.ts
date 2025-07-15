@@ -126,7 +126,7 @@ OPTIONS
                     memberInfo.cha,
                 );
 
-                if (maxLevel < thresholds.trainLevel) {
+                if (maxLevel > thresholds.trainLevel) {
                     ns.print(`SUCCESS: ${name} has finished bootstrapping!`);
                     memberState[name] = "ready";
                 }
