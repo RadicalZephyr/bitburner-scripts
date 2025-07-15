@@ -69,6 +69,19 @@ export class StatTracker<Type> {
     }
 
     /**
+     * Compute the velocity of the specified field.
+     *
+     * @param stat - The field to compute the velocity for
+     * @returns Numeric value of the velocity or null if not enough history exists
+     */
+    velocity(stat: keyof PickByType<Type, number>): number | void {
+        if (this.history.length > 2) {
+            const velocity = computeVelocity(this.history.at(-1)!, this.history.at(0)!);
+            return velocity[stat] as number;
+        }
+    }
+
+    /**
      * Watches the value of the given field, resolving when it the
      * comparing the value to the threshold satisfies the
      * condition.
