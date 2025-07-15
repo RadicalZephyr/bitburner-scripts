@@ -1,5 +1,21 @@
 import type { GangGenInfo, GangMemberInfo, GangTaskStats, NS } from "netscript";
-import { pickByType, PickByType } from "/util/stat-tracker";
+import { pickByType, PickByType } from "util/stat-tracker";
+
+export type Role =
+    | "bootstrapping"
+    | "respectGrind"
+    | "moneyGrind"
+    | "warfare"
+    | "cooling";
+
+export interface RoleProfile {
+    hackWeight: number;
+    strWeight: number;
+    defWeight: number;
+    dexWeight: number;
+    agiWeight: number;
+    chaWeight: number;
+}
 
 /**
  * Helper for analyzing gang tasks to determine optimal assignments.
@@ -15,6 +31,13 @@ export class TaskAnalyzer {
     bestWarTasks: GangTaskStats[] = [];
     bestCoolingTasks: GangTaskStats[] = [];
     coolingTaskList: GangTaskStats[] = [];
+    private profiles: Record<Role, RoleProfile> = {
+        bootstrapping: emptyProfile(),
+        respectGrind: emptyProfile(),
+        moneyGrind: emptyProfile(),
+        warfare: emptyProfile(),
+        cooling: emptyProfile(),
+    };
 
     constructor(ns: NS) {
         this.ns = ns;
@@ -58,6 +81,23 @@ export class TaskAnalyzer {
         this.coolingTaskList = this.bestCoolingTasks.filter(
             t => t.baseWanted < 0 || (wanted.get(t) ?? 0) === minWanted
         );
+
+        this.profiles = {
+            bootstrapping: averageWeights(this.tasks.filter(t => t.name.startsWith("Train"))),
+            respectGrind: averageWeights(this.bestRespectTasks.slice(0, 3)),
+            moneyGrind: averageWeights(this.bestMoneyTasks.slice(0, 3)),
+            warfare: averageWeights(this.bestWarTasks.slice(0, 3)),
+            cooling: averageWeights(this.coolingTaskList),
+        };
+    }
+
+    /**
+     * Get the averaged stat weight profiles for each role.
+     *
+     * @returns Map of role to average weight profile
+     */
+    roleProfiles(): Record<Role, RoleProfile> {
+        return this.profiles;
     }
 
     private averageMember(): GangMemberInfo {
@@ -87,6 +127,30 @@ export class TaskAnalyzer {
         const firstMemberNonNumber = pickByType(firstMember, (v): v is any => typeof v !== 'number');
         return { ...firstMemberNonNumber, ...avg };
     }
+}
+
+function emptyProfile(): RoleProfile {
+    return { hackWeight: 0, strWeight: 0, defWeight: 0, dexWeight: 0, agiWeight: 0, chaWeight: 0 };
+}
+
+function averageWeights(tasks: GangTaskStats[]): RoleProfile {
+    const profile = emptyProfile();
+    if (tasks.length === 0) return profile;
+    for (const t of tasks) {
+        profile.hackWeight += t.hackWeight;
+        profile.strWeight += t.strWeight;
+        profile.defWeight += t.defWeight;
+        profile.dexWeight += t.dexWeight;
+        profile.agiWeight += t.agiWeight;
+        profile.chaWeight += t.chaWeight;
+    }
+    profile.hackWeight /= tasks.length;
+    profile.strWeight /= tasks.length;
+    profile.defWeight /= tasks.length;
+    profile.dexWeight /= tasks.length;
+    profile.agiWeight /= tasks.length;
+    profile.chaWeight /= tasks.length;
+    return profile;
 }
 
 function calculateMoneyGain(ns: NS, gang: GangGenInfo, member: GangMemberInfo, task: GangTaskStats): number {

@@ -1,6 +1,10 @@
-import type { NS } from "netscript";
+import type { GangMemberInfo, NS } from "netscript";
 import { TaskAnalyzer } from "gang/task-analyzer";
 import { wantedTaskBalancer } from "gang/task-balancer";
+import { assignTrainingTasks } from "gang/training-focus-manager";
+import { purchaseBestGear } from "gang/equipment-manager";
+import { StatTracker } from "util/stat-tracker";
+import { CONFIG } from "gang/config";
 
 interface Thresholds {
     trainLevel: number;
@@ -86,12 +90,15 @@ OPTIONS
     for (const name of currentNames) {
         memberState[name] = "bootstrapping";
     }
+    const trackers: Record<string, StatTracker<GangMemberInfo>> = {};
 
     const trainingTask = ns.gang.getGangInformation().isHacking ?
         "Train Hacking" : "Train Combat";
 
     while (true) {
         ns.print(`INFO: starting next tick`);
+        const count = ns.gang.getMemberNames().length;
+        const velocityThresh = CONFIG.velocityThreshold[count] ?? 0.1;
         if (
             ns.gang.canRecruitMember() &&
             ns.gang.getGangInformation().respect >= ns.gang.respectForNextRecruit() &&
@@ -106,8 +113,9 @@ OPTIONS
             }
         }
 
-        const thresholds = getThresholds(ns.gang.getMemberNames().length);
+        const thresholds = getThresholds(count);
         const ready: string[] = [];
+        const training: string[] = [];
 
         for (const name of ns.gang.getMemberNames()) {
             ns.print(`INFO: assigning current task for ${name}`);
@@ -115,8 +123,12 @@ OPTIONS
             if (!(name in memberState)) memberState[name] = "bootstrapping";
             ns.print(`INFO: ${name} is ${memberState[name]}`);
 
+            if (!trackers[name]) trackers[name] = new StatTracker<GangMemberInfo>();
+            const memberInfo = ns.gang.getMemberInformation(name);
+            trackers[name].update(memberInfo);
+
             if (memberState[name] === "bootstrapping") {
-                const memberInfo = ns.gang.getMemberInformation(name);
+                training.push(name);
                 const maxLevel = Math.max(
                     memberInfo.hack,
                     memberInfo.str,
@@ -156,14 +168,25 @@ OPTIONS
                     if (maxGain >= thresholds.ascendMult) {
                         ns.print(`SUCCESS: ascending ${name}!`);
                         ns.gang.ascendMember(name);
+                        trackers[name].reset();
                     }
                 }
             } else {
                 ready.push(name);
             }
+            const hist = trackers[name].history;
+            if (hist.length >= 2) {
+                const v = (hist.at(-1)!.hack - hist[0].hack) / ((hist.at(-1)!.t - hist[0].t) / 1000);
+                if (v < velocityThresh && ns.gang.getAscensionResult(name)) {
+                    ns.gang.ascendMember(name);
+                    trackers[name].reset();
+                }
+            }
         }
 
         const analyzer = new TaskAnalyzer(ns);
+        assignTrainingTasks(ns, training, analyzer.roleProfiles());
+        training.forEach(n => purchaseBestGear(ns, n, "bootstrapping"));
         wantedTaskBalancer(ns, ready, analyzer, 1);
 
         await ns.gang.nextUpdate();
