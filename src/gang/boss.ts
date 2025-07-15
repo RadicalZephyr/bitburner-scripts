@@ -1,11 +1,12 @@
-import type { GangMemberInfo, NS } from "netscript";
+import type { GangMemberInfo, MoneySource, NS } from "netscript";
 
 import { TaskAnalyzer } from "gang/task-analyzer";
 import { wantedTaskBalancer } from "gang/task-balancer";
 import { assignTrainingTasks } from "gang/training-focus-manager";
 import { purchaseBestGear } from "gang/equipment-manager";
-import { StatTracker } from "util/stat-tracker";
 import { CONFIG } from "gang/config";
+
+import { StatTracker } from "util/stat-tracker";
 
 interface Thresholds {
     trainLevel: number;
@@ -92,6 +93,8 @@ OPTIONS
         memberState[name] = "bootstrapping";
     }
     const trackers: Record<string, StatTracker<GangMemberInfo>> = {};
+
+    const moneyTracker = new StatTracker<MoneySource>();
 
     while (true) {
         ns.print(`INFO: starting next tick`);
@@ -191,7 +194,8 @@ OPTIONS
 
         const analyzer = new TaskAnalyzer(ns);
         assignTrainingTasks(ns, training, analyzer.roleProfiles());
-        for (const n of training) purchaseBestGear(ns, n, "bootstrapping");
+        moneyTracker.update(ns.getMoneySources().sinceInstall);
+        for (const n of training) purchaseBestGear(ns, n, "bootstrapping", moneyTracker);
         wantedTaskBalancer(ns, ready, analyzer, 1);
 
         await ns.gang.nextUpdate();
