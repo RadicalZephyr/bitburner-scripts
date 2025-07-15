@@ -21,7 +21,7 @@ export type PickByType<T, U> = Pick<T, {
     [K in keyof T]: T[K] extends U ? K : never
 }[keyof T]>;
 
-function pickByType<T, V>(
+export function pickByType<T, V>(
     obj: T,
     isV: (x: unknown) => x is V
 ): PickByType<T, V> {
