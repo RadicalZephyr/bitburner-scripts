@@ -1,8 +1,9 @@
 import type { AutocompleteData, NS } from "netscript";
 
 import { HostAllocation, MemoryClient, registerAllocationOwnership } from "services/client/memory";
-import { TaskSelectorClient, Lifecycle } from "batch/client/task_selector";
+import { TAG_ARG } from "/services/client/memory_tag";
 import { PortClient } from "services/client/port";
+import { TaskSelectorClient, Lifecycle } from "batch/client/task_selector";
 
 import { CONFIG } from "batch/config";
 import {
@@ -13,6 +14,7 @@ import {
 } from "batch/expected_value";
 
 import { collectDependencies } from "util/dependencies";
+
 
 export function autocomplete(data: AutocompleteData, _args: string[]): string[] {
     return data.servers;
@@ -141,7 +143,7 @@ OPTIONS
     // fully populated before entering the steady state loop.
     for (let i = 0; i < maxOverlap; ++i) {
         const host = batchHost.at(i);
-        let batchPids = await spawnBatch(ns, host, target, logistics.phases, donePortId);
+        let batchPids = await spawnBatch(ns, host, target, logistics.phases, donePortId, allocation.allocationId);
         batches.push(batchPids);
         currentBatches++;
         if (Date.now() >= lastHeartbeat + CONFIG.heartbeatCadence) {
@@ -207,7 +209,7 @@ OPTIONS
             }
         }
 
-        let batchPids = await spawnBatch(ns, host, target, phases, donePortId);
+        let batchPids = await spawnBatch(ns, host, target, phases, donePortId, allocation.allocationId);
         if (batchPids.length > 0) {
             batches[batchIndex] = batchPids;
             currentBatches++;
@@ -273,7 +275,7 @@ function makeBatchHostArray(allocatedChunks: HostAllocation[]) {
     return sparseHosts;
 }
 
-async function spawnBatch(ns: NS, host: string | null, target: string, phases: BatchPhase[], donePort: number): Promise<number[]> {
+async function spawnBatch(ns: NS, host: string | null, target: string, phases: BatchPhase[], donePort: number, allocId: number): Promise<number[]> {
     if (!host) return [];
 
     const scripts = Array.from(new Set(phases.map(p => p.script)));
@@ -295,7 +297,7 @@ async function spawnBatch(ns: NS, host: string | null, target: string, phases: B
                 return pids;
             }
 
-            const pid = ns.exec(script, host, { threads: phase.threads, temporary: true }, target, phase.start, lastArg);
+            const pid = ns.exec(script, host, { threads: phase.threads, temporary: true }, target, phase.start, lastArg, TAG_ARG, allocId);
             if (pid === 0) {
                 retryCount += 1;
                 ns.print(`WARN: failed to exec ${script} on ${host}, trying again`);
