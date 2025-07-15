@@ -6,9 +6,9 @@ interface Thresholds {
 }
 
 const thresholdsByCount: Record<number, Thresholds> = {
-    3: { trainLevel: 100, ascendMult: 0.05 },
-    6: { trainLevel: 500, ascendMult: 0.10 },
-    9: { trainLevel: 2000, ascendMult: 0.15 },
+    3: { trainLevel: 500, ascendMult: 1.00 },
+    6: { trainLevel: 1000, ascendMult: 0.80 },
+    9: { trainLevel: 5000, ascendMult: 0.5 },
     12: { trainLevel: 10000, ascendMult: 0.2 },
 };
 
