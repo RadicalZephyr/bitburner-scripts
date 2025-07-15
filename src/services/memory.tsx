@@ -231,8 +231,9 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memResponsePort
                     `${reg.numChunks}x${ns.formatRam(reg.chunkSize)} ` +
                     `${reg.filename}`
                 );
-                payload = memoryManager.registerAllocation(reg);
-                break;
+                memoryManager.registerAllocation(reg);
+                // Don't send a response, no one is listening.
+                continue;
 
             case MessageType.Status:
                 payload = { freeRam: memoryManager.getFreeRamTotal() };

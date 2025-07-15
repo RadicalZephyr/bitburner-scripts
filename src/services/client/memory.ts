@@ -290,7 +290,7 @@ export class MemoryClient extends Client<MessageType, Payload, ResponsePayload> 
         hostname: string,
         chunkSize: number,
         numChunks: number = 1,
-    ): Promise<AllocationResult> {
+    ): Promise<void> {
         const self = this.ns.self();
         const payload: AllocationRegister = {
             pid: self.pid,
@@ -299,15 +299,10 @@ export class MemoryClient extends Client<MessageType, Payload, ResponsePayload> 
             chunkSize,
             numChunks,
         };
-        const result = await this.sendMessageReceiveResponse(
+        await this.sendMessage(
             MessageType.Register,
             payload,
         );
-        if (!result) {
-            this.ns.print("WARN: allocation registration failed");
-            return null;
-        }
-        return result as AllocationResult;
     }
 
     /**
