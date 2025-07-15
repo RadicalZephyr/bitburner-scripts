@@ -74,7 +74,8 @@ interface GangTaskStats { /* … see prompt for full fields … */ }
 
 2. **TrainingAssignment**
 
-   - Config: `trainingTask: string` (e.g. "Train Combat").
+   - Determine `trainingTask` from the gang type
+     (`"Train Hacking"` or `"Train Combat"`).
    - Each tick: for each `name` in `ns.gang.getMemberNames()`, call:
      ```ts
      ns.gang.setMemberTask(name, trainingTask);
@@ -83,7 +84,6 @@ interface GangTaskStats { /* … see prompt for full fields … */ }
 3. **Configuration**
 
    - `MAX_MEMBERS = 12`
-   - `trainingTask`
 
 ---
 
@@ -109,7 +109,8 @@ interface GangTaskStats { /* … see prompt for full fields … */ }
 2. **LifecycleManager**
 
    - Track `MemberState` (`"bootstrapping" | "ready"`).
-   - **Bootstrapping**: cycle between `trainingTask` and `ascend` until `ns.gang.getAscensionResult(name)` gain ≥ `ascendMult`.
+   - **Bootstrapping**: cycle between training and `ascend` until
+     `ns.gang.getAscensionResult(name)` gain ≥ `ascendMult`.
    - Transition to `"ready"` once gain threshold met.
 
 ---
