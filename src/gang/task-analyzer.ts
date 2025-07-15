@@ -144,11 +144,24 @@ function calculateWantedGain(ns: NS, gang: GangGenInfo, member: GangMemberInfo, 
     if (ns.fileExists("Formulas.exe", "home"))
         return ns.formulas.gang.wantedLevelGain(gang, member, task);
     else
-        return estimateWantedGain(task);
+        return estimateWantedGain(gang, member, task);
 }
 
-function estimateWantedGain(task: GangTaskStats): number {
-    return task.baseWanted;
+function estimateWantedGain(gang: GangGenInfo, member: GangMemberInfo, task: GangTaskStats): number {
+    if (task.baseWanted === 0) return 0;
+    let statWeight =
+        (task.hackWeight / 100) * member.hack +
+        (task.strWeight / 100) * member.str +
+        (task.defWeight / 100) * member.def +
+        (task.dexWeight / 100) * member.dex +
+        (task.agiWeight / 100) * member.agi +
+        (task.chaWeight / 100) * member.cha;
+    statWeight -= 4 * task.difficulty;
+    if (statWeight <= 0) return 0;
+    const territoryMult = Math.max(0.005, Math.pow(gang.territory * 100, task.territory.wanted) / 100);
+    const territoryPenalty = (0.2 * gang.territory + 0.8);
+    if (isNaN(territoryMult) || territoryMult <= 0) return 0;
+    return Math.pow(task.baseWanted * statWeight * territoryMult, territoryPenalty);
 }
 
 function calculateWantedPenalty(gang: GangGenInfo): number {
