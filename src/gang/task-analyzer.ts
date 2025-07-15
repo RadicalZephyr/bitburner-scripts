@@ -1,4 +1,5 @@
 import type { GangMemberInfo, GangTaskStats, NS } from "netscript";
+import { pickByType, PickByType } from "/util/stat-tracker";
 
 /**
  * Helper for analyzing gang tasks to determine optimal assignments.
@@ -52,13 +53,11 @@ export class TaskAnalyzer {
         if (names.length === 0) {
             throw new Error("No gang members");
         }
-        const sample = this.ns.gang.getMemberInformation(names[0]);
-        const fields: (keyof GangMemberInfo)[] = [
-            "hack", "str", "def", "dex", "agi", "cha",
-            "hack_mult", "str_mult", "def_mult", "dex_mult", "agi_mult", "cha_mult",
-            "hack_asc_mult", "str_asc_mult", "def_asc_mult", "dex_asc_mult",
-            "agi_asc_mult", "cha_asc_mult",
-        ];
+
+        const firstMember = this.ns.gang.getMemberInformation(names[0]);
+        const sample = pickByType(firstMember, (v): v is number => typeof v === 'number');
+        const fields = Object.keys(sample) as (keyof PickByType<GangMemberInfo, number>)[];
+
         const sums: Record<string, number> = {};
         for (const f of fields) sums[f as string] = 0;
 
@@ -69,10 +68,11 @@ export class TaskAnalyzer {
             }
         }
 
-        const avg: GangMemberInfo = { ...sample };
+        const avg: PickByType<GangMemberInfo, number> = { ...sample };
         for (const f of fields) {
-            (avg as any)[f] = sums[f as string] / names.length;
+            avg[f] = sums[f] / names.length;
         }
-        return avg;
+        const firstMemberNonNumber = pickByType(firstMember, (v): v is any => typeof v !== 'number');
+        return { ...firstMemberNonNumber, ...avg };
     }
 }
