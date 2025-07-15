@@ -76,6 +76,9 @@ interface GangTaskStats { /* … see prompt for full fields … */ }
 
    - Determine `trainingTask` from the gang type
      (`"Train Hacking"` or `"Train Combat"`).
+   - Initial work tasks mirror the in-game defaults:
+     - heating: `"Money Laundering"` (hacking) or `"Strongarm Civilians"` (combat)
+     - cooling: `"Ethical Hacking"` (hacking) or `"Vigilante Justice"` (combat)
    - Each tick: for each `name` in `ns.gang.getMemberNames()`, call:
      ```ts
      ns.gang.setMemberTask(name, trainingTask);
@@ -141,12 +144,12 @@ interface GangTaskStats { /* … see prompt for full fields … */ }
    - Each tick, fetch `wantedLevel`, `wantedLevelGainRate`, and `wantedPenalty` from `GangGenInfo`.
 
 2. **WantedTaskBalancer**
-   - Define `maxWantedPenalty` threshold (e.g., 0.9).
-   - If `wantedPenalty > maxWantedPenalty`, assign additional members to a cooling task (lowest `baseWanted` and high penalty reduction).
-   - Else maintain base split from Phase 2 between respect and money tasks.
+   - Define `maxWantedPenalty` threshold (default `0.05`).
+   - If `wantedPenalty > maxWantedPenalty`, assign `assignCoolingCount` members to the best task from `coolingTaskList`.
+   - Else reuse the Phase 2 split between respect and money tasks.
 
 3. **CoolingTask Analysis**
-   - From `TaskAnalyzer`, identify tasks with negative or lowest `wantedLevelGainRate` (i.e., best for cooling).
+   - `TaskAnalyzer` computes `coolingTaskList` by sorting tasks by wanted gain. Tasks with `baseWanted < 0` or minimal gain appear first; this list is exposed as `bestCoolingTasks`.
    - Integrate into split logic:
      ```ts
      if (wantedPenalty > maxWantedPenalty) {
@@ -156,7 +159,7 @@ interface GangTaskStats { /* … see prompt for full fields … */ }
      ```
 
 4. **Configuration**
-   - `maxWantedPenalty`
+   - `maxWantedPenalty` — penalty threshold before assigning cooling (defaults to `0.05`)
    - `coolingTaskList` (from `TaskAnalyzer`)
 
 ---

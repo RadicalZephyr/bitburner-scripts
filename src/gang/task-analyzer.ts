@@ -13,6 +13,8 @@ export class TaskAnalyzer {
     bestMoneyTasks: GangTaskStats[] = [];
     bestRespectTasks: GangTaskStats[] = [];
     bestWarTasks: GangTaskStats[] = [];
+    bestCoolingTasks: GangTaskStats[] = [];
+    coolingTaskList: GangTaskStats[] = [];
 
     constructor(ns: NS) {
         this.ns = ns;
@@ -30,10 +32,12 @@ export class TaskAnalyzer {
         const avgMember = this.averageMember();
         const money = new Map<GangTaskStats, number>();
         const respect = new Map<GangTaskStats, number>();
+        const wanted = new Map<GangTaskStats, number>();
 
         for (const task of this.tasks) {
             money.set(task, calculateMoneyGain(this.ns, gangInfo, avgMember, task));
             respect.set(task, calculateRespectGain(this.ns, gangInfo, avgMember, task));
+            wanted.set(task, calculateWantedGain(this.ns, gangInfo, avgMember, task));
         }
 
         const moneySort = (a: GangTaskStats, b: GangTaskStats) =>
@@ -42,10 +46,18 @@ export class TaskAnalyzer {
             (respect.get(b) ?? 0) - (respect.get(a) ?? 0);
         const warSort = (a: GangTaskStats, b: GangTaskStats) =>
             (b.territory.respect ?? 0) - (a.territory.respect ?? 0);
+        const wantedSort = (a: GangTaskStats, b: GangTaskStats) =>
+            (wanted.get(a) ?? 0) - (wanted.get(b) ?? 0);
 
         this.bestMoneyTasks = [...this.tasks].sort(moneySort);
         this.bestRespectTasks = [...this.tasks].sort(respectSort);
         this.bestWarTasks = [...this.tasks].sort(warSort);
+        this.bestCoolingTasks = [...this.tasks].sort(wantedSort);
+
+        const minWanted = Math.min(...this.bestCoolingTasks.map(t => wanted.get(t) ?? 0));
+        this.coolingTaskList = this.bestCoolingTasks.filter(
+            t => t.baseWanted < 0 || (wanted.get(t) ?? 0) === minWanted
+        );
     }
 
     private averageMember(): GangMemberInfo {
@@ -126,6 +138,17 @@ function estimateRespectGain(gang: GangGenInfo, member: GangMemberInfo, task: Ga
     if (isNaN(territoryMult) || territoryMult <= 0) return 0;
     const respectMult = calculateWantedPenalty(gang);
     return Math.pow(11 * task.baseRespect * statWeight * territoryMult * respectMult, territoryPenalty);
+}
+
+function calculateWantedGain(ns: NS, gang: GangGenInfo, member: GangMemberInfo, task: GangTaskStats): number {
+    if (ns.fileExists("Formulas.exe", "home"))
+        return ns.formulas.gang.wantedLevelGain(gang, member, task);
+    else
+        return estimateWantedGain(task);
+}
+
+function estimateWantedGain(task: GangTaskStats): number {
+    return task.baseWanted;
 }
 
 function calculateWantedPenalty(gang: GangGenInfo): number {

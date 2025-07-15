@@ -3,6 +3,7 @@ import { Config, ConfigInstance } from "util/config";
 const entries = [
     ["ascendThreshold", 1.01],
     ["trainingPercent", 4 / 12],
+    // Maximum wanted level penalty tolerated before switching to cooling tasks
     ["maxWantedPenalty", 0.05],
     ["minWantedLevel", 10],
     ["jobCheckInterval", 5000],

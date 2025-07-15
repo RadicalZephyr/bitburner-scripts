@@ -32,7 +32,7 @@ Example:
 CONFIG VALUES
   GANG_ascendThreshold   Ascension multiplier required to ascend
   GANG_trainingPercent   Fraction of members training
-  GANG_maxWantedPenalty  Maximum wanted penalty before cooling
+  GANG_maxWantedPenalty  Maximum wanted penalty before switching members to cooling tasks
   GANG_minWantedLevel    Wanted level where heating resumes
   GANG_jobCheckInterval  Delay between evaluations`);
         return;
