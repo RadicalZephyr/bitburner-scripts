@@ -82,6 +82,16 @@ Example:
 
     let memoryManager = new MemoryAllocator(ns, printLog);
 
+    // Register this script's memory usage
+    const self = ns.self();
+    memoryManager.registerAllocation({
+        pid: self.pid,
+        hostname: self.server,
+        filename: self.filename,
+        chunkSize: self.ramUsage,
+        numChunks: 1
+    });
+
     printLog(`INFO: starting memory manager on ${ns.self().server}`);
 
     if (ns.getServerMaxRam("home") > 32) {
