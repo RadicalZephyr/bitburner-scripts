@@ -1,4 +1,4 @@
-import type { NetscriptPort, NS, ScriptArg } from "netscript";
+import type { NetscriptPort, NS, ScriptArg, RunOptions } from "netscript";
 
 import type { LaunchRunOptions } from "services/launch";
 import {
@@ -151,12 +151,20 @@ export class GrowableAllocation extends TransferableAllocation {
         let totalThreads: number;
         let allocationFlag: string | undefined;
         let explicitDependencies: string[] = [];
+        let baseRunOptions: Partial<RunOptions> | undefined;
         if (typeof threads === "number") {
             totalThreads = threads;
         } else {
             totalThreads = threads.threads ?? 1;
             allocationFlag = threads.allocationFlag;
             explicitDependencies = threads.dependencies ?? [];
+            const runOpts: Partial<RunOptions> = {};
+            if (threads.ramOverride !== undefined) runOpts.ramOverride = threads.ramOverride;
+            if (threads.temporary !== undefined) runOpts.temporary = threads.temporary;
+            if (threads.preventDuplicates !== undefined) runOpts.preventDuplicates = threads.preventDuplicates;
+            if (Object.keys(runOpts).length > 0) {
+                baseRunOptions = runOpts;
+            }
         }
 
         const dependencies = Array.from(collectDependencies(this.ns, script));
@@ -177,7 +185,10 @@ export class GrowableAllocation extends TransferableAllocation {
                     return pids;
                 }
 
-                const pid = this.ns.exec(script, chunk.hostname, threadsHere, ...execArgs);
+                const runOptions = baseRunOptions
+                    ? { ...baseRunOptions, threads: threadsHere }
+                    : threadsHere;
+                const pid = this.ns.exec(script, chunk.hostname, runOptions as never, ...execArgs);
                 if (pid === 0) {
                     retryCount += 1;
                     this.ns.printf(`WARN: failed to spawn ${threadsHere} threads of ${script} on ${chunk.hostname} trying again`);
