@@ -2,7 +2,8 @@ import type { AutocompleteData, NS } from "netscript";
 
 import { TaskSelectorClient, Lifecycle } from "batch/client/task_selector";
 
-import { registerAllocationOwnership, MemoryClient } from "services/client/memory";
+import { GrowableMemoryClient } from "services/client/growable_memory";
+import { registerAllocationOwnership } from "services/client/memory";
 
 import { CONFIG } from "batch/config";
 import { awaitRound, calculateRoundInfo, RoundInfo } from "batch/progress";
@@ -63,7 +64,7 @@ OPTIONS
     }
 
     const taskSelectorClient = new TaskSelectorClient(ns);
-    const memClient = new MemoryClient(ns);
+    const memClient = new GrowableMemoryClient(ns);
     const script = "/batch/w.js";
     const scriptRam = ns.getScriptRam(script, "home");
 
@@ -80,7 +81,7 @@ OPTIONS
     }
 
     let requestThreads = maxThreadsCap;
-    let allocation = await memClient.requestTransferableAllocation(
+    let allocation = await memClient.requestGrowableAllocation(
         scriptRam,
         requestThreads,
         {
@@ -111,21 +112,15 @@ OPTIONS
         const info: RoundInfo = calculateRoundInfo(ns, target, round, totalRounds, roundsRemaining);
 
         const spawnThreads = Math.min(threadsNeeded, totalThreads);
-        const pids: number[] = [];
-        let remaining = spawnThreads;
 
-        for (const chunk of allocation.allocatedChunks) {
-            if (remaining <= 0) break;
-            const t = Math.min(chunk.numChunks, remaining);
-            ns.scp(script, chunk.hostname, "home");
-            const pid = ns.exec(script, chunk.hostname, { threads: t, temporary: true }, target, 0, TAG_ARG, allocation.allocationId);
-            if (pid) {
-                pids.push(pid);
-            } else {
-                ns.tprintf("failed to spawn %d threads on %s", t, chunk.hostname);
-            }
-            remaining -= t;
-        }
+        const pids: number[] = await allocation.launch(
+            script,
+            { threads: spawnThreads, temporary: true },
+            target,
+            0,
+            TAG_ARG,
+            allocation.allocationId
+        );
 
         const sendHb = () =>
             Promise.resolve(
