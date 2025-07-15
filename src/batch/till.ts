@@ -6,6 +6,7 @@ import { registerAllocationOwnership, MemoryClient } from "services/client/memor
 
 import { CONFIG } from "batch/config";
 import { awaitRound, calculateRoundInfo, RoundInfo } from "batch/progress";
+import { TAG_ARG } from "/services/client/memory_tag";
 
 export function autocomplete(data: AutocompleteData, _args: string[]): string[] {
     return data.servers;
@@ -117,7 +118,7 @@ OPTIONS
             if (remaining <= 0) break;
             const t = Math.min(chunk.numChunks, remaining);
             ns.scp(script, chunk.hostname, "home");
-            const pid = ns.exec(script, chunk.hostname, { threads: t, temporary: true }, target, 0);
+            const pid = ns.exec(script, chunk.hostname, { threads: t, temporary: true }, target, 0, TAG_ARG, allocation.allocationId);
             if (pid) {
                 pids.push(pid);
             } else {
