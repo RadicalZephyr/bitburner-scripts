@@ -15,7 +15,7 @@ import { MemoryClient, registerAllocationOwnership } from "services/client/memor
 import { launch } from "services/launch";
 
 import { readAllFromPort } from "util/ports";
-import { HUD_HEIGHT, KARMA_HEIGHT } from "/util/ui";
+import { HUD_HEIGHT, KARMA_HEIGHT } from "util/ui";
 
 interface InProgressTask {
     pid: number;

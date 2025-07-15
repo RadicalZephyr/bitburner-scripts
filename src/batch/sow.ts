@@ -11,7 +11,7 @@ import {
 import { CONFIG } from "batch/config";
 import { BatchLogistics, BatchPhase, calculatePhaseStartTimes } from "batch/phase";
 import { awaitRound, calculateRoundInfo, RoundInfo } from "batch/progress";
-import { TAG_ARG } from "/services/client/memory_tag";
+import { TAG_ARG } from "services/client/memory_tag";
 
 const GROW_SCRIPT = "/batch/g.js";
 const WEAKEN_SCRIPT = "/batch/w.js";

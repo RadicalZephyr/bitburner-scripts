@@ -10,7 +10,7 @@ import {
     MessageType,
 } from "services/client/memory";
 
-import { readAllFromPort } from "/util/ports";
+import { readAllFromPort } from "util/ports";
 
 export async function main(ns: NS) {
     let memPort = ns.getPortHandle(MEMORY_PORT);

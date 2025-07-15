@@ -24,7 +24,7 @@ import { DiscoveryClient } from "services/client/discover";
 import { fromFixed, ClaimInfo, MemoryAllocator, Worker } from "services/allocator";
 
 import { readAllFromPort } from "util/ports";
-import { HUD_HEIGHT, HUD_WIDTH, STATUS_WINDOW_WIDTH } from "/util/ui";
+import { HUD_HEIGHT, HUD_WIDTH, STATUS_WINDOW_WIDTH } from "util/ui";
 
 declare const React: any;
 

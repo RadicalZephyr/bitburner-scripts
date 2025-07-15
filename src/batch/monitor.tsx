@@ -10,7 +10,7 @@ import { registerAllocationOwnership } from "services/client/memory";
 
 import { extend } from "util/extend";
 import { readAllFromPort } from "util/ports";
-import { HUD_HEIGHT, HUD_WIDTH, STATUS_WINDOW_WIDTH } from "/util/ui";
+import { HUD_HEIGHT, HUD_WIDTH, STATUS_WINDOW_WIDTH } from "util/ui";
 
 
 declare const React: any;

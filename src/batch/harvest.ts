@@ -1,7 +1,7 @@
 import type { AutocompleteData, NS } from "netscript";
 
 import { HostAllocation, MemoryClient, registerAllocationOwnership } from "services/client/memory";
-import { TAG_ARG } from "/services/client/memory_tag";
+import { TAG_ARG } from "services/client/memory_tag";
 import { PortClient } from "services/client/port";
 import { TaskSelectorClient, Lifecycle } from "batch/client/task_selector";
 
