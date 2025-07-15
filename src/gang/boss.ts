@@ -1,6 +1,6 @@
 import type { NS } from "netscript";
 import { TaskAnalyzer } from "gang/task-analyzer";
-import { balanceTasks } from "gang/task-balancer";
+import { wantedTaskBalancer } from "gang/task-balancer";
 
 interface Thresholds {
     trainLevel: number;
@@ -164,7 +164,7 @@ OPTIONS
         }
 
         const analyzer = new TaskAnalyzer(ns);
-        balanceTasks(ns, ready, analyzer);
+        wantedTaskBalancer(ns, ready, analyzer, 1);
 
         await ns.gang.nextUpdate();
     }
