@@ -73,62 +73,58 @@ OPTIONS
 
     let taskSelectorClient = new TaskSelectorClient(ns);
 
-    let growThreads = neededGrowThreads(ns, target);
-    let weakenThreads: number;
-    if (maxThreads !== -1) {
-        growThreads = Math.min(growThreads, maxThreads);
-        ({ weakenThreads } = calculateSowThreadsForMaxThreads(ns, growThreads));
-    } else {
-        let growSecDelta = ns.growthAnalyzeSecurity(growThreads, target);
-        weakenThreads = weakenAnalyze(growSecDelta);
-    }
-
-    if (growThreads < 1 || weakenThreads < 1) {
+    const growThreads = neededGrowThreads(ns, target);
+    if (growThreads < 1) {
         ns.printf(`no need to sow ${target}`);
         ns.toast(`finished sowing ${target}!`, "success");
         taskSelectorClient.finishedSowing(target);
         return;
     }
 
+    const sowBatchLogistics = calculateSowBatchLogistics(ns, target);
+    const { batchRam, overlap } = sowBatchLogistics;
+
+    let allocChunks = overlap;
+    if (maxThreads !== -1) {
+        const batchThreads = sowBatchLogistics.phases.reduce((s, p) => s + p.threads, 0);
+    }
+    // let weakenThreads: number;
+    // if (maxThreads !== -1) {
+    //     growThreads = Math.min(growThreads, maxThreads);
+    //     ({ weakenThreads } = calculateSowThreadsForMaxThreads(ns, growThreads));
+    // } else {
+    //     let growSecDelta = ns.growthAnalyzeSecurity(growThreads, target);
+    //     weakenThreads = weakenAnalyze(growSecDelta);
+    // }
+
     const memClient = new MemoryClient(ns);
 
-    const wRam = ns.getScriptRam(WEAKEN_SCRIPT, "home");
-    const gRam = ns.getScriptRam(GROW_SCRIPT, "home");
-
     const allocOptions = { coreDependent: true, shrinkable: true };
-    let weakenAlloc = await memClient.requestTransferableAllocation(wRam, weakenThreads, allocOptions);
-
-    if (!weakenAlloc) {
-        ns.tprint("ERROR: failed to allocate memory for weaken threads");
-        return;
-    }
-
-    let growAlloc = await memClient.requestTransferableAllocation(gRam, growThreads, allocOptions);
-
-    if (!growAlloc) {
-        ns.tprint("ERROR: failed to allocate memory for grow threads");
-        return;
-    }
+    let alloc = await memClient.requestTransferableAllocation(batchRam, allocChunks, allocOptions);
 
     // Send a Sow Heartbeat to indicate we're starting the main loop
     taskSelectorClient.tryHeartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Sow);
 
-    let totalGrowThreads = neededGrowThreads(ns, target);
-    const totalThreads = growAlloc.numChunks;
+    const maxOverlap = alloc.numChunks;
+    let batches = [];
+
+    for (let i = 0; i < maxOverlap; i++) {
+    }
+
+    let totalGrowBatches = sowBatchLogistics.totalBatches;
+    const totalBatches = alloc.numChunks;
 
     let round = 0;
     let nextHeartbeat = Date.now() + CONFIG.heartbeatCadence + Math.random() * 500;
 
     while (growThreads > 0) {
         round += 1;
-        const roundsRemaining = Math.ceil(totalGrowThreads / totalThreads);
+        const roundsRemaining = Math.ceil(totalGrowBatches / totalBatches);
         const totalRounds = (round - 1) + roundsRemaining;
 
         const info: RoundInfo = calculateRoundInfo(ns, target, round, totalRounds, roundsRemaining);
 
-        const growPids = runAllocation(ns, growAlloc, GROW_SCRIPT, growThreads, target, 0, TAG_ARG, weakenAlloc.allocationId);
-        const weakenPids = runAllocation(ns, weakenAlloc, WEAKEN_SCRIPT, weakenThreads, target, 0, TAG_ARG, growAlloc.allocationId);
-        const pids = [...growPids, ...weakenPids];
+        const pids = await spawnBatch(ns,);
 
         const sendHb = () =>
             Promise.resolve(
@@ -236,14 +232,14 @@ function calculateSowBatchLogistics(ns: NS, target: string): SowBatchLogistics {
     const batchRam = gRam + wRam;
 
     const totalGrowThreads = neededGrowThreads(ns, target);
-
     const totalBatches = Math.ceil(totalGrowThreads / threads.growThreads);
 
     const phases = calculateSowPhases(ns, target, threads);
 
     const batchTime = ns.getWeakenTime(target);
     const endingPeriod = CONFIG.batchInterval * 3;
-    const overlap = Math.ceil(batchTime / endingPeriod);
+
+    const overlap = Math.min(Math.ceil(batchTime / endingPeriod), totalBatches);
     const requiredRam = batchRam * overlap;
 
     return {
