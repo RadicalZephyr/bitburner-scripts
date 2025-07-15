@@ -6,6 +6,7 @@ const entries = [
     ["maxWantedPenalty", 0.05],
     ["minWantedLevel", 10],
     ["jobCheckInterval", 5000],
+    ["trainingTask", "Train Combat"],
     ["hackTrainVelocity", 1],
     ["combatTrainVelocity", 1],
     ["charismaTrainVelocity", 1],
