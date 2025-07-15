@@ -145,7 +145,7 @@ interface GangTaskStats { /* … see prompt for full fields … */ }
 
 2. **WantedTaskBalancer**
    - Define `maxWantedPenalty` threshold (default `0.05`).
-   - If `wantedPenalty > maxWantedPenalty`, assign `assignCoolingCount` members to the best task from `coolingTaskList`.
+   - If `wantedPenalty > maxWantedPenalty`, assign `assignCoolingCount` members to the best cooling task from `TaskAnalyzer`.
    - Else reuse the Phase 2 split between respect and money tasks.
 
 3. **CoolingTask Analysis**
