@@ -7,6 +7,7 @@ import {
     MessageType,
     Subscription as ClientSubscription,
 } from "services/client/discover";
+import { MemoryClient } from "services/client/memory";
 
 import { CONFIG } from "services/config";
 
@@ -22,6 +23,11 @@ export async function main(ns: NS) {
 
     const discovery = new Discovery(ns);
     discovery.pushHosts(["home"]);
+
+    const memClient = new MemoryClient(ns);
+
+    const self = ns.self();
+    memClient.registerAllocation(self.server, self.ramUsage, 1);
 
     const port = ns.getPortHandle(DISCOVERY_PORT);
     const respPort = ns.getPortHandle(DISCOVERY_RESPONSE_PORT);
