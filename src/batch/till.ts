@@ -7,7 +7,7 @@ import { registerAllocationOwnership } from "services/client/memory";
 
 import { CONFIG } from "batch/config";
 import { awaitRound, calculateRoundInfo, RoundInfo } from "batch/progress";
-import { TAG_ARG } from "/services/client/memory_tag";
+import { TAG_ARG } from "services/client/memory_tag";
 
 export function autocomplete(data: AutocompleteData, _args: string[]): string[] {
     return data.servers;
