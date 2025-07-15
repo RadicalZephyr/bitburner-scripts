@@ -4,10 +4,13 @@ import { GrowableMemoryClient } from "services/client/growable_memory";
 export async function main(ns: NS) {
     const client = new GrowableMemoryClient(ns);
 
+    const self = ns.self();
+    client.registerAllocation(self.server, self.ramUsage, 1);
+
     const freeRam = await client.getFreeRam();
     ns.tprintf(`free ram: ${ns.formatRam(freeRam)}`);
 
-    const chunks = Math.floor((freeRam - 8) / 8);
+    const chunks = Math.floor((freeRam - 16) / 8);
     const firstAlloc = await client.requestTransferableAllocation(8, chunks, { shrinkable: true });
     if (!firstAlloc) {
         ns.tprintf("first allocation failed");
