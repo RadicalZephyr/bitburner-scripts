@@ -4,6 +4,19 @@ import { pickByType, PickByType } from "/util/stat-tracker";
 /**
  * Helper for analyzing gang tasks to determine optimal assignments.
  */
+export type Role = "bootstrapping" | "respectGrind" | "moneyGrind" | "warfare" | "cooling";
+
+export interface WeightVector {
+    hackWeight: number;
+    strWeight: number;
+    defWeight: number;
+    dexWeight: number;
+    agiWeight: number;
+    chaWeight: number;
+}
+
+export type RoleProfiles = Record<Role, WeightVector>;
+
 export class TaskAnalyzer {
     private ns: NS;
 
@@ -15,6 +28,13 @@ export class TaskAnalyzer {
     bestWarTasks: GangTaskStats[] = [];
     bestCoolingTasks: GangTaskStats[] = [];
     coolingTaskList: GangTaskStats[] = [];
+    private profiles: RoleProfiles = {
+        bootstrapping: defaultVector(),
+        respectGrind: defaultVector(),
+        moneyGrind: defaultVector(),
+        warfare: defaultVector(),
+        cooling: defaultVector(),
+    };
 
     constructor(ns: NS) {
         this.ns = ns;
@@ -58,6 +78,8 @@ export class TaskAnalyzer {
         this.coolingTaskList = this.bestCoolingTasks.filter(
             t => t.baseWanted < 0 || (wanted.get(t) ?? 0) === minWanted
         );
+
+        this.computeRoleProfiles();
     }
 
     private averageMember(): GangMemberInfo {
@@ -86,6 +108,51 @@ export class TaskAnalyzer {
         }
         const firstMemberNonNumber = pickByType(firstMember, (v): v is any => typeof v !== 'number');
         return { ...firstMemberNonNumber, ...avg };
+    }
+
+    private computeRoleProfiles() {
+        const groups: Record<Role, GangTaskStats[]> = {
+            bootstrapping: this.tasks.filter(t => t.name.includes("Train")),
+            warfare: this.tasks.filter(t => t.name.includes("Territory")),
+            cooling: this.tasks.filter(t => t.baseWanted < 0),
+            respectGrind: this.tasks.filter(t => t.baseRespect > t.baseMoney && t.baseRespect > 0 && t.baseWanted >= 0),
+            moneyGrind: this.tasks.filter(t => t.baseMoney >= t.baseRespect && t.baseMoney > 0 && t.baseWanted >= 0),
+        };
+
+        for (const role of Object.keys(groups) as Role[]) {
+            const vec = defaultVector();
+            const list = groups[role];
+            if (list.length === 0) {
+                this.profiles[role] = vec;
+                continue;
+            }
+            for (const task of list) {
+                vec.hackWeight += task.hackWeight;
+                vec.strWeight += task.strWeight;
+                vec.defWeight += task.defWeight;
+                vec.dexWeight += task.dexWeight;
+                vec.agiWeight += task.agiWeight;
+                vec.chaWeight += task.chaWeight;
+            }
+            const len = list.length;
+            this.profiles[role] = {
+                hackWeight: vec.hackWeight / len,
+                strWeight: vec.strWeight / len,
+                defWeight: vec.defWeight / len,
+                dexWeight: vec.dexWeight / len,
+                agiWeight: vec.agiWeight / len,
+                chaWeight: vec.chaWeight / len,
+            };
+        }
+    }
+
+    /**
+     * Get the averaged weight vectors for each gang role.
+     *
+     * @returns Object mapping role names to average weight vectors
+     */
+    roleProfiles(): RoleProfiles {
+        return this.profiles;
     }
 }
 
@@ -170,4 +237,8 @@ function estimateWantedGain(gang: GangGenInfo, member: GangMemberInfo, task: Gan
 
 function calculateWantedPenalty(gang: GangGenInfo): number {
     return gang.respect / (gang.respect + gang.wantedLevel);
+}
+
+function defaultVector(): WeightVector {
+    return { hackWeight: 0, strWeight: 0, defWeight: 0, dexWeight: 0, agiWeight: 0, chaWeight: 0 };
 }
