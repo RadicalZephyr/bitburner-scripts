@@ -1,6 +1,6 @@
 import type { NS } from "netscript";
 
-import { HostAllocation, AllocationResult, MemorySnapshot, WorkerSnapshot, AllocationSnapshot, AllocationClaim } from "services/client/memory";
+import { HostAllocation, AllocationResult, MemorySnapshot, WorkerSnapshot, AllocationSnapshot, AllocationClaim, AllocationRegister } from "services/client/memory";
 
 /**
  * Convert a floating point RAM value to a fixed point bigint
@@ -232,6 +232,21 @@ export class MemoryAllocator {
         const id = this.nextAllocId++;
         const allocation = new Allocation(id, pid, filename, chunks);
         this.allocations.set(id, allocation);
+
+        return allocation.asAllocationResult();
+    }
+
+    registerAllocation(info: AllocationRegister): AllocationResult {
+        const worker = this.workers.get(info.hostname);
+        if (!worker) return null;
+
+        const chunk = new AllocationChunk(info.hostname, info.chunkSize, info.numChunks);
+        const id = this.nextAllocId++;
+        const allocation = new Allocation(id, info.pid, info.filename, [chunk]);
+        this.allocations.set(id, allocation);
+
+        worker.allocatedRam += toFixed(info.chunkSize * info.numChunks);
+        worker.updateReservedRam();
 
         return allocation.asAllocationResult();
     }

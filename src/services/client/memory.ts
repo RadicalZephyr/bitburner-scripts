@@ -18,6 +18,7 @@ export enum MessageType {
     Claim,
     ClaimRelease,
     ReleaseChunks,
+    Register,
     Status,
     Snapshot,
 }
@@ -29,6 +30,7 @@ type Payload =
     | AllocationClaim
     | AllocationClaimRelease
     | AllocationChunksRelease
+    | AllocationRegister
     | StatusRequest
     | SnapshotRequest;
 
@@ -79,6 +81,14 @@ export interface AllocationClaimRelease {
 export interface AllocationChunksRelease {
     allocationId: number,
     numChunks: number,
+}
+
+export interface AllocationRegister {
+    pid: number;
+    hostname: string;
+    filename: string;
+    chunkSize: number;
+    numChunks: number;
 }
 
 export interface StatusRequest {
@@ -265,6 +275,39 @@ export class MemoryClient extends Client<MessageType, Payload, ResponsePayload> 
 
         result.releaseAtExit(this.ns, "Owned");
         return result.allocatedChunks;
+    }
+
+    /**
+     * Register an already running script's memory allocation with the
+     * allocator service.
+     *
+     * @param hostname - The host the process is running on.
+     * @param chunkSize - Memory usage of the process.
+     * @param numChunks - Thread count for the process.
+     * @returns Allocation information describing the registered memory.
+     */
+    async registerAllocation(
+        hostname: string,
+        chunkSize: number,
+        numChunks: number = 1,
+    ): Promise<AllocationResult> {
+        const self = this.ns.self();
+        const payload: AllocationRegister = {
+            pid: self.pid,
+            hostname,
+            filename: self.filename,
+            chunkSize,
+            numChunks,
+        };
+        const result = await this.sendMessageReceiveResponse(
+            MessageType.Register,
+            payload,
+        );
+        if (!result) {
+            this.ns.print("WARN: allocation registration failed");
+            return null;
+        }
+        return result as AllocationResult;
     }
 
     /**

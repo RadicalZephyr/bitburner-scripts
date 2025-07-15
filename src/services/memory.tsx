@@ -11,6 +11,7 @@ import {
     Message,
     MessageType,
     AllocationChunksRelease,
+    AllocationRegister,
     WorkerSnapshot,
     AllocationSnapshot,
     MemorySnapshot,
@@ -221,6 +222,16 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memResponsePort
                     releaseInfo.allocationId,
                     releaseInfo.numChunks,
                 );
+                break;
+
+            case MessageType.Register:
+                const reg = msg[2] as AllocationRegister;
+                printLog(
+                    `INFO: register pid=${reg.pid} host=${reg.hostname} ` +
+                    `${reg.numChunks}x${ns.formatRam(reg.chunkSize)} ` +
+                    `${reg.filename}`
+                );
+                payload = memoryManager.registerAllocation(reg);
                 break;
 
             case MessageType.Status:

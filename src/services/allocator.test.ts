@@ -275,3 +275,22 @@ test('claim fails on unknown host chunk', () => {
     const result = alloc.claimAllocation({ allocationId: res!.allocationId, pid: 1, hostname: 'h2', filename: 'a.js', chunkSize: 4, numChunks: 1 });
     expect(result).toBe(false);
 });
+
+test('registerAllocation converts reserved to allocated', () => {
+    const hosts = { h1: { max: 16, used: 4 } };
+    const ns = makeNS(hosts, {});
+    const alloc = new MemoryAllocator(ns);
+    alloc.pushWorker('h1');
+
+    const res = alloc.registerAllocation({
+        pid: 1,
+        hostname: 'h1',
+        filename: 'mem.js',
+        chunkSize: 4,
+        numChunks: 1,
+    });
+    expect(res).not.toBeNull();
+    const worker = Array.from(alloc.workers.values())[0];
+    expect(worker.allocatedRam).toBe(BigInt(400));
+    expect(worker.reservedRam).toBe(0n);
+});
