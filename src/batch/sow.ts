@@ -10,6 +10,7 @@ import {
 
 import { CONFIG } from "batch/config";
 import { awaitRound, calculateRoundInfo, RoundInfo } from "batch/progress";
+import { TAG_ARG } from "/services/client/memory_tag";
 
 const GROW_SCRIPT = "/batch/g.js";
 const WEAKEN_SCRIPT = "/batch/w.js";
@@ -123,8 +124,8 @@ OPTIONS
 
         const info: RoundInfo = calculateRoundInfo(ns, target, round, totalRounds, roundsRemaining);
 
-        const growPids = runAllocation(ns, growAlloc, GROW_SCRIPT, growThreads, target, 0);
-        const weakenPids = runAllocation(ns, weakenAlloc, WEAKEN_SCRIPT, weakenThreads, target, 0);
+        const growPids = runAllocation(ns, growAlloc, GROW_SCRIPT, growThreads, target, 0, TAG_ARG, weakenAlloc.allocationId);
+        const weakenPids = runAllocation(ns, weakenAlloc, WEAKEN_SCRIPT, weakenThreads, target, 0, TAG_ARG, growAlloc.allocationId);
         const pids = [...growPids, ...weakenPids];
 
         const sendHb = () =>
