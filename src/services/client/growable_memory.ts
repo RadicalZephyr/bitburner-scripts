@@ -177,13 +177,14 @@ export class GrowableAllocation extends TransferableAllocation {
                 }
 
                 const pid = this.ns.exec(script, chunk.hostname, threadsHere, ...execArgs);
-                if (pid) {
+                if (pid === 0) {
+                    retryCount += 1;
+                    this.ns.printf(`WARN: failed to spawn ${threadsHere} threads of ${script} on ${chunk.hostname} trying again`);
+                    await this.ns.sleep(10);
+                } else {
                     pids.push(pid);
                     totalThreads -= threadsHere;
                     break;
-                } else {
-                    this.ns.printf(`WARN: failed to spawn ${threadsHere} threads of ${script} on ${chunk.hostname} trying again`);
-                    await this.ns.sleep(10);
                 }
             }
         }
