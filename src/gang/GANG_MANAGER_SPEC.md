@@ -1,6 +1,6 @@
 ## Comprehensive Gang Management Script Specification
 
-This document outlines a phased development plan for a Bitburner gang management script, leveraging the available `ns.gang` APIs and exposed data structures to progress from a basic MVP to a full-featured, dynamic lifecycle controller including territory warfare.
+This document outlines a phased development plan for a Bitburner gang management script, leveraging the available `ns.gang` APIs and exposed data structures to progress from a basic MVP to a full-featured, dynamic lifecycle controller including territory warfare and wanted level management.
 
 ---
 
@@ -52,7 +52,7 @@ interface GangTaskStats { /* … see prompt for full fields … */ }
 
 #### Other Gangs & Warfare
 
-- `ns.gang.getOtherGangInformation(): Record<string,GangOtherInfoObject>`
+- `ns.gang.getOtherGangInformation(): Record<string, GangOtherInfoObject>`
 - `ns.gang.getChanceToWinClash(gangName): number`
 
 ---
@@ -108,9 +108,8 @@ interface GangTaskStats { /* … see prompt for full fields … */ }
 
 2. **LifecycleManager**
 
-   - Track `MemberState` (`"bootstrapping" | "ready"`).
-   - **Bootstrapping**: cycle between training and `ascend` until
-     `ns.gang.getAscensionResult(name)` gain ≥ `ascendMult`.
+   - Track `MemberState`: `"bootstrapping" | "ready"`.
+   - **Bootstrapping**: cycle training ↔ ascend until ascension gain ≥ `ascendMult`.
    - Transition to `"ready"` once gain threshold met.
 
 ---
@@ -120,40 +119,57 @@ interface GangTaskStats { /* … see prompt for full fields … */ }
 **Objective:** Dynamically analyze available tasks and split ready members between respect and money earning.
 
 1. **TaskAnalyzer**
-
-   - Periodically fetch tasks:
-     ```ts
-     const tasks = ns.gang.getTaskNames().map(ns.gang.getTaskStats);
-     const hackTasks = tasks.filter(t => t.isHacking);
-     const combatTasks = tasks.filter(t => t.isCombat);
-     ```
-   - Compute yields using `GangMemberInfo` averages & current `territory` bonus.
-   - Produce sorted lists:
-     - `bestMoneyTasks`, `bestRespectTasks`, `bestWarTasks`.
+   - Periodically fetch task stats via `ns.gang.getTaskNames()` + `ns.gang.getTaskStats()`.
+   - Separate by `isHacking` and `isCombat`, compute per-second yields incorporating current territory bonus.
+   - Generate sorted lists: `bestMoneyTasks`, `bestRespectTasks`, `bestWarTasks`.
 
 2. **TaskBalancer**
-
-   - Compute `respectDeficit = info.respectForNextRecruit - info.respect`.
-   - Determine `respectFraction = clamp(respectDeficit / (respectGainRate * recruitHorizon), 0, 1)`.
-   - Assign `respectFraction * readyCount` to `bestRespectTasks[0]`, rest to `bestMoneyTasks[0]`.
+   - Fetch `GangGenInfo` to compute:
+     ```ts
+     respectDeficit = respectForNextRecruit - respect;
+     respectFraction = clamp(respectDeficit / (respectGainRate * recruitHorizon), 0, 1);
+     ```
+   - Assign `respectFraction * readyCount` members to `bestRespectTasks[0]`, rest to `bestMoneyTasks[0]`.
 
 ---
 
-## Phase 3: Training Focus & Equipment
+## Phase 3: Wanted Level Management & Balancing
+
+**Objective:** Maintain a low wanted level penalty while continuing to earn respect and money.
+
+1. **WantedInfo Monitoring**
+   - Each tick, fetch `wantedLevel`, `wantedLevelGainRate`, and `wantedPenalty` from `GangGenInfo`.
+
+2. **WantedTaskBalancer**
+   - Define `maxWantedPenalty` threshold (e.g., 0.9).
+   - If `wantedPenalty > maxWantedPenalty`, assign additional members to a cooling task (lowest `baseWanted` and high penalty reduction).
+   - Else maintain base split from Phase 2 between respect and money tasks.
+
+3. **CoolingTask Analysis**
+   - From `TaskAnalyzer`, identify tasks with negative or lowest `wantedLevelGainRate` (i.e., best for cooling).
+   - Integrate into split logic:
+     ```ts
+     if (wantedPenalty > maxWantedPenalty) {
+       assignCoolingCount members to bestCooldownTask;
+     }
+     distributeRemaining between respect & money tasks as before;
+     ```
+
+4. **Configuration**
+   - `maxWantedPenalty`
+   - `coolingTaskList` (from `TaskAnalyzer`)
+
+---
+
+## Phase 4: Training Focus & Equipment
 
 **Objective:** Select training tasks based on role profiles; purchase equipment via ROI.
 
 1. **Role Profiles**
-
-   - For each role (`bootstrapping`, `respectGrind`, `moneyGrind`, `warfare`), define:
-     ```ts
-     const profile: Partial<Record<Stat, number>> = averageWeights(tasksForRole);
-     ```
+   - For roles (`bootstrapping`, `respectGrind`, `moneyGrind`, `warfare`, `cooling`), compute average weight vectors from `GangTaskStats`.
 
 2. **TrainingFocusManager**
-
-   - Each tick, for each `"bootstrapping"` or `"training"` member:
-     - Compare `profile.hack`, `profile.str`, …, `profile.cha` → assign `Train Hacking`, `Train Combat`, or `Train Charisma` accordingly.
+   - For each training-phase member, compare profile weights to assign `Train Hacking`, `Train Combat`, or `Train Charisma`.
 
 3. **EquipmentManager**
 
@@ -164,12 +180,12 @@ interface GangTaskStats { /* … see prompt for full fields … */ }
 
 4. **Velocity-Based Ascension**
 
-   - Maintain level history samples for each member.
+   - Track level history and compute velocity (levels/sec).
    - Compute velocity (levels/sec); if `< velThresh[count]`, invoke `ns.gang.ascendMember(name)`.
 
 ---
 
-## Phase 4: Territory Warfare & Full Orchestration
+## Phase 5: Territory Warfare & Full Orchestration
 
 **Objective:** Integrate territory control, death handling, and holistic task/state coordination.
 
@@ -181,38 +197,33 @@ interface GangTaskStats { /* … see prompt for full fields … */ }
 
 2. **Death & Re-Recruit**
 
-   - Monitor `ns.gang.getMemberInformation().task === 'Unassigned'` or state changes.
-   - If death detected and slots open, recruit new member.
+   - Detect deaths via member state or unassigned task.
+   - On death and available slot, recruit new member.
 
 3. **Full State Machine**
 
    ```text
-   recruited
-       ↓
-   bootstrapping ↔ training ↔ ascending
-       ↓
-   ready
-   ↙   ↓    ↘
+   recruited → bootstrapping ↔ training ↔ ascending
+                      ↓
+                    ready
+              ↙       ↓       ↘
+        respectGrind moneyGrind territoryWarfare
+              ↖       ↓       ↗
+               cooling
    ```
 
-respectGrind moneyGrind territoryWarfare ↘       ↗ ascend
-
-```
-
 4. **Dynamic Splits**
-- Respect vs. cash vs. warfare assignments driven by:
-  - `info.respectForNextRecruit` & `info.respect`
-  - `moneyGainRate` deficits vs. gear/ascend budgets
-  - `info.territory` vs. `otherGangs` territory
-  - Clash win probabilities via `getChanceToWinClash`
+   - Balance respect, money, cooling, and warfare based on:
+     - Next recruit respect needs
+     - Money requirements for gear/ascends
+     - Current `wantedPenalty`
+     - `territory` deficits & clash probabilities
 
 ---
 
 ### Next Steps
-1. Choose initial threshold values for Phase 1.
-2. Provide preferred recruit horizon and velocity thresholds.
-3. Confirm which tasks you consider top candidates for respect, money, and warfare.
+1. Choose initial threshold values for Phases 1 & 3 (`trainLevel`, `ascendMult`, `maxWantedPenalty`).
+2. Provide preferred `recruitHorizon`, `velThresh`, and `maxROITime` for each role.
+3. Confirm top candidate tasks for respect, money, cooling, and warfare.
 
-*Once these parameters are set, we can begin implementing modules in TypeScript.*
-
-```
+*Once parameters are set, we can begin implementing modules in TypeScript.*
