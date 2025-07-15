@@ -1,4 +1,6 @@
 import type { NS } from "netscript";
+import { TaskAnalyzer } from "gang/task-analyzer";
+import { balanceTasks } from "gang/task-balancer";
 
 interface Thresholds {
     trainLevel: number;
@@ -105,6 +107,7 @@ OPTIONS
         }
 
         const thresholds = getThresholds(ns.gang.getMemberNames().length);
+        const ready: string[] = [];
 
         for (const name of ns.gang.getMemberNames()) {
             ns.print(`INFO: assigning current task for ${name}`);
@@ -131,7 +134,8 @@ OPTIONS
                 ns.gang.setMemberTask(name, trainingTask);
                 const result = ns.gang.getAscensionResult(name);
                 if (result) {
-                    ns.print(`INFO: ascension gains ` +
+                    ns.print(
+                        `INFO: ascension gains ` +
                         `hck: ${result.hack} ` +
                         `str: ${result.str} ` +
                         `def: ${result.def} ` +
@@ -155,9 +159,12 @@ OPTIONS
                     }
                 }
             } else {
-                ns.gang.setMemberTask(name, trainingTask);
+                ready.push(name);
             }
         }
+
+        const analyzer = new TaskAnalyzer(ns);
+        balanceTasks(ns, ready, analyzer);
 
         await ns.gang.nextUpdate();
     }
