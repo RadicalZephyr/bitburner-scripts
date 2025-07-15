@@ -444,7 +444,7 @@ export class TransferableAllocation {
     }
 }
 
-class AllocationChunk {
+export class AllocationChunk {
     hostname: string;
     chunkSize: number;
     numChunks: number;

@@ -11,6 +11,7 @@ import {
     AllocationRelease,
     AllocationResult,
     HostAllocation,
+    AllocationChunk,
 } from "services/client/memory";
 import { PortClient } from "services/client/port";
 
@@ -197,7 +198,7 @@ export class GrowableAllocation extends TransferableAllocation {
 }
 
 /** Merge an array of allocation chunks into an existing list. */
-function mergeChunks(dest: HostAllocation[], add: HostAllocation[]) {
+function mergeChunks(dest: AllocationChunk[], add: HostAllocation[]) {
     for (const chunk of add) {
         const existing = dest.find(
             c => c.hostname === chunk.hostname && c.chunkSize === chunk.chunkSize,
@@ -205,7 +206,7 @@ function mergeChunks(dest: HostAllocation[], add: HostAllocation[]) {
         if (existing) {
             existing.numChunks += chunk.numChunks;
         } else {
-            dest.push({ ...chunk });
+            dest.push(new AllocationChunk(chunk));
         }
     }
 }
