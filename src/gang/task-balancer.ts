@@ -53,9 +53,9 @@ export function wantedTaskBalancer(
 ) {
     const info = ns.gang.getGangInformation();
     if (info.wantedPenalty > CONFIG.maxWantedPenalty) {
-        const coolTask = analyzer.bestCoolingTasks[0]?.name;
+        const coolingTask = analyzer.bestCoolingTasks[0]?.name;
         readyNames.slice(0, assignCoolingCount).forEach(name => {
-            if (coolTask) ns.gang.setMemberTask(name, coolTask);
+            if (coolingTask) ns.gang.setMemberTask(name, coolingTask);
         });
         balanceTasks(ns, readyNames.slice(assignCoolingCount), analyzer);
     } else {
