@@ -156,12 +156,16 @@ function estimateWantedGain(gang: GangGenInfo, member: GangMemberInfo, task: Gan
         (task.dexWeight / 100) * member.dex +
         (task.agiWeight / 100) * member.agi +
         (task.chaWeight / 100) * member.cha;
-    statWeight -= 4 * task.difficulty;
+    statWeight -= 3.5 * task.difficulty;
     if (statWeight <= 0) return 0;
     const territoryMult = Math.max(0.005, Math.pow(gang.territory * 100, task.territory.wanted) / 100);
-    const territoryPenalty = (0.2 * gang.territory + 0.8);
     if (isNaN(territoryMult) || territoryMult <= 0) return 0;
-    return Math.pow(task.baseWanted * statWeight * territoryMult, territoryPenalty);
+    if (task.baseWanted < 0) {
+        return 0.4 * task.baseWanted * statWeight * territoryMult;
+    }
+    const calc = (7 * task.baseWanted) / Math.pow(3 * statWeight * territoryMult, 0.8);
+
+    return Math.min(100, calc);
 }
 
 function calculateWantedPenalty(gang: GangGenInfo): number {
