@@ -151,14 +151,14 @@ export class GrowableAllocation extends TransferableAllocation {
         let totalThreads: number;
         let allocationFlag: string | undefined;
         let explicitDependencies: string[] = [];
-        let baseRunOptions: Partial<RunOptions> | undefined;
+        let baseRunOptions: RunOptions | undefined;
         if (typeof threads === "number") {
             totalThreads = threads;
         } else {
             totalThreads = threads.threads ?? 1;
             allocationFlag = threads.allocationFlag;
             explicitDependencies = threads.dependencies ?? [];
-            const runOpts: Partial<RunOptions> = {};
+            const runOpts: RunOptions = {};
             if (threads.ramOverride !== undefined) runOpts.ramOverride = threads.ramOverride;
             if (threads.temporary !== undefined) runOpts.temporary = threads.temporary;
             if (threads.preventDuplicates !== undefined) runOpts.preventDuplicates = threads.preventDuplicates;
