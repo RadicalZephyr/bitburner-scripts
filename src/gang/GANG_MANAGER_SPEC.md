@@ -142,8 +142,8 @@ interface GangTaskStats { /* … see prompt for full fields … */ }
 
 2. **WantedTaskBalancer**
    - Define `maxWantedPenalty` threshold (e.g., 0.9).
-   - If `wantedPenalty > maxWantedPenalty`, assign additional members to a cooling task (lowest `baseWanted` and high penalty reduction).
-   - Else maintain base split from Phase 2 between respect and money tasks.
+   - If `wantedPenalty > maxWantedPenalty`, assign `assignCoolingCount` members to the best cooling task from `TaskAnalyzer`.
+   - Else maintain the Phase 2 split between respect and money tasks.
 
 3. **CoolingTask Analysis**
    - From `TaskAnalyzer`, identify tasks with negative or lowest `wantedLevelGainRate` (i.e., best for cooling).
@@ -157,7 +157,7 @@ interface GangTaskStats { /* … see prompt for full fields … */ }
 
 4. **Configuration**
    - `maxWantedPenalty`
-   - `coolingTaskList` (from `TaskAnalyzer`)
+   - `coolingTaskList` (defaults to an empty list and populated from `TaskAnalyzer`)
 
 ---
 

@@ -10,6 +10,7 @@ const entries = [
     ["combatTrainVelocity", 1],
     ["charismaTrainVelocity", 1],
     ["recruitHorizon", 60],
+    ["coolingTaskList", [] as string[]],
 ] as const;
 
 export const CONFIG: ConfigInstance<typeof entries> =
