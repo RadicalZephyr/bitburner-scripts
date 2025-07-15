@@ -11,6 +11,14 @@ const entries = [
     ["combatTrainVelocity", 1],
     ["charismaTrainVelocity", 1],
     ["recruitHorizon", 60],
+    ["velocityThreshold", 0.1],
+    ["maxROITime", {
+        bootstrapping: 60,
+        respectGrind: 60,
+        moneyGrind: 60,
+        warfare: 60,
+        cooling: 60,
+    }],
 ] as const;
 
 export const CONFIG: ConfigInstance<typeof entries> =

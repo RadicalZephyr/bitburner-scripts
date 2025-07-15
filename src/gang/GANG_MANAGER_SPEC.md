@@ -170,6 +170,7 @@ interface GangTaskStats { /* … see prompt for full fields … */ }
 
 1. **Role Profiles**
    - For roles (`bootstrapping`, `respectGrind`, `moneyGrind`, `warfare`, `cooling`), compute average weight vectors from `GangTaskStats`.
+   - Exposed via `TaskAnalyzer.roleProfiles()` for use by other modules.
 
 2. **TrainingFocusManager**
    - For each training-phase member, compare profile weights to assign `Train Hacking`, `Train Combat`, or `Train Charisma`.
@@ -179,12 +180,13 @@ interface GangTaskStats { /* … see prompt for full fields … */ }
    - For each member:
      1. Fetch `ns.gang.getMemberInformation(name)` & available gear via `ns.gang.getEquipmentNames()` + `ns.gang.getEquipmentStats(equip)`.
      2. Compute **ROI**: `cost / gainRate` (level/sec for training, money/sec for working).
-     3. If `ROI <= maxROITime` for current role, call `ns.gang.purchaseEquipment(name, equip)`.
+    3. If `ROI <= maxROITime` for current role, call `ns.gang.purchaseEquipment(name, equip)`.
+   - Uses `CONFIG.maxROITime` per role.
 
 4. **Velocity-Based Ascension**
 
    - Track level history and compute velocity (levels/sec).
-   - Compute velocity (levels/sec); if `< velThresh[count]`, invoke `ns.gang.ascendMember(name)`.
+   - Compute velocity; if it drops below `CONFIG.velocityThreshold`, invoke `ns.gang.ascendMember(name)` and reset tracking.
 
 ---
 
