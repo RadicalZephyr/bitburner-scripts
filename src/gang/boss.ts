@@ -113,6 +113,21 @@ OPTIONS
             ns.print(`INFO: ${name} is ${memberState[name]}`);
 
             if (memberState[name] === "bootstrapping") {
+                const memberInfo = ns.gang.getMemberInformation(name);
+                const maxLevel = Math.max(
+                    memberInfo.hack,
+                    memberInfo.str,
+                    memberInfo.def,
+                    memberInfo.dex,
+                    memberInfo.agi,
+                    memberInfo.cha,
+                );
+
+                if (maxLevel < thresholds.trainLevel) {
+                    ns.print(`SUCCESS: ${name} has finished bootstrapping!`);
+                    memberState[name] = "ready";
+                }
+
                 ns.gang.setMemberTask(name, trainingTask);
                 const result = ns.gang.getAscensionResult(name);
                 if (result) {
@@ -137,7 +152,6 @@ OPTIONS
                     if (maxGain >= thresholds.ascendMult) {
                         ns.print(`SUCCESS: ascending ${name}!`);
                         ns.gang.ascendMember(name);
-                        memberState[name] = "ready";
                     }
                 }
             } else {
