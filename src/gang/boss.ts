@@ -82,7 +82,7 @@ OPTIONS
 
     const memberState: Record<string, MemberState> = {};
     for (const name of currentNames) {
-        memberState[name] = "ready";
+        memberState[name] = "bootstrapping";
     }
 
     const trainingTask = ns.gang.getGangInformation().isHacking ?
