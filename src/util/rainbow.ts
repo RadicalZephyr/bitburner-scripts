@@ -1,6 +1,8 @@
 import type { NS } from "netscript";
 
 export async function main(ns: NS) {
+    const bag = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()[]{}/=?,./<>?;:'\"`~".split('');
+    await tryBrute(ns, bag);
 }
 
 async function tryDictionaryPasswords(ns: NS) {
@@ -14,6 +16,26 @@ async function tryDictionaryPasswords(ns: NS) {
 
 function* variations(word: string) {
     // TODO generate common passwordified variations of this word
+}
+
+async function tryBrute(ns: NS, bag: string[], maxLen = 12) {
+    let calls = 0;
+    for (let len = 1; len <= maxLen; len++) {
+        const idx = Array(len).fill(0);
+        while (true) {
+            const pw = idx.map(i => bag[i]).join('');
+            if ((ns as any).rainbow(pw)) return true;
+            // increment counter:
+            let pos = len - 1;
+            while (pos >= 0 && ++idx[pos] === bag.length) {
+                idx[pos] = 0;
+                pos--;
+            }
+            if (pos < 0) break;
+            if (++calls % 1000 === 0) await ns.sleep(0);
+        }
+    }
+    return false;
 }
 
 async function tryRandomPasswords(ns: NS) {
