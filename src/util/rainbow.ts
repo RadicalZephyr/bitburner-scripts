@@ -19,8 +19,8 @@ function* variations(word: string) {
 }
 
 async function tryBrute(ns: NS, bag: string[], maxLen = 12) {
-    let calls = 0;
     for (let len = 1; len <= maxLen; len++) {
+        let calls = 0;
         const idx = Array(len).fill(0);
         while (true) {
             const pw = idx.map(i => bag[i]).join('');
@@ -31,8 +31,8 @@ async function tryBrute(ns: NS, bag: string[], maxLen = 12) {
                 idx[pos] = 0;
                 pos--;
             }
+            await ns.sleep(1);
             if (pos < 0) break;
-            if (++calls % 1000 === 0) await ns.sleep(0);
         }
     }
     return false;
