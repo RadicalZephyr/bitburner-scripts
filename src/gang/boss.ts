@@ -129,21 +129,24 @@ OPTIONS
             const memberInfo = ns.gang.getMemberInformation(name);
             trackers[name].update(memberInfo);
 
+            const maxLevel = Math.max(
+                memberInfo.hack,
+                memberInfo.str,
+                memberInfo.def,
+                memberInfo.dex,
+                memberInfo.agi,
+                memberInfo.cha,
+            );
+
+            if (maxLevel > thresholds.trainLevel) {
+                ns.print(`SUCCESS: ${name} has finished bootstrapping!`);
+                memberState[name] = "ready";
+            } else {
+                ns.print(`SUCCESS: ${name} needs to go back to bootstrapping!`);
+                memberState[name] = "bootstrapping";
+            }
+
             if (memberState[name] === "bootstrapping") {
-                const maxLevel = Math.max(
-                    memberInfo.hack,
-                    memberInfo.str,
-                    memberInfo.def,
-                    memberInfo.dex,
-                    memberInfo.agi,
-                    memberInfo.cha,
-                );
-
-                if (maxLevel > thresholds.trainLevel) {
-                    ns.print(`SUCCESS: ${name} has finished bootstrapping!`);
-                    memberState[name] = "ready";
-                }
-
                 training.push(name);
                 const result = ns.gang.getAscensionResult(name);
                 if (result) {
