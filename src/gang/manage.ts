@@ -1,5 +1,7 @@
-import type { GangMemberAscension, GangMemberInfo, NS } from "netscript";
+import type { GangMemberAscension, GangMemberInfo, MoneySource, NS } from "netscript";
 import { CONFIG } from "gang/config";
+import { purchaseBestGear } from "gang/equipment-manager";
+import { StatTracker } from "util/stat-tracker";
 
 const NAMES = [
     "Freya",
@@ -56,7 +58,11 @@ CONFIG VALUES
 
     let numHeating = memberNames.length;
 
+    const moneyTracker = new StatTracker<MoneySource>();
+
     while (true) {
+        moneyTracker.update(ns.getMoneySources().sinceInstall);
+
         if (ns.gang.canRecruitMember() && nameIndex < availableNames.length) {
             const name = availableNames[nameIndex++];
             if (ns.gang.recruitMember(name)) {
@@ -78,14 +84,17 @@ CONFIG VALUES
             ns.gang.ascendMember(ascend.name);
         }
 
-        for (const m of training) ns.gang.setMemberTask(m.name, trainingTask);
+        for (const m of training) {
+            purchaseBestGear(ns, m.name, "bootstrapping", moneyTracker)
+            ns.gang.setMemberTask(m.name, trainingTask);
+        }
 
         numHeating = Math.min(working.length, numHeating);
 
         for (const m of working.slice(numHeating)) ns.gang.setMemberTask(m.name, coolTask);
         for (const m of working.slice(0, numHeating)) ns.gang.setMemberTask(m.name, heatTask);
 
-        await ns.sleep(CONFIG.jobCheckInterval);
+        await ns.gang.nextUpdate();
     }
 }
 
