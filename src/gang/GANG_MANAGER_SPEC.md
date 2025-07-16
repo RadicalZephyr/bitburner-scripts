@@ -197,7 +197,7 @@ interface GangTaskStats { /* … see prompt for full fields … */ }
 
 1. **TerritoryManager**
 
-   - Every 20s: fetch `info = ns.gang.getGangInformation()`.
+   - Every 4 gang update ticks: fetch `info = ns.gang.getGangInformation()`.
    - Compute `territoryBonus = f(info.territory)`.
    - Update TaskAnalyzer yields accordingly.
 
@@ -215,7 +215,7 @@ interface GangTaskStats { /* … see prompt for full fields … */ }
               ↙       ↓       ↘
         respectGrind moneyGrind territoryWarfare
               ↖       ↓       ↗
-               cooling
+                   cooling
    ```
 
 4. **Dynamic Splits**
