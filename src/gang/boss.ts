@@ -43,7 +43,7 @@ const NAMES = [
     "Uruziel",
 
     "Kysandra",
-    "Tremain",
+    "Tremine",
 
     "Madda",
     "Padda",
