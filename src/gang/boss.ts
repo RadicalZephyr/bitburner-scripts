@@ -14,18 +14,39 @@ interface Thresholds {
 }
 
 const thresholdsByCount: Record<number, Thresholds> = {
-    3: { trainLevel: 500, ascendMult: 2.00 },
-    6: { trainLevel: 1000, ascendMult: 1.50 },
+    3: { trainLevel: 500, ascendMult: 2.0 },
+    6: { trainLevel: 1000, ascendMult: 1.5 },
     9: { trainLevel: 5000, ascendMult: 1.15 },
     12: { trainLevel: 10000, ascendMult: 1.05 },
 };
 
+function lerp(a: number, b: number, t: number): number {
+    return a + (b - a) * t;
+}
+
 function getThresholds(n: number): Thresholds {
-    let result: Thresholds = thresholdsByCount[3];
-    for (const key of Object.keys(thresholdsByCount).map(Number).sort((a, b) => a - b)) {
-        if (n >= key) result = thresholdsByCount[key];
+    const keys = Object.keys(thresholdsByCount)
+        .map(Number)
+        .sort((a, b) => a - b);
+
+    if (n <= keys[0]) return thresholdsByCount[keys[0]];
+    if (n >= keys[keys.length - 1]) return thresholdsByCount[keys[keys.length - 1]];
+
+    for (let i = 0; i < keys.length - 1; i++) {
+        const low = keys[i];
+        const high = keys[i + 1];
+        if (n >= low && n <= high) {
+            const t = (n - low) / (high - low);
+            const lowThr = thresholdsByCount[low];
+            const highThr = thresholdsByCount[high];
+            return {
+                trainLevel: lerp(lowThr.trainLevel, highThr.trainLevel, t),
+                ascendMult: lerp(lowThr.ascendMult, highThr.ascendMult, t),
+            };
+        }
     }
-    return result;
+
+    return thresholdsByCount[keys[0]]; // fallback, should never hit
 }
 
 type MemberState =

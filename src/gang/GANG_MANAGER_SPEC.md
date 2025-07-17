@@ -101,13 +101,15 @@ interface GangTaskStats { /* … see prompt for full fields … */ }
      trainLevel: number;
      ascendMult: number;
    }
-   const thresholdsByCount: Record<number, Thresholds> = {
-     1: {trainLevel: 100, ascendMult: 0.05},
-     6: {trainLevel: 500, ascendMult: 0.10},
-     12:{trainLevel:2000, ascendMult:0.15},
-   };
-   function getThresholds(n: number): Thresholds { /* find highest key ≤ n */ }
-   ```
+  const thresholdsByCount: Record<number, Thresholds> = {
+    3: {trainLevel: 500, ascendMult: 2.0},
+    6: {trainLevel: 1000, ascendMult: 1.5},
+    9: {trainLevel: 5000, ascendMult: 1.15},
+    12:{trainLevel:10000, ascendMult:1.05},
+  };
+  // Interpolate between adjacent entries based on current member count
+  function getThresholds(n: number): Thresholds { /* linear interpolation */ }
+  ```
 
 2. **LifecycleManager**
 
