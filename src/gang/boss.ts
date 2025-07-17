@@ -62,11 +62,48 @@ type MemberState =
 
 class Member {
     state: MemberState;
-    tracker: StatTracker<GangMemberInfo>;
+    private tracker: StatTracker<GangMemberInfo>;
 
     constructor(state: MemberState = "bootstrapping") {
         this.state = state;
         this.tracker = new StatTracker<GangMemberInfo>();
+    }
+
+    update(info: GangMemberInfo) {
+        this.tracker.update(info);
+    }
+
+    reset() {
+        this.tracker.reset();
+    }
+
+    tryAscend(ns: NS, name: string): boolean {
+        if (ns.gang.ascendMember(name)) {
+            this.reset();
+            return true;
+        }
+        return false;
+    }
+
+    averageVelocity(): number | undefined {
+        const stats: (keyof Pick<GangMemberInfo, "hack" | "str" | "def" | "dex" | "agi" | "cha">)[] = [
+            "hack",
+            "str",
+            "def",
+            "dex",
+            "agi",
+            "cha",
+        ];
+        let total = 0;
+        let count = 0;
+        for (const s of stats) {
+            const v = this.tracker.velocity(s);
+            if (typeof v === "number") {
+                total += v;
+                count++;
+            }
+        }
+        return count > 0 ? total / count : undefined;
     }
 }
 
@@ -181,7 +218,7 @@ OPTIONS
             ns.print(`INFO: ${name} is ${members[name].state}`);
 
             const memberInfo = ns.gang.getMemberInformation(name);
-            members[name].tracker.update(memberInfo);
+            members[name].update(memberInfo);
 
             const maxLevel = Math.max(
                 memberInfo.hack,
@@ -225,27 +262,16 @@ OPTIONS
 
                     if (maxGain >= thresholds.ascendMult) {
                         ns.print(`SUCCESS: ascending ${name}!`);
-                        ns.gang.ascendMember(name);
-                        members[name].tracker.reset();
+                        members[name].tryAscend(ns, name);
                     }
                 }
             } else {
                 ready.push(name);
             }
 
-            const hist = members[name].tracker.history;
-            if (hist.length >= 2) {
-                const first = hist[0];
-                const last = hist[hist.length - 1];
-                const dt = (last.t - first.t) / 1000;
-                const sumFirst = first.hack + first.str + first.def + first.dex + first.agi + first.cha;
-                const sumLast = last.hack + last.str + last.def + last.dex + last.agi + last.cha;
-                const vel = (sumLast - sumFirst) / dt;
-                if (vel < CONFIG.velocityThreshold) {
-                    if (ns.gang.ascendMember(name)) {
-                        members[name].tracker.reset();
-                    }
-                }
+            const vel = members[name].averageVelocity();
+            if (typeof vel === "number" && vel < CONFIG.velocityThreshold) {
+                members[name].tryAscend(ns, name);
             }
         }
 
