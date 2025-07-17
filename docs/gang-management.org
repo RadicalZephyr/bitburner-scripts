@@ -172,3 +172,94 @@ The current script handles basic recruitment, ascension, and task scheduling. We
 - prioritize ascensions by evaluating each member with `getAscensionResult`
 - track member deaths and re-equip them to keep power high
 
+
+* New Management Script
+
+** Phases
+
+*** Recruitment Drive Phase
+
+Basically, the way I want gang management to proceed is something like
+this:
+
+In the initial phase we recruit our initial three members and start
+training them up. We want to gain exp mostly in our primary stat
+(hacking for hacking gangs, combat for combat gangs).
+
+As soon as possible we want to recruit more members. Our fourth member
+is at 5 respect so this is fairly quick, but after that we need to go
+into a cycle of training, ascending, training back until relatively
+"full strength" (i.e. level growth slows down to < 1 level per gang
+update).
+
+When a member is at full strength they start respect grinding and
+periodic cooling to build respect and keep wanted level low.
+
+Once all team members are at full strength for their current ascension
+multipliers and switched to respect/money gain and cooling tasks, we
+check how long recruiting the next member will take. If it's beyond
+the specified ~recruitmentHorizon~ window, then we need to increase
+our current members ascension multipliers before trying again.
+
+
+** Ascension Review Board
+
+We want to avoid having our respect fall back to 1 ever. This means we
+need to stagger ascensions which means we need one component tracking
+which members _want_ to ascend and deciding when to ascend each one.
+
+This means a new centralized component that is in charge of
+ascensions.
+
+Broadly speaking, a member can signal their interest in ascending. The
+review board has a quota of respect to maintain. We sort members based
+on "ascension need" (i.e. who has the lowest ascension multipliers for
+the primary stat block). When losing the respect that member has
+gained is still larger than our respect quota, we can ascend that
+member.
+
+This respect quota strategy will have a natural throttling effect and
+ensure we don't ascend everyone at once. Sorting members by ascension
+multiplier means that newer members will tend to be ascended first
+until they catch up to older members with higher multipliers, and the
+more respect a member has earned the longer it will take before the
+gang as a whole can replace the respect they've earned and they are
+allowed to ascend.
+
+
+** Quartermaster
+
+Gear buying strategy probably depends on the gang phase we're in.
+
+During recruitment we're likely to be strapped for cash even with
+hacking bringing in money.
+
+At all phases we want to distribute the equipment we can buy with our
+current budget equitably. This means that we want to equip members
+that are training, and that have the lowest multipliers first, but we
+don't want to overinvest in any one member.
+
+With staggered ascensions the gang should generate much more money and
+respect overall meaning gear prices will be lower and we'll have a
+higher budget for buying equipment.
+
+There are still nuances to work out in the gear buying system, like
+when do we buy augments.
+
+***  Augments
+
+Should be handled separately from regular gear because of how much
+more expensive they are. They also only need to be bought once so
+they're an investment in the future. Probably prioritize new members
+to help them catch up and get the longest term return on investing in
+the augment.
+
+
+** Pitfalls
+
+*** Wanted Penalty Calculation
+
+If we watch "wanted penalty" exclusively there's a local issue where
+at 1 respect, 1 wanted (minimum wanted level) the penalty is
+50%. There's no way to decrease the wanted level from 1 so the only
+way to decrease the penalty is to increase the respect.
