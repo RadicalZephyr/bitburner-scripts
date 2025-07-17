@@ -71,7 +71,8 @@ class Member {
         this.tracker = new StatTracker<GangMemberInfo>();
     }
 
-    update(info: GangMemberInfo) {
+    update(ns: NS) {
+        const info = ns.gang.getMemberInformation(this.name);
         this.tracker.update(info);
     }
 
@@ -85,6 +86,17 @@ class Member {
             return true;
         }
         return false;
+    }
+
+    maxLevel() {
+        return Math.max(
+            this.tracker["hack"],
+            this.tracker["str"],
+            this.tracker["def"],
+            this.tracker["dex"],
+            this.tracker["agi"],
+            this.tracker["cha"],
+        );
     }
 
     averageVelocity(): number | undefined {
@@ -219,17 +231,9 @@ OPTIONS
             if (!(name in members)) members[name] = new Member(name);
             ns.print(`INFO: ${name} is ${members[name].state}`);
 
-            const memberInfo = ns.gang.getMemberInformation(name);
-            members[name].update(memberInfo);
+            members[name].update(ns);
 
-            const maxLevel = Math.max(
-                memberInfo.hack,
-                memberInfo.str,
-                memberInfo.def,
-                memberInfo.dex,
-                memberInfo.agi,
-                memberInfo.cha,
-            );
+            const maxLevel = members[name].maxLevel();
 
             if (maxLevel > thresholds.trainLevel) {
                 ns.print(`SUCCESS: ${name} has finished bootstrapping!`);
