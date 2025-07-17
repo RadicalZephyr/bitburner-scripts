@@ -4,18 +4,16 @@ import { TaskSelectorClient, Lifecycle } from "batch/client/task_selector";
 
 import {
     registerAllocationOwnership,
-    MemoryClient,
-    TransferableAllocation,
+    AllocationChunk,
 } from "services/client/memory";
+import { GrowableMemoryClient, GrowableAllocation } from "services/client/growable_memory";
 import { TAG_ARG } from "services/client/memory_tag";
 
 import { CONFIG } from "batch/config";
 import { awaitRound, calculateRoundInfo, RoundInfo } from "batch/progress";
 
-import { BatchLogistics, BatchPhase, calculatePhaseStartTimes } from "services/batch";
+import { BatchLogistics, BatchPhase, calculatePhaseStartTimes, spawnBatch } from "services/batch";
 
-const GROW_SCRIPT = "/batch/g.js";
-const WEAKEN_SCRIPT = "/batch/w.js";
 
 export function autocomplete(data: AutocompleteData, _args: string[]): string[] {
     return data.servers;
@@ -84,112 +82,52 @@ OPTIONS
     const sowBatchLogistics = calculateSowBatchLogistics(ns, target);
     const { batchRam, overlap } = sowBatchLogistics;
 
-    let allocChunks = overlap;
-    if (maxThreads !== -1) {
-        const batchThreads = sowBatchLogistics.phases.reduce((s, p) => s + p.threads, 0);
-    }
-    // let weakenThreads: number;
-    // if (maxThreads !== -1) {
-    //     growThreads = Math.min(growThreads, maxThreads);
-    //     ({ weakenThreads } = calculateSowThreadsForMaxThreads(ns, growThreads));
-    // } else {
-    //     let growSecDelta = ns.growthAnalyzeSecurity(growThreads, target);
-    //     weakenThreads = weakenAnalyze(growSecDelta);
-    // }
-
-    const memClient = new MemoryClient(ns);
-
+    const memClient = new GrowableMemoryClient(ns);
     const allocOptions = { coreDependent: true, shrinkable: true };
-    let alloc = await memClient.requestTransferableAllocation(batchRam, allocChunks, allocOptions);
+    let allocation = await memClient.requestGrowableAllocation(batchRam, overlap, allocOptions);
+    if (!allocation) {
+        ns.tprint("ERROR: failed to allocate memory for sow batches");
+        return;
+    }
+    allocation.releaseAtExit(ns);
 
     // Send a Sow Heartbeat to indicate we're starting the main loop
     taskSelectorClient.tryHeartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Sow);
 
-    const maxOverlap = alloc.numChunks;
-    let batches = [];
-
-    for (let i = 0; i < maxOverlap; i++) {
-    }
-
-    let totalGrowBatches = sowBatchLogistics.totalBatches;
-    const totalBatches = alloc.numChunks;
-
-    let round = 0;
     let nextHeartbeat = Date.now() + CONFIG.heartbeatCadence + Math.random() * 500;
+    let round = 0;
+    let growNeeded = neededGrowThreads(ns, target);
+    const growPerBatch = sowBatchLogistics.phases[0].threads;
 
-    while (growThreads > 0) {
+    while (growNeeded > 0) {
         round += 1;
-        const roundsRemaining = Math.ceil(totalGrowBatches / totalBatches);
+
+        allocation.pollGrowth();
+        const hosts = hostListFromChunks(allocation.allocatedChunks);
+        const pids: number[] = [];
+        for (const host of hosts) {
+            const ps = await spawnBatch(ns, host, target, sowBatchLogistics.phases, -1, allocation.allocationId);
+            pids.push(...ps);
+        }
+
+        const roundsRemaining = Math.ceil(growNeeded / (growPerBatch * hosts.length));
         const totalRounds = (round - 1) + roundsRemaining;
-
         const info: RoundInfo = calculateRoundInfo(ns, target, round, totalRounds, roundsRemaining);
-
-        const pids = await spawnBatch(ns,);
 
         const sendHb = () =>
             Promise.resolve(
-                taskSelectorClient.tryHeartbeat(
-                    ns.pid,
-                    ns.getScriptName(),
-                    target,
-                    Lifecycle.Sow,
-                ),
+                taskSelectorClient.tryHeartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Sow),
             );
         nextHeartbeat = await awaitRound(ns, pids, info, nextHeartbeat, sendHb);
 
-        totalGrowThreads = neededGrowThreads(ns, target);
-        growThreads = Math.min(totalGrowThreads, growThreads);
-        const growSec = ns.growthAnalyzeSecurity(growThreads, target);
-        weakenThreads = Math.min(weakenAnalyze(growSec), weakenThreads);
+        growNeeded = neededGrowThreads(ns, target);
     }
 
-    await weakenAlloc.release(ns);
-    await growAlloc.release(ns);
+    await allocation.release(ns);
     ns.toast(`finished sowing ${target}!`, "success");
     taskSelectorClient.finishedSowing(target);
 }
 
-function calculateSowThreadsForMaxThreads(ns: NS, maxThreads: number) {
-    let low = 1;
-    let high = maxThreads;
-    for (let i = 0; i < 16; i++) {
-        const mid = Math.floor((low + high) / 2);
-        const { growThreads, weakenThreads } = calculateSowBatchThreads(ns, mid);
-        if (growThreads + weakenThreads === maxThreads) {
-            low = mid;
-            break;
-        } else if (growThreads + weakenThreads < maxThreads) {
-            low = mid;
-        } else {
-            high = mid;
-        }
-    }
-    return calculateSowBatchThreads(ns, low);
-}
-
-function runAllocation(
-    ns: NS,
-    allocation: TransferableAllocation,
-    script: string,
-    threads: number,
-    ...args: ScriptArg[]
-): number[] {
-    let remaining = threads;
-    let pids: number[] = [];
-    for (const chunk of allocation.allocatedChunks) {
-        if (remaining <= 0) break;
-        const t = Math.min(chunk.numChunks, remaining);
-        ns.scp(script, chunk.hostname, "home");
-        const pid = ns.exec(script, chunk.hostname, { threads: t, temporary: true }, ...args);
-        if (pid === 0) {
-            ns.print(`WARN: failed to exec ${script} on ${chunk.hostname}`);
-        } else {
-            pids.push(pid);
-        }
-        remaining -= t;
-    }
-    return pids;
-}
 
 function neededGrowThreads(ns: NS, target: string) {
     const maxMoney = ns.getServerMaxMoney(target);
@@ -218,6 +156,16 @@ function weakenAnalyze(weakenAmount: number): number {
 
 function weakenAnalyzeSecurity(weakenThreads: number) {
     return -0.05 * weakenThreads;
+}
+
+function hostListFromChunks(chunks: AllocationChunk[]): string[] {
+    const hosts: string[] = [];
+    for (const chunk of chunks) {
+        for (let i = 0; i < chunk.numChunks; i++) {
+            hosts.push(chunk.hostname);
+        }
+    }
+    return hosts;
 }
 
 interface SowBatchLogistics extends BatchLogistics {
