@@ -5,7 +5,6 @@ import { distributeTasks } from "gang/task-balancer";
 import { assignTrainingTasks } from "gang/training-focus-manager";
 import { purchaseBestGear } from "gang/equipment-manager";
 import { CONFIG } from "gang/config";
-import { TerritoryManager } from "gang/territory-manager";
 
 import { StatTracker } from "util/stat-tracker";
 
@@ -39,6 +38,16 @@ type MemberState =
     | "moneyGrind"
     | "territoryWarfare"
     | "cooling";
+
+class Member {
+    state: MemberState;
+    tracker: StatTracker<GangMemberInfo>;
+
+    constructor(state: MemberState = "bootstrapping") {
+        this.state = state;
+        this.tracker = new StatTracker<GangMemberInfo>();
+    }
+}
 
 const MAX_MEMBERS = 12;
 
@@ -98,52 +107,46 @@ OPTIONS
 
     ns.print(`Current members: ${Array.from(currentNames).join(", ")}`);
 
-    const memberState: Record<string, MemberState> = {};
+    const members: Record<string, Member> = {};
     for (const name of currentNames) {
-        memberState[name] = "bootstrapping";
+        members[name] = new Member();
     }
-    const trackers: Record<string, StatTracker<GangMemberInfo>> = {};
+
+    function recruitNew(replaced?: string) {
+        if (
+            ns.gang.canRecruitMember() &&
+            nameIndex < availableNames.length &&
+            currentNames.size < MAX_MEMBERS &&
+            ns.gang.getGangInformation().respect >= ns.gang.respectForNextRecruit()
+        ) {
+            const recruit = availableNames[nameIndex++];
+            if (ns.gang.recruitMember(recruit)) {
+                const msg = replaced
+                    ? `SUCCESS: replaced ${replaced} with ${recruit}`
+                    : `SUCCESS: recruited ${recruit}!`;
+                ns.print(msg);
+                currentNames.add(recruit);
+                members[recruit] = new Member();
+            }
+        }
+    }
 
     const moneyTracker = new StatTracker<MoneySource>();
-    const territory = new TerritoryManager(ns);
 
     while (true) {
-        territory.tick();
         ns.print(`INFO: starting next tick`);
 
         const live = new Set(ns.gang.getMemberNames());
         for (const name of Array.from(currentNames)) {
-            const dead = !live.has(name) || ns.gang.getMemberInformation(name).task === "";
-            if (dead) {
+            if (!live.has(name)) {
                 currentNames.delete(name);
-                delete memberState[name];
-                delete trackers[name];
-                if (ns.gang.canRecruitMember() && nameIndex < availableNames.length) {
-                    const recruit = availableNames[nameIndex++];
-                    if (ns.gang.recruitMember(recruit)) {
-                        ns.print(`SUCCESS: replaced ${name} with ${recruit}`);
-                        currentNames.add(recruit);
-                        memberState[recruit] = "bootstrapping";
-                        trackers[recruit] = new StatTracker();
-                    }
-                }
+                availableNames.push(name as (typeof NAMES)[number]);
+                delete members[name];
+                recruitNew(name);
             }
         }
 
-        if (
-            ns.gang.canRecruitMember() &&
-            ns.gang.getGangInformation().respect >= ns.gang.respectForNextRecruit() &&
-            ns.gang.getMemberNames().length < MAX_MEMBERS &&
-            nameIndex < availableNames.length
-        ) {
-            const name = availableNames[nameIndex++];
-            if (ns.gang.recruitMember(name)) {
-                ns.print(`SUCCESS: recruited ${name}!`);
-                currentNames.add(name);
-                memberState[name] = "bootstrapping";
-                trackers[name] = new StatTracker();
-            }
-        }
+        recruitNew();
 
         const count = ns.gang.getMemberNames().length;
         const thresholds = getThresholds(count);
@@ -153,12 +156,11 @@ OPTIONS
         for (const name of ns.gang.getMemberNames()) {
             ns.print(`INFO: assigning current task for ${name}`);
 
-            if (!(name in memberState)) memberState[name] = "bootstrapping";
-            ns.print(`INFO: ${name} is ${memberState[name]}`);
+            if (!(name in members)) members[name] = new Member();
+            ns.print(`INFO: ${name} is ${members[name].state}`);
 
-            if (!trackers[name]) trackers[name] = new StatTracker<GangMemberInfo>();
             const memberInfo = ns.gang.getMemberInformation(name);
-            trackers[name].update(memberInfo);
+            members[name].tracker.update(memberInfo);
 
             const maxLevel = Math.max(
                 memberInfo.hack,
@@ -171,13 +173,13 @@ OPTIONS
 
             if (maxLevel > thresholds.trainLevel) {
                 ns.print(`SUCCESS: ${name} has finished bootstrapping!`);
-                memberState[name] = "ready";
+                members[name].state = "ready";
             } else {
                 ns.print(`SUCCESS: ${name} needs to go back to bootstrapping!`);
-                memberState[name] = "bootstrapping";
+                members[name].state = "bootstrapping";
             }
 
-            if (memberState[name] === "bootstrapping") {
+            if (members[name].state === "bootstrapping") {
                 training.push(name);
                 const result = ns.gang.getAscensionResult(name);
                 if (result) {
@@ -203,14 +205,14 @@ OPTIONS
                     if (maxGain >= thresholds.ascendMult) {
                         ns.print(`SUCCESS: ascending ${name}!`);
                         ns.gang.ascendMember(name);
-                        trackers[name].reset();
+                        members[name].tracker.reset();
                     }
                 }
             } else {
                 ready.push(name);
             }
 
-            const hist = trackers[name].history;
+            const hist = members[name].tracker.history;
             if (hist.length >= 2) {
                 const first = hist[0];
                 const last = hist[hist.length - 1];
@@ -220,22 +222,22 @@ OPTIONS
                 const vel = (sumLast - sumFirst) / dt;
                 if (vel < CONFIG.velocityThreshold) {
                     if (ns.gang.ascendMember(name)) {
-                        trackers[name].reset();
+                        members[name].tracker.reset();
                     }
                 }
             }
         }
 
         const analyzer = new TaskAnalyzer(ns);
-        analyzer.refresh(territory.getBonus());
+        analyzer.refresh();
         assignTrainingTasks(ns, training, analyzer.roleProfiles());
         moneyTracker.update(ns.getMoneySources().sinceInstall);
         for (const n of training) purchaseBestGear(ns, n, "bootstrapping", moneyTracker);
-        const assignments = distributeTasks(ns, ready, analyzer, territory.getBonus());
-        for (const n of assignments.cooling) memberState[n] = "cooling";
-        for (const n of assignments.territoryWarfare) memberState[n] = "territoryWarfare";
-        for (const n of assignments.respectGrind) memberState[n] = "respectGrind";
-        for (const n of assignments.moneyGrind) memberState[n] = "moneyGrind";
+        const assignments = distributeTasks(ns, ready, analyzer);
+        for (const n of assignments.cooling) members[n].state = "cooling";
+        for (const n of assignments.territoryWarfare) members[n].state = "territoryWarfare";
+        for (const n of assignments.respectGrind) members[n].state = "respectGrind";
+        for (const n of assignments.moneyGrind) members[n].state = "moneyGrind";
 
         await ns.gang.nextUpdate();
     }

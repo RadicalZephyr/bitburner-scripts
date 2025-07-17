@@ -195,11 +195,10 @@ interface GangTaskStats { /* … see prompt for full fields … */ }
 
 **Objective:** Integrate territory control, death handling, and holistic task/state coordination.
 
-1. **TerritoryManager**
+1. **Territory Bonus**
 
-   - Every 4 gang update ticks: fetch `info = ns.gang.getGangInformation()`.
-   - Compute `territoryBonus = f(info.territory)` using `1 + territory` as the multiplier.
-   - Update `TaskAnalyzer.refresh(territoryBonus)` so task rewards include territory effects.
+   - Each tick compute `territoryBonus = 1 + info.territory` from `ns.gang.getGangInformation()`.
+   - Apply this multiplier within `TaskAnalyzer.refresh()` when evaluating tasks.
 
 2. **Death & Re-Recruit**
 

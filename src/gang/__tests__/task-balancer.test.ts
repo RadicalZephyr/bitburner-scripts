@@ -44,9 +44,9 @@ function makeNS(penalty: number, territory: number, chance: number): NS {
 
 describe("distributeTasks", () => {
     test("assigns cooling and warfare members", () => {
-        const ns = makeNS(0.04, 0.5, 0.8);
+        const ns = makeNS(0.04, 0.5, 0.4);
         const members = Array.from({ length: 10 }, (_, i) => `m${i}`);
-        const result = distributeTasks(ns, members, analyzer, 1);
+        const result = distributeTasks(ns, members, analyzer);
         expect(result.cooling.length).toBe(0);
         expect(result.territoryWarfare.length).toBeGreaterThan(0);
     });

@@ -56,11 +56,8 @@ export class TaskAnalyzer {
         return this.profiles;
     }
 
-    /** Refresh task statistics and recompute rankings.
-     *
-     * @param territoryBonus - Multiplier applied to yields from territory.
-     */
-    refresh(territoryBonus = 1) {
+    /** Refresh task statistics and recompute rankings. */
+    refresh() {
         const taskNames = this.ns.gang.getTaskNames();
         this.tasks = taskNames.map(name => this.ns.gang.getTaskStats(name));
         this.hackTasks = this.tasks.filter(t => t.isHacking);
@@ -73,8 +70,8 @@ export class TaskAnalyzer {
         const wanted = new Map<GangTaskStats, number>();
 
         for (const task of this.tasks) {
-            money.set(task, calculateMoneyGain(this.ns, gangInfo, avgMember, task) * territoryBonus);
-            respect.set(task, calculateRespectGain(this.ns, gangInfo, avgMember, task) * territoryBonus);
+            money.set(task, calculateMoneyGain(this.ns, gangInfo, avgMember, task));
+            respect.set(task, calculateRespectGain(this.ns, gangInfo, avgMember, task));
             wanted.set(task, calculateWantedGain(this.ns, gangInfo, avgMember, task));
         }
 

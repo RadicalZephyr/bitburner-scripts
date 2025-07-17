@@ -8,14 +8,12 @@ import { TaskAnalyzer } from "gang/task-analyzer";
  * @param ns - Netscript API
  * @param members - Members eligible for work
  * @param analyzer - Task analyzer with precomputed stats
- * @param territoryBonus - Territory bonus from {@link TerritoryManager}
  * @returns Map of role names to member lists
  */
 export function distributeTasks(
     ns: NS,
     members: string[],
     analyzer: TaskAnalyzer,
-    territoryBonus: number,
 ): Record<string, string[]> {
     const info = ns.gang.getGangInformation();
     const respectDeficit = Math.max(0, info.respectForNextRecruit - info.respect);
@@ -26,8 +24,8 @@ export function distributeTasks(
         ? Math.min(1, (info.wantedPenalty - CONFIG.maxWantedPenalty) / CONFIG.maxWantedPenalty)
         : 0;
 
-    const warChance = averageClashChance(ns);
-    const warFraction = info.territory < 1 && warChance > 0.6 ? 0.1 : 0;
+    const winChance = averageClashWinChance(ns);
+    const warFraction = info.territory < 1 && winChance < 0.6 ? 0.1 : 0;
 
     const total = members.length;
     const numCooling = Math.round(total * coolingFraction);
@@ -63,7 +61,7 @@ export function distributeTasks(
     };
 }
 
-function averageClashChance(ns: NS): number {
+function averageClashWinChance(ns: NS): number {
     const others = ns.gang.getOtherGangInformation();
     const names = Object.keys(others);
     if (names.length === 0) return 0;
