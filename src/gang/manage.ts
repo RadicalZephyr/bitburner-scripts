@@ -1,6 +1,7 @@
 import type { GangMemberAscension, GangMemberInfo, MoneySource, NS } from "netscript";
 import { CONFIG } from "gang/config";
 import { purchaseBestGear } from "gang/equipment-manager";
+import { TaskAnalyzer } from "gang/task-analyzer";
 import { StatTracker } from "util/stat-tracker";
 
 const NAMES = [
@@ -63,6 +64,10 @@ CONFIG VALUES
     while (true) {
         moneyTracker.update(ns.getMoneySources().sinceInstall);
 
+        const analyzer = new TaskAnalyzer(ns);
+        analyzer.refresh();
+        const profiles = analyzer.roleProfiles();
+
         if (ns.gang.canRecruitMember() && nameIndex < availableNames.length) {
             const name = availableNames[nameIndex++];
             if (ns.gang.recruitMember(name)) {
@@ -85,7 +90,7 @@ CONFIG VALUES
         }
 
         for (const m of training) {
-            purchaseBestGear(ns, m.name, "bootstrapping", moneyTracker)
+            purchaseBestGear(ns, m.name, "bootstrapping", moneyTracker, profiles.bootstrapping)
             ns.gang.setMemberTask(m.name, trainingTask);
         }
 

@@ -310,9 +310,10 @@ OPTIONS
 
         const analyzer = new TaskAnalyzer(ns);
         analyzer.refresh();
-        assignTrainingTasks(ns, training, analyzer.roleProfiles());
+        const profiles = analyzer.roleProfiles();
+        assignTrainingTasks(ns, training, profiles);
         moneyTracker.update(ns.getMoneySources().sinceInstall);
-        for (const n of training) purchaseBestGear(ns, n, "bootstrapping", moneyTracker);
+        for (const n of training) purchaseBestGear(ns, n, "bootstrapping", moneyTracker, profiles.bootstrapping);
         const assignments = distributeTasks(ns, ready, analyzer);
         for (const n of assignments.cooling) members[n].state = "cooling";
         for (const n of assignments.territoryWarfare) members[n].state = "territoryWarfare";

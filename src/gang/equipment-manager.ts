@@ -1,15 +1,19 @@
 import type { EquipmentStats, GangMemberInfo, MoneySource, NS } from "netscript";
 
+import type { Role, RoleProfile } from "gang/task-analyzer";
+
 import { CONFIG } from "gang/config";
 
 import { StatTracker } from "util/stat-tracker";
 
-function statGain(stats: EquipmentStats): number {
+function weightedStatGain(stats: EquipmentStats, profile: RoleProfile): number {
     let total = 0;
-    for (const key in stats) {
-        const v = stats[key];
-        if (typeof v === "number") total += v - 1;
-    }
+    total += ((stats.hack ?? 1) - 1) * profile.hackWeight;
+    total += ((stats.str ?? 1) - 1) * profile.strWeight;
+    total += ((stats.def ?? 1) - 1) * profile.defWeight;
+    total += ((stats.dex ?? 1) - 1) * profile.dexWeight;
+    total += ((stats.agi ?? 1) - 1) * profile.agiWeight;
+    total += ((stats.cha ?? 1) - 1) * profile.chaWeight;
     return total;
 }
 
@@ -25,7 +29,13 @@ export function computeROI(cost: number, gainRate: number): number {
  * @param memberName - Gang member name
  * @param role - Role used to look up {@link CONFIG.maxROITime}
  */
-export function purchaseBestGear(ns: NS, memberName: string, role: string, moneyTracker: StatTracker<MoneySource>) {
+export function purchaseBestGear(
+    ns: NS,
+    memberName: string,
+    role: Role,
+    moneyTracker: StatTracker<MoneySource>,
+    profile: RoleProfile,
+) {
     const info: GangMemberInfo = ns.gang.getMemberInformation(memberName);
     const equips = ns.gang.getEquipmentNames();
     const limit = CONFIG.maxROITime[role] ?? 0;
@@ -35,8 +45,9 @@ export function purchaseBestGear(ns: NS, memberName: string, role: string, money
     for (const equip of equips) {
         if (info.upgrades.includes(equip) || info.augmentations.includes(equip)) continue;
         const cost = ns.gang.getEquipmentCost(equip);
-
-        const roi = computeROI(cost, gainRate);
+        const stats = ns.gang.getEquipmentStats(equip);
+        const effectiveGain = weightedStatGain(stats, profile);
+        const roi = computeROI(cost, gainRate * effectiveGain);
         ns.print(`INFO: ROI on buying ${equip} is ${ns.tFormat(roi * 1000)}`);
         if (roi <= limit) {
             ns.print(`SUCCESS: buying ${memberName} ${equip}`);
