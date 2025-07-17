@@ -13,11 +13,11 @@ const entries = [
     ["recruitHorizon", 60],
     ["velocityThreshold", 0.1],
     ["maxROITime", {
-        bootstrapping: 3600,
-        respectGrind: 3600,
-        moneyGrind: 3600,
-        warfare: 3600,
-        cooling: 3600,
+        bootstrapping: 600,
+        respectGrind: 600,
+        moneyGrind: 600,
+        warfare: 600,
+        cooling: 600,
     }],
 ] as const;
 
