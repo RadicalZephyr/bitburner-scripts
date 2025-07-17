@@ -1,18 +1,13 @@
-import type { AutocompleteData, NS, ScriptArg } from "netscript";
+import type { AutocompleteData, NS } from "netscript";
 
 import { TaskSelectorClient, Lifecycle } from "batch/client/task_selector";
 
-import {
-    registerAllocationOwnership,
-    MemoryClient,
-    TransferableAllocation,
-} from "services/client/memory";
-import { TAG_ARG } from "services/client/memory_tag";
+import { registerAllocationOwnership, MemoryClient } from "services/client/memory";
 
 import { CONFIG } from "batch/config";
 import { awaitRound, calculateRoundInfo, RoundInfo } from "batch/progress";
 
-import { BatchLogistics, BatchPhase, calculatePhaseStartTimes } from "services/batch";
+import { BatchLogistics, BatchPhase, calculatePhaseStartTimes, spawnBatch } from "services/batch";
 
 const GROW_SCRIPT = "/batch/g.js";
 const WEAKEN_SCRIPT = "/batch/w.js";
@@ -73,8 +68,8 @@ OPTIONS
 
     let taskSelectorClient = new TaskSelectorClient(ns);
 
-    const growThreads = neededGrowThreads(ns, target);
-    if (growThreads < 1) {
+    let totalGrowThreads = neededGrowThreads(ns, target);
+    if (totalGrowThreads < 1) {
         ns.printf(`no need to sow ${target}`);
         ns.toast(`finished sowing ${target}!`, "success");
         taskSelectorClient.finishedSowing(target);
@@ -87,6 +82,11 @@ OPTIONS
     let allocChunks = overlap;
     if (maxThreads !== -1) {
         const batchThreads = sowBatchLogistics.phases.reduce((s, p) => s + p.threads, 0);
+        allocChunks = Math.min(overlap, Math.floor(maxThreads / batchThreads));
+        if (allocChunks === 0) {
+            ns.tprint('--max-threads is too small for one batch');
+            return;
+        }
     }
     // let weakenThreads: number;
     // if (maxThreads !== -1) {
@@ -105,26 +105,37 @@ OPTIONS
     // Send a Sow Heartbeat to indicate we're starting the main loop
     taskSelectorClient.tryHeartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Sow);
 
-    const maxOverlap = alloc.numChunks;
-    let batches = [];
-
-    for (let i = 0; i < maxOverlap; i++) {
+    const hosts: string[] = [];
+    for (const chunk of alloc.allocatedChunks) {
+        for (let i = 0; i < chunk.numChunks; i++) {
+            hosts.push(chunk.hostname);
+        }
     }
 
+    const maxOverlap = hosts.length;
+    const totalBatches = maxOverlap;
     let totalGrowBatches = sowBatchLogistics.totalBatches;
-    const totalBatches = alloc.numChunks;
+
+    const growPhase = sowBatchLogistics.phases.find(p => p.script === GROW_SCRIPT)!;
+    const growThreadsPerBatch = growPhase.threads;
 
     let round = 0;
     let nextHeartbeat = Date.now() + CONFIG.heartbeatCadence + Math.random() * 500;
 
-    while (growThreads > 0) {
+    while (totalGrowThreads > 0) {
         round += 1;
         const roundsRemaining = Math.ceil(totalGrowBatches / totalBatches);
         const totalRounds = (round - 1) + roundsRemaining;
 
         const info: RoundInfo = calculateRoundInfo(ns, target, round, totalRounds, roundsRemaining);
 
-        const pids = await spawnBatch(ns,);
+        const batchesThisRound = Math.min(maxOverlap, totalGrowBatches);
+        let pids: number[] = [];
+        for (let i = 0; i < batchesThisRound; i++) {
+            const host = hosts[i];
+            const batchPids = await spawnBatch(ns, host, target, sowBatchLogistics.phases, -1, alloc.allocationId);
+            pids = pids.concat(batchPids);
+        }
 
         const sendHb = () =>
             Promise.resolve(
@@ -138,13 +149,10 @@ OPTIONS
         nextHeartbeat = await awaitRound(ns, pids, info, nextHeartbeat, sendHb);
 
         totalGrowThreads = neededGrowThreads(ns, target);
-        growThreads = Math.min(totalGrowThreads, growThreads);
-        const growSec = ns.growthAnalyzeSecurity(growThreads, target);
-        weakenThreads = Math.min(weakenAnalyze(growSec), weakenThreads);
+        totalGrowBatches = Math.ceil(totalGrowThreads / growThreadsPerBatch);
     }
 
-    await weakenAlloc.release(ns);
-    await growAlloc.release(ns);
+    await alloc.release(ns);
     ns.toast(`finished sowing ${target}!`, "success");
     taskSelectorClient.finishedSowing(target);
 }
@@ -167,29 +175,6 @@ function calculateSowThreadsForMaxThreads(ns: NS, maxThreads: number) {
     return calculateSowBatchThreads(ns, low);
 }
 
-function runAllocation(
-    ns: NS,
-    allocation: TransferableAllocation,
-    script: string,
-    threads: number,
-    ...args: ScriptArg[]
-): number[] {
-    let remaining = threads;
-    let pids: number[] = [];
-    for (const chunk of allocation.allocatedChunks) {
-        if (remaining <= 0) break;
-        const t = Math.min(chunk.numChunks, remaining);
-        ns.scp(script, chunk.hostname, "home");
-        const pid = ns.exec(script, chunk.hostname, { threads: t, temporary: true }, ...args);
-        if (pid === 0) {
-            ns.print(`WARN: failed to exec ${script} on ${chunk.hostname}`);
-        } else {
-            pids.push(pid);
-        }
-        remaining -= t;
-    }
-    return pids;
-}
 
 function neededGrowThreads(ns: NS, target: string) {
     const maxMoney = ns.getServerMaxMoney(target);
