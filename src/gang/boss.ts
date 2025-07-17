@@ -61,10 +61,12 @@ type MemberState =
     | "cooling";
 
 class Member {
+    name: string;
     state: MemberState;
     private tracker: StatTracker<GangMemberInfo>;
 
-    constructor(state: MemberState = "bootstrapping") {
+    constructor(name: string, state: MemberState = "bootstrapping") {
+        this.name = name;
         this.state = state;
         this.tracker = new StatTracker<GangMemberInfo>();
     }
@@ -77,8 +79,8 @@ class Member {
         this.tracker.reset();
     }
 
-    tryAscend(ns: NS, name: string): boolean {
-        if (ns.gang.ascendMember(name)) {
+    tryAscend(ns: NS): boolean {
+        if (ns.gang.ascendMember(this.name)) {
             this.reset();
             return true;
         }
@@ -167,7 +169,7 @@ OPTIONS
 
     const members: Record<string, Member> = {};
     for (const name of currentNames) {
-        members[name] = new Member();
+        members[name] = new Member(name);
     }
 
     function recruitNew(replaced?: string) {
@@ -184,7 +186,7 @@ OPTIONS
                     : `SUCCESS: recruited ${recruit}!`;
                 ns.print(msg);
                 currentNames.add(recruit);
-                members[recruit] = new Member();
+                members[recruit] = new Member(recruit);
             }
         }
     }
@@ -214,7 +216,7 @@ OPTIONS
         for (const name of ns.gang.getMemberNames()) {
             ns.print(`INFO: assigning current task for ${name}`);
 
-            if (!(name in members)) members[name] = new Member();
+            if (!(name in members)) members[name] = new Member(name);
             ns.print(`INFO: ${name} is ${members[name].state}`);
 
             const memberInfo = ns.gang.getMemberInformation(name);
@@ -262,7 +264,7 @@ OPTIONS
 
                     if (maxGain >= thresholds.ascendMult) {
                         ns.print(`SUCCESS: ascending ${name}!`);
-                        members[name].tryAscend(ns, name);
+                        members[name].tryAscend(ns);
                     }
                 }
             } else {
@@ -271,7 +273,7 @@ OPTIONS
 
             const vel = members[name].averageVelocity();
             if (typeof vel === "number" && vel < CONFIG.velocityThreshold) {
-                members[name].tryAscend(ns, name);
+                members[name].tryAscend(ns);
             }
         }
 
