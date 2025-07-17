@@ -302,10 +302,10 @@ OPTIONS
                 ready.push(name);
             }
 
-            const vel = members[name].averageVelocity();
-            if (typeof vel === "number" && vel < CONFIG.velocityThreshold) {
-                members[name].tryAscend(ns);
-            }
+            // const vel = members[name].averageVelocity();
+            // if (typeof vel === "number" && vel < CONFIG.velocityThreshold) {
+            //     members[name].tryAscend(ns);
+            // }
         }
 
         const analyzer = new TaskAnalyzer(ns);
