@@ -2,7 +2,7 @@ import type { EquipmentStats, GangMemberInfo, MoneySource, NS } from "netscript"
 
 import { CONFIG } from "gang/config";
 
-import { StatTracker } from "/util/stat-tracker";
+import { StatTracker } from "util/stat-tracker";
 
 function statGain(stats: EquipmentStats): number {
     let total = 0;
