@@ -68,6 +68,19 @@ export class StatTracker<Type> {
         this.historyLen = typeof historyLen === 'number' && historyLen >= 2 ? historyLen : 3;
     }
 
+
+    /**
+     * Return the most recent value of the specified field.
+     *
+     * @param stat - The field to retrieve the most recent value of
+     * @returns Numeric value of the field, or null if no history exists yet
+     */
+    value(stat: keyof PickByType<Type, number>): number | void {
+        if (this.history.length > 0) {
+            return this.history.at(-1)![stat] as number;
+        }
+    }
+
     /**
      * Compute the velocity of the specified field.
      *
