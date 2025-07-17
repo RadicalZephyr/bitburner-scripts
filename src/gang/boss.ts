@@ -1,10 +1,11 @@
 import type { GangMemberInfo, MoneySource, NS } from "netscript";
 
 import { TaskAnalyzer } from "gang/task-analyzer";
-import { wantedTaskBalancer } from "gang/task-balancer";
+import { distributeTasks } from "gang/task-balancer";
 import { assignTrainingTasks } from "gang/training-focus-manager";
 import { purchaseBestGear } from "gang/equipment-manager";
 import { CONFIG } from "gang/config";
+import { TerritoryManager } from "gang/territory-manager";
 
 import { StatTracker } from "util/stat-tracker";
 
@@ -28,7 +29,16 @@ function getThresholds(n: number): Thresholds {
     return result;
 }
 
-type MemberState = "bootstrapping" | "ready";
+type MemberState =
+    | "recruited"
+    | "bootstrapping"
+    | "training"
+    | "ascending"
+    | "ready"
+    | "respectGrind"
+    | "moneyGrind"
+    | "territoryWarfare"
+    | "cooling";
 
 const MAX_MEMBERS = 12;
 
@@ -95,9 +105,30 @@ OPTIONS
     const trackers: Record<string, StatTracker<GangMemberInfo>> = {};
 
     const moneyTracker = new StatTracker<MoneySource>();
+    const territory = new TerritoryManager(ns);
 
     while (true) {
+        territory.tick();
         ns.print(`INFO: starting next tick`);
+
+        const live = new Set(ns.gang.getMemberNames());
+        for (const name of Array.from(currentNames)) {
+            const dead = !live.has(name) || ns.gang.getMemberInformation(name).task === "";
+            if (dead) {
+                currentNames.delete(name);
+                delete memberState[name];
+                delete trackers[name];
+                if (ns.gang.canRecruitMember() && nameIndex < availableNames.length) {
+                    const recruit = availableNames[nameIndex++];
+                    if (ns.gang.recruitMember(recruit)) {
+                        ns.print(`SUCCESS: replaced ${name} with ${recruit}`);
+                        currentNames.add(recruit);
+                        memberState[recruit] = "bootstrapping";
+                        trackers[recruit] = new StatTracker();
+                    }
+                }
+            }
+        }
 
         if (
             ns.gang.canRecruitMember() &&
@@ -196,10 +227,15 @@ OPTIONS
         }
 
         const analyzer = new TaskAnalyzer(ns);
+        analyzer.refresh(territory.getBonus());
         assignTrainingTasks(ns, training, analyzer.roleProfiles());
         moneyTracker.update(ns.getMoneySources().sinceInstall);
         for (const n of training) purchaseBestGear(ns, n, "bootstrapping", moneyTracker);
-        wantedTaskBalancer(ns, ready, analyzer, 1);
+        const assignments = distributeTasks(ns, ready, analyzer, territory.getBonus());
+        for (const n of assignments.cooling) memberState[n] = "cooling";
+        for (const n of assignments.territoryWarfare) memberState[n] = "territoryWarfare";
+        for (const n of assignments.respectGrind) memberState[n] = "respectGrind";
+        for (const n of assignments.moneyGrind) memberState[n] = "moneyGrind";
 
         await ns.gang.nextUpdate();
     }

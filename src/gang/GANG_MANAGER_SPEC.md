@@ -198,8 +198,8 @@ interface GangTaskStats { /* … see prompt for full fields … */ }
 1. **TerritoryManager**
 
    - Every 4 gang update ticks: fetch `info = ns.gang.getGangInformation()`.
-   - Compute `territoryBonus = f(info.territory)`.
-   - Update TaskAnalyzer yields accordingly.
+   - Compute `territoryBonus = f(info.territory)` using `1 + territory` as the multiplier.
+   - Update `TaskAnalyzer.refresh(territoryBonus)` so task rewards include territory effects.
 
 2. **Death & Re-Recruit**
 

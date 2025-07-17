@@ -3,62 +3,71 @@ import { CONFIG } from "gang/config";
 import { TaskAnalyzer } from "gang/task-analyzer";
 
 /**
- * Assign ready gang members between money and respect tasks.
+ * Distribute members across respect, money, cooling and warfare tasks.
  *
  * @param ns - Netscript API
- * @param readyNames - Members eligible for work
- * @param analyzer - Precomputed task analysis
+ * @param members - Members eligible for work
+ * @param analyzer - Task analyzer with precomputed stats
+ * @param territoryBonus - Territory bonus from {@link TerritoryManager}
+ * @returns Map of role names to member lists
  */
-export function balanceTasks(
+export function distributeTasks(
     ns: NS,
-    readyNames: string[],
+    members: string[],
     analyzer: TaskAnalyzer,
-) {
+    territoryBonus: number,
+): Record<string, string[]> {
     const info = ns.gang.getGangInformation();
-    const respectDeficit = info.respectForNextRecruit - info.respect;
+    const respectDeficit = Math.max(0, info.respectForNextRecruit - info.respect);
     const horizon = info.respectGainRate * CONFIG.recruitHorizon;
-    const respectFraction = horizon <= 0
-        ? 0
-        : Math.max(0, Math.min(1, respectDeficit / horizon));
+    const respectFraction = horizon <= 0 ? 0 : Math.min(1, respectDeficit / horizon);
 
-    const numRespect = Math.round(respectFraction * readyNames.length);
+    const coolingFraction = info.wantedPenalty > CONFIG.maxWantedPenalty
+        ? Math.min(1, (info.wantedPenalty - CONFIG.maxWantedPenalty) / CONFIG.maxWantedPenalty)
+        : 0;
+
+    const warChance = averageClashChance(ns);
+    const warFraction = info.territory < 1 && warChance > 0.6 ? 0.1 : 0;
+
+    const total = members.length;
+    const numCooling = Math.round(total * coolingFraction);
+    const numWar = Math.round(total * warFraction);
+    const numRespect = Math.round((total - numCooling - numWar) * respectFraction);
+
+    const coolingTask = analyzer.bestCoolingTasks[0]?.name;
+    const warTask = analyzer.bestWarTasks[0]?.name;
     const respectTask = analyzer.bestRespectTasks[0]?.name;
     const moneyTask = analyzer.bestMoneyTasks[0]?.name;
 
-    readyNames.forEach((name, i) => {
-        const task = i < numRespect ? respectTask : moneyTask;
-        if (task) ns.gang.setMemberTask(name, task);
-    });
+    let idx = 0;
+    const coolingNames = members.slice(idx, idx + numCooling);
+    coolingNames.forEach(n => coolingTask && ns.gang.setMemberTask(n, coolingTask));
+    idx += numCooling;
+
+    const warNames = members.slice(idx, idx + numWar);
+    warNames.forEach(n => warTask && ns.gang.setMemberTask(n, warTask));
+    idx += numWar;
+
+    const respectNames = members.slice(idx, idx + numRespect);
+    respectNames.forEach(n => respectTask && ns.gang.setMemberTask(n, respectTask));
+    idx += numRespect;
+
+    const moneyNames = members.slice(idx);
+    moneyNames.forEach(n => moneyTask && ns.gang.setMemberTask(n, moneyTask));
+
+    return {
+        cooling: coolingNames,
+        territoryWarfare: warNames,
+        respectGrind: respectNames,
+        moneyGrind: moneyNames,
+    };
 }
 
-/**
- * Assign members while respecting wanted level limits.
- *
- * When the gang's {@link GangGenInfo.wantedPenalty | wanted penalty}
- * exceeds {@link CONFIG.maxWantedPenalty}, the first `assignCoolingCount`
- * members are moved to the best cooling task from the analyzer.
- * Remaining members are distributed by {@link balanceTasks} between
- * respect and money generation.
- *
- * @param ns - Netscript API
- * @param readyNames - Members eligible for work
- * @param analyzer - Task analyzer with precomputed stats
- * @param assignCoolingCount - Number of members to assign to cooling when needed
- */
-export function wantedTaskBalancer(
-    ns: NS,
-    readyNames: string[],
-    analyzer: TaskAnalyzer,
-    assignCoolingCount: number,
-) {
-    const info = ns.gang.getGangInformation();
-    if (info.wantedPenalty > CONFIG.maxWantedPenalty) {
-        const coolingTask = analyzer.bestCoolingTasks[0]?.name;
-        readyNames.slice(0, assignCoolingCount).forEach(name => {
-            if (coolingTask) ns.gang.setMemberTask(name, coolingTask);
-        });
-        balanceTasks(ns, readyNames.slice(assignCoolingCount), analyzer);
-    } else {
-        balanceTasks(ns, readyNames, analyzer);
-    }
+function averageClashChance(ns: NS): number {
+    const others = ns.gang.getOtherGangInformation();
+    const names = Object.keys(others);
+    if (names.length === 0) return 0;
+    let total = 0;
+    for (const n of names) total += ns.gang.getChanceToWinClash(n);
+    return total / names.length;
 }
