@@ -230,7 +230,7 @@ OPTIONS
         }
     }
 
-    const moneyTracker = new StatTracker<MoneySource>();
+    const moneyTracker = new StatTracker<MoneySource>(12);
 
     while (true) {
         ns.print(`INFO: starting next tick`);
