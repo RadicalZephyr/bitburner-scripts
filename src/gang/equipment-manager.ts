@@ -28,7 +28,7 @@ export function computeROI(cost: number, gainRate: number): number {
 export function purchaseBestGear(ns: NS, memberName: string, role: string, moneyTracker: StatTracker<MoneySource>) {
     const info: GangMemberInfo = ns.gang.getMemberInformation(memberName);
     const equips = ns.gang.getEquipmentNames();
-    const limit = CONFIG.maxROITime[role] ?? Infinity;
+    const limit = CONFIG.maxROITime[role] ?? 0;
     const gainRate = moneyTracker.velocity("total");
     if (!gainRate) return;
 
