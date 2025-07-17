@@ -162,20 +162,19 @@ OPTIONS
         const host = batchHost.at(batchIndex);
         let lastScriptPid = batches[batchIndex]?.at(-1);
         if (typeof lastScriptPid === "number") {
-            let missedMessages = 0;
-            while (finishedPort.read() !== "NULL PORT DATA") {
-                missedMessages += 1;
-            }
-            if (missedMessages > 0) {
-                ns.print(`WARN: missed ${missedMessages} while spawning new batch`);
-            }
-            await finishedPort.nextWrite();
             let donePid = finishedPort.read();
+            if (donePid === "NULL PORT DATA") {
+                await finishedPort.nextWrite();
+                donePid = finishedPort.read();
+            }
+            if (finishedPort.peek() !== "NULL PORT DATA") {
+                ns.print("WARN: missed one or more done messages while spawning new batch");
+            }
             if (typeof donePid === "number" && lastScriptPid !== donePid) {
                 ns.print(`INFO: expected to receive done message from ${lastScriptPid}, got ${donePid}`);
             }
         } else {
-            ns.print(`WARN: lastScriptPid was not a number, did scripts fail to launch?`);
+            ns.print("WARN: lastScriptPid was not a number, did scripts fail to launch?");
             // Safety sleep to avoid hanging
             await ns.sleep(10);
         }
