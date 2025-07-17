@@ -90,12 +90,12 @@ class Member {
 
     maxLevel() {
         return Math.max(
-            this.tracker["hack"],
-            this.tracker["str"],
-            this.tracker["def"],
-            this.tracker["dex"],
-            this.tracker["agi"],
-            this.tracker["cha"],
+            this.tracker.value("hack"),
+            this.tracker.value("str"),
+            this.tracker.value("def"),
+            this.tracker.value("dex"),
+            this.tracker.value("agi"),
+            this.tracker.value("cha"),
         );
     }
 
