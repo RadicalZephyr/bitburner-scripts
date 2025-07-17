@@ -14,10 +14,10 @@ interface Thresholds {
 }
 
 const thresholdsByCount: Record<number, Thresholds> = {
-    3: { trainLevel: 500, ascendMult: 1.00 },
+    3: { trainLevel: 500, ascendMult: 2.00 },
     6: { trainLevel: 1000, ascendMult: 1.50 },
-    9: { trainLevel: 5000, ascendMult: 2.0 },
-    12: { trainLevel: 10000, ascendMult: 3.0 },
+    9: { trainLevel: 5000, ascendMult: 1.15 },
+    12: { trainLevel: 10000, ascendMult: 1.05 },
 };
 
 function getThresholds(n: number): Thresholds {
