@@ -1,6 +1,6 @@
 # bitburner
 
-Scripts and utilities for playing [Bitburner](https://danielyxie.github.io/bitburner/).
+Scripts and utilities for playing [Bitburner](https://bitburner-official.github.io/).
 
 Most documentation lives in the [docs](./docs) directory. New users can start with [Getting Started](docs/getting-started.md).
 
