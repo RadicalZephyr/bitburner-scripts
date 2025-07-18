@@ -10,11 +10,26 @@ Most documentation lives in the [docs](./docs) directory. New users can start wi
 
 A GitHub Actions workflow automatically builds the TypeScript sources whenever code is pushed to the `main` branch. The compiled scripts are pushed to the `latest-files` branch along with a small `bootstrap.js` loader. That branch is packaged into a release tagged `latest`.
 
-To download the published scripts directly from inside the game, use the following aliases from [`aliases.txt`](aliases.txt):
+To download the published scripts directly from inside the game just
+run these commands in the Bitburner terminal:
+
+```bash
+wget https://raw.githubusercontent.com/RadicalZephyr/bitburner-scripts/latest/bootstrap.js external-bootstrap.js
+run external-bootstrap.js
+```
+
+If you want to regularly get the newest releases, you can set up these
+commands as aliases, by running these commands in the Bitburner terminal:
 
 ```bash
 alias get-external-bootstrap="wget https://raw.githubusercontent.com/RadicalZephyr/bitburner-scripts/latest/bootstrap.js external-bootstrap.js"
 alias external-bootstrap="run external-bootstrap.js"
 ```
 
-Run `get-external-bootstrap` in a Bitburner terminal and then execute `external-bootstrap` to fetch all released scripts.
+Now you can just run these commands from your Bitburner terminal
+whenever you want to fetch a new release of these scripts:
+
+```bash
+get-external-bootstrap
+external-bootstrap
+```
