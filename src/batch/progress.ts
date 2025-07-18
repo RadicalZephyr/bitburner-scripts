@@ -57,13 +57,7 @@ export async function awaitRound(
     for (const pid of pids) {
         while (ns.isRunning(pid)) {
             ns.clearLog();
-            const elapsed = ns.self().onlineRunningTime * 1000;
-            ns.print(`
-Round ${info.round} of ${info.totalRounds}
-Elapsed time:    ${ns.tFormat(elapsed)}
-Round ends:      ${ns.tFormat(info.roundEnd)}
-Total expected:  ${ns.tFormat(info.totalExpectedEnd)}
-`);
+            printRoundProgress(ns, info);
             if (Date.now() >= nextHeartbeat) {
                 const result = await sendHeartbeat();
                 if (result !== false) {
@@ -75,4 +69,20 @@ Total expected:  ${ns.tFormat(info.totalExpectedEnd)}
     }
 
     return nextHeartbeat;
+}
+
+/**
+ * Print out the current round progress message.
+ *
+ * @param ns   - Netscript API instance
+ * @param info - Round info
+ */
+export function printRoundProgress(ns: NS, info: RoundInfo) {
+    const elapsed = ns.self().onlineRunningTime * 1000;
+    ns.print(`
+Round ${info.round} of ${info.totalRounds}
+Elapsed time:    ${ns.tFormat(elapsed)}
+Round ends:      ${ns.tFormat(info.roundEnd)}
+Total expected:  ${ns.tFormat(info.totalExpectedEnd)}
+`);
 }
