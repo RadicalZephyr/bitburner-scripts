@@ -10,7 +10,7 @@ import { GrowableMemoryClient } from "services/client/growable_memory";
 import { TAG_ARG } from "services/client/memory_tag";
 
 import { CONFIG } from "batch/config";
-import { awaitRound, calculateRoundInfo, RoundInfo } from "batch/progress";
+import { awaitRound, calculateRoundInfo, printRoundProgress, RoundInfo } from "batch/progress";
 
 import { BatchLogistics, BatchPhase, calculatePhaseStartTimes, spawnBatch } from "services/batch";
 
@@ -121,15 +121,16 @@ OPTIONS
 
         growNeeded = neededGrowThreads(ns, target);
 
-        for (const host of hosts) {
-            const ps = await spawnBatch(ns, host, target, sowBatchLogistics.phases, -1, allocation.allocationId);
-            pids.push(...ps);
-            await ns.sleep(sowBatchLogistics.endingPeriod);
-        }
-
         const roundsRemaining = Math.ceil(growNeeded / (growPerBatch * hosts.length));
         const totalRounds = (round - 1) + roundsRemaining;
         const info: RoundInfo = calculateRoundInfo(ns, target, round, totalRounds, roundsRemaining);
+
+        for (const host of hosts) {
+            const ps = await spawnBatch(ns, host, target, sowBatchLogistics.phases, -1, allocation.allocationId);
+            pids.push(...ps);
+            printRoundProgress(ns, info);
+            await ns.sleep(sowBatchLogistics.endingPeriod);
+        }
 
         const sendHb = () =>
             Promise.resolve(
