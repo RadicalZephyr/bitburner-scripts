@@ -13,6 +13,7 @@ export async function main(ns: NS) {
     await ns.sleep(500);
 
     await startMemory(ns, host);
+    await startUpdater(ns, host);
     await startPort(ns, host);
 }
 
@@ -36,6 +37,17 @@ async function startDiscover(ns: NS, host: string) {
     }
 
     manualLaunch(ns, discoverScript, host);
+}
+
+async function startUpdater(ns: NS, host: string) {
+    const updaterScript = "/services/updater.js";
+
+    const updater = ns.getRunningScript(updaterScript, host);
+    if (updater !== null) {
+        ns.kill(updater.pid);
+    }
+
+    manualLaunch(ns, updaterScript, host);
 }
 
 async function startPort(ns: NS, host: string) {

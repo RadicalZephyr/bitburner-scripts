@@ -37,3 +37,19 @@ export const setInterval: SetInterval = globalThis.setInterval;
  * @param args    - Arguments to pass to the function
  */
 export const setTimeout: SetTimeout = globalThis.setTimeout;
+
+/**
+ * Produce an async iterator that yields once every `interval` milliseconds.
+ *
+ * Each iteration resolves after the specified interval has elapsed since the
+ * previous one, allowing consumers to `for await` on the generator to perform
+ * work periodically.
+ *
+ * @param interval - Time to wait between iterations in milliseconds
+ */
+export async function* every(interval: number): AsyncGenerator<void, never> {
+    while (true) {
+        await sleep(interval);
+        yield;
+    }
+}

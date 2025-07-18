@@ -2,7 +2,8 @@ import { Config, ConfigInstance } from "util/config";
 
 const entries = [
     ["subscriptionMaxRetries", 5],
-    ["launchRetryMax", 5]
+    ["launchRetryMax", 5],
+    ["updateCheckIntervalMs", 1000 * 60 * 60]
 ] as const;
 
 export const CONFIG: ConfigInstance<typeof entries> =
