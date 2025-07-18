@@ -468,7 +468,6 @@ class TaskSelector {
             this.recordLaunchFailure(host);
             return;
         }
-        this.resetLaunchFailure(host);
         if (result.pids.length >= 1) {
             this.pendingTillTargets = this.pendingTillTargets.filter(h => h !== host);
             const expected = this.estimateTillTime(host, threads);
@@ -497,7 +496,6 @@ class TaskSelector {
             this.recordLaunchFailure(host);
             return;
         }
-        this.resetLaunchFailure(host);
         if (result.pids.length >= 1) {
             this.pendingSowTargets = this.pendingSowTargets.filter(h => h !== host);
             const expected = this.estimateSowTime(host, threads);
@@ -525,7 +523,6 @@ class TaskSelector {
             this.recordLaunchFailure(host);
             return;
         }
-        this.resetLaunchFailure(host);
         if (result.pids.length >= 1) {
             this.pendingHarvestTargets = this.pendingHarvestTargets.filter(h => h !== host);
             const pid = result.pids[0];
