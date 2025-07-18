@@ -40,6 +40,19 @@ jobs:
         shell: bash
         run: unzip ${{ needs.build.outputs.artifact_file }}
 
+      - name: Add a VERSION.json file
+        shell: bash
+        run: |
+          DATE=$(date --utc)
+          EPOCH=$(date --utc +%s)
+          cat > VERSION.json <<JSON_HERE
+          {
+            date: "$DATE",
+            epoch: "$EPOCH",
+            sha: "${{ github.sha }}"
+          }
+          JSON_HERE
+
       - name: Commit and push new script files to latest branch
         shell: bash
         run: |
