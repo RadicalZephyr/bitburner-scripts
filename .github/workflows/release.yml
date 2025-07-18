@@ -47,9 +47,9 @@ jobs:
           EPOCH=$(date --utc +%s)
           cat > VERSION.json <<JSON_HERE
           {
-            date: "$DATE",
-            epoch: "$EPOCH",
-            sha: "${{ github.sha }}"
+            "date": "$DATE",
+            "epoch": "$EPOCH",
+            "sha": "${{ github.sha }}"
           }
           JSON_HERE
 
