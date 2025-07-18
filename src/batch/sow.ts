@@ -71,8 +71,15 @@ OPTIONS
 
     let taskSelectorClient = new TaskSelectorClient(ns);
 
-    const growThreads = neededGrowThreads(ns, target);
-    if (growThreads < 1) {
+    const maxGrowThreads = neededGrowThreads(ns, target);
+    const maxWeakenThreads = weakenAnalyze(ns.growthAnalyzeSecurity(maxGrowThreads));
+    let maxThreadsCap = maxGrowThreads + maxWeakenThreads;
+
+    if (maxThreads !== -1) {
+        maxThreadsCap = Math.min(maxThreadsCap, maxThreads);
+    }
+
+    if (maxThreadsCap < 1 || isNaN(maxThreadsCap)) {
         ns.printf(`no need to sow ${target}`);
         ns.toast(`finished sowing ${target}!`, "success");
         taskSelectorClient.finishedSowing(target);
@@ -80,11 +87,15 @@ OPTIONS
     }
 
     let sowBatchLogistics = calculateSowBatchLogistics(ns, target);
-    const { batchRam, overlap } = sowBatchLogistics;
+    const { batchRam, phases, overlap } = sowBatchLogistics;
+
+    const totalBatchThreads = phases.reduce((s, p) => s + p.threads, 0);
+    const maxOverlapCap = Math.floor(maxThreadsCap / totalBatchThreads);
+    const maxOverlap = Math.min(maxOverlapCap, overlap);
 
     const memClient = new GrowableMemoryClient(ns);
     const allocOptions = { coreDependent: true, shrinkable: true };
-    let allocation = await memClient.requestGrowableAllocation(batchRam, overlap, allocOptions);
+    let allocation = await memClient.requestGrowableAllocation(batchRam, maxOverlap, allocOptions);
     if (!allocation) {
         ns.tprint("ERROR: failed to allocate memory for sow batches");
         return;
