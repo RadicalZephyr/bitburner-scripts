@@ -80,8 +80,6 @@ OPTIONS
     }
 
     let sowBatchLogistics = calculateSowBatchLogistics(ns, target);
-    ns.tprint(`sow batch logistics:\n${JSON.stringify(sowBatchLogistics, null, 2)}`);
-
     const { batchRam, overlap } = sowBatchLogistics;
 
     const memClient = new GrowableMemoryClient(ns);
@@ -108,7 +106,6 @@ OPTIONS
         const pids: number[] = [];
 
         sowBatchLogistics = calculateSowBatchLogistics(ns, target);
-        ns.tprint(`sow batch logistics:\n${JSON.stringify(sowBatchLogistics, null, 2)}`);
         const growPerBatch = sowBatchLogistics.phases[0].threads;
 
         growNeeded = neededGrowThreads(ns, target);
