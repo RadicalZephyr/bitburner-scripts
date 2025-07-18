@@ -1,12 +1,15 @@
 import type { GangMemberInfo, MoneySource, NS } from "netscript";
 
+import { AscensionReviewBoard } from "gang/ascension-review";
+import { purchaseBestGear } from "gang/equipment-manager";
 import { TaskAnalyzer } from "gang/task-analyzer";
 import { distributeTasks } from "gang/task-balancer";
 import { assignTrainingTasks } from "gang/training-focus-manager";
-import { purchaseBestGear } from "gang/equipment-manager";
+
 import { CONFIG } from "gang/config";
 
 import { StatTracker } from "util/stat-tracker";
+
 
 interface Thresholds {
     trainLevel: number;
@@ -211,6 +214,8 @@ OPTIONS
         members[name] = new Member(name);
     }
 
+    const ascensionBoard = new AscensionReviewBoard(ns.gang.respectForNextRecruit());
+
     function recruitNew(replaced?: string) {
         if (
             ns.gang.canRecruitMember() &&
@@ -226,6 +231,11 @@ OPTIONS
                 ns.print(msg);
                 currentNames.add(recruit);
                 members[recruit] = new Member(recruit);
+
+                let respectForNextRecruit = ns.gang.respectForNextRecruit();
+                if (!isFinite(respectForNextRecruit))
+                    respectForNextRecruit = ns.gang.getGangInformation().respect;
+                ascensionBoard.setRespectQuota(ns.gang.respectForNextRecruit());
             }
         }
     }
@@ -251,6 +261,11 @@ OPTIONS
         const thresholds = getThresholds(count);
         const ready: string[] = [];
         const training: string[] = [];
+
+        const ascender = ascensionBoard.reviewRequests(ns);
+        if (ascender) {
+            members[ascender].tryAscend(ns);
+        }
 
         for (const name of ns.gang.getMemberNames()) {
             ns.print(`INFO: assigning current task for ${name}`);
@@ -294,18 +309,13 @@ OPTIONS
                     );
 
                     if (maxGain >= thresholds.ascendMult) {
-                        ns.print(`SUCCESS: ascending ${name}!`);
-                        members[name].tryAscend(ns);
+                        ns.print(`SUCCESS: registering ${name} for ascension`);
+                        ascensionBoard.requestAscension(name);
                     }
                 }
             } else {
                 ready.push(name);
             }
-
-            // const vel = members[name].averageVelocity();
-            // if (typeof vel === "number" && vel < CONFIG.velocityThreshold) {
-            //     members[name].tryAscend(ns);
-            // }
         }
 
         const analyzer = new TaskAnalyzer(ns);
