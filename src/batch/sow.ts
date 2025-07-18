@@ -1,4 +1,4 @@
-import type { AutocompleteData, NS, ScriptArg } from "netscript";
+import type { AutocompleteData, NS } from "netscript";
 
 import { TaskSelectorClient, Lifecycle } from "batch/client/task_selector";
 
@@ -6,7 +6,7 @@ import {
     registerAllocationOwnership,
     AllocationChunk,
 } from "services/client/memory";
-import { GrowableMemoryClient, GrowableAllocation } from "services/client/growable_memory";
+import { GrowableMemoryClient } from "services/client/growable_memory";
 import { TAG_ARG } from "services/client/memory_tag";
 
 import { CONFIG } from "batch/config";
