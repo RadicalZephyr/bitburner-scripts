@@ -21,7 +21,9 @@ export async function main(ns: NS) {
 
     await ns.weaken(target, { additionalMsec: sleepTime });
 
-    if (typeof donePortId === 'number' && donePortId !== -1) {
-        ns.writePort(donePortId, ns.pid);
-    }
+    ns.atExit(() => {
+        if (typeof donePortId === 'number' && donePortId !== -1) {
+            ns.writePort(donePortId, ns.pid);
+        }
+    });
 }
