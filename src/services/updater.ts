@@ -36,8 +36,25 @@ export async function main(ns: NS) {
             continue;
         }
 
-        const remote: Version = JSON.parse(ns.read(tempFile));
-        const local: Version = JSON.parse(ns.read(VERSION_FILE));
+        let remote: Version;
+        let local: Version;
+        try {
+            remote = JSON.parse(ns.read(tempFile));
+        } catch (err) {
+            ns.print(`ERROR: failed to parse ${tempFile}: ${String(err)}`);
+            ns.rm(tempFile, host);
+            ns.rm(VERSION_FILE, host);
+            continue;
+        }
+
+        try {
+            local = JSON.parse(ns.read(VERSION_FILE));
+        } catch (err) {
+            ns.print(`ERROR: failed to parse ${VERSION_FILE}: ${String(err)}`);
+            ns.rm(tempFile, host);
+            ns.rm(VERSION_FILE, host);
+            continue;
+        }
 
         ns.rm(tempFile, host);
         ns.rm(VERSION_FILE, host);
