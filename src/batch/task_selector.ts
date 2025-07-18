@@ -284,10 +284,9 @@ class TaskSelector {
 
     private recordLaunchFailure(host: string) {
         const entry = this.launchFailures.get(host) ?? { count: 0, nextAttempt: 0 };
-        const count = entry.count + 1;
+        const count = Math.min(entry.count + 1, CONFIG.launchFailLimit);
         const backoff = CONFIG.launchFailBackoffMs * Math.pow(2, count - 1);
-        const limited = Math.min(count, CONFIG.launchFailLimit);
-        this.launchFailures.set(host, { count: limited, nextAttempt: Date.now() + backoff });
+        this.launchFailures.set(host, { count, nextAttempt: Date.now() + backoff });
     }
 
     private resetLaunchFailure(host: string) {
