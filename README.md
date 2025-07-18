@@ -14,7 +14,7 @@ To download the published scripts directly from inside the game just
 run these commands in the Bitburner terminal:
 
 ```bash
-wget https://raw.githubusercontent.com/RadicalZephyr/bitburner-scripts/latest/bootstrap.js external-bootstrap.js
+wget https://github.com/RadicalZephyr/bitburner-scripts/releases/download/latest/bootstrap.js external-bootstrap.js
 run external-bootstrap.js
 ```
 
@@ -22,7 +22,7 @@ If you want to regularly get the newest releases, you can set up these
 commands as aliases, by running these commands in the Bitburner terminal:
 
 ```bash
-alias get-external-bootstrap="wget https://raw.githubusercontent.com/RadicalZephyr/bitburner-scripts/latest/bootstrap.js external-bootstrap.js"
+alias get-external-bootstrap="wget https://github.com/RadicalZephyr/bitburner-scripts/releases/download/latest/bootstrap.js external-bootstrap.js"
 alias external-bootstrap="run external-bootstrap.js"
 ```
 
