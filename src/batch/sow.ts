@@ -79,7 +79,9 @@ OPTIONS
         return;
     }
 
-    const sowBatchLogistics = calculateSowBatchLogistics(ns, target);
+    let sowBatchLogistics = calculateSowBatchLogistics(ns, target);
+    ns.tprint(`sow batch logistics:\n${JSON.stringify(sowBatchLogistics, null, 2)}`);
+
     const { batchRam, overlap } = sowBatchLogistics;
 
     const memClient = new GrowableMemoryClient(ns);
@@ -97,7 +99,6 @@ OPTIONS
     let nextHeartbeat = Date.now() + CONFIG.heartbeatCadence + Math.random() * 500;
     let round = 0;
     let growNeeded = neededGrowThreads(ns, target);
-    const growPerBatch = sowBatchLogistics.phases[0].threads;
 
     while (growNeeded > 0) {
         round += 1;
@@ -105,6 +106,13 @@ OPTIONS
         allocation.pollGrowth();
         const hosts = hostListFromChunks(allocation.allocatedChunks);
         const pids: number[] = [];
+
+        sowBatchLogistics = calculateSowBatchLogistics(ns, target);
+        ns.tprint(`sow batch logistics:\n${JSON.stringify(sowBatchLogistics, null, 2)}`);
+        const growPerBatch = sowBatchLogistics.phases[0].threads;
+
+        growNeeded = neededGrowThreads(ns, target);
+
         for (const host of hosts) {
             const ps = await spawnBatch(ns, host, target, sowBatchLogistics.phases, -1, allocation.allocationId);
             pids.push(...ps);
