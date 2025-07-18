@@ -56,8 +56,8 @@ jobs:
           cat > README.md <<README_HERE
           # Latest Release
           Download the bootstrap script with
-          \`wget https://github.com/RadicalZephyr/bitburner-scripts/releases/download/latest/bootstrap.js bootstrap.js\`
-          then run it with \`run bootstrap.js\`.
+          \`wget https://github.com/RadicalZephyr/bitburner-scripts/releases/download/latest/bootstrap.js external-bootstrap.js\`
+          then run it with \`run external-bootstrap.js\`.
           README_HERE
 
       - name: Create bootstrap script

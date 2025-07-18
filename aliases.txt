@@ -1,5 +1,5 @@
-alias get-bootstrap="wget https://raw.githubusercontent.com/RadicalZephyr/bitburner-scripts/latest/bootstrap.js bootstrap.js"
-alias bootstrap="run bootstrap.js"
+alias get-external-bootstrap="wget https://raw.githubusercontent.com/RadicalZephyr/bitburner-scripts/latest/bootstrap.js external-bootstrap.js"
+alias external-bootstrap="run external-bootstrap.js"
 
 alias crack="run BruteSSH.exe ; run FTPCrack.exe ; run HTTPWorm.exe ; run relaySMTP.exe ; run SQLInject.exe ; run NUKE.exe"
 alias whereis="run whereis.js --ram-override 3.9"
