@@ -142,6 +142,12 @@ export class GrowableAllocation extends TransferableAllocation {
     /**
      * Launch a script across all allocated chunks.
      *
+     * Each chunk is attempted sequentially and a short delay is inserted
+     * whenever `ns.exec` fails. The call will retry until the number of
+     * failures exceeds `CONFIG.launchRetryMax` at which point the method
+     * prints an error, opens the tail window and returns any pids that were
+     * successfully spawned.
+     *
      * @param script  - Script filename to run.
      * @param threads - Number of threads or launch options.
      * @param args    - Arguments passed to the script.
