@@ -116,7 +116,7 @@ OPTIONS
         for (const host of hosts) {
             const ps = await spawnBatch(ns, host, target, sowBatchLogistics.phases, -1, allocation.allocationId);
             pids.push(...ps);
-            await ns.sleep(sowBatchLogistics.endingPeriod + CONFIG.batchInterval);
+            await ns.sleep(sowBatchLogistics.endingPeriod);
         }
 
         const roundsRemaining = Math.ceil(growNeeded / (growPerBatch * hosts.length));
