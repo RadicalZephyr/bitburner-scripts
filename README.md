@@ -4,11 +4,8 @@ Scripts and utilities for playing [Bitburner](https://bitburner-official.github.
 
 ![A stylized digital illustration of a person in a dark hoodie sitting at a desk with multiple glowing green computer screens. The central screen displays code, while another shows a world map with data overlays. The atmosphere is dark and moody, evoking themes of hacking or cybersecurity.](images/hackers-whimsy.png?raw=true)
 
-Most documentation lives in the [docs](./docs) directory. New users can start with [Getting Started](docs/getting-started.md).
-
-## Release workflow
-
-A GitHub Actions workflow automatically builds the TypeScript sources whenever code is pushed to the `main` branch. The compiled scripts are pushed to the `latest-files` branch along with a small `bootstrap.js` loader. That branch is packaged into a release tagged `latest`.
+Most documentation lives in the [docs](./docs) directory. If you want
+to contribute to their development you can check out the [contributing guide](docs/contributing.md).
 
 ### One Time Set Up
 
