@@ -98,7 +98,7 @@ export class GrowableAllocation extends TransferableAllocation {
             for (const msg of readAllFromPort(this.ns, this.port)) {
                 const chunks = msg as HostAllocation[];
                 if (Array.isArray(chunks)) {
-                    mergeChunks(this.allocatedChunks, chunks);
+                    appendChunks(this.allocatedChunks, chunks);
                 }
             }
             await nextWrite;
@@ -110,7 +110,7 @@ export class GrowableAllocation extends TransferableAllocation {
         for (const msg of readAllFromPort(this.ns, this.port)) {
             const chunks = msg as HostAllocation[];
             if (Array.isArray(chunks)) {
-                mergeChunks(this.allocatedChunks, chunks);
+                appendChunks(this.allocatedChunks, chunks);
             }
         }
     }
@@ -208,16 +208,9 @@ export class GrowableAllocation extends TransferableAllocation {
     }
 }
 
-/** Merge an array of allocation chunks into an existing list. */
-function mergeChunks(dest: AllocationChunk[], add: HostAllocation[]) {
+/** Append allocation chunks to an existing list without merging. */
+function appendChunks(dest: AllocationChunk[], add: HostAllocation[]) {
     for (const chunk of add) {
-        const existing = dest.find(
-            c => c.hostname === chunk.hostname && c.chunkSize === chunk.chunkSize,
-        );
-        if (existing) {
-            existing.numChunks += chunk.numChunks;
-        } else {
-            dest.push(new AllocationChunk(chunk));
-        }
+        dest.push(new AllocationChunk(chunk));
     }
 }

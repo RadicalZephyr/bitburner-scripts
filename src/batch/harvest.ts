@@ -158,10 +158,10 @@ OPTIONS
 
     ns.printf("INFO: launched initial round, going into batch respawn loop");
     while (true) {
+        let batchIndex = currentBatches % hosts.length;
         allocation.pollGrowth();
         hosts = hostListFromChunks(allocation.allocatedChunks);
-
-        if (hosts.length > batches.length) {
+        if (batchIndex === 0 && hosts.length > batches.length) {
             ns.print(
                 `INFO: allocation grew to ${hosts.length} chunks. ` +
                 `Spawning ${hosts.length - batches.length} additional batches`,
@@ -197,7 +197,7 @@ OPTIONS
 
         maxOverlap = hosts.length;
 
-        let batchIndex = currentBatches % hosts.length;
+        batchIndex = currentBatches % hosts.length;
         const host = hosts[batchIndex];
 
         let lastScriptPid = batches[batchIndex]?.at(-1);

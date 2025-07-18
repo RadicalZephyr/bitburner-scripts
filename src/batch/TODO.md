@@ -2,3 +2,5 @@
 - [x] Update harvest.ts to launch additional batches for new hosts.
 - [x] Track updated overlap value when allocation changes.
 - [x] Verify build and tests succeed.
+- [x] Change GrowableAllocation to append new chunks.
+- [x] Spawn extra batches only when completing a cycle.
