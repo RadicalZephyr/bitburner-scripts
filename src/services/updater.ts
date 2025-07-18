@@ -16,15 +16,15 @@ const BOOTSTRAP_URL = "https://github.com/RadicalZephyr/bitburner-scripts/raw/re
 export async function main(ns: NS) {
     ns.disableLog("sleep");
 
-    if (!ns.fileExists(VERSION_FILE, "home")) {
-        ns.print(`INFO: ${VERSION_FILE} not found on home, exiting updater`);
-        return;
-    }
-
     const host = ns.self().server;
     const tempFile = "VERSION.remote.json";
 
     while (true) {
+        if (!ns.fileExists(VERSION_FILE, "home")) {
+            ns.print(`INFO: ${VERSION_FILE} not found on home, exiting updater`);
+            return;
+        }
+
         if (!await ns.wget(REMOTE_URL, tempFile, host)) {
             ns.print("WARN: failed to download VERSION.json");
             continue;
