@@ -2,7 +2,7 @@
 
 Scripts and utilities for playing [Bitburner](https://bitburner-official.github.io/).
 
-![A stylized digital illustration of a person in a dark hoodie sitting at a desk with multiple glowing green computer screens. The central screen displays code, while another shows a world map with data overlays. The atmosphere is dark and moody, evoking themes of hacking or cybersecurity.](../images/hackers-whimsy.png?raw=true)
+![A stylized digital illustration of a person in a dark hoodie sitting at a desk with multiple glowing green computer screens. The central screen displays code, while another shows a world map with data overlays. The atmosphere is dark and moody, evoking themes of hacking or cybersecurity.](images/hackers-whimsy.png?raw=true)
 
 Most documentation lives in the [docs](./docs) directory. New users can start with [Getting Started](docs/getting-started.md).
 
