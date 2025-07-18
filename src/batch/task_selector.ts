@@ -159,6 +159,7 @@ class TaskSelector {
 
     hackHistory: { time: number, level: number }[] = [];
     velocity: number = 0;
+    launchFailures: Map<string, { count: number; nextAttempt: number }> = new Map();
 
     constructor(ns: NS, monitor: MonitorClient) {
         this.ns = ns;
@@ -219,6 +220,7 @@ class TaskSelector {
             const [task] = this.launchedTasks.splice(idx, 1);
             this.inProgressTasks.push(task);
         }
+        this.resetLaunchFailure(hb.target);
         this.allTargets.add(hb.target);
 
         this.pendingTillTargets = this.pendingTillTargets.filter(h => h !== hb.target);
@@ -280,6 +282,18 @@ class TaskSelector {
         }
     }
 
+    private recordLaunchFailure(host: string) {
+        const entry = this.launchFailures.get(host) ?? { count: 0, nextAttempt: 0 };
+        const count = entry.count + 1;
+        const backoff = CONFIG.launchFailBackoffMs * Math.pow(2, count - 1);
+        const limited = Math.min(count, CONFIG.launchFailLimit);
+        this.launchFailures.set(host, { count: limited, nextAttempt: Date.now() + backoff });
+    }
+
+    private resetLaunchFailure(host: string) {
+        this.launchFailures.delete(host);
+    }
+
     private estimateTillTime(host: string, threads: number): number {
         const weaken = calculateWeakenThreads(this.ns, host);
         if (threads <= 0) return 0;
@@ -303,6 +317,7 @@ class TaskSelector {
         for (const launch of this.launchedTasks) {
             if (now - launch.time > CONFIG.heartbeatTimeoutMs && !this.ns.isRunning(launch.pid)) {
                 this.ns.print(`WARN: launch of ${launch.type} on ${launch.host} failed`);
+                this.recordLaunchFailure(launch.host);
                 await this.pushTarget(launch.host);
             } else {
                 stillWaiting.push(launch);
@@ -334,6 +349,8 @@ class TaskSelector {
 
         let fallbackHarvest: string | null = null;
         for (const task of harvestTasks) {
+            const lf = this.launchFailures.get(task.host);
+            if (lf && lf.nextAttempt > Date.now()) continue;
             if (harvestScriptRam + task.requiredRam * task.overlap <= freeRam) {
                 await this.launchHarvest(task.host);
                 return;
@@ -343,8 +360,11 @@ class TaskSelector {
 
         const minimalHarvestRam = hRam + gRam + 2 * wRam;
         if (fallbackHarvest && freeRam > minimalHarvestRam) {
-            await this.launchHarvest(fallbackHarvest, freeRam);
-            return;
+            const lf = this.launchFailures.get(fallbackHarvest);
+            if (!lf || lf.nextAttempt <= Date.now()) {
+                await this.launchHarvest(fallbackHarvest, freeRam);
+                return;
+            }
         }
 
         if (this.sowTargets.size < CONFIG.maxSowTargets) {
@@ -363,6 +383,8 @@ class TaskSelector {
 
             let fallback: string | null = null;
             for (const host of candidates.slice(0, canAdd)) {
+                const lf = this.launchFailures.get(host);
+                if (lf && lf.nextAttempt > Date.now()) continue;
                 const { growThreads, weakenThreads } = calculateSowThreads(this.ns, host);
                 const total = growThreads + weakenThreads;
                 const ram = growThreads * gRam + weakenThreads * wRam;
@@ -375,11 +397,14 @@ class TaskSelector {
 
             const minimalSowRam = sowScriptRam + gRam + wRam;
             if (fallback && freeRam > minimalSowRam) {
-                const maxRamPerThread = Math.max(gRam, wRam);
-                const threads = Math.floor(freeRam / maxRamPerThread);
-                if (threads > 0) {
-                    await this.launchSow(fallback, threads);
-                    return;
+                const lf = this.launchFailures.get(fallback);
+                if (!lf || lf.nextAttempt <= Date.now()) {
+                    const maxRamPerThread = Math.max(gRam, wRam);
+                    const threads = Math.floor(freeRam / maxRamPerThread);
+                    if (threads > 0) {
+                        await this.launchSow(fallback, threads);
+                        return;
+                    }
                 }
             }
         }
@@ -399,6 +424,8 @@ class TaskSelector {
 
             let fallback: string | null = null;
             for (const host of candidates.slice(0, canAdd)) {
+                const lf = this.launchFailures.get(host);
+                if (lf && lf.nextAttempt > Date.now()) continue;
                 const threads = calculateWeakenThreads(this.ns, host);
                 const ram = threads * wRam;
                 if (tillScriptRam + ram <= freeRam) {
@@ -410,11 +437,14 @@ class TaskSelector {
 
             const minimalTillRam = tillScriptRam + wRam;
             if (fallback && freeRam > minimalTillRam) {
-                const threadRam = wRam;
-                const threads = Math.floor(freeRam / threadRam);
-                if (threads > 0) {
-                    await this.launchTill(fallback, threads);
-                    return;
+                const lf = this.launchFailures.get(fallback);
+                if (!lf || lf.nextAttempt <= Date.now()) {
+                    const threadRam = wRam;
+                    const threads = Math.floor(freeRam / threadRam);
+                    if (threads > 0) {
+                        await this.launchTill(fallback, threads);
+                        return;
+                    }
                 }
             }
         }
@@ -434,7 +464,12 @@ class TaskSelector {
             "--max-threads",
             threads,
         );
-        if (result && result.pids.length >= 1) {
+        if (!result || result.pids.length === 0) {
+            this.recordLaunchFailure(host);
+            return;
+        }
+        this.resetLaunchFailure(host);
+        if (result.pids.length >= 1) {
             this.pendingTillTargets = this.pendingTillTargets.filter(h => h !== host);
             const expected = this.estimateTillTime(host, threads);
             const pid = result.pids[0];
@@ -458,7 +493,12 @@ class TaskSelector {
             "--max-threads",
             threads,
         );
-        if (result && result.pids.length >= 1) {
+        if (!result || result.pids.length === 0) {
+            this.recordLaunchFailure(host);
+            return;
+        }
+        this.resetLaunchFailure(host);
+        if (result.pids.length >= 1) {
             this.pendingSowTargets = this.pendingSowTargets.filter(h => h !== host);
             const expected = this.estimateSowTime(host, threads);
             const pid = result.pids[0];
@@ -481,7 +521,12 @@ class TaskSelector {
             },
             ...args,
         );
-        if (result && result.pids.length >= 1) {
+        if (!result || result.pids.length === 0) {
+            this.recordLaunchFailure(host);
+            return;
+        }
+        this.resetLaunchFailure(host);
+        if (result.pids.length >= 1) {
             this.pendingHarvestTargets = this.pendingHarvestTargets.filter(h => h !== host);
             const pid = result.pids[0];
             const task: LaunchedTask = { pid, host, type: "harvest", max: maxRam, expectedTime: undefined, time: Date.now() };

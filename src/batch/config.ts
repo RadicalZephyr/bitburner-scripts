@@ -12,7 +12,9 @@ const entries = [
     ["heartbeatTimeoutMs", 3000],
     ["hackLevelVelocityThreshold", 0.05],
     ["harvestRetryMax", 5],
-    ["harvestRetryWait", 50]
+    ["harvestRetryWait", 50],
+    ["launchFailLimit", 5],
+    ["launchFailBackoffMs", 2000]
 ] as const;
 
 export const CONFIG: ConfigInstance<typeof entries> =
