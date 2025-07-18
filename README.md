@@ -1,4 +1,4 @@
-# bitburner
+# Bitburner
 
 Scripts and utilities for playing [Bitburner](https://bitburner-official.github.io/).
 
