@@ -158,9 +158,16 @@ OPTIONS
 
     ns.printf("INFO: launched initial round, going into batch respawn loop");
     while (true) {
-        let batchIndex = currentBatches % hosts.length;
         allocation.pollGrowth();
-        hosts = hostListFromChunks(allocation.allocatedChunks);
+        const newHosts = hostListFromChunks(allocation.allocatedChunks);
+        if (newHosts.length < hosts.length) {
+            batches = cancelRemovedBatches(ns, hosts, newHosts, batches);
+            if (currentBatches >= newHosts.length) {
+                currentBatches %= newHosts.length;
+            }
+        }
+        hosts = newHosts;
+        let batchIndex = currentBatches % hosts.length;
         if (batchIndex === 0 && hosts.length > batches.length) {
             ns.print(
                 `INFO: allocation grew to ${hosts.length} chunks. ` +
@@ -239,8 +246,27 @@ OPTIONS
             const desiredOverlap = Math.min(overlapLimit, logistics.overlap);
 
             if (desiredOverlap < allocation.numChunks) {
-                const toRelease = maxOverlap - desiredOverlap;
-                ns.print(`WARN: overlap decreasing. Could release ${toRelease} chunks...`);
+                const toRelease = allocation.numChunks - desiredOverlap;
+                const beforeHosts = hosts;
+                const result = await memClient.releaseChunks(
+                    allocation.allocationId,
+                    toRelease,
+                );
+                if (result) {
+                    allocation.allocatedChunks = result.hosts.map(
+                        h => new AllocationChunk(h),
+                    );
+                    const shrinkHosts = hostListFromChunks(allocation.allocatedChunks);
+                    batches = cancelRemovedBatches(ns, beforeHosts, shrinkHosts, batches);
+                    hosts = shrinkHosts;
+                    if (currentBatches >= hosts.length) {
+                        currentBatches %= hosts.length;
+                    }
+                    maxOverlap = hosts.length;
+                    ns.print(`INFO: released ${toRelease} chunks from allocation`);
+                } else {
+                    ns.print(`WARN: failed to release ${toRelease} chunks`);
+                }
             }
         }
 
@@ -270,6 +296,38 @@ function hostListFromChunks(chunks: AllocationChunk[]): string[] {
         }
     }
     return hosts;
+}
+
+function hostCountMap(hosts: string[]): Map<string, number> {
+    const counts = new Map<string, number>();
+    for (const h of hosts) {
+        const c = counts.get(h) ?? 0;
+        counts.set(h, c + 1);
+    }
+    return counts;
+}
+
+function cancelRemovedBatches(
+    ns: NS,
+    prevHosts: string[],
+    newHosts: string[],
+    batches: number[][],
+): number[][] {
+    const remaining = hostCountMap(newHosts);
+    const keep: number[][] = [];
+    for (let i = 0; i < prevHosts.length; i++) {
+        const host = prevHosts[i];
+        const allowed = remaining.get(host) ?? 0;
+        if (allowed > 0) {
+            remaining.set(host, allowed - 1);
+            keep.push(batches[i]);
+        } else {
+            for (const pid of batches[i] ?? []) {
+                if (ns.isRunning(pid)) ns.kill(pid);
+            }
+        }
+    }
+    return keep;
 }
 
 /** Calculate RAM and phase information for a full harvest batch.
