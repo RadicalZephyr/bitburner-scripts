@@ -161,6 +161,42 @@ OPTIONS
         allocation.pollGrowth();
         hosts = hostListFromChunks(allocation.allocatedChunks);
 
+        if (hosts.length > batches.length) {
+            ns.print(
+                `INFO: allocation grew to ${hosts.length} chunks. ` +
+                `Spawning ${hosts.length - batches.length} additional batches`,
+            );
+            for (let i = batches.length; i < hosts.length; i++) {
+                const extraPids = await spawnBatch(
+                    ns,
+                    hosts[i],
+                    target,
+                    logistics.phases,
+                    donePortId,
+                    allocation.allocationId,
+                );
+                batches[i] = extraPids;
+                currentBatches++;
+                if (Date.now() >= lastHeartbeat + CONFIG.heartbeatCadence) {
+                    taskSelectorClient.tryHeartbeat(
+                        ns.pid,
+                        ns.getScriptName(),
+                        target,
+                        Lifecycle.Harvest,
+                    );
+                    lastHeartbeat = Date.now();
+                }
+                await ns.sleep(logistics.endingPeriod);
+            }
+        } else if (hosts.length < batches.length) {
+            batches.length = hosts.length;
+            if (currentBatches >= hosts.length) {
+                currentBatches %= hosts.length;
+            }
+        }
+
+        maxOverlap = hosts.length;
+
         let batchIndex = currentBatches % hosts.length;
         const host = hosts[batchIndex];
 

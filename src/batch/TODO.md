@@ -1,0 +1,4 @@
+- [x] Plan how harvest should react when memory allocation grows.
+- [x] Update harvest.ts to launch additional batches for new hosts.
+- [x] Track updated overlap value when allocation changes.
+- [x] Verify build and tests succeed.
