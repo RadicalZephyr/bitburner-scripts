@@ -228,6 +228,17 @@ interface GangTaskStats { /* … see prompt for full fields … */ }
 
 ---
 
+### Ascension Review Board
+
+To prevent respect from dropping too low, ascension requests are
+centralized through an **Ascension Review Board**. Members submit a
+request when they are ready to ascend. The board keeps a respect quota
+and will only approve requests when the gang's respect after the
+ascension would remain above the quota. Requests are processed in order
+of lowest ascension multiplier so that weaker members are ascended first.
+
+---
+
 ### Next Steps
 1. Choose initial threshold values for Phases 1 & 3 (`trainLevel`, `ascendMult`, `maxWantedPenalty`).
 2. Provide preferred `recruitHorizon`, `velThresh`, and `maxROITime` for each role.
