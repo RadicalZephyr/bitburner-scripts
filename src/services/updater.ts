@@ -1,6 +1,5 @@
 import type { NS } from "netscript";
 
-import { every } from "util/time";
 import { CONFIG } from "services/config";
 
 interface Version {
