@@ -95,12 +95,9 @@ jobs:
           BOOTSTRAP_HERE
 
       - name: Package main branch with `latest` tag
-        uses: "marvinpinto/action-automatic-releases@latest"
+        uses: softprops/action-gh-release@v2
         with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "latest"
-          prerelease: false
-          title: "Latest Main Branch Release"
+          name: "Latest Main Branch Release"
           files: |
             README.md
             bootstrap.js
