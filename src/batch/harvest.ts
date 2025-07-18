@@ -1,7 +1,7 @@
 import type { AutocompleteData, NS } from "netscript";
 
-import { HostAllocation, MemoryClient, registerAllocationOwnership } from "services/client/memory";
-import { TAG_ARG } from "services/client/memory_tag";
+import { GrowableMemoryClient } from "services/client/growable_memory";
+import { AllocationChunk, registerAllocationOwnership } from "services/client/memory";
 import { PortClient } from "services/client/port";
 
 import { TaskSelectorClient, Lifecycle } from "batch/client/task_selector";
@@ -120,8 +120,8 @@ OPTIONS
     // to fit within the batch size that we originally allocated
     const batchRam = logistics.batchRam;
 
-    let memClient = new MemoryClient(ns);
-    let allocation = await memClient.requestTransferableAllocation(batchRam, overlapLimit, { shrinkable: true });
+    let memClient = new GrowableMemoryClient(ns);
+    let allocation = await memClient.requestGrowableAllocation(batchRam, overlapLimit, { shrinkable: true });
     if (!allocation) return;
 
     allocation.releaseAtExit(ns);
@@ -135,15 +135,14 @@ OPTIONS
     let maxOverlap = allocation.numChunks;
     let currentBatches = 0;
 
-    let batchHost: SparseHostArray = makeBatchHostArray(allocation.allocatedChunks);
+    let hosts = hostListFromChunks(allocation.allocatedChunks);
 
     let batches = [];
 
     ns.print(`INFO: spawning initial round of ${maxOverlap} batches`);
     // Launch one batch per allocated chunk so that the pipeline is
     // fully populated before entering the steady state loop.
-    for (let i = 0; i < maxOverlap; ++i) {
-        const host = batchHost.at(i);
+    for (const host of hosts) {
         let batchPids = await spawnBatch(ns, host, target, logistics.phases, donePortId, allocation.allocationId);
         batches.push(batchPids);
         currentBatches++;
@@ -159,8 +158,12 @@ OPTIONS
 
     ns.printf("INFO: launched initial round, going into batch respawn loop");
     while (true) {
-        let batchIndex = currentBatches % maxOverlap;
-        const host = batchHost.at(batchIndex);
+        allocation.pollGrowth();
+        hosts = hostListFromChunks(allocation.allocatedChunks);
+
+        let batchIndex = currentBatches % hosts.length;
+        const host = hosts[batchIndex];
+
         let lastScriptPid = batches[batchIndex]?.at(-1);
         if (typeof lastScriptPid === "number") {
             if (finishedPort.peek() === "NULL PORT DATA") {
@@ -199,7 +202,7 @@ OPTIONS
 
             const desiredOverlap = Math.min(overlapLimit, logistics.overlap);
 
-            if (desiredOverlap < maxOverlap) {
+            if (desiredOverlap < allocation.numChunks) {
                 const toRelease = maxOverlap - desiredOverlap;
                 ns.print(`WARN: overlap decreasing. Could release ${toRelease} chunks...`);
             }
@@ -222,53 +225,15 @@ OPTIONS
     }
 }
 
-interface SparseHostEntry {
-    start: number;
-    end: number;
-    hostname: string;
-}
 
-class SparseHostArray {
-    private intervals: SparseHostEntry[] = [];
-
-    at(i: number): string | null {
-        let low = 0;
-        let high = this.intervals.length - 1;
-
-        while (low <= high) {
-            const mid = Math.floor((low + high) / 2);
-            const int = this.intervals[mid];
-            if (i < int.start) {
-                high = mid - 1;
-            } else if (i >= int.end) {
-                low = mid + 1;
-            } else {
-                return int.hostname;
-            }
-        }
-        return undefined;
-    }
-
-    pushN(hostname: string, n: number) {
-        let lastEntry = this.intervals.at(-1);
-
-        if (lastEntry?.hostname === hostname) {
-            lastEntry.end += n;
-        } else {
-            let start = lastEntry ? lastEntry.end : 0;
-            this.intervals.push({ hostname, start, end: start + n });
+function hostListFromChunks(chunks: AllocationChunk[]): string[] {
+    const hosts: string[] = [];
+    for (const chunk of chunks) {
+        for (let i = 0; i < chunk.numChunks; i++) {
+            hosts.push(chunk.hostname);
         }
     }
-}
-
-function makeBatchHostArray(allocatedChunks: HostAllocation[]) {
-    let sparseHosts = new SparseHostArray();
-
-    for (const chunk of allocatedChunks) {
-        sparseHosts.pushN(chunk.hostname, chunk.numChunks);
-    }
-
-    return sparseHosts;
+    return hosts;
 }
 
 /** Calculate RAM and phase information for a full harvest batch.
