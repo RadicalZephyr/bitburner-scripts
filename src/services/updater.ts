@@ -24,7 +24,7 @@ export async function main(ns: NS) {
     const host = ns.self().server;
     const tempFile = "VERSION.remote.json";
 
-    for await (const _ of every(CONFIG.updateCheckIntervalMs)) {
+    while (true) {
         if (!await ns.wget(REMOTE_URL, tempFile, host)) {
             ns.print("WARN: failed to download VERSION.json");
             continue;
@@ -72,5 +72,7 @@ export async function main(ns: NS) {
                 ns.print("ERROR: failed to download bootstrap.js");
             }
         }
+
+        await ns.sleep(CONFIG.updateCheckIntervalMs);
     }
 }
