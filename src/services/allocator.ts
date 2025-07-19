@@ -423,7 +423,8 @@ export class MemoryAllocator {
         // Important! Reduce the number of requested chunks so the
         // allocator doesn't try to grow our allocation back to the
         // original size!!
-        allocation.requestedChunks -= numChunks;
+        allocation.requestedChunks =
+            Math.max(0, allocation.requestedChunks - numChunks);
         allocation.chunks = allocation.chunks.filter(c => c.numChunks > 0);
         allocation.claims = allocation.claims.filter(c => c.numChunks > 0);
         if (allocation.chunks.length === 0) {
