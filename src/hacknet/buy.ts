@@ -1,4 +1,5 @@
 import type { NS } from "netscript";
+import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 
 import { CONFIG } from "hacknet/config";
 
@@ -10,6 +11,7 @@ export async function main(ns: NS) {
         ["return-time", DEFAULT_RETURN_TIME],
         ["spend", DEFAULT_SPEND],
         ["help", false],
+        ...MEM_TAG_FLAGS
     ]);
 
     if (

@@ -1,4 +1,5 @@
 import type { NS } from "netscript";
+import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 import { CONFIG } from "stock/config";
 import { TickData } from "stock/indicators";
 import { simulateTrades, StrategyParams } from "stock/backtest";
@@ -7,6 +8,7 @@ export async function main(ns: NS) {
     const flags = ns.flags([
         ["cash", 1_000_000],
         ["help", false],
+        ...MEM_TAG_FLAGS
     ]);
     if (flags.help) {
         ns.tprint(`USAGE: run ${ns.getScriptName()} [--cash CASH]`);

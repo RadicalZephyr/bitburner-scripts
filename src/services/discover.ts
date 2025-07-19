@@ -1,4 +1,5 @@
 import type { NS, NetscriptPort } from "netscript";
+import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 
 import {
     DISCOVERY_PORT,
@@ -17,6 +18,7 @@ import { walkNetworkBFS } from "util/walk";
 
 
 export async function main(ns: NS) {
+    const flags = ns.flags(MEM_TAG_FLAGS);
     ns.disableLog("sleep");
 
     const cracked = new Set<string>();

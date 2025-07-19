@@ -1,4 +1,5 @@
 import type { NetscriptPort, NS } from "netscript";
+import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 
 import { TASK_SELECTOR_PORT, TASK_SELECTOR_RESPONSE_PORT, Message, MessageType, Heartbeat, Lifecycle } from "batch/client/task_selector";
 import { MonitorClient, Lifecycle as MonitorLifecycle } from "batch/client/monitor";
@@ -40,6 +41,7 @@ function makeCompareLevel(ns: NS): (ta: string, tb: string) => number {
 export async function main(ns: NS) {
     const flags = ns.flags([
         ['allocation-id', -1],
+        ...MEM_TAG_FLAGS
     ]);
 
     let allocationId = flags['allocation-id'];

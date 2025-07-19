@@ -1,4 +1,5 @@
 import type { NS } from "netscript";
+import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 
 import { MemoryClient } from "services/client/memory";
 
@@ -13,7 +14,8 @@ export async function main(ns: NS) {
         ['dry-run', false],
         ['no-rename', false],
         ['wait', false],
-        ['help', false]
+        ['help', false],
+        ...MEM_TAG_FLAGS
     ]);
 
     if (

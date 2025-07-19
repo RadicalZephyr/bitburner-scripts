@@ -1,4 +1,5 @@
 import type { NS, UserInterfaceTheme } from "netscript";
+import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 
 import { MONITOR_PORT, Lifecycle, Message as MonitorMessage } from "batch/client/monitor";
 
@@ -20,6 +21,7 @@ export async function main(ns: NS) {
         ['allocation-id', -1],
         ['refreshrate', 200],
         ['help', false],
+        ...MEM_TAG_FLAGS
     ]);
 
     const rest = flags._ as string[];

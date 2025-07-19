@@ -1,4 +1,5 @@
 import type { NS, AutocompleteData } from "netscript";
+import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 
 import { CONFIG as BatchConfig } from 'batch/config';
 import { CONFIG as GangConfig } from 'gang/config';
@@ -13,7 +14,8 @@ export function autocomplete(_data: AutocompleteData, args: string[]): string[] 
 export async function main(ns: NS) {
     const flags = ns.flags([
         ['show', false],
-        ['help', false]
+        ['help', false],
+        ...MEM_TAG_FLAGS
     ]);
 
     if (flags.show) {

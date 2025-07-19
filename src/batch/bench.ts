@@ -1,4 +1,5 @@
 import type { AutocompleteData, NS } from "netscript";
+import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 
 export function autocomplete(data: AutocompleteData, _args: string[]): string[] {
     return data.servers;
@@ -7,6 +8,7 @@ export function autocomplete(data: AutocompleteData, _args: string[]): string[] 
 export async function main(ns: NS) {
     const flags = ns.flags([
         ["help", false],
+        ...MEM_TAG_FLAGS
     ]);
 
     const targets = (flags._ as string[]).filter((t) => typeof t === "string");

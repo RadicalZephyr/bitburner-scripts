@@ -1,6 +1,8 @@
 import type { NS } from "netscript";
+import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 
 export async function main(ns: NS) {
+    const flags = ns.flags(MEM_TAG_FLAGS);
     const bag = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()[]{}/=?,./<>?;:'\"`~".split('');
     await tryBrute(ns, bag);
 }

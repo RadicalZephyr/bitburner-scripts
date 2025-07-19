@@ -1,4 +1,5 @@
 import type { AutocompleteData, NS } from "netscript";
+import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 import { CONFIG } from "batch/config";
 
 export interface BatchThreadAnalysis {
@@ -13,6 +14,7 @@ export function autocomplete(data: AutocompleteData, _args: string[]): string[] 
 }
 
 export async function main(ns: NS) {
+    const flags = ns.flags(MEM_TAG_FLAGS);
     let target = ns.args[0];
     if (typeof target !== 'string' || !ns.serverExists(target)) {
         ns.tprintf("target %s does not exist", target);

@@ -1,8 +1,10 @@
 import type { NS } from "netscript";
+import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 
 import { launch } from "services/launch";
 
 export async function main(ns: NS) {
+    const flags = ns.flags(MEM_TAG_FLAGS);
     const tracker = await launch(ns, "/stock/tracker.js", {
         threads: 1,
         allocationFlag: "--allocation-id",

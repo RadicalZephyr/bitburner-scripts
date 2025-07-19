@@ -1,4 +1,5 @@
 import type { GangMemberAscension, GangMemberInfo, MoneySource, NS } from "netscript";
+import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 import { CONFIG } from "gang/config";
 import { purchaseBestGear } from "gang/equipment-manager";
 import { TaskAnalyzer } from "gang/task-analyzer";
@@ -22,6 +23,7 @@ const NAMES = [
 export async function main(ns: NS) {
     const flags = ns.flags([
         ["help", false],
+        ...MEM_TAG_FLAGS
     ]);
 
     if (flags.help) {

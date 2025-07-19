@@ -1,4 +1,5 @@
 import type { NS, AutocompleteData } from "netscript";
+import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 
 import { walkNetworkBFS } from 'util/walk';
 
@@ -9,6 +10,7 @@ export function autocomplete(data: AutocompleteData, _args: string[]): string[] 
 export async function main(ns: NS) {
     const flags = ns.flags([
         ['help', false],
+        ...MEM_TAG_FLAGS
     ]);
 
     if (flags.help) {

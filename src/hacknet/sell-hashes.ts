@@ -1,10 +1,12 @@
 import type { NS } from "netscript";
+import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 import { CONFIG } from "./config";
 
 export async function main(ns: NS) {
     const flags = ns.flags([
         ["continue", false],
         ["help", false],
+        ...MEM_TAG_FLAGS
     ]);
 
     const hashCapacity = ns.hacknet.hashCapacity();

@@ -1,4 +1,5 @@
 import type { NS, NetscriptPort } from "netscript";
+import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 
 import { CONFIG } from "stock/config";
 import { computeIndicators, TickData, Indicators } from "stock/indicators";
@@ -15,6 +16,7 @@ import { readAllFromPort } from "util/ports";
 export async function main(ns: NS) {
     const flags = ns.flags([
         ["allocation-id", -1],
+        ...MEM_TAG_FLAGS
     ]);
 
     const allocationId = flags["allocation-id"];

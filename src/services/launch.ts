@@ -1,4 +1,5 @@
 import type { AutocompleteData, NS, RunOptions, ScriptArg } from "netscript";
+import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 
 export interface LaunchRunOptions extends RunOptions {
     allocationFlag?: string;
@@ -24,6 +25,7 @@ export async function main(ns: NS) {
         ['core-dependent', false],
         ['long-running', false],
         ['help', false],
+        ...MEM_TAG_FLAGS
     ]);
 
     const rest = flags._ as ScriptArg[];

@@ -1,4 +1,5 @@
 import type { NS, NetscriptPort, UserInterfaceTheme } from "netscript";
+import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 
 import {
     AllocationClaim,
@@ -35,6 +36,7 @@ export async function main(ns: NS) {
     const flags = ns.flags([
         ['refresh-rate', 1000],
         ['help', false],
+        ...MEM_TAG_FLAGS
     ]);
 
     let refreshRate = flags['refresh-rate'];

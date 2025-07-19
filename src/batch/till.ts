@@ -1,4 +1,5 @@
 import type { AutocompleteData, NS } from "netscript";
+import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 
 import { TaskSelectorClient, Lifecycle } from "batch/client/task_selector";
 
@@ -20,6 +21,7 @@ export async function main(ns: NS) {
         ['allocation-id', -1],
         ['max-threads', -1],
         ['help', false],
+        ...MEM_TAG_FLAGS
     ]);
 
     const rest = flags._ as string[];

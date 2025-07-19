@@ -1,4 +1,5 @@
 import type { AutocompleteData, NS } from "netscript";
+import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 import type { ContractData } from "all-contracts";
 
 import { walkNetworkBFS } from "util/walk";
@@ -54,6 +55,7 @@ export async function main(ns: NS) {
         ['test', null],
         ['count', -1],
         ['help', false],
+        ...MEM_TAG_FLAGS
     ]);
 
     const rest = flags._ as string[];

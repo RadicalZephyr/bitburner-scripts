@@ -1,8 +1,10 @@
 import type { ILocation, InfiltrationLocation, NS, UserInterfaceTheme } from "netscript";
+import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 
 declare const React: any;
 
 export async function main(ns: NS) {
+    const flags = ns.flags(MEM_TAG_FLAGS);
     ns.disableLog("ALL");
     ns.ui.openTail();
     ns.ui.moveTail(60, 350);
