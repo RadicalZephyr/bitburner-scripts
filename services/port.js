@@ -1,13 +1,19 @@
+import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 import { PORT_ALLOCATOR_PORT, PORT_ALLOCATOR_RESPONSE_PORT, MessageType, } from "services/client/port";
+import { MemoryClient } from "services/client/memory";
 import { readAllFromPort } from "util/ports";
 /**
  * Main loop for the PortAllocator daemon.
  */
 export async function main(ns) {
+    const flags = ns.flags(MEM_TAG_FLAGS);
     ns.disableLog("sleep");
     const port = ns.getPortHandle(PORT_ALLOCATOR_PORT);
     const respPort = ns.getPortHandle(PORT_ALLOCATOR_RESPONSE_PORT);
     const allocator = new PortAllocator(ns);
+    const memClient = new MemoryClient(ns);
+    const self = ns.self();
+    memClient.registerAllocation(self.server, self.ramUsage, 1);
     let waiting = true;
     port.nextWrite().then(() => { waiting = true; });
     while (true) {

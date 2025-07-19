@@ -1,15 +1,17 @@
+import { ALLOC_ID, ALLOC_ID_ARG, MEM_TAG_FLAGS } from "services/client/memory_tag";
 import { MONITOR_PORT, Lifecycle } from "batch/client/monitor";
 import { expectedValuePerRamSecond } from "batch/expected_value";
 import { DiscoveryClient } from "services/client/discover";
 import { TaskSelectorClient } from "batch/client/task_selector";
-import { registerAllocationOwnership } from "services/client/memory";
+import { parseAndRegisterAlloc } from "services/client/memory";
 import { extend } from "util/extend";
 import { readAllFromPort } from "util/ports";
+import { HUD_HEIGHT, HUD_WIDTH, STATUS_WINDOW_WIDTH } from "util/ui";
 export async function main(ns) {
     const flags = ns.flags([
-        ['allocation-id', -1],
         ['refreshrate', 200],
         ['help', false],
+        ...MEM_TAG_FLAGS
     ]);
     const rest = flags._;
     if (rest.length !== 0 || flags.help || typeof flags.refreshrate != 'number') {
@@ -27,20 +29,17 @@ Example:
 `);
         return;
     }
-    let allocationId = flags['allocation-id'];
-    if (allocationId !== -1) {
-        if (typeof allocationId !== 'number') {
-            ns.tprint('--allocation-id must be a number');
-            return;
-        }
-        await registerAllocationOwnership(ns, allocationId, "self");
+    const allocationId = await parseAndRegisterAlloc(ns, flags);
+    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
+        return;
     }
     ns.disableLog('ALL');
     ns.clearLog();
     ns.ui.openTail();
     ns.ui.setTailTitle("Monitor");
-    ns.ui.resizeTail(930, 650);
-    ns.ui.moveTail(1220, 0);
+    ns.ui.resizeTail(HUD_WIDTH, HUD_HEIGHT);
+    const [ww, wh] = ns.ui.windowSize();
+    ns.ui.moveTail(ww - (HUD_WIDTH + STATUS_WINDOW_WIDTH), 0);
     const tableSortings = {
         harvesting: {
             key: "hckLevel",
@@ -229,7 +228,7 @@ export function countThreadsByTarget(ns, workers, targets) {
     let targetThreads = new Map(targets.map(h => [h, new TargetThreads()]));
     for (const worker of workers) {
         for (const pi of ns.ps(worker)) {
-            let target = pi.args[0] === "--allocation-id" ? pi.args[2] : pi.args[0];
+            let target = pi.args[0] === ALLOC_ID_ARG ? pi.args[2] : pi.args[0];
             if (typeof target != 'string')
                 continue;
             let targetThread = targetThreads.get(target);
@@ -380,5 +379,5 @@ function formatPercent(ns, value) {
     return Math.abs(value - 1) < 0.001 ? '100.0%' : ns.formatPercent(value);
 }
 function formatSecurity(ns, sec) {
-    return Math.abs(sec) < 0.1 ? '+0.0' : `+${ns.formatNumber(sec, 2)}`;
+    return ns.sprintf("%+6.2f", sec);
 }

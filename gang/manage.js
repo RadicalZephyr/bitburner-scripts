@@ -1,21 +1,14 @@
+import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { parseAndRegisterAlloc } from "services/client/memory";
 import { CONFIG } from "gang/config";
-const NAMES = [
-    "Freya",
-    "Frigg",
-    "Gefion",
-    "Idun",
-    "Sif",
-    "Sigyn",
-    "Eir",
-    "Fulla",
-    "Gna",
-    "Hlin",
-    "Ilmrxs",
-    "Hel",
-];
+import { purchaseBestGear } from "gang/equipment-manager";
+import { TaskAnalyzer } from "gang/task-analyzer";
+import { NAMES } from "gang/names";
+import { StatTracker } from "util/stat-tracker";
 export async function main(ns) {
     const flags = ns.flags([
         ["help", false],
+        ...MEM_TAG_FLAGS
     ]);
     if (flags.help) {
         ns.tprint(`USAGE: run ${ns.getScriptName()}
@@ -26,14 +19,17 @@ Example:
   > run ${ns.getScriptName()}
 
 CONFIG VALUES
-  GANG_ASCEND_THRESHOLD   Ascension multiplier required to ascend
-  GANG_TRAINING_PERCENT   Fraction of members training
-  GANG_MAX_WANTED_PENALTY Maximum wanted penalty before cooling
-  GANG_MIN_WANTED_LEVEL   Wanted level where heating resumes
-  GANG_JOB_CHECK_INTERVAL Delay between evaluations`);
+  GANG_ascendThreshold   Ascension multiplier required to ascend
+  GANG_trainingPercent   Fraction of members training
+  GANG_maxWantedPenalty  Maximum wanted penalty before switching members to cooling tasks
+  GANG_minWantedLevel    Wanted level where heating resumes
+  GANG_jobCheckInterval  Delay between evaluations`);
         return;
     }
-    CONFIG.setDefaults();
+    const allocationId = await parseAndRegisterAlloc(ns, flags);
+    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
+        return;
+    }
     if (!ns.gang.inGang()) {
         ns.tprint("No gang to manage.");
         return;
@@ -47,7 +43,12 @@ CONFIG VALUES
     const coolTask = isHackingGang ? "Ethical Hacking" : "Vigilante Justice";
     const memberNames = ns.gang.getMemberNames();
     let numHeating = memberNames.length;
+    const moneyTracker = new StatTracker();
     while (true) {
+        moneyTracker.update(ns.getMoneySources().sinceInstall);
+        const analyzer = new TaskAnalyzer(ns);
+        analyzer.refresh();
+        const profiles = analyzer.roleProfiles();
         if (ns.gang.canRecruitMember() && nameIndex < availableNames.length) {
             const name = availableNames[nameIndex++];
             if (ns.gang.recruitMember(name)) {
@@ -55,7 +56,7 @@ CONFIG VALUES
             }
         }
         const info = ns.gang.getGangInformation();
-        if (info.wantedPenalty > CONFIG.maxPenalty && info.wantedLevelGainRate > 0) {
+        if (info.wantedPenalty > CONFIG.maxWantedPenalty && info.wantedLevelGainRate > 0) {
             numHeating--;
         }
         else if (info.wantedLevel < CONFIG.minWantedLevel && info.wantedLevelGainRate < 0) {
@@ -66,14 +67,16 @@ CONFIG VALUES
             ns.gang.setMemberTask(ascend.name, trainingTask);
             ns.gang.ascendMember(ascend.name);
         }
-        for (const m of training)
+        for (const m of training) {
+            purchaseBestGear(ns, m.name, "bootstrapping", moneyTracker, profiles.bootstrapping);
             ns.gang.setMemberTask(m.name, trainingTask);
+        }
         numHeating = Math.min(working.length, numHeating);
         for (const m of working.slice(numHeating))
             ns.gang.setMemberTask(m.name, coolTask);
         for (const m of working.slice(0, numHeating))
             ns.gang.setMemberTask(m.name, heatTask);
-        await ns.sleep(CONFIG.jobCheckInterval);
+        await ns.gang.nextUpdate();
     }
 }
 function splitMembers(ns, memberNames) {

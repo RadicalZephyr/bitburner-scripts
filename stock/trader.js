@@ -1,12 +1,15 @@
-import { registerAllocationOwnership } from "services/client/memory";
+import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { parseAndRegisterAlloc } from "services/client/memory";
 import { TrackerClient } from "stock/client/tracker";
 import { CONFIG } from "stock/config";
 /** Simple Z-Score based trading daemon. */
 export async function main(ns) {
-    const flags = ns.flags([["allocation-id", -1]]);
-    const allocationId = flags["allocation-id"];
-    if (typeof allocationId === "number" && allocationId !== -1) {
-        await registerAllocationOwnership(ns, allocationId, "trader");
+    const flags = ns.flags([
+        ...MEM_TAG_FLAGS
+    ]);
+    const allocationId = await parseAndRegisterAlloc(ns, flags, "trader");
+    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
+        return;
     }
     const client = new TrackerClient(ns);
     const symbols = ns.stock.getSymbols();

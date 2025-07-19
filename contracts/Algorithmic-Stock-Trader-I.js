@@ -10,7 +10,9 @@ transaction (i.e. you can only buy and sell the stock once). If no
 profit can be made then the answer should be 0. Note that you have to
 buy the stock before you can sell it.
 */
+import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 export async function main(ns) {
+    const flags = ns.flags(MEM_TAG_FLAGS);
     let scriptName = ns.getScriptName();
     let contractPortNum = ns.args[0];
     if (typeof contractPortNum !== 'number') {

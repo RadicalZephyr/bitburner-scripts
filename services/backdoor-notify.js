@@ -1,3 +1,4 @@
+import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 import { walkNetworkBFS } from "util/walk";
 const FACTION_SERVERS = [
     "CSEC",
@@ -7,6 +8,7 @@ const FACTION_SERVERS = [
     "The-Cave"
 ];
 export async function main(ns) {
+    const flags = ns.flags(MEM_TAG_FLAGS);
     ns.disableLog("ALL");
     ns.clearLog();
     let tailOpen = false;
@@ -51,7 +53,7 @@ function canInstallBackdoor(ns, info) {
 }
 /** Send a command to the terminal by simulating user input. */
 export function sendCommand(command) {
-    const terminalInput = globalThis.document.getElementById("terminal-input");
+    const terminalInput = globalThis["terminal-input"];
     terminalInput.value = command;
     const handler = Object.keys(terminalInput)[1];
     terminalInput[handler].onChange({ target: terminalInput });

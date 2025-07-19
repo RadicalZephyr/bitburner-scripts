@@ -1,7 +1,10 @@
+import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { parseAndRegisterAlloc } from "services/client/memory";
 export async function main(ns) {
     const flags = ns.flags([
         ['all', false],
         ['help', false],
+        ...MEM_TAG_FLAGS
     ]);
     if (flags.help || typeof flags.all != 'boolean') {
         ns.tprint(`USAGE: run ${ns.getScriptName()} [-all] PORT_NUM...
@@ -13,6 +16,10 @@ OPTIONS
  --all    Clear all port numbers from 0 up until 99,999 or the first specified port number
  --help   Displays this help message
 `);
+        return;
+    }
+    const allocationId = await parseAndRegisterAlloc(ns, flags);
+    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
         return;
     }
     let rest = flags._;

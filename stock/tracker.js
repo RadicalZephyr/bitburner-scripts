@@ -1,16 +1,17 @@
+import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
 import { CONFIG } from "stock/config";
 import { computeIndicators } from "stock/indicators";
 import { computeCorrelations } from "stock/indicators";
 import { TRACKER_PORT, TRACKER_RESPONSE_PORT, MessageType, } from "stock/client/tracker";
-import { registerAllocationOwnership } from "services/client/memory";
+import { parseAndRegisterAlloc } from "services/client/memory";
 import { readAllFromPort } from "util/ports";
 export async function main(ns) {
     const flags = ns.flags([
-        ["allocation-id", -1],
+        ...MEM_TAG_FLAGS
     ]);
-    const allocationId = flags["allocation-id"];
-    if (typeof allocationId === "number" && allocationId !== -1) {
-        await registerAllocationOwnership(ns, allocationId, "tracker");
+    const allocationId = await parseAndRegisterAlloc(ns, flags, "tracker");
+    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
+        return;
     }
     ns.disableLog("ALL");
     ns.ui.openTail();

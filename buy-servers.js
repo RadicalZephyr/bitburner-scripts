@@ -1,3 +1,5 @@
+import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { parseAndRegisterAlloc } from "services/client/memory";
 import { MemoryClient } from "services/client/memory";
 const DEFAULT_SPEND = 1.0;
 const DEFAULT_MIN_RAM = 16;
@@ -9,7 +11,8 @@ export async function main(ns) {
         ['dry-run', false],
         ['no-rename', false],
         ['wait', false],
-        ['help', false]
+        ['help', false],
+        ...MEM_TAG_FLAGS
     ]);
     if (options.help
         || typeof options.spend != 'number'
@@ -30,6 +33,10 @@ OPTIONS
   --wait        Wait for money to become available to buy servers
   --help        Show this help message
 `);
+        return;
+    }
+    const allocationId = await parseAndRegisterAlloc(ns, options);
+    if (options[ALLOC_ID] !== -1 && allocationId === null) {
         return;
     }
     const shouldRenameServers = !options['no-rename'];

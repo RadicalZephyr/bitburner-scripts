@@ -1,0 +1,227 @@
+import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { parseAndRegisterAlloc } from "services/client/memory";
+import { AscensionReviewBoard } from "gang/ascension-review";
+import { purchaseBestGear } from "gang/equipment-manager";
+import { TaskAnalyzer } from "gang/task-analyzer";
+import { distributeTasks } from "gang/task-balancer";
+import { assignTrainingTasks } from "gang/training-focus-manager";
+import { NAMES } from "gang/names";
+import { StatTracker } from "util/stat-tracker";
+const thresholdsByCount = {
+    3: { trainLevel: 500, ascendMult: 2.0 },
+    6: { trainLevel: 1000, ascendMult: 1.5 },
+    9: { trainLevel: 5000, ascendMult: 1.15 },
+    12: { trainLevel: 10000, ascendMult: 1.05 },
+};
+function lerp(a, b, t) {
+    return a + (b - a) * t;
+}
+function getThresholds(n) {
+    const keys = Object.keys(thresholdsByCount)
+        .map(Number)
+        .sort((a, b) => a - b);
+    if (n <= keys[0])
+        return thresholdsByCount[keys[0]];
+    if (n >= keys[keys.length - 1])
+        return thresholdsByCount[keys[keys.length - 1]];
+    for (let i = 0; i < keys.length - 1; i++) {
+        const low = keys[i];
+        const high = keys[i + 1];
+        if (n >= low && n <= high) {
+            const t = (n - low) / (high - low);
+            const lowThr = thresholdsByCount[low];
+            const highThr = thresholdsByCount[high];
+            return {
+                trainLevel: lerp(lowThr.trainLevel, highThr.trainLevel, t),
+                ascendMult: lerp(lowThr.ascendMult, highThr.ascendMult, t),
+            };
+        }
+    }
+    return thresholdsByCount[keys[0]]; // fallback, should never hit
+}
+class Member {
+    name;
+    state;
+    tracker;
+    constructor(name, state = "bootstrapping") {
+        this.name = name;
+        this.state = state;
+        this.tracker = new StatTracker();
+    }
+    update(ns) {
+        const info = ns.gang.getMemberInformation(this.name);
+        this.tracker.update(info);
+    }
+    reset() {
+        this.tracker.reset();
+    }
+    tryAscend(ns) {
+        if (ns.gang.ascendMember(this.name)) {
+            this.reset();
+            return true;
+        }
+        return false;
+    }
+    maxLevel() {
+        return Math.max(this.tracker.value("hack"), this.tracker.value("str"), this.tracker.value("def"), this.tracker.value("dex"), this.tracker.value("agi"), this.tracker.value("cha"));
+    }
+    averageVelocity() {
+        const stats = [
+            "hack",
+            "str",
+            "def",
+            "dex",
+            "agi",
+            "cha",
+        ];
+        let total = 0;
+        let count = 0;
+        for (const s of stats) {
+            const v = this.tracker.velocity(s);
+            if (typeof v === "number") {
+                total += v;
+                count++;
+            }
+        }
+        return count > 0 ? total / count : undefined;
+    }
+}
+const MAX_MEMBERS = 12;
+/**
+ * Recruit and train gang members up to the maximum allowed.
+ *
+ * @param ns - Netscript API
+ */
+export async function main(ns) {
+    const flags = ns.flags([
+        ["help", false],
+        ...MEM_TAG_FLAGS
+    ]);
+    if (typeof flags.help !== "boolean" || flags.help) {
+        ns.tprint(`USAGE: run ${ns.getScriptName()}
+
+Automatically recruit gang members and assign them all to training.
+
+Example:
+  > run ${ns.getScriptName()}
+
+OPTIONS
+  --help  Show this help message`);
+        return;
+    }
+    const allocationId = await parseAndRegisterAlloc(ns, flags);
+    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
+        return;
+    }
+    if (!ns.gang.inGang()) {
+        ns.tprint("No gang to manage.");
+        return;
+    }
+    ns.disableLog("ALL");
+    const currentNames = new Set(ns.gang.getMemberNames());
+    const availableNames = NAMES.filter(n => !currentNames.has(n));
+    let nameIndex = 0;
+    ns.print(`Current members: ${Array.from(currentNames).join(", ")}`);
+    const members = {};
+    for (const name of currentNames) {
+        members[name] = new Member(name);
+    }
+    const ascensionBoard = new AscensionReviewBoard(ns.gang.respectForNextRecruit());
+    function recruitNew(replaced) {
+        if (ns.gang.canRecruitMember() &&
+            nameIndex < availableNames.length &&
+            currentNames.size < MAX_MEMBERS &&
+            ns.gang.getGangInformation().respect >= ns.gang.respectForNextRecruit()) {
+            const recruit = availableNames[nameIndex++];
+            if (ns.gang.recruitMember(recruit)) {
+                const msg = replaced
+                    ? `SUCCESS: replaced ${replaced} with ${recruit}`
+                    : `SUCCESS: recruited ${recruit}!`;
+                ns.print(msg);
+                currentNames.add(recruit);
+                members[recruit] = new Member(recruit);
+                let respectForNextRecruit = ns.gang.respectForNextRecruit();
+                if (!isFinite(respectForNextRecruit))
+                    respectForNextRecruit = ns.gang.getGangInformation().respect;
+                ascensionBoard.setRespectQuota(ns.gang.respectForNextRecruit());
+            }
+        }
+    }
+    const moneyTracker = new StatTracker(12);
+    while (true) {
+        ns.print(`INFO: starting next tick`);
+        const live = new Set(ns.gang.getMemberNames());
+        for (const name of Array.from(currentNames)) {
+            if (!live.has(name)) {
+                currentNames.delete(name);
+                availableNames.push(name);
+                delete members[name];
+                recruitNew(name);
+            }
+        }
+        recruitNew();
+        const count = ns.gang.getMemberNames().length;
+        const thresholds = getThresholds(count);
+        const ready = [];
+        const training = [];
+        const ascender = ascensionBoard.reviewRequests(ns);
+        if (ascender) {
+            members[ascender].tryAscend(ns);
+        }
+        for (const name of ns.gang.getMemberNames()) {
+            ns.print(`INFO: assigning current task for ${name}`);
+            if (!(name in members))
+                members[name] = new Member(name);
+            ns.print(`INFO: ${name} is ${members[name].state}`);
+            members[name].update(ns);
+            const maxLevel = members[name].maxLevel();
+            if (maxLevel > thresholds.trainLevel) {
+                ns.print(`SUCCESS: ${name} has finished bootstrapping!`);
+                members[name].state = "ready";
+            }
+            else {
+                ns.print(`SUCCESS: ${name} needs to go back to bootstrapping!`);
+                members[name].state = "bootstrapping";
+            }
+            if (members[name].state === "bootstrapping") {
+                training.push(name);
+                const result = ns.gang.getAscensionResult(name);
+                if (result) {
+                    ns.print(`INFO: ascension gains ` +
+                        `hck: ${result.hack} ` +
+                        `str: ${result.str} ` +
+                        `def: ${result.def} ` +
+                        `dex: ${result.dex} ` +
+                        `agi: ${result.agi} ` +
+                        `cha: ${result.cha} ` +
+                        `for ${name}`);
+                    const maxGain = Math.max(result.hack, result.str, result.def, result.dex, result.agi, result.cha);
+                    if (maxGain >= thresholds.ascendMult) {
+                        ns.print(`SUCCESS: registering ${name} for ascension`);
+                        ascensionBoard.requestAscension(name);
+                    }
+                }
+            }
+            else {
+                ready.push(name);
+            }
+        }
+        const analyzer = new TaskAnalyzer(ns);
+        analyzer.refresh();
+        const profiles = analyzer.roleProfiles();
+        assignTrainingTasks(ns, training, profiles);
+        moneyTracker.update(ns.getMoneySources().sinceInstall);
+        for (const n of training)
+            purchaseBestGear(ns, n, "bootstrapping", moneyTracker, profiles.bootstrapping);
+        const assignments = distributeTasks(ns, ready, analyzer);
+        for (const n of assignments.cooling)
+            members[n].state = "cooling";
+        for (const n of assignments.territoryWarfare)
+            members[n].state = "territoryWarfare";
+        for (const n of assignments.respectGrind)
+            members[n].state = "respectGrind";
+        for (const n of assignments.moneyGrind)
+            members[n].state = "moneyGrind";
+        await ns.gang.nextUpdate();
+    }
+}

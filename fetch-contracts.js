@@ -1,3 +1,5 @@
+import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { parseAndRegisterAlloc } from "services/client/memory";
 import { walkNetworkBFS } from "util/walk";
 const ALL_CONTRACT_TYPES = [
     "Algorithmic-Stock-Trader-I",
@@ -42,6 +44,7 @@ export async function main(ns) {
         ['test', null],
         ['count', -1],
         ['help', false],
+        ...MEM_TAG_FLAGS
     ]);
     const rest = flags._;
     if (flags.help ||
@@ -55,6 +58,10 @@ OPTIONS
   --test CONTRACT_NAME  Test a specific contract type
   --count N             Only process N contracts
 `);
+        return;
+    }
+    const allocationId = await parseAndRegisterAlloc(ns, flags);
+    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
         return;
     }
     let network = walkNetworkBFS(ns);

@@ -1,9 +1,12 @@
+import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { parseAndRegisterAlloc } from "services/client/memory";
 export function autocomplete(data, _args) {
     return data.servers;
 }
 export async function main(ns) {
     const flags = ns.flags([
         ["help", false],
+        ...MEM_TAG_FLAGS
     ]);
     const targets = flags._.filter((t) => typeof t === "string");
     if (targets.length === 0 || flags.help) {
@@ -15,6 +18,10 @@ Benchmark sow thread allocation algorithms on TARGETS.
 OPTIONS
   --help   Show this help message
 `);
+        return;
+    }
+    const allocationId = await parseAndRegisterAlloc(ns, flags);
+    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
         return;
     }
     ns.disableLog("ALL");

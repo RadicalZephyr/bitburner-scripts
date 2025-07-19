@@ -1,13 +1,22 @@
+import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { parseAndRegisterAlloc } from "services/client/memory";
 export function autocomplete(data, _args) {
     return data.servers;
 }
 export async function main(ns) {
-    const args = ns.flags([["help", false]]);
+    const args = ns.flags([
+        ["help", false],
+        ...MEM_TAG_FLAGS
+    ]);
     if (args.help || ns.args.length > 1) {
         ns.tprint("This script does a more detailed analysis of a server.");
         ns.tprint(`Usage: run ${ns.getScriptName()} SERVER`);
         ns.tprint("Example:");
         ns.tprint(`> run ${ns.getScriptName()} n00dles`);
+        return;
+    }
+    const allocationId = await parseAndRegisterAlloc(ns, args);
+    if (args[ALLOC_ID] !== -1 && allocationId === null) {
         return;
     }
     const server = ns.args[0];

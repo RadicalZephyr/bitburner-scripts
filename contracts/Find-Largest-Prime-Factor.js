@@ -3,6 +3,7 @@
 A prime factor is a factor that is a prime number. What is the largest
 prime factor of 129983129?
  */
+import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 /**
  * Generate all prime numbers less than or equal to the provided limit using a
  * simple Sieve of Eratosthenes.
@@ -28,6 +29,7 @@ function primesUpTo(limit) {
     return primes;
 }
 export async function main(ns) {
+    const flags = ns.flags(MEM_TAG_FLAGS);
     let scriptName = ns.getScriptName();
     let contractPortNum = ns.args[0];
     if (typeof contractPortNum !== 'number') {

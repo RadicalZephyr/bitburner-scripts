@@ -1,5 +1,7 @@
+import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 import { CONTRACTS } from "all-contracts";
 export async function main(ns) {
+    const flags = ns.flags(MEM_TAG_FLAGS);
     let failures = {};
     for (const contract of CONTRACTS) {
         if (contract.answer !== "null") {

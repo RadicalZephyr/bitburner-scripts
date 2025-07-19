@@ -1,13 +1,19 @@
+import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 import { DISCOVERY_PORT, DISCOVERY_RESPONSE_PORT, MessageType, } from "services/client/discover";
+import { MemoryClient } from "services/client/memory";
 import { CONFIG } from "services/config";
 import { trySendMessage } from "util/client";
 import { readAllFromPort } from "util/ports";
 import { walkNetworkBFS } from "util/walk";
 export async function main(ns) {
+    const flags = ns.flags(MEM_TAG_FLAGS);
     ns.disableLog("sleep");
     const cracked = new Set();
     const discovery = new Discovery(ns);
     discovery.pushHosts(["home"]);
+    const memClient = new MemoryClient(ns);
+    const self = ns.self();
+    memClient.registerAllocation(self.server, self.ramUsage, 1);
     const port = ns.getPortHandle(DISCOVERY_PORT);
     const respPort = ns.getPortHandle(DISCOVERY_RESPONSE_PORT);
     let messageWaiting = true;

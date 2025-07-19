@@ -28,7 +28,9 @@ Example: decoding '5aaabb450723abb' chunk-by-chunk
     5aaabb45072      ->  aaabbaaababababa
     5aaabb450723abb  ->  aaabbaaababababaabb
  */
+import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 export async function main(ns) {
+    const flags = ns.flags(MEM_TAG_FLAGS);
     let scriptName = ns.getScriptName();
     let contractPortNum = ns.args[0];
     if (typeof contractPortNum !== 'number') {

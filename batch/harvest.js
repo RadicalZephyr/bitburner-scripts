@@ -1,6 +1,9 @@
-import { MemoryClient, registerAllocationOwnership } from "services/client/memory";
-import { TaskSelectorClient, Lifecycle } from "batch/client/task_selector";
+import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { calculatePhaseStartTimes, hostListFromChunks, spawnBatch } from "services/batch";
+import { GrowableMemoryClient } from "services/client/growable_memory";
+import { AllocationChunk, parseAndRegisterAlloc } from "services/client/memory";
 import { PortClient } from "services/client/port";
+import { TaskSelectorClient, Lifecycle } from "batch/client/task_selector";
 import { CONFIG } from "batch/config";
 import { analyzeBatchThreads, fullBatchTime, growthAnalyze } from "batch/expected_value";
 export function autocomplete(data, _args) {
@@ -9,9 +12,9 @@ export function autocomplete(data, _args) {
 export async function main(ns) {
     ns.disableLog('ALL');
     const flags = ns.flags([
-        ['allocation-id', -1],
         ['max-ram', -1],
         ['help', false],
+        ...MEM_TAG_FLAGS
     ]);
     const rest = flags._;
     if (rest.length === 0 || flags.help) {
@@ -32,13 +35,9 @@ OPTIONS
 `);
         return;
     }
-    let allocationId = flags['allocation-id'];
-    if (allocationId !== -1) {
-        if (typeof allocationId !== 'number') {
-            ns.tprint('--allocation-id must be a number');
-            return;
-        }
-        await registerAllocationOwnership(ns, allocationId, "self");
+    const allocationId = await parseAndRegisterAlloc(ns, flags);
+    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
+        return;
     }
     let maxRam = flags['max-ram'];
     if (maxRam !== -1) {
@@ -85,26 +84,25 @@ OPTIONS
     // batch for rebalancing the server we need each rebalancing batch
     // to fit within the batch size that we originally allocated
     const batchRam = logistics.batchRam;
-    let memClient = new MemoryClient(ns);
-    let allocation = await memClient.requestTransferableAllocation(batchRam, overlapLimit, { shrinkable: true });
+    let memClient = new GrowableMemoryClient(ns);
+    let allocation = await memClient.requestGrowableAllocation(batchRam, overlapLimit, { shrinkable: true });
     if (!allocation)
         return;
     allocation.releaseAtExit(ns);
     // Send a Harvest Heartbeat to indicate we're starting the main loop
-    await taskSelectorClient.heartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Harvest);
+    taskSelectorClient.tryHeartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Harvest);
     // Track how many batches can overlap concurrently. If the
     // calculated overlap drops we release the extra memory back to the
     // MemoryManager so it can be reused by other processes.
     let maxOverlap = allocation.numChunks;
     let currentBatches = 0;
-    let batchHost = makeBatchHostArray(allocation.allocatedChunks);
+    let hosts = hostListFromChunks(allocation.allocatedChunks);
     let batches = [];
     ns.print(`INFO: spawning initial round of ${maxOverlap} batches`);
     // Launch one batch per allocated chunk so that the pipeline is
     // fully populated before entering the steady state loop.
-    for (let i = 0; i < maxOverlap; ++i) {
-        const host = batchHost.at(i);
-        let batchPids = spawnBatch(ns, host, target, logistics.phases, donePortId);
+    for (const host of hosts) {
+        let batchPids = await spawnBatch(ns, host, target, logistics.phases, donePortId, allocation.allocationId);
         batches.push(batchPids);
         currentBatches++;
         if (Date.now() >= lastHeartbeat + CONFIG.heartbeatCadence) {
@@ -116,19 +114,45 @@ OPTIONS
     const finishedPort = ns.getPortHandle(donePortId);
     ns.printf("INFO: launched initial round, going into batch respawn loop");
     while (true) {
-        let batchIndex = currentBatches % maxOverlap;
-        const host = batchHost.at(batchIndex);
-        let lastScriptPid = batches[batchIndex].at(-1);
+        allocation.pollGrowth();
+        const newHosts = hostListFromChunks(allocation.allocatedChunks);
+        if (newHosts.length < hosts.length) {
+            batches = cancelRemovedBatches(ns, hosts, newHosts, batches);
+            if (currentBatches >= newHosts.length) {
+                currentBatches %= newHosts.length;
+            }
+        }
+        hosts = newHosts;
+        let batchIndex = currentBatches % hosts.length;
+        if (batchIndex === 0 && hosts.length > batches.length) {
+            ns.print(`INFO: allocation grew to ${hosts.length} chunks. ` +
+                `Spawning ${hosts.length - batches.length} additional batches`);
+            for (let i = batches.length; i < hosts.length; i++) {
+                const extraPids = await spawnBatch(ns, hosts[i], target, logistics.phases, donePortId, allocation.allocationId);
+                batches[i] = extraPids;
+                currentBatches++;
+                if (Date.now() >= lastHeartbeat + CONFIG.heartbeatCadence) {
+                    taskSelectorClient.tryHeartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Harvest);
+                    lastHeartbeat = Date.now();
+                }
+                await ns.sleep(logistics.endingPeriod);
+            }
+        }
+        else if (hosts.length < batches.length) {
+            batches.length = hosts.length;
+            if (currentBatches >= hosts.length) {
+                currentBatches %= hosts.length;
+            }
+        }
+        maxOverlap = hosts.length;
+        batchIndex = currentBatches % hosts.length;
+        const host = hosts[batchIndex];
+        let lastScriptPid = batches[batchIndex]?.at(-1);
         if (typeof lastScriptPid === "number") {
-            let missedMessages = 0;
-            while (finishedPort.read() !== "NULL PORT DATA") {
-                missedMessages += 1;
+            if (finishedPort.peek() === "NULL PORT DATA") {
+                await finishedPort.nextWrite();
             }
-            if (missedMessages > 0) {
-                ns.print(`WARN: missed ${missedMessages} while spawning new batch`);
-            }
-            await finishedPort.nextWrite();
-            let donePid = finishedPort.read();
+            const donePid = finishedPort.read();
             if (typeof donePid === "number" && lastScriptPid !== donePid) {
                 ns.print(`INFO: expected to receive done message from ${lastScriptPid}, got ${donePid}`);
             }
@@ -157,12 +181,27 @@ OPTIONS
             let logistics = calculateBatchLogistics(ns, target, hackPercent);
             phases = logistics.phases;
             const desiredOverlap = Math.min(overlapLimit, logistics.overlap);
-            if (desiredOverlap < maxOverlap) {
-                const toRelease = maxOverlap - desiredOverlap;
-                ns.print(`WARN: overlap decreasing. Could release ${toRelease} chunks...`);
+            if (desiredOverlap < allocation.numChunks) {
+                const toRelease = allocation.numChunks - desiredOverlap;
+                const beforeHosts = hosts;
+                const result = await memClient.releaseChunks(allocation.allocationId, toRelease);
+                if (result) {
+                    allocation.allocatedChunks = result.hosts.map(h => new AllocationChunk(h));
+                    const shrinkHosts = hostListFromChunks(allocation.allocatedChunks);
+                    batches = cancelRemovedBatches(ns, beforeHosts, shrinkHosts, batches);
+                    hosts = shrinkHosts;
+                    if (currentBatches >= hosts.length) {
+                        currentBatches %= hosts.length;
+                    }
+                    maxOverlap = hosts.length;
+                    ns.print(`INFO: released ${toRelease} chunks from allocation`);
+                }
+                else {
+                    ns.print(`WARN: failed to release ${toRelease} chunks`);
+                }
             }
         }
-        let batchPids = spawnBatch(ns, host, target, phases, donePortId);
+        let batchPids = await spawnBatch(ns, host, target, phases, donePortId, allocation.allocationId);
         if (batchPids.length > 0) {
             batches[batchIndex] = batchPids;
             currentBatches++;
@@ -177,64 +216,32 @@ OPTIONS
         }
     }
 }
-class SparseHostArray {
-    intervals = [];
-    at(i) {
-        let low = 0;
-        let high = this.intervals.length - 1;
-        while (low <= high) {
-            const mid = Math.floor((low + high) / 2);
-            const int = this.intervals[mid];
-            if (i < int.start) {
-                high = mid - 1;
-            }
-            else if (i >= int.end) {
-                low = mid + 1;
-            }
-            else {
-                return int.hostname;
-            }
-        }
-        return undefined;
+function hostCountMap(hosts) {
+    const counts = new Map();
+    for (const h of hosts) {
+        const c = counts.get(h) ?? 0;
+        counts.set(h, c + 1);
     }
-    pushN(hostname, n) {
-        let lastEntry = this.intervals.at(-1);
-        if (lastEntry?.hostname === hostname) {
-            lastEntry.end += n;
+    return counts;
+}
+function cancelRemovedBatches(ns, prevHosts, newHosts, batches) {
+    const remaining = hostCountMap(newHosts);
+    const keep = [];
+    for (let i = 0; i < prevHosts.length; i++) {
+        const host = prevHosts[i];
+        const allowed = remaining.get(host) ?? 0;
+        if (allowed > 0) {
+            remaining.set(host, allowed - 1);
+            keep.push(batches[i]);
         }
         else {
-            let start = lastEntry ? lastEntry.end : 0;
-            this.intervals.push({ hostname, start, end: start + n });
+            for (const pid of batches[i] ?? []) {
+                if (ns.isRunning(pid))
+                    ns.kill(pid);
+            }
         }
     }
-}
-function makeBatchHostArray(allocatedChunks) {
-    let sparseHosts = new SparseHostArray();
-    for (const chunk of allocatedChunks) {
-        sparseHosts.pushN(chunk.hostname, chunk.numChunks);
-    }
-    return sparseHosts;
-}
-function spawnBatch(ns, host, target, phases, donePort) {
-    if (!host)
-        return [];
-    const scripts = Array.from(new Set(phases.map(p => p.script)));
-    ns.scp(scripts, host, "home");
-    let pids = [];
-    for (const [idx, phase] of phases.map((phase, idx) => [idx, phase])) {
-        if (phase.threads <= 0)
-            continue;
-        const script = phase.script;
-        let lastArg = idx === phases.length - 1 ? donePort : -1;
-        const pid = ns.exec(script, host, { threads: phase.threads, temporary: true }, target, phase.start, lastArg);
-        if (pid === 0) {
-            ns.print(`WARN: failed to spawn ${script} on ${host}`);
-        }
-        else {
-            pids.push(pid);
-        }
-    }
-    return pids;
+    return keep;
 }
 /** Calculate RAM and phase information for a full harvest batch.
  *
@@ -337,19 +344,6 @@ function calculateRebalancePhases(ns, target, weakenThreads, growThreads, postGr
     // always be sent and allow the harvester to continue progressing.
     phases = phases.filter(p => p.threads > 0);
     return calculatePhaseStartTimes(phases);
-}
-function calculatePhaseStartTimes(phases) {
-    const spacing = CONFIG.batchInterval;
-    let endTime = 0;
-    for (const p of phases) {
-        p.start = endTime - p.duration;
-        endTime += spacing;
-    }
-    const earliest = Math.abs(Math.min(...phases.map(p => p.start)));
-    for (const p of phases) {
-        p.start += earliest;
-    }
-    return phases;
 }
 function maxHackPercentForRam(ns, target, maxRam) {
     const minPercent = (() => {

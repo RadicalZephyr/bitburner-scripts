@@ -9,5 +9,10 @@ const entries = [
     ["maxHackPercent", 0.5],
     ["heartbeatCadence", 2000],
     ["heartbeatTimeoutMs", 3000],
+    ["hackLevelVelocityThreshold", 0.05],
+    ["harvestRetryMax", 5],
+    ["harvestRetryWait", 50],
+    ["launchFailLimit", 5],
+    ["launchFailBackoffMs", 2000]
 ];
 export const CONFIG = new Config("BATCH", entries);

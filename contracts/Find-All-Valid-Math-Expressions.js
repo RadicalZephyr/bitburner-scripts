@@ -27,7 +27,9 @@ Output: ["1+2+3", "1*2*3"]
 Input: digits = "105", target = 5
 Output: ["1*0+5", "10-5"]
  */
+import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 export async function main(ns) {
+    const flags = ns.flags(MEM_TAG_FLAGS);
     let scriptName = ns.getScriptName();
     let contractPortNum = ns.args[0];
     if (typeof contractPortNum !== 'number') {

@@ -1,58 +1,50 @@
+import { MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { collectDependencies } from "util/dependencies";
 export async function main(ns) {
+    const flags = ns.flags(MEM_TAG_FLAGS);
     const host = ns.self().server;
     // We start the Discovery service first because everything else
     // needs the hosts and targets that it finds and cracks.
     await startDiscover(ns, host);
     await ns.sleep(500);
     await startMemory(ns, host);
+    await startUpdater(ns, host);
     await startPort(ns, host);
 }
-const MEMORY_FILES = [
-    "/services/client/discover.js",
-    "/services/client/memory.js",
-    "/services/allocator.js",
-    "/util/client.js",
-    "/util/ports.js"
-];
 async function startMemory(ns, host) {
     const memoryScript = "/services/memory.js";
     const memory = ns.getRunningScript(memoryScript, host);
     if (memory !== null) {
         ns.kill(memory.pid);
     }
-    manualLaunch(ns, memoryScript, host, MEMORY_FILES);
+    manualLaunch(ns, memoryScript, host);
 }
-const DISCOVER_FILES = [
-    "/services/client/discover.js",
-    "/services/config.js",
-    "/util/client.js",
-    "/util/config.js",
-    "/util/localStorage.js",
-    "/util/ports.js",
-    "/util/walk.js"
-];
 async function startDiscover(ns, host) {
     const discoverScript = "/services/discover.js";
     const discover = ns.getRunningScript(discoverScript, host);
     if (discover !== null) {
         ns.kill(discover.pid);
     }
-    manualLaunch(ns, discoverScript, host, DISCOVER_FILES);
+    manualLaunch(ns, discoverScript, host);
 }
-const PORT_FILES = [
-    "/services/client/port.js",
-    "/util/client.js",
-    "/util/ports.js",
-];
+async function startUpdater(ns, host) {
+    const updaterScript = "/services/updater.js";
+    const updater = ns.getRunningScript(updaterScript, host);
+    if (updater !== null) {
+        ns.kill(updater.pid);
+    }
+    manualLaunch(ns, updaterScript, host);
+}
 async function startPort(ns, host) {
     const portScript = "/services/port.js";
     const portAllocator = ns.getRunningScript(portScript, host);
     if (portAllocator !== null) {
         ns.kill(portAllocator.pid);
     }
-    manualLaunch(ns, portScript, host, PORT_FILES);
+    manualLaunch(ns, portScript, host);
 }
-function manualLaunch(ns, script, hostname, dependencies) {
+function manualLaunch(ns, script, hostname) {
+    let dependencies = collectDependencies(ns, script);
     let files = [script, ...dependencies];
     if (!ns.scp(files, hostname, "home")) {
         let error = `failed to send files to ${hostname}`;

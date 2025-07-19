@@ -14,7 +14,9 @@ determine whether you are able to reach the last index.
 Your answer should be submitted as 1 or 0, representing true and false
 respectively
  */
+import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 export async function main(ns) {
+    const flags = ns.flags(MEM_TAG_FLAGS);
     let scriptName = ns.getScriptName();
     let contractPortNum = ns.args[0];
     if (typeof contractPortNum !== 'number') {

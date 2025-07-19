@@ -1,3 +1,5 @@
+import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { parseAndRegisterAlloc } from "services/client/memory";
 import { CONFIG } from "stock/config";
 import { computeIndicators } from "stock/indicators";
 /**
@@ -85,10 +87,15 @@ export async function main(ns) {
     const flags = ns.flags([
         ["cash", 1_000_000],
         ["help", false],
+        ...MEM_TAG_FLAGS
     ]);
     if (flags.help) {
         ns.tprint(`USAGE: run ${ns.getScriptName()} [--cash CASH]`);
         ns.tprint("Simulate trades using historical tick data.");
+        return;
+    }
+    const allocationId = await parseAndRegisterAlloc(ns, flags);
+    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
         return;
     }
     const dataPath = CONFIG.dataPath;

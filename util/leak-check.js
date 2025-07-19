@@ -1,5 +1,7 @@
+import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 import { MemoryClient, } from "services/client/memory";
 export async function main(ns) {
+    const flags = ns.flags(MEM_TAG_FLAGS);
     ns.disableLog('ALL');
     ns.ui.openTail();
     const client = new MemoryClient(ns);
@@ -14,10 +16,13 @@ export async function main(ns) {
     ns.print(`finished leak check.`);
 }
 function checkWorkers(ns, allocations, workers) {
+    const selfDetails = ns.self();
+    const selfHost = selfDetails.server;
+    const selfRam = selfDetails.ramUsage;
     for (const w of workers) {
         const actualTotal = ns.getServerMaxRam(w.hostname);
         const actualInUse = ns.getServerUsedRam(w.hostname);
-        const used = w.setAsideRam + w.reservedRam + w.allocatedRam;
+        const used = w.reservedRam + w.allocatedRam + (w.hostname === selfHost ? selfRam : 0);
         if (Math.abs(actualTotal - w.totalRam) > 0.0001) {
             ns.print(`ERROR: worker ${w.hostname} snapshot has incorrect total RAM ` +
                 `snapshot ${ns.formatRam(w.totalRam)} actual ${ns.formatRam(actualTotal)}`);

@@ -16,7 +16,9 @@ Examples:
     111112333            ->  511233
     zzzzzzzzzzzzzzzzzzz  ->  9z9z1z  (or 9z8z2z, etc.)
  */
+import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 export async function main(ns) {
+    const flags = ns.flags(MEM_TAG_FLAGS);
     let scriptName = ns.getScriptName();
     let contractPortNum = ns.args[0];
     if (typeof contractPortNum !== 'number') {

@@ -38,7 +38,9 @@ Note that the matrix will not always be square:
 
 Answer: [1, 2, 3, 4, 8, 12, 11, 10, 9, 5, 6, 7]
  */
+import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 export async function main(ns) {
+    const flags = ns.flags(MEM_TAG_FLAGS);
     let scriptName = ns.getScriptName();
     let contractPortNum = ns.args[0];
     if (typeof contractPortNum !== 'number') {

@@ -1,5 +1,7 @@
+import { ALLOC_ID, ALLOC_ID_ARG, MEM_TAG_FLAGS } from "services/client/memory_tag";
 import { TaskSelectorClient, Lifecycle } from "batch/client/task_selector";
-import { registerAllocationOwnership, MemoryClient } from "services/client/memory";
+import { GrowableMemoryClient } from "services/client/growable_memory";
+import { parseAndRegisterAlloc } from "services/client/memory";
 import { CONFIG } from "batch/config";
 import { awaitRound, calculateRoundInfo } from "batch/progress";
 export function autocomplete(data, _args) {
@@ -8,9 +10,9 @@ export function autocomplete(data, _args) {
 export async function main(ns) {
     ns.disableLog('ALL');
     const flags = ns.flags([
-        ['allocation-id', -1],
         ['max-threads', -1],
         ['help', false],
+        ...MEM_TAG_FLAGS
     ]);
     const rest = flags._;
     if (rest.length === 0 || flags.help) {
@@ -28,13 +30,9 @@ OPTIONS
 `);
         return;
     }
-    let allocationId = flags['allocation-id'];
-    if (allocationId !== -1) {
-        if (typeof allocationId !== 'number') {
-            ns.tprint('--allocation-id must be a number');
-            return;
-        }
-        await registerAllocationOwnership(ns, allocationId, "self");
+    const allocationId = await parseAndRegisterAlloc(ns, flags);
+    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
+        return;
     }
     let maxThreads = flags['max-threads'];
     if (maxThreads !== -1) {
@@ -50,7 +48,7 @@ OPTIONS
         return;
     }
     const taskSelectorClient = new TaskSelectorClient(ns);
-    const memClient = new MemoryClient(ns);
+    const memClient = new GrowableMemoryClient(ns);
     const script = "/batch/w.js";
     const scriptRam = ns.getScriptRam(script, "home");
     let maxThreadsCap = calculateWeakenThreads(ns, target);
@@ -64,7 +62,7 @@ OPTIONS
         return;
     }
     let requestThreads = maxThreadsCap;
-    let allocation = await memClient.requestTransferableAllocation(scriptRam, requestThreads, {
+    let allocation = await memClient.requestGrowableAllocation(scriptRam, requestThreads, {
         coreDependent: true,
         shrinkable: true,
     });
@@ -73,7 +71,7 @@ OPTIONS
         return;
     }
     // Send a Till Heartbeat to indicate we're starting the main loop
-    await taskSelectorClient.heartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Till);
+    taskSelectorClient.tryHeartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Till);
     let threadsNeeded = calculateWeakenThreads(ns, target);
     const totalThreads = allocation.numChunks;
     let round = 0;
@@ -84,22 +82,7 @@ OPTIONS
         const totalRounds = (round - 1) + roundsRemaining;
         const info = calculateRoundInfo(ns, target, round, totalRounds, roundsRemaining);
         const spawnThreads = Math.min(threadsNeeded, totalThreads);
-        const pids = [];
-        let remaining = spawnThreads;
-        for (const chunk of allocation.allocatedChunks) {
-            if (remaining <= 0)
-                break;
-            const t = Math.min(chunk.numChunks, remaining);
-            ns.scp(script, chunk.hostname, "home");
-            const pid = ns.exec(script, chunk.hostname, { threads: t, temporary: true }, target, 0);
-            if (pid) {
-                pids.push(pid);
-            }
-            else {
-                ns.tprintf("failed to spawn %d threads on %s", t, chunk.hostname);
-            }
-            remaining -= t;
-        }
+        const pids = await allocation.launch(script, { threads: spawnThreads, temporary: true }, target, 0, ALLOC_ID_ARG, allocation.allocationId);
         const sendHb = () => Promise.resolve(taskSelectorClient.tryHeartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Till));
         nextHeartbeat = await awaitRound(ns, pids, info, nextHeartbeat, sendHb);
         threadsNeeded = calculateWeakenThreads(ns, target);

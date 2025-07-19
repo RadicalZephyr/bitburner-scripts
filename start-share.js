@@ -1,35 +1,48 @@
+import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { parseAndRegisterAlloc } from "services/client/memory";
 import { walkNetworkBFS } from 'util/walk';
 export async function main(ns) {
     const options = ns.flags([
         ['share-percent', 0.75],
-        ['help', false]
+        ['max-ram', 32],
+        ['help', false],
+        ...MEM_TAG_FLAGS
     ]);
     if (options.help
-        || typeof options['share-percent'] != 'number') {
+        || typeof options['share-percent'] != 'number'
+        || typeof options['max-ram'] !== 'number') {
         ns.tprint(`
 Usage: ${ns.getScriptName()} [OPTIONS]
 
 OPTIONS
-  --help          Show this help message
-  --share-percent Specify the percentage of usable hosts to share [0-1]
+  --help            Show this help message
+  --max-ram RAM     Only run share on servers with RAM less than or equal to RAM
+  --share-percent P Specify the percentage of usable hosts to share [0-1]
 `);
         return;
     }
+    const allocationId = await parseAndRegisterAlloc(ns, options);
+    if (options[ALLOC_ID] !== -1 && allocationId === null) {
+        return;
+    }
     let shareScript = "/share.js";
+    let maxRam = options['max-ram'];
     let share_percent = options['share-percent'];
     let ownedHosts = ns.getPurchasedServers();
-    await shareHosts(ns, ownedHosts, shareScript, share_percent);
+    await shareHosts(ns, ownedHosts, shareScript, share_percent, maxRam);
     let network = walkNetworkBFS(ns);
     let allHosts = Array.from(network.keys());
     let hosts = usableHosts(ns, allHosts);
-    await shareHosts(ns, hosts, shareScript, share_percent);
+    await shareHosts(ns, hosts, shareScript, share_percent, maxRam);
 }
-async function shareHosts(ns, hosts, shareScript, shareAmount) {
+async function shareHosts(ns, hosts, shareScript, shareAmount, maxRam) {
     if (!ns.fileExists(shareScript)) {
         ns.tprintf("share script '%s' does not exist", shareScript);
         return;
     }
     for (const host of hosts) {
+        if (maxRam < ns.getServerMaxRam(host))
+            continue;
         let threads = numThreads(ns, host, shareScript, shareAmount);
         if (threads > 0) {
             ns.printf("calculated num threads of %d", threads);

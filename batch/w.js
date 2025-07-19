@@ -1,5 +1,7 @@
+import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 export async function main(ns) {
-    const args = ns.args;
+    const flags = ns.flags(MEM_TAG_FLAGS);
+    const args = flags._;
     const target = args[0];
     if (typeof target != 'string') {
         return;
@@ -9,9 +11,10 @@ export async function main(ns) {
         sleepTime = 1;
     }
     let donePortId = args[2];
+    ns.atExit(() => {
+        if (typeof donePortId === 'number' && donePortId !== -1) {
+            ns.writePort(donePortId, ns.pid);
+        }
+    });
     await ns.weaken(target, { additionalMsec: sleepTime });
-    globalThis.performance.mark("weaken");
-    if (typeof donePortId === 'number' && donePortId !== -1) {
-        ns.writePort(donePortId, ns.pid);
-    }
 }

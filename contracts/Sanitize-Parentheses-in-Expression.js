@@ -19,7 +19,9 @@ IMPORTANT: The string may contain letters, not just parentheses. Examples:
 ")(" -> [""]
 ```
  */
+import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 export async function main(ns) {
+    const flags = ns.flags(MEM_TAG_FLAGS);
     let scriptName = ns.getScriptName();
     let contractPortNum = ns.args[0];
     if (typeof contractPortNum !== 'number') {

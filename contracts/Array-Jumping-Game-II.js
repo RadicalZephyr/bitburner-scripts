@@ -13,7 +13,9 @@ determine the minimum number of jumps to reach the end of the array.
 
 If it's impossible to reach the end, then the answer should be 0.
  */
+import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 export async function main(ns) {
+    const flags = ns.flags(MEM_TAG_FLAGS);
     let scriptName = ns.getScriptName();
     let contractPortNum = ns.args[0];
     if (typeof contractPortNum !== 'number') {

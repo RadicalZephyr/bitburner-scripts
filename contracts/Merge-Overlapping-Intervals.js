@@ -15,7 +15,9 @@ The intervals must be returned in ASCENDING order. You can assume that
 in an interval, the first number will always be smaller than the
 second.
 */
+import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 export async function main(ns) {
+    const flags = ns.flags(MEM_TAG_FLAGS);
     let scriptName = ns.getScriptName();
     let contractPortNum = ns.args[0];
     if (typeof contractPortNum !== 'number') {

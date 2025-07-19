@@ -1,3 +1,5 @@
+import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { parseAndRegisterAlloc } from "services/client/memory";
 import { walkNetworkBFS } from 'util/walk';
 export function autocomplete(data, args) {
     return data.servers;
@@ -7,6 +9,7 @@ export async function main(ns) {
         ['goto', false],
         ['startingHost', ns.self().server],
         ['help', false],
+        ...MEM_TAG_FLAGS
     ]);
     const rest = flags._;
     if (rest.length === 0 || flags.help || typeof flags.startingHost != 'string') {
@@ -23,6 +26,10 @@ OPTIONS
   --startingHost   The host to start the search from
   --goto           If sufficient RAM is available (+25GB) send player to SERVER_NAME
 `);
+        return;
+    }
+    const allocationId = await parseAndRegisterAlloc(ns, flags);
+    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
         return;
     }
     if (!ns.serverExists(flags.startingHost)) {
@@ -60,9 +67,9 @@ OPTIONS
         S.shift();
     }
     const goCommand = `go ${S.join(" ; go ")}`;
-    if (flags.goto && ns.ramOverride(28.9)) {
+    if (flags.goto) {
         // Acquire a reference to the terminal text field
-        const terminalInput = globalThis.document.getElementById("terminal-input");
+        const terminalInput = globalThis["terminal-input"];
         terminalInput.value = goCommand;
         // Get a reference to the React event handler.
         const handler = Object.keys(terminalInput)[1];

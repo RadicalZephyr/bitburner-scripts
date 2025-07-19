@@ -1,12 +1,16 @@
+import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { parseAndRegisterAlloc } from "services/client/memory";
 import { MEMORY_PORT, MessageType, MEMORY_RESPONSE_PORT, } from "services/client/memory";
 import { DiscoveryClient } from "services/client/discover";
 import { fromFixed, MemoryAllocator } from "services/allocator";
 import { readAllFromPort } from "util/ports";
+import { HUD_HEIGHT, HUD_WIDTH, STATUS_WINDOW_WIDTH } from "util/ui";
 let printLog;
 export async function main(ns) {
     const flags = ns.flags([
         ['refresh-rate', 1000],
         ['help', false],
+        ...MEM_TAG_FLAGS
     ]);
     let refreshRate = flags['refresh-rate'];
     const rest = flags._;
@@ -28,11 +32,16 @@ Example:
 `);
         return;
     }
+    const allocationId = await parseAndRegisterAlloc(ns, flags);
+    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
+        return;
+    }
     ns.disableLog("ALL");
     ns.ui.openTail();
     ns.ui.setTailTitle("Memory Allocator");
-    ns.ui.resizeTail(930, 560);
-    ns.ui.moveTail(1220, 650);
+    ns.ui.resizeTail(HUD_WIDTH, HUD_HEIGHT);
+    const [ww, wh] = ns.ui.windowSize();
+    ns.ui.moveTail(ww - ((2 * HUD_WIDTH) + STATUS_WINDOW_WIDTH), 0);
     const log = [];
     const maxLog = 72;
     printLog = (msg) => {
@@ -60,11 +69,23 @@ Example:
     for (const worker of workers) {
         memoryManager.pushWorker(worker);
     }
+    // Register this script's memory usage
+    const self = ns.self();
+    memoryManager.registerAllocation({
+        pid: self.pid,
+        hostname: self.server,
+        filename: self.filename,
+        chunkSize: self.ramUsage,
+        numChunks: 1
+    });
     let collectionRate = 1000 * 10;
     let lastRender = 0;
     let lastCollection = Date.now();
+    let lastGrowCheck = 0;
+    const growCheckRate = 1000;
     while (true) {
         let now = Date.now();
+        memoryManager.checkHomeForRamIncrease();
         if (memMessageWaiting) {
             memMessageWaiting = false;
             memPort.nextWrite().then(_ => { memMessageWaiting = true; });
@@ -83,6 +104,10 @@ Example:
             memoryManager.updateReserved();
             memoryManager.cleanupTerminated();
             lastCollection = now;
+        }
+        if (lastGrowCheck + growCheckRate < now) {
+            await growAllocations(ns, memoryManager);
+            lastGrowCheck = now;
         }
         await ns.sleep(50);
     }
@@ -106,8 +131,9 @@ function readMemRequestsFromPort(ns, memPort, memResponsePort, memoryManager) {
                 printLog(`INFO: request pid=${request.pid} filename=${request.filename} ` +
                     `${request.numChunks}x${ns.formatRam(request.chunkSize)} ` +
                     `contiguous=${request.contiguous ?? false} ` +
-                    `coreDependent=${request.coreDependent ?? false}`);
-                const allocation = memoryManager.allocate(request.pid, request.filename, request.chunkSize, request.numChunks, request.contiguous ?? false, request.coreDependent ?? false, request.shrinkable ?? false);
+                    `coreDependent=${request.coreDependent ?? false} ` +
+                    `longRunning=${request.longRunning ?? false}`);
+                const allocation = memoryManager.allocate(request.pid, request.filename, request.chunkSize, request.numChunks, request.contiguous ?? false, request.coreDependent ?? false, request.shrinkable ?? false, request.longRunning ?? false);
                 if (allocation) {
                     printLog(`SUCCESS: allocated id ${allocation.allocationId} ` +
                         `across ${allocation.hosts.length} hosts`);
@@ -116,6 +142,20 @@ function readMemRequestsFromPort(ns, memPort, memResponsePort, memoryManager) {
                     printLog("WARN: allocation failed, not enough space");
                 }
                 payload = allocation;
+                break;
+            case MessageType.GrowableRequest:
+                const growReq = msg[2];
+                printLog(`INFO: growable request pid=${growReq.pid} filename=${growReq.filename} ` +
+                    `${growReq.numChunks}x${ns.formatRam(growReq.chunkSize)}`);
+                const growAlloc = memoryManager.allocate(growReq.pid, growReq.filename, growReq.chunkSize, growReq.numChunks, growReq.contiguous ?? false, growReq.coreDependent ?? false, growReq.shrinkable ?? true, growReq.longRunning ?? false, growReq.port);
+                if (growAlloc) {
+                    printLog(`SUCCESS: allocated id ${growAlloc.allocationId} ` +
+                        `across ${growAlloc.hosts.length} hosts`);
+                }
+                else {
+                    printLog("WARN: growable allocation failed");
+                }
+                payload = growAlloc;
                 break;
             case MessageType.Release:
                 const release = msg[2];
@@ -145,6 +185,14 @@ function readMemRequestsFromPort(ns, memPort, memResponsePort, memoryManager) {
                     `allocation ${releaseInfo.allocationId}`);
                 payload = memoryManager.releaseChunks(releaseInfo.allocationId, releaseInfo.numChunks);
                 break;
+            case MessageType.Register:
+                const reg = msg[2];
+                printLog(`INFO: register pid=${reg.pid} host=${reg.hostname} ` +
+                    `${reg.numChunks}x${ns.formatRam(reg.chunkSize)} ` +
+                    `${reg.filename}`);
+                memoryManager.registerAllocation(reg);
+                // Don't send a response, no one is listening.
+                continue;
             case MessageType.Status:
                 payload = { freeRam: memoryManager.getFreeRamTotal() };
                 break;
@@ -168,6 +216,30 @@ function readMemRequestsFromPort(ns, memPort, memResponsePort, memoryManager) {
         }
         // TODO: make this more robust when the response port is full
         memResponsePort.write([requestId, payload]);
+    }
+}
+async function growAllocations(ns, memoryManager) {
+    if (memoryManager.getFreeRamTotal() <= 0)
+        return;
+    for (const alloc of memoryManager.allocations.values()) {
+        if (alloc.notifyPort === undefined)
+            continue;
+        const current = alloc.chunks.reduce((s, c) => s + c.numChunks, 0);
+        const missing = alloc.requestedChunks - current;
+        if (missing <= 0)
+            continue;
+        const newChunks = memoryManager.growAllocation(alloc, missing);
+        if (newChunks.length === 0)
+            continue;
+        const firstChunk = newChunks[0];
+        const host = firstChunk.hostname;
+        const chunkSize = ns.formatRam(firstChunk?.chunkSize ?? 0);
+        const totalChunks = newChunks.reduce((s, c) => s + c.numChunks, 0);
+        printLog(`INFO: growing allocation ${alloc.id} by ${totalChunks}x${chunkSize} from ${host}`);
+        const port = ns.getPortHandle(alloc.notifyPort);
+        while (!port.tryWrite(newChunks)) {
+            await ns.sleep(20);
+        }
     }
 }
 /**

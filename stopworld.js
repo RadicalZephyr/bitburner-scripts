@@ -1,7 +1,13 @@
+import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { parseAndRegisterAlloc } from "services/client/memory";
 import { walkNetworkBFS } from 'util/walk';
+export function autocomplete(data, _args) {
+    return data.scripts;
+}
 export async function main(ns) {
     const flags = ns.flags([
         ['help', false],
+        ...MEM_TAG_FLAGS
     ]);
     if (flags.help) {
         ns.tprint(`
@@ -16,6 +22,10 @@ OPTIONS:
 Example:
   > run ${ns.getScriptName()} hack.js
 `);
+        return;
+    }
+    const allocationId = await parseAndRegisterAlloc(ns, flags);
+    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
         return;
     }
     const targetScripts = new Set(flags._);

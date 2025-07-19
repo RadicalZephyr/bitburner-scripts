@@ -1,14 +1,11 @@
-const BOOTSTRAP_FILES = [
-    "/services/bootstrap.js",
-    "/batch/bootstrap.js",
-    "/services/launch.js",
-    "/services/client/memory.js",
-    "/util/client.js"
-];
+import { MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { collectDependencies } from "util/dependencies";
 export async function main(ns) {
+    const flags = ns.flags(MEM_TAG_FLAGS);
     ns.disableLog("sleep");
     let script = "/bootstrap.js";
-    let files = [script, ...BOOTSTRAP_FILES];
+    let dependencies = collectDependencies(ns, script);
+    let files = [script, ...dependencies];
     let hostname = "foodnstuff";
     if (!ns.scp(files, hostname, "home")) {
         reportError(ns, `failed to send files to ${hostname}`);
