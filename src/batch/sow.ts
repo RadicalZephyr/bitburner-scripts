@@ -1,6 +1,6 @@
 import type { AutocompleteData, NS } from "netscript";
 
-import { TaskSelectorClient, Lifecycle } from "batch/client/task_selector";
+import { BatchLogistics, BatchPhase, calculatePhaseStartTimes, hostListFromChunks, spawnBatch } from "services/batch";
 
 import {
     registerAllocationOwnership,
@@ -12,7 +12,7 @@ import { TAG_ARG } from "services/client/memory_tag";
 import { CONFIG } from "batch/config";
 import { awaitRound, calculateRoundInfo, printRoundProgress, RoundInfo } from "batch/progress";
 
-import { BatchLogistics, BatchPhase, calculatePhaseStartTimes, spawnBatch } from "services/batch";
+import { TaskSelectorClient, Lifecycle } from "batch/client/task_selector";
 
 
 export function autocomplete(data: AutocompleteData, _args: string[]): string[] {
@@ -174,16 +174,6 @@ function weakenAnalyze(weakenAmount: number): number {
 
 function weakenAnalyzeSecurity(weakenThreads: number) {
     return -0.05 * weakenThreads;
-}
-
-function hostListFromChunks(chunks: AllocationChunk[]): string[] {
-    const hosts: string[] = [];
-    for (const chunk of chunks) {
-        for (let i = 0; i < chunk.numChunks; i++) {
-            hosts.push(chunk.hostname);
-        }
-    }
-    return hosts;
 }
 
 interface SowBatchLogistics extends BatchLogistics {

@@ -2,6 +2,7 @@ import type { NS } from "netscript";
 
 import { CONFIG } from "batch/config";
 
+import { AllocationChunk } from "services/client/memory";
 import { TAG_ARG } from "services/client/memory_tag";
 
 import { collectDependencies } from "util/dependencies";
@@ -38,6 +39,23 @@ export interface BatchLogistics {
 
     /** The phases in each batch */
     phases: BatchPhase[];
+}
+
+/**
+ * Create a list of hosts where each host is repeated `numChunks`
+ * times.
+ *
+ * @param chunks
+ * @returns
+ */
+export function hostListFromChunks(chunks: AllocationChunk[]): string[] {
+    const hosts: string[] = [];
+    for (const chunk of chunks) {
+        for (let i = 0; i < chunk.numChunks; i++) {
+            hosts.push(chunk.hostname);
+        }
+    }
+    return hosts;
 }
 
 

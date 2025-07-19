@@ -1,5 +1,7 @@
 import type { AutocompleteData, NS } from "netscript";
 
+import { BatchLogistics, BatchPhase, calculatePhaseStartTimes, hostListFromChunks, spawnBatch } from "services/batch";
+
 import { GrowableMemoryClient } from "services/client/growable_memory";
 import { AllocationChunk, registerAllocationOwnership } from "services/client/memory";
 import { PortClient } from "services/client/port";
@@ -13,8 +15,6 @@ import {
     fullBatchTime,
     growthAnalyze
 } from "batch/expected_value";
-
-import { BatchLogistics, BatchPhase, calculatePhaseStartTimes, spawnBatch } from "services/batch";
 
 
 export function autocomplete(data: AutocompleteData, _args: string[]): string[] {
@@ -287,16 +287,6 @@ OPTIONS
     }
 }
 
-
-function hostListFromChunks(chunks: AllocationChunk[]): string[] {
-    const hosts: string[] = [];
-    for (const chunk of chunks) {
-        for (let i = 0; i < chunk.numChunks; i++) {
-            hosts.push(chunk.hostname);
-        }
-    }
-    return hosts;
-}
 
 function hostCountMap(hosts: string[]): Map<string, number> {
     const counts = new Map<string, number>();
