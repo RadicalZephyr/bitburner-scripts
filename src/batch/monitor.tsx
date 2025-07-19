@@ -1,5 +1,5 @@
 import type { NS, UserInterfaceTheme } from "netscript";
-import { MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
 
 import { MONITOR_PORT, Lifecycle, Message as MonitorMessage } from "batch/client/monitor";
 
@@ -18,7 +18,6 @@ declare const React: any;
 
 export async function main(ns: NS) {
     const flags = ns.flags([
-        ['allocation-id', -1],
         ['refreshrate', 200],
         ['help', false],
         ...MEM_TAG_FLAGS
@@ -41,7 +40,7 @@ Example:
         return;
     }
 
-    let allocationId = flags['allocation-id'];
+    let allocationId = flags[ALLOC_ID];
     if (allocationId !== -1) {
         if (typeof allocationId !== 'number') {
             ns.tprint('--allocation-id must be a number');

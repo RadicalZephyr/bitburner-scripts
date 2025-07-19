@@ -1,5 +1,5 @@
 import type { AutocompleteData, NS } from "netscript";
-import { MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
 
 import { BatchLogistics, BatchPhase, calculatePhaseStartTimes, hostListFromChunks, spawnBatch } from "services/batch";
 
@@ -26,7 +26,6 @@ export async function main(ns: NS) {
     ns.disableLog('ALL');
 
     const flags = ns.flags([
-        ['allocation-id', -1],
         ['max-ram', -1],
         ['help', false],
         ...MEM_TAG_FLAGS
@@ -52,7 +51,7 @@ OPTIONS
         return;
     }
 
-    let allocationId = flags['allocation-id'];
+    let allocationId = flags[ALLOC_ID];
     if (allocationId !== -1) {
         if (typeof allocationId !== 'number') {
             ns.tprint('--allocation-id must be a number');
