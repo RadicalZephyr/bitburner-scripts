@@ -5,6 +5,7 @@ export interface LaunchRunOptions extends RunOptions {
     coreDependent?: boolean;
     longRunning?: boolean;
     dependencies?: string[];
+    allocationFlag?: string;
 }
 
 import { MemoryClient } from "services/client/memory";

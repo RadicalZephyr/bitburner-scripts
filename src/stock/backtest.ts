@@ -1,5 +1,6 @@
 import type { NS } from "netscript";
-import { MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { registerAllocationOwnership } from "services/client/memory";
 import { CONFIG } from "stock/config";
 import { computeIndicators, TickData } from "stock/indicators";
 
@@ -122,6 +123,15 @@ export async function main(ns: NS) {
         ns.tprint(`USAGE: run ${ns.getScriptName()} [--cash CASH]`);
         ns.tprint("Simulate trades using historical tick data.");
         return;
+    }
+
+    let allocationId = flags[ALLOC_ID];
+    if (allocationId !== -1) {
+        if (typeof allocationId !== 'number') {
+            ns.tprint('--allocation-id must be a number');
+            return;
+        }
+        await registerAllocationOwnership(ns, allocationId, "self");
     }
 
     const dataPath = CONFIG.dataPath;

@@ -1,5 +1,6 @@
 import type { GangMemberAscension, GangMemberInfo, MoneySource, NS } from "netscript";
-import { MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { registerAllocationOwnership } from "services/client/memory";
 import { CONFIG } from "gang/config";
 import { purchaseBestGear } from "gang/equipment-manager";
 import { TaskAnalyzer } from "gang/task-analyzer";
@@ -41,6 +42,15 @@ CONFIG VALUES
   GANG_minWantedLevel    Wanted level where heating resumes
   GANG_jobCheckInterval  Delay between evaluations`);
         return;
+    }
+
+    let allocationId = flags[ALLOC_ID];
+    if (allocationId !== -1) {
+        if (typeof allocationId !== 'number') {
+            ns.tprint('--allocation-id must be a number');
+            return;
+        }
+        await registerAllocationOwnership(ns, allocationId, "self");
     }
 
     if (!ns.gang.inGang()) {

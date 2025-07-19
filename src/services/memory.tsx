@@ -1,5 +1,6 @@
 import type { NS, NetscriptPort, UserInterfaceTheme } from "netscript";
-import { MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { registerAllocationOwnership } from "services/client/memory";
 
 import {
     AllocationClaim,
@@ -58,6 +59,15 @@ Example:
 > run ${ns.getScriptName()}
 `);
         return;
+    }
+
+    let allocationId = flags[ALLOC_ID];
+    if (allocationId !== -1) {
+        if (typeof allocationId !== 'number') {
+            ns.tprint('--allocation-id must be a number');
+            return;
+        }
+        await registerAllocationOwnership(ns, allocationId, "self");
     }
 
     ns.disableLog("ALL");

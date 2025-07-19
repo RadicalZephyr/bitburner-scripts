@@ -1,5 +1,6 @@
 import type { GangMemberInfo, MoneySource, NS } from "netscript";
-import { MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { registerAllocationOwnership } from "services/client/memory";
 
 import { AscensionReviewBoard } from "gang/ascension-review";
 import { purchaseBestGear } from "gang/equipment-manager";
@@ -194,8 +195,17 @@ Example:
   > run ${ns.getScriptName()}
 
 OPTIONS
-  --help  Show this help message`);
+    --help  Show this help message`);
         return;
+    }
+
+    let allocationId = flags[ALLOC_ID];
+    if (allocationId !== -1) {
+        if (typeof allocationId !== 'number') {
+            ns.tprint('--allocation-id must be a number');
+            return;
+        }
+        await registerAllocationOwnership(ns, allocationId, "self");
     }
 
     if (!ns.gang.inGang()) {

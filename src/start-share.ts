@@ -1,5 +1,6 @@
 import type { NS } from "netscript";
-import { MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { registerAllocationOwnership } from "services/client/memory";
 
 import { walkNetworkBFS } from 'util/walk';
 
@@ -23,6 +24,15 @@ OPTIONS
   --share-percent P Specify the percentage of usable hosts to share [0-1]
 `);
         return;
+    }
+
+    let allocationId = options[ALLOC_ID];
+    if (allocationId !== -1) {
+        if (typeof allocationId !== 'number') {
+            ns.tprint('--allocation-id must be a number');
+            return;
+        }
+        await registerAllocationOwnership(ns, allocationId, "self");
     }
 
     let shareScript = "/share.js";

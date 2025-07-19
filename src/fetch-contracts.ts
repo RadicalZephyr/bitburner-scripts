@@ -1,5 +1,6 @@
 import type { AutocompleteData, NS } from "netscript";
-import { MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { registerAllocationOwnership } from "services/client/memory";
 import type { ContractData } from "all-contracts";
 
 import { walkNetworkBFS } from "util/walk";
@@ -68,9 +69,18 @@ USAGE: run ${ns.getScriptName()} [--test CONTRACT_NAME]
 OPTIONS
   --help                Show this help message
   --test CONTRACT_NAME  Test a specific contract type
-  --count N             Only process N contracts
+        --count N             Only process N contracts
 `);
         return;
+    }
+
+    let allocationId = flags[ALLOC_ID];
+    if (allocationId !== -1) {
+        if (typeof allocationId !== 'number') {
+            ns.tprint('--allocation-id must be a number');
+            return;
+        }
+        await registerAllocationOwnership(ns, allocationId, "self");
     }
 
     let network = walkNetworkBFS(ns);

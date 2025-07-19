@@ -1,5 +1,6 @@
 import type { NS } from "netscript";
-import { MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { registerAllocationOwnership } from "services/client/memory";
 
 import { MemoryClient } from "services/client/memory";
 
@@ -36,10 +37,19 @@ OPTIONS
   --dry-run     Print out the number and tier of servers you could buy but don't actually buy anything
   --no-upgrade  Don't upgrade existing servers
   --no-rename   Don't rename the newly purchased servers
-  --wait        Wait for money to become available to buy servers
-  --help        Show this help message
+        --wait        Wait for money to become available to buy servers
+        --help        Show this help message
 `);
         return;
+    }
+
+    let allocationId = options[ALLOC_ID];
+    if (allocationId !== -1) {
+        if (typeof allocationId !== 'number') {
+            ns.tprint('--allocation-id must be a number');
+            return;
+        }
+        await registerAllocationOwnership(ns, allocationId, "self");
     }
 
     const shouldRenameServers = !options['no-rename'];

@@ -1,5 +1,6 @@
 import type { NS, AutocompleteData } from "netscript";
-import { MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { registerAllocationOwnership } from "services/client/memory";
 
 import { walkNetworkBFS } from 'util/walk';
 
@@ -27,6 +28,15 @@ Example:
   > run ${ns.getScriptName()} hack.js
 `);
         return;
+    }
+
+    let allocationId = flags[ALLOC_ID];
+    if (allocationId !== -1) {
+        if (typeof allocationId !== 'number') {
+            ns.tprint('--allocation-id must be a number');
+            return;
+        }
+        await registerAllocationOwnership(ns, allocationId, "self");
     }
 
     const targetScripts = new Set(flags._ as string[]);

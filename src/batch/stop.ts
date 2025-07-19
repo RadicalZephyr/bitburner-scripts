@@ -1,5 +1,6 @@
 import type { NS } from "netscript";
-import { MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { registerAllocationOwnership } from "services/client/memory";
 
 import { walkNetworkBFS } from 'util/walk';
 
@@ -23,6 +24,15 @@ Example:
 > run ${ns.getScriptName()}
 `);
         return;
+    }
+
+    let allocationId = flags[ALLOC_ID];
+    if (allocationId !== -1) {
+        if (typeof allocationId !== 'number') {
+            ns.tprint('--allocation-id must be a number');
+            return;
+        }
+        await registerAllocationOwnership(ns, allocationId, "self");
     }
 
     const scripts = ["services/discover.js", "services/memory.js", "services/port.js", "batch/task_selector.js", "batch/monitor.js", "batch/harvest.js"];
