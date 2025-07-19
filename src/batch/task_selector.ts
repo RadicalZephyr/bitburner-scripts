@@ -458,7 +458,6 @@ class TaskSelector {
             {
                 threads: 1,
                 longRunning: true,
-                allocationFlag: "--allocation-id"
             },
             host,
             "--max-threads",
@@ -486,7 +485,6 @@ class TaskSelector {
             {
                 threads: 1,
                 longRunning: true,
-                allocationFlag: "--allocation-id"
             },
             host,
             "--max-threads",
@@ -515,7 +513,6 @@ class TaskSelector {
             {
                 threads: 1,
                 longRunning: true,
-                allocationFlag: "--allocation-id"
             },
             ...args,
         );

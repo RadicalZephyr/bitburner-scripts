@@ -1,8 +1,7 @@
 import type { AutocompleteData, NS, RunOptions, ScriptArg } from "netscript";
-import { MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { ALLOC_ID_ARG, MEM_TAG_FLAGS } from "services/client/memory_tag";
 
 export interface LaunchRunOptions extends RunOptions {
-    allocationFlag?: string;
     coreDependent?: boolean;
     longRunning?: boolean;
     dependencies?: string[];
@@ -21,7 +20,6 @@ export async function main(ns: NS) {
         ['threads', 1],
         ['itail', null],
         ['ram_override', null],
-        ['allocation-flag', null],
         ['core-dependent', false],
         ['long-running', false],
         ['help', false],
@@ -42,7 +40,6 @@ OPTIONS
   --help             Show this help message
   --threads          Number of threads to run
   --ram_override     Override static RAM calculation
-  --allocation-flag  Pass FLAG and allocation id to the spawned script
   --core-dependent   Prefer allocations from home when available
   --long-running     Prefer non-home servers when allocating
 `);
@@ -66,19 +63,6 @@ OPTIONS
         return;
     }
 
-    let allocationFlag = flags['allocation-flag'];
-    if (allocationFlag !== null) {
-        if (typeof allocationFlag !== 'string') {
-            ns.tprint('--allocation-flag must be a string');
-            return;
-        }
-        if (threads !== 1) {
-            ns.tprint('--allocation-flag can only be used when launching a single thread');
-            return;
-        }
-        allocationFlag = "--" + allocationFlag;
-    }
-
     let coreDependent = flags['core-dependent'];
     if (typeof coreDependent !== 'boolean') {
         ns.tprint('--core-dependent must be a boolean');
@@ -98,17 +82,10 @@ OPTIONS
         coreDependent: coreDependent,
         longRunning: longRunning,
     };
-    if (allocationFlag !== null) {
-        options.allocationFlag = allocationFlag as string;
-    }
 
     ns.tprint(`${script} ${JSON.stringify(options)} ${JSON.stringify(args)}`);
 
     let result = await launch(ns, script, options, ...args);
-
-    if (allocationFlag !== null) {
-        return;
-    }
 
     result.allocation.releaseAtExit(ns);
 
@@ -131,16 +108,13 @@ export async function launch(ns: NS, script: string, threadOrOptions?: number | 
     let client = new MemoryClient(ns);
 
     let totalThreads: number;
-    let allocationFlag: string | undefined;
     let coreDependent = false;
     let longRunning = false;
     let explicitDependencies = [];
     if (typeof threadOrOptions === 'number' || typeof threadOrOptions === 'undefined') {
         totalThreads = typeof threadOrOptions === 'number' ? threadOrOptions : 1;
-        allocationFlag = undefined;
     } else {
         totalThreads = threadOrOptions.threads ?? 1;
-        allocationFlag = threadOrOptions.allocationFlag;
         coreDependent = threadOrOptions.coreDependent ?? false;
         longRunning = threadOrOptions.longRunning ?? false;
         explicitDependencies = threadOrOptions.dependencies ?? [];
@@ -169,8 +143,7 @@ export async function launch(ns: NS, script: string, threadOrOptions?: number | 
         if (isNaN(threadsHere)) continue;
 
         ns.scp([...dependencies, ...explicitDependencies], hostname, "home");
-        let execArgs = allocationFlag ? [allocationFlag, allocation.allocationId, ...args] : args;
-        let pid = ns.exec(script, hostname, threadsHere, ...execArgs);
+        let pid = ns.exec(script, hostname, threadsHere, ...args, ALLOC_ID_ARG, allocation.allocationId);
         if (!pid) {
             ns.tprintf("failed to spawn %d threads of %s on %s", threadsHere, script, hostname);
         } else {

@@ -20,6 +20,7 @@ import { CONFIG } from "services/config";
 import { sendMessage } from "util/client";
 import { readAllFromPort } from "util/ports";
 import { collectDependencies } from "util/dependencies";
+import { ALLOC_ID_ARG } from "./memory_tag";
 
 
 /** Client helper for growable allocations. */
@@ -155,14 +156,12 @@ export class GrowableAllocation extends TransferableAllocation {
      */
     async launch(script: string, threads: number | LaunchRunOptions, ...args: ScriptArg[]): Promise<number[]> {
         let totalThreads: number;
-        let allocationFlag: string | undefined;
         let explicitDependencies: string[] = [];
         let baseRunOptions: RunOptions | undefined;
         if (typeof threads === "number") {
             totalThreads = threads;
         } else {
             totalThreads = threads.threads ?? 1;
-            allocationFlag = threads.allocationFlag;
             explicitDependencies = threads.dependencies ?? [];
             const runOpts: RunOptions = {};
             if (threads.ramOverride !== undefined) runOpts.ramOverride = threads.ramOverride;
@@ -181,7 +180,7 @@ export class GrowableAllocation extends TransferableAllocation {
             if (threadsHere <= 0) continue;
 
             this.ns.scp([...dependencies, ...explicitDependencies], chunk.hostname, "home");
-            const execArgs = allocationFlag ? [allocationFlag, this.allocationId, ...args] : args;
+            const execArgs = [...args, ALLOC_ID_ARG, this.allocationId];
 
             let retryCount = 0;
             while (true) {
