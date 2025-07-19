@@ -1,13 +1,13 @@
 import type { AutocompleteData, NS } from "netscript";
+import { ALLOC_ID, ALLOC_ID_ARG, MEM_TAG_FLAGS } from "services/client/memory_tag";
 
 import { TaskSelectorClient, Lifecycle } from "batch/client/task_selector";
 
 import { GrowableMemoryClient } from "services/client/growable_memory";
-import { registerAllocationOwnership } from "services/client/memory";
+import { parseAndRegisterAlloc } from "services/client/memory";
 
 import { CONFIG } from "batch/config";
 import { awaitRound, calculateRoundInfo, RoundInfo } from "batch/progress";
-import { TAG_ARG } from "services/client/memory_tag";
 
 export function autocomplete(data: AutocompleteData, _args: string[]): string[] {
     return data.servers;
@@ -17,9 +17,9 @@ export async function main(ns: NS) {
     ns.disableLog('ALL');
 
     const flags = ns.flags([
-        ['allocation-id', -1],
         ['max-threads', -1],
         ['help', false],
+        ...MEM_TAG_FLAGS
     ]);
 
     const rest = flags._ as string[];
@@ -39,13 +39,9 @@ OPTIONS
         return;
     }
 
-    let allocationId = flags['allocation-id'];
-    if (allocationId !== -1) {
-        if (typeof allocationId !== 'number') {
-            ns.tprint('--allocation-id must be a number');
-            return;
-        }
-        await registerAllocationOwnership(ns, allocationId, "self");
+    const allocationId = await parseAndRegisterAlloc(ns, flags);
+    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
+        return;
     }
 
     let maxThreads = flags['max-threads'];
@@ -118,7 +114,7 @@ OPTIONS
             { threads: spawnThreads, temporary: true },
             target,
             0,
-            TAG_ARG,
+            ALLOC_ID_ARG,
             allocation.allocationId
         );
 

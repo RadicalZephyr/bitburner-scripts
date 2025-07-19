@@ -1,4 +1,6 @@
 import type { NS } from "netscript";
+import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { parseAndRegisterAlloc } from "services/client/memory";
 
 import { CONFIG } from "hacknet/config";
 
@@ -10,6 +12,7 @@ export async function main(ns: NS) {
         ["return-time", DEFAULT_RETURN_TIME],
         ["spend", DEFAULT_SPEND],
         ["help", false],
+        ...MEM_TAG_FLAGS
     ]);
 
     if (
@@ -30,6 +33,11 @@ OPTIONS
   --spend        Portion of money to spend (default ${ns.formatPercent(DEFAULT_SPEND)})
   --help         Display this message
 `);
+        return;
+    }
+
+    const allocationId = await parseAndRegisterAlloc(ns, flags);
+    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
         return;
     }
 

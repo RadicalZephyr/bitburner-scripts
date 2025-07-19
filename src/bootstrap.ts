@@ -1,9 +1,11 @@
 import type { NS } from "netscript";
+import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 
 import { main as serviceBootstrap } from "services/bootstrap";
 import { main as batchBootstrap } from "batch/bootstrap";
 
 export async function main(ns: NS) {
+    const flags = ns.flags(MEM_TAG_FLAGS);
     await serviceBootstrap(ns);
     await batchBootstrap(ns);
 }

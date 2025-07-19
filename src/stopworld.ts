@@ -1,4 +1,6 @@
 import type { NS, AutocompleteData } from "netscript";
+import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { parseAndRegisterAlloc } from "services/client/memory";
 
 import { walkNetworkBFS } from 'util/walk';
 
@@ -9,6 +11,7 @@ export function autocomplete(data: AutocompleteData, _args: string[]): string[] 
 export async function main(ns: NS) {
     const flags = ns.flags([
         ['help', false],
+        ...MEM_TAG_FLAGS
     ]);
 
     if (flags.help) {
@@ -24,6 +27,11 @@ OPTIONS:
 Example:
   > run ${ns.getScriptName()} hack.js
 `);
+        return;
+    }
+
+    const allocationId = await parseAndRegisterAlloc(ns, flags);
+    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
         return;
     }
 

@@ -1,4 +1,5 @@
 import type { NS, UserInterfaceTheme } from "netscript";
+import { ALLOC_ID, ALLOC_ID_ARG, MEM_TAG_FLAGS } from "services/client/memory_tag";
 
 import { MONITOR_PORT, Lifecycle, Message as MonitorMessage } from "batch/client/monitor";
 
@@ -6,7 +7,7 @@ import { expectedValuePerRamSecond } from "batch/expected_value";
 
 import { DiscoveryClient } from "services/client/discover";
 import { TaskSelectorClient } from "batch/client/task_selector";
-import { registerAllocationOwnership } from "services/client/memory";
+import { parseAndRegisterAlloc } from "services/client/memory";
 
 import { extend } from "util/extend";
 import { readAllFromPort } from "util/ports";
@@ -17,9 +18,9 @@ declare const React: any;
 
 export async function main(ns: NS) {
     const flags = ns.flags([
-        ['allocation-id', -1],
         ['refreshrate', 200],
         ['help', false],
+        ...MEM_TAG_FLAGS
     ]);
 
     const rest = flags._ as string[];
@@ -39,13 +40,9 @@ Example:
         return;
     }
 
-    let allocationId = flags['allocation-id'];
-    if (allocationId !== -1) {
-        if (typeof allocationId !== 'number') {
-            ns.tprint('--allocation-id must be a number');
-            return;
-        }
-        await registerAllocationOwnership(ns, allocationId, "self");
+    const allocationId = await parseAndRegisterAlloc(ns, flags);
+    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
+        return;
     }
 
 
@@ -278,7 +275,7 @@ export function countThreadsByTarget(ns: NS, workers: string[], targets: string[
     for (const worker of workers) {
         for (const pi of ns.ps(worker)) {
 
-            let target = pi.args[0] === "--allocation-id" ? pi.args[2] : pi.args[0];
+            let target = pi.args[0] === ALLOC_ID_ARG ? pi.args[2] : pi.args[0];
 
             if (typeof target != 'string') continue;
 

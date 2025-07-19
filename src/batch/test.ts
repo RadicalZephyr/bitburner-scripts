@@ -1,5 +1,6 @@
 import type { NS } from "netscript";
-import { MemoryClient, TransferableAllocation } from "services/client/memory";
+import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { parseAndRegisterAlloc, MemoryClient, TransferableAllocation } from "services/client/memory";
 import { calculateWeakenThreads } from "batch/till";
 import { calculateSowThreads } from "batch/sow";
 
@@ -125,6 +126,7 @@ export async function main(ns: NS) {
         ["iterations", 5],
         ["max-threads", 1],
         ["help", false],
+        ...MEM_TAG_FLAGS
     ]);
     const rest = flags._ as string[];
     if (rest.length === 0 || flags.help) {
@@ -139,6 +141,11 @@ OPTIONS
   --iterations        Number of iterations to average (default 5)
   --max-threads       Max threads for tests (default 1)
 `);
+        return;
+    }
+
+    const allocationId = await parseAndRegisterAlloc(ns, flags);
+    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
         return;
     }
     const target = rest[0];

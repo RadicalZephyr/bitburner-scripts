@@ -1,9 +1,10 @@
 import type { AutocompleteData, NS } from "netscript";
+import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
 
 import { BatchLogistics, BatchPhase, calculatePhaseStartTimes, hostListFromChunks, spawnBatch } from "services/batch";
 
 import { GrowableMemoryClient } from "services/client/growable_memory";
-import { AllocationChunk, registerAllocationOwnership } from "services/client/memory";
+import { AllocationChunk, parseAndRegisterAlloc } from "services/client/memory";
 import { PortClient } from "services/client/port";
 
 import { TaskSelectorClient, Lifecycle } from "batch/client/task_selector";
@@ -25,9 +26,9 @@ export async function main(ns: NS) {
     ns.disableLog('ALL');
 
     const flags = ns.flags([
-        ['allocation-id', -1],
         ['max-ram', -1],
         ['help', false],
+        ...MEM_TAG_FLAGS
     ]);
 
     const rest = flags._ as string[];
@@ -50,13 +51,9 @@ OPTIONS
         return;
     }
 
-    let allocationId = flags['allocation-id'];
-    if (allocationId !== -1) {
-        if (typeof allocationId !== 'number') {
-            ns.tprint('--allocation-id must be a number');
-            return;
-        }
-        await registerAllocationOwnership(ns, allocationId, "self");
+    const allocationId = await parseAndRegisterAlloc(ns, flags);
+    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
+        return;
     }
 
     let maxRam = flags['max-ram'];

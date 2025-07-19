@@ -1,4 +1,5 @@
 import type { NS, Server, UserInterfaceTheme } from "netscript";
+import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 
 import { walkNetworkBFS } from "util/walk";
 
@@ -13,6 +14,7 @@ const FACTION_SERVERS = [
 ];
 
 export async function main(ns: NS) {
+    const flags = ns.flags(MEM_TAG_FLAGS);
     ns.disableLog("ALL");
     ns.clearLog();
 

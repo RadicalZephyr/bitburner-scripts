@@ -1,5 +1,7 @@
 import type { NS } from "netscript";
 
+import { ALLOC_ID, ALLOC_ID_ARG } from "services/client/memory_tag";
+
 import {
     Client,
     Message as ClientMessage,
@@ -406,6 +408,37 @@ export async function registerAllocationOwnership(
     let memPort = ns.getPortHandle(MEMORY_PORT);
 
     await sendMessage(ns, memPort, MessageType.Claim, claim);
+}
+
+/**
+ * Validate the `ALLOC_ID` flag and claim the allocation if valid.
+ *
+ * All scripts optionally take an `--allocId` argument to
+ * indicate that memory has been preallocated. This helper checks the
+ * provided flags object, prints an error when the flag is not a
+ * number, and registers ownership of the allocation when valid.
+ *
+ * @param ns    - The Netscript context
+ * @param flags - Flags returned from `ns.flags`
+ * @param name  - Optional name to tag the allocation release handler
+ * @returns     The allocation ID if ownership was registered, otherwise `null`.
+ */
+export async function parseAndRegisterAlloc(
+    ns: NS,
+    flags: Record<string, unknown>,
+    name = "self",
+): Promise<number | null> {
+    const allocId = flags[ALLOC_ID];
+    if (allocId === undefined || allocId === -1) {
+        return null;
+    }
+    if (typeof allocId !== "number") {
+        ns.tprint(`${ALLOC_ID_ARG} must be a number`);
+        return null;
+    }
+
+    await registerAllocationOwnership(ns, allocId, name);
+    return allocId;
 }
 
 export class TransferableAllocation {

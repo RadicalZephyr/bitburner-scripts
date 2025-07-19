@@ -1,5 +1,7 @@
-const TAG_NAME = "allocId";
+export const ALLOC_ID = "allocId";
 
-export const TAG_ARG = `--${TAG_NAME}`;
+export const ALLOC_ID_ARG = `--${ALLOC_ID}`;
 
-export const MEM_TAG_FLAGS = [[TAG_NAME, -1]] satisfies [string, string | number | boolean | string[]][];
+export const MEM_TAG_FLAGS = [
+    [ALLOC_ID, -1]
+] satisfies [string, string | number | boolean | string[]][];

@@ -1,7 +1,7 @@
 import type { NS, ProcessInfo } from "netscript";
 
 import { HostAllocation, AllocationResult, MemorySnapshot, WorkerSnapshot, AllocationSnapshot, AllocationClaim, AllocationRegister } from "services/client/memory";
-import { TAG_ARG } from "services/client/memory_tag";
+import { ALLOC_ID_ARG } from "services/client/memory_tag";
 
 /**
  * Convert a floating point RAM value to a fixed point bigint
@@ -29,7 +29,7 @@ export interface ClaimInfo {
 }
 
 function hasAllocTag(proc: ProcessInfo): boolean {
-    const idx = proc.args.indexOf(TAG_ARG);
+    const idx = proc.args.indexOf(ALLOC_ID_ARG);
     return idx !== -1 && typeof proc.args[idx + 1] === "number";
 }
 

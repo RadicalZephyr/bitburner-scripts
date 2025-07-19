@@ -1,8 +1,10 @@
 import type { NS } from "netscript";
+import { ALLOC_ID_ARG, MEM_TAG_FLAGS } from "services/client/memory_tag";
 
 import { MemoryClient } from "services/client/memory";
 
 export async function main(ns: NS) {
+    const flags = ns.flags(MEM_TAG_FLAGS);
     const client = new MemoryClient(ns);
 
     const allocation = await client.requestTransferableAllocation(8, 300);
@@ -36,7 +38,7 @@ export async function main(ns: NS) {
             "/batch/client/tests/test_app.js",
             ns.getHostname(),
             1,
-            "--allocation-id",
+            ALLOC_ID_ARG,
             next.allocationId,
             delay,
         );

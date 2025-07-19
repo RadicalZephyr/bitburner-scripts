@@ -3,7 +3,7 @@ import type { NS } from "netscript";
 import { CONFIG } from "batch/config";
 
 import { AllocationChunk } from "services/client/memory";
-import { TAG_ARG } from "services/client/memory_tag";
+import { ALLOC_ID_ARG } from "services/client/memory_tag";
 
 import { collectDependencies } from "util/dependencies";
 
@@ -116,7 +116,7 @@ export async function spawnBatch(ns: NS, host: string | null, target: string, ph
                 return pids;
             }
 
-            const pid = ns.exec(script, host, { threads: phase.threads, temporary: true }, target, phase.start, lastArg, TAG_ARG, allocId);
+            const pid = ns.exec(script, host, { threads: phase.threads, temporary: true }, target, phase.start, lastArg, ALLOC_ID_ARG, allocId);
             if (pid === 0) {
                 retryCount += 1;
                 ns.print(`WARN: failed to exec ${script} on ${host}, trying again with fewer threads`);

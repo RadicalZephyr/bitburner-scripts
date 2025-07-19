@@ -1,4 +1,5 @@
 import type { NetscriptPort, NS } from "netscript";
+import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
 
 import { TASK_SELECTOR_PORT, TASK_SELECTOR_RESPONSE_PORT, Message, MessageType, Heartbeat, Lifecycle } from "batch/client/task_selector";
 import { MonitorClient, Lifecycle as MonitorLifecycle } from "batch/client/monitor";
@@ -11,7 +12,7 @@ import { calculateSowThreads } from "batch/sow";
 import { calculateBatchLogistics } from "batch/harvest";
 
 import { DiscoveryClient } from "services/client/discover";
-import { MemoryClient, registerAllocationOwnership } from "services/client/memory";
+import { MemoryClient, parseAndRegisterAlloc } from "services/client/memory";
 import { launch } from "services/launch";
 
 import { readAllFromPort } from "util/ports";
@@ -39,16 +40,12 @@ function makeCompareLevel(ns: NS): (ta: string, tb: string) => number {
 
 export async function main(ns: NS) {
     const flags = ns.flags([
-        ['allocation-id', -1],
+        ...MEM_TAG_FLAGS
     ]);
 
-    let allocationId = flags['allocation-id'];
-    if (allocationId !== -1) {
-        if (typeof allocationId !== 'number') {
-            ns.tprint('--allocation-id must be a number');
-            return;
-        }
-        await registerAllocationOwnership(ns, allocationId, "self");
+    const allocationId = await parseAndRegisterAlloc(ns, flags);
+    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
+        return;
     }
 
     ns.disableLog("ALL");
@@ -457,7 +454,6 @@ class TaskSelector {
             {
                 threads: 1,
                 longRunning: true,
-                allocationFlag: "--allocation-id"
             },
             host,
             "--max-threads",
@@ -485,7 +481,6 @@ class TaskSelector {
             {
                 threads: 1,
                 longRunning: true,
-                allocationFlag: "--allocation-id"
             },
             host,
             "--max-threads",
@@ -514,7 +509,6 @@ class TaskSelector {
             {
                 threads: 1,
                 longRunning: true,
-                allocationFlag: "--allocation-id"
             },
             ...args,
         );

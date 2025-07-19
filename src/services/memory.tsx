@@ -1,4 +1,6 @@
 import type { NS, NetscriptPort, UserInterfaceTheme } from "netscript";
+import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { parseAndRegisterAlloc } from "services/client/memory";
 
 import {
     AllocationClaim,
@@ -35,6 +37,7 @@ export async function main(ns: NS) {
     const flags = ns.flags([
         ['refresh-rate', 1000],
         ['help', false],
+        ...MEM_TAG_FLAGS
     ]);
 
     let refreshRate = flags['refresh-rate'];
@@ -55,6 +58,11 @@ Example:
 
 > run ${ns.getScriptName()}
 `);
+        return;
+    }
+
+    const allocationId = await parseAndRegisterAlloc(ns, flags);
+    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
         return;
     }
 

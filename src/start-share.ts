@@ -1,4 +1,6 @@
 import type { NS } from "netscript";
+import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { parseAndRegisterAlloc } from "services/client/memory";
 
 import { walkNetworkBFS } from 'util/walk';
 
@@ -6,7 +8,8 @@ export async function main(ns: NS) {
     const options = ns.flags([
         ['share-percent', 0.75],
         ['max-ram', 32],
-        ['help', false]
+        ['help', false],
+        ...MEM_TAG_FLAGS
     ]);
 
     if (options.help
@@ -20,6 +23,11 @@ OPTIONS
   --max-ram RAM     Only run share on servers with RAM less than or equal to RAM
   --share-percent P Specify the percentage of usable hosts to share [0-1]
 `);
+        return;
+    }
+
+    const allocationId = await parseAndRegisterAlloc(ns, options);
+    if (options[ALLOC_ID] !== -1 && allocationId === null) {
         return;
     }
 

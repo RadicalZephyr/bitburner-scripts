@@ -1,4 +1,6 @@
 import type { GangGenInfo, GangMemberAscension, GangMemberInfo, NS } from "netscript";
+import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { parseAndRegisterAlloc } from "services/client/memory";
 
 import { CONFIG } from "gang/config";
 import { NAMES } from "gang/names";
@@ -10,6 +12,7 @@ const MAX_GANG_MEMBERS = 12;
 export async function main(ns: NS) {
     const flags = ns.flags([
         ["help", false],
+        ...MEM_TAG_FLAGS
     ]);
 
     if (typeof flags.help !== 'boolean' || flags.help) {
@@ -26,6 +29,11 @@ CONFIG VALUES
   GANG_combatTrainVelocity    The threshold for when we're done combat training
   GANG_charismaTrainVelocity  The threshold for when we're done charisma training
 `);
+        return;
+    }
+
+    const allocationId = await parseAndRegisterAlloc(ns, flags);
+    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
         return;
     }
 

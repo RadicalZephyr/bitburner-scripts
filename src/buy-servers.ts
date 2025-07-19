@@ -1,4 +1,6 @@
 import type { NS } from "netscript";
+import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { parseAndRegisterAlloc } from "services/client/memory";
 
 import { MemoryClient } from "services/client/memory";
 
@@ -13,7 +15,8 @@ export async function main(ns: NS) {
         ['dry-run', false],
         ['no-rename', false],
         ['wait', false],
-        ['help', false]
+        ['help', false],
+        ...MEM_TAG_FLAGS
     ]);
 
     if (
@@ -37,6 +40,11 @@ OPTIONS
   --wait        Wait for money to become available to buy servers
   --help        Show this help message
 `);
+        return;
+    }
+
+    const allocationId = await parseAndRegisterAlloc(ns, options);
+    if (options[ALLOC_ID] !== -1 && allocationId === null) {
         return;
     }
 

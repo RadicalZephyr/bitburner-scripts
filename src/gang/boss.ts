@@ -1,4 +1,6 @@
 import type { GangMemberInfo, MoneySource, NS } from "netscript";
+import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { parseAndRegisterAlloc } from "services/client/memory";
 
 import { AscensionReviewBoard } from "gang/ascension-review";
 import { purchaseBestGear } from "gang/equipment-manager";
@@ -133,6 +135,7 @@ const MAX_MEMBERS = 12;
 export async function main(ns: NS) {
     const flags = ns.flags([
         ["help", false],
+        ...MEM_TAG_FLAGS
     ]);
 
     if (typeof flags.help !== "boolean" || flags.help) {
@@ -145,6 +148,11 @@ Example:
 
 OPTIONS
   --help  Show this help message`);
+        return;
+    }
+
+    const allocationId = await parseAndRegisterAlloc(ns, flags);
+    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
         return;
     }
 

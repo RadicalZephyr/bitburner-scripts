@@ -1,4 +1,5 @@
 import type { NS } from "netscript";
+import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 
 import {
     AllocationClaim,
@@ -13,6 +14,7 @@ import {
 import { readAllFromPort } from "util/ports";
 
 export async function main(ns: NS) {
+    const flags = ns.flags(MEM_TAG_FLAGS);
     let memPort = ns.getPortHandle(MEMORY_PORT);
     let memResponsePort = ns.getPortHandle(MEMORY_RESPONSE_PORT);
 

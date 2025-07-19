@@ -1,4 +1,5 @@
 import type { NS } from "netscript";
+import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 
 import { CONFIG } from "services/config";
 
@@ -13,6 +14,7 @@ const REMOTE_URL = "https://github.com/RadicalZephyr/bitburner-scripts/raw/refs/
 const BOOTSTRAP_URL = "https://github.com/RadicalZephyr/bitburner-scripts/raw/refs/heads/latest-files/bootstrap.js";
 
 export async function main(ns: NS) {
+    const flags = ns.flags(MEM_TAG_FLAGS);
     ns.disableLog("sleep");
 
     const host = ns.self().server;
