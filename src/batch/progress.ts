@@ -56,7 +56,6 @@ export async function awaitRound(
 ): Promise<number> {
     for (const pid of pids) {
         while (ns.isRunning(pid)) {
-            ns.clearLog();
             printRoundProgress(ns, info);
             if (Date.now() >= nextHeartbeat) {
                 const result = await sendHeartbeat();
@@ -79,6 +78,7 @@ export async function awaitRound(
  */
 export function printRoundProgress(ns: NS, info: RoundInfo) {
     const elapsed = ns.self().onlineRunningTime * 1000;
+    ns.clearLog();
     ns.print(`
 Round ${info.round} of ${info.totalRounds}
 Elapsed time:    ${ns.tFormat(elapsed)}
