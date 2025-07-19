@@ -1,7 +1,6 @@
 import type { NS } from "netscript";
-import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 
-import { MemoryClient } from "services/client/memory";
+import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 
 import { collectDependencies } from "util/dependencies";
 
