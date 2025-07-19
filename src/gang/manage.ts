@@ -2,22 +2,10 @@ import type { GangMemberAscension, GangMemberInfo, MoneySource, NS } from "netsc
 import { CONFIG } from "gang/config";
 import { purchaseBestGear } from "gang/equipment-manager";
 import { TaskAnalyzer } from "gang/task-analyzer";
+import { NAMES } from "gang/names";
+
 import { StatTracker } from "util/stat-tracker";
 
-const NAMES = [
-    "Freya",
-    "Frigg",
-    "Gefion",
-    "Idun",
-    "Sif",
-    "Sigyn",
-    "Eir",
-    "Fulla",
-    "Gna",
-    "Hlin",
-    "Ilmrxs",
-    "Hel",
-];
 
 export async function main(ns: NS) {
     const flags = ns.flags([

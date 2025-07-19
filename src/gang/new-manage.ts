@@ -1,30 +1,11 @@
 import type { GangGenInfo, GangMemberAscension, GangMemberInfo, NS } from "netscript";
 
 import { CONFIG } from "gang/config";
+import { NAMES } from "gang/names";
 
 import { Condition, PickByType, StatTracker, Threshold } from "util/stat-tracker";
 
 const MAX_GANG_MEMBERS = 12;
-
-const NAMES = [
-    "Hamma",
-    "Ruwen",
-
-    "Sift",
-    "Lylan",
-
-    "Madda",
-    "Padda",
-
-    "Overlord",
-    "Uruziel",
-
-    "Kysandra",
-    "Tremain",
-
-    "Eiru",
-    "Miranda",
-] as const;
 
 export async function main(ns: NS) {
     const flags = ns.flags([

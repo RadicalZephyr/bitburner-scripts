@@ -5,8 +5,7 @@ import { purchaseBestGear } from "gang/equipment-manager";
 import { TaskAnalyzer } from "gang/task-analyzer";
 import { distributeTasks } from "gang/task-balancer";
 import { assignTrainingTasks } from "gang/training-focus-manager";
-
-import { CONFIG } from "gang/config";
+import { NAMES } from "gang/names";
 
 import { StatTracker } from "util/stat-tracker";
 
@@ -125,53 +124,6 @@ class Member {
 }
 
 const MAX_MEMBERS = 12;
-
-const NAMES = [
-    "Hamma",
-    "Ruwen",
-
-    "Sift",
-    "Lylan",
-
-    "Rami",
-    "Xavier",
-
-    "Overlord",
-    "Uruziel",
-
-    "Fractal",
-    "Lir",
-
-    "Wip",
-    "Qip",
-
-    "Blizz",
-    "Big D",
-
-    "Kysandra",
-    "Tremine",
-
-    "Madda",
-    "Padda",
-
-    "Mist",
-    "Thorn",
-
-    "Dusk",
-    "Tarot",
-
-    "Nymthus",
-    "Echo",
-
-    "Chip",
-    "Stump",
-
-    "Ash",
-    "Pine",
-
-    "Eiru",
-    "Miranda",
-] as const;
 
 /**
  * Recruit and train gang members up to the maximum allowed.
