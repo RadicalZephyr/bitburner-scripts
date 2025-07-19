@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v2.1.0
 
 - Services bootstrap now launches the updater on `n00dles` to avoid running too many scripts on `foodnstuff`.
 - Added initial corporation management scripts and configuration support.
