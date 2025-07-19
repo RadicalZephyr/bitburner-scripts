@@ -33,7 +33,6 @@ export async function main(ns: NS) {
 
         if (!ns.scp(VERSION_FILE, host, "home")) {
             ns.print(`WARN: failed to copy ${VERSION_FILE} from home`);
-            ns.rm(tempFile, host);
             continue;
         }
 
@@ -43,8 +42,6 @@ export async function main(ns: NS) {
             remote = JSON.parse(ns.read(tempFile));
         } catch (err) {
             ns.print(`ERROR: failed to parse ${tempFile}: ${String(err)}`);
-            ns.rm(tempFile, host);
-            ns.rm(VERSION_FILE, host);
             continue;
         }
 
@@ -52,13 +49,8 @@ export async function main(ns: NS) {
             local = JSON.parse(ns.read(VERSION_FILE));
         } catch (err) {
             ns.print(`ERROR: failed to parse ${VERSION_FILE}: ${String(err)}`);
-            ns.rm(tempFile, host);
-            ns.rm(VERSION_FILE, host);
             continue;
         }
-
-        ns.rm(tempFile, host);
-        ns.rm(VERSION_FILE, host);
 
         if (remote.epoch > local.epoch && remote.sha !== local.sha) {
             const prompt =
