@@ -181,8 +181,7 @@ export class MemoryClient extends Client<MessageType, Payload, ResponsePayload> 
      */
     async newWorker(hostname: string) {
         this.ns.print(
-            `INFO: registering worker ${hostname} with ` +
-            `${this.ns.formatRam(this.ns.getServerMaxRam(hostname))}`
+            `INFO: registering worker ${hostname}`
         );
         await this.sendMessage(MessageType.Worker, hostname);
     }
