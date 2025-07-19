@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Services bootstrap now launches the updater on `n00dles` to avoid running too many scripts on `foodnstuff`.
+- Added initial corporation management scripts and configuration support.
+- Added a corporation summary and related documentation.
 ## v2.0.0
 
 Built for Bitburner 2.8.1
