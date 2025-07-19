@@ -1,5 +1,5 @@
 import type { NS } from "netscript";
-import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { ALLOC_ID, MEM_TAG_FLAGS, TAG_ARG } from "services/client/memory_tag";
 import { registerAllocationOwnership } from "services/client/memory";
 
 import { CONFIG } from "hacknet/config";
@@ -31,7 +31,7 @@ Buy hacknet nodes/servers and upgrades that can pay for themselves within a time
 OPTIONS
   --return-time  Desired payback time window (default ${DEFAULT_RETURN_TIME} hours)
   --spend        Portion of money to spend (default ${ns.formatPercent(DEFAULT_SPEND)})
-        --help         Display this message
+  --help         Display this message
 `);
         return;
     }
@@ -39,7 +39,7 @@ OPTIONS
     let allocationId = flags[ALLOC_ID];
     if (allocationId !== -1) {
         if (typeof allocationId !== 'number') {
-            ns.tprint('--allocation-id must be a number');
+            ns.tprint(`${TAG_ARG} must be a number`);
             return;
         }
         await registerAllocationOwnership(ns, allocationId, "self");

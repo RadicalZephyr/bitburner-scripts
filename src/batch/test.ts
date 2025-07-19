@@ -1,5 +1,5 @@
 import type { NS } from "netscript";
-import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { ALLOC_ID, MEM_TAG_FLAGS, TAG_ARG } from "services/client/memory_tag";
 import { registerAllocationOwnership } from "services/client/memory";
 import { MemoryClient, TransferableAllocation } from "services/client/memory";
 import { calculateWeakenThreads } from "batch/till";
@@ -148,10 +148,11 @@ OPTIONS
     let allocationId = flags[ALLOC_ID];
     if (allocationId !== -1) {
         if (typeof allocationId !== 'number') {
-            ns.tprint('--allocation-id must be a number');
+            ns.tprint(`${TAG_ARG} must be a number`);
             return;
         }
         await registerAllocationOwnership(ns, allocationId, "self");
+
     }
     const target = rest[0];
     if (typeof target !== "string" || !ns.serverExists(target)) {

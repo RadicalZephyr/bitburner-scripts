@@ -1,5 +1,5 @@
 import type { NS, AutocompleteData } from "netscript";
-import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { ALLOC_ID, MEM_TAG_FLAGS, TAG_ARG } from "services/client/memory_tag";
 import { registerAllocationOwnership } from "services/client/memory";
 
 export function autocomplete(data: AutocompleteData, _args: string[]): string[] {
@@ -22,11 +22,12 @@ export async function main(ns: NS) {
     let allocationId = args[ALLOC_ID];
     if (allocationId !== -1) {
         if (typeof allocationId !== 'number') {
-            ns.tprint('--allocation-id must be a number');
+            ns.tprint(`${TAG_ARG} must be a number`);
             return;
         }
         await registerAllocationOwnership(ns, allocationId, "self");
     }
+
     const server = ns.args[0];
     if (!(typeof server === "string" && ns.serverExists(server))) {
         ns.tprint(`${server} is not a valid hostname.`);

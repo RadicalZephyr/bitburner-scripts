@@ -1,5 +1,5 @@
 import type { AutocompleteData, NS } from "netscript";
-import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { ALLOC_ID, MEM_TAG_FLAGS, TAG_ARG } from "services/client/memory_tag";
 
 import { TaskSelectorClient, Lifecycle } from "batch/client/task_selector";
 
@@ -8,7 +8,6 @@ import { registerAllocationOwnership } from "services/client/memory";
 
 import { CONFIG } from "batch/config";
 import { awaitRound, calculateRoundInfo, RoundInfo } from "batch/progress";
-import { TAG_ARG } from "services/client/memory_tag";
 
 export function autocomplete(data: AutocompleteData, _args: string[]): string[] {
     return data.servers;
@@ -43,7 +42,7 @@ OPTIONS
     let allocationId = flags[ALLOC_ID];
     if (allocationId !== -1) {
         if (typeof allocationId !== 'number') {
-            ns.tprint('--allocation-id must be a number');
+            ns.tprint(`${TAG_ARG} must be a number`);
             return;
         }
         await registerAllocationOwnership(ns, allocationId, "self");
