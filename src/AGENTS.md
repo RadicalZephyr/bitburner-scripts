@@ -1,25 +1,23 @@
-# Netscript API Object Usage and Costs
+# Minimizing Netscript RAM Usage
 
-Every method in the Netscript API has a RAM cost specified in GB in
-the JSDoc `@remarks` tagged like this: `RAM cost: 1 GB`.
+Each Netscript function has a RAM cost noted in its JSDoc comments.
+Bitburner decides how much memory a script needs by scanning the text
+of that script and any modules it imports. The scanner simply looks for
+API function names. If the name appears anywhere—even in comments or in
+unused functions—its RAM cost is added to the total.
 
-The Bitburner runtime uses a static RAM check that analyzes script
-files in a simplistic way to determine how much RAM a script requires
-to run. The algorithm for the static RAM checker is basically a simple
-search in the script file for instances of `NS` function names.
+This means that importing a module brings in the cost of **every** NS
+function used in that module, regardless of which parts of it you
+actually call. Mentioning an API function in a comment can also inflate
+the cost.
 
-This check is extremely simple and prone to false positives, for
-instance mentioning the function name in a comment will cause the
-static RAM checker to assume the script is using that function and
-will increase the script's RAM cost accordingly. This same simplistic
-RAM check is done recursively on all files a script imports with no
-regard for what NS API elements are used in the specific functions or
-classes a script has imported.
+To keep RAM usage low:
 
-This means that if a library module contains two functions using
-different NS APIs and we import and use only one function, our scripts
-RAM usage will be still be increased by the static RAM checker for all
-the NS APIs used in the function we didn't use.
+1. Avoid referencing NS APIs you do not use.
+2. Keep modules small and focused so that imported files contain only
+   the APIs you need.
+3. Be careful when documenting code; quoting NS function names may raise
+   the calculated cost.
 
-Because of this, we prefer to use small focused modules that use as
-minimal a set of netscript APIs as possible.
+Following these guidelines will prevent unused APIs from counting
+against your script's RAM budget.
