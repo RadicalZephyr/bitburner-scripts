@@ -14,8 +14,9 @@ export async function main(ns: NS) {
     await ns.sleep(500);
 
     await startMemory(ns, host);
-    await startUpdater(ns, host);
     await startPort(ns, host);
+
+    await startUpdater(ns, "n00dles");
 }
 
 async function startMemory(ns: NS, host: string) {
@@ -73,7 +74,7 @@ function manualLaunch(ns: NS, script: string, hostname: string) {
         return;
     }
 
-    let pid = ns.run(script);
+    let pid = ns.exec(script, hostname);
     if (pid === 0) {
         let error = `failed to launch ${script} on ${hostname}`;
         ns.toast(error, "error");
