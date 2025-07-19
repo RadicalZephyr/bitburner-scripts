@@ -16,6 +16,7 @@
 - Imports should never include the file extension and should be full
   paths specified relative to the `src/` directory. So
   `src/batch/sow.ts` would be referenced as `batch/sow`.
+- Don't remove comments from the code.
 
 ## Terminology used to classify hosts
 
@@ -120,3 +121,15 @@ Prefix every commit message with the name of the folder in source in
 square brackets like "[batch]". If a commit touches files in multiple
 directories use the folder name that the commit is most conceptually
 linked to.
+
+## Pull Request Review Instructions
+
+- Provide a comprehensive critique of the code, focusing on code clarity, quality, and readability.
+- Identify the purpose behind the changes the author made.
+- Discuss the pros and cons of the approach the author took.
+- Look for opportunities to refactor duplicated or very similar code.
+- Look for new code that mixes a lot of different responsibilities in an overly complex way.
+- Suggest breaking up long functions into discrete conceptual units.
+- Check conformance to repository contribution guidelines.
+- Look for bugs, audit for any dead code.
+- Give feedback on whether the code change is conceptually complete.
