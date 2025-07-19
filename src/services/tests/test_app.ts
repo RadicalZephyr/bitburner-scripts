@@ -1,7 +1,7 @@
 import type { NS } from "netscript";
 import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
 
-import { registerAllocationOwnership } from "services/client/memory";
+import { parseAndRegisterAlloc } from "services/client/memory";
 
 export async function main(ns: NS) {
     const flags = ns.flags([
@@ -21,8 +21,10 @@ export async function main(ns: NS) {
         return;
     }
 
-    const allocationId = flags[ALLOC_ID] as number;
-    await registerAllocationOwnership(ns, allocationId);
+    const allocationId = await parseAndRegisterAlloc(ns, flags);
+    if (allocationId === null) {
+        return;
+    }
 
     const sleepTime = rest[0] as number;
     await ns.sleep(sleepTime);

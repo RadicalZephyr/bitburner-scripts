@@ -10,7 +10,7 @@ import {
     Message,
     MessageType,
 } from "stock/client/tracker";
-import { registerAllocationOwnership } from "services/client/memory";
+import { parseAndRegisterAlloc } from "services/client/memory";
 import { readAllFromPort } from "util/ports";
 
 export async function main(ns: NS) {
@@ -18,9 +18,9 @@ export async function main(ns: NS) {
         ...MEM_TAG_FLAGS
     ]);
 
-    const allocationId = flags[ALLOC_ID];
-    if (typeof allocationId === "number" && allocationId !== -1) {
-        await registerAllocationOwnership(ns, allocationId, "tracker");
+    const allocationId = await parseAndRegisterAlloc(ns, flags, "tracker");
+    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
+        return;
     }
 
     ns.disableLog("ALL");

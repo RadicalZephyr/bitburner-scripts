@@ -1,6 +1,6 @@
 import type { NS, AutocompleteData } from "netscript";
 import { ALLOC_ID, MEM_TAG_FLAGS, TAG_ARG } from "services/client/memory_tag";
-import { registerAllocationOwnership } from "services/client/memory";
+import { parseAndRegisterAlloc } from "services/client/memory";
 
 import { CONFIG as BatchConfig } from 'batch/config';
 import { CONFIG as GangConfig } from 'gang/config';
@@ -37,13 +37,9 @@ Example:
         return;
     }
 
-    let allocationId = flags[ALLOC_ID];
-    if (allocationId !== -1) {
-        if (typeof allocationId !== 'number') {
-            ns.tprint(`${TAG_ARG} must be a number`);
-            return;
-        }
-        await registerAllocationOwnership(ns, allocationId, "self");
+    const allocationId = await parseAndRegisterAlloc(ns, flags);
+    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
+        return;
     }
 
     let key = rest[0];

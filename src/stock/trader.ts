@@ -1,7 +1,7 @@
 import type { NS } from "netscript";
 import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
 
-import { registerAllocationOwnership } from "services/client/memory";
+import { parseAndRegisterAlloc } from "services/client/memory";
 import { TrackerClient } from "stock/client/tracker";
 import { CONFIG } from "stock/config";
 import { Indicators } from "stock/indicators";
@@ -12,9 +12,9 @@ export async function main(ns: NS) {
         ...MEM_TAG_FLAGS
     ]);
 
-    const allocationId = flags[ALLOC_ID];
-    if (typeof allocationId === "number" && allocationId !== -1) {
-        await registerAllocationOwnership(ns, allocationId, "trader");
+    const allocationId = await parseAndRegisterAlloc(ns, flags, "trader");
+    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
+        return;
     }
 
     const client = new TrackerClient(ns);

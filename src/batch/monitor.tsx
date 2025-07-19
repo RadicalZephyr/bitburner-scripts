@@ -7,7 +7,7 @@ import { expectedValuePerRamSecond } from "batch/expected_value";
 
 import { DiscoveryClient } from "services/client/discover";
 import { TaskSelectorClient } from "batch/client/task_selector";
-import { registerAllocationOwnership } from "services/client/memory";
+import { parseAndRegisterAlloc } from "services/client/memory";
 
 import { extend } from "util/extend";
 import { readAllFromPort } from "util/ports";
@@ -40,13 +40,9 @@ Example:
         return;
     }
 
-    let allocationId = flags[ALLOC_ID];
-    if (allocationId !== -1) {
-        if (typeof allocationId !== 'number') {
-            ns.tprint(`${TAG_ARG} must be a number`);
-            return;
-        }
-        await registerAllocationOwnership(ns, allocationId, "self");
+    const allocationId = await parseAndRegisterAlloc(ns, flags);
+    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
+        return;
     }
 
 

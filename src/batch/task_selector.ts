@@ -12,7 +12,7 @@ import { calculateSowThreads } from "batch/sow";
 import { calculateBatchLogistics } from "batch/harvest";
 
 import { DiscoveryClient } from "services/client/discover";
-import { MemoryClient, registerAllocationOwnership } from "services/client/memory";
+import { MemoryClient, parseAndRegisterAlloc } from "services/client/memory";
 import { launch } from "services/launch";
 
 import { readAllFromPort } from "util/ports";
@@ -43,13 +43,9 @@ export async function main(ns: NS) {
         ...MEM_TAG_FLAGS
     ]);
 
-    let allocationId = flags[ALLOC_ID];
-    if (allocationId !== -1) {
-        if (typeof allocationId !== 'number') {
-            ns.tprint(`${TAG_ARG} must be a number`);
-            return;
-        }
-        await registerAllocationOwnership(ns, allocationId, "self");
+    const allocationId = await parseAndRegisterAlloc(ns, flags);
+    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
+        return;
     }
 
     ns.disableLog("ALL");

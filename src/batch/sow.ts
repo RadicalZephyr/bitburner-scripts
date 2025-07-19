@@ -4,7 +4,7 @@ import { ALLOC_ID, MEM_TAG_FLAGS, TAG_ARG } from "services/client/memory_tag";
 import { BatchLogistics, BatchPhase, calculatePhaseStartTimes, hostListFromChunks, spawnBatch } from "services/batch";
 
 import {
-    registerAllocationOwnership,
+    parseAndRegisterAlloc,
     AllocationChunk,
 } from "services/client/memory";
 import { GrowableMemoryClient } from "services/client/growable_memory";
@@ -46,13 +46,9 @@ OPTIONS
         return;
     }
 
-    let allocationId = flags[ALLOC_ID];
-    if (allocationId !== -1) {
-        if (typeof allocationId !== 'number') {
-            ns.tprint(`${TAG_ARG} must be a number`);
-            return;
-        }
-        await registerAllocationOwnership(ns, allocationId, "self");
+    const allocationId = await parseAndRegisterAlloc(ns, flags);
+    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
+        return;
     }
 
     let maxThreads = flags['max-threads'];

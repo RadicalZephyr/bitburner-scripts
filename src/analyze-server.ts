@@ -1,6 +1,6 @@
 import type { NS, AutocompleteData } from "netscript";
 import { ALLOC_ID, MEM_TAG_FLAGS, TAG_ARG } from "services/client/memory_tag";
-import { registerAllocationOwnership } from "services/client/memory";
+import { parseAndRegisterAlloc } from "services/client/memory";
 
 export function autocomplete(data: AutocompleteData, _args: string[]): string[] {
     return data.servers;
@@ -19,13 +19,9 @@ export async function main(ns: NS) {
         return;
     }
 
-    let allocationId = args[ALLOC_ID];
-    if (allocationId !== -1) {
-        if (typeof allocationId !== 'number') {
-            ns.tprint(`${TAG_ARG} must be a number`);
-            return;
-        }
-        await registerAllocationOwnership(ns, allocationId, "self");
+    const allocationId = await parseAndRegisterAlloc(ns, args);
+    if (args[ALLOC_ID] !== -1 && allocationId === null) {
+        return;
     }
 
     const server = ns.args[0];
