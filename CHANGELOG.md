@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## v2.0.0
+
+Built for Bitburner 2.8.1
 
 - Release workflow now generates a `VERSION.json` and uses `softprops/action-gh-release`.
 - Added automatic updater service (`services/updater.ts`) with instructions in `README.md`.
