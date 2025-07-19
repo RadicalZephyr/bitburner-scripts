@@ -45,7 +45,7 @@ async function shareHosts(ns: NS, hosts: string[], shareScript: string, shareAmo
     }
 
     for (const host of hosts) {
-        if (maxRam <= 0 || maxRam > ns.getServerMaxRam(host))
+        if (maxRam < ns.getServerMaxRam(host))
             continue;
         let threads = numThreads(ns, host, shareScript, shareAmount);
         if (threads > 0) {
