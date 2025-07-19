@@ -334,3 +334,22 @@ test('registerAllocation converts reserved to allocated', () => {
     expect(worker.allocatedRam).toBe(BigInt(400));
     expect(worker.reservedRam).toBe(0n);
 });
+
+test('releaseChunks clamps requestedChunks to zero', () => {
+    const hosts = { h1: { max: 32, used: 0 } };
+    const ns = makeNS(hosts, {});
+    const alloc = new MemoryAllocator(ns);
+    alloc.pushWorker('h1');
+
+    const res = alloc.allocate(1, 'clamp.js', 4, 2);
+    expect(res).not.toBeNull();
+    const id = res!.allocationId;
+    const allocation = alloc.allocations.get(id)!;
+    // Grow the allocation without updating requestedChunks
+    alloc.growAllocation(allocation as any, 2);
+
+    const after = alloc.releaseChunks(id, 3);
+    expect(after).not.toBeNull();
+    const updated = alloc.allocations.get(id)!;
+    expect(updated.requestedChunks).toBe(0);
+});
