@@ -133,3 +133,9 @@ linked to.
 - Check conformance to repository contribution guidelines.
 - Look for bugs, audit for any dead code.
 - Give feedback on whether the code change is conceptually complete.
+
+## Task Writing Instructions
+
+- You don't need to include instructions from AGENTS.md in tasks you
+  write. The running agent that the task is written for will already
+  have access to the AGENTS.md file so we don't need to repeat it.
