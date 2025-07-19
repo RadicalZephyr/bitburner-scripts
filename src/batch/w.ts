@@ -19,11 +19,11 @@ export async function main(ns: NS) {
 
     let donePortId = args[2];
 
-    await ns.weaken(target, { additionalMsec: sleepTime });
-
     ns.atExit(() => {
         if (typeof donePortId === 'number' && donePortId !== -1) {
             ns.writePort(donePortId, ns.pid);
         }
     });
+
+    await ns.weaken(target, { additionalMsec: sleepTime });
 }
