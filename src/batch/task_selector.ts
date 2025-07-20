@@ -15,7 +15,8 @@ import { DiscoveryClient } from "services/client/discover";
 import { MemoryClient, parseAndRegisterAlloc } from "services/client/memory";
 import { launch } from "services/launch";
 
-import { readAllFromPort } from "util/ports";
+import { readAllFromPort, readLoop } from "util/ports";
+import { sleep } from "util/time";
 import { HUD_HEIGHT, KARMA_HEIGHT } from "util/ui";
 
 interface InProgressTask {
@@ -75,16 +76,11 @@ export async function main(ns: NS) {
         manager.pushTarget(target);
     }
 
-    let hostsMessagesWaiting = true;
+    readLoop(ns, taskSelectorPort, () => readHostsFromPort(ns, taskSelectorPort, responsePort, manager, monitor));
 
     while (true) {
-        if (hostsMessagesWaiting) {
-            hostsMessagesWaiting = false;
-            taskSelectorPort.nextWrite().then(_ => { hostsMessagesWaiting = true; });
-            await readHostsFromPort(ns, taskSelectorPort, responsePort, manager, monitor);
-        }
         await tick(ns, memory, manager);
-        await ns.sleep(100);
+        await sleep(100);
     }
 }
 
