@@ -1,6 +1,7 @@
 import { Config, ConfigInstance } from "util/config";
 
 const entries = [
+    ["discoverWalkIntervalMs", 5000],
     ["subscriptionMaxRetries", 5],
     ["launchRetryMax", 5],
     ["updateCheckIntervalMs", 1000 * 60 * 60]

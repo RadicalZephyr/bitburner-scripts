@@ -13,7 +13,7 @@ import { MemoryClient } from "services/client/memory";
 import { CONFIG } from "services/config";
 
 import { trySendMessage } from "util/client";
-import { readAllFromPort } from "util/ports";
+import { readAllFromPort, readLoop } from "util/ports";
 import { walkNetworkBFS } from "util/walk";
 
 
@@ -34,48 +34,35 @@ export async function main(ns: NS) {
     const port = ns.getPortHandle(DISCOVERY_PORT);
     const respPort = ns.getPortHandle(DISCOVERY_RESPONSE_PORT);
 
-    let messageWaiting = true;
-    port.nextWrite().then(() => { messageWaiting = true; });
-
-    const walkRate = 1000 * 5;
-    let lastWalk = 0;
+    readLoop(ns, port, () => readRequests(ns, port, respPort, discovery));
 
     while (true) {
-        if (lastWalk + walkRate < Date.now()) {
-            const network = walkNetworkBFS(ns);
-            const newHosts: string[] = [];
-            for (const host of network.keys()) {
-                if (host === "home") continue;
+        const network = walkNetworkBFS(ns);
+        const newHosts: string[] = [];
+        for (const host of network.keys()) {
+            if (host === "home") continue;
 
-                if (!cracked.has(host)) {
-                    if (ns.hasRootAccess(host)) {
-                        newHosts.push(host);
-                        cracked.add(host);
-                    } else {
-                        const portsNeeded = ns.getServerNumPortsRequired(host);
-                        if (countPortCrackers(ns) >= portsNeeded) {
-                            attemptCrack(ns, host);
-                            if (ns.hasRootAccess(host)) {
-                                newHosts.push(host);
-                                cracked.add(host);
-                            }
+            if (!cracked.has(host)) {
+                if (ns.hasRootAccess(host)) {
+                    newHosts.push(host);
+                    cracked.add(host);
+                } else {
+                    const portsNeeded = ns.getServerNumPortsRequired(host);
+                    if (countPortCrackers(ns) >= portsNeeded) {
+                        attemptCrack(ns, host);
+                        if (ns.hasRootAccess(host)) {
+                            newHosts.push(host);
+                            cracked.add(host);
                         }
                     }
                 }
             }
-            if (newHosts.length > 0) {
-                discovery.pushHosts(newHosts);
-            }
-            lastWalk = Date.now();
+        }
+        if (newHosts.length > 0) {
+            discovery.pushHosts(newHosts);
         }
 
-        if (messageWaiting) {
-            messageWaiting = false;
-            port.nextWrite().then(() => { messageWaiting = true; });
-            await readRequests(ns, port, respPort, discovery);
-        }
-
-        await ns.sleep(50);
+        await ns.sleep(CONFIG.discoverWalkIntervalMs);
     }
 }
 
