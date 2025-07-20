@@ -108,11 +108,15 @@ export class GrowableAllocation extends TransferableAllocation {
     }
 
     /** Explicitly poll for growth messages. */
-    pollGrowth() {
+    pollGrowth(shouldMergeChunks: boolean = false) {
         for (const msg of readAllFromPort(this.ns, this.port)) {
             const chunks = msg as HostAllocation[];
             if (Array.isArray(chunks)) {
-                appendChunks(this.allocatedChunks, chunks);
+                if (shouldMergeChunks) {
+                    mergeChunks(this.allocatedChunks, chunks);
+                } else {
+                    appendChunks(this.allocatedChunks, chunks);
+                }
             }
         }
     }
@@ -218,5 +222,19 @@ export class GrowableAllocation extends TransferableAllocation {
 function appendChunks(dest: AllocationChunk[], add: HostAllocation[]) {
     for (const chunk of add) {
         dest.push(new AllocationChunk(chunk));
+    }
+}
+
+/** Merge chunks into an existing list, maximizing the numChunks for each host. */
+function mergeChunks(dest: AllocationChunk[], add: HostAllocation[]) {
+    for (const chunk of add) {
+        const existing = dest.find(
+            c => c.hostname === chunk.hostname && c.chunkSize === chunk.chunkSize,
+        );
+        if (existing) {
+            existing.numChunks += chunk.numChunks;
+        } else {
+            dest.push(new AllocationChunk(chunk));
+        }
     }
 }
