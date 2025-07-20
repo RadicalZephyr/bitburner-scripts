@@ -80,7 +80,7 @@ export async function main(ns: NS) {
 
     while (true) {
         await tick(ns, memory, manager);
-        await sleep(100);
+        await sleep(CONFIG.taskSelectorTickMs);
     }
 }
 

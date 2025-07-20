@@ -14,7 +14,8 @@ const entries = [
     ["maxMoneyTolerance", 0.99],
     ["maxSowTargets", 2],
     ["maxTillTargets", 2],
-    ["minSecTolerance", 1]
+    ["minSecTolerance", 1],
+    ["taskSelectorTickMs", 500]
 ] as const;
 
 export const CONFIG: ConfigInstance<typeof entries> =
