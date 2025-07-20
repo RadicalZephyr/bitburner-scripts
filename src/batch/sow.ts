@@ -87,6 +87,12 @@ OPTIONS
 
     const totalBatchThreads = phases.reduce((s, p) => s + p.threads, 0);
     const maxOverlapCap = Math.floor(maxThreadsCap / totalBatchThreads);
+
+    if (maxOverlapCap < 1) {
+        ns.print("max threads was smaller than minimum batch size");
+        return;
+    }
+
     const maxOverlap = Math.min(maxOverlapCap, overlap);
 
     const memClient = new GrowableMemoryClient(ns);
