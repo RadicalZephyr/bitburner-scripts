@@ -8,25 +8,22 @@ import {
     AllocationRelease,
     AllocationRequest,
     GrowableAllocationRequest,
-    AllocationResult,
-    HostAllocation,
     MEMORY_PORT,
     Message,
     MessageType,
     AllocationChunksRelease,
     AllocationRegister,
-    WorkerSnapshot,
-    AllocationSnapshot,
-    MemorySnapshot,
     MEMORY_RESPONSE_PORT,
 } from "services/client/memory";
 
 import { DiscoveryClient } from "services/client/discover";
 
-import { fromFixed, ClaimInfo, MemoryAllocator, Worker } from "services/allocator";
+import { fromFixed, MemoryAllocator, Worker } from "services/allocator";
 
-import { readAllFromPort } from "util/ports";
+import { readAllFromPort, readLoop } from "util/ports";
 import { HUD_HEIGHT, HUD_WIDTH, STATUS_WINDOW_WIDTH } from "util/ui";
+
+import { sleep } from "util/time";
 
 declare const React: any;
 
@@ -86,9 +83,6 @@ Example:
     let memPort = ns.getPortHandle(MEMORY_PORT);
     let memResponsePort = ns.getPortHandle(MEMORY_RESPONSE_PORT);
 
-    let memMessageWaiting = true;
-    memPort.nextWrite().then(_ => { memMessageWaiting = true; });
-
     let memoryManager = new MemoryAllocator(ns, printLog);
 
     printLog(`INFO: starting memory manager on ${ns.self().server}`);
@@ -126,16 +120,12 @@ Example:
     let lastGrowCheck = 0;
     const growCheckRate = 1000;
 
+    readLoop(ns, memPort, async () => readMemRequestsFromPort(ns, memPort, memResponsePort, memoryManager));
+
     while (true) {
         let now = Date.now();
 
         memoryManager.checkHomeForRamIncrease();
-
-        if (memMessageWaiting) {
-            memMessageWaiting = false;
-            memPort.nextWrite().then(_ => { memMessageWaiting = true; });
-            readMemRequestsFromPort(ns, memPort, memResponsePort, memoryManager);
-        }
 
         if (lastRender + refreshRate < now) {
             const theme = ns.ui.getTheme();
@@ -160,7 +150,7 @@ Example:
             await growAllocations(ns, memoryManager);
             lastGrowCheck = now;
         }
-        await ns.sleep(50);
+        await sleep(50);
     }
 }
 
