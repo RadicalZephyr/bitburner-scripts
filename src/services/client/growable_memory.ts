@@ -128,7 +128,14 @@ export class GrowableAllocation extends TransferableAllocation {
         }
     }
 
-    /** Explicitly poll for growth messages. */
+
+    /**
+     * Check for new grow messages and update the allocation list accordingly.
+     *
+     * See documentation for `GrowableAllocation.startPolling` for discussion of the `shouldMergeChunks` argument.
+     *
+     * @param shouldMergeChunks - If true, merges new chunks into existing host entries. If false, appends them as separate entries.
+     */
     pollGrowth(shouldMergeChunks: boolean = false) {
         for (const msg of readAllFromPort(this.ns, this.port)) {
             const chunks = msg as HostAllocation[];
