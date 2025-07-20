@@ -19,7 +19,6 @@ export async function main(ns) {
         }
         if (!ns.scp(VERSION_FILE, host, "home")) {
             ns.print(`WARN: failed to copy ${VERSION_FILE} from home`);
-            ns.rm(tempFile, host);
             continue;
         }
         let remote;
@@ -29,8 +28,6 @@ export async function main(ns) {
         }
         catch (err) {
             ns.print(`ERROR: failed to parse ${tempFile}: ${String(err)}`);
-            ns.rm(tempFile, host);
-            ns.rm(VERSION_FILE, host);
             continue;
         }
         try {
@@ -38,12 +35,8 @@ export async function main(ns) {
         }
         catch (err) {
             ns.print(`ERROR: failed to parse ${VERSION_FILE}: ${String(err)}`);
-            ns.rm(tempFile, host);
-            ns.rm(VERSION_FILE, host);
             continue;
         }
-        ns.rm(tempFile, host);
-        ns.rm(VERSION_FILE, host);
         if (remote.epoch > local.epoch && remote.sha !== local.sha) {
             const prompt = `A newer version of the scripts was published on ${remote.date}. ` +
                 `Download now?`;

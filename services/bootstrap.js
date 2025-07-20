@@ -8,8 +8,8 @@ export async function main(ns) {
     await startDiscover(ns, host);
     await ns.sleep(500);
     await startMemory(ns, host);
-    await startUpdater(ns, host);
     await startPort(ns, host);
+    await startUpdater(ns, "n00dles");
 }
 async function startMemory(ns, host) {
     const memoryScript = "/services/memory.js";
@@ -53,7 +53,7 @@ function manualLaunch(ns, script, hostname) {
         ns.ui.openTail();
         return;
     }
-    let pid = ns.run(script);
+    let pid = ns.exec(script, hostname);
     if (pid === 0) {
         let error = `failed to launch ${script} on ${hostname}`;
         ns.toast(error, "error");
