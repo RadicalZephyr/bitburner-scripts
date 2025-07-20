@@ -12,3 +12,18 @@ export function* readAllFromPort(ns: NS, port: NetscriptPort) {
         yield nextMsg;
     }
 }
+
+export async function readLoop(ns: NS, port: NetscriptPort, readFn: () => Promise<void>) {
+    const scriptInfo = ns.self();
+    let running = true;
+    ns.atExit(() => {
+        running = false;
+    }, `${scriptInfo.filename}-${scriptInfo.server}-readLoop`);
+
+    let next = port.nextWrite();
+    while (running) {
+        readFn();
+        await next;
+        next = port.nextWrite();
+    }
+}
