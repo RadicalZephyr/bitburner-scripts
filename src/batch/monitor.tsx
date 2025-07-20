@@ -1,4 +1,4 @@
-import type { NS, UserInterfaceTheme } from "netscript";
+import type { NetscriptPort, NS, UserInterfaceTheme } from "netscript";
 import { ALLOC_ID, ALLOC_ID_ARG, MEM_TAG_FLAGS } from "services/client/memory_tag";
 
 import { MONITOR_PORT, Lifecycle, Message as MonitorMessage } from "batch/client/monitor";
@@ -119,19 +119,7 @@ Example:
         if (monitorMessagesWaiting) {
             monitorMessagesWaiting = false;
             monitorPort.nextWrite().then(_ => { monitorMessagesWaiting = true; });
-            for (const nextMsg of readAllFromPort(ns, monitorPort)) {
-                if (typeof nextMsg === "object") {
-                    const [phase, _, payload] = nextMsg as MonitorMessage;
-                    const hosts = Array.isArray(payload) ? payload : [payload];
-                    for (const host of hosts) {
-                        if (phase === Lifecycle.Worker) {
-                            workers.push(host);
-                        } else {
-                            lifecycleByHost.set(host, phase);
-                        }
-                    }
-                }
-            }
+            readMonitorMessages(ns, monitorPort, workers, lifecycleByHost);
         }
 
         let threadsByTarget = countThreadsByTarget(ns, workers, Array.from(lifecycleByHost.keys()));
@@ -213,6 +201,22 @@ interface SortBy {
     key: string,
     dir: Dir,
     data: HostInfo[],
+}
+
+function readMonitorMessages(ns: NS, monitorPort: NetscriptPort, workers: string[], lifecycleByHost: Map<string, Lifecycle>) {
+    for (const nextMsg of readAllFromPort(ns, monitorPort)) {
+        if (typeof nextMsg === "object") {
+            const [phase, _, payload] = nextMsg as MonitorMessage;
+            const hosts = Array.isArray(payload) ? payload : [payload];
+            for (const host of hosts) {
+                if (phase === Lifecycle.Worker) {
+                    workers.push(host);
+                } else {
+                    lifecycleByHost.set(host, phase);
+                }
+            }
+        }
+    }
 }
 
 function sortByFn(sortBy: SortBy) {
