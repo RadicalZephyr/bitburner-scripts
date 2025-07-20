@@ -42,22 +42,24 @@ export async function main(ns: NS) {
         for (const host of network.keys()) {
             if (host === "home") continue;
 
-            if (!cracked.has(host)) {
-                if (ns.hasRootAccess(host)) {
-                    newHosts.push(host);
-                    cracked.add(host);
-                } else {
-                    const portsNeeded = ns.getServerNumPortsRequired(host);
-                    if (countPortCrackers(ns) >= portsNeeded) {
-                        attemptCrack(ns, host);
-                        if (ns.hasRootAccess(host)) {
-                            newHosts.push(host);
-                            cracked.add(host);
-                        }
-                    }
-                }
+            if (cracked.has(host)) continue;
+
+            if (ns.hasRootAccess(host)) {
+                newHosts.push(host);
+                cracked.add(host);
+                continue;
             }
+
+            const portsNeeded = ns.getServerNumPortsRequired(host);
+            if (countPortCrackers(ns) < portsNeeded) continue;
+
+            attemptCrack(ns, host);
+            if (!ns.hasRootAccess(host)) continue;
+
+            newHosts.push(host);
+            cracked.add(host);
         }
+
         if (newHosts.length > 0) {
             discovery.pushHosts(newHosts);
         }
