@@ -71,15 +71,15 @@ OPTIONS
     const maxWeakenThreads = weakenAnalyze(ns.growthAnalyzeSecurity(maxGrowThreads));
     let maxThreadsCap = maxGrowThreads + maxWeakenThreads;
 
-    if (maxThreads !== -1) {
-        maxThreadsCap = Math.min(maxThreadsCap, maxThreads);
-    }
-
     if (maxThreadsCap < 1 || isNaN(maxThreadsCap)) {
         ns.printf(`no need to sow ${target}`);
         ns.toast(`finished sowing ${target}!`, "success");
         taskSelectorClient.finishedSowing(target);
         return;
+    }
+
+    if (maxThreads !== -1) {
+        maxThreadsCap = Math.min(maxThreadsCap, maxThreads);
     }
 
     let sowBatchLogistics = calculateSowBatchLogistics(ns, target);
