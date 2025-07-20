@@ -10,8 +10,9 @@ import { TaskSelectorClient } from "batch/client/task_selector";
 import { parseAndRegisterAlloc } from "services/client/memory";
 
 import { extend } from "util/extend";
-import { readAllFromPort } from "util/ports";
+import { readAllFromPort, readLoop } from "util/ports";
 import { HUD_HEIGHT, HUD_WIDTH, STATUS_WINDOW_WIDTH } from "util/ui";
+import { sleep } from "util/time";
 
 
 declare const React: any;
@@ -113,15 +114,9 @@ Example:
 
     const lifecycleByHost: Map<string, Lifecycle> = new Map(snapshot);
 
-    let monitorMessagesWaiting = true;
+    readLoop(ns, monitorPort, async () => readMonitorMessages(ns, monitorPort, workers, lifecycleByHost));
 
     while (true) {
-        if (monitorMessagesWaiting) {
-            monitorMessagesWaiting = false;
-            monitorPort.nextWrite().then(_ => { monitorMessagesWaiting = true; });
-            readMonitorMessages(ns, monitorPort, workers, lifecycleByHost);
-        }
-
         let threadsByTarget = countThreadsByTarget(ns, workers, Array.from(lifecycleByHost.keys()));
 
         tableSortings.harvesting.data = [];
@@ -188,7 +183,7 @@ Example:
         }
         // Clear the queue after we process it
         openTailQueue.length = 0;
-        await ns.sleep(flags.refreshrate);
+        await sleep(flags.refreshrate);
     }
 }
 
