@@ -15,7 +15,8 @@ const entries = [
     ["maxSowTargets", 2],
     ["maxTillTargets", 2],
     ["minSecTolerance", 1],
-    ["taskSelectorTickMs", 500]
+    ["spawnBatchOpenTailOnExecFail", true],
+    ["taskSelectorTickMs", 500],
 ] as const;
 
 export const CONFIG: ConfigInstance<typeof entries> =

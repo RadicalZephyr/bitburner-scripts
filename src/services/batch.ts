@@ -126,7 +126,7 @@ export async function spawnBatch(ns: NS, host: HostDesignation, target: string, 
         while (true) {
             if (retryCount > CONFIG.harvestRetryMax) {
                 ns.print(`ERROR: harvest repeatedly failed to exec ${script} on ${hostname}`);
-                ns.ui.openTail();
+                if (CONFIG.spawnBatchOpenTailOnExecFail) ns.ui.openTail();
                 return pids;
             }
 
