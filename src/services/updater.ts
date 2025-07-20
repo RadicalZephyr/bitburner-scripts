@@ -1,7 +1,10 @@
 import type { NS } from "netscript";
+
+import { MemoryClient } from "services/client/memory";
 import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 
 import { CONFIG } from "services/config";
+
 
 interface Version {
     date: string;
@@ -17,8 +20,13 @@ export async function main(ns: NS) {
     const flags = ns.flags(MEM_TAG_FLAGS);
     ns.disableLog("sleep");
 
-    const host = ns.self().server;
+    const scriptInfo = ns.self();
+    const host = scriptInfo.server;
+
     const tempFile = "VERSION.remote.json";
+
+    const memClient = new MemoryClient(ns);
+    memClient.registerAllocation(scriptInfo.server, scriptInfo.ramUsage, 1);
 
     while (true) {
         if (!ns.fileExists(VERSION_FILE, "home")) {
