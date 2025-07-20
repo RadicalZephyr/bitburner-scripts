@@ -155,6 +155,22 @@ export interface FreeRam {
 }
 
 /**
+ * Compute how many memory chunks could fit on all workers in the snapshot.
+ *
+ * @param snapshot   - Memory snapshot from the allocator service
+ * @param chunkSize  - Size of the chunk in GB
+ * @returns Number of chunks that can fit across all workers
+ */
+export function maxChunksForSnapshot(snapshot: MemorySnapshot, chunkSize: number): number {
+    let total = 0;
+    for (const w of snapshot.workers) {
+        const free = w.totalRam - w.reservedRam - w.allocatedRam - w.setAsideRam;
+        total += Math.floor(free / chunkSize);
+    }
+    return total;
+}
+
+/**
  * Optional flags to request specific allocation strategies.
  *
  * contiguous:    Request a single contiguous allocation if possible
