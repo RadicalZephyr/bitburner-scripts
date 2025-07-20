@@ -40,7 +40,7 @@ function getSerDeFor<T extends ConfigValue>(v: T): SerDeFor<T> {
     } else if (typeof v === "boolean") {
         return [
             (v: T) => v.toString(),
-            (s: string) => Boolean(s)
+            (s: string) => boolFromString(s)
         ] as SerDeFor<T>;
     } else if (typeof v === "number") {
         return [
@@ -57,6 +57,14 @@ function getSerDeFor<T extends ConfigValue>(v: T): SerDeFor<T> {
             (v: T) => JSON.stringify(v),
             (s: string) => JSON.parse(s) as T,
         ] as SerDeFor<T>;
+    }
+}
+
+function boolFromString(s: string): boolean {
+    if (s === 'true') {
+        return true;
+    } else {
+        return false;
     }
 }
 
