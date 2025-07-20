@@ -15,6 +15,7 @@ import { CONFIG } from "services/config";
 import { trySendMessage } from "util/client";
 import { readAllFromPort, readLoop } from "util/ports";
 import { walkNetworkBFS } from "util/walk";
+import { sleep } from "util/time";
 
 
 export async function main(ns: NS) {
@@ -64,7 +65,7 @@ export async function main(ns: NS) {
             discovery.pushHosts(newHosts);
         }
 
-        await ns.sleep(CONFIG.discoverWalkIntervalMs);
+        await sleep(CONFIG.discoverWalkIntervalMs);
     }
 }
 
