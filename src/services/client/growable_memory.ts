@@ -96,7 +96,11 @@ export class GrowableAllocation extends TransferableAllocation {
     async startPolling(shouldMergeChunks: boolean = false) {
         while (this.running) {
             const nextWrite = this.port.nextWrite();
-            this.pollGrowth(shouldMergeChunks);
+            try {
+                this.pollGrowth(shouldMergeChunks);
+            } catch (err) {
+                this.ns.print(`WARN: threw error while polling for allocation grow messages: ${String(err)}`);
+            }
             await nextWrite;
         }
     }

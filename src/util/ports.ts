@@ -49,7 +49,7 @@ export async function readLoop(ns: NS, port: NetscriptPort, readFn: () => Promis
         try {
             await readFn();
         } catch (err) {
-            ns.print(`WARN: failed to read from port ${String(err)}`)
+            ns.print(`WARN: failed to read from port ${String(err)}`);
         }
         await next;
         next = port.nextWrite();
