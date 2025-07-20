@@ -10,7 +10,7 @@ import {
 } from "services/client/port";
 import { MemoryClient } from "services/client/memory";
 
-import { readAllFromPort } from "util/ports";
+import { readAllFromPort, readLoop } from "util/ports";
 
 /**
  * Main loop for the PortAllocator daemon.
@@ -29,17 +29,7 @@ export async function main(ns: NS) {
     const self = ns.self();
     memClient.registerAllocation(self.server, self.ramUsage, 1);
 
-    let waiting = true;
-    port.nextWrite().then(() => { waiting = true; });
-
-    while (true) {
-        if (waiting) {
-            waiting = false;
-            port.nextWrite().then(() => { waiting = true; });
-            await readRequests(ns, port, respPort, allocator);
-        }
-        await ns.sleep(50);
-    }
+    await readLoop(ns, port, () => readRequests(ns, port, respPort, allocator));
 }
 
 async function readRequests(
@@ -56,10 +46,12 @@ async function readRequests(
         switch (msg[0]) {
             case MessageType.PortRequest:
                 payload = allocator.allocate();
+                ns.print("SUCCESS: allocated port ${payload}");
                 break;
             case MessageType.PortRelease:
                 const rel = msg[2] as PortRelease;
                 allocator.release(rel.port);
+                ns.print("SUCCESS: released port ${payload}");
                 continue;
         }
         while (!respPort.tryWrite([requestId, payload])) {
