@@ -30,6 +30,9 @@ export function* readAllFromPort(ns: NS, port: NetscriptPort) {
  * The Promise returned by this function should not be awaited unless
  * you wish to wait until this script is killed.
  *
+ * Any exceptions thrown by `readFn` are logged with a warning and the
+ * loop continues.
+ *
  * @param ns     - Netscript API object
  * @param port   - NetscriptPort to wait to read from
  * @param readFn - Callback to read from and process port messages
@@ -43,7 +46,11 @@ export async function readLoop(ns: NS, port: NetscriptPort, readFn: () => Promis
 
     let next = port.nextWrite();
     while (running) {
-        await readFn();
+        try {
+            await readFn();
+        } catch (err) {
+            ns.print(`WARN: failed to read from port ${String(err)}`)
+        }
         await next;
         next = port.nextWrite();
     }
