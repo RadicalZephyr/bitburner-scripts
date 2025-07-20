@@ -94,22 +94,27 @@ export class GrowableAllocation extends TransferableAllocation {
     }
 
     /**
-     * Start a background task to handle grow messages for this
-     * allocation.
+     * Starts a background polling loop to handle grow messages for this allocation.
      *
      * @remarks
-     * Choosing to merge new chunks prevents duplicate entries for
-     * each host, and keeps the overall host list as small as
-     * possible. Keep in mind that this effectively reorders chunks by
-     * increasing the `numChunks` of any hosts that we have received
-     * new chunks for.
+     * This function runs continuously until `this.release()` is
+     * called. It listens for new grow messages and updates the
+     * allocation list accordingly.
      *
-     * If you prefer to have larger contiguous chunks for scaling
-     * tasks with more threads, then you should merge chunks. If the
-     * ordering of your host chunks is important, then you don't want
-     * chunks to be merged.
+     * Use the `shouldMergeChunks` option to control how new chunks are handled:
      *
-     * @param shouldMergeChunks - Whether new chunks should be appended to the allocation list or merged with existing entries for that host.
+     * - `true`: Merge new chunks into existing entries for each host. This avoids
+     *   duplicates and keeps the list smaller, which is better for load balancing
+     *   or scaling tasks across fewer targets.
+     *   - ⚠️ Note: This reorders chunks and may change the `numChunks` count, potentially
+     *     affecting chunk distribution and ordering-sensitive logic.
+     *
+     * - `false` (default): Append new chunks as separate entries. This preserves
+     *   ordering but may lead to duplication and a larger list.
+     *
+     * Errors during polling are logged to the script output but do not stop the loop.
+     *
+     * @param shouldMergeChunks - If true, merges new chunks into existing host entries. If false, appends them as separate entries.
      */
     async startPolling(shouldMergeChunks: boolean = false) {
         while (this.running) {
