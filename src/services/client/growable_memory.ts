@@ -93,6 +93,24 @@ export class GrowableAllocation extends TransferableAllocation {
         this.port = ns.getPortHandle(port);
     }
 
+    /**
+     * Start a background task to handle grow messages for this
+     * allocation.
+     *
+     * @remarks
+     * Choosing to merge new chunks prevents duplicate entries for
+     * each host, and keeps the overall host list as small as
+     * possible. Keep in mind that this effectively reorders chunks by
+     * increasing the `numChunks` of any hosts that we have received
+     * new chunks for.
+     *
+     * If you prefer to have larger contiguous chunks for scaling
+     * tasks with more threads, then you should merge chunks. If the
+     * ordering of your host chunks is important, then you don't want
+     * chunks to be merged.
+     *
+     * @param shouldMergeChunks - Whether new chunks should be appended to the allocation list or merged with existing entries for that host.
+     */
     async startPolling(shouldMergeChunks: boolean = false) {
         while (this.running) {
             const nextWrite = this.port.nextWrite();
