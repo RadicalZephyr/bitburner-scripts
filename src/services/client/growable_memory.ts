@@ -91,18 +91,12 @@ export class GrowableAllocation extends TransferableAllocation {
         this.ns = ns;
         this.portId = port;
         this.port = ns.getPortHandle(port);
-        this.startPolling();
     }
 
-    private async startPolling() {
+    async startPolling(shouldMergeChunks: boolean = false) {
         while (this.running) {
             const nextWrite = this.port.nextWrite();
-            for (const msg of readAllFromPort(this.ns, this.port)) {
-                const chunks = msg as HostAllocation[];
-                if (Array.isArray(chunks)) {
-                    appendChunks(this.allocatedChunks, chunks);
-                }
-            }
+            this.pollGrowth(shouldMergeChunks);
             await nextWrite;
         }
     }
