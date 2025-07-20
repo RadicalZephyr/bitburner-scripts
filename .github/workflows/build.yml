@@ -13,6 +13,9 @@ on:
       artifact_file:
         description: Build artifact file path
         value: ${{ jobs.build.outputs.artifact_file }}
+      release_version:
+        description: Release version
+        value: ${{ jobs.build.outputs.release_version }}
 
 env:
   ARTIFACT_NAME: scripts
@@ -24,6 +27,7 @@ jobs:
     outputs:
       artifact_name: ${{ env.ARTIFACT_NAME }}
       artifact_file: ${{ env.ARTIFACT_FILE }}
+      release_version: ${{ env.SCRIPT_VERSION }}
 
     strategy:
       matrix:

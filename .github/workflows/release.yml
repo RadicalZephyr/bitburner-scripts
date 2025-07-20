@@ -94,10 +94,10 @@ jobs:
           ];
           BOOTSTRAP_HERE
 
-      - name: Package main branch with `latest` tag
+      - name: Package newest tag as a release
         uses: softprops/action-gh-release@v2
         with:
-          name: "Latest Main Branch Release"
+          name: "RadZ Bitburner Scripts ${{ needs.build.outputs.release_version }}"
           files: |
             README.md
             bootstrap.js
