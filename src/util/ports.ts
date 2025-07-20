@@ -43,7 +43,7 @@ export async function readLoop(ns: NS, port: NetscriptPort, readFn: () => Promis
 
     let next = port.nextWrite();
     while (running) {
-        readFn();
+        await readFn();
         await next;
         next = port.nextWrite();
     }
