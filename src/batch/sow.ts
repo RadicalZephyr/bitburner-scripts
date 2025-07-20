@@ -108,8 +108,8 @@ OPTIONS
     while (growNeeded > 0) {
         round += 1;
 
-        allocation.pollGrowth();
-        const hosts = hostListFromChunks(allocation.allocatedChunks);
+        allocation.pollGrowth(true);
+        const hosts = allocation.allocatedChunks;
         const pids: number[] = [];
 
         sowBatchLogistics = calculateSowBatchLogistics(ns, target);
@@ -117,7 +117,7 @@ OPTIONS
 
         growNeeded = neededGrowThreads(ns, target);
 
-        const roundsRemaining = Math.ceil(growNeeded / (growPerBatch * hosts.length));
+        const roundsRemaining = Math.ceil(growNeeded / (growPerBatch * allocation.numChunks));
         const totalRounds = (round - 1) + roundsRemaining;
         const info: RoundInfo = calculateRoundInfo(ns, target, round, totalRounds, roundsRemaining);
 
