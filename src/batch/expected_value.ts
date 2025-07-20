@@ -37,29 +37,29 @@ export async function main(ns: NS) {
 export function expectedValuePerRamSecond(
     ns: NS,
     host: string,
+    hackPercent: number = CONFIG.maxHackPercent,
 ): number {
-    const {
-        hackThreads,
-        growThreads,
-        postHackWeakenThreads,
-        postGrowWeakenThreads,
-    } = analyzeBatchThreads(ns, host);
+    const hackThreads = hackThreadsForPercent(ns, host, hackPercent);
 
-    const weakenThreads = postHackWeakenThreads + postGrowWeakenThreads;
-
-    const ramUse =
-        hackThreads * ns.getScriptRam("/batch/h.js", "home") +
-        growThreads * ns.getScriptRam("/batch/g.js", "home") +
-        weakenThreads * ns.getScriptRam("/batch/w.js", "home");
+    const threads = analyzeBatchThreads(ns, host, hackThreads);
+    const hRam = ns.getScriptRam('/batch/h.js', 'home') * threads.hackThreads;
+    const gRam = ns.getScriptRam('/batch/g.js', 'home') * threads.growThreads;
+    const wRam = ns.getScriptRam('/batch/w.js', 'home') *
+        (threads.postHackWeakenThreads + threads.postGrowWeakenThreads);
+    const batchRam = hRam + gRam + wRam;
 
     const batchTime = fullBatchTime(ns, host);
+    const endingPeriod = CONFIG.batchInterval * 4;
+    const overlap = Math.ceil(batchTime / endingPeriod);
+    const requiredRam = batchRam * overlap;
 
-    const hackValue = successfulHackValue(ns, host, hackThreads);
+    const hackValue = successfulHackValue(ns, host, threads.hackThreads);
     const expectedHackValue = hackValue * ns.hackAnalyzeChance(host);
 
-    // Scale by 1000 to get human readable values and convert units
-    // from $/GB*ms to $/GB*s
-    return 1000 * expectedHackValue / (batchTime * ramUse);
+    const batchesPerSecond = 1000 / endingPeriod;
+    const moneyPerSecond = expectedHackValue * batchesPerSecond;
+
+    return moneyPerSecond / requiredRam;
 }
 
 /** Calculate the total runtime for a full hack-weaken-grow-weaken batch.
@@ -150,6 +150,35 @@ export function growthAnalyze(ns: NS, hostname: string, afterHackMoney: number):
         const growMultiplier = maxMoney / Math.max(1, afterHackMoney);
         return Math.ceil(ns.growthAnalyze(hostname, growMultiplier));
     }
+}
+
+/** Calculate the number of hack threads needed to steal the given
+ *  percentage of the target server's max money.
+ *
+ * @param ns      - Netscript API instance
+ * @param host    - Hostname of the target server
+ * @param percent - Desired money percentage to hack (0-1)
+ * @returns Required hack thread count, adjusted for player hacking multipliers
+ */
+export function hackThreadsForPercent(
+    ns: NS,
+    host: string,
+    percent: number,
+): number {
+    if (percent <= 0) return 0;
+
+    let hackPercent: number;
+    if (canUseFormulas(ns)) {
+        const server = ns.getServer(host);
+        const player = ns.getPlayer();
+        hackPercent = ns.formulas.hacking.hackPercent(server, player);
+    } else {
+        hackPercent = ns.hackAnalyze(host);
+    }
+
+    if (hackPercent <= 0) return 0;
+
+    return Math.ceil(percent / hackPercent);
 }
 
 

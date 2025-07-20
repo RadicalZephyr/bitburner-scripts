@@ -326,8 +326,8 @@ class TaskSelector {
             .filter(h => canHarvest(this.ns, h) && worthHarvesting(this.ns, h))
             .map(h => ({
                 host: h,
-                value: expectedValuePerRamSecond(this.ns, h),
-                ...calculateBatchLogistics(this.ns, h)
+                value: expectedValuePerRamSecond(this.ns, h, CONFIG.maxHackPercent),
+                ...calculateBatchLogistics(this.ns, h, CONFIG.maxHackPercent)
             }))
             .sort((a, b) => b.value - a.value);
 
@@ -539,5 +539,5 @@ function canHarvest(ns: NS, hostname: string) {
 }
 
 function worthHarvesting(ns: NS, hostname: string) {
-    return expectedValuePerRamSecond(ns, hostname) > CONFIG.expectedValueThreshold;
+    return expectedValuePerRamSecond(ns, hostname, CONFIG.maxHackPercent) > CONFIG.expectedValueThreshold;
 }
