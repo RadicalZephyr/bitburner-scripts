@@ -205,7 +205,9 @@ function readMonitorMessages(ns: NS, monitorPort: NetscriptPort, workers: string
             const hosts = Array.isArray(payload) ? payload : [payload];
             for (const host of hosts) {
                 if (phase === Lifecycle.Worker) {
-                    workers.push(host);
+                    if (!workers.includes(host)) {
+                        workers.push(host);
+                    }
                 } else {
                     lifecycleByHost.set(host, phase);
                 }
