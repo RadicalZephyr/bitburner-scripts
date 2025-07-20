@@ -35,7 +35,8 @@ significantly higher than it's minimum possible security value
 money.
 
 The Till Task script continually spawns rounds of weaken helper
-scripts to until the targets security value has been brought to the
+scripts to until the targets security value has been reduced to it's
+minimum value.
 
 #### Sow Phase
 
