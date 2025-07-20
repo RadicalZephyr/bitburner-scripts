@@ -46,12 +46,12 @@ async function readRequests(
         switch (msg[0]) {
             case MessageType.PortRequest:
                 payload = allocator.allocate();
-                ns.print("SUCCESS: allocated port ${payload}");
+                ns.print(`SUCCESS: allocated port ${payload}`);
                 break;
             case MessageType.PortRelease:
                 const rel = msg[2] as PortRelease;
                 allocator.release(rel.port);
-                ns.print("SUCCESS: released port ${payload}");
+                ns.print(`SUCCESS: released port ${rel.port}`);
                 continue;
         }
         while (!respPort.tryWrite([requestId, payload])) {
