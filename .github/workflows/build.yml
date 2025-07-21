@@ -66,6 +66,9 @@ jobs:
       - name: Test
         run: npm exec jest
 
+      - name: Formatting Check
+        run: npx prettier . --check
+
       - name: Package output
         if: github.ref_type == 'tag'
         run: zip ${{ env.ARTIFACT_FILE }} dist/**/*.js dist/*.js
