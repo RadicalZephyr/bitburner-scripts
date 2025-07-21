@@ -124,6 +124,8 @@ OPTIONS
 
 ## Commit Authoring Convention
 
+- Before committing run `npx prettier . --write` to format code.
+
 Prefix every commit message with the name of the folder in source in
 square brackets like "[batch]". If a commit touches files in multiple
 directories use the folder name that the commit is most conceptually
