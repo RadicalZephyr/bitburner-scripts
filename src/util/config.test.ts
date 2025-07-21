@@ -1,5 +1,5 @@
 import { Config, ConfigInstance } from "./config";
-import { LocalStorage, setLocalStorage } from "./localStorage";
+import { setLocalStorage } from "./localStorage";
 
 let storage: Record<string, string> = {};
 

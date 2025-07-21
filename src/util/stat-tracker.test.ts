@@ -1,4 +1,4 @@
-import { StatTracker, Condition } from "util/stat-tracker";
+import { Sample, StatTracker, Condition } from "util/stat-tracker";
 
 type Example = { a: number; b: string; c: number };
 
@@ -6,15 +6,17 @@ function makeExample(a: number, b: string = "x", c: number = 0): Example {
     return { a, b, c };
 }
 
+type SampleCheck<T> = Sample<T> & { b: number | void };
+
 test('update only records numeric fields', () => {
     const tracker = new StatTracker<Example>();
     tracker.update(makeExample(1, 'hello', 2));
 
     expect(tracker.history.length).toBe(1);
-    const entry = tracker.history[0];
+    const entry = tracker.history[0] satisfies Sample<Example>;
     expect(entry.a).toBe(1);
     expect(entry.c).toBe(2);
-    expect((entry as any).b).toBeUndefined();
+    expect((entry as unknown as SampleCheck<Example>).b).toBeUndefined();
     expect(typeof entry.t).toBe('number');
 });
 

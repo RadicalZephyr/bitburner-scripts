@@ -1,6 +1,6 @@
-type TimerHandler = string | Function;
-
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type SetInterval = (handler: TimerHandler, timeout?: number, ...args: any[]) => number;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type SetTimeout = (handler: TimerHandler, timeout?: number, ...args: any[]) => number;
 
 /**

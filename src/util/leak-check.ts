@@ -9,7 +9,7 @@ import {
 } from "services/client/memory";
 
 export async function main(ns: NS) {
-    const flags = ns.flags(MEM_TAG_FLAGS);
+    ns.flags(MEM_TAG_FLAGS);
     ns.disableLog('ALL');
     ns.ui.openTail();
 
@@ -60,7 +60,6 @@ function checkWorkers(ns: NS, allocations: AllocationSnapshot[], workers: Worker
                     );
                 } else {
                     const chunkSize = alloc.hosts[0]?.chunkSize;
-                    const hosts = alloc.hosts.map(h => h.hostname);
                     const totalChunks = alloc.hosts.reduce((sum, h) => sum + h.numChunks, 0);
                     ns.print(
                         `INFO: allocating process ${alloc.pid} running ${alloc.filename} ` +

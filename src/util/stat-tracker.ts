@@ -7,13 +7,16 @@ export type Threshold = number | (() => number);
 
 function compareBy(condition: Condition): (a: number, b: number) => boolean {
     switch (condition) {
-        case Condition.GreaterThan:
+        case Condition.GreaterThan: {
             return (a, b) => a > b;
-        case Condition.LessThan:
+        }
+        case Condition.LessThan: {
             return (a, b) => a < b;
-        default:
+        }
+        default: {
             const _exhaustiveCheck: never = condition;
             return _exhaustiveCheck;
+        }
     }
 }
 
@@ -30,13 +33,16 @@ export function pickByType<T, V>(
         const val = obj[key];
         if (isV(val)) {
             // TS knows `key` is one of the ValueFilter keys
-            (result as any)[key] = val;
+            (result as unknown)[key] = val;
         }
     }
     return result;
 }
 
-type Sample<Type> = { t: number } & PickByType<Type, number>;
+/**
+ * A simple type alias that adds a `t` value to `PickByType<Type, number>`.
+ */
+export type Sample<Type> = { t: number } & PickByType<Type, number>;
 
 function sample<T>(obj: T, t?: number): Sample<T> {
     return {
