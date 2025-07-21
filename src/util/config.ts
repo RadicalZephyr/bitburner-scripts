@@ -61,7 +61,8 @@ function getSerDeFor<T extends ConfigValue>(v: T): SerDeFor<T> {
 }
 
 function boolFromString(s: string): boolean {
-    return s === 'true';
+    const lowerS = s.toLocaleLowerCase();
+    return lowerS === 'true' || lowerS === 'yes' || lowerS === 'on' || lowerS === '1';
 }
 
 export type SetDefaultFn = (() => void);
