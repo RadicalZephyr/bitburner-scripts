@@ -141,10 +141,6 @@ function moneyGain(ns: NS, level: number, ram: number, cores: number) {
     return hashCapacity > 0 ? hashMoneyGain(ns, level, ram, cores) : nodeMoneyGain(ns, level, ram, cores);
 }
 
-function getMoneyGainFn(ns: NS) {
-    return moneyGain.bind(null, ns);
-}
-
 type UpgradeType = "node" | "level" | "ram" | "core" | null;
 
 interface UpgradeCandidate {
@@ -274,7 +270,6 @@ function purchaseCandidate(ns: NS, budget: Budget, candidate: UpgradeCandidate) 
 }
 
 function printUpgrade(ns: NS, upgrade: UpgradeCandidate) {
-    const hacknetType = ns.hacknet.hashCapacity() > 0 ? "server" : "node";
     ns.print(`SUCCESS: upgraded ${upgradeDescription(ns, upgrade)}`);
 }
 
