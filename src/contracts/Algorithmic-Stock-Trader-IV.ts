@@ -23,7 +23,7 @@ import type { NS } from "netscript";
 import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 
 export async function main(ns: NS) {
-    const flags = ns.flags(MEM_TAG_FLAGS);
+    ns.flags(MEM_TAG_FLAGS);
     const scriptName = ns.getScriptName();
     const contractPortNum = ns.args[0];
     if (typeof contractPortNum !== 'number') {
@@ -35,7 +35,7 @@ export async function main(ns: NS) {
         ns.tprintf('%s contract run with non-string data argument. Must be a JSON string containing file, host and contract data.', scriptName);
         return;
     }
-    const contractData: any = JSON.parse(contractDataJSON);
+    const contractData = JSON.parse(contractDataJSON);
     ns.tprintf('contract data: %s', JSON.stringify(contractData));
     const answer = await solve(ns, contractData);
     ns.writePort(contractPortNum, JSON.stringify(answer));
@@ -46,6 +46,7 @@ export async function main(ns: NS) {
  * Maximum profit with at most k transactions.
  */
 export async function solve(_ns: NS, data1: [number, number[]]): Promise<number> {
+    /*eslint prefer-const: ["error", {"destructuring": "all"}]*/
     let [k, stocks] = data1;
     if (stocks.length === 0 || k === 0) return 0;
 

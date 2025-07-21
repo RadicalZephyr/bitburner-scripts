@@ -14,15 +14,8 @@
 import type { NS } from "netscript";
 import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 
-declare global {
-    interface JSON {
-        rawJSON: ((string) => any),
-    }
-    var JSON: JSON;
-}
-
 export async function main(ns: NS) {
-    const flags = ns.flags(MEM_TAG_FLAGS);
+    ns.flags(MEM_TAG_FLAGS);
     const scriptName = ns.getScriptName();
     const contractPortNum = ns.args[0];
     if (typeof contractPortNum !== 'number') {
@@ -65,8 +58,6 @@ export function solve(data: bigint): bigint {
 
     // Now iteratively calculate better approximations to the square
     // root of S using Heron's Method
-    const two = BigInt(2);
-
     while (!(x_n * x_n < s && (x_n + 1n) * (x_n + 1n) > s)) {
         // Exit if a perfect root is found
         if (x_n * x_n == s) return x_n;

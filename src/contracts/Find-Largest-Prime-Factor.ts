@@ -34,7 +34,7 @@ function primesUpTo(limit: number): number[] {
     return primes;
 }
 export async function main(ns: NS) {
-    const flags = ns.flags(MEM_TAG_FLAGS);
+    ns.flags(MEM_TAG_FLAGS);
     const scriptName = ns.getScriptName();
     const contractPortNum = ns.args[0];
     if (typeof contractPortNum !== 'number') {
@@ -46,13 +46,13 @@ export async function main(ns: NS) {
         ns.tprintf('%s contract run with non-string data argument. Must be a JSON string containing file, host and contract data.', scriptName);
         return;
     }
-    const contractData: any = JSON.parse(contractDataJSON);
+    const contractData = JSON.parse(contractDataJSON);
     ns.tprintf('contract data: %s', JSON.stringify(contractData));
     const answer = solve(contractData);
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
 
-export function solve(data: number): any {
+export function solve(data: number) {
     const factors: number[] = [];
 
     // copy so we can make sure the product of the factorization is

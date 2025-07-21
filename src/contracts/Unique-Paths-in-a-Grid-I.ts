@@ -16,7 +16,7 @@ import type { NS } from "netscript";
 import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 
 export async function main(ns: NS) {
-    const flags = ns.flags(MEM_TAG_FLAGS);
+    ns.flags(MEM_TAG_FLAGS);
     const scriptName = ns.getScriptName();
     const contractPortNum = ns.args[0];
     if (typeof contractPortNum !== 'number') {
@@ -28,7 +28,7 @@ export async function main(ns: NS) {
         ns.tprintf('%s contract run with non-string data argument. Must be a JSON string containing file, host and contract data.', scriptName);
         return;
     }
-    const contractData: any = JSON.parse(contractDataJSON);
+    const contractData = JSON.parse(contractDataJSON);
     ns.tprintf('contract data: %s', JSON.stringify(contractData));
     const answer = solve(contractData);
     ns.writePort(contractPortNum, JSON.stringify(answer));
@@ -78,7 +78,7 @@ export async function main(ns: NS) {
  * 1 3 6 10
  *
  */
-export function solve(data: [number, number]): any {
+export function solve(data: [number, number]) {
     const [numRows, numCols] = data;
     const pathsTable = new Paths(numRows, numCols);
     pathsTable.fillTable();
@@ -123,9 +123,9 @@ class Paths {
 }
 
 function seedTable(numRows: number, numCols: number): number[][] {
-    const firstRow = Array.from({ length: numCols }, (_v, _i) => 1);
-    const rows = Array.from({ length: numRows - 1 }, (_v, _i) => {
-        const row = Array.from({ length: numCols - 1 }, (_v, _i) => 0);
+    const firstRow = Array.from({ length: numCols }, () => 1);
+    const rows = Array.from({ length: numRows - 1 }, () => {
+        const row = Array.from({ length: numCols - 1 }, () => 0);
         row.unshift(1);
         return row;
     });

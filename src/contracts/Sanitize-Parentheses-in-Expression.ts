@@ -24,7 +24,7 @@ import type { NS } from "netscript";
 import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 
 export async function main(ns: NS) {
-    const flags = ns.flags(MEM_TAG_FLAGS);
+    ns.flags(MEM_TAG_FLAGS);
     const scriptName = ns.getScriptName();
     const contractPortNum = ns.args[0];
     if (typeof contractPortNum !== 'number') {
@@ -36,13 +36,13 @@ export async function main(ns: NS) {
         ns.tprintf('%s contract run with non-string data argument. Must be a JSON string containing file, host and contract data.', scriptName);
         return;
     }
-    const contractData: any = JSON.parse(contractDataJSON);
+    const contractData = JSON.parse(contractDataJSON);
     ns.tprintf('contract data: %s', JSON.stringify(contractData));
     const answer = solve(contractData);
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
 
-export function solve(data: string): any {
+export function solve(data: string) {
     if (areParensBalanced(data)) {
         return [data];
     }
@@ -109,6 +109,8 @@ function* choose<T>(a: T[], m: number): Iterable<T[]> {
     const p = initTwiddle(m, n);
     while (true) {
         const [done, x, _y, z] = twiddle(p);
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const _ = _y;
         if (done) {
             return;
         }

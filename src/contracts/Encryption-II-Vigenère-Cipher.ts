@@ -40,7 +40,7 @@ import type { NS } from "netscript";
 import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 
 export async function main(ns: NS) {
-    const flags = ns.flags(MEM_TAG_FLAGS);
+    ns.flags(MEM_TAG_FLAGS);
     const scriptName = ns.getScriptName();
     const contractPortNum = ns.args[0];
     if (typeof contractPortNum !== 'number') {
@@ -52,7 +52,7 @@ export async function main(ns: NS) {
         ns.tprintf('%s contract run with non-string data argument. Must be a JSON string containing file, host and contract data.', scriptName);
         return;
     }
-    const contractData: any = JSON.parse(contractDataJSON);
+    const contractData = JSON.parse(contractDataJSON);
     ns.tprintf('contract data: %s', JSON.stringify(contractData));
     const answer = solve(contractData);
     ns.writePort(contractPortNum, answer);
@@ -60,7 +60,7 @@ export async function main(ns: NS) {
 
 const A_CODE: number = 'A'.charCodeAt(0);
 
-export function solve(data: [string, string]): any {
+export function solve(data: [string, string]) {
     const [plaintext, keyword] = data;
     const fullKey = extendKey(plaintext.length, keyword);
 
