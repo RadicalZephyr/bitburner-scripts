@@ -2,7 +2,7 @@ import type { AutocompleteData, NS } from "netscript";
 import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
 import { parseAndRegisterAlloc } from "services/client/memory";
 
-export function autocomplete(data: AutocompleteData, _args: string[]): string[] {
+export function autocomplete(data: AutocompleteData): string[] {
     return data.servers;
 }
 

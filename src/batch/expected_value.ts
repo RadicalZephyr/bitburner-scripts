@@ -9,12 +9,12 @@ export interface BatchThreadAnalysis {
     postGrowWeakenThreads: number;
 }
 
-export function autocomplete(data: AutocompleteData, _args: string[]): string[] {
+export function autocomplete(data: AutocompleteData): string[] {
     return data.servers;
 }
 
 export async function main(ns: NS) {
-    const flags = ns.flags(MEM_TAG_FLAGS);
+    ns.flags(MEM_TAG_FLAGS);
     const target = ns.args[0];
     if (typeof target !== 'string' || !ns.serverExists(target)) {
         ns.tprintf("target %s does not exist", target);

@@ -1,12 +1,9 @@
 import type { AutocompleteData, NS } from "netscript";
 import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
 
-import { BatchLogistics, BatchPhase, calculatePhaseStartTimes, hostListFromChunks, spawnBatch } from "services/batch";
+import { BatchLogistics, BatchPhase, calculatePhaseStartTimes, spawnBatch } from "services/batch";
 
-import {
-    parseAndRegisterAlloc,
-    AllocationChunk,
-} from "services/client/memory";
+import { parseAndRegisterAlloc, } from "services/client/memory";
 import { GrowableMemoryClient } from "services/client/growable_memory";
 
 import { CONFIG } from "batch/config";
@@ -15,7 +12,7 @@ import { awaitRound, calculateRoundInfo, printRoundProgress, RoundInfo } from "b
 import { TaskSelectorClient, Lifecycle } from "batch/client/task_selector";
 
 
-export function autocomplete(data: AutocompleteData, _args: string[]): string[] {
+export function autocomplete(data: AutocompleteData): string[] {
     return data.servers;
 }
 

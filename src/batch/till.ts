@@ -9,7 +9,7 @@ import { parseAndRegisterAlloc } from "services/client/memory";
 import { CONFIG } from "batch/config";
 import { awaitRound, calculateRoundInfo, RoundInfo } from "batch/progress";
 
-export function autocomplete(data: AutocompleteData, _args: string[]): string[] {
+export function autocomplete(data: AutocompleteData): string[] {
     return data.servers;
 }
 

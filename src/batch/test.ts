@@ -211,6 +211,7 @@ OPTIONS
 }
 
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function testGrow(ns: NS, target: string, allocation: TransferableAllocation, useFormulas: boolean, threads: number, maxThreads: number) {
     await resetServer(ns, target, allocation, maxThreads);
     const gBeforeM = ns.getServerMoneyAvailable(target);
@@ -238,6 +239,7 @@ async function testGrow(ns: NS, target: string, allocation: TransferableAllocati
     ns.write("resultsGrow.txt", dataG + "\n", "a");
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function testWeaken(ns: NS, target: string, allocation: TransferableAllocation, useFormulas: boolean, threads: number, maxThreads: number) {
     await resetServer(ns, target, allocation, maxThreads);
     const wBeforeM = ns.getServerMoneyAvailable(target);

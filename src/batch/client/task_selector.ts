@@ -27,6 +27,7 @@ export interface Heartbeat {
     lifecycle: Lifecycle;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface LifecycleRequest { }
 
 export type LifecycleSnapshot = [string, MonitorLifecycle][];

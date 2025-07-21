@@ -1,4 +1,4 @@
-import type { NetscriptPort, NS, UserInterfaceTheme } from "netscript";
+import type { NetscriptPort, NS, ReactElement, UserInterfaceTheme } from "netscript";
 import { ALLOC_ID, ALLOC_ID_ARG, MEM_TAG_FLAGS } from "services/client/memory_tag";
 
 import { MONITOR_PORT, Lifecycle, Message as MonitorMessage } from "batch/client/monitor";
@@ -15,6 +15,7 @@ import { HUD_HEIGHT, HUD_WIDTH, STATUS_WINDOW_WIDTH } from "util/ui";
 import { sleep } from "util/time";
 
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const React: any;
 
 export async function main(ns: NS) {
@@ -53,7 +54,7 @@ Example:
     ns.ui.setTailTitle("Monitor");
     ns.ui.resizeTail(HUD_WIDTH, HUD_HEIGHT);
 
-    const [ww, wh] = ns.ui.windowSize();
+    const [ww] = ns.ui.windowSize();
     ns.ui.moveTail(ww - (HUD_WIDTH + STATUS_WINDOW_WIDTH), 0);
 
     const tableSortings: Record<string, SortBy> = {
@@ -201,7 +202,9 @@ interface SortBy {
 function readMonitorMessages(ns: NS, monitorPort: NetscriptPort, workers: string[], lifecycleByHost: Map<string, Lifecycle>) {
     for (const nextMsg of readAllFromPort(ns, monitorPort)) {
         if (typeof nextMsg === "object") {
-            const [phase, _, payload] = nextMsg as MonitorMessage;
+            const [phase, reqId, payload] = nextMsg as MonitorMessage;
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const _ = reqId; // Minimize code surface where lint is suppressed
             const hosts = Array.isArray(payload) ? payload : [payload];
             for (const host of hosts) {
                 if (phase === Lifecycle.Worker) {
@@ -362,7 +365,7 @@ export function hostInfo(ns: NS, target: string, targetThreads: TargetThreads): 
 function moneyPercentage(ns: NS, host: string): number {
     const curMoney = ns.getServerMoneyAvailable(host);
     const maxMoney = ns.getServerMaxMoney(host);
-    return maxMoney != 0.0 && maxMoney != -0.0 ? curMoney / maxMoney : 0.0;
+    return maxMoney != 0 ? curMoney / maxMoney : 0.0;
 }
 
 function formatThreads(ns: NS, threads: number): string {
@@ -407,14 +410,13 @@ export function ServerBlock({ ns, title, phase, setTableSorting, queuePidsForTai
 }
 
 interface IHeaderSettings {
-    children?: any,
+    children?: ReactElement,
     field: string,
     sortedBy: SortBy,
     setTableSorting: (column: string) => void,
 }
 
 function Header({ children, field, sortedBy, setTableSorting }: IHeaderSettings) {
-    const dir = sortedBy.dir;
     let decB = (<></>);
     let decA = (<></>);
     if (sortedBy.key === field) {
@@ -441,7 +443,7 @@ interface IRowSettings {
     ns: NS,
     host: HostInfo,
     rowIndex: number,
-    cellStyle: any,
+    cellStyle: object,
     queuePidsForTail: (pids: number[]) => void;
     theme: UserInterfaceTheme,
 }

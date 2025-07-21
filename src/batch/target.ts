@@ -1,4 +1,4 @@
-import type { NS, ProcessInfo } from "netscript";
+import type { NS } from "netscript";
 
 export class Target {
     ns: NS;

@@ -56,7 +56,7 @@ export async function main(ns: NS) {
     const WIDTH = 500;
     ns.ui.resizeTail(WIDTH, 500);
 
-    const [ww, wh] = ns.ui.windowSize();
+    const [ww] = ns.ui.windowSize();
     ns.ui.moveTail(ww - WIDTH, HUD_HEIGHT + KARMA_HEIGHT);
     ns.print(`INFO: starting manager on ${ns.getHostname()}`);
 
@@ -96,37 +96,38 @@ async function readHostsFromPort(
             const nextHostMsg = nextMsg as Message;
             const payload = nextHostMsg[2];
             switch (nextHostMsg[0]) {
-                case MessageType.NewTarget:
+                case MessageType.NewTarget: {
                     const targets = Array.isArray(payload) ? payload : [payload as string];
                     ns.print(`INFO: received target ${targets.join(', ')}`);
                     for (const t of targets) {
                         await manager.pushTarget(t);
                     }
                     break;
-
-                case MessageType.FinishedTilling:
+                }
+                case MessageType.FinishedTilling: {
                     ns.print(`SUCCESS: finished tilling ${payload}`);
                     await monitor.sowing(payload as string);
                     await manager.pushTarget(payload as string);
                     break;
-
-                case MessageType.FinishedSowing:
+                }
+                case MessageType.FinishedSowing: {
                     ns.print(`SUCCESS: finished sowing ${payload}`);
                     await manager.pushTarget(payload as string);
                     break;
-
-                case MessageType.Heartbeat:
+                }
+                case MessageType.Heartbeat: {
                     ns.print(`INFO: heartbeat from ${(payload as Heartbeat).target}`);
                     await manager.handleHeartbeat(payload as Heartbeat);
                     break;
-
-                case MessageType.RequestLifecycle:
+                }
+                case MessageType.RequestLifecycle: {
                     const requestId = nextHostMsg[1] as string;
                     const snapshot = manager.snapshotLifecycle();
                     while (!responsePort.tryWrite([requestId, snapshot])) {
                         await ns.sleep(20);
                     }
                     break;
+                }
             }
         }
     }
@@ -528,10 +529,6 @@ async function tick(ns: NS, memory: MemoryClient, manager: TaskSelector) {
 
     const freeRam = await memory.getFreeRam();
     await manager.launchPendingTasks(freeRam);
-}
-
-function noodlesIsSpecial(ns: NS, hostname: string) {
-    return hostname == "n00dles" && ns.getHackingLevel() == 1;
 }
 
 function canHarvest(ns: NS, hostname: string) {

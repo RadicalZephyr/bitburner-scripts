@@ -1,4 +1,4 @@
-import type { NS, NetscriptPort } from "netscript";
+import type { NS } from "netscript";
 
 import { Client, Message as ClientMessage } from "util/client";
 

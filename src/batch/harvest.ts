@@ -18,7 +18,7 @@ import {
 } from "batch/expected_value";
 
 
-export function autocomplete(data: AutocompleteData, _args: string[]): string[] {
+export function autocomplete(data: AutocompleteData): string[] {
     return data.servers;
 }
 
