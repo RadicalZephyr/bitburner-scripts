@@ -2,13 +2,6 @@ import type { GangMemberInfo, NS } from "netscript";
 
 import type { RoleProfiles } from "gang/task-analyzer";
 
-function normalize(v: Record<string, number>): Record<string, number> {
-    const sum = Object.values(v).reduce((a, b) => a + b, 0);
-    const result: Record<string, number> = {};
-    for (const k in v) result[k] = sum === 0 ? 0 : v[k] / sum;
-    return result;
-}
-
 function distance(a: Record<string, number>, b: Record<string, number>): number {
     let d = 0;
     for (const k in a) d += (a[k] - b[k]) ** 2;

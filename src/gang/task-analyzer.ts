@@ -113,7 +113,7 @@ export class TaskAnalyzer {
         for (const name of names) {
             const info = this.ns.gang.getMemberInformation(name);
             for (const f of fields) {
-                sums[f as string] += (info as any)[f];
+                sums[f as string] += info[f];
             }
         }
 
@@ -121,6 +121,7 @@ export class TaskAnalyzer {
         for (const f of fields) {
             avg[f] = sums[f] / names.length;
         }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const firstMemberNonNumber = pickByType(firstMember, (v): v is any => typeof v !== 'number');
         return { ...firstMemberNonNumber, ...avg };
     }
@@ -166,6 +167,7 @@ function emptyProfile(): RoleProfile {
     return { hackWeight: 0, strWeight: 0, defWeight: 0, dexWeight: 0, agiWeight: 0, chaWeight: 0 };
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function averageWeights(tasks: GangTaskStats[]): RoleProfile {
     const profile = emptyProfile();
     if (tasks.length === 0) return profile;

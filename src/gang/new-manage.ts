@@ -7,8 +7,6 @@ import { NAMES } from "gang/names";
 
 import { Condition, PickByType, StatTracker, Threshold } from "util/stat-tracker";
 
-const MAX_GANG_MEMBERS = 12;
-
 export async function main(ns: NS) {
     const flags = ns.flags([
         ["help", false],
@@ -47,8 +45,6 @@ CONFIG VALUES
     const availableNames = NAMES.filter(n => !currentNames.has(n));
     let nameIndex = 0;
 
-    const isHackingGang = ns.gang.getGangInformation().isHacking;
-
     const gangTracker = new GangTracker(ns);
 
     gangTracker.tick();
@@ -57,7 +53,6 @@ CONFIG VALUES
         trainMember(ns, name, gangTracker.member(name));
     }
 
-    let deltaT = 0;
     while (true) {
         if (ns.gang.canRecruitMember() && nameIndex < availableNames.length) {
             const name = availableNames[nameIndex++];
@@ -67,8 +62,8 @@ CONFIG VALUES
             }
         }
 
-        deltaT = await ns.gang.nextUpdate();
-        gangTracker.tick(deltaT);
+        await ns.gang.nextUpdate();
+        gangTracker.tick();
     }
 }
 
@@ -93,12 +88,12 @@ class GangTracker extends StatTracker<GangGenInfo> {
         this.members[name] = new MemberTracker(this.ns, name);
     }
 
-    tick(deltaT?: number) {
+    tick() {
         const gangInfo: GangGenInfo = this.ns.gang.getGangInformation();
         this.update(gangInfo);
 
         for (const name in this.members) {
-            this.members[name].tick(deltaT);
+            this.members[name].tick();
         }
     }
 }
@@ -136,7 +131,7 @@ class MemberTracker {
         return this.ascensionTracker.whenVelocity(stat, condition, threshold);
     }
 
-    tick(deltaT: number) {
+    tick() {
         this.info = this.ns.gang.getMemberInformation(this.name)
         this.infoTracker.update(this.info);
 
