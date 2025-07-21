@@ -4,7 +4,7 @@ const src = 'src';
 const allowedFiletypes = fileSyncJson['allowedFiletypes'];
 
 module.exports = {
-  dist,
-  src,
-  allowedFiletypes,
+    dist,
+    src,
+    allowedFiletypes,
 };

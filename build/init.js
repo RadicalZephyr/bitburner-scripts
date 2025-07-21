@@ -3,5 +3,5 @@ const { dist } = require('./config');
 
 // ensure dist exist
 if (!fs.existsSync(dist)) {
-  fs.mkdirSync(dist);
+    fs.mkdirSync(dist);
 }

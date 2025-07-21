@@ -3,26 +3,26 @@ import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
 import { CONFIG } from 'batch/config';
 
 export interface BatchThreadAnalysis {
-  hackThreads: number;
-  postHackWeakenThreads: number;
-  growThreads: number;
-  postGrowWeakenThreads: number;
+    hackThreads: number;
+    postHackWeakenThreads: number;
+    growThreads: number;
+    postGrowWeakenThreads: number;
 }
 
 export function autocomplete(data: AutocompleteData): string[] {
-  return data.servers;
+    return data.servers;
 }
 
 export async function main(ns: NS) {
-  ns.flags(MEM_TAG_FLAGS);
-  const target = ns.args[0];
-  if (typeof target !== 'string' || !ns.serverExists(target)) {
-    ns.tprintf('target %s does not exist', target);
-    return;
-  }
+    ns.flags(MEM_TAG_FLAGS);
+    const target = ns.args[0];
+    if (typeof target !== 'string' || !ns.serverExists(target)) {
+        ns.tprintf('target %s does not exist', target);
+        return;
+    }
 
-  const eValue = expectedValuePerRamSecond(ns, target);
-  ns.tprint(`${target} ${eValue}`);
+    const eValue = expectedValuePerRamSecond(ns, target);
+    ns.tprint(`${target} ${eValue}`);
 }
 
 /**
@@ -35,28 +35,28 @@ export async function main(ns: NS) {
  * @returns Expected value per RAM-second
  */
 export function expectedValuePerRamSecond(ns: NS, host: string): number {
-  const {
-    hackThreads,
-    growThreads,
-    postHackWeakenThreads,
-    postGrowWeakenThreads,
-  } = analyzeBatchThreads(ns, host);
+    const {
+        hackThreads,
+        growThreads,
+        postHackWeakenThreads,
+        postGrowWeakenThreads,
+    } = analyzeBatchThreads(ns, host);
 
-  const weakenThreads = postHackWeakenThreads + postGrowWeakenThreads;
+    const weakenThreads = postHackWeakenThreads + postGrowWeakenThreads;
 
-  const ramUse =
-    hackThreads * ns.getScriptRam('/batch/h.js', 'home')
-    + growThreads * ns.getScriptRam('/batch/g.js', 'home')
-    + weakenThreads * ns.getScriptRam('/batch/w.js', 'home');
+    const ramUse =
+        hackThreads * ns.getScriptRam('/batch/h.js', 'home')
+        + growThreads * ns.getScriptRam('/batch/g.js', 'home')
+        + weakenThreads * ns.getScriptRam('/batch/w.js', 'home');
 
-  const batchTime = fullBatchTime(ns, host);
+    const batchTime = fullBatchTime(ns, host);
 
-  const hackValue = successfulHackValue(ns, host, hackThreads);
-  const expectedHackValue = hackValue * ns.hackAnalyzeChance(host);
+    const hackValue = successfulHackValue(ns, host, hackThreads);
+    const expectedHackValue = hackValue * ns.hackAnalyzeChance(host);
 
-  // Scale by 1000 to get human readable values and convert units
-  // from $/GB*ms to $/GB*s
-  return (1000 * expectedHackValue) / (batchTime * ramUse);
+    // Scale by 1000 to get human readable values and convert units
+    // from $/GB*ms to $/GB*s
+    return (1000 * expectedHackValue) / (batchTime * ramUse);
 }
 
 /** Calculate the total runtime for a full hack-weaken-grow-weaken batch.
@@ -67,20 +67,20 @@ export function expectedValuePerRamSecond(ns: NS, host: string): number {
  * the player's hacking speed multiplier
  */
 export function fullBatchTime(ns: NS, host: string): number {
-  return ns.getWeakenTime(host) + 2 * CONFIG.batchInterval;
+    return ns.getWeakenTime(host) + 2 * CONFIG.batchInterval;
 }
 
 function successfulHackValue(ns: NS, host: string, threads: number): number {
-  const maxMoney = ns.getServerMaxMoney(host);
+    const maxMoney = ns.getServerMaxMoney(host);
 
-  if (canUseFormulas(ns)) {
-    const server = ns.getServer(host);
-    const player = ns.getPlayer();
-    const percent = ns.formulas.hacking.hackPercent(server, player);
-    return threads * server.moneyMax * percent;
-  }
+    if (canUseFormulas(ns)) {
+        const server = ns.getServer(host);
+        const player = ns.getPlayer();
+        const percent = ns.formulas.hacking.hackPercent(server, player);
+        return threads * server.moneyMax * percent;
+    }
 
-  return threads * maxMoney * ns.hackAnalyze(host);
+    return threads * maxMoney * ns.hackAnalyze(host);
 }
 
 /**
@@ -92,25 +92,25 @@ function successfulHackValue(ns: NS, host: string, threads: number): number {
  * @returns Calculated thread allocation
  */
 export function analyzeBatchThreads(
-  ns: NS,
-  host: string,
-  hackThreads: number = 1,
+    ns: NS,
+    host: string,
+    hackThreads: number = 1,
 ): BatchThreadAnalysis {
-  const stolen = successfulHackValue(ns, host, hackThreads);
-  const maxMoney = ns.getServerMaxMoney(host);
-  const afterHackMoney = Math.max(1, maxMoney - stolen);
+    const stolen = successfulHackValue(ns, host, hackThreads);
+    const maxMoney = ns.getServerMaxMoney(host);
+    const afterHackMoney = Math.max(1, maxMoney - stolen);
 
-  const growThreads = growthAnalyze(ns, host, afterHackMoney);
+    const growThreads = growthAnalyze(ns, host, afterHackMoney);
 
-  const hackSecInc = ns.hackAnalyzeSecurity(hackThreads);
-  const growSecInc = ns.growthAnalyzeSecurity(growThreads);
+    const hackSecInc = ns.hackAnalyzeSecurity(hackThreads);
+    const growSecInc = ns.growthAnalyzeSecurity(growThreads);
 
-  return {
-    hackThreads,
-    postHackWeakenThreads: weakenThreadsNeeded(hackSecInc),
-    growThreads,
-    postGrowWeakenThreads: weakenThreadsNeeded(growSecInc),
-  };
+    return {
+        hackThreads,
+        postHackWeakenThreads: weakenThreadsNeeded(hackSecInc),
+        growThreads,
+        postGrowWeakenThreads: weakenThreadsNeeded(growSecInc),
+    };
 }
 
 /** Calculate the number of grow threads needed for a given multiplicative growth factor.
@@ -128,33 +128,33 @@ export function analyzeBatchThreads(
  * @param afterHackMoney - Remaining money after the hack completes
  */
 export function growthAnalyze(
-  ns: NS,
-  hostname: string,
-  afterHackMoney: number,
+    ns: NS,
+    hostname: string,
+    afterHackMoney: number,
 ): number {
-  if (canUseFormulas(ns)) {
-    const server = ns.getServer(hostname);
-    const player = ns.getPlayer();
-    server.moneyAvailable = afterHackMoney;
-    return Math.ceil(
-      ns.formulas.hacking.growThreads(server, player, server.moneyMax),
-    );
-  } else {
-    // N.B. from testing this calculation tracks very closely with
-    // the formulas value, _except_ as the afterHackMoney
-    // approaches zero the error grows super-linearly
-    const maxMoney = ns.getServerMaxMoney(hostname);
-    const growMultiplier = maxMoney / Math.max(1, afterHackMoney);
-    return Math.ceil(ns.growthAnalyze(hostname, growMultiplier));
-  }
+    if (canUseFormulas(ns)) {
+        const server = ns.getServer(hostname);
+        const player = ns.getPlayer();
+        server.moneyAvailable = afterHackMoney;
+        return Math.ceil(
+            ns.formulas.hacking.growThreads(server, player, server.moneyMax),
+        );
+    } else {
+        // N.B. from testing this calculation tracks very closely with
+        // the formulas value, _except_ as the afterHackMoney
+        // approaches zero the error grows super-linearly
+        const maxMoney = ns.getServerMaxMoney(hostname);
+        const growMultiplier = maxMoney / Math.max(1, afterHackMoney);
+        return Math.ceil(ns.growthAnalyze(hostname, growMultiplier));
+    }
 }
 
 function weakenThreadsNeeded(securityDecrease: number): number {
-  // N.B. this function cannot be substited with the ns function
-  // weaken analyze because they do opposite things!
-  return Math.max(1, Math.ceil(securityDecrease * 20));
+    // N.B. this function cannot be substited with the ns function
+    // weaken analyze because they do opposite things!
+    return Math.max(1, Math.ceil(securityDecrease * 20));
 }
 
 function canUseFormulas(ns: NS): boolean {
-  return ns.fileExists('Formulas.exe', 'home');
+    return ns.fileExists('Formulas.exe', 'home');
 }

@@ -5,20 +5,20 @@
 Each industry has a different set of boost material's coefficients. For example:
 
 - Agriculture:
-  - AI Cores: 0.3
-  - Hardware: 0.2
-  - Real Estate: 0.72
-  - Robots: 0.3
+    - AI Cores: 0.3
+    - Hardware: 0.2
+    - Real Estate: 0.72
+    - Robots: 0.3
 - Chemical:
-  - AI Cores: 0.2
-  - Hardware: 0.2
-  - Real Estate: 0.25
-  - Robots: 0.25
+    - AI Cores: 0.2
+    - Hardware: 0.2
+    - Real Estate: 0.25
+    - Robots: 0.25
 - Tobacco:
-  - AI Cores: 0.15
-  - Hardware: 0.15
-  - Real Estate: 0.15
-  - Robots: 0.25
+    - AI Cores: 0.15
+    - Hardware: 0.15
+    - Real Estate: 0.15
+    - Robots: 0.25
 
 The division production multiplier is used for calculating [division raw production](./division-raw-production.md) in the PRODUCTION state. It's sum of each warehouse's `cityMult`, and `cityMult` is calculated by combining the quantity of each boost material with the boost material's coefficient.
 

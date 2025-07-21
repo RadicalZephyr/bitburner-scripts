@@ -30,8 +30,8 @@ We will store the data as follows:
 
 - **Directory**: `/stocks/`
 - **Files per symbol**: `SYMBOL.json`
-  - Stores an array of `{ ts: number, askPrice: number, bidPrice: number, volatility: number, forecast: number }` entries.
-  - Rolling window length (N ticks) is configurable.
+    - Stores an array of `{ ts: number, askPrice: number, bidPrice: number, volatility: number, forecast: number }` entries.
+    - Rolling window length (N ticks) is configurable.
 
 ##### 2.1.1 Consequences
 
@@ -56,26 +56,26 @@ Persist and load configuration values from `LocalStorage` using the
 
 - Window size (`STOCK_WINDOW_SIZE`)
 - Indicator parameters
-  - `STOCK_SMA_PERIOD`
-  - `STOCK_EMA_PERIOD`
-  - `STOCK_ROC_PERIOD`
-  - `STOCK_BOLLINGER_K`
-  - `STOCK_BUY_PCT` / `STOCK_SELL_PCT`
+    - `STOCK_SMA_PERIOD`
+    - `STOCK_EMA_PERIOD`
+    - `STOCK_ROC_PERIOD`
+    - `STOCK_BOLLINGER_K`
+    - `STOCK_BUY_PCT` / `STOCK_SELL_PCT`
 - Risk limits (`STOCK_MAX_POSITION`, `STOCK_COOLDOWN_MS`)
 - Paths (`STOCK_DATA_PATH`)
 
 #### 2.3 Tracker Script (`src/stock/tracker.ts`)
 
 1. On each stock update `await ns.stock.nextUpdate();`
-   - Fetch these values for each symbol:
-     - `ns.stock.getBidPrice()`
-     - `ns.stock.getAskPrice()`
-     - `ns.stock.getVolatility()`
-     - `ns.stock.getForecast()`
+    - Fetch these values for each symbol:
+        - `ns.stock.getBidPrice()`
+        - `ns.stock.getAskPrice()`
+        - `ns.stock.getVolatility()`
+        - `ns.stock.getForecast()`
 
-   - Append `{ ts: Date.now(), askPrice, bidPrice, volatility, forecast }` to the in-memory buffer.
-   - Trim buffer to the last N entries.
-   - Write buffer to `/stocks/SYMBOL.json`.
+    - Append `{ ts: Date.now(), askPrice, bidPrice, volatility, forecast }` to the in-memory buffer.
+    - Trim buffer to the last N entries.
+    - Write buffer to `/stocks/SYMBOL.json`.
 
 2. For each symbol, compute indicators (see Section 3).
 3. Process requests sent by `StockTrackerClient`.
@@ -108,9 +108,9 @@ Persist and load configuration values from `LocalStorage` using the
 1. Defines a port-based request/response protocol. Use a `MessageType`
    enum and typed payloads mirroring
    `src/services/client/memory.ts`. Supported messages should include:
-   - `Invest` specify an amount of liquid cash to invest.
-   - `Liquidate` instructs the trader to immediately sell all
-     holdings.
+    - `Invest` specify an amount of liquid cash to invest.
+    - `Liquidate` instructs the trader to immediately sell all
+      holdings.
 2. Create a class (`TraderClient`) to hide details of communication
    protocol.
 3. Send requests to trader daemon on a single well-known port `TRADER_PORT`.
@@ -158,11 +158,11 @@ process exits.
 
 1. Scaffold project structure and `src/stock/config.ts`.
 2. Implement `src/stock/tracker.ts`:
-   - Read window size from `src/stock/config.ts`.
-   - Fetch symbols with `ns.stock.getSymbols()`.
-   - Read existing historical data for each symbol from `/stocks/SYMBOL.json`
-   - Fetch and buffer ticks.
-   - Persist to FS as JSON.
+    - Read window size from `src/stock/config.ts`.
+    - Fetch symbols with `ns.stock.getSymbols()`.
+    - Read existing historical data for each symbol from `/stocks/SYMBOL.json`
+    - Fetch and buffer ticks.
+    - Persist to FS as JSON.
 3. Implement `src/stock/client/tracker.ts`.
 4. Implement basic indicators: mean, min/max, σ.
 5. Unit test indicator functions using Jest unit tests in a separate file.
@@ -175,7 +175,7 @@ process exits.
 1. Add median & percentiles.
 2. Add SMA & EMA computations, including unit tests.
 3. Implement `src/stock/trader.ts` skeleton:
-   - Request indicators for all symbols with `StockTrackerClient`.
+    - Request indicators for all symbols with `StockTrackerClient`.
 4. Unit tests for indicator helpers using sample data.
 5. Add simple threshold-based buy/sell using Z‑score rules.
 6. Basic risk control: max position per symbol.
@@ -191,8 +191,8 @@ process exits.
 #### Phase 3 (Advanced)
 
 1. Backtesting harness:
-   - Replay historical ticks from JSON and simulate trades.
-   - Output a JSON timeline of portfolio value and trade P&L to `/logs/backtest-pnl.json`.
+    - Replay historical ticks from JSON and simulate trades.
+    - Output a JSON timeline of portfolio value and trade P&L to `/logs/backtest-pnl.json`.
 2. Parameter tuning: script to sweep indicator periods & thresholds.
 3. Extend to portfolio-level diversification metrics (correlations).
 4. _(Optional)_ Add skewness/kurtosis and anomaly detection.

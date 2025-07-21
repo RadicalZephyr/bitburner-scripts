@@ -18,43 +18,43 @@ import type { NS } from 'netscript';
 import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
 
 export async function main(ns: NS) {
-  ns.flags(MEM_TAG_FLAGS);
-  const scriptName = ns.getScriptName();
-  const contractPortNum = ns.args[0];
-  if (typeof contractPortNum !== 'number') {
-    ns.tprintf(
-      '%s contract run with non-number answer port argument',
-      scriptName,
-    );
-    return;
-  }
-  const contractDataJSON = ns.args[1];
-  if (typeof contractDataJSON !== 'string') {
-    ns.tprintf(
-      '%s contract run with non-string data argument. Must be a JSON string containing file, host and contract data.',
-      scriptName,
-    );
-    return;
-  }
-  const contractData = JSON.parse(contractDataJSON);
-  ns.tprintf('contract data: %s', JSON.stringify(contractData));
-  const answer = solve(contractData);
-  ns.writePort(contractPortNum, answer);
+    ns.flags(MEM_TAG_FLAGS);
+    const scriptName = ns.getScriptName();
+    const contractPortNum = ns.args[0];
+    if (typeof contractPortNum !== 'number') {
+        ns.tprintf(
+            '%s contract run with non-number answer port argument',
+            scriptName,
+        );
+        return;
+    }
+    const contractDataJSON = ns.args[1];
+    if (typeof contractDataJSON !== 'string') {
+        ns.tprintf(
+            '%s contract run with non-string data argument. Must be a JSON string containing file, host and contract data.',
+            scriptName,
+        );
+        return;
+    }
+    const contractData = JSON.parse(contractDataJSON);
+    ns.tprintf('contract data: %s', JSON.stringify(contractData));
+    const answer = solve(contractData);
+    ns.writePort(contractPortNum, answer);
 }
 
 export function solve(data: number[]): number {
-  if (data.length <= 1) return 0;
+    if (data.length <= 1) return 0;
 
-  let jumps = 0;
-  let currentEnd = 0;
-  let farthest = 0;
-  for (let i = 0; i < data.length - 1; i++) {
-    farthest = Math.max(farthest, i + data[i]);
-    if (i === currentEnd) {
-      jumps++;
-      currentEnd = farthest;
-      if (currentEnd >= data.length - 1) return jumps;
+    let jumps = 0;
+    let currentEnd = 0;
+    let farthest = 0;
+    for (let i = 0; i < data.length - 1; i++) {
+        farthest = Math.max(farthest, i + data[i]);
+        if (i === currentEnd) {
+            jumps++;
+            currentEnd = farthest;
+            if (currentEnd >= data.length - 1) return jumps;
+        }
     }
-  }
-  return 0;
+    return 0;
 }

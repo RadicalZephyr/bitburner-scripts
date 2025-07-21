@@ -31,36 +31,36 @@ import type { NS } from 'netscript';
 import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
 
 export async function main(ns: NS) {
-  ns.flags(MEM_TAG_FLAGS);
-  const scriptName = ns.getScriptName();
-  const contractPortNum = ns.args[0];
-  if (typeof contractPortNum !== 'number') {
-    ns.tprintf(
-      '%s contract run with non-number answer port argument',
-      scriptName,
-    );
-    return;
-  }
-  const contractDataJSON = ns.args[1];
-  if (typeof contractDataJSON !== 'string') {
-    ns.tprintf(
-      '%s contract run with non-string data argument. Must be a JSON string containing file, host and contract data.',
-      scriptName,
-    );
-    return;
-  }
-  const contractData = JSON.parse(contractDataJSON);
-  ns.tprintf('contract data: %s', JSON.stringify(contractData));
-  const answer = solve(contractData);
-  ns.writePort(contractPortNum, JSON.stringify(answer));
+    ns.flags(MEM_TAG_FLAGS);
+    const scriptName = ns.getScriptName();
+    const contractPortNum = ns.args[0];
+    if (typeof contractPortNum !== 'number') {
+        ns.tprintf(
+            '%s contract run with non-number answer port argument',
+            scriptName,
+        );
+        return;
+    }
+    const contractDataJSON = ns.args[1];
+    if (typeof contractDataJSON !== 'string') {
+        ns.tprintf(
+            '%s contract run with non-string data argument. Must be a JSON string containing file, host and contract data.',
+            scriptName,
+        );
+        return;
+    }
+    const contractData = JSON.parse(contractDataJSON);
+    ns.tprintf('contract data: %s', JSON.stringify(contractData));
+    const answer = solve(contractData);
+    ns.writePort(contractPortNum, JSON.stringify(answer));
 }
 
 export function solve(data: number[][]): number {
-  const dp = data[data.length - 1].slice();
-  for (let row = data.length - 2; row >= 0; row--) {
-    for (let col = 0; col < data[row].length; col++) {
-      dp[col] = Math.min(dp[col], dp[col + 1]) + data[row][col];
+    const dp = data[data.length - 1].slice();
+    for (let row = data.length - 2; row >= 0; row--) {
+        for (let col = 0; col < data[row].length; col++) {
+            dp[col] = Math.min(dp[col], dp[col + 1]) + data[row][col];
+        }
     }
-  }
-  return dp[0];
+    return dp[0];
 }

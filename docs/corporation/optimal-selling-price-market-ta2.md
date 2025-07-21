@@ -6,8 +6,8 @@ Market price:
 
 - Material: `material.marketPrice`.
 - Product: `product.productionCost`. This value is based on `ProductMarketPriceMult`, input materials' `MarketPrice` and `Coefficient`.
-  - $n = {Number\ of\ input\ materials}$
-  - $ProductMarketPriceMult = 5$
+    - $n = {Number\ of\ input\ materials}$
+    - $ProductMarketPriceMult = 5$
 
 $$ProductMarketPrice = ProductMarketPriceMult\ast\sum_{i = 1}^{n}{MaterialMarketPrice_i\ast MaterialCoefficient_i}$$
 
@@ -47,12 +47,12 @@ It is the product of 6 multipliers:
 $$PotentialSalesVolume = \ ItemMultiplier\ast BusinessFactor\ast AdvertFactor\ast MarketFactor\ast SaleBotsBonus\ast ResearchBonus$$
 
 - Quality/EffectiveRating multiplier:
-  - Material:
-    $$ItemMultiplier = MaterialQuality + 0.001$$
-  - Product:
-    $$ItemMultiplier = 0.5\ast(ProductEffectiveRating)^{0.65}$$
+    - Material:
+      $$ItemMultiplier = MaterialQuality + 0.001$$
+    - Product:
+      $$ItemMultiplier = 0.5\ast(ProductEffectiveRating)^{0.65}$$
 - Business factor:
-  - `BusinessProduction = 1 + office.employeeProductionByJob["Business"]`
+    - `BusinessProduction = 1 + office.employeeProductionByJob["Business"]`
 
 $${BusinessFactor = (BusinessProduction)}^{0.26} + \left({BusinessProduction}\ast{0.0001}\right)$$
 
@@ -124,8 +124,8 @@ There are 2 cases:
 
 - When `PotentialSalesVolume` > `ExpectedSalesVolume`, we can accept a penalty modifier (`MarkupMultiplier` < 1) and raise the price above `MarketPrice + MarkupLimit`.
 - When `PotentialSalesVolume` <= `ExpectedSalesVolume`: `MarketPrice` <= `SellingPrice` <= `MarketPrice + MarkupLimit`.
-  - The selling price is still higher than the market price.
-  - There is no penalty modifier. In this case, we already cannot sell all items, so having no penalty modifier means that the situation is at least not worse.
+    - The selling price is still higher than the market price.
+    - There is no penalty modifier. In this case, we already cannot sell all items, so having no penalty modifier means that the situation is at least not worse.
 
 This is what Market-TA2 does. It assumes that we can sell all stored units without any problems (`PotentialSalesVolume` > `ExpectedSalesVolume`) and can accept a penalty modifier. If that's the case, it assumes `MaxSalesVolume = ExpectedSalesVolume`, "exploits" the range 4 in the previous part, and finds the highest possible price. Otherwise, the price is in range 3, and `MaxSalesVolume` is not affected negatively.
 
@@ -135,7 +135,7 @@ In order to use the formula of Market-TA2, we need `MarkupLimit`. With products,
 
 - Calculate the approximation value. Check the previous section to see how to do this.
 - Calculate `MarkupLimit` directly:
-  - Set `SellingPrice` to a very high value. It must be so high that we cannot sell all produced units (`MaxSalesVolume < ExpectedSalesVolume`). This forces the game to apply the penalty modifier that contains `MarkupLimit`.
-  - Wait for 1 cycle to get `ActualSalesVolume`. It's `product.actualSellAmount` and `material.actualSellAmount`.
-  - Use `ActualSalesVolume` in place of `ExpectedSalesVolume` in the previous formula: $MarkupLimit = (SellingPrice - MarketPrice)\ast\sqrt{\frac{ActualSalesVolume}{M}}$
-  - Calculate `ProductMarkup` from `MarkupLimit`, save `ProductMarkup` to reuse later. `ProductMarkup` never changes.
+    - Set `SellingPrice` to a very high value. It must be so high that we cannot sell all produced units (`MaxSalesVolume < ExpectedSalesVolume`). This forces the game to apply the penalty modifier that contains `MarkupLimit`.
+    - Wait for 1 cycle to get `ActualSalesVolume`. It's `product.actualSellAmount` and `material.actualSellAmount`.
+    - Use `ActualSalesVolume` in place of `ExpectedSalesVolume` in the previous formula: $MarkupLimit = (SellingPrice - MarketPrice)\ast\sqrt{\frac{ActualSalesVolume}{M}}$
+    - Calculate `ProductMarkup` from `MarkupLimit`, save `ProductMarkup` to reuse later. `ProductMarkup` never changes.

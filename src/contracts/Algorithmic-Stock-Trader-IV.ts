@@ -23,52 +23,54 @@ import type { NS } from 'netscript';
 import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
 
 export async function main(ns: NS) {
-  ns.flags(MEM_TAG_FLAGS);
-  const scriptName = ns.getScriptName();
-  const contractPortNum = ns.args[0];
-  if (typeof contractPortNum !== 'number') {
-    ns.tprintf(
-      '%s contract run with non-number answer port argument',
-      scriptName,
-    );
-    return;
-  }
-  const contractDataJSON = ns.args[1];
-  if (typeof contractDataJSON !== 'string') {
-    ns.tprintf(
-      '%s contract run with non-string data argument. Must be a JSON string containing file, host and contract data.',
-      scriptName,
-    );
-    return;
-  }
-  const contractData = JSON.parse(contractDataJSON);
-  ns.tprintf('contract data: %s', JSON.stringify(contractData));
-  const answer = await solve(ns, contractData);
-  ns.writePort(contractPortNum, JSON.stringify(answer));
+    ns.flags(MEM_TAG_FLAGS);
+    const scriptName = ns.getScriptName();
+    const contractPortNum = ns.args[0];
+    if (typeof contractPortNum !== 'number') {
+        ns.tprintf(
+            '%s contract run with non-number answer port argument',
+            scriptName,
+        );
+        return;
+    }
+    const contractDataJSON = ns.args[1];
+    if (typeof contractDataJSON !== 'string') {
+        ns.tprintf(
+            '%s contract run with non-string data argument. Must be a JSON string containing file, host and contract data.',
+            scriptName,
+        );
+        return;
+    }
+    const contractData = JSON.parse(contractDataJSON);
+    ns.tprintf('contract data: %s', JSON.stringify(contractData));
+    const answer = await solve(ns, contractData);
+    ns.writePort(contractPortNum, JSON.stringify(answer));
 }
 
 /**
  * Maximum profit with at most k transactions.
  */
 export async function solve(
-  _ns: NS,
-  data1: [number, number[]],
+    _ns: NS,
+    data1: [number, number[]],
 ): Promise<number> {
-  /*eslint prefer-const: ["error", {"destructuring": "all"}]*/
-  let [k, stocks] = data1;
-  if (stocks.length === 0 || k === 0) return 0;
+    /*eslint prefer-const: ["error", {"destructuring": "all"}]*/
+    let [k, stocks] = data1;
+    if (stocks.length === 0 || k === 0) return 0;
 
-  k = Math.min(k, Math.floor(stocks.length / 2));
-  const n = stocks.length;
-  const dp: number[][] = Array.from({ length: k + 1 }, () => Array(n).fill(0));
+    k = Math.min(k, Math.floor(stocks.length / 2));
+    const n = stocks.length;
+    const dp: number[][] = Array.from({ length: k + 1 }, () =>
+        Array(n).fill(0),
+    );
 
-  for (let t = 1; t <= k; t++) {
-    let maxDiff = -stocks[0];
-    for (let d = 1; d < n; d++) {
-      dp[t][d] = Math.max(dp[t][d - 1], stocks[d] + maxDiff);
-      maxDiff = Math.max(maxDiff, dp[t - 1][d] - stocks[d]);
+    for (let t = 1; t <= k; t++) {
+        let maxDiff = -stocks[0];
+        for (let d = 1; d < n; d++) {
+            dp[t][d] = Math.max(dp[t][d - 1], stocks[d] + maxDiff);
+            maxDiff = Math.max(maxDiff, dp[t - 1][d] - stocks[d]);
+        }
     }
-  }
 
-  return dp[k][n - 1];
+    return dp[k][n - 1];
 }

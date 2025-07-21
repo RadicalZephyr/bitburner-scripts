@@ -43,8 +43,8 @@ Waiting for RP is mandatory in this round. It serves 2 purposes:
 
 - Raising RP in Chemical. High RP means high-quality Chemicals (material).
 - Raising RP in Agriculture. High RP means high-quality Plants.
-  - High-quality Plants can be exported to Chemical to create a loop of quality-enhancing process.
-  - High-quality Plants can be sold easier (higher [MaxSalesVolume](./optimal-selling-price-market-ta2.md)). With your limited budget, you can only increase `MaxSalesVolume` by buying Advert and improving quality of output material. Buying Advert costs money, but waiting for RP is free (except your time).
+    - High-quality Plants can be exported to Chemical to create a loop of quality-enhancing process.
+    - High-quality Plants can be sold easier (higher [MaxSalesVolume](./optimal-selling-price-market-ta2.md)). With your limited budget, you can only increase `MaxSalesVolume` by buying Advert and improving quality of output material. Buying Advert costs money, but waiting for RP is free (except your time).
 
 Waiting for 700RP/390RP in Agriculture/Chemical division respectively is enough. You can wait for more if you want.
 
@@ -72,8 +72,8 @@ Wilson and Advert are extremely important, they are the main factors that make p
 
 - Check this [section](./wilson-analytics-advert.md) for details about the mechanism of Wilson and Advert.
 - When you continuously improve the product division and buy the upgrades with small budget (profit of a few cycles):
-  - Buy Wilson if you can afford it.
-  - After that, use at least 20% of current funds to buy Advert.
+    - Buy Wilson if you can afford it.
+    - After that, use at least 20% of current funds to buy Advert.
 - Stop buying Wilson and Advert when product division's awareness/popularity reaches max value.
 
 [Product](./product.md) is the center of round 3+.

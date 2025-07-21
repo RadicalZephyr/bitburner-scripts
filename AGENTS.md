@@ -14,20 +14,20 @@
   length of the doc comment should be inversely proportional to the
   length and complexity of the function.
 
-  Example:
+    Example:
 
-  ```typescript
-  /**
-   * Get available money on a host.
-   *
-   * @param ns - Netscript API
-   * @param host - Host to query
-   * @returns Amount of money on the server
-   */
-  export function getMoney(ns: NS, host: string): number {
-    return ns.getServerMoneyAvailable(host);
-  }
-  ```
+    ```typescript
+    /**
+     * Get available money on a host.
+     *
+     * @param ns - Netscript API
+     * @param host - Host to query
+     * @returns Amount of money on the server
+     */
+    export function getMoney(ns: NS, host: string): number {
+        return ns.getServerMoneyAvailable(host);
+    }
+    ```
 
 - Imports should never include the file extension and should be full
   paths specified relative to the `src/` directory. So
@@ -79,19 +79,19 @@ string with one of these strings:
 
 - Every script command-line argument, whether a flag or positional argument, should be type-checked using the typescript idiom (`typeof x != "string"`). The script should return early with an error message if the argument type is incorrect.
 - Every new script that is created should have a `--help` flag that is shown when incorrect options are passed and displays a standard UNIX style usage message describing:
-  - what the script does
-  - examples of how to use it
-  - all of the flags that the script takes
-  - any CONFIG values that the script uses
+    - what the script does
+    - examples of how to use it
+    - all of the flags that the script takes
+    - any CONFIG values that the script uses
 
 Use this general structure:
 
 ```typescript
 export async function main(ns: NS) {
-  const flags = ns.flags([['help', false]]);
+    const flags = ns.flags([['help', false]]);
 
-  if (flags.help) {
-    ns.tprint(`
+    if (flags.help) {
+        ns.tprint(`
 USAGE: run ${ns.getScriptName()}
 
 {{ description }}
@@ -102,8 +102,8 @@ Example:
 OPTIONS
   --help   Show this help message
 `);
-    return;
-  }
+        return;
+    }
 }
 ```
 

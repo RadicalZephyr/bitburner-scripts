@@ -3,43 +3,43 @@ import { ALLOC_ID, MEM_TAG_FLAGS } from 'services/client/memory_tag';
 import { parseAndRegisterAlloc } from 'services/client/memory';
 
 export function autocomplete(data: AutocompleteData): string[] {
-  return data.servers;
+    return data.servers;
 }
 
 export async function main(ns: NS) {
-  const args = ns.flags([['help', false], ...MEM_TAG_FLAGS]);
-  if (args.help || ns.args.length > 1) {
-    ns.tprint('This script does a more detailed analysis of a server.');
-    ns.tprint(`Usage: run ${ns.getScriptName()} SERVER`);
-    ns.tprint('Example:');
-    ns.tprint(`> run ${ns.getScriptName()} n00dles`);
-    return;
-  }
+    const args = ns.flags([['help', false], ...MEM_TAG_FLAGS]);
+    if (args.help || ns.args.length > 1) {
+        ns.tprint('This script does a more detailed analysis of a server.');
+        ns.tprint(`Usage: run ${ns.getScriptName()} SERVER`);
+        ns.tprint('Example:');
+        ns.tprint(`> run ${ns.getScriptName()} n00dles`);
+        return;
+    }
 
-  const allocationId = await parseAndRegisterAlloc(ns, args);
-  if (args[ALLOC_ID] !== -1 && allocationId === null) {
-    return;
-  }
+    const allocationId = await parseAndRegisterAlloc(ns, args);
+    if (args[ALLOC_ID] !== -1 && allocationId === null) {
+        return;
+    }
 
-  const server = ns.args[0];
-  if (!(typeof server === 'string' && ns.serverExists(server))) {
-    ns.tprint(`${server} is not a valid hostname.`);
-    return;
-  }
-  const usedRam = ns.getServerUsedRam(server);
-  const maxRam = ns.getServerMaxRam(server);
-  const money = ns.getServerMoneyAvailable(server);
-  const maxMoney = ns.getServerMaxMoney(server);
-  const minSec = ns.getServerMinSecurityLevel(server);
-  const sec = ns.getServerSecurityLevel(server);
-  const grow2x = Math.ceil(ns.growthAnalyze(server, 2));
-  const grow3x = Math.ceil(ns.growthAnalyze(server, 3));
-  const grow4x = Math.ceil(ns.growthAnalyze(server, 4));
-  const grow8x = Math.ceil(ns.growthAnalyze(server, 8));
-  const hack10 = Math.ceil(0.1 / ns.hackAnalyze(server));
-  const hack25 = Math.ceil(0.25 / ns.hackAnalyze(server));
-  const hack50 = Math.ceil(0.5 / ns.hackAnalyze(server));
-  ns.tprint(`
+    const server = ns.args[0];
+    if (!(typeof server === 'string' && ns.serverExists(server))) {
+        ns.tprint(`${server} is not a valid hostname.`);
+        return;
+    }
+    const usedRam = ns.getServerUsedRam(server);
+    const maxRam = ns.getServerMaxRam(server);
+    const money = ns.getServerMoneyAvailable(server);
+    const maxMoney = ns.getServerMaxMoney(server);
+    const minSec = ns.getServerMinSecurityLevel(server);
+    const sec = ns.getServerSecurityLevel(server);
+    const grow2x = Math.ceil(ns.growthAnalyze(server, 2));
+    const grow3x = Math.ceil(ns.growthAnalyze(server, 3));
+    const grow4x = Math.ceil(ns.growthAnalyze(server, 4));
+    const grow8x = Math.ceil(ns.growthAnalyze(server, 8));
+    const hack10 = Math.ceil(0.1 / ns.hackAnalyze(server));
+    const hack25 = Math.ceil(0.25 / ns.hackAnalyze(server));
+    const hack50 = Math.ceil(0.5 / ns.hackAnalyze(server));
+    ns.tprint(`
 ${server}:
     RAM        : ${usedRam} / ${maxRam} (${(usedRam / maxRam) * 100}%)
     $          : $${ns.formatNumber(money)} / $${ns.formatNumber(maxMoney)} (${ns.formatPercent(money / maxMoney)})

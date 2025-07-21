@@ -125,12 +125,12 @@ $$TotalMult\ast (0.08\ast B + 0.05\ast C + 0.02\ast D + 0.1\ast E)$$
 $$TotalMult\ast (0.08\ast A + 0.05\ast B + 0.02\ast C + 0.05\ast D + 0.05\ast E)$$
 
 - Product's rating:
-  - If an industry produces product, it has its own `RatingWeights` for its product. `RatingWeights` contains coefficients of 6 stats: quality, performance, durability, reliability, aesthetics, features. For example: Tobacco's `RatingWeights`:
-    - Quality's coefficient: 0.7.
-    - Durability's coefficient: 0.1.
-    - Aesthetics' coefficient: 0.2.
-  - `RatingWeights` is `industryData.product.ratingWeights`.
-  - Formula:
+    - If an industry produces product, it has its own `RatingWeights` for its product. `RatingWeights` contains coefficients of 6 stats: quality, performance, durability, reliability, aesthetics, features. For example: Tobacco's `RatingWeights`:
+        - Quality's coefficient: 0.7.
+        - Durability's coefficient: 0.1.
+        - Aesthetics' coefficient: 0.2.
+    - `RatingWeights` is `industryData.product.ratingWeights`.
+    - Formula:
 
 $$ProductRating = \sum_{i = 1}^{6}{{ProductStat}_i\ast{StatCoefficient}_i}$$
 
@@ -155,8 +155,8 @@ $$Demand = \begin{cases}Min(100,AdvertInvestMult\ast(100\ast(Popularity/Awarenes
 $$Competition = Random(0,70)$$
 
 - Product's size:
-  - It's `product.size`.
-  - Formula:
+    - It's `product.size`.
+    - Formula:
 
 $$ProductSize = \sum_{i = 1}^{NumberOfInputMaterials}{{InputMaterialSize}_i\ast{InputMaterialCoefficient}_i}$$
 

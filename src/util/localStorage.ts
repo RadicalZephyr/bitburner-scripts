@@ -7,7 +7,7 @@ let LocalStorage: Storage = globalThis.localStorage;
  * `globalThis.localStorage` may not be defined.
  */
 export function setLocalStorage(storage: Storage) {
-  LocalStorage = storage;
+    LocalStorage = storage;
 }
 
 export { LocalStorage };

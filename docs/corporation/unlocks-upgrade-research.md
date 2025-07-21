@@ -61,8 +61,8 @@ $$UpgradeCost_{From\ a\ to\ b} = BasePrice\ast\left( \frac{{PriceMult}^{b} - {Pr
 $$MaxUpgradeLevel = \log_{PriceMult}\left( MaxCost\ast\frac{PriceMult - 1}{BasePrice} + (PriceMult)^{CurrentLevel} \right)$$
 
 - Benefit:
-  - All benefits are multipliers. `BaseBenefit` is 1.
-  - The only exception is DreamSense. Its benefit is raw value, its `BaseBenefit` is 0.
+    - All benefits are multipliers. `BaseBenefit` is 1.
+    - The only exception is DreamSense. Its benefit is raw value, its `BaseBenefit` is 0.
 
 $$Benefit = BaseBenefit + Benefit\ast CurrentLevel$$
 
@@ -96,12 +96,12 @@ Advice:
 
 - DreamSense is useless. Never buy it.
 - Round 1:
-  - SmartStorage and Warehouse are the most important upgrades in this round.
-  - Only buy 1 or 2 Advert level(s).
+    - SmartStorage and Warehouse are the most important upgrades in this round.
+    - Only buy 1 or 2 Advert level(s).
 - Round 2:
-  - SmartFactories, SmartStorage and Warehouse are the most important upgrades in this round.
-  - Only buy 1 Office level and a couple of Advert levels for Agriculture division.
-  - Do not buy Office/Advert for Chemical division.
+    - SmartFactories, SmartStorage and Warehouse are the most important upgrades in this round.
+    - Only buy 1 Office level and a couple of Advert levels for Agriculture division.
+    - Do not buy Office/Advert for Chemical division.
 - Check this [section](./general-advice.md) for more advice, especially for round 3+.
 
 ## Research
@@ -153,17 +153,17 @@ Research list:
 Advice:
 
 - Do not deplete entire RP pool to buy research. You should only buy research if it costs less than half of the RP pool. Personally, my conditions for buying research upgrades are:
-  - For energy/morale and employee's stats: if it costs less than 20% of RP pool.
-  - For production: if it costs less than 10% of RP pool.
+    - For energy/morale and employee's stats: if it costs less than 20% of RP pool.
+    - For production: if it costs less than 10% of RP pool.
 - If you don't have a custom Market-TA2 script, you must prioritize Market-TA1 and Market-TA2. Market-TA1 is useless, the only reason to buy it is because it's the prerequisite of Market-TA2. If you buy them, you should stock up on RP and buy them together. However, I recommend implementing a custom Market-TA2 ASAP. Market-TA1 and Market-TA2 cost 70000 RP, that's a huge number of RP at the start of round 3+. **Implementing a custom Market-TA2 script is the best optimization in round 3+.**
 - After that, you should prioritize research upgrades for higher maximum energy/morale and employee's stats over production. Research upgrades for production are nice to have, but it's much less important than energy/morale/employee's stats.
 - My research order for higher maximum energy/morale and employee's stats: Overclock → Sti.mu → Automatic Drug Administration → Go-Juice → CPH4 Injections.
 - Do not buy these useless ones:
-  - uPgrade: Dashboard
-  - AutoBrew
-  - AutoPartyManager
-  - HRBuddy-Recruitment
-  - HRBuddy-Training
+    - uPgrade: Dashboard
+    - AutoBrew
+    - AutoPartyManager
+    - HRBuddy-Recruitment
+    - HRBuddy-Training
 - In most cases, uPgrade: Capacity.I and uPgrade: Capacity.II are useless. New products are usually much better than the old ones, so there is no point in increasing the maximum number of products. The only exception is when you reach the endgame. In the endgame, new products are only marginally better than the old ones, so having more product slots may be beneficial. However, even in the endgame, those research upgrades may do more harm than good. In the endgame, the warehouse's size and high-quality input materials are serious bottlenecks. Having more product slots means that you need more free space in the warehouse and more units of input materials. In some cases, increasing product slots actually reduces the overall profit. You need to fine-tune it per use case.
 
 You can exchange hashes for RP if you have SF9. This number of RP is added to all divisions.
@@ -172,7 +172,7 @@ RP gain rate:
 
 - RP is increased in 4 states: PURCHASE, PRODUCTION, EXPORT and SALE.
 - RP gain per city per state:
-  - `RnDProduction = office.employeeProductionByJob["Research & Development"]`
+    - `RnDProduction = office.employeeProductionByJob["Research & Development"]`
 
 $$RPGain = 0.004\ast(RnDProduction)^{0.5}\ast UpgradeMultiplier\ast ResearchMultiplier$$
 

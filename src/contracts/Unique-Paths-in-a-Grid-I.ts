@@ -16,28 +16,28 @@ import type { NS } from 'netscript';
 import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
 
 export async function main(ns: NS) {
-  ns.flags(MEM_TAG_FLAGS);
-  const scriptName = ns.getScriptName();
-  const contractPortNum = ns.args[0];
-  if (typeof contractPortNum !== 'number') {
-    ns.tprintf(
-      '%s contract run with non-number answer port argument',
-      scriptName,
-    );
-    return;
-  }
-  const contractDataJSON = ns.args[1];
-  if (typeof contractDataJSON !== 'string') {
-    ns.tprintf(
-      '%s contract run with non-string data argument. Must be a JSON string containing file, host and contract data.',
-      scriptName,
-    );
-    return;
-  }
-  const contractData = JSON.parse(contractDataJSON);
-  ns.tprintf('contract data: %s', JSON.stringify(contractData));
-  const answer = solve(contractData);
-  ns.writePort(contractPortNum, JSON.stringify(answer));
+    ns.flags(MEM_TAG_FLAGS);
+    const scriptName = ns.getScriptName();
+    const contractPortNum = ns.args[0];
+    if (typeof contractPortNum !== 'number') {
+        ns.tprintf(
+            '%s contract run with non-number answer port argument',
+            scriptName,
+        );
+        return;
+    }
+    const contractDataJSON = ns.args[1];
+    if (typeof contractDataJSON !== 'string') {
+        ns.tprintf(
+            '%s contract run with non-string data argument. Must be a JSON string containing file, host and contract data.',
+            scriptName,
+        );
+        return;
+    }
+    const contractData = JSON.parse(contractDataJSON);
+    ns.tprintf('contract data: %s', JSON.stringify(contractData));
+    const answer = solve(contractData);
+    ns.writePort(contractPortNum, JSON.stringify(answer));
 }
 
 /* The solution to this hinges on breaking the problem down. From each
@@ -85,60 +85,60 @@ export async function main(ns: NS) {
  *
  */
 export function solve(data: [number, number]) {
-  const [numRows, numCols] = data;
-  const pathsTable = new Paths(numRows, numCols);
-  pathsTable.fillTable();
-  return pathsTable.at([numRows - 1, numCols - 1]);
+    const [numRows, numCols] = data;
+    const pathsTable = new Paths(numRows, numCols);
+    pathsTable.fillTable();
+    return pathsTable.at([numRows - 1, numCols - 1]);
 }
 
 type Position = [number, number];
 
 class Paths {
-  numRows: number;
-  numCols: number;
-  paths: number[][];
+    numRows: number;
+    numCols: number;
+    paths: number[][];
 
-  constructor(numRows: number, numCols: number) {
-    this.numRows = numRows;
-    this.numCols = numCols;
-    this.paths = seedTable(numRows, numCols);
-  }
-
-  fillTable() {
-    for (let x = 1; x < this.numRows; x++) {
-      for (let y = 1; y < this.numCols; y++) {
-        this.calculate([x, y]);
-      }
+    constructor(numRows: number, numCols: number) {
+        this.numRows = numRows;
+        this.numCols = numCols;
+        this.paths = seedTable(numRows, numCols);
     }
-  }
 
-  calculate(pos: Position) {
-    const sum = this.prevNeighbors(pos)
-      .map((p) => this.at(p), this)
-      .reduce((p, c) => p + c);
-    this.paths[pos[0]][pos[1]] = sum;
-  }
+    fillTable() {
+        for (let x = 1; x < this.numRows; x++) {
+            for (let y = 1; y < this.numCols; y++) {
+                this.calculate([x, y]);
+            }
+        }
+    }
 
-  at([x, y]: Position): number {
-    return this.paths[x][y];
-  }
+    calculate(pos: Position) {
+        const sum = this.prevNeighbors(pos)
+            .map((p) => this.at(p), this)
+            .reduce((p, c) => p + c);
+        this.paths[pos[0]][pos[1]] = sum;
+    }
 
-  prevNeighbors(position: Position): Position[] {
-    const [x, y] = position;
-    return [
-      [x - 1, y],
-      [x, y - 1],
-    ].filter(([x, y]) => x >= 0 && y >= 0, this) as Position[];
-  }
+    at([x, y]: Position): number {
+        return this.paths[x][y];
+    }
+
+    prevNeighbors(position: Position): Position[] {
+        const [x, y] = position;
+        return [
+            [x - 1, y],
+            [x, y - 1],
+        ].filter(([x, y]) => x >= 0 && y >= 0, this) as Position[];
+    }
 }
 
 function seedTable(numRows: number, numCols: number): number[][] {
-  const firstRow = Array.from({ length: numCols }, () => 1);
-  const rows = Array.from({ length: numRows - 1 }, () => {
-    const row = Array.from({ length: numCols - 1 }, () => 0);
-    row.unshift(1);
-    return row;
-  });
-  rows.unshift(firstRow);
-  return rows;
+    const firstRow = Array.from({ length: numCols }, () => 1);
+    const rows = Array.from({ length: numRows - 1 }, () => {
+        const row = Array.from({ length: numCols - 1 }, () => 0);
+        row.unshift(1);
+        return row;
+    });
+    rows.unshift(firstRow);
+    return rows;
 }

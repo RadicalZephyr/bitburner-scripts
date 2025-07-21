@@ -1,32 +1,32 @@
 {
-  "include": [
-    "NetscriptDefinitions.d.ts",
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "src/**/*.js"
-  ],
-  "exclude": ["src/lib/react.ts", "src/jest-shim.ts", "src/**/*.test.ts"],
-  "compilerOptions": {
-    "lib": ["esnext", "dom"],
-    "module": "esnext",
-    "target": "esnext",
-    "moduleResolution": "node",
-    "skipLibCheck": true,
-    "noImplicitReturns": true,
-    "noImplicitThis": true,
-    "esModuleInterop": true,
-    "inlineSourceMap": false,
-    "inlineSources": false,
-    "rootDir": "src/",
-    "outDir": "dist/",
-    "baseUrl": "src/",
-    "allowJs": true,
-    "jsx": "react",
-    "types": ["jest"],
-    "paths": {
-      "/*": ["*"],
-      "netscript": ["../NetScriptDefinitions.d.ts"],
-      "@react": ["lib/react.ts"]
+    "include": [
+        "NetscriptDefinitions.d.ts",
+        "src/**/*.ts",
+        "src/**/*.tsx",
+        "src/**/*.js"
+    ],
+    "exclude": ["src/lib/react.ts", "src/jest-shim.ts", "src/**/*.test.ts"],
+    "compilerOptions": {
+        "lib": ["esnext", "dom"],
+        "module": "esnext",
+        "target": "esnext",
+        "moduleResolution": "node",
+        "skipLibCheck": true,
+        "noImplicitReturns": true,
+        "noImplicitThis": true,
+        "esModuleInterop": true,
+        "inlineSourceMap": false,
+        "inlineSources": false,
+        "rootDir": "src/",
+        "outDir": "dist/",
+        "baseUrl": "src/",
+        "allowJs": true,
+        "jsx": "react",
+        "types": ["jest"],
+        "paths": {
+            "/*": ["*"],
+            "netscript": ["../NetScriptDefinitions.d.ts"],
+            "@react": ["lib/react.ts"]
+        }
     }
-  }
 }

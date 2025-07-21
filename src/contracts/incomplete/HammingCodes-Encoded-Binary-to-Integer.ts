@@ -35,59 +35,60 @@ import type { NS } from 'netscript';
 import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
 
 export async function main(ns: NS) {
-  ns.flags(MEM_TAG_FLAGS);
-  const scriptName = ns.getScriptName();
-  const contractPortNum = ns.args[0];
-  if (typeof contractPortNum !== 'number') {
-    ns.tprintf(
-      '%s contract run with non-number answer port argument',
-      scriptName,
-    );
-    return;
-  }
-  const contractDataJSON = ns.args[1];
-  if (typeof contractDataJSON !== 'string') {
-    ns.tprintf(
-      '%s contract run with non-string data argument. Must be a JSON string containing file, host and contract data.',
-      scriptName,
-    );
-    return;
-  }
-  const contractData = JSON.parse(contractDataJSON);
-  ns.tprintf('contract data: %s', JSON.stringify(contractData));
-  const answer = solve(contractData);
-  ns.writePort(contractPortNum, JSON.stringify(answer));
+    ns.flags(MEM_TAG_FLAGS);
+    const scriptName = ns.getScriptName();
+    const contractPortNum = ns.args[0];
+    if (typeof contractPortNum !== 'number') {
+        ns.tprintf(
+            '%s contract run with non-number answer port argument',
+            scriptName,
+        );
+        return;
+    }
+    const contractDataJSON = ns.args[1];
+    if (typeof contractDataJSON !== 'string') {
+        ns.tprintf(
+            '%s contract run with non-string data argument. Must be a JSON string containing file, host and contract data.',
+            scriptName,
+        );
+        return;
+    }
+    const contractData = JSON.parse(contractDataJSON);
+    ns.tprintf('contract data: %s', JSON.stringify(contractData));
+    const answer = solve(contractData);
+    ns.writePort(contractPortNum, JSON.stringify(answer));
 }
 
 /**
  * Decode extended Hamming code to an integer.
  */
 function solve(data: string): number {
-  const bits = data.split('');
-  const m = bits.length;
+    const bits = data.split('');
+    const m = bits.length;
 
-  const parityIndices: number[] = [];
-  for (let i = 0; 2 ** i < m; i++) parityIndices.push(2 ** i);
-  parityIndices.unshift(0);
+    const parityIndices: number[] = [];
+    for (let i = 0; 2 ** i < m; i++) parityIndices.push(2 ** i);
+    parityIndices.unshift(0);
 
-  let error = 0;
-  for (const p of parityIndices.slice(1)) {
-    let parity = 0;
-    for (let i = p; i <= m; i += 2 * p) {
-      for (let j = i; j < i + p && j <= m; j++) parity ^= Number(bits[j - 1]);
+    let error = 0;
+    for (const p of parityIndices.slice(1)) {
+        let parity = 0;
+        for (let i = p; i <= m; i += 2 * p) {
+            for (let j = i; j < i + p && j <= m; j++)
+                parity ^= Number(bits[j - 1]);
+        }
+        if (parity !== Number(bits[p - 1])) error ^= p;
     }
-    if (parity !== Number(bits[p - 1])) error ^= p;
-  }
-  const overall = bits.reduce((a, b) => a ^ Number(b), 0);
-  if (overall !== 0 && error === 0) error = 1; // overall parity bit
-  if (error > 0) {
-    const idx = error - 1;
-    bits[idx] = bits[idx] === '0' ? '1' : '0';
-  }
+    const overall = bits.reduce((a, b) => a ^ Number(b), 0);
+    if (overall !== 0 && error === 0) error = 1; // overall parity bit
+    if (error > 0) {
+        const idx = error - 1;
+        bits[idx] = bits[idx] === '0' ? '1' : '0';
+    }
 
-  const dataBits: string[] = [];
-  for (let i = 1; i <= m; i++) {
-    if (!parityIndices.includes(i)) dataBits.push(bits[i - 1]);
-  }
-  return parseInt(dataBits.join(''), 2);
+    const dataBits: string[] = [];
+    for (let i = 1; i <= m; i++) {
+        if (!parityIndices.includes(i)) dataBits.push(bits[i - 1]);
+    }
+    return parseInt(dataBits.join(''), 2);
 }

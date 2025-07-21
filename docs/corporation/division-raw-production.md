@@ -20,21 +20,21 @@ For example, with Agriculture, if `RawProduction` is 1000, we need 500 units of 
 `RawProduction` is the product of 4 multipliers:
 
 - Office multiplier:
-  - Employee production in 3 jobs (Operations, Engineer, Management) and their sum:
-    - `OperationsProd = office.employeeProductionByJob.Operations`
-    - `EngineerProd = office.employeeProductionByJob.Engineer`
-    - `ManagementProd = office.employeeProductionByJob.Management`
-    - $TotalEmployeesProd = OperationsProd + EngineerProd + ManagementProd$
-  - Management factor:
-    $$ManagementFactor = 1 + \frac{ManagementProd}{1.2\ast TotalEmployeesProd}$$
-  - Employee production multiplier:
-    $$EmployeeProductionMultiplier = \left( (OperationsProd)^{0.4} + (EngineerProd)^{0.3} \right)\ast ManagementFactor$$
-  - Balancing multiplier:
-    $$BalancingMultiplier = 0.05$$
-  - If output is material:
-    $$OfficeMultiplier = BalancingMultiplier\ast EmployeeProductionMultiplier$$
-  - If output is product:
-    $$OfficeMultiplier = 0.5\ast BalancingMultiplier\ast EmployeeProductionMultiplier$$
+    - Employee production in 3 jobs (Operations, Engineer, Management) and their sum:
+        - `OperationsProd = office.employeeProductionByJob.Operations`
+        - `EngineerProd = office.employeeProductionByJob.Engineer`
+        - `ManagementProd = office.employeeProductionByJob.Management`
+        - $TotalEmployeesProd = OperationsProd + EngineerProd + ManagementProd$
+    - Management factor:
+      $$ManagementFactor = 1 + \frac{ManagementProd}{1.2\ast TotalEmployeesProd}$$
+    - Employee production multiplier:
+      $$EmployeeProductionMultiplier = \left( (OperationsProd)^{0.4} + (EngineerProd)^{0.3} \right)\ast ManagementFactor$$
+    - Balancing multiplier:
+      $$BalancingMultiplier = 0.05$$
+    - If output is material:
+      $$OfficeMultiplier = BalancingMultiplier\ast EmployeeProductionMultiplier$$
+    - If output is product:
+      $$OfficeMultiplier = 0.5\ast BalancingMultiplier\ast EmployeeProductionMultiplier$$
 - Division production multiplier: see previous [section](./boost-material.md).
 - Upgrade multiplier: multiplier from [Smart Factories](./unlocks-upgrade-research.md).
 - Research multiplier: multiplier from [research](./unlocks-upgrade-research.md).

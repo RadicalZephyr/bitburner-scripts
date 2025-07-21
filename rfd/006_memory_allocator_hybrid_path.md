@@ -93,10 +93,10 @@ const procs = ns.ps(host);
 let allocRam = 0n;
 let foreignRam = 0n;
 for (const p of procs) {
-  if (hasAllocTag(p)) allocRam += toFixed(p.ramUsage);
-  else if (isRegistered(pid))
-    allocRam += toFixed(p.ramUsage); // core services
-  else foreignRam += toFixed(p.ramUsage);
+    if (hasAllocTag(p)) allocRam += toFixed(p.ramUsage);
+    else if (isRegistered(pid))
+        allocRam += toFixed(p.ramUsage); // core services
+    else foreignRam += toFixed(p.ramUsage);
 }
 ```
 
@@ -126,10 +126,10 @@ With identical CLI semantics, most ad‑hoc scripts now opt‑in automatically.
 
 ```ts
 interface Registration {
-  pid: number;
-  ram: bigint;
-  hostname: string;
-  ts: number;
+    pid: number;
+    ram: bigint;
+    hostname: string;
+    ts: number;
 }
 
 registerAllocation(host, pid, ram);

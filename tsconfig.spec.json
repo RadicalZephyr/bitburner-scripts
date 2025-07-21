@@ -1,12 +1,12 @@
 {
-  "compilerOptions": {
-    "target": "ESNext",
-    "lib": ["ESNext"],
-    "module": "ESNext",
-    "esModuleInterop": true,
-    "isolatedModules": false,
-    "strict": true,
-    "skipLibCheck": true,
-    "types": ["jest"]
-  }
+    "compilerOptions": {
+        "target": "ESNext",
+        "lib": ["ESNext"],
+        "module": "ESNext",
+        "esModuleInterop": true,
+        "isolatedModules": false,
+        "strict": true,
+        "skipLibCheck": true,
+        "types": ["jest"]
+    }
 }

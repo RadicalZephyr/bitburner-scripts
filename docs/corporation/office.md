@@ -6,20 +6,21 @@ Employee's stats are kept track as average value. There are 6 average values: `A
 
 ```typescript
 this.avgMorale =
-  (this.avgMorale * this.numEmployees + getRandomInt(averageStat, averageStat))
-  / (this.numEmployees + 1);
+    (this.avgMorale * this.numEmployees
+        + getRandomInt(averageStat, averageStat))
+    / (this.numEmployees + 1);
 ```
 
 Job assignment:
 
 - Each office has 2 records: `employeeJobs` and `employeeNextJobs`. Data in `employeeJobs` (number of employees in each job) is used for calculations of other relevant data like `EmployeeProductionByJob`, `AvgEnergy`, `AvgMorale`, `TotalExperience`. When you call `setAutoJobAssignment`, its parameter is calculated and assigned to `employeeNextJobs`. In next cycle's START state, data in `employeeNextJobs` will be copied to `employeeJobs`.
 - Behavior of `setAutoJobAssignment` may be confused at first glance. Let's say you call it like this: `ns.corporation.setAutoJobAssignment("Agriculture","Sector-12","Operations", 5)`
-  - If you have 5 \"Operations\" employees, it does nothing.
-  - If you have 7 \"Operations\" employees, it reduces number of \"Operations\" employees to 5, and set \"Unassigned\" employees to 2.
-  - If you have 2 \"Operations\" employees, it checks if you have at least 3 \"Unassigned\" employees. If yes, it changes \"Operations\" employees to 5 and reduces \"Unassigned\" employees by 3. If not, it throws error. Essentially, it tries to move employees from \"Unassigned\" to \"Operations\".
+    - If you have 5 \"Operations\" employees, it does nothing.
+    - If you have 7 \"Operations\" employees, it reduces number of \"Operations\" employees to 5, and set \"Unassigned\" employees to 2.
+    - If you have 2 \"Operations\" employees, it checks if you have at least 3 \"Unassigned\" employees. If yes, it changes \"Operations\" employees to 5 and reduces \"Unassigned\" employees by 3. If not, it throws error. Essentially, it tries to move employees from \"Unassigned\" to \"Operations\".
 - This means the proper way to use `setAutoJobAssignment` is:
-  - Use it to set all jobs to 0.
-  - Use it to set all jobs to your requirements.
+    - Use it to set all jobs to 0.
+    - Use it to set all jobs to your requirements.
 
 Total experience is increased in these cases:
 
@@ -100,11 +101,11 @@ $$IncreaseOfMorale = \frac{PartyCostPerEmployee}{10^{6}}$$
 const reduction = 0.002 * marketCycles;
 const increase = this.partyMult > 1 ? (this.partyMult - 1) * 10 : 0;
 this.avgEnergy =
-  (this.avgEnergy - reduction * Math.random()) * perfMult
-  + (this.teaPending ? 2 : 0);
+    (this.avgEnergy - reduction * Math.random()) * perfMult
+    + (this.teaPending ? 2 : 0);
 this.avgMorale =
-  ((this.avgMorale - reduction * Math.random()) * perfMult + increase)
-  * this.partyMult;
+    ((this.avgMorale - reduction * Math.random()) * perfMult + increase)
+    * this.partyMult;
 ```
 
 There are 3 ways to counter the drop of energy/morale:
@@ -117,11 +118,11 @@ There are 3 ways to counter the drop of energy/morale:
 
 ```typescript
 this.avgMorale =
-  (this.avgMorale * this.numEmployees + getRandomInt(50, 100))
-  / (this.numEmployees + 1);
+    (this.avgMorale * this.numEmployees + getRandomInt(50, 100))
+    / (this.numEmployees + 1);
 this.avgEnergy =
-  (this.avgEnergy * this.numEmployees + getRandomInt(50, 100))
-  / (this.numEmployees + 1);
+    (this.avgEnergy * this.numEmployees + getRandomInt(50, 100))
+    / (this.numEmployees + 1);
 ```
 
 Optimal `PartyCostPerEmployee`:
@@ -183,11 +184,11 @@ $$ProductionBase = AvgMorale\ast AvgEnergy\ast 10^{-4}$$
 $$Exp = \frac{TotalExperience}{TotalEmployees}$$
 
 - Production multiplier:
-  - Operations: $$ProductionMultiplier = 0.6\ast IntelligenceMult + 0.1\ast CharismaMult + Exp + 0.5\ast CreativityMult + EfficiencyMult$$
-  - Engineer: $$ProductionMultiplier = IntelligenceMult + 0.1\ast CharismaMult + 1.5\ast Exp + EfficiencyMult$$
-  - Business: $$ProductionMultiplier = 0.4\ast IntelligenceMult + CharismaMult + 0.5\ast Exp$$
-  - Management: $$ProductionMultiplier = 2\ast CharismaMult + Exp + 0.2\ast CreativityMult + 0.7\ast EfficiencyMult$$
-  - Research and Development: $$ProductionMultiplier = 1.5\ast IntelligenceMult + 0.8\ast Exp + CreativityMult + 0.5\ast EfficiencyMult$$
+    - Operations: $$ProductionMultiplier = 0.6\ast IntelligenceMult + 0.1\ast CharismaMult + Exp + 0.5\ast CreativityMult + EfficiencyMult$$
+    - Engineer: $$ProductionMultiplier = IntelligenceMult + 0.1\ast CharismaMult + 1.5\ast Exp + EfficiencyMult$$
+    - Business: $$ProductionMultiplier = 0.4\ast IntelligenceMult + CharismaMult + 0.5\ast Exp$$
+    - Management: $$ProductionMultiplier = 2\ast CharismaMult + Exp + 0.2\ast CreativityMult + 0.7\ast EfficiencyMult$$
+    - Research and Development: $$ProductionMultiplier = 1.5\ast IntelligenceMult + 0.8\ast Exp + CreativityMult + 0.5\ast EfficiencyMult$$
 - $EmployeesJobCount = office.employeeJobs[JobName]$
 - Employee production by job:
 

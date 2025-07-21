@@ -12,19 +12,19 @@ Provides real-time metrics for decision-making:
 
 ```ts
 interface GangGenInfo {
-  faction: string;
-  isHacking: boolean;
-  moneyGainRate: number;
-  power: number;
-  respect: number;
-  respectGainRate: number;
-  respectForNextRecruit: number;
-  territory: number;
-  territoryClashChance: number;
-  wantedLevel: number;
-  wantedLevelGainRate: number;
-  territoryWarfareEngaged: boolean;
-  wantedPenalty: number;
+    faction: string;
+    isHacking: boolean;
+    moneyGainRate: number;
+    power: number;
+    respect: number;
+    respectGainRate: number;
+    respectForNextRecruit: number;
+    territory: number;
+    territoryClashChance: number;
+    wantedLevel: number;
+    wantedLevelGainRate: number;
+    territoryWarfareEngaged: boolean;
+    wantedPenalty: number;
 }
 ```
 
@@ -40,7 +40,7 @@ Detailed per-member stats & gains:
 
 ```ts
 interface GangMemberInfo {
-  /* … see prompt for full fields … */
+    /* … see prompt for full fields … */
 }
 ```
 
@@ -50,7 +50,7 @@ Describes income, weights, and scaling:
 
 ```ts
 interface GangTaskStats {
-  /* … see prompt for full fields … */
+    /* … see prompt for full fields … */
 }
 ```
 
@@ -66,28 +66,28 @@ interface GangTaskStats {
 **Objective:** Automatically recruit up to 12 members and assign them to a fixed training task.
 
 1. **RecruitmentManager**
-   - Each tick: if `ns.gang.canRecruitMember()` is `true`, then:
-     ```ts
-     const nextReq = ns.gang.respectForNextRecruit();
-     const curRespect = ns.gang.getGangInformation().respect;
-     if (curRespect >= nextReq) {
-       ns.gang.createMember(`GangMember${count + 1}`);
-     }
-     ```
+    - Each tick: if `ns.gang.canRecruitMember()` is `true`, then:
+        ```ts
+        const nextReq = ns.gang.respectForNextRecruit();
+        const curRespect = ns.gang.getGangInformation().respect;
+        if (curRespect >= nextReq) {
+            ns.gang.createMember(`GangMember${count + 1}`);
+        }
+        ```
 
 2. **TrainingAssignment**
-   - Determine `trainingTask` from the gang type
-     (`"Train Hacking"` or `"Train Combat"`).
-   - Initial work tasks mirror the in-game defaults:
-     - heating: `"Money Laundering"` (hacking) or `"Strongarm Civilians"` (combat)
-     - cooling: `"Ethical Hacking"` (hacking) or `"Vigilante Justice"` (combat)
-   - Each tick: for each `name` in `ns.gang.getMemberNames()`, call:
-     ```ts
-     ns.gang.setMemberTask(name, trainingTask);
-     ```
+    - Determine `trainingTask` from the gang type
+      (`"Train Hacking"` or `"Train Combat"`).
+    - Initial work tasks mirror the in-game defaults:
+        - heating: `"Money Laundering"` (hacking) or `"Strongarm Civilians"` (combat)
+        - cooling: `"Ethical Hacking"` (hacking) or `"Vigilante Justice"` (combat)
+    - Each tick: for each `name` in `ns.gang.getMemberNames()`, call:
+        ```ts
+        ns.gang.setMemberTask(name, trainingTask);
+        ```
 
 3. **Configuration**
-   - `MAX_MEMBERS = 12`
+    - `MAX_MEMBERS = 12`
 
 ---
 
@@ -97,22 +97,22 @@ interface GangTaskStats {
 
 1. **Threshold Profiles by Member Count**
 
-   ```ts
-   interface Thresholds {
-     trainLevel: number;
-     ascendMult: number;
-   }
-   const thresholdsByCount: Record<number, Thresholds> = {
-     3: { trainLevel: 500, ascendMult: 2.0 },
-     6: { trainLevel: 1000, ascendMult: 1.5 },
-     9: { trainLevel: 5000, ascendMult: 1.15 },
-     12: { trainLevel: 10000, ascendMult: 1.05 },
-   };
-   // Interpolate between adjacent entries based on current member count
-   function getThresholds(n: number): Thresholds {
-     /* linear interpolation */
-   }
-   ```
+    ```ts
+    interface Thresholds {
+        trainLevel: number;
+        ascendMult: number;
+    }
+    const thresholdsByCount: Record<number, Thresholds> = {
+        3: { trainLevel: 500, ascendMult: 2.0 },
+        6: { trainLevel: 1000, ascendMult: 1.5 },
+        9: { trainLevel: 5000, ascendMult: 1.15 },
+        12: { trainLevel: 10000, ascendMult: 1.05 },
+    };
+    // Interpolate between adjacent entries based on current member count
+    function getThresholds(n: number): Thresholds {
+        /* linear interpolation */
+    }
+    ```
 
 ````
 
@@ -225,11 +225,11 @@ interface GangTaskStats {
 ````
 
 4. **Dynamic Splits**
-   - Balance respect, money, cooling, and warfare based on:
-     - Next recruit respect needs
-     - Money requirements for gear/ascends
-     - Current `wantedPenalty`
-     - `territory` deficits & clash probabilities
+    - Balance respect, money, cooling, and warfare based on:
+        - Next recruit respect needs
+        - Money requirements for gear/ascends
+        - Current `wantedPenalty`
+        - `territory` deficits & clash probabilities
 
 ---
 

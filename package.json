@@ -1,45 +1,45 @@
 {
-  "name": "radz-bitburner-scripts",
-  "version": "0.1.0",
-  "description": "My awesome scripts for automating Bitburner",
-  "scripts": {
-    "build": "tsc",
-    "clean": "find dist -depth ! -name 'dist' ! -name .gitkeep -delete",
-    "watch:init": "node build/init.js",
-    "watch:transpile": "tsc -w --preserveWatchOutput",
-    "watch:local": "node build/watch.js",
-    "watch:remote": "bitburner-filesync",
-    "watch:all": "concurrently npm:watch:transpile npm:watch:local npm:watch:remote",
-    "watch": "npm run watch:init && npm run watch:all"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/RadicalZephyr/bitburner-scripts.git"
-  },
-  "author": "Zefira Shannon",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/RadicalZephyr/bitburner-scripts/issues"
-  },
-  "homepage": "https://github.com/RadicalZephyr/bitburner-scripts#readme",
-  "devDependencies": {
-    "@eslint/js": "^9.31.0",
-    "@types/jest": "^30.0.0",
-    "@types/react": "^18.2.18",
-    "@types/react-dom": "^18.2.7",
-    "bitburner-filesync": "^1.1.5",
-    "chokidar": "^4.0.3",
-    "concurrently": "^9.2.0",
-    "eslint": "^9.31.0",
-    "fast-glob": "^3.2.12",
-    "jest": "^30.0.4",
-    "prettier": "3.6.2",
-    "sync-directory": "^6.0.5",
-    "ts-jest": "^29.4.0",
-    "typescript": "^5.8.3",
-    "typescript-eslint": "^8.37.0"
-  },
-  "dependencies": {
-    "graphology": "^0.26.0"
-  }
+    "name": "radz-bitburner-scripts",
+    "version": "0.1.0",
+    "description": "My awesome scripts for automating Bitburner",
+    "scripts": {
+        "build": "tsc",
+        "clean": "find dist -depth ! -name 'dist' ! -name .gitkeep -delete",
+        "watch:init": "node build/init.js",
+        "watch:transpile": "tsc -w --preserveWatchOutput",
+        "watch:local": "node build/watch.js",
+        "watch:remote": "bitburner-filesync",
+        "watch:all": "concurrently npm:watch:transpile npm:watch:local npm:watch:remote",
+        "watch": "npm run watch:init && npm run watch:all"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/RadicalZephyr/bitburner-scripts.git"
+    },
+    "author": "Zefira Shannon",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/RadicalZephyr/bitburner-scripts/issues"
+    },
+    "homepage": "https://github.com/RadicalZephyr/bitburner-scripts#readme",
+    "devDependencies": {
+        "@eslint/js": "^9.31.0",
+        "@types/jest": "^30.0.0",
+        "@types/react": "^18.2.18",
+        "@types/react-dom": "^18.2.7",
+        "bitburner-filesync": "^1.1.5",
+        "chokidar": "^4.0.3",
+        "concurrently": "^9.2.0",
+        "eslint": "^9.31.0",
+        "fast-glob": "^3.2.12",
+        "jest": "^30.0.4",
+        "prettier": "3.6.2",
+        "sync-directory": "^6.0.5",
+        "ts-jest": "^29.4.0",
+        "typescript": "^5.8.3",
+        "typescript-eslint": "^8.37.0"
+    },
+    "dependencies": {
+        "graphology": "^0.26.0"
+    }
 }

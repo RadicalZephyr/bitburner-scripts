@@ -33,7 +33,7 @@ The production capability of support division should be balanced. The `ImportAmo
 `MaxOutputQuality` is sum of 3 values:
 
 - Engineer summand:
-  - `EngineerProduction = office.employeeProductionByJob["Engineer"]`
+    - `EngineerProduction = office.employeeProductionByJob["Engineer"]`
 
 $$EngineerSummand = \frac{EngineerProduction}{90}$$
 
@@ -55,8 +55,8 @@ With formulas above, we have these conclusions:
 - In late rounds (round 3+), we have large funds to upgrade offices. In this case, the most important factor of `MaxOutputQuality` is `EngineerProduction`. "Engineer" is more significant than "Research & Development".
 - `OutputQuality` starts at square root of `MaxOutputQuality`. `AvgInputQuality` increases it until it reaches `MaxOutputQuality`.
 - This is a simple strategy for checking if we need to increase `AvgInputQuality`:
-  - If square of `AvgInputQuality` is greater than or equal to current output quality, it's fine.
-  - If not, you need to increase input material's quality. It usually means you need to improve the support division.
+    - If square of `AvgInputQuality` is greater than or equal to current output quality, it's fine.
+    - If not, you need to increase input material's quality. It usually means you need to improve the support division.
 
 ## Product
 

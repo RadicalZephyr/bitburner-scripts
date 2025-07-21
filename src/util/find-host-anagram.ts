@@ -5,15 +5,15 @@ import { parseAndRegisterAlloc } from 'services/client/memory';
 import { walkNetworkBFS } from 'util/walk';
 
 export function autocomplete(data: AutocompleteData): string[] {
-  return data.servers;
+    return data.servers;
 }
 
 export async function main(ns: NS) {
-  const flags = ns.flags([['help', false], ...MEM_TAG_FLAGS]);
+    const flags = ns.flags([['help', false], ...MEM_TAG_FLAGS]);
 
-  const rest = flags._ as ScriptArg[];
-  if (rest.length === 0 || flags.help) {
-    ns.tprint(`
+    const rest = flags._ as ScriptArg[];
+    if (rest.length === 0 || flags.help) {
+        ns.tprint(`
 USAGE: run ${ns.getScriptName()} ANAGRAM
 
 This script compares the given anagram to all hostnames on the network and
@@ -25,40 +25,40 @@ Example:
 OPTIONS
   --help  Show this help message
 `);
-    return;
-  }
+        return;
+    }
 
-  const allocationId = await parseAndRegisterAlloc(ns, flags);
-  if (flags[ALLOC_ID] !== -1 && allocationId === null) {
-    return;
-  }
+    const allocationId = await parseAndRegisterAlloc(ns, flags);
+    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
+        return;
+    }
 
-  const key = rest[0];
-  if (typeof key != 'string') {
-    ns.tprint('ERROR: ANAGRAM must be a string');
-    return;
-  }
+    const key = rest[0];
+    if (typeof key != 'string') {
+        ns.tprint('ERROR: ANAGRAM must be a string');
+        return;
+    }
 
-  const network = walkNetworkBFS(ns);
-  const allHosts = [...network.keys()];
+    const network = walkNetworkBFS(ns);
+    const allHosts = [...network.keys()];
 
-  const localeCompare = (a, b) => a.localeCompare(b);
+    const localeCompare = (a, b) => a.localeCompare(b);
 
-  const needle = key.split('').sort(localeCompare).join('');
-  const sortedHostNames = allHosts.map((h) => {
-    return {
-      ana: h.split('').sort(localeCompare).join(''),
-      hostname: h,
-    };
-  });
+    const needle = key.split('').sort(localeCompare).join('');
+    const sortedHostNames = allHosts.map((h) => {
+        return {
+            ana: h.split('').sort(localeCompare).join(''),
+            hostname: h,
+        };
+    });
 
-  const found = sortedHostNames
-    .filter((sh) => sh.ana == needle)
-    .map((sh) => sh.hostname);
+    const found = sortedHostNames
+        .filter((sh) => sh.ana == needle)
+        .map((sh) => sh.hostname);
 
-  if (found.length > 0)
-    ns.tprint(
-      `${found.length} hosts are an anagram for ${key}: ${found.join(', ')}`,
-    );
-  else ns.tprint(`no anagrams found for ${key}`);
+    if (found.length > 0)
+        ns.tprint(
+            `${found.length} hosts are an anagram for ${key}: ${found.join(', ')}`,
+        );
+    else ns.tprint(`no anagrams found for ${key}`);
 }

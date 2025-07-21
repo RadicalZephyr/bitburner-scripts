@@ -7,11 +7,11 @@ Corporation continuously transitions between 5 states: START → PURCHASE → PR
 START:
 
 - Division:
-  - Office:
-    - Calculate: energy, morale, total experience, salary, employee production by jobs.
-    - Set employees' jobs: copy data from `employeeNextJobs` to `employeeJobs`.
-  - Material market: update `demand`, `competition`, `marketPrice`.
-  - Product market: decrease `demand` and increase `competition`.
+    - Office:
+        - Calculate: energy, morale, total experience, salary, employee production by jobs.
+        - Set employees' jobs: copy data from `employeeNextJobs` to `employeeJobs`.
+    - Material market: update `demand`, `competition`, `marketPrice`.
+    - Product market: decrease `demand` and increase `competition`.
 - Calculate corporation's financial statements: revenue, expenses, profit, dividend, total assets, valuation, share price.
 
 PURCHASE:
@@ -44,8 +44,8 @@ Export string can use "MAX", "EINV", "IINV", "EPROD" and "IPROD". Read the descr
 The optimal export string is `(IPROD+IINV/10)*(-1)`. For example: export "Chemicals" from Chemical division to Agriculture division:
 
 - Agriculture division needs 100 Chemicals/s and has 700 Chemicals in warehouse.
-  - IPROD = -100 ("Consumption is negative production")
-  - IINV = 700
+    - IPROD = -100 ("Consumption is negative production")
+    - IINV = 700
 - "Export" is expressed by number of units per second, so we want to export:
 
 $$\left(100-\frac{700}{10}\right)=\left(-100+\frac{700}{10}\right)\ast(-1)=\left(IPROD+\frac{IINV}{10}\right)\ast(-1)$$
@@ -78,15 +78,15 @@ The accuracy and performance are acceptable, so we employ it case 2. We don't us
 Quick test for case 2 shows that the accuracy is pretty good:
 
 - `creationJobFactors`:
-  - Business: 420.103620358641
-  - Engineer: 29666.47672073447
-  - Management: 40466.091598191015
-  - Operations: 25760.399443536793
+    - Business: 420.103620358641
+    - Engineer: 29666.47672073447
+    - Management: 40466.091598191015
+    - Operations: 25760.399443536793
 - Solver's result:
-  - Business: 420.08121628008024
-  - Engineer: 29664.894610028987
-  - Management: 40463.933544920386
-  - Operations: 25759.025643594476
+    - Business: 420.08121628008024
+    - Engineer: 29664.894610028987
+    - Management: 40463.933544920386
+    - Operations: 25759.025643594476
 
 ## Noodles trick
 
@@ -94,8 +94,8 @@ There is a place called "Noodle Bar" in New Tokyo. After going there, there is a
 
 ```typescript
 Player.corporation.gainFunds(
-  Player.corporation.revenue * 0.000001,
-  'glitch in reality',
+    Player.corporation.revenue * 0.000001,
+    'glitch in reality',
 );
 ```
 

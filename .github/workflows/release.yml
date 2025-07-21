@@ -1,104 +1,104 @@
 name: Create Release
 
 on:
-  push:
-    tags:
-      - 'v*.*.*'
+    push:
+        tags:
+            - 'v*.*.*'
 
 env:
-  RELEASE_BRANCH: latest-files
+    RELEASE_BRANCH: latest-files
 
 jobs:
-  build:
-    name: 'Build'
-    uses: './.github/workflows/build.yml'
+    build:
+        name: 'Build'
+        uses: './.github/workflows/build.yml'
 
-  release:
-    name: 'Release'
-    runs-on: 'ubuntu-latest'
-    needs: build
+    release:
+        name: 'Release'
+        runs-on: 'ubuntu-latest'
+        needs: build
 
-    steps:
-      - name: Download built scripts artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: ${{ needs.build.outputs.artifact_name }}
-          path: ./
+        steps:
+            - name: Download built scripts artifact
+              uses: actions/download-artifact@v4
+              with:
+                  name: ${{ needs.build.outputs.artifact_name }}
+                  path: ./
 
-      - name: Checkout latest branch for upload
-        uses: actions/checkout@v4
-        with:
-          path: dist
-          ref: ${{ env.RELEASE_BRANCH }}
-          fetch-depth: 0
+            - name: Checkout latest branch for upload
+              uses: actions/checkout@v4
+              with:
+                  path: dist
+                  ref: ${{ env.RELEASE_BRANCH }}
+                  fetch-depth: 0
 
-      - name: Remove old scripts
-        shell: bash
-        run: find dist -type f -name '*.js' -delete
+            - name: Remove old scripts
+              shell: bash
+              run: find dist -type f -name '*.js' -delete
 
-      - name: Unzip scripts artifact
-        shell: bash
-        run: unzip ${{ needs.build.outputs.artifact_file }}
+            - name: Unzip scripts artifact
+              shell: bash
+              run: unzip ${{ needs.build.outputs.artifact_file }}
 
-      - name: Add a VERSION.json file
-        shell: bash
-        run: |
-          DATE=$(date --utc)
-          EPOCH=$(date --utc +%s)
-          cat > VERSION.json <<JSON_HERE
-          {
-            "date": "$DATE",
-            "epoch": "$EPOCH",
-            "sha": "${{ github.sha }}"
-          }
-          JSON_HERE
+            - name: Add a VERSION.json file
+              shell: bash
+              run: |
+                  DATE=$(date --utc)
+                  EPOCH=$(date --utc +%s)
+                  cat > VERSION.json <<JSON_HERE
+                  {
+                    "date": "$DATE",
+                    "epoch": "$EPOCH",
+                    "sha": "${{ github.sha }}"
+                  }
+                  JSON_HERE
 
-      - name: Commit and push new script files to latest branch
-        shell: bash
-        run: |
-          cd dist
-          git config user.name  "Release Script"
-          git config user.email "earthlingzephyr@gmail.com"
-          git add .
-          git commit -m 'Update to ${{ github.sha }}' || exit 0
-          git push origin ${{ env.RELEASE_BRANCH }}
+            - name: Commit and push new script files to latest branch
+              shell: bash
+              run: |
+                  cd dist
+                  git config user.name  "Release Script"
+                  git config user.email "earthlingzephyr@gmail.com"
+                  git add .
+                  git commit -m 'Update to ${{ github.sha }}' || exit 0
+                  git push origin ${{ env.RELEASE_BRANCH }}
 
-      - name: Create README
-        shell: bash
-        run: |
-          cat > README.md <<README_HERE
-          # Latest Release
-          Download the bootstrap script with
-          \`wget https://github.com/RadicalZephyr/bitburner-scripts/releases/download/latest/bootstrap.js external-bootstrap.js\`
-          then run it with \`run external-bootstrap.js\`.
-          README_HERE
+            - name: Create README
+              shell: bash
+              run: |
+                  cat > README.md <<README_HERE
+                  # Latest Release
+                  Download the bootstrap script with
+                  \`wget https://github.com/RadicalZephyr/bitburner-scripts/releases/download/latest/bootstrap.js external-bootstrap.js\`
+                  then run it with \`run external-bootstrap.js\`.
+                  README_HERE
 
-      - name: Create bootstrap script
-        shell: bash
-        run: |
-          FILES="$(find dist/ -type f -name '*.js' | cut -d '/' -f 2- | sed 's/\(.*\)/  "\1",/')"
-          cat > bootstrap.js <<BOOTSTRAP_HERE
-          /** @param {NS} ns */
-          export async function main(ns) {
-            files.pop(); // drop empty final element
-            const slashRE = /\//;
-            for (const file of files) {
-              const prefix = slashRE.test(file) ? '/' : '';
-              await ns.wget(baseUrl + file, prefix + file, "home");
-            }
-          }
-          const baseUrl = "https://github.com/RadicalZephyr/bitburner-scripts/raw/refs/heads/${{ env.RELEASE_BRANCH }}/";
-          let files = [
-            $FILES
-            ""
-          ];
-          BOOTSTRAP_HERE
+            - name: Create bootstrap script
+              shell: bash
+              run: |
+                  FILES="$(find dist/ -type f -name '*.js' | cut -d '/' -f 2- | sed 's/\(.*\)/  "\1",/')"
+                  cat > bootstrap.js <<BOOTSTRAP_HERE
+                  /** @param {NS} ns */
+                  export async function main(ns) {
+                    files.pop(); // drop empty final element
+                    const slashRE = /\//;
+                    for (const file of files) {
+                      const prefix = slashRE.test(file) ? '/' : '';
+                      await ns.wget(baseUrl + file, prefix + file, "home");
+                    }
+                  }
+                  const baseUrl = "https://github.com/RadicalZephyr/bitburner-scripts/raw/refs/heads/${{ env.RELEASE_BRANCH }}/";
+                  let files = [
+                    $FILES
+                    ""
+                  ];
+                  BOOTSTRAP_HERE
 
-      - name: Package newest tag as a release
-        uses: softprops/action-gh-release@v2
-        with:
-          name: 'RadZ Bitburner Scripts ${{ needs.build.outputs.release_version }}'
-          files: |
-            README.md
-            bootstrap.js
-            ${{ needs.build.outputs.artifact_file }}
+            - name: Package newest tag as a release
+              uses: softprops/action-gh-release@v2
+              with:
+                  name: 'RadZ Bitburner Scripts ${{ needs.build.outputs.release_version }}'
+                  files: |
+                      README.md
+                      bootstrap.js
+                      ${{ needs.build.outputs.artifact_file }}

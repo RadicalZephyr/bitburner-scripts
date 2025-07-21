@@ -11,16 +11,16 @@ export const DONE_SENTINEL: string = 'PORT CLOSED';
  * @yields Messages read from the given port
  */
 export function* readAllFromPort(ns: NS, port: NetscriptPort) {
-  while (true) {
-    const nextMsg = port.read();
-    if (
-      typeof nextMsg === 'string'
-      && (nextMsg === EMPTY_SENTINEL || nextMsg === DONE_SENTINEL)
-    ) {
-      return;
+    while (true) {
+        const nextMsg = port.read();
+        if (
+            typeof nextMsg === 'string'
+            && (nextMsg === EMPTY_SENTINEL || nextMsg === DONE_SENTINEL)
+        ) {
+            return;
+        }
+        yield nextMsg;
     }
-    yield nextMsg;
-  }
 }
 
 /**
@@ -41,24 +41,24 @@ export function* readAllFromPort(ns: NS, port: NetscriptPort) {
  * @param readFn - Callback to read from and process port messages
  */
 export async function readLoop(
-  ns: NS,
-  port: NetscriptPort,
-  readFn: () => Promise<void>,
+    ns: NS,
+    port: NetscriptPort,
+    readFn: () => Promise<void>,
 ) {
-  const scriptInfo = ns.self();
-  let running = true;
-  ns.atExit(() => {
-    running = false;
-  }, `${scriptInfo.filename}-${scriptInfo.server}-readLoop`);
+    const scriptInfo = ns.self();
+    let running = true;
+    ns.atExit(() => {
+        running = false;
+    }, `${scriptInfo.filename}-${scriptInfo.server}-readLoop`);
 
-  let next = port.nextWrite();
-  while (running) {
-    try {
-      await readFn();
-    } catch (err) {
-      ns.print(`WARN: failed to read from port ${String(err)}`);
+    let next = port.nextWrite();
+    while (running) {
+        try {
+            await readFn();
+        } catch (err) {
+            ns.print(`WARN: failed to read from port ${String(err)}`);
+        }
+        await next;
+        next = port.nextWrite();
     }
-    await next;
-    next = port.nextWrite();
-  }
 }

@@ -6,13 +6,13 @@
 
 - Funds.
 - With each division:
-  - Division's `RecoupableValue`. It's half of the sum of:
-    - Industry's starting cost.
-    - With each city that division has expanded to (exclude Sector-12):
-      - Office's initial cost.
-      - Warehouse's initial cost.
-  - Output material: `material.stored * material.averagePrice`.
-  - Product: `product.stored * product.productionCost`.
+    - Division's `RecoupableValue`. It's half of the sum of:
+        - Industry's starting cost.
+        - With each city that division has expanded to (exclude Sector-12):
+            - Office's initial cost.
+            - Warehouse's initial cost.
+    - Output material: `material.stored * material.averagePrice`.
+    - Product: `product.stored * product.productionCost`.
 
 This value is kept track by `TotalAssets` and `PreviousTotalAssets`.
 
@@ -20,7 +20,7 @@ Funds is increased/decreased by `gainFunds`/`loseFunds` for each "action" (buyin
 
 ```typescript
 if (LongTermFundsSources.has(source)) {
-  this.totalAssets += amt;
+    this.totalAssets += amt;
 }
 this.funds += amt;
 ```
@@ -36,14 +36,14 @@ Cycle's valuation:
 $$AssetDelta = \frac{TotalAssets - PreviousTotalAssets}{10}$$
 
 - Pre-IPO:
-  - If `AssetDelta` is greater than 0, it's used for calculating valuation.
-  - Formula:
-    $$Valuation = \left( 10^{10} + \frac{Funds}{3} + AssetDelta\ast 315000 \right)\ast\left( \sqrt[12]{1.1} \right)^{NumberOfOfficesAndWarehouses}$$
-  - Valuation is rounded down to nearest million.
+    - If `AssetDelta` is greater than 0, it's used for calculating valuation.
+    - Formula:
+      $$Valuation = \left( 10^{10} + \frac{Funds}{3} + AssetDelta\ast 315000 \right)\ast\left( \sqrt[12]{1.1} \right)^{NumberOfOfficesAndWarehouses}$$
+    - Valuation is rounded down to nearest million.
 - Post-IPO:
-  - `AssetDelta` is affected by `DividendRate`:
-    $$AssetDelta = AssetDelta\ast(1 - DividendRate)$$
-  - Formula:
+    - `AssetDelta` is affected by `DividendRate`:
+      $$AssetDelta = AssetDelta\ast(1 - DividendRate)$$
+    - Formula:
 
 $$Valuation = (Funds + AssetDelta\ast 85000)\ast\left(\sqrt[12]{1.1}\right)^{NumberOfOfficesAndWarehouses}$$
 
@@ -70,9 +70,9 @@ $$Offer = CorporationValuation\ast FundingRoundShares\ast FundingRoundMultiplier
 Analyses:
 
 - Offer depends on `Funds`, `AssetDelta` and `NumberOfOfficesAndWarehouses`.
-  - `Funds` are usually depleted to improve divisions.
-  - `NumberOfOfficesAndWarehouses` is the exponent of the multiplier, it can be increased by creating [dummy division](./miscellany.md). It is an easy way to get higher offer in round 3+, when we have enough funds to do that.
-  - `AssetDelta` is multiplied by 315000, so it is the main source of offer.
+    - `Funds` are usually depleted to improve divisions.
+    - `NumberOfOfficesAndWarehouses` is the exponent of the multiplier, it can be increased by creating [dummy division](./miscellany.md). It is an easy way to get higher offer in round 3+, when we have enough funds to do that.
+    - `AssetDelta` is multiplied by 315000, so it is the main source of offer.
 - Assuming that we can sell all produced units and not buy more boost materials, `AssetDelta` is the delta of funds, and the delta of funds is profit. This is why we try our best to improve profit.
 
 ## Dividend
@@ -147,13 +147,13 @@ $$Profit = {NewShares\ast(SharePrice + NewSharePrice)}\ast{0.5}$$
 - `DefaultCooldown` is 4 hours.
 - Cooldown: $$Cooldown = DefaultCooldown\ast\frac{TotalShares}{10^{9}}$$
 - Part of the new shares are added to `InvestorShares`. The remaining ones are added to `IssuedShares`.
-  - `MaxPrivateShares`:
-    $$MaxPrivateShares = {NewShares}\ast{0.5}\ast\frac{InvestorShares}{TotalShares}$$
-  - `PrivateShares` is randomized between 0 and `MaxPrivateShares`, rounded to nearest 10 million.
-  - `InvestorShares`:
-    $$InvestorShares = InvestorShares + PrivateShares$$
-  - `IssuedShares`:
-    $$IssuedShares = IssuedShares + NewShares - PrivateShares$$
+    - `MaxPrivateShares`:
+      $$MaxPrivateShares = {NewShares}\ast{0.5}\ast\frac{InvestorShares}{TotalShares}$$
+    - `PrivateShares` is randomized between 0 and `MaxPrivateShares`, rounded to nearest 10 million.
+    - `InvestorShares`:
+      $$InvestorShares = InvestorShares + PrivateShares$$
+    - `IssuedShares`:
+      $$IssuedShares = IssuedShares + NewShares - PrivateShares$$
 
 Sell shares:
 

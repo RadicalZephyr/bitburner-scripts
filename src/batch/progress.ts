@@ -3,10 +3,10 @@ import type { NS } from 'netscript';
 import { CONFIG } from 'batch/config';
 
 export interface RoundInfo {
-  round: number;
-  totalRounds: number;
-  roundEnd: number;
-  totalExpectedEnd: number;
+    round: number;
+    totalRounds: number;
+    roundEnd: number;
+    totalExpectedEnd: number;
 }
 
 /**
@@ -20,17 +20,17 @@ export interface RoundInfo {
  * @returns Calculated round data
  */
 export function calculateRoundInfo(
-  ns: NS,
-  target: string,
-  round: number,
-  totalRounds: number,
-  roundsRemaining: number,
+    ns: NS,
+    target: string,
+    round: number,
+    totalRounds: number,
+    roundsRemaining: number,
 ): RoundInfo {
-  const roundTime = ns.getWeakenTime(target);
-  const roundStart = ns.self().onlineRunningTime * 1000;
-  const roundEnd = roundStart + roundTime;
-  const totalExpectedEnd = roundStart + roundsRemaining * roundTime;
-  return { round, totalRounds, roundEnd, totalExpectedEnd };
+    const roundTime = ns.getWeakenTime(target);
+    const roundStart = ns.self().onlineRunningTime * 1000;
+    const roundEnd = roundStart + roundTime;
+    const totalExpectedEnd = roundStart + roundsRemaining * roundTime;
+    return { round, totalRounds, roundEnd, totalExpectedEnd };
 }
 
 /**
@@ -48,27 +48,29 @@ export function calculateRoundInfo(
  * @returns The timestamp for the subsequent heartbeat
  */
 export async function awaitRound(
-  ns: NS,
-  pids: number[],
-  info: RoundInfo,
-  nextHeartbeat: number,
-  sendHeartbeat: () => Promise<boolean | void>,
+    ns: NS,
+    pids: number[],
+    info: RoundInfo,
+    nextHeartbeat: number,
+    sendHeartbeat: () => Promise<boolean | void>,
 ): Promise<number> {
-  for (const pid of pids) {
-    while (ns.isRunning(pid)) {
-      printRoundProgress(ns, info);
-      if (Date.now() >= nextHeartbeat) {
-        const result = await sendHeartbeat();
-        if (result !== false) {
-          nextHeartbeat =
-            Date.now() + CONFIG.heartbeatCadence + Math.random() * 500;
+    for (const pid of pids) {
+        while (ns.isRunning(pid)) {
+            printRoundProgress(ns, info);
+            if (Date.now() >= nextHeartbeat) {
+                const result = await sendHeartbeat();
+                if (result !== false) {
+                    nextHeartbeat =
+                        Date.now()
+                        + CONFIG.heartbeatCadence
+                        + Math.random() * 500;
+                }
+            }
+            await ns.sleep(1000);
         }
-      }
-      await ns.sleep(1000);
     }
-  }
 
-  return nextHeartbeat;
+    return nextHeartbeat;
 }
 
 /**
@@ -78,9 +80,9 @@ export async function awaitRound(
  * @param info - Round info
  */
 export function printRoundProgress(ns: NS, info: RoundInfo) {
-  const elapsed = ns.self().onlineRunningTime * 1000;
-  ns.clearLog();
-  ns.print(`
+    const elapsed = ns.self().onlineRunningTime * 1000;
+    ns.clearLog();
+    ns.print(`
 Round ${info.round} of ${info.totalRounds}
 Elapsed time:    ${ns.tFormat(elapsed)}
 Round ends:      ${ns.tFormat(info.roundEnd)}
