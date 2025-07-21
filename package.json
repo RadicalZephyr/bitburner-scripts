@@ -24,6 +24,10 @@
     "homepage": "https://github.com/RadicalZephyr/bitburner-scripts#readme",
     "devDependencies": {
         "@eslint/js": "^9.31.0",
+        "@rollup/plugin-commonjs": "^28.0.6",
+        "@rollup/plugin-node-resolve": "^16.0.1",
+        "@rollup/plugin-replace": "6.0.2",
+        "@rollup/plugin-typescript": "^12.1.4",
         "@types/jest": "^30.0.0",
         "@types/react": "^18.2.18",
         "@types/react-dom": "^18.2.7",
@@ -34,12 +38,15 @@
         "fast-glob": "^3.2.12",
         "jest": "^30.0.4",
         "prettier": "3.6.2",
+        "rollup": "^4.45.1",
+        "rollup-plugin-typescript2": "0.36.0",
         "sync-directory": "^6.0.5",
         "ts-jest": "^29.4.0",
         "typescript": "^5.8.3",
         "typescript-eslint": "^8.37.0"
     },
     "dependencies": {
-        "graphology": "^0.26.0"
+        "graphology": "^0.26.0",
+        "sodiumjs": "^3.0.7"
     }
 }

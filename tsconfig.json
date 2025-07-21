@@ -5,7 +5,7 @@
         "src/**/*.tsx",
         "src/**/*.js"
     ],
-    "exclude": ["src/lib/react.ts", "src/jest-shim.ts", "src/**/*.test.ts"],
+    "exclude": ["src/lib/*.js", "src/jest-shim.ts", "src/**/*.test.ts"],
     "compilerOptions": {
         "lib": ["esnext", "dom"],
         "module": "esnext",
@@ -25,8 +25,7 @@
         "types": ["jest"],
         "paths": {
             "/*": ["*"],
-            "netscript": ["../NetScriptDefinitions.d.ts"],
-            "@react": ["lib/react.ts"]
+            "netscript": ["../NetScriptDefinitions.d.ts"]
         }
     }
 }
