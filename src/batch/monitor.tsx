@@ -17,6 +17,7 @@ import {
 } from 'batch/client/monitor';
 
 import { expectedValuePerRamSecond } from 'batch/expected_value';
+import { CONFIG } from 'batch/config';
 
 import { DiscoveryClient } from 'services/client/discover';
 import { TaskSelectorClient } from 'batch/client/task_selector';
@@ -441,7 +442,11 @@ export function hostInfo(
     const secPlus = sec - minSec;
 
     const harvestMoney = targetThreads.harvestMoney;
-    const expectedValue = expectedValuePerRamSecond(ns, target);
+    const expectedValue = expectedValuePerRamSecond(
+        ns,
+        target,
+        CONFIG.maxHackPercent,
+    );
 
     return {
         name: target,
