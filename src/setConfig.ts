@@ -1,4 +1,4 @@
-import type { NS, AutocompleteData } from "netscript";
+import type { NS } from "netscript";
 import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
 import { parseAndRegisterAlloc } from "services/client/memory";
 
@@ -9,7 +9,7 @@ import { CONFIG as StockConfig } from 'stock/config';
 import { CONFIG as HacknetConfig } from 'hacknet/config';
 import { CONFIG as CorpConfig } from 'corp/config';
 
-export function autocomplete(_data: AutocompleteData, args: string[]): string[] {
+export function autocomplete(): string[] {
     return allConfigValues();
 }
 

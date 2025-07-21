@@ -5,13 +5,6 @@ import type { ContractData } from "all-contracts";
 
 import { walkNetworkBFS } from "util/walk";
 
-declare global {
-    interface JSON {
-        rawJSON: ((string) => any),
-    }
-    var JSON: JSON;
-}
-
 const ALL_CONTRACT_TYPES = [
     "Algorithmic-Stock-Trader-I",
     "Algorithmic-Stock-Trader-II",
@@ -59,7 +52,6 @@ export async function main(ns: NS) {
         ...MEM_TAG_FLAGS
     ]);
 
-    const rest = flags._ as string[];
     if (flags.help ||
         (flags.test !== null && typeof flags.test != 'string') ||
         (flags.count !== -1 && typeof flags.count !== 'number')) {

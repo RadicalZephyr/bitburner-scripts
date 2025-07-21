@@ -3,10 +3,11 @@ import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 
 import { STATUS_WINDOW_WIDTH, STATUS_WINDOW_HEIGHT, KARMA_HEIGHT } from "util/ui";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const React: any;
 
 export async function main(ns: NS) {
-    const flags = ns.flags(MEM_TAG_FLAGS);
+    ns.flags(MEM_TAG_FLAGS);
     ns.disableLog("ALL");
     ns.ui.openTail();
     ns.ui.setTailTitle("Karma");
@@ -20,7 +21,7 @@ export async function main(ns: NS) {
     } as const;
 
     while (true) {
-        const [ww, wh] = ns.ui.windowSize();
+        const [ww] = ns.ui.windowSize();
         ns.ui.moveTail(ww - STATUS_WINDOW_WIDTH, STATUS_WINDOW_HEIGHT);
 
         const player = ns.getPlayer();

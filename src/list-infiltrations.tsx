@@ -1,16 +1,17 @@
 import type { ILocation, InfiltrationLocation, NS, UserInterfaceTheme } from "netscript";
 import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const React: any;
 
 export async function main(ns: NS) {
-    const flags = ns.flags(MEM_TAG_FLAGS);
+    ns.flags(MEM_TAG_FLAGS);
     ns.disableLog("ALL");
     ns.ui.openTail();
     ns.ui.moveTail(60, 350);
     ns.ui.resizeTail(825, 800);
 
-    const infiltrations = ns.infiltration.getPossibleLocations().map((loc: any) => ns.infiltration.getInfiltration(loc.name));
+    const infiltrations = ns.infiltration.getPossibleLocations().map((loc: ILocation) => ns.infiltration.getInfiltration(loc.name));
 
     const augInfiltrations = infiltrations.map(augmentInfiltration).sort((a, b) => a.expPerAction - b.expPerAction);
 
@@ -62,7 +63,7 @@ function LocationBlock({ infiltrations, theme }: IBlockSettings) {
 interface IRowSettings {
     rowIndex: number,
     infiltration: RatedInfiltrationLoc,
-    cellStyle: any,
+    cellStyle: object,
     theme: UserInterfaceTheme,
 }
 

@@ -5,19 +5,13 @@ import { main as serviceBootstrap } from "services/bootstrap";
 import { main as batchBootstrap } from "batch/bootstrap";
 
 export async function main(ns: NS) {
-    const flags = ns.flags(MEM_TAG_FLAGS);
+    ns.flags(MEM_TAG_FLAGS);
     await serviceBootstrap(ns);
     await batchBootstrap(ns);
 }
 
-function reportError(ns: NS, error: string) {
-    ns.toast(error, "error");
-    ns.print(`ERROR: ${error}`);
-    ns.ui.openTail();
-}
-
 interface DynImportNS extends NS {
-    dynamicImport: (script: string) => Promise<any>;
+    dynamicImport: (script: string) => Promise<ImportedScript>;
 }
 
 interface ImportedScript {

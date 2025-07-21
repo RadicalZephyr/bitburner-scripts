@@ -4,7 +4,7 @@ import { parseAndRegisterAlloc } from "services/client/memory";
 
 import { walkNetworkBFS } from 'util/walk';
 
-export function autocomplete(data: AutocompleteData, _args: string[]): string[] {
+export function autocomplete(data: AutocompleteData): string[] {
     return data.scripts;
 }
 

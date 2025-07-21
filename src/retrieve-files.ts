@@ -4,7 +4,7 @@ import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 import { walkNetworkBFS } from "util/walk";
 
 export async function main(ns: NS) {
-    const flags = ns.flags(MEM_TAG_FLAGS);
+    ns.flags(MEM_TAG_FLAGS);
     const network = walkNetworkBFS(ns);
     const allHosts = Array.from(network.keys());
 

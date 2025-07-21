@@ -4,7 +4,7 @@ import { parseAndRegisterAlloc } from "services/client/memory";
 
 import { walkNetworkBFS } from 'util/walk';
 
-export function autocomplete(data: AutocompleteData, args: string[]): string[] {
+export function autocomplete(data: AutocompleteData): string[] {
     return data.servers;
 }
 
@@ -83,7 +83,9 @@ OPTIONS
 
     if (flags.goto) {
         // Acquire a reference to the terminal text field
-        const terminalInput: any = globalThis["terminal-input"];
+        const terminalInput = globalThis["terminal-input"];
+        if (!(terminalInput instanceof HTMLInputElement)) return;
+
         terminalInput.value = goCommand;
 
         // Get a reference to the React event handler.

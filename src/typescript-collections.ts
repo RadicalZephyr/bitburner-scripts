@@ -4,7 +4,7 @@
 //
 // Orginal javascript code was by Mauricio Santos
 import * as _arrays from 'typescript-collections/arrays';
-export var arrays = _arrays;
+export const arrays = _arrays;
 export { default as Bag } from 'typescript-collections/Bag';
 export { default as BSTree } from 'typescript-collections/BSTree';
 export { default as BSTreeKV } from 'typescript-collections/BSTreeKV';
@@ -21,4 +21,4 @@ export { default as Set } from 'typescript-collections/Set';
 export { default as Stack } from 'typescript-collections/Stack';
 export { default as MultiRootTree } from 'typescript-collections/MultiRootTree';
 import * as _util from 'typescript-collections/util';
-export var util = _util;
+export const util = _util;
