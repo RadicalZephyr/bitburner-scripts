@@ -1,4 +1,4 @@
-import type { NS, CityName, CorpMaterialName, CorpIndustryData, Material, Product } from "netscript";
+import type { NS, CityName, CorpMaterialName, Material, Product } from "netscript";
 
 /** Data tracked between cycles for calculating input requirements. */
 const SmartSupplyData: Record<string, number> = {};

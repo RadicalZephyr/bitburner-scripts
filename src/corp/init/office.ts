@@ -1,6 +1,6 @@
 import type { NS } from "netscript";
 
-import { AGRI_DIVISION, CITIES, CORPORATION_NAME } from "corp/constants";
+import { AGRI_DIVISION, CITIES } from "corp/constants";
 
 export async function main(ns: NS) {
     const corp = ns.corporation;
