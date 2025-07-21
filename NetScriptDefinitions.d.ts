@@ -198,7 +198,14 @@ interface TailProperties {
  *
  * Use React.createElement to make the ReactElement type, see {@link https://react.dev/reference/react/createElement#creating-an-element-without-jsx | creating an element without jsx} from the official React documentation.
  */
-type ReactNode = ReactElement | string | number | null | undefined | boolean | ReactNode[];
+type ReactNode =
+  | ReactElement
+  | string
+  | number
+  | null
+  | undefined
+  | boolean
+  | ReactNode[];
 
 /**
  * @public
@@ -207,7 +214,10 @@ type ReactNode = ReactElement | string | number | null | undefined | boolean | R
  * See {@link https://react.dev/reference/react/createElement#creating-an-element-without-jsx | creating an element without jsx} from the official React documentation.
  */
 interface ReactElement {
-  type: string | ((props: any) => ReactElement | null) | (new (props: any) => object);
+  type:
+    | string
+    | ((props: any) => ReactElement | null)
+    | (new (props: any) => object);
   props: any;
   key: string | number | null;
 }
@@ -396,16 +406,16 @@ interface AugmentPair {
 
 /** @public */
 declare enum PositionType {
-  Long = "L",
-  Short = "S",
+  Long = 'L',
+  Short = 'S',
 }
 
 /** @public */
 declare enum OrderType {
-  LimitBuy = "Limit Buy Order",
-  LimitSell = "Limit Sell Order",
-  StopBuy = "Stop Buy Order",
-  StopSell = "Stop Sell Order",
+  LimitBuy = 'Limit Buy Order',
+  LimitSell = 'Limit Sell Order',
+  StopBuy = 'Stop Buy Order',
+  StopSell = 'Stop Sell Order',
 }
 
 /**
@@ -1061,8 +1071,8 @@ interface GangMemberAscension {
 
 /** @public */
 type SleeveBladeburnerTask = {
-  type: "BLADEBURNER";
-  actionType: "General" | "Contracts";
+  type: 'BLADEBURNER';
+  actionType: 'General' | 'Contracts';
   actionName: string;
   cyclesWorked: number;
   cyclesNeeded: number;
@@ -1072,17 +1082,21 @@ type SleeveBladeburnerTask = {
 
 /** @public */
 type SleeveClassTask = {
-  type: "CLASS";
-  classType: UniversityClassType | GymType | `${UniversityClassType}` | `${GymType}`;
+  type: 'CLASS';
+  classType:
+    | UniversityClassType
+    | GymType
+    | `${UniversityClassType}`
+    | `${GymType}`;
   location: LocationName | `${LocationName}`;
 };
 
 /** @public */
-type SleeveCompanyTask = { type: "COMPANY"; companyName: CompanyName };
+type SleeveCompanyTask = { type: 'COMPANY'; companyName: CompanyName };
 
 /** @public */
 type SleeveCrimeTask = {
-  type: "CRIME";
+  type: 'CRIME';
   crimeType: CrimeType | `${CrimeType}`;
   cyclesWorked: number;
   cyclesNeeded: number;
@@ -1091,27 +1105,27 @@ type SleeveCrimeTask = {
 
 /** @public */
 type SleeveFactionTask = {
-  type: "FACTION";
+  type: 'FACTION';
   factionWorkType: FactionWorkType | `${FactionWorkType}`;
   factionName: string;
 };
 
 /** @public */
 type SleeveInfiltrateTask = {
-  type: "INFILTRATE";
+  type: 'INFILTRATE';
   cyclesWorked: number;
   cyclesNeeded: number;
   nextCompletion: Promise<void>;
 };
 
 /** @public */
-type SleeveRecoveryTask = { type: "RECOVERY" };
+type SleeveRecoveryTask = { type: 'RECOVERY' };
 
 /** @public */
-type SleeveSupportTask = { type: "SUPPORT" };
+type SleeveSupportTask = { type: 'SUPPORT' };
 
 /** @public */
-type SleeveSynchroTask = { type: "SYNCHRO" };
+type SleeveSynchroTask = { type: 'SYNCHRO' };
 
 /** Object representing a sleeve current task.
  * @public */
@@ -1484,7 +1498,13 @@ export interface TIX {
    * @param pos - Specifies whether the order is a “Long” or “Short” position.
    * @returns True if the order is successfully placed, and false otherwise.
    */
-  placeOrder(sym: string, shares: number, price: number, type: string, pos: string): boolean;
+  placeOrder(
+    sym: string,
+    shares: number,
+    price: number,
+    type: string,
+    pos: string,
+  ): boolean;
 
   /**
    * Cancel order for stocks.
@@ -1501,7 +1521,13 @@ export interface TIX {
    * @param type - Type of order.
    * @param pos - Specifies whether the order is a “Long” or “Short” position.
    */
-  cancelOrder(sym: string, shares: number, price: number, type: string, pos: string): void;
+  cancelOrder(
+    sym: string,
+    shares: number,
+    price: number,
+    type: string,
+    pos: string,
+  ): void;
 
   /**
    * Returns your order book for the stock market.
@@ -1685,7 +1711,7 @@ export interface BaseTask {
  * @public
  */
 export interface StudyTask extends BaseTask {
-  type: "CLASS";
+  type: 'CLASS';
   classType: string;
   location: LocationName | `${LocationName}`;
 }
@@ -1699,7 +1725,7 @@ export interface StudyTask extends BaseTask {
  * @public
  */
 export interface CompanyWorkTask extends BaseTask {
-  type: "COMPANY";
+  type: 'COMPANY';
   companyName: CompanyName;
 }
 
@@ -1712,7 +1738,7 @@ export interface CompanyWorkTask extends BaseTask {
  * @public
  */
 export interface CreateProgramWorkTask extends BaseTask {
-  type: "CREATE_PROGRAM";
+  type: 'CREATE_PROGRAM';
   programName: string;
 }
 
@@ -1725,7 +1751,7 @@ export interface CreateProgramWorkTask extends BaseTask {
  * @public
  */
 export interface CrimeTask extends BaseTask {
-  type: "CRIME";
+  type: 'CRIME';
   crimeType: CrimeType;
 }
 
@@ -1738,7 +1764,7 @@ export interface CrimeTask extends BaseTask {
  * @public
  */
 export interface FactionWorkTask extends BaseTask {
-  type: "FACTION";
+  type: 'FACTION';
   factionWorkType: FactionWorkType;
   factionName: string;
 }
@@ -1752,7 +1778,7 @@ export interface FactionWorkTask extends BaseTask {
  * @public
  */
 export interface GraftingTask extends BaseTask {
-  type: "GRAFTING";
+  type: 'GRAFTING';
   augmentation: string;
   /**
    * This promise resolves when the task is complete.
@@ -1768,7 +1794,13 @@ export interface GraftingTask extends BaseTask {
  *
  * @public
  */
-export type Task = StudyTask | CompanyWorkTask | CreateProgramWorkTask | CrimeTask | FactionWorkTask | GraftingTask;
+export type Task =
+  | StudyTask
+  | CompanyWorkTask
+  | CreateProgramWorkTask
+  | CrimeTask
+  | FactionWorkTask
+  | GraftingTask;
 
 /**
  * Default value:
@@ -1888,7 +1920,11 @@ export interface Singularity {
    * @param focus - Acquire player focus on this gym workout. Optional. Defaults to true.
    * @returns True if action is successfully started, false otherwise.
    */
-  gymWorkout(gymName: GymLocationName | `${GymLocationName}`, stat: GymType | `${GymType}`, focus?: boolean): boolean;
+  gymWorkout(
+    gymName: GymLocationName | `${GymLocationName}`,
+    stat: GymType | `${GymType}`,
+    focus?: boolean,
+  ): boolean;
 
   /**
    * Travel to another city.
@@ -2158,7 +2194,10 @@ export interface Singularity {
    * @param field - Field to which you want to apply.
    * @returns Job name if the player successfully get a job/promotion, and null otherwise.
    */
-  applyToCompany(companyName: CompanyName | `${CompanyName}`, field: JobField | `${JobField}`): JobName | null;
+  applyToCompany(
+    companyName: CompanyName | `${CompanyName}`,
+    field: JobField | `${JobField}`,
+  ): JobName | null;
 
   /**
    * Get company reputation.
@@ -2306,7 +2345,11 @@ export interface Singularity {
    * @param focus - Acquire player focus on this work operation. Optional. Defaults to true.
    * @returns True if the player starts working, and false otherwise.
    */
-  workForFaction(faction: string, workType: FactionWorkType | `${FactionWorkType}`, focus?: boolean): boolean;
+  workForFaction(
+    faction: string,
+    workType: FactionWorkType | `${FactionWorkType}`,
+    focus?: boolean,
+  ): boolean;
 
   /**
    * Get the work types of a faction.
@@ -2775,7 +2818,11 @@ export interface Singularity {
    * @param callbackScript - Name of the script to launch in the next BN.
    * @param bitNodeOptions - BitNode options for the next BN.
    */
-  b1tflum3(nextBN: number, callbackScript?: string, bitNodeOptions?: BitNodeOptions): void;
+  b1tflum3(
+    nextBN: number,
+    callbackScript?: string,
+    bitNodeOptions?: BitNodeOptions,
+  ): void;
 
   /**
    * Destroy the w0r1d_d43m0n and move on to the next BN.
@@ -2790,7 +2837,11 @@ export interface Singularity {
    * @param callbackScript - Name of the script to launch in the next BN.
    * @param bitNodeOptions - BitNode options for the next BN.
    */
-  destroyW0r1dD43m0n(nextBN: number, callbackScript?: string, bitNodeOptions?: BitNodeOptions): void;
+  destroyW0r1dD43m0n(
+    nextBN: number,
+    callbackScript?: string,
+    bitNodeOptions?: BitNodeOptions,
+  ): void;
 
   /**
    * Get the current work the player is doing.
@@ -3161,10 +3212,10 @@ export interface Hacknet {
  * @public
  */
 declare enum BladeburnerActionType {
-  General = "General",
-  Contract = "Contracts",
-  Operation = "Operations",
-  BlackOp = "Black Operations",
+  General = 'General',
+  Contract = 'Contracts',
+  Operation = 'Operations',
+  BlackOp = 'Black Operations',
 }
 
 /**
@@ -3173,12 +3224,12 @@ declare enum BladeburnerActionType {
  * @public
  */
 declare enum BladeburnerGeneralActionName {
-  Training = "Training",
-  FieldAnalysis = "Field Analysis",
-  Recruitment = "Recruitment",
-  Diplomacy = "Diplomacy",
-  HyperbolicRegen = "Hyperbolic Regeneration Chamber",
-  InciteViolence = "Incite Violence",
+  Training = 'Training',
+  FieldAnalysis = 'Field Analysis',
+  Recruitment = 'Recruitment',
+  Diplomacy = 'Diplomacy',
+  HyperbolicRegen = 'Hyperbolic Regeneration Chamber',
+  InciteViolence = 'Incite Violence',
 }
 
 /**
@@ -3187,9 +3238,9 @@ declare enum BladeburnerGeneralActionName {
  * @public
  */
 declare enum BladeburnerContractName {
-  Tracking = "Tracking",
-  BountyHunter = "Bounty Hunter",
-  Retirement = "Retirement",
+  Tracking = 'Tracking',
+  BountyHunter = 'Bounty Hunter',
+  Retirement = 'Retirement',
 }
 
 /**
@@ -3198,12 +3249,12 @@ declare enum BladeburnerContractName {
  * @public
  */
 declare enum BladeburnerOperationName {
-  Investigation = "Investigation",
-  Undercover = "Undercover Operation",
-  Sting = "Sting Operation",
-  Raid = "Raid",
-  StealthRetirement = "Stealth Retirement Operation",
-  Assassination = "Assassination",
+  Investigation = 'Investigation',
+  Undercover = 'Undercover Operation',
+  Sting = 'Sting Operation',
+  Raid = 'Raid',
+  StealthRetirement = 'Stealth Retirement Operation',
+  Assassination = 'Assassination',
 }
 
 /**
@@ -3212,27 +3263,27 @@ declare enum BladeburnerOperationName {
  * @public
  */
 declare enum BladeburnerBlackOpName {
-  OperationTyphoon = "Operation Typhoon",
-  OperationZero = "Operation Zero",
-  OperationX = "Operation X",
-  OperationTitan = "Operation Titan",
-  OperationAres = "Operation Ares",
-  OperationArchangel = "Operation Archangel",
-  OperationJuggernaut = "Operation Juggernaut",
-  OperationRedDragon = "Operation Red Dragon",
-  OperationK = "Operation K",
-  OperationDeckard = "Operation Deckard",
-  OperationTyrell = "Operation Tyrell",
-  OperationWallace = "Operation Wallace",
-  OperationShoulderOfOrion = "Operation Shoulder of Orion",
-  OperationHyron = "Operation Hyron",
-  OperationMorpheus = "Operation Morpheus",
-  OperationIonStorm = "Operation Ion Storm",
-  OperationAnnihilus = "Operation Annihilus",
-  OperationUltron = "Operation Ultron",
-  OperationCenturion = "Operation Centurion",
-  OperationVindictus = "Operation Vindictus",
-  OperationDaedalus = "Operation Daedalus",
+  OperationTyphoon = 'Operation Typhoon',
+  OperationZero = 'Operation Zero',
+  OperationX = 'Operation X',
+  OperationTitan = 'Operation Titan',
+  OperationAres = 'Operation Ares',
+  OperationArchangel = 'Operation Archangel',
+  OperationJuggernaut = 'Operation Juggernaut',
+  OperationRedDragon = 'Operation Red Dragon',
+  OperationK = 'Operation K',
+  OperationDeckard = 'Operation Deckard',
+  OperationTyrell = 'Operation Tyrell',
+  OperationWallace = 'Operation Wallace',
+  OperationShoulderOfOrion = 'Operation Shoulder of Orion',
+  OperationHyron = 'Operation Hyron',
+  OperationMorpheus = 'Operation Morpheus',
+  OperationIonStorm = 'Operation Ion Storm',
+  OperationAnnihilus = 'Operation Annihilus',
+  OperationUltron = 'Operation Ultron',
+  OperationCenturion = 'Operation Centurion',
+  OperationVindictus = 'Operation Vindictus',
+  OperationDaedalus = 'Operation Daedalus',
 }
 
 /**
@@ -3242,17 +3293,17 @@ declare enum BladeburnerBlackOpName {
  */
 declare enum BladeburnerSkillName {
   BladesIntuition = "Blade's Intuition",
-  Cloak = "Cloak",
-  ShortCircuit = "Short-Circuit",
-  DigitalObserver = "Digital Observer",
-  Tracer = "Tracer",
-  Overclock = "Overclock",
-  Reaper = "Reaper",
-  EvasiveSystem = "Evasive System",
-  Datamancer = "Datamancer",
+  Cloak = 'Cloak',
+  ShortCircuit = 'Short-Circuit',
+  DigitalObserver = 'Digital Observer',
+  Tracer = 'Tracer',
+  Overclock = 'Overclock',
+  Reaper = 'Reaper',
+  EvasiveSystem = 'Evasive System',
+  Datamancer = 'Datamancer',
   CybersEdge = "Cyber's Edge",
-  HandsOfMidas = "Hands of Midas",
-  Hyperdrive = "Hyperdrive",
+  HandsOfMidas = 'Hands of Midas',
+  Hyperdrive = 'Hyperdrive',
 }
 
 /**
@@ -3270,16 +3321,19 @@ export type BladeburnerActionName =
  * @public
  */
 declare enum SpecialBladeburnerActionTypeForSleeve {
-  InfiltrateSynthoids = "Infiltrate Synthoids",
-  SupportMainSleeve = "Support main sleeve",
-  TakeOnContracts = "Take on contracts",
+  InfiltrateSynthoids = 'Infiltrate Synthoids',
+  SupportMainSleeve = 'Support main sleeve',
+  TakeOnContracts = 'Take on contracts',
 }
 
 /**
  * @public
  */
 export type BladeburnerActionTypeForSleeve =
-  | Exclude<BladeburnerGeneralActionName, BladeburnerGeneralActionName.InciteViolence>
+  | Exclude<
+      BladeburnerGeneralActionName,
+      BladeburnerGeneralActionName.InciteViolence
+    >
   | SpecialBladeburnerActionTypeForSleeve;
 
 /**
@@ -3644,7 +3698,9 @@ export interface Bladeburner {
    * @param skillName - Name of skill. Case-sensitive and must be an exact match.
    * @returns Level in the specified skill.
    */
-  getSkillLevel(skillName: BladeburnerSkillName | `${BladeburnerSkillName}`): number;
+  getSkillLevel(
+    skillName: BladeburnerSkillName | `${BladeburnerSkillName}`,
+  ): number;
 
   /**
    * Get cost to upgrade skill.
@@ -3667,7 +3723,10 @@ export interface Bladeburner {
    * @param count - Number of times to upgrade the skill. Defaults to 1 if not specified.
    * @returns Number of skill points needed to upgrade the specified skill.
    */
-  getSkillUpgradeCost(skillName: BladeburnerSkillName | `${BladeburnerSkillName}`, count?: number): number;
+  getSkillUpgradeCost(
+    skillName: BladeburnerSkillName | `${BladeburnerSkillName}`,
+    count?: number,
+  ): number;
 
   /**
    * Upgrade skill.
@@ -3682,7 +3741,10 @@ export interface Bladeburner {
    * @param count - Number of times to upgrade the skill. Defaults to 1 if not specified.
    * @returns true if the skill is successfully upgraded, and false otherwise.
    */
-  upgradeSkill(skillName: BladeburnerSkillName | `${BladeburnerSkillName}`, count?: number): boolean;
+  upgradeSkill(
+    skillName: BladeburnerSkillName | `${BladeburnerSkillName}`,
+    count?: number,
+  ): boolean;
 
   /**
    * Get team size.
@@ -4356,14 +4418,14 @@ export interface Gang {
 
 /** @public */
 type GoOpponent =
-  | "No AI"
-  | "Netburners"
-  | "Slum Snakes"
-  | "The Black Hand"
-  | "Tetrads"
-  | "Daedalus"
-  | "Illuminati"
-  | "????????????";
+  | 'No AI'
+  | 'Netburners'
+  | 'Slum Snakes'
+  | 'The Black Hand'
+  | 'Tetrads'
+  | 'Daedalus'
+  | 'Illuminati'
+  | '????????????';
 
 /** @public */
 type SimpleOpponentStats = {
@@ -4410,7 +4472,11 @@ export interface GoAnalysis {
    *  @param playAsWhite - Optional. Whether to analyze the board state as if the white player is the current player. Defaults to false. Intended to be used when playing as white when the opponent is set to "No AI".
    *  @returns A 2D array of booleans indicating the validity of each move.
    */
-  getValidMoves(boardState?: string[] | boolean, priorBoardState?: string[], playAsWhite?: boolean): boolean[][];
+  getValidMoves(
+    boardState?: string[] | boolean,
+    priorBoardState?: string[],
+    playAsWhite?: boolean,
+  ): boolean[][];
 
   /**
    * Returns an ID for each point. All points that share an ID are part of the same network (or "chain"). Empty points
@@ -4616,7 +4682,7 @@ export interface GoCheat {
     y: number,
     playAsWhite?: boolean,
   ): Promise<{
-    type: "move" | "pass" | "gameOver";
+    type: 'move' | 'pass' | 'gameOver';
     x: number | null;
     y: number | null;
   }>;
@@ -4647,7 +4713,7 @@ export interface GoCheat {
     y2: number,
     playAsWhite?: boolean,
   ): Promise<{
-    type: "move" | "pass" | "gameOver";
+    type: 'move' | 'pass' | 'gameOver';
     x: number | null;
     y: number | null;
   }>;
@@ -4674,7 +4740,7 @@ export interface GoCheat {
     y: number,
     playAsWhite?: boolean,
   ): Promise<{
-    type: "move" | "pass" | "gameOver";
+    type: 'move' | 'pass' | 'gameOver';
     x: number | null;
     y: number | null;
   }>;
@@ -4702,7 +4768,7 @@ export interface GoCheat {
     y: number,
     playAsWhite?: boolean,
   ): Promise<{
-    type: "move" | "pass" | "gameOver";
+    type: 'move' | 'pass' | 'gameOver';
     x: number | null;
     y: number | null;
   }>;
@@ -4730,7 +4796,7 @@ export interface Go {
     y: number,
     playAsWhite?: boolean,
   ): Promise<{
-    type: "move" | "pass" | "gameOver";
+    type: 'move' | 'pass' | 'gameOver';
     x: number | null;
     y: number | null;
   }>;
@@ -4750,7 +4816,7 @@ export interface Go {
    *
    */
   passTurn(passAsWhite?: boolean): Promise<{
-    type: "move" | "pass" | "gameOver";
+    type: 'move' | 'pass' | 'gameOver';
     x: number | null;
     y: number | null;
   }>;
@@ -4770,7 +4836,7 @@ export interface Go {
     logOpponentMove?: boolean,
     playAsWhite?: boolean,
   ): Promise<{
-    type: "move" | "pass" | "gameOver";
+    type: 'move' | 'pass' | 'gameOver';
     x: number | null;
     y: number | null;
   }>;
@@ -4821,7 +4887,7 @@ export interface Go {
    * Returns the color of the current player, or 'None' if the game is over.
    * @returns "White" | "Black" | "None"
    */
-  getCurrentPlayer(): "White" | "Black" | "None";
+  getCurrentPlayer(): 'White' | 'Black' | 'None';
 
   /**
    * Gets the status of the current game.
@@ -4829,7 +4895,7 @@ export interface Go {
    * Previous move coordinates will be [-1, -1] for a pass, or if there are no prior moves.
    */
   getGameState(): {
-    currentPlayer: "White" | "Black" | "None";
+    currentPlayer: 'White' | 'Black' | 'None';
     whiteScore: number;
     blackScore: number;
     previousMove: [number, number] | null;
@@ -4855,7 +4921,10 @@ export interface Go {
    * @param boardSize - The size of the board to play on. Must be 5, 7, 9, or 13.
    * @returns a simplified version of the board state as an array of strings representing the board columns. See ns.Go.getBoardState() for full details
    */
-  resetBoardState(opponent: GoOpponent, boardSize: 5 | 7 | 9 | 13): string[] | undefined;
+  resetBoardState(
+    opponent: GoOpponent,
+    boardSize: 5 | 7 | 9 | 13,
+  ): string[] | undefined;
 
   /**
    * Tools to analyze the IPvGO subnet.
@@ -4967,7 +5036,10 @@ export interface Sleeve {
    * @param crimeType - Name of the crime.
    * @returns True if this action was set successfully, false otherwise.
    */
-  setToCommitCrime(sleeveNumber: number, crimeType: CrimeType | `${CrimeType}`): boolean;
+  setToCommitCrime(
+    sleeveNumber: number,
+    crimeType: CrimeType | `${CrimeType}`,
+  ): boolean;
 
   /**
    * Set a sleeve to work for a faction.
@@ -4998,7 +5070,10 @@ export interface Sleeve {
    * @param companyName - Name of the company to work for.
    * @returns True if the sleeve started working for this company, false otherwise.
    */
-  setToCompanyWork(sleeveNumber: number, companyName: CompanyName | `${CompanyName}`): boolean;
+  setToCompanyWork(
+    sleeveNumber: number,
+    companyName: CompanyName | `${CompanyName}`,
+  ): boolean;
 
   /**
    * Set a sleeve to take a class at a university.
@@ -5122,7 +5197,9 @@ export interface Sleeve {
    */
   setToBladeburnerAction(
     sleeveNumber: number,
-    action: BladeburnerActionTypeForSleeve | `${BladeburnerActionTypeForSleeve}`,
+    action:
+      | BladeburnerActionTypeForSleeve
+      | `${BladeburnerActionTypeForSleeve}`,
     contract?: BladeburnerContractName,
   ): boolean;
 }
@@ -5244,11 +5321,18 @@ interface WorkStats {
  * @public
  */
 interface WorkFormulas {
-  crimeSuccessChance(person: Person, crimeType: CrimeType | `${CrimeType}`): number;
+  crimeSuccessChance(
+    person: Person,
+    crimeType: CrimeType | `${CrimeType}`,
+  ): number;
   /** @returns The WorkStats gained when completing one instance of the specified crime. */
   crimeGains(person: Person, crimeType: CrimeType | `${CrimeType}`): WorkStats;
   /** @returns The WorkStats applied every game cycle (200ms) by taking the specified gym class. */
-  gymGains(person: Person, gymType: GymType | `${GymType}`, locationName: LocationName | `${LocationName}`): WorkStats;
+  gymGains(
+    person: Person,
+    gymType: GymType | `${GymType}`,
+    locationName: LocationName | `${LocationName}`,
+  ): WorkStats;
   /** @returns The WorkStats applied every game cycle (200ms) by taking the specified university class. */
   universityGains(
     person: Person,
@@ -5256,7 +5340,11 @@ interface WorkFormulas {
     locationName: LocationName | `${LocationName}`,
   ): WorkStats;
   /** @returns The WorkStats applied every game cycle (200ms) by performing the specified faction work. */
-  factionGains(person: Person, workType: FactionWorkType | `${FactionWorkType}`, favor: number): WorkStats;
+  factionGains(
+    person: Person,
+    workType: FactionWorkType | `${FactionWorkType}`,
+    favor: number,
+  ): WorkStats;
   /** @returns The WorkStats applied every game cycle (200ms) by performing the specified company work. */
   companyGains(
     person: Person,
@@ -5351,7 +5439,12 @@ interface HackingFormulas {
    * @param cores - Number of cores on the computer that will execute grow.
    * @returns The calculated grow percent.
    */
-  growPercent(server: Server, threads: number, player: Person, cores?: number): number;
+  growPercent(
+    server: Server,
+    threads: number,
+    player: Person,
+    cores?: number,
+  ): number;
   /**
    * Calculate how many threads it will take to grow server to targetMoney. Starting money is server.moneyAvailable.
    * Note that when simulating the effect of {@link NS.grow | grow}, what matters is the state of the server and player
@@ -5367,7 +5460,12 @@ interface HackingFormulas {
    * @param cores - Number of cores on the computer that will execute grow.
    * @returns The calculated grow threads as an integer, rounded up.
    */
-  growThreads(server: Server, player: Person, targetMoney: number, cores?: number): number;
+  growThreads(
+    server: Server,
+    player: Person,
+    targetMoney: number,
+    cores?: number,
+  ): number;
   /**
    * Calculate the amount of money a grow action will leave a server with. Starting money is server.moneyAvailable.
    * Note that when simulating the effect of {@link NS.grow | grow}, what matters is the state of the server and player
@@ -5383,7 +5481,12 @@ interface HackingFormulas {
    * @param cores - Number of cores on the computer that will execute grow.
    * @returns The amount of money after the calculated grow.
    */
-  growAmount(server: Server, player: Person, threads: number, cores?: number): number;
+  growAmount(
+    server: Server,
+    player: Person,
+    threads: number,
+    cores?: number,
+  ): number;
   /**
    * Calculate hack time.
    * @param server - Server info, typically from {@link NS.getServer | getServer}
@@ -5420,7 +5523,12 @@ interface HacknetNodesFormulas {
    * @param mult - player production mult (default to 1)
    * @returns The calculated money gain rate.
    */
-  moneyGainRate(level: number, ram: number, cores: number, mult?: number): number;
+  moneyGainRate(
+    level: number,
+    ram: number,
+    cores: number,
+    mult?: number,
+  ): number;
   /**
    * Calculate cost of upgrading hacknet node level.
    * @param startingLevel - starting level
@@ -5428,7 +5536,11 @@ interface HacknetNodesFormulas {
    * @param costMult - player cost reduction (default to 1)
    * @returns The calculated cost.
    */
-  levelUpgradeCost(startingLevel: number, extraLevels?: number, costMult?: number): number;
+  levelUpgradeCost(
+    startingLevel: number,
+    extraLevels?: number,
+    costMult?: number,
+  ): number;
   /**
    * Calculate cost of upgrading hacknet node ram.
    * @param startingRam - starting ram
@@ -5436,7 +5548,11 @@ interface HacknetNodesFormulas {
    * @param costMult - player cost reduction (default to 1)
    * @returns The calculated cost.
    */
-  ramUpgradeCost(startingRam: number, extraLevels?: number, costMult?: number): number;
+  ramUpgradeCost(
+    startingRam: number,
+    extraLevels?: number,
+    costMult?: number,
+  ): number;
   /**
    * Calculate cost of upgrading hacknet node cores.
    * @param startingCore - starting cores
@@ -5444,7 +5560,11 @@ interface HacknetNodesFormulas {
    * @param costMult - player cost reduction (default to 1)
    * @returns The calculated cost.
    */
-  coreUpgradeCost(startingCore: number, extraCores?: number, costMult?: number): number;
+  coreUpgradeCost(
+    startingCore: number,
+    extraCores?: number,
+    costMult?: number,
+  ): number;
   /**
    * Calculate the cost of a hacknet node.
    * @param n - number of the hacknet node
@@ -5473,7 +5593,13 @@ interface HacknetServersFormulas {
    * @param mult - player production mult (default to 1)
    * @returns The calculated hash gain rate.
    */
-  hashGainRate(level: number, ramUsed: number, maxRam: number, cores: number, mult?: number): number;
+  hashGainRate(
+    level: number,
+    ramUsed: number,
+    maxRam: number,
+    cores: number,
+    mult?: number,
+  ): number;
   /**
    * Calculate cost of upgrading hacknet server level.
    * @param startingLevel - starting level
@@ -5481,7 +5607,11 @@ interface HacknetServersFormulas {
    * @param costMult - player cost reduction (default to 1)
    * @returns The calculated cost.
    */
-  levelUpgradeCost(startingLevel: number, extraLevels?: number, costMult?: number): number;
+  levelUpgradeCost(
+    startingLevel: number,
+    extraLevels?: number,
+    costMult?: number,
+  ): number;
   /**
    * Calculate cost of upgrading hacknet server ram.
    * @param startingRam - starting ram
@@ -5489,7 +5619,11 @@ interface HacknetServersFormulas {
    * @param costMult - player cost reduction (default to 1)
    * @returns The calculated cost.
    */
-  ramUpgradeCost(startingRam: number, extraLevels?: number, costMult?: number): number;
+  ramUpgradeCost(
+    startingRam: number,
+    extraLevels?: number,
+    costMult?: number,
+  ): number;
   /**
    * Calculate cost of upgrading hacknet server cores.
    * @param startingCore - starting cores
@@ -5497,7 +5631,11 @@ interface HacknetServersFormulas {
    * @param costMult - player cost reduction (default to 1)
    * @returns The calculated cost.
    */
-  coreUpgradeCost(startingCore: number, extraCores?: number, costMult?: number): number;
+  coreUpgradeCost(
+    startingCore: number,
+    extraCores?: number,
+    costMult?: number,
+  ): number;
   /**
    * Calculate cost of upgrading hacknet server cache.
    * @param startingCache - starting cache level
@@ -5544,7 +5682,11 @@ interface GangFormulas {
    * @param task - Gang info from {@link Gang.getTaskStats | getTaskStats}
    * @returns The calculated respect gain.
    */
-  respectGain(gang: GangGenInfo, member: GangMemberInfo, task: GangTaskStats): number;
+  respectGain(
+    gang: GangGenInfo,
+    member: GangMemberInfo,
+    task: GangTaskStats,
+  ): number;
   /**
    * Calculate wanted gain per tick.
    * @param gang - Gang info from {@link Gang.getGangInformation | getGangInformation}
@@ -5552,7 +5694,11 @@ interface GangFormulas {
    * @param task - Task info from {@link Gang.getTaskStats | getTaskStats}
    * @returns The calculated wanted gain.
    */
-  wantedLevelGain(gang: GangGenInfo, member: GangMemberInfo, task: GangTaskStats): number;
+  wantedLevelGain(
+    gang: GangGenInfo,
+    member: GangMemberInfo,
+    task: GangTaskStats,
+  ): number;
   /**
    * Calculate money gain per tick.
    * @param gang - Gang info from {@link Gang.getGangInformation | getGangInformation}
@@ -5560,7 +5706,11 @@ interface GangFormulas {
    * @param task - Task info from {@link Gang.getTaskStats | getTaskStats}
    * @returns The calculated money gain.
    */
-  moneyGain(gang: GangGenInfo, member: GangMemberInfo, task: GangTaskStats): number;
+  moneyGain(
+    gang: GangGenInfo,
+    member: GangMemberInfo,
+    task: GangTaskStats,
+  ): number;
 
   /**
    * Calculate ascension point gain.
@@ -5711,7 +5861,12 @@ interface Stanek {
    * @param fragmentId - ID of the fragment to place.
    * @returns true if the fragment can be placed at that position. false otherwise.
    */
-  canPlaceFragment(rootX: number, rootY: number, rotation: number, fragmentId: number): boolean;
+  canPlaceFragment(
+    rootX: number,
+    rootY: number,
+    rotation: number,
+    fragmentId: number,
+  ): boolean;
   /**
    * Place fragment on Stanek's Gift.
    * @remarks
@@ -5723,7 +5878,12 @@ interface Stanek {
    * @param fragmentId - ID of the fragment to place.
    * @returns true if the fragment can be placed at that position. false otherwise.
    */
-  placeFragment(rootX: number, rootY: number, rotation: number, fragmentId: number): boolean;
+  placeFragment(
+    rootX: number,
+    rootY: number,
+    rotation: number,
+    fragmentId: number,
+  ): boolean;
   /**
    * Get placed fragment at location.
    * @remarks
@@ -5802,7 +5962,9 @@ interface Infiltration {
    *
    * @returns Infiltration data for given location.
    */
-  getInfiltration(location: LocationName | `${LocationName}`): InfiltrationLocation;
+  getInfiltration(
+    location: LocationName | `${LocationName}`,
+  ): InfiltrationLocation;
 }
 
 /**
@@ -5938,7 +6100,12 @@ interface UserInterface {
    * @param host - Optional. Hostname of the target script. Defaults to the server this script is running on. If args are specified, this is not optional.
    * @param args - Arguments for the target script.
    */
-  setTailFontSize(pixel?: number, fn?: FilenameOrPID, host?: string, ...args: ScriptArg[]): void;
+  setTailFontSize(
+    pixel?: number,
+    fn?: FilenameOrPID,
+    host?: string,
+    ...args: ScriptArg[]
+  ): void;
 
   /**
    * Get the current window size
@@ -6390,7 +6557,11 @@ export interface NS {
    * @param cores - Optional. The number of cores of the server that would run grow.
    * @returns The security increase.
    */
-  growthAnalyzeSecurity(threads: number, hostname?: string, cores?: number): number;
+  growthAnalyzeSecurity(
+    threads: number,
+    hostname?: string,
+    cores?: number,
+  ): number;
 
   readonly heart: {
     /**
@@ -6646,7 +6817,11 @@ export interface NS {
    * @param args - Arguments to identify which scripts to get logs for.
    * @returns Returns a string array, where each line is an element in the array. The most recently logged line is at the end of the array.
    */
-  getScriptLogs(fn?: FilenameOrPID, host?: string, ...args: ScriptArg[]): string[];
+  getScriptLogs(
+    fn?: FilenameOrPID,
+    host?: string,
+    ...args: ScriptArg[]
+  ): string[];
 
   /**
    * Get an array of recently killed scripts across all servers.
@@ -6992,7 +7167,11 @@ export interface NS {
    * @param args - Additional arguments to pass into the new script that is being run. Note that if any arguments are being passed into the new script, then the second argument threadOrOptions must be filled in with a value.
    * @returns Returns the PID of a successfully started script, and 0 otherwise.
    */
-  run(script: string, threadOrOptions?: number | RunOptions, ...args: ScriptArg[]): number;
+  run(
+    script: string,
+    threadOrOptions?: number | RunOptions,
+    ...args: ScriptArg[]
+  ): number;
 
   /**
    * Start another script on any server.
@@ -7032,7 +7211,12 @@ export interface NS {
    * @param args - Additional arguments to pass into the new script that is being run. Note that if any arguments are being passed into the new script, then the third argument threadOrOptions must be filled in with a value.
    * @returns Returns the PID of a successfully started script, and 0 otherwise.
    */
-  exec(script: string, hostname: string, threadOrOptions?: number | RunOptions, ...args: ScriptArg[]): number;
+  exec(
+    script: string,
+    hostname: string,
+    threadOrOptions?: number | RunOptions,
+    ...args: ScriptArg[]
+  ): number;
 
   /**
    * Terminate current script and start another in a defined number of milliseconds.
@@ -7060,7 +7244,11 @@ export interface NS {
    * @param threadOrOptions - Either an integer number of threads for new script, or a {@link SpawnOptions} object. Threads defaults to 1 and spawnDelay defaults to 10,000 ms.
    * @param args - Additional arguments to pass into the new script that is being run.
    */
-  spawn(script: string, threadOrOptions?: number | SpawnOptions, ...args: ScriptArg[]): void;
+  spawn(
+    script: string,
+    threadOrOptions?: number | SpawnOptions,
+    ...args: ScriptArg[]
+  ): void;
 
   /**
    * Returns the currently running script.
@@ -7465,7 +7653,11 @@ export interface NS {
    * @param args - Arguments to specify/identify the script. Optional, when looking for scripts run without arguments.
    * @returns True if the specified script is running on the target server, and false otherwise.
    */
-  isRunning(script: FilenameOrPID, host?: string, ...args: ScriptArg[]): boolean;
+  isRunning(
+    script: FilenameOrPID,
+    host?: string,
+    ...args: ScriptArg[]
+  ): boolean;
 
   /**
    * Get general info about a running script.
@@ -7484,7 +7676,11 @@ export interface NS {
    * @param args  - Arguments to specify/identify the script. Optional, when looking for scripts run without arguments.
    * @returns The info about the running script if found, and null otherwise.
    */
-  getRunningScript(filename?: FilenameOrPID, hostname?: string, ...args: ScriptArg[]): RunningScript | null;
+  getRunningScript(
+    filename?: FilenameOrPID,
+    hostname?: string,
+    ...args: ScriptArg[]
+  ): RunningScript | null;
 
   /**
    * Change the current static RAM allocation of the script.
@@ -7653,7 +7849,7 @@ export interface NS {
    * @param data - Data to write.
    * @param mode - Defines the write mode.
    */
-  write(filename: string, data?: string, mode?: "w" | "a"): void;
+  write(filename: string, data?: string, mode?: 'w' | 'a'): void;
 
   /**
    * Attempt to write to a port.
@@ -8011,7 +8207,12 @@ export interface NS {
    * @param isInteger - Whether the number represents an integer. Integers do not display fractional digits until a suffix is present. Optional, defaults to false.
    * @returns Formatted number.
    */
-  formatNumber(n: number, fractionalDigits?: number, suffixStart?: number, isInteger?: boolean): string;
+  formatNumber(
+    n: number,
+    fractionalDigits?: number,
+    suffixStart?: number,
+    isInteger?: boolean,
+  ): string;
 
   /**
    * Format a number as an amount of ram.
@@ -8044,7 +8245,11 @@ export interface NS {
    * @param suffixStart - When to switch the percentage to a multiplier. Default is 1e6 or x1.00m.
    * @returns Formatted percentage.
    */
-  formatPercent(n: number, fractionalDigits?: number, suffixStart?: number): string;
+  formatPercent(
+    n: number,
+    fractionalDigits?: number,
+    suffixStart?: number,
+  ): string;
 
   /**
    * Format a number using the numeral library. This function is deprecated and will be removed in a later version.
@@ -8145,7 +8350,7 @@ export interface NS {
    */
   prompt(
     txt: string,
-    options?: { type?: "boolean" | "text" | "select"; choices?: string[] },
+    options?: { type?: 'boolean' | 'text' | 'select'; choices?: string[] },
   ): Promise<boolean | string>;
 
   /**
@@ -8160,7 +8365,11 @@ export interface NS {
    * @param variant - Type of toast. Must be one of success, info, warning, error. Defaults to success.
    * @param duration - Duration of toast in ms. Can also be `null` to create a persistent toast. Defaults to 2000.
    */
-  toast(msg: string, variant?: ToastVariant | `${ToastVariant}`, duration?: number | null): void;
+  toast(
+    msg: string,
+    variant?: ToastVariant | `${ToastVariant}`,
+    duration?: number | null,
+  ): void;
 
   /**
    * Download a file from the internet.
@@ -8350,7 +8559,9 @@ export interface NS {
    * // {"_":[],"delay":0,"server":"foodnstuff","exclude":[],"help":false,"v":true}
    * ```
    */
-  flags(schema: [string, string | number | boolean | string[]][]): { [key: string]: ScriptArg | string[] };
+  flags(schema: [string, string | number | boolean | string[]][]): {
+    [key: string]: ScriptArg | string[];
+  };
 
   /**
    * Share the server's ram with your factions.
@@ -8376,219 +8587,219 @@ export interface NS {
 // BASE ENUMS
 /** @public */
 declare enum ToastVariant {
-  SUCCESS = "success",
-  WARNING = "warning",
-  ERROR = "error",
-  INFO = "info",
+  SUCCESS = 'success',
+  WARNING = 'warning',
+  ERROR = 'error',
+  INFO = 'info',
 }
 
 /** @public */
 declare enum CrimeType {
-  shoplift = "Shoplift",
-  robStore = "Rob Store",
-  mug = "Mug",
-  larceny = "Larceny",
-  dealDrugs = "Deal Drugs",
-  bondForgery = "Bond Forgery",
-  traffickArms = "Traffick Arms",
-  homicide = "Homicide",
-  grandTheftAuto = "Grand Theft Auto",
-  kidnap = "Kidnap",
-  assassination = "Assassination",
-  heist = "Heist",
+  shoplift = 'Shoplift',
+  robStore = 'Rob Store',
+  mug = 'Mug',
+  larceny = 'Larceny',
+  dealDrugs = 'Deal Drugs',
+  bondForgery = 'Bond Forgery',
+  traffickArms = 'Traffick Arms',
+  homicide = 'Homicide',
+  grandTheftAuto = 'Grand Theft Auto',
+  kidnap = 'Kidnap',
+  assassination = 'Assassination',
+  heist = 'Heist',
 }
 
 /** @public */
 declare enum FactionWorkType {
-  hacking = "hacking",
-  field = "field",
-  security = "security",
+  hacking = 'hacking',
+  field = 'field',
+  security = 'security',
 }
 
 /** @public */
 declare enum UniversityClassType {
-  computerScience = "Computer Science",
-  dataStructures = "Data Structures",
-  networks = "Networks",
-  algorithms = "Algorithms",
-  management = "Management",
-  leadership = "Leadership",
+  computerScience = 'Computer Science',
+  dataStructures = 'Data Structures',
+  networks = 'Networks',
+  algorithms = 'Algorithms',
+  management = 'Management',
+  leadership = 'Leadership',
 }
 
 /** @public */
 declare enum GymType {
-  strength = "str",
-  defense = "def",
-  dexterity = "dex",
-  agility = "agi",
+  strength = 'str',
+  defense = 'def',
+  dexterity = 'dex',
+  agility = 'agi',
 }
 
 /** @public */
 declare enum JobName {
-  software0 = "Software Engineering Intern",
-  software1 = "Junior Software Engineer",
-  software2 = "Senior Software Engineer",
-  software3 = "Lead Software Developer",
-  software4 = "Head of Software",
-  software5 = "Head of Engineering",
-  software6 = "Vice President of Technology",
-  software7 = "Chief Technology Officer",
-  IT0 = "IT Intern",
-  IT1 = "IT Analyst",
-  IT2 = "IT Manager",
-  IT3 = "Systems Administrator",
-  securityEng = "Security Engineer",
-  networkEng0 = "Network Engineer",
-  networkEng1 = "Network Administrator",
-  business0 = "Business Intern",
-  business1 = "Business Analyst",
-  business2 = "Business Manager",
-  business3 = "Operations Manager",
-  business4 = "Chief Financial Officer",
-  business5 = "Chief Executive Officer",
-  security0 = "Security Guard",
-  security1 = "Security Officer",
-  security2 = "Security Supervisor",
-  security3 = "Head of Security",
-  agent0 = "Field Agent",
-  agent1 = "Secret Agent",
-  agent2 = "Special Operative",
-  waiter = "Waiter",
-  employee = "Employee",
-  softwareConsult0 = "Software Consultant",
-  softwareConsult1 = "Senior Software Consultant",
-  businessConsult0 = "Business Consultant",
-  businessConsult1 = "Senior Business Consultant",
-  waiterPT = "Part-time Waiter",
-  employeePT = "Part-time Employee",
+  software0 = 'Software Engineering Intern',
+  software1 = 'Junior Software Engineer',
+  software2 = 'Senior Software Engineer',
+  software3 = 'Lead Software Developer',
+  software4 = 'Head of Software',
+  software5 = 'Head of Engineering',
+  software6 = 'Vice President of Technology',
+  software7 = 'Chief Technology Officer',
+  IT0 = 'IT Intern',
+  IT1 = 'IT Analyst',
+  IT2 = 'IT Manager',
+  IT3 = 'Systems Administrator',
+  securityEng = 'Security Engineer',
+  networkEng0 = 'Network Engineer',
+  networkEng1 = 'Network Administrator',
+  business0 = 'Business Intern',
+  business1 = 'Business Analyst',
+  business2 = 'Business Manager',
+  business3 = 'Operations Manager',
+  business4 = 'Chief Financial Officer',
+  business5 = 'Chief Executive Officer',
+  security0 = 'Security Guard',
+  security1 = 'Security Officer',
+  security2 = 'Security Supervisor',
+  security3 = 'Head of Security',
+  agent0 = 'Field Agent',
+  agent1 = 'Secret Agent',
+  agent2 = 'Special Operative',
+  waiter = 'Waiter',
+  employee = 'Employee',
+  softwareConsult0 = 'Software Consultant',
+  softwareConsult1 = 'Senior Software Consultant',
+  businessConsult0 = 'Business Consultant',
+  businessConsult1 = 'Senior Business Consultant',
+  waiterPT = 'Part-time Waiter',
+  employeePT = 'Part-time Employee',
 }
 
 /** @public */
 declare enum JobField {
-  software = "Software",
-  softwareConsultant = "Software Consultant",
-  it = "IT",
-  securityEngineer = "Security Engineer",
-  networkEngineer = "Network Engineer",
-  business = "Business",
-  businessConsultant = "Business Consultant",
-  security = "Security",
-  agent = "Agent",
-  employee = "Employee",
-  partTimeEmployee = "Part-time Employee",
-  waiter = "Waiter",
-  partTimeWaiter = "Part-time Waiter",
+  software = 'Software',
+  softwareConsultant = 'Software Consultant',
+  it = 'IT',
+  securityEngineer = 'Security Engineer',
+  networkEngineer = 'Network Engineer',
+  business = 'Business',
+  businessConsultant = 'Business Consultant',
+  security = 'Security',
+  agent = 'Agent',
+  employee = 'Employee',
+  partTimeEmployee = 'Part-time Employee',
+  waiter = 'Waiter',
+  partTimeWaiter = 'Part-time Waiter',
 }
 
 // CORP ENUMS - Changed to types
 /** @public */
 type CorpEmployeePosition =
-  | "Operations"
-  | "Engineer"
-  | "Business"
-  | "Management"
-  | "Research & Development"
-  | "Intern"
-  | "Unassigned";
+  | 'Operations'
+  | 'Engineer'
+  | 'Business'
+  | 'Management'
+  | 'Research & Development'
+  | 'Intern'
+  | 'Unassigned';
 
 /** @public */
 type CorpIndustryName =
-  | "Spring Water"
-  | "Water Utilities"
-  | "Agriculture"
-  | "Fishing"
-  | "Mining"
-  | "Refinery"
-  | "Restaurant"
-  | "Tobacco"
-  | "Chemical"
-  | "Pharmaceutical"
-  | "Computer Hardware"
-  | "Robotics"
-  | "Software"
-  | "Healthcare"
-  | "Real Estate";
+  | 'Spring Water'
+  | 'Water Utilities'
+  | 'Agriculture'
+  | 'Fishing'
+  | 'Mining'
+  | 'Refinery'
+  | 'Restaurant'
+  | 'Tobacco'
+  | 'Chemical'
+  | 'Pharmaceutical'
+  | 'Computer Hardware'
+  | 'Robotics'
+  | 'Software'
+  | 'Healthcare'
+  | 'Real Estate';
 
 /** @public */
-type CorpSmartSupplyOption = "leftovers" | "imports" | "none";
+type CorpSmartSupplyOption = 'leftovers' | 'imports' | 'none';
 
 /** Names of all cities
  * @public */
 declare enum CityName {
-  Aevum = "Aevum",
-  Chongqing = "Chongqing",
-  Sector12 = "Sector-12",
-  NewTokyo = "New Tokyo",
-  Ishima = "Ishima",
-  Volhaven = "Volhaven",
+  Aevum = 'Aevum',
+  Chongqing = 'Chongqing',
+  Sector12 = 'Sector-12',
+  NewTokyo = 'New Tokyo',
+  Ishima = 'Ishima',
+  Volhaven = 'Volhaven',
 }
 
 /** Names of all locations
  * @public */
 declare enum LocationName {
-  AevumAeroCorp = "AeroCorp",
-  AevumBachmanAndAssociates = "Bachman & Associates",
-  AevumClarkeIncorporated = "Clarke Incorporated",
-  AevumCrushFitnessGym = "Crush Fitness Gym",
-  AevumECorp = "ECorp",
-  AevumFulcrumTechnologies = "Fulcrum Technologies",
-  AevumGalacticCybersystems = "Galactic Cybersystems",
-  AevumNetLinkTechnologies = "NetLink Technologies",
-  AevumPolice = "Aevum Police Headquarters",
-  AevumRhoConstruction = "Rho Construction",
-  AevumSnapFitnessGym = "Snap Fitness Gym",
-  AevumSummitUniversity = "Summit University",
-  AevumWatchdogSecurity = "Watchdog Security",
-  AevumCasino = "Iker Molina Casino",
+  AevumAeroCorp = 'AeroCorp',
+  AevumBachmanAndAssociates = 'Bachman & Associates',
+  AevumClarkeIncorporated = 'Clarke Incorporated',
+  AevumCrushFitnessGym = 'Crush Fitness Gym',
+  AevumECorp = 'ECorp',
+  AevumFulcrumTechnologies = 'Fulcrum Technologies',
+  AevumGalacticCybersystems = 'Galactic Cybersystems',
+  AevumNetLinkTechnologies = 'NetLink Technologies',
+  AevumPolice = 'Aevum Police Headquarters',
+  AevumRhoConstruction = 'Rho Construction',
+  AevumSnapFitnessGym = 'Snap Fitness Gym',
+  AevumSummitUniversity = 'Summit University',
+  AevumWatchdogSecurity = 'Watchdog Security',
+  AevumCasino = 'Iker Molina Casino',
 
-  ChongqingKuaiGongInternational = "KuaiGong International",
-  ChongqingSolarisSpaceSystems = "Solaris Space Systems",
-  ChongqingChurchOfTheMachineGod = "Church of the Machine God",
+  ChongqingKuaiGongInternational = 'KuaiGong International',
+  ChongqingSolarisSpaceSystems = 'Solaris Space Systems',
+  ChongqingChurchOfTheMachineGod = 'Church of the Machine God',
 
-  Sector12AlphaEnterprises = "Alpha Enterprises",
-  Sector12BladeIndustries = "Blade Industries",
-  Sector12CIA = "Central Intelligence Agency",
-  Sector12CarmichaelSecurity = "Carmichael Security",
-  Sector12CityHall = "Sector-12 City Hall",
-  Sector12DeltaOne = "DeltaOne",
-  Sector12FoodNStuff = "FoodNStuff",
-  Sector12FourSigma = "Four Sigma",
-  Sector12IcarusMicrosystems = "Icarus Microsystems",
-  Sector12IronGym = "Iron Gym",
+  Sector12AlphaEnterprises = 'Alpha Enterprises',
+  Sector12BladeIndustries = 'Blade Industries',
+  Sector12CIA = 'Central Intelligence Agency',
+  Sector12CarmichaelSecurity = 'Carmichael Security',
+  Sector12CityHall = 'Sector-12 City Hall',
+  Sector12DeltaOne = 'DeltaOne',
+  Sector12FoodNStuff = 'FoodNStuff',
+  Sector12FourSigma = 'Four Sigma',
+  Sector12IcarusMicrosystems = 'Icarus Microsystems',
+  Sector12IronGym = 'Iron Gym',
   Sector12JoesGuns = "Joe's Guns",
-  Sector12MegaCorp = "MegaCorp",
-  Sector12NSA = "National Security Agency",
-  Sector12PowerhouseGym = "Powerhouse Gym",
-  Sector12RothmanUniversity = "Rothman University",
-  Sector12UniversalEnergy = "Universal Energy",
+  Sector12MegaCorp = 'MegaCorp',
+  Sector12NSA = 'National Security Agency',
+  Sector12PowerhouseGym = 'Powerhouse Gym',
+  Sector12RothmanUniversity = 'Rothman University',
+  Sector12UniversalEnergy = 'Universal Energy',
 
-  NewTokyoDefComm = "DefComm",
-  NewTokyoGlobalPharmaceuticals = "Global Pharmaceuticals",
-  NewTokyoNoodleBar = "Noodle Bar",
-  NewTokyoVitaLife = "VitaLife",
-  NewTokyoArcade = "Arcade",
+  NewTokyoDefComm = 'DefComm',
+  NewTokyoGlobalPharmaceuticals = 'Global Pharmaceuticals',
+  NewTokyoNoodleBar = 'Noodle Bar',
+  NewTokyoVitaLife = 'VitaLife',
+  NewTokyoArcade = 'Arcade',
 
-  IshimaNovaMedical = "Nova Medical",
-  IshimaOmegaSoftware = "Omega Software",
-  IshimaStormTechnologies = "Storm Technologies",
-  IshimaGlitch = "0x6C1",
+  IshimaNovaMedical = 'Nova Medical',
+  IshimaOmegaSoftware = 'Omega Software',
+  IshimaStormTechnologies = 'Storm Technologies',
+  IshimaGlitch = '0x6C1',
 
-  VolhavenCompuTek = "CompuTek",
-  VolhavenHeliosLabs = "Helios Labs",
-  VolhavenLexoCorp = "LexoCorp",
-  VolhavenMilleniumFitnessGym = "Millenium Fitness Gym",
-  VolhavenNWO = "NWO",
-  VolhavenOmniTekIncorporated = "OmniTek Incorporated",
-  VolhavenOmniaCybersystems = "Omnia Cybersystems",
-  VolhavenSysCoreSecurities = "SysCore Securities",
-  VolhavenZBInstituteOfTechnology = "ZB Institute of Technology",
+  VolhavenCompuTek = 'CompuTek',
+  VolhavenHeliosLabs = 'Helios Labs',
+  VolhavenLexoCorp = 'LexoCorp',
+  VolhavenMilleniumFitnessGym = 'Millenium Fitness Gym',
+  VolhavenNWO = 'NWO',
+  VolhavenOmniTekIncorporated = 'OmniTek Incorporated',
+  VolhavenOmniaCybersystems = 'Omnia Cybersystems',
+  VolhavenSysCoreSecurities = 'SysCore Securities',
+  VolhavenZBInstituteOfTechnology = 'ZB Institute of Technology',
 
-  Hospital = "Hospital",
-  Slums = "The Slums",
-  TravelAgency = "Travel Agency",
-  WorldStockExchange = "World Stock Exchange",
+  Hospital = 'Hospital',
+  Slums = 'The Slums',
+  TravelAgency = 'Travel Agency',
+  WorldStockExchange = 'World Stock Exchange',
 
-  Void = "The Void",
+  Void = 'The Void',
 }
 
 /**
@@ -8618,44 +8829,44 @@ declare enum GymLocationName {
 /** Names of all companies
  * @public */
 declare enum CompanyName {
-  ECorp = "ECorp",
-  MegaCorp = "MegaCorp",
-  BachmanAndAssociates = "Bachman & Associates",
-  BladeIndustries = "Blade Industries",
-  NWO = "NWO",
-  ClarkeIncorporated = "Clarke Incorporated",
-  OmniTekIncorporated = "OmniTek Incorporated",
-  FourSigma = "Four Sigma",
-  KuaiGongInternational = "KuaiGong International",
-  FulcrumTechnologies = "Fulcrum Technologies",
-  StormTechnologies = "Storm Technologies",
-  DefComm = "DefComm",
-  HeliosLabs = "Helios Labs",
-  VitaLife = "VitaLife",
-  IcarusMicrosystems = "Icarus Microsystems",
-  UniversalEnergy = "Universal Energy",
-  GalacticCybersystems = "Galactic Cybersystems",
-  AeroCorp = "AeroCorp",
-  OmniaCybersystems = "Omnia Cybersystems",
-  SolarisSpaceSystems = "Solaris Space Systems",
-  DeltaOne = "DeltaOne",
-  GlobalPharmaceuticals = "Global Pharmaceuticals",
-  NovaMedical = "Nova Medical",
-  CIA = "Central Intelligence Agency",
-  NSA = "National Security Agency",
-  WatchdogSecurity = "Watchdog Security",
-  LexoCorp = "LexoCorp",
-  RhoConstruction = "Rho Construction",
-  AlphaEnterprises = "Alpha Enterprises",
-  Police = "Aevum Police Headquarters",
-  SysCoreSecurities = "SysCore Securities",
-  CompuTek = "CompuTek",
-  NetLinkTechnologies = "NetLink Technologies",
-  CarmichaelSecurity = "Carmichael Security",
-  FoodNStuff = "FoodNStuff",
+  ECorp = 'ECorp',
+  MegaCorp = 'MegaCorp',
+  BachmanAndAssociates = 'Bachman & Associates',
+  BladeIndustries = 'Blade Industries',
+  NWO = 'NWO',
+  ClarkeIncorporated = 'Clarke Incorporated',
+  OmniTekIncorporated = 'OmniTek Incorporated',
+  FourSigma = 'Four Sigma',
+  KuaiGongInternational = 'KuaiGong International',
+  FulcrumTechnologies = 'Fulcrum Technologies',
+  StormTechnologies = 'Storm Technologies',
+  DefComm = 'DefComm',
+  HeliosLabs = 'Helios Labs',
+  VitaLife = 'VitaLife',
+  IcarusMicrosystems = 'Icarus Microsystems',
+  UniversalEnergy = 'Universal Energy',
+  GalacticCybersystems = 'Galactic Cybersystems',
+  AeroCorp = 'AeroCorp',
+  OmniaCybersystems = 'Omnia Cybersystems',
+  SolarisSpaceSystems = 'Solaris Space Systems',
+  DeltaOne = 'DeltaOne',
+  GlobalPharmaceuticals = 'Global Pharmaceuticals',
+  NovaMedical = 'Nova Medical',
+  CIA = 'Central Intelligence Agency',
+  NSA = 'National Security Agency',
+  WatchdogSecurity = 'Watchdog Security',
+  LexoCorp = 'LexoCorp',
+  RhoConstruction = 'Rho Construction',
+  AlphaEnterprises = 'Alpha Enterprises',
+  Police = 'Aevum Police Headquarters',
+  SysCoreSecurities = 'SysCore Securities',
+  CompuTek = 'CompuTek',
+  NetLinkTechnologies = 'NetLink Technologies',
+  CarmichaelSecurity = 'Carmichael Security',
+  FoodNStuff = 'FoodNStuff',
   JoesGuns = "Joe's Guns",
-  OmegaSoftware = "Omega Software",
-  NoodleBar = "Noodle Bar",
+  OmegaSoftware = 'Omega Software',
+  NoodleBar = 'Noodle Bar',
 }
 
 /**
@@ -8666,71 +8877,71 @@ declare enum CompanyName {
  *
  * @public */
 declare enum FactionName {
-  Illuminati = "Illuminati",
-  Daedalus = "Daedalus",
-  TheCovenant = "The Covenant",
-  ECorp = "ECorp",
-  MegaCorp = "MegaCorp",
-  BachmanAssociates = "Bachman & Associates",
-  BladeIndustries = "Blade Industries",
-  NWO = "NWO",
-  ClarkeIncorporated = "Clarke Incorporated",
-  OmniTekIncorporated = "OmniTek Incorporated",
-  FourSigma = "Four Sigma",
-  KuaiGongInternational = "KuaiGong International",
-  FulcrumSecretTechnologies = "Fulcrum Secret Technologies",
-  BitRunners = "BitRunners",
-  TheBlackHand = "The Black Hand",
-  NiteSec = "NiteSec",
-  Aevum = "Aevum",
-  Chongqing = "Chongqing",
-  Ishima = "Ishima",
-  NewTokyo = "New Tokyo",
-  Sector12 = "Sector-12",
-  Volhaven = "Volhaven",
-  SpeakersForTheDead = "Speakers for the Dead",
-  TheDarkArmy = "The Dark Army",
-  TheSyndicate = "The Syndicate",
-  Silhouette = "Silhouette",
-  Tetrads = "Tetrads",
-  SlumSnakes = "Slum Snakes",
-  Netburners = "Netburners",
-  TianDiHui = "Tian Di Hui",
-  CyberSec = "CyberSec",
-  Bladeburners = "Bladeburners",
-  ChurchOfTheMachineGod = "Church of the Machine God",
-  ShadowsOfAnarchy = "Shadows of Anarchy",
+  Illuminati = 'Illuminati',
+  Daedalus = 'Daedalus',
+  TheCovenant = 'The Covenant',
+  ECorp = 'ECorp',
+  MegaCorp = 'MegaCorp',
+  BachmanAssociates = 'Bachman & Associates',
+  BladeIndustries = 'Blade Industries',
+  NWO = 'NWO',
+  ClarkeIncorporated = 'Clarke Incorporated',
+  OmniTekIncorporated = 'OmniTek Incorporated',
+  FourSigma = 'Four Sigma',
+  KuaiGongInternational = 'KuaiGong International',
+  FulcrumSecretTechnologies = 'Fulcrum Secret Technologies',
+  BitRunners = 'BitRunners',
+  TheBlackHand = 'The Black Hand',
+  NiteSec = 'NiteSec',
+  Aevum = 'Aevum',
+  Chongqing = 'Chongqing',
+  Ishima = 'Ishima',
+  NewTokyo = 'New Tokyo',
+  Sector12 = 'Sector-12',
+  Volhaven = 'Volhaven',
+  SpeakersForTheDead = 'Speakers for the Dead',
+  TheDarkArmy = 'The Dark Army',
+  TheSyndicate = 'The Syndicate',
+  Silhouette = 'Silhouette',
+  Tetrads = 'Tetrads',
+  SlumSnakes = 'Slum Snakes',
+  Netburners = 'Netburners',
+  TianDiHui = 'Tian Di Hui',
+  CyberSec = 'CyberSec',
+  Bladeburners = 'Bladeburners',
+  ChurchOfTheMachineGod = 'Church of the Machine God',
+  ShadowsOfAnarchy = 'Shadows of Anarchy',
 }
 
 declare enum CodingContractName {
-  FindLargestPrimeFactor = "Find Largest Prime Factor",
-  SubarrayWithMaximumSum = "Subarray with Maximum Sum",
-  TotalWaysToSum = "Total Ways to Sum",
-  TotalWaysToSumII = "Total Ways to Sum II",
-  SpiralizeMatrix = "Spiralize Matrix",
-  ArrayJumpingGame = "Array Jumping Game",
-  ArrayJumpingGameII = "Array Jumping Game II",
-  MergeOverlappingIntervals = "Merge Overlapping Intervals",
-  GenerateIPAddresses = "Generate IP Addresses",
-  AlgorithmicStockTraderI = "Algorithmic Stock Trader I",
-  AlgorithmicStockTraderII = "Algorithmic Stock Trader II",
-  AlgorithmicStockTraderIII = "Algorithmic Stock Trader III",
-  AlgorithmicStockTraderIV = "Algorithmic Stock Trader IV",
-  MinimumPathSumInATriangle = "Minimum Path Sum in a Triangle",
-  UniquePathsInAGridI = "Unique Paths in a Grid I",
-  UniquePathsInAGridII = "Unique Paths in a Grid II",
-  ShortestPathInAGrid = "Shortest Path in a Grid",
-  SanitizeParenthesesInExpression = "Sanitize Parentheses in Expression",
-  FindAllValidMathExpressions = "Find All Valid Math Expressions",
-  HammingCodesIntegerToEncodedBinary = "HammingCodes: Integer to Encoded Binary",
-  HammingCodesEncodedBinaryToInteger = "HammingCodes: Encoded Binary to Integer",
-  Proper2ColoringOfAGraph = "Proper 2-Coloring of a Graph",
-  CompressionIRLECompression = "Compression I: RLE Compression",
-  CompressionIILZDecompression = "Compression II: LZ Decompression",
-  CompressionIIILZCompression = "Compression III: LZ Compression",
-  EncryptionICaesarCipher = "Encryption I: Caesar Cipher",
-  EncryptionIIVigenereCipher = "Encryption II: Vigenère Cipher",
-  SquareRoot = "Square Root",
+  FindLargestPrimeFactor = 'Find Largest Prime Factor',
+  SubarrayWithMaximumSum = 'Subarray with Maximum Sum',
+  TotalWaysToSum = 'Total Ways to Sum',
+  TotalWaysToSumII = 'Total Ways to Sum II',
+  SpiralizeMatrix = 'Spiralize Matrix',
+  ArrayJumpingGame = 'Array Jumping Game',
+  ArrayJumpingGameII = 'Array Jumping Game II',
+  MergeOverlappingIntervals = 'Merge Overlapping Intervals',
+  GenerateIPAddresses = 'Generate IP Addresses',
+  AlgorithmicStockTraderI = 'Algorithmic Stock Trader I',
+  AlgorithmicStockTraderII = 'Algorithmic Stock Trader II',
+  AlgorithmicStockTraderIII = 'Algorithmic Stock Trader III',
+  AlgorithmicStockTraderIV = 'Algorithmic Stock Trader IV',
+  MinimumPathSumInATriangle = 'Minimum Path Sum in a Triangle',
+  UniquePathsInAGridI = 'Unique Paths in a Grid I',
+  UniquePathsInAGridII = 'Unique Paths in a Grid II',
+  ShortestPathInAGrid = 'Shortest Path in a Grid',
+  SanitizeParenthesesInExpression = 'Sanitize Parentheses in Expression',
+  FindAllValidMathExpressions = 'Find All Valid Math Expressions',
+  HammingCodesIntegerToEncodedBinary = 'HammingCodes: Integer to Encoded Binary',
+  HammingCodesEncodedBinaryToInteger = 'HammingCodes: Encoded Binary to Integer',
+  Proper2ColoringOfAGraph = 'Proper 2-Coloring of a Graph',
+  CompressionIRLECompression = 'Compression I: RLE Compression',
+  CompressionIILZDecompression = 'Compression II: LZ Decompression',
+  CompressionIIILZCompression = 'Compression III: LZ Compression',
+  EncryptionICaesarCipher = 'Encryption I: Caesar Cipher',
+  EncryptionIIVigenereCipher = 'Encryption II: Vigenère Cipher',
+  SquareRoot = 'Square Root',
 }
 
 export type CodingContractSignatures = {
@@ -8741,7 +8952,10 @@ export type CodingContractSignatures = {
   [CodingContractName.SpiralizeMatrix]: [number[][], number[]];
   [CodingContractName.ArrayJumpingGame]: [number[], 1 | 0];
   [CodingContractName.ArrayJumpingGameII]: [number[], number];
-  [CodingContractName.MergeOverlappingIntervals]: [[number, number][], [number, number][]];
+  [CodingContractName.MergeOverlappingIntervals]: [
+    [number, number][],
+    [number, number][],
+  ];
   [CodingContractName.GenerateIPAddresses]: [string, string[]];
   [CodingContractName.AlgorithmicStockTraderI]: [number[], number];
   [CodingContractName.AlgorithmicStockTraderII]: [number[], number];
@@ -8752,10 +8966,16 @@ export type CodingContractSignatures = {
   [CodingContractName.UniquePathsInAGridII]: [(1 | 0)[][], number];
   [CodingContractName.ShortestPathInAGrid]: [(1 | 0)[][], string];
   [CodingContractName.SanitizeParenthesesInExpression]: [string, string[]];
-  [CodingContractName.FindAllValidMathExpressions]: [[string, number], string[]];
+  [CodingContractName.FindAllValidMathExpressions]: [
+    [string, number],
+    string[],
+  ];
   [CodingContractName.HammingCodesIntegerToEncodedBinary]: [number, string];
   [CodingContractName.HammingCodesEncodedBinaryToInteger]: [string, number];
-  [CodingContractName.Proper2ColoringOfAGraph]: [[number, [number, number][]], (1 | 0)[]];
+  [CodingContractName.Proper2ColoringOfAGraph]: [
+    [number, [number, number][]],
+    (1 | 0)[],
+  ];
   [CodingContractName.CompressionIRLECompression]: [string, string];
   [CodingContractName.CompressionIILZDecompression]: [string, string];
   [CodingContractName.CompressionIIILZCompression]: [string, string];
@@ -8810,7 +9030,11 @@ export interface OfficeAPI {
    * @param employeePosition - Position to place into. Defaults to "Unassigned".
    * @returns True if an employee was hired, false otherwise
    */
-  hireEmployee(divisionName: string, city: CityName | `${CityName}`, employeePosition?: CorpEmployeePosition): boolean;
+  hireEmployee(
+    divisionName: string,
+    city: CityName | `${CityName}`,
+    employeePosition?: CorpEmployeePosition,
+  ): boolean;
 
   /**
    * Upgrade office size.
@@ -8822,7 +9046,11 @@ export interface OfficeAPI {
    * @param city - Name of the city
    * @param size - Amount of positions to open
    */
-  upgradeOfficeSize(divisionName: string, city: CityName | `${CityName}`, size: number): void;
+  upgradeOfficeSize(
+    divisionName: string,
+    city: CityName | `${CityName}`,
+    size: number,
+  ): void;
 
   /**
    * Throw a party for your employees.
@@ -8835,7 +9063,11 @@ export interface OfficeAPI {
    * @param costPerEmployee - Amount to spend per employee.
    * @returns Multiplier for morale, or zero on failure
    */
-  throwParty(divisionName: string, city: CityName | `${CityName}`, costPerEmployee: number): number;
+  throwParty(
+    divisionName: string,
+    city: CityName | `${CityName}`,
+    costPerEmployee: number,
+  ): number;
 
   /**
    * Buy tea for your employees.
@@ -8940,7 +9172,12 @@ export interface OfficeAPI {
    * @param amount - Number of employees to assign to that job
    * @returns true if the employee count reached the target amount, false if not
    */
-  setAutoJobAssignment(divisionName: string, city: CityName | `${CityName}`, job: string, amount: number): boolean;
+  setAutoJobAssignment(
+    divisionName: string,
+    city: CityName | `${CityName}`,
+    job: string,
+    amount: number,
+  ): boolean;
 
   /**
    * Get the cost to upgrade an office.
@@ -8953,7 +9190,11 @@ export interface OfficeAPI {
    * @param size - Amount of positions to open
    * @returns Cost of upgrading the office
    */
-  getOfficeSizeUpgradeCost(divisionName: string, city: CityName | `${CityName}`, size: number): number;
+  getOfficeSizeUpgradeCost(
+    divisionName: string,
+    city: CityName | `${CityName}`,
+    size: number,
+  ): number;
 }
 
 /**
@@ -9028,7 +9269,11 @@ export interface WarehouseAPI {
    * @param city - Name of the city
    * @param enabled - Use true to enable, false otherwise.
    */
-  setSmartSupply(divisionName: string, city: CityName | `${CityName}`, enabled: boolean): void;
+  setSmartSupply(
+    divisionName: string,
+    city: CityName | `${CityName}`,
+    enabled: boolean,
+  ): void;
 
   /**
    * Set whether smart supply uses leftovers before buying.
@@ -9059,7 +9304,12 @@ export interface WarehouseAPI {
    * @param materialName - Name of the material
    * @param amt - Amount of material to buy
    */
-  buyMaterial(divisionName: string, city: CityName | `${CityName}`, materialName: string, amt: number): void;
+  buyMaterial(
+    divisionName: string,
+    city: CityName | `${CityName}`,
+    materialName: string,
+    amt: number,
+  ): void;
 
   /**
    * Set material to bulk-buy.
@@ -9072,7 +9322,12 @@ export interface WarehouseAPI {
    * @param materialName - Name of the material
    * @param amt - Amount of material to buy
    */
-  bulkPurchase(divisionName: string, city: CityName | `${CityName}`, materialName: string, amt: number): void;
+  bulkPurchase(
+    divisionName: string,
+    city: CityName | `${CityName}`,
+    materialName: string,
+    amt: number,
+  ): void;
 
   /**
    * Get warehouse data.
@@ -9097,7 +9352,11 @@ export interface WarehouseAPI {
    * @param productName - Name of the product
    * @returns Product data
    */
-  getProduct(divisionName: string, cityName: CityName | `${CityName}`, productName: string): Product;
+  getProduct(
+    divisionName: string,
+    cityName: CityName | `${CityName}`,
+    productName: string,
+  ): Product;
 
   /**
    * Get material data.
@@ -9110,7 +9369,11 @@ export interface WarehouseAPI {
    * @param materialName - Name of the material
    * @returns Material data
    */
-  getMaterial(divisionName: string, city: CityName | `${CityName}`, materialName: string): Material;
+  getMaterial(
+    divisionName: string,
+    city: CityName | `${CityName}`,
+    materialName: string,
+  ): Material;
 
   /**
    * Set Market-TA1 for a material.
@@ -9123,7 +9386,12 @@ export interface WarehouseAPI {
    * @param materialName - Name of the material
    * @param on - Use true to enable, false otherwise.
    */
-  setMaterialMarketTA1(divisionName: string, city: CityName | `${CityName}`, materialName: string, on: boolean): void;
+  setMaterialMarketTA1(
+    divisionName: string,
+    city: CityName | `${CityName}`,
+    materialName: string,
+    on: boolean,
+  ): void;
 
   /**
    * Set Market-TA2 for a material.
@@ -9136,7 +9404,12 @@ export interface WarehouseAPI {
    * @param materialName - Name of the material
    * @param on - Use true to enable, false otherwise.
    */
-  setMaterialMarketTA2(divisionName: string, city: CityName | `${CityName}`, materialName: string, on: boolean): void;
+  setMaterialMarketTA2(
+    divisionName: string,
+    city: CityName | `${CityName}`,
+    materialName: string,
+    on: boolean,
+  ): void;
 
   /**
    * Set Market-TA1 for a product.
@@ -9148,7 +9421,11 @@ export interface WarehouseAPI {
    * @param productName - Name of the product
    * @param on - Use true to enable, false otherwise.
    */
-  setProductMarketTA1(divisionName: string, productName: string, on: boolean): void;
+  setProductMarketTA1(
+    divisionName: string,
+    productName: string,
+    on: boolean,
+  ): void;
 
   /**
    * Set Market-TA2 for a product.
@@ -9160,7 +9437,11 @@ export interface WarehouseAPI {
    * @param productName - Name of the product
    * @param on - Use true to enable, false otherwise.
    */
-  setProductMarketTA2(divisionName: string, productName: string, on: boolean): void;
+  setProductMarketTA2(
+    divisionName: string,
+    productName: string,
+    on: boolean,
+  ): void;
 
   /**
    * Set material export data.
@@ -9225,7 +9506,11 @@ export interface WarehouseAPI {
    * @param city - Name of the city
    * @param amt - Amount of upgrades. Defaults to 1.
    */
-  upgradeWarehouse(divisionName: string, city: CityName | `${CityName}`, amt?: number): void;
+  upgradeWarehouse(
+    divisionName: string,
+    city: CityName | `${CityName}`,
+    amt?: number,
+  ): void;
 
   /**
    * Create a new product.
@@ -9276,7 +9561,12 @@ export interface WarehouseAPI {
    * @param productName - Name of the product.
    * @param qty - Amount to limit to. Pass a negative value to remove the limit instead.
    */
-  limitProductProduction(divisionName: string, city: CityName | `${CityName}`, productName: string, qty: number): void;
+  limitProductProduction(
+    divisionName: string,
+    city: CityName | `${CityName}`,
+    productName: string,
+    qty: number,
+  ): void;
 
   /**
    * Get the cost to upgrade a warehouse to the next level.
@@ -9289,7 +9579,11 @@ export interface WarehouseAPI {
    * @param amt - Amount of upgrades. Optional. Defaults to 1.
    * @returns Cost to upgrade
    */
-  getUpgradeWarehouseCost(divisionName: string, city: CityName | `${CityName}`, amt?: number): number;
+  getUpgradeWarehouseCost(
+    divisionName: string,
+    city: CityName | `${CityName}`,
+    amt?: number,
+  ): number;
 
   /**
    * Check if you have a warehouse in city.
@@ -9306,11 +9600,11 @@ export interface WarehouseAPI {
  * @public
  */
 declare enum CreatingCorporationCheckResult {
-  Success = "Success",
-  NoSf3OrDisabled = "NoSf3OrDisabled",
-  CorporationExists = "CorporationExists",
-  UseSeedMoneyOutsideBN3 = "UseSeedMoneyOutsideBN3",
-  DisabledBySoftCap = "DisabledBySoftCap",
+  Success = 'Success',
+  NoSf3OrDisabled = 'NoSf3OrDisabled',
+  CorporationExists = 'CorporationExists',
+  UseSeedMoneyOutsideBN3 = 'UseSeedMoneyOutsideBN3',
+  DisabledBySoftCap = 'DisabledBySoftCap',
 }
 
 /**
@@ -9793,71 +10087,71 @@ interface CorpConstants {
   smartSupplyOptions: CorpSmartSupplyOption[];
 }
 /** @public */
-type CorpStateName = "START" | "PURCHASE" | "PRODUCTION" | "EXPORT" | "SALE";
+type CorpStateName = 'START' | 'PURCHASE' | 'PRODUCTION' | 'EXPORT' | 'SALE';
 
 /** @public */
 type CorpMaterialName =
-  | "Minerals"
-  | "Ore"
-  | "Water"
-  | "Food"
-  | "Plants"
-  | "Metal"
-  | "Hardware"
-  | "Chemicals"
-  | "Drugs"
-  | "Robots"
-  | "AI Cores"
-  | "Real Estate";
+  | 'Minerals'
+  | 'Ore'
+  | 'Water'
+  | 'Food'
+  | 'Plants'
+  | 'Metal'
+  | 'Hardware'
+  | 'Chemicals'
+  | 'Drugs'
+  | 'Robots'
+  | 'AI Cores'
+  | 'Real Estate';
 
 /** @public */
 type CorpUnlockName =
-  | "Export"
-  | "Smart Supply"
-  | "Market Research - Demand"
-  | "Market Data - Competition"
-  | "VeChain"
-  | "Shady Accounting"
-  | "Government Partnership"
-  | "Warehouse API"
-  | "Office API";
+  | 'Export'
+  | 'Smart Supply'
+  | 'Market Research - Demand'
+  | 'Market Data - Competition'
+  | 'VeChain'
+  | 'Shady Accounting'
+  | 'Government Partnership'
+  | 'Warehouse API'
+  | 'Office API';
 
 /** @public */
 type CorpUpgradeName =
-  | "Smart Factories"
-  | "Smart Storage"
-  | "DreamSense"
-  | "Wilson Analytics"
-  | "Nuoptimal Nootropic Injector Implants"
-  | "Speech Processor Implants"
-  | "Neural Accelerators"
-  | "FocusWires"
-  | "ABC SalesBots"
-  | "Project Insight";
+  | 'Smart Factories'
+  | 'Smart Storage'
+  | 'DreamSense'
+  | 'Wilson Analytics'
+  | 'Nuoptimal Nootropic Injector Implants'
+  | 'Speech Processor Implants'
+  | 'Neural Accelerators'
+  | 'FocusWires'
+  | 'ABC SalesBots'
+  | 'Project Insight';
 
 /** @public */
 type CorpResearchName =
-  | "Hi-Tech R&D Laboratory"
-  | "AutoBrew"
-  | "AutoPartyManager"
-  | "Automatic Drug Administration"
-  | "CPH4 Injections"
-  | "Drones"
-  | "Drones - Assembly"
-  | "Drones - Transport"
-  | "Go-Juice"
-  | "HRBuddy-Recruitment"
-  | "HRBuddy-Training"
-  | "Market-TA.I"
-  | "Market-TA.II"
-  | "Overclock"
-  | "Self-Correcting Assemblers"
-  | "Sti.mu"
-  | "uPgrade: Capacity.I"
-  | "uPgrade: Capacity.II"
-  | "uPgrade: Dashboard"
-  | "uPgrade: Fulcrum"
-  | "sudo.Assist";
+  | 'Hi-Tech R&D Laboratory'
+  | 'AutoBrew'
+  | 'AutoPartyManager'
+  | 'Automatic Drug Administration'
+  | 'CPH4 Injections'
+  | 'Drones'
+  | 'Drones - Assembly'
+  | 'Drones - Transport'
+  | 'Go-Juice'
+  | 'HRBuddy-Recruitment'
+  | 'HRBuddy-Training'
+  | 'Market-TA.I'
+  | 'Market-TA.II'
+  | 'Overclock'
+  | 'Self-Correcting Assemblers'
+  | 'Sti.mu'
+  | 'uPgrade: Capacity.I'
+  | 'uPgrade: Capacity.II'
+  | 'uPgrade: Dashboard'
+  | 'uPgrade: Fulcrum'
+  | 'sudo.Assist';
 
 /**
  * Corporation material information
@@ -10170,7 +10464,9 @@ interface AutocompleteData {
   /** Netscript Enums */
   enums: NSEnums;
   /** Parses the flags schema on the already inputted flags */
-  flags(schema: [string, string | number | boolean | string[]][]): { [key: string]: ScriptArg | string[] };
+  flags(schema: [string, string | number | boolean | string[]][]): {
+    [key: string]: ScriptArg | string[];
+  };
   /** The hostname of the server the script would be running on */
   hostname: string;
   /** The filename of the script about to be run */
@@ -10191,7 +10487,7 @@ interface AutocompleteData {
  * @public
  */
 interface MoneyRequirement {
-  type: "money";
+  type: 'money';
   money: number;
 }
 /**
@@ -10199,7 +10495,7 @@ interface MoneyRequirement {
  * @public
  */
 interface SkillRequirement {
-  type: "skills";
+  type: 'skills';
   skills: Partial<Skills>;
 }
 /**
@@ -10207,7 +10503,7 @@ interface SkillRequirement {
  * @public
  */
 interface KarmaRequirement {
-  type: "karma";
+  type: 'karma';
   karma: number;
 }
 /**
@@ -10215,7 +10511,7 @@ interface KarmaRequirement {
  * @public
  */
 interface PeopleKilledRequirement {
-  type: "numPeopleKilled";
+  type: 'numPeopleKilled';
   numPeopleKilled: number;
 }
 /**
@@ -10223,7 +10519,7 @@ interface PeopleKilledRequirement {
  * @public
  */
 interface FileRequirement {
-  type: "file";
+  type: 'file';
   file: string;
 }
 /**
@@ -10232,7 +10528,7 @@ interface FileRequirement {
  * @public
  */
 interface NumAugmentationsRequirement {
-  type: "numAugmentations";
+  type: 'numAugmentations';
   numAugmentations: number;
 }
 /**
@@ -10240,7 +10536,7 @@ interface NumAugmentationsRequirement {
  * @public
  */
 interface EmployedByRequirement {
-  type: "employedBy";
+  type: 'employedBy';
   company: CompanyName;
 }
 /**
@@ -10248,7 +10544,7 @@ interface EmployedByRequirement {
  * @public
  */
 interface CompanyReputationRequirement {
-  type: "companyReputation";
+  type: 'companyReputation';
   company: CompanyName;
   reputation: number;
 }
@@ -10257,7 +10553,7 @@ interface CompanyReputationRequirement {
  * @public
  */
 interface JobTitleRequirement {
-  type: "jobTitle";
+  type: 'jobTitle';
   jobTitle: JobName;
 }
 /**
@@ -10265,7 +10561,7 @@ interface JobTitleRequirement {
  * @public
  */
 interface CityRequirement {
-  type: "city";
+  type: 'city';
   city: CityName;
 }
 /**
@@ -10273,7 +10569,7 @@ interface CityRequirement {
  * @public
  */
 interface LocationRequirement {
-  type: "location";
+  type: 'location';
   location: LocationName;
 }
 /**
@@ -10281,7 +10577,7 @@ interface LocationRequirement {
  * @public
  */
 interface BackdoorRequirement {
-  type: "backdoorInstalled";
+  type: 'backdoorInstalled';
   server: string;
 }
 /**
@@ -10289,7 +10585,7 @@ interface BackdoorRequirement {
  * @public
  */
 interface HacknetRAMRequirement {
-  type: "hacknetRAM";
+  type: 'hacknetRAM';
   hacknetRAM: number;
 }
 /**
@@ -10297,7 +10593,7 @@ interface HacknetRAMRequirement {
  * @public
  */
 interface HacknetCoresRequirement {
-  type: "hacknetCores";
+  type: 'hacknetCores';
   hacknetCores: number;
 }
 /**
@@ -10305,7 +10601,7 @@ interface HacknetCoresRequirement {
  * @public
  */
 interface HacknetLevelsRequirement {
-  type: "hacknetLevels";
+  type: 'hacknetLevels';
   hacknetLevels: number;
 }
 /**
@@ -10313,7 +10609,7 @@ interface HacknetLevelsRequirement {
  * @public
  */
 interface BitNodeRequirement {
-  type: "bitNodeN";
+  type: 'bitNodeN';
   bitNodeN: number;
 }
 /**
@@ -10321,7 +10617,7 @@ interface BitNodeRequirement {
  * @public
  */
 interface SourceFileRequirement {
-  type: "sourceFile";
+  type: 'sourceFile';
   sourceFile: number;
 }
 /**
@@ -10329,7 +10625,7 @@ interface SourceFileRequirement {
  * @public
  */
 interface BladeburnerRankRequirement {
-  type: "bladeburnerRank";
+  type: 'bladeburnerRank';
   bladeburnerRank: number;
 }
 /**
@@ -10337,7 +10633,7 @@ interface BladeburnerRankRequirement {
  * @public
  */
 interface NumInfiltrationsRequirement {
-  type: "numInfiltrations";
+  type: 'numInfiltrations';
   numInfiltrations: number;
 }
 /**
@@ -10345,7 +10641,7 @@ interface NumInfiltrationsRequirement {
  * @public
  */
 interface NotRequirement {
-  type: "not";
+  type: 'not';
   condition: PlayerRequirement;
 }
 /**
@@ -10353,7 +10649,7 @@ interface NotRequirement {
  * @public
  */
 interface SomeRequirement {
-  type: "someCondition";
+  type: 'someCondition';
   conditions: PlayerRequirement[];
 }
 /**
@@ -10361,7 +10657,7 @@ interface SomeRequirement {
  * @public
  */
 interface EveryRequirement {
-  type: "everyCondition";
+  type: 'everyCondition';
   conditions: PlayerRequirement[];
 }
 

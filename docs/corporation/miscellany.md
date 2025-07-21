@@ -93,7 +93,10 @@ Quick test for case 2 shows that the accuracy is pretty good:
 There is a place called "Noodle Bar" in New Tokyo. After going there, there is a button that says "Eat noodles". Eating noodles gives you multiple benefits. Each benefit is miniscule, but you can press that button programmatically. With Corporation, the benefit is:
 
 ```typescript
-Player.corporation.gainFunds(Player.corporation.revenue * 0.000001, "glitch in reality");
+Player.corporation.gainFunds(
+  Player.corporation.revenue * 0.000001,
+  'glitch in reality',
+);
 ```
 
 In previous versions, the revenue is multiplied by 0.01. If you do it fast enough, it'll raise the investment offer by a considerable amount. Nowadays, this trick is useless.

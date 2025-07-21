@@ -31,15 +31,14 @@ The downside of this is that the harvesters don't have a good picture
 of the full memory picture and thus can't optimize overall memory use
 effectively.
 
-
-2) The `releaseChunks` API could be made more complex to involve a
-back-and-forth between the memory client.
+2. The `releaseChunks` API could be made more complex to involve a
+   back-and-forth between the memory client.
 
 This would probably look something like
 
-* client notifys that it can give up N chunks.
-* server sends back which N chunks it would prefer to get back
-* client waits until those chunks are actually free, tells server that
+- client notifys that it can give up N chunks.
+- server sends back which N chunks it would prefer to get back
+- client waits until those chunks are actually free, tells server that
   the free is complete.
 
 This approach is so complex that it would make correctly using this

@@ -1,276 +1,349 @@
-import type { GangGenInfo, GangMemberInfo, GangTaskStats, NS } from "netscript";
-import { pickByType, PickByType } from "util/stat-tracker";
-
+import type { GangGenInfo, GangMemberInfo, GangTaskStats, NS } from 'netscript';
+import { pickByType, PickByType } from 'util/stat-tracker';
 
 /**
  * Helper for analyzing gang tasks to determine optimal assignments.
  */
 export type Role =
-    | "bootstrapping"
-    | "respectGrind"
-    | "moneyGrind"
-    | "warfare"
-    | "cooling";
+  | 'bootstrapping'
+  | 'respectGrind'
+  | 'moneyGrind'
+  | 'warfare'
+  | 'cooling';
 
 export interface RoleProfile {
-    hackWeight: number;
-    strWeight: number;
-    defWeight: number;
-    dexWeight: number;
-    agiWeight: number;
-    chaWeight: number;
+  hackWeight: number;
+  strWeight: number;
+  defWeight: number;
+  dexWeight: number;
+  agiWeight: number;
+  chaWeight: number;
 }
 
 export type RoleProfiles = Record<Role, RoleProfile>;
 
 export class TaskAnalyzer {
-    private ns: NS;
+  private ns: NS;
 
-    tasks: GangTaskStats[] = [];
-    hackTasks: GangTaskStats[] = [];
-    combatTasks: GangTaskStats[] = [];
-    bestMoneyTasks: GangTaskStats[] = [];
-    bestRespectTasks: GangTaskStats[] = [];
-    bestWarTasks: GangTaskStats[] = [];
-    bestCoolingTasks: GangTaskStats[] = [];
-    coolingTaskList: GangTaskStats[] = [];
-    private profiles: RoleProfiles = {
-        bootstrapping: emptyProfile(),
-        respectGrind: emptyProfile(),
-        moneyGrind: emptyProfile(),
-        warfare: emptyProfile(),
-        cooling: emptyProfile(),
+  tasks: GangTaskStats[] = [];
+  hackTasks: GangTaskStats[] = [];
+  combatTasks: GangTaskStats[] = [];
+  bestMoneyTasks: GangTaskStats[] = [];
+  bestRespectTasks: GangTaskStats[] = [];
+  bestWarTasks: GangTaskStats[] = [];
+  bestCoolingTasks: GangTaskStats[] = [];
+  coolingTaskList: GangTaskStats[] = [];
+  private profiles: RoleProfiles = {
+    bootstrapping: emptyProfile(),
+    respectGrind: emptyProfile(),
+    moneyGrind: emptyProfile(),
+    warfare: emptyProfile(),
+    cooling: emptyProfile(),
+  };
+
+  constructor(ns: NS) {
+    this.ns = ns;
+    this.refresh();
+  }
+
+  /**
+   * Get the averaged stat weight profiles for each role.
+   *
+   * @returns Map of role to average weight profile
+   */
+  roleProfiles(): RoleProfiles {
+    return this.profiles;
+  }
+
+  /** Refresh task statistics and recompute rankings. */
+  refresh() {
+    const taskNames = this.ns.gang.getTaskNames();
+    this.tasks = taskNames.map((name) => this.ns.gang.getTaskStats(name));
+    this.hackTasks = this.tasks.filter((t) => t.isHacking);
+    this.combatTasks = this.tasks.filter((t) => t.isCombat);
+
+    const gangInfo = this.ns.gang.getGangInformation();
+    const avgMember = this.averageMember();
+    const money = new Map<GangTaskStats, number>();
+    const respect = new Map<GangTaskStats, number>();
+    const wanted = new Map<GangTaskStats, number>();
+
+    for (const task of this.tasks) {
+      money.set(task, calculateMoneyGain(this.ns, gangInfo, avgMember, task));
+      respect.set(
+        task,
+        calculateRespectGain(this.ns, gangInfo, avgMember, task),
+      );
+      wanted.set(task, calculateWantedGain(this.ns, gangInfo, avgMember, task));
+    }
+
+    const moneySort = (a: GangTaskStats, b: GangTaskStats) =>
+      (money.get(b) ?? 0) - (money.get(a) ?? 0);
+    const respectSort = (a: GangTaskStats, b: GangTaskStats) =>
+      (respect.get(b) ?? 0) - (respect.get(a) ?? 0);
+    const warSort = (a: GangTaskStats, b: GangTaskStats) =>
+      (b.territory.respect ?? 0) - (a.territory.respect ?? 0);
+    const wantedSort = (a: GangTaskStats, b: GangTaskStats) =>
+      (wanted.get(a) ?? 0) - (wanted.get(b) ?? 0);
+
+    this.bestMoneyTasks = [...this.tasks].sort(moneySort);
+    this.bestRespectTasks = [...this.tasks].sort(respectSort);
+    this.bestWarTasks = [...this.tasks].sort(warSort);
+    this.bestCoolingTasks = [...this.tasks].sort(wantedSort);
+
+    const minWanted = Math.min(
+      ...this.bestCoolingTasks.map((t) => wanted.get(t) ?? 0),
+    );
+    this.coolingTaskList = this.bestCoolingTasks.filter(
+      (t) => t.baseWanted < 0 || (wanted.get(t) ?? 0) === minWanted,
+    );
+
+    this.computeRoleProfiles();
+  }
+
+  private averageMember(): GangMemberInfo {
+    const names = this.ns.gang.getMemberNames();
+    if (names.length === 0) {
+      throw new Error('No gang members');
+    }
+
+    const firstMember = this.ns.gang.getMemberInformation(names[0]);
+    const sample = pickByType(
+      firstMember,
+      (v): v is number => typeof v === 'number',
+    );
+    const fields = Object.keys(sample) as (keyof PickByType<
+      GangMemberInfo,
+      number
+    >)[];
+
+    const sums: Record<string, number> = {};
+    for (const f of fields) sums[f as string] = 0;
+
+    for (const name of names) {
+      const info = this.ns.gang.getMemberInformation(name);
+      for (const f of fields) {
+        sums[f as string] += info[f];
+      }
+    }
+
+    const avg: PickByType<GangMemberInfo, number> = { ...sample };
+    for (const f of fields) {
+      avg[f] = sums[f] / names.length;
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const firstMemberNonNumber = pickByType(
+      firstMember,
+      (v): v is any => typeof v !== 'number',
+    );
+    return { ...firstMemberNonNumber, ...avg };
+  }
+
+  private computeRoleProfiles() {
+    const groups: Record<Role, GangTaskStats[]> = {
+      bootstrapping: this.tasks.filter((t) => t.name.includes('Train')),
+      warfare: this.tasks.filter((t) => t.name.includes('Territory')),
+      cooling: this.tasks.filter((t) => t.baseWanted < 0),
+      respectGrind: this.tasks.filter(
+        (t) =>
+          t.baseRespect > t.baseMoney && t.baseRespect > 0 && t.baseWanted >= 0,
+      ),
+      moneyGrind: this.tasks.filter(
+        (t) =>
+          t.baseMoney >= t.baseRespect && t.baseMoney > 0 && t.baseWanted >= 0,
+      ),
     };
 
-    constructor(ns: NS) {
-        this.ns = ns;
-        this.refresh();
+    for (const role of Object.keys(groups) as Role[]) {
+      const vec = defaultVector();
+      const list = groups[role];
+      if (list.length === 0) {
+        this.profiles[role] = vec;
+        continue;
+      }
+      for (const task of list) {
+        vec.hackWeight += task.hackWeight;
+        vec.strWeight += task.strWeight;
+        vec.defWeight += task.defWeight;
+        vec.dexWeight += task.dexWeight;
+        vec.agiWeight += task.agiWeight;
+        vec.chaWeight += task.chaWeight;
+      }
+      const len = list.length;
+      this.profiles[role] = {
+        hackWeight: vec.hackWeight / len,
+        strWeight: vec.strWeight / len,
+        defWeight: vec.defWeight / len,
+        dexWeight: vec.dexWeight / len,
+        agiWeight: vec.agiWeight / len,
+        chaWeight: vec.chaWeight / len,
+      };
     }
-
-    /**
-     * Get the averaged stat weight profiles for each role.
-     *
-     * @returns Map of role to average weight profile
-     */
-    roleProfiles(): RoleProfiles {
-        return this.profiles;
-    }
-
-    /** Refresh task statistics and recompute rankings. */
-    refresh() {
-        const taskNames = this.ns.gang.getTaskNames();
-        this.tasks = taskNames.map(name => this.ns.gang.getTaskStats(name));
-        this.hackTasks = this.tasks.filter(t => t.isHacking);
-        this.combatTasks = this.tasks.filter(t => t.isCombat);
-
-        const gangInfo = this.ns.gang.getGangInformation();
-        const avgMember = this.averageMember();
-        const money = new Map<GangTaskStats, number>();
-        const respect = new Map<GangTaskStats, number>();
-        const wanted = new Map<GangTaskStats, number>();
-
-        for (const task of this.tasks) {
-            money.set(task, calculateMoneyGain(this.ns, gangInfo, avgMember, task));
-            respect.set(task, calculateRespectGain(this.ns, gangInfo, avgMember, task));
-            wanted.set(task, calculateWantedGain(this.ns, gangInfo, avgMember, task));
-        }
-
-        const moneySort = (a: GangTaskStats, b: GangTaskStats) =>
-            (money.get(b) ?? 0) - (money.get(a) ?? 0);
-        const respectSort = (a: GangTaskStats, b: GangTaskStats) =>
-            (respect.get(b) ?? 0) - (respect.get(a) ?? 0);
-        const warSort = (a: GangTaskStats, b: GangTaskStats) =>
-            (b.territory.respect ?? 0) - (a.territory.respect ?? 0);
-        const wantedSort = (a: GangTaskStats, b: GangTaskStats) =>
-            (wanted.get(a) ?? 0) - (wanted.get(b) ?? 0);
-
-        this.bestMoneyTasks = [...this.tasks].sort(moneySort);
-        this.bestRespectTasks = [...this.tasks].sort(respectSort);
-        this.bestWarTasks = [...this.tasks].sort(warSort);
-        this.bestCoolingTasks = [...this.tasks].sort(wantedSort);
-
-        const minWanted = Math.min(...this.bestCoolingTasks.map(t => wanted.get(t) ?? 0));
-        this.coolingTaskList = this.bestCoolingTasks.filter(
-            t => t.baseWanted < 0 || (wanted.get(t) ?? 0) === minWanted
-        );
-
-        this.computeRoleProfiles();
-    }
-
-    private averageMember(): GangMemberInfo {
-        const names = this.ns.gang.getMemberNames();
-        if (names.length === 0) {
-            throw new Error("No gang members");
-        }
-
-        const firstMember = this.ns.gang.getMemberInformation(names[0]);
-        const sample = pickByType(firstMember, (v): v is number => typeof v === 'number');
-        const fields = Object.keys(sample) as (keyof PickByType<GangMemberInfo, number>)[];
-
-        const sums: Record<string, number> = {};
-        for (const f of fields) sums[f as string] = 0;
-
-        for (const name of names) {
-            const info = this.ns.gang.getMemberInformation(name);
-            for (const f of fields) {
-                sums[f as string] += info[f];
-            }
-        }
-
-        const avg: PickByType<GangMemberInfo, number> = { ...sample };
-        for (const f of fields) {
-            avg[f] = sums[f] / names.length;
-        }
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const firstMemberNonNumber = pickByType(firstMember, (v): v is any => typeof v !== 'number');
-        return { ...firstMemberNonNumber, ...avg };
-    }
-
-    private computeRoleProfiles() {
-        const groups: Record<Role, GangTaskStats[]> = {
-            bootstrapping: this.tasks.filter(t => t.name.includes("Train")),
-            warfare: this.tasks.filter(t => t.name.includes("Territory")),
-            cooling: this.tasks.filter(t => t.baseWanted < 0),
-            respectGrind: this.tasks.filter(t => t.baseRespect > t.baseMoney && t.baseRespect > 0 && t.baseWanted >= 0),
-            moneyGrind: this.tasks.filter(t => t.baseMoney >= t.baseRespect && t.baseMoney > 0 && t.baseWanted >= 0),
-        };
-
-        for (const role of Object.keys(groups) as Role[]) {
-            const vec = defaultVector();
-            const list = groups[role];
-            if (list.length === 0) {
-                this.profiles[role] = vec;
-                continue;
-            }
-            for (const task of list) {
-                vec.hackWeight += task.hackWeight;
-                vec.strWeight += task.strWeight;
-                vec.defWeight += task.defWeight;
-                vec.dexWeight += task.dexWeight;
-                vec.agiWeight += task.agiWeight;
-                vec.chaWeight += task.chaWeight;
-            }
-            const len = list.length;
-            this.profiles[role] = {
-                hackWeight: vec.hackWeight / len,
-                strWeight: vec.strWeight / len,
-                defWeight: vec.defWeight / len,
-                dexWeight: vec.dexWeight / len,
-                agiWeight: vec.agiWeight / len,
-                chaWeight: vec.chaWeight / len,
-            };
-        }
-    }
+  }
 }
 
 function emptyProfile(): RoleProfile {
-    return { hackWeight: 0, strWeight: 0, defWeight: 0, dexWeight: 0, agiWeight: 0, chaWeight: 0 };
+  return {
+    hackWeight: 0,
+    strWeight: 0,
+    defWeight: 0,
+    dexWeight: 0,
+    agiWeight: 0,
+    chaWeight: 0,
+  };
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function averageWeights(tasks: GangTaskStats[]): RoleProfile {
-    const profile = emptyProfile();
-    if (tasks.length === 0) return profile;
-    for (const t of tasks) {
-        profile.hackWeight += t.hackWeight;
-        profile.strWeight += t.strWeight;
-        profile.defWeight += t.defWeight;
-        profile.dexWeight += t.dexWeight;
-        profile.agiWeight += t.agiWeight;
-        profile.chaWeight += t.chaWeight;
-    }
-    profile.hackWeight /= tasks.length;
-    profile.strWeight /= tasks.length;
-    profile.defWeight /= tasks.length;
-    profile.dexWeight /= tasks.length;
-    profile.agiWeight /= tasks.length;
-    profile.chaWeight /= tasks.length;
-    return profile;
+  const profile = emptyProfile();
+  if (tasks.length === 0) return profile;
+  for (const t of tasks) {
+    profile.hackWeight += t.hackWeight;
+    profile.strWeight += t.strWeight;
+    profile.defWeight += t.defWeight;
+    profile.dexWeight += t.dexWeight;
+    profile.agiWeight += t.agiWeight;
+    profile.chaWeight += t.chaWeight;
+  }
+  profile.hackWeight /= tasks.length;
+  profile.strWeight /= tasks.length;
+  profile.defWeight /= tasks.length;
+  profile.dexWeight /= tasks.length;
+  profile.agiWeight /= tasks.length;
+  profile.chaWeight /= tasks.length;
+  return profile;
 }
 
-function calculateMoneyGain(ns: NS, gang: GangGenInfo, member: GangMemberInfo, task: GangTaskStats): number {
-    if (ns.fileExists("Formulas.exe", "home"))
-        return ns.formulas.gang.moneyGain(gang, member, task)
-    else
-        return estimateMoneyGain(gang, member, task);
+function calculateMoneyGain(
+  ns: NS,
+  gang: GangGenInfo,
+  member: GangMemberInfo,
+  task: GangTaskStats,
+): number {
+  if (ns.fileExists('Formulas.exe', 'home'))
+    return ns.formulas.gang.moneyGain(gang, member, task);
+  else return estimateMoneyGain(gang, member, task);
 }
 
-function estimateMoneyGain(gang: GangGenInfo, member: GangMemberInfo, task: GangTaskStats): number {
-    if (task.baseMoney === 0) return 0;
-    let statWeight =
-        (task.hackWeight / 100) * member.hack +
-        (task.strWeight / 100) * member.str +
-        (task.defWeight / 100) * member.def +
-        (task.dexWeight / 100) * member.dex +
-        (task.agiWeight / 100) * member.agi +
-        (task.chaWeight / 100) * member.cha;
+function estimateMoneyGain(
+  gang: GangGenInfo,
+  member: GangMemberInfo,
+  task: GangTaskStats,
+): number {
+  if (task.baseMoney === 0) return 0;
+  let statWeight =
+    (task.hackWeight / 100) * member.hack
+    + (task.strWeight / 100) * member.str
+    + (task.defWeight / 100) * member.def
+    + (task.dexWeight / 100) * member.dex
+    + (task.agiWeight / 100) * member.agi
+    + (task.chaWeight / 100) * member.cha;
 
-    statWeight -= 3.2 * task.difficulty;
-    if (statWeight <= 0) return 0;
-    const territoryMult = Math.max(0.005, Math.pow(gang.territory * 100, task.territory.money) / 100);
-    if (isNaN(territoryMult) || territoryMult <= 0) return 0;
-    const respectMult = calculateWantedPenalty(gang);
-    const territoryPenalty = (0.2 * gang.territory + 0.8);
-    return Math.pow(5 * task.baseMoney * statWeight * territoryMult * respectMult, territoryPenalty);
+  statWeight -= 3.2 * task.difficulty;
+  if (statWeight <= 0) return 0;
+  const territoryMult = Math.max(
+    0.005,
+    Math.pow(gang.territory * 100, task.territory.money) / 100,
+  );
+  if (isNaN(territoryMult) || territoryMult <= 0) return 0;
+  const respectMult = calculateWantedPenalty(gang);
+  const territoryPenalty = 0.2 * gang.territory + 0.8;
+  return Math.pow(
+    5 * task.baseMoney * statWeight * territoryMult * respectMult,
+    territoryPenalty,
+  );
 }
 
-function calculateRespectGain(ns: NS, gang: GangGenInfo, member: GangMemberInfo, task: GangTaskStats): number {
-    if (ns.fileExists("Formulas.exe", "home"))
-        return ns.formulas.gang.respectGain(gang, member, task)
-    else
-        return estimateRespectGain(gang, member, task);
+function calculateRespectGain(
+  ns: NS,
+  gang: GangGenInfo,
+  member: GangMemberInfo,
+  task: GangTaskStats,
+): number {
+  if (ns.fileExists('Formulas.exe', 'home'))
+    return ns.formulas.gang.respectGain(gang, member, task);
+  else return estimateRespectGain(gang, member, task);
 }
 
-function estimateRespectGain(gang: GangGenInfo, member: GangMemberInfo, task: GangTaskStats): number {
-    if (task.baseRespect === 0) return 0;
-    let statWeight =
-        (task.hackWeight / 100) * member.hack +
-        (task.strWeight / 100) * member.str +
-        (task.defWeight / 100) * member.def +
-        (task.dexWeight / 100) * member.dex +
-        (task.agiWeight / 100) * member.agi +
-        (task.chaWeight / 100) * member.cha;
-    statWeight -= 4 * task.difficulty;
-    if (statWeight <= 0) return 0;
-    const territoryMult = Math.max(0.005, Math.pow(gang.territory * 100, task.territory.respect) / 100);
-    const territoryPenalty = (0.2 * gang.territory + 0.8);
-    if (isNaN(territoryMult) || territoryMult <= 0) return 0;
-    const respectMult = calculateWantedPenalty(gang);
-    return Math.pow(11 * task.baseRespect * statWeight * territoryMult * respectMult, territoryPenalty);
+function estimateRespectGain(
+  gang: GangGenInfo,
+  member: GangMemberInfo,
+  task: GangTaskStats,
+): number {
+  if (task.baseRespect === 0) return 0;
+  let statWeight =
+    (task.hackWeight / 100) * member.hack
+    + (task.strWeight / 100) * member.str
+    + (task.defWeight / 100) * member.def
+    + (task.dexWeight / 100) * member.dex
+    + (task.agiWeight / 100) * member.agi
+    + (task.chaWeight / 100) * member.cha;
+  statWeight -= 4 * task.difficulty;
+  if (statWeight <= 0) return 0;
+  const territoryMult = Math.max(
+    0.005,
+    Math.pow(gang.territory * 100, task.territory.respect) / 100,
+  );
+  const territoryPenalty = 0.2 * gang.territory + 0.8;
+  if (isNaN(territoryMult) || territoryMult <= 0) return 0;
+  const respectMult = calculateWantedPenalty(gang);
+  return Math.pow(
+    11 * task.baseRespect * statWeight * territoryMult * respectMult,
+    territoryPenalty,
+  );
 }
 
-function calculateWantedGain(ns: NS, gang: GangGenInfo, member: GangMemberInfo, task: GangTaskStats): number {
-    if (ns.fileExists("Formulas.exe", "home"))
-        return ns.formulas.gang.wantedLevelGain(gang, member, task);
-    else
-        return estimateWantedGain(gang, member, task);
+function calculateWantedGain(
+  ns: NS,
+  gang: GangGenInfo,
+  member: GangMemberInfo,
+  task: GangTaskStats,
+): number {
+  if (ns.fileExists('Formulas.exe', 'home'))
+    return ns.formulas.gang.wantedLevelGain(gang, member, task);
+  else return estimateWantedGain(gang, member, task);
 }
 
-function estimateWantedGain(gang: GangGenInfo, member: GangMemberInfo, task: GangTaskStats): number {
-    if (task.baseWanted === 0) return 0;
-    let statWeight =
-        (task.hackWeight / 100) * member.hack +
-        (task.strWeight / 100) * member.str +
-        (task.defWeight / 100) * member.def +
-        (task.dexWeight / 100) * member.dex +
-        (task.agiWeight / 100) * member.agi +
-        (task.chaWeight / 100) * member.cha;
-    statWeight -= 3.5 * task.difficulty;
-    if (statWeight <= 0) return 0;
-    const territoryMult = Math.max(0.005, Math.pow(gang.territory * 100, task.territory.wanted) / 100);
-    if (isNaN(territoryMult) || territoryMult <= 0) return 0;
-    if (task.baseWanted < 0) {
-        return 0.4 * task.baseWanted * statWeight * territoryMult;
-    }
-    const calc = (7 * task.baseWanted) / Math.pow(3 * statWeight * territoryMult, 0.8);
+function estimateWantedGain(
+  gang: GangGenInfo,
+  member: GangMemberInfo,
+  task: GangTaskStats,
+): number {
+  if (task.baseWanted === 0) return 0;
+  let statWeight =
+    (task.hackWeight / 100) * member.hack
+    + (task.strWeight / 100) * member.str
+    + (task.defWeight / 100) * member.def
+    + (task.dexWeight / 100) * member.dex
+    + (task.agiWeight / 100) * member.agi
+    + (task.chaWeight / 100) * member.cha;
+  statWeight -= 3.5 * task.difficulty;
+  if (statWeight <= 0) return 0;
+  const territoryMult = Math.max(
+    0.005,
+    Math.pow(gang.territory * 100, task.territory.wanted) / 100,
+  );
+  if (isNaN(territoryMult) || territoryMult <= 0) return 0;
+  if (task.baseWanted < 0) {
+    return 0.4 * task.baseWanted * statWeight * territoryMult;
+  }
+  const calc =
+    (7 * task.baseWanted) / Math.pow(3 * statWeight * territoryMult, 0.8);
 
-    return Math.min(100, calc);
+  return Math.min(100, calc);
 }
 
 function calculateWantedPenalty(gang: GangGenInfo): number {
-    return gang.respect / (gang.respect + gang.wantedLevel);
+  return gang.respect / (gang.respect + gang.wantedLevel);
 }
 
 function defaultVector(): RoleProfile {
-    return { hackWeight: 0, strWeight: 0, defWeight: 0, dexWeight: 0, agiWeight: 0, chaWeight: 0 };
+  return {
+    hackWeight: 0,
+    strWeight: 0,
+    defWeight: 0,
+    dexWeight: 0,
+    agiWeight: 0,
+    chaWeight: 0,
+  };
 }

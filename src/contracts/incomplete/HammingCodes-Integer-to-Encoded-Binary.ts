@@ -29,58 +29,64 @@ For more information on the 'rule' of encoding, refer to Wikipedia
 Hamming Codes. (https://youtube.com/watch?v=X8jsijhllIA)
  */
 
-import type { NS } from "netscript";
-import { MEM_TAG_FLAGS } from "services/client/memory_tag";
+import type { NS } from 'netscript';
+import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
 
 export async function main(ns: NS) {
-    ns.flags(MEM_TAG_FLAGS);
-    const scriptName = ns.getScriptName();
-    const contractPortNum = ns.args[0];
-    if (typeof contractPortNum !== 'number') {
-        ns.tprintf('%s contract run with non-number answer port argument', scriptName);
-        return;
-    }
-    const contractDataJSON = ns.args[1];
-    if (typeof contractDataJSON !== 'string') {
-        ns.tprintf('%s contract run with non-string data argument. Must be a JSON string containing file, host and contract data.', scriptName);
-        return;
-    }
-    const contractData = JSON.parse(contractDataJSON);
-    ns.tprintf('contract data: %s', JSON.stringify(contractData));
-    const answer = solve(contractData);
-    ns.writePort(contractPortNum, JSON.stringify(answer));
+  ns.flags(MEM_TAG_FLAGS);
+  const scriptName = ns.getScriptName();
+  const contractPortNum = ns.args[0];
+  if (typeof contractPortNum !== 'number') {
+    ns.tprintf(
+      '%s contract run with non-number answer port argument',
+      scriptName,
+    );
+    return;
+  }
+  const contractDataJSON = ns.args[1];
+  if (typeof contractDataJSON !== 'string') {
+    ns.tprintf(
+      '%s contract run with non-string data argument. Must be a JSON string containing file, host and contract data.',
+      scriptName,
+    );
+    return;
+  }
+  const contractData = JSON.parse(contractDataJSON);
+  ns.tprintf('contract data: %s', JSON.stringify(contractData));
+  const answer = solve(contractData);
+  ns.writePort(contractPortNum, JSON.stringify(answer));
 }
 
 /**
  * Encode an integer using extended Hamming code.
  */
 function solve(data: number): string {
-    const dataBits = data.toString(2).split("");
-    const m = dataBits.length;
-    let p = 0;
-    while ((1 << p) < m + p + 1) p++;
-    const total = m + p + 1;
-    const out = Array(total).fill("0");
+  const dataBits = data.toString(2).split('');
+  const m = dataBits.length;
+  let p = 0;
+  while (1 << p < m + p + 1) p++;
+  const total = m + p + 1;
+  const out = Array(total).fill('0');
 
-    let d = m - 1;
-    for (let i = total - 1; i >= 0; i--) {
-        if (i === 0 || (i & (i - 1)) === 0) {
-            continue; // parity bit
-        }
-        out[i] = dataBits[d--];
+  let d = m - 1;
+  for (let i = total - 1; i >= 0; i--) {
+    if (i === 0 || (i & (i - 1)) === 0) {
+      continue; // parity bit
     }
+    out[i] = dataBits[d--];
+  }
 
-    for (let pIndex = 1; pIndex < total; pIndex <<= 1) {
-        let parity = 0;
-        for (let i = pIndex; i < total; i += 2 * pIndex) {
-            for (let j = i; j < i + pIndex && j < total; j++) {
-                parity ^= Number(out[j]);
-            }
-        }
-        out[pIndex] = parity.toString();
+  for (let pIndex = 1; pIndex < total; pIndex <<= 1) {
+    let parity = 0;
+    for (let i = pIndex; i < total; i += 2 * pIndex) {
+      for (let j = i; j < i + pIndex && j < total; j++) {
+        parity ^= Number(out[j]);
+      }
     }
+    out[pIndex] = parity.toString();
+  }
 
-    const overall = out.slice(1).reduce((a, b) => a ^ Number(b), 0);
-    out[0] = overall.toString();
-    return out.join("");
+  const overall = out.slice(1).reduce((a, b) => a ^ Number(b), 0);
+  out[0] = overall.toString();
+  return out.join('');
 }

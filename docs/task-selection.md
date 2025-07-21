@@ -16,7 +16,6 @@ When RAM is low, prefer to use new RAM to grow existing tasks than
 spawn new tasks. `GrowableAllocation` is a step in this direction
 (perhaps all we need to do?).
 
-
 ### Improve `Allocator` feedback when allocation fails
 
 Use allocation shrinking and retry strategies. Currently, if
@@ -26,7 +25,6 @@ one machine.
 
 The allocator should detect this and return an error saying
 "`chunkSize` too large" so the task can try to shrink it's batch size.
-
 
 ## High RAM
 

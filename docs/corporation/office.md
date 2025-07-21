@@ -6,7 +6,8 @@ Employee's stats are kept track as average value. There are 6 average values: `A
 
 ```typescript
 this.avgMorale =
-  (this.avgMorale * this.numEmployees + getRandomInt(averageStat, averageStat)) / (this.numEmployees + 1);
+  (this.avgMorale * this.numEmployees + getRandomInt(averageStat, averageStat))
+  / (this.numEmployees + 1);
 ```
 
 Job assignment:
@@ -98,8 +99,12 @@ $$IncreaseOfMorale = \frac{PartyCostPerEmployee}{10^{6}}$$
 ```typescript
 const reduction = 0.002 * marketCycles;
 const increase = this.partyMult > 1 ? (this.partyMult - 1) * 10 : 0;
-this.avgEnergy = (this.avgEnergy - reduction * Math.random()) * perfMult + (this.teaPending ? 2 : 0);
-this.avgMorale = ((this.avgMorale - reduction * Math.random()) * perfMult + increase) * this.partyMult;
+this.avgEnergy =
+  (this.avgEnergy - reduction * Math.random()) * perfMult
+  + (this.teaPending ? 2 : 0);
+this.avgMorale =
+  ((this.avgMorale - reduction * Math.random()) * perfMult + increase)
+  * this.partyMult;
 ```
 
 There are 3 ways to counter the drop of energy/morale:
@@ -111,8 +116,12 @@ There are 3 ways to counter the drop of energy/morale:
 `AvgEnergy` and `AvgMorale` are increased by a randomized amount when we hire new employee.
 
 ```typescript
-this.avgMorale = (this.avgMorale * this.numEmployees + getRandomInt(50, 100)) / (this.numEmployees + 1);
-this.avgEnergy = (this.avgEnergy * this.numEmployees + getRandomInt(50, 100)) / (this.numEmployees + 1);
+this.avgMorale =
+  (this.avgMorale * this.numEmployees + getRandomInt(50, 100))
+  / (this.numEmployees + 1);
+this.avgEnergy =
+  (this.avgEnergy * this.numEmployees + getRandomInt(50, 100))
+  / (this.numEmployees + 1);
 ```
 
 Optimal `PartyCostPerEmployee`:

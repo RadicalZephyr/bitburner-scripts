@@ -1,46 +1,46 @@
 export const NAMES = [
-    "Hamma",
-    "Ruwen",
+  'Hamma',
+  'Ruwen',
 
-    "Sift",
-    "Lylan",
+  'Sift',
+  'Lylan',
 
-    "Rami",
-    "Xavier",
+  'Rami',
+  'Xavier',
 
-    "Overlord",
-    "Uruziel",
+  'Overlord',
+  'Uruziel',
 
-    "Fractal",
-    "Lir",
+  'Fractal',
+  'Lir',
 
-    "Wip",
-    "Qip",
+  'Wip',
+  'Qip',
 
-    "Blizz",
-    "Big D",
+  'Blizz',
+  'Big D',
 
-    "Kysandra",
-    "Tremine",
+  'Kysandra',
+  'Tremine',
 
-    "Madda",
-    "Padda",
+  'Madda',
+  'Padda',
 
-    "Mist",
-    "Thorn",
+  'Mist',
+  'Thorn',
 
-    "Dusk",
-    "Tarot",
+  'Dusk',
+  'Tarot',
 
-    "Nymthus",
-    "Echo",
+  'Nymthus',
+  'Echo',
 
-    "Chip",
-    "Stump",
+  'Chip',
+  'Stump',
 
-    "Ash",
-    "Pine",
+  'Ash',
+  'Pine',
 
-    "Eiru",
-    "Miranda",
+  'Eiru',
+  'Miranda',
 ] as const;

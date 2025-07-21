@@ -10,20 +10,20 @@
 
 ## Summary
 
-This Request for Discussion proposes a *hybrid* strategy for keeping
+This Request for Discussion proposes a _hybrid_ strategy for keeping
 the Bitburner **Memory Allocator** in sync with all RAM consumers on
 worker hosts — including:
 
 1. **Allocator‑aware** scripts started via the `launch` helper;
 
-2. **Core infrastructure** that must start *before* the allocator
+2. **Core infrastructure** that must start _before_ the allocator
    (Discovery and the allocator itself);
 
 3. **Ad‑hoc / foreign** processes started manually by the player.
 
 The design combines **explicit registration + PID tagging** for
 allocator‑aware processes with a **smoothed reserved‑RAM measurement**
-for everything else.  The goal is to provide stable, conservative
+for everything else. The goal is to provide stable, conservative
 free‑RAM estimates while keeping ergonomics acceptable for one‑off
 testing.
 
@@ -37,7 +37,7 @@ testing.
 - Players (or automation in other repos) periodically `run` scripts
   directly; the allocator must avoid clobbering this memory.
 
-- The current *Δ‑based* `reservedRam` heuristic is noisy: if a
+- The current _Δ‑based_ `reservedRam` heuristic is noisy: if a
   controller script allocates a large block for helpers **before**
   those helpers spawn, the allocator temporarily believes the host is
   full, hurting throughput.
@@ -45,10 +45,9 @@ testing.
 - Full PID‑level accounting solves accuracy but is too heavy without
   cooperation from helper scripts.
 
-
 A balanced solution should:
 
-- Be *accurate enough* to avoid clashes 99 % of the time.
+- Be _accurate enough_ to avoid clashes 99 % of the time.
 - Add minimal overhead to hot paths.
 - Require little friction for casual users.
 
@@ -58,7 +57,7 @@ A balanced solution should:
 
 | ID  | Requirement                                                                      | Priority     |
 | --- | -------------------------------------------------------------------------------- | ------------ |
-|  R1 | Must avoid launching a new script if free RAM would go < 0 GB at *runtime*.      | MUST         |
+|  R1 | Must avoid launching a new script if free RAM would go < 0 GB at _runtime_.      | MUST         |
 |  R2 | Must not misclassify Discovery or Allocator RAM after they start.                | MUST         |
 |  R3 | Should reclaim memory within one polling interval after a foreign process exits. | SHOULD       |
 |  R4 | Should impose ≤ O(#PIDs) operations per poll, with low constant factors.         | SHOULD       |
@@ -72,11 +71,10 @@ A balanced solution should:
 ### 1  Explicit self‑registration of core services
 
 - Discovery and the allocator call `registerAllocation(hostname, pid,
-  ram)` once their PID is known.
+ram)` once their PID is known.
 
 - On clean shutdown they emit `unregister(pid)` (best‑effort;
   allocator also times‑out stale entries).
-
 
 ### 2  Allocator tag propagation
 
@@ -86,7 +84,7 @@ A balanced solution should:
 - Helper libraries expose `inheritAllocatorArgs(ns)`; task scripts
   must pass this when they `exec` children.
 
-- The tag is *copy‑only*: no runtime IPC is required.
+- The tag is _copy‑only_: no runtime IPC is required.
 
 ### 3  Host‑scan algorithm (every `T_poll`, default = 2 s)
 
@@ -96,7 +94,8 @@ let allocRam = 0n;
 let foreignRam = 0n;
 for (const p of procs) {
   if (hasAllocTag(p)) allocRam += toFixed(p.ramUsage);
-  else if (isRegistered(pid)) allocRam += toFixed(p.ramUsage); // core services
+  else if (isRegistered(pid))
+    allocRam += toFixed(p.ramUsage); // core services
   else foreignRam += toFixed(p.ramUsage);
 }
 ```
@@ -126,10 +125,15 @@ With identical CLI semantics, most ad‑hoc scripts now opt‑in automatically.
 ## Data structures & APIs
 
 ```ts
-interface Registration { pid: number; ram: bigint; hostname: string; ts: number; }
+interface Registration {
+  pid: number;
+  ram: bigint;
+  hostname: string;
+  ts: number;
+}
 
-registerAllocation(host, pid, ram)
-unregister(pid)
+registerAllocation(host, pid, ram);
+unregister(pid);
 
 // in launch.ts
 function makeAllocArgs(uuid: string, userArgs: ScriptArg[]): ScriptArg[];
@@ -139,7 +143,7 @@ Runtime state (per host):
 
 | Field           | Type   | Meaning                             |
 | --------------- | ------ | ----------------------------------- |
-|  `allocatedRam` | bigint | Sum RAM of *known* allocator PIDs.  |
+|  `allocatedRam` | bigint | Sum RAM of _known_ allocator PIDs.  |
 |  `reservedEMA`  | bigint | Exponentially‑smoothed foreign RAM. |
 |  `lastScan`     | ms     | Timestamp of last full PID scan.    |
 
@@ -156,7 +160,6 @@ Runtime state (per host):
 - False positives if an external script deliberately spoofs
   `--allocId` (mitigate by using 128‑bit UUIDs and optional checksum).
 
-
 ---
 
 ## Alternatives considered
@@ -170,16 +173,14 @@ Runtime state (per host):
 3. **Kernel‑like cgroups** (one exec spawns an entire VM) — outside
    Bitburner’s JS sandbox capabilities.
 
-
 ---
 
 ## Prior art and references
 
-- Oxide Computer — *RFD 1* style guide.
+- Oxide Computer — _RFD 1_ style guide.
 
 - Kubernetes — Pod UID tag + cAdvisor (reserved vs working
   set). \* AWS Lambda — Provisioned vs utilized memory model.
-
 
 ---
 
@@ -204,7 +205,7 @@ Runtime state (per host):
 - What is an acceptable upper bound on allocator CPU time per poll on
   low‑end servers?
 
-- Should we age‑out *registered* PIDs aggressively if a crash prevents
+- Should we age‑out _registered_ PIDs aggressively if a crash prevents
   unregister?
 
 - How big must the default UUID be to make tag collisions effectively

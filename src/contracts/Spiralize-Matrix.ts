@@ -39,61 +39,67 @@ Note that the matrix will not always be square:
 Answer: [1, 2, 3, 4, 8, 12, 11, 10, 9, 5, 6, 7]
  */
 
-import type { NS } from "netscript";
-import { MEM_TAG_FLAGS } from "services/client/memory_tag";
+import type { NS } from 'netscript';
+import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
 
 export async function main(ns: NS) {
-    ns.flags(MEM_TAG_FLAGS);
-    const scriptName = ns.getScriptName();
-    const contractPortNum = ns.args[0];
-    if (typeof contractPortNum !== 'number') {
-        ns.tprintf('%s contract run with non-number answer port argument', scriptName);
-        return;
-    }
-    const contractDataJSON = ns.args[1];
-    if (typeof contractDataJSON !== 'string') {
-        ns.tprintf('%s contract run with non-string data argument. Must be a JSON string containing file, host and contract data.', scriptName);
-        return;
-    }
-    const contractData = JSON.parse(contractDataJSON);
-    ns.tprintf('contract data: %s', JSON.stringify(contractData));
-    const answer = solve(contractData);
-    ns.writePort(contractPortNum, JSON.stringify(answer));
+  ns.flags(MEM_TAG_FLAGS);
+  const scriptName = ns.getScriptName();
+  const contractPortNum = ns.args[0];
+  if (typeof contractPortNum !== 'number') {
+    ns.tprintf(
+      '%s contract run with non-number answer port argument',
+      scriptName,
+    );
+    return;
+  }
+  const contractDataJSON = ns.args[1];
+  if (typeof contractDataJSON !== 'string') {
+    ns.tprintf(
+      '%s contract run with non-string data argument. Must be a JSON string containing file, host and contract data.',
+      scriptName,
+    );
+    return;
+  }
+  const contractData = JSON.parse(contractDataJSON);
+  ns.tprintf('contract data: %s', JSON.stringify(contractData));
+  const answer = solve(contractData);
+  ns.writePort(contractPortNum, JSON.stringify(answer));
 }
 
 export function solve(data: number[][]): number[] {
-    const rows = data.length;
-    if (rows === 0) return [];
-    const cols = data[0].length;
+  const rows = data.length;
+  if (rows === 0) return [];
+  const cols = data[0].length;
 
-    const result: number[] = [];
-    let top = 0;
-    let bottom = rows - 1;
-    let left = 0;
-    let right = cols - 1;
+  const result: number[] = [];
+  let top = 0;
+  let bottom = rows - 1;
+  let left = 0;
+  let right = cols - 1;
 
-    while (top <= bottom && left <= right) {
-        for (let col = left; col <= right; col++) {
-            result.push(data[top][col]);
-        }
-        top++;
-        for (let row = top; row <= bottom; row++) {
-            result.push(data[row][right]);
-        }
-        right--;
-        if (top <= bottom) {
-            for (let col = right; col >= left; col--) {
-                result.push(data[bottom][col]);
-            }
-            bottom--;
-        }
-        if (left <= right) {
-            for (let row = bottom; row >= top; row--) {
-                result.push(data[row][left]);
-            }
-            left++;
-        }
+  while (top <= bottom && left <= right) {
+    for (let col = left; col <= right; col++) {
+      result.push(data[top][col]);
     }
+    top++;
+    for (let row = top; row <= bottom; row++) {
+      result.push(data[row][right]);
+    }
+    right--;
+    if (top <= bottom) {
+      for (let col = right; col >= left; col--) {
+        result.push(data[bottom][col]);
+      }
+      bottom--;
+    }
+    if (left <= right) {
+      for (let row = bottom; row >= top; row--) {
+        result.push(data[row][left]);
+      }
+      left++;
+    }
+  }
 
-    return result;
+  return result;
 }

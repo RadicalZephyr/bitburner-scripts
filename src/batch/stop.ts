@@ -1,15 +1,12 @@
-import type { NS } from "netscript";
-import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
-import { parseAndRegisterAlloc } from "services/client/memory";
+import type { NS } from 'netscript';
+import { ALLOC_ID, MEM_TAG_FLAGS } from 'services/client/memory_tag';
+import { parseAndRegisterAlloc } from 'services/client/memory';
 
 export async function main(ns: NS) {
-    const flags = ns.flags([
-        ['help', false],
-        ...MEM_TAG_FLAGS
-    ]);
+  const flags = ns.flags([['help', false], ...MEM_TAG_FLAGS]);
 
-    if (flags.help) {
-        ns.tprint(`
+  if (flags.help) {
+    ns.tprint(`
 USAGE: run ${ns.getScriptName()}
 
 This script gracefully shuts down the batch hacking system by killing all
@@ -21,14 +18,21 @@ OPTIONS:
 Example:
 > run ${ns.getScriptName()}
 `);
-        return;
-    }
+    return;
+  }
 
-    const allocationId = await parseAndRegisterAlloc(ns, flags);
-    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
-        return;
-    }
+  const allocationId = await parseAndRegisterAlloc(ns, flags);
+  if (flags[ALLOC_ID] !== -1 && allocationId === null) {
+    return;
+  }
 
-    const scripts = ["services/discover.js", "services/memory.js", "services/port.js", "batch/task_selector.js", "batch/monitor.js", "batch/harvest.js"];
-    ns.spawn("stopworld.js", { threads: 1, spawnDelay: 0 }, ...scripts);
+  const scripts = [
+    'services/discover.js',
+    'services/memory.js',
+    'services/port.js',
+    'batch/task_selector.js',
+    'batch/monitor.js',
+    'batch/harvest.js',
+  ];
+  ns.spawn('stopworld.js', { threads: 1, spawnDelay: 0 }, ...scripts);
 }

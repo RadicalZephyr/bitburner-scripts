@@ -25,9 +25,10 @@
    * @returns Amount of money on the server
    */
   export function getMoney(ns: NS, host: string): number {
-      return ns.getServerMoneyAvailable(host);
+    return ns.getServerMoneyAvailable(host);
   }
   ```
+
 - Imports should never include the file extension and should be full
   paths specified relative to the `src/` directory. So
   `src/batch/sow.ts` would be referenced as `batch/sow`.
@@ -41,7 +42,6 @@ We use two terms to identify different types of hosts:
 - Targets: any server where `ns.getServerMaxMoney(host) > 0`
 
 Any individual host can be both a Worker and a Target simultaneously.
-
 
 ## Dev Environment Tips
 
@@ -68,8 +68,6 @@ string with one of these strings:
 - `"WARN: "`: The whole string will be printed in yellow. Use this prefix to indicate that you or a user of your script should be careful of something.
 - `"INFO: "`: The whole string will be printed in purplish blue. Use this prefix to remind yourself or a user of your script of something. Think of this prefix as indicating an FYI (for your information).
 
-
-
 ### Formatting Tips
 
 - Always format RAM values with `ns.formatRam()`
@@ -77,26 +75,23 @@ string with one of these strings:
 - Always format percentage values with `ns.formatPercent()`
 - Always format money values with `ns.formatNumber()`
 
-
 ## Authoring New Scripts
 
 - Every script command-line argument, whether a flag or positional argument, should be type-checked using the typescript idiom (`typeof x != "string"`). The script should return early with an error message if the argument type is incorrect.
 - Every new script that is created should have a `--help` flag that is shown when incorrect options are passed and displays a standard UNIX style usage message describing:
-  * what the script does
-  * examples of how to use it
-  * all of the flags that the script takes
-  * any CONFIG values that the script uses
+  - what the script does
+  - examples of how to use it
+  - all of the flags that the script takes
+  - any CONFIG values that the script uses
 
 Use this general structure:
 
 ```typescript
 export async function main(ns: NS) {
-    const flags = ns.flags([
-        ['help', false]
-    ]);
+  const flags = ns.flags([['help', false]]);
 
-    if (flags.help) {
-        ns.tprint(`
+  if (flags.help) {
+    ns.tprint(`
 USAGE: run ${ns.getScriptName()}
 
 {{ description }}
@@ -107,15 +102,14 @@ Example:
 OPTIONS
   --help   Show this help message
 `);
-        return;
-    }
+    return;
+  }
 }
-
 ```
 
 ## Limitations of the Netscript2 Runtime Environment
 
-* There is a bug in the implementation of `NetscriptPort.nextWrite`
+- There is a bug in the implementation of `NetscriptPort.nextWrite`
   that makes it impossible to listen to two different ports from the
   same script. This is the reason that all services listen on a single
   port.
@@ -127,7 +121,6 @@ OPTIONS
 - Check that the unit tests still run with `npx jest`
 - Check that the code conforms to quality standards with `npx eslint src/`
 - Fix any type or lint errors until the build completes with no errors or warnings
-
 
 ## Commit Authoring Convention
 

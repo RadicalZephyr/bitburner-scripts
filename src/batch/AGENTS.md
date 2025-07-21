@@ -2,11 +2,10 @@
 
 ## Development Instructions
 
- * Any function that calculates a number of threads to run must always
-   return an integer value.
- * Grow and weaken thread calculations should always be rounded up
-   with `Math.ceil`.
-
+- Any function that calculates a number of threads to run must always
+  return an integer value.
+- Grow and weaken thread calculations should always be rounded up
+  with `Math.ceil`.
 
 ## Glossary
 
@@ -15,7 +14,6 @@ These are important terms used to describe the code in this directory.
 ### Batch Hacking Systems
 
 The collective term for the scripts in this `src/batch/` directory.
-
 
 ### Hacking Lifecycle
 
@@ -58,7 +56,6 @@ calculates batches of hack, grow and weaken scripts so that running
 the entire batch of scripts will steal money from the server while
 returning it to the optimal state of max money and minimum security.
 
-
 ### Task Selector (`src/batch/task_selector.ts`)
 
 The `TaskSelector` is responsible for identifying which lifecycle
@@ -66,16 +63,15 @@ phase each target is in, determining which targets are the highest
 priority to move through the hacking lifecycle, and launching the
 appropriate task script to do so.
 
-
 ### Task Scripts
 
 There are three task scripts that correspond to the three major
 
 Files:
- - Till Task script: `src/batch/till.ts`
- - Sow Task script: `src/batch/sow.ts`
- - Harvest Task script: `src/batch/harvest.ts`
 
+- Till Task script: `src/batch/till.ts`
+- Sow Task script: `src/batch/sow.ts`
+- Harvest Task script: `src/batch/harvest.ts`
 
 #### Task Helper Scripts
 
@@ -83,17 +79,16 @@ The very simple worker scripts that actually run specific operations
 against a target.
 
 Files:
- - hack helper script: `src/batch/h.ts`
- - grow helper script: `src/batch/g.ts`
- - weaken helper script: `src/batch/w.ts`
 
+- hack helper script: `src/batch/h.ts`
+- grow helper script: `src/batch/g.ts`
+- weaken helper script: `src/batch/w.ts`
 
 ### Monitor (`src/batch/monitor.ts`)
 
 The monitor script helps the user get visual insight into the state of
 the batch hacking system and provides helpful UI features to make it
 easier to debug the system.
-
 
 ### MemoryAllocator (`src/services/memory.tsx`)
 

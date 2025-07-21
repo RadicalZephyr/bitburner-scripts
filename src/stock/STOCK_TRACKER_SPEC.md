@@ -1,7 +1,9 @@
 ## Project: Bitburner Stock Tracker & Trader
 
 ### 1. Overview
+
 A new suite of Netscript 2.0 scripts for the Bitburner game:
+
 - **stock/tracker.ts**: Collects raw price ticks for a configurable set of
   symbols into a rolling window and persists them to the Bitburner
   filesystem. Provides a client API for requesting both raw data and
@@ -19,8 +21,8 @@ After considering several options for data persistence (LocalStorage,
 IndexedDB and Bitburner FS), we've chosen to use the Bitburner FS for
 the following reasons.
 
-* We are storing very simple JSON objects in relatively small amounts.
-* We want stored historical stock data to be saved in the Bitburner
+- We are storing very simple JSON objects in relatively small amounts.
+- We want stored historical stock data to be saved in the Bitburner
   save file so restoring an old save or moving it to a new browser
   will contain relevant historical stock data.
 
@@ -63,44 +65,51 @@ Persist and load configuration values from `LocalStorage` using the
 - Paths (`STOCK_DATA_PATH`)
 
 #### 2.3 Tracker Script (`src/stock/tracker.ts`)
+
 1. On each stock update `await ns.stock.nextUpdate();`
    - Fetch these values for each symbol:
-     * `ns.stock.getBidPrice()`
-     * `ns.stock.getAskPrice()`
-     * `ns.stock.getVolatility()`
-     * `ns.stock.getForecast()`
+     - `ns.stock.getBidPrice()`
+     - `ns.stock.getAskPrice()`
+     - `ns.stock.getVolatility()`
+     - `ns.stock.getForecast()`
 
    - Append `{ ts: Date.now(), askPrice, bidPrice, volatility, forecast }` to the in-memory buffer.
    - Trim buffer to the last N entries.
    - Write buffer to `/stocks/SYMBOL.json`.
+
 2. For each symbol, compute indicators (see Section 3).
 3. Process requests sent by `StockTrackerClient`.
 
 #### 2.4 Tracker Client API (`stock/client/tracker.ts`)
+
 1. Defines a port-based request/response protocol. Use a `MessageType`
    enum and typed payloads mirroring
    `src/services/client/memory.ts`. Supported messages should include
    `RequestTicks` and `RequestIndicators` so the tracker can respond
    with `TickData[]` or the computed indicator object.
-  * Current window of raw tick data for all symbols.
-  * All statistical indicators for all symbols.
+
+- Current window of raw tick data for all symbols.
+- All statistical indicators for all symbols.
+
 2. Create a class (`TrackerClient`) to hide details of
    communication protocol.
 3. Send requests to tracker daemon on a single well-known port `TRACKER_PORT`.
 4. Multiplex responses to client on a single well-known `TRACKER_RESPONSE_PORT`.
 
 #### 2.5 Trader Script (`src/stock/trader.ts`)
+
 1. Load ticks from each `/stocks/SYMBOL.json`.
 2. Compare latest values to buy/sell rules (configurable).
 3. Submit `ns.stock.buy()` or `ns.stock.sell()` orders.
 4. Log decisions to `/logs/trader.log`.
 
 #### 2.6 Trader Client API (`src/stock/client/trader.ts`)
+
 1. Defines a port-based request/response protocol. Use a `MessageType`
    enum and typed payloads mirroring
    `src/services/client/memory.ts`. Supported messages should include:
-   * `Invest` specify an amount of liquid cash to invest.
-   * `Liquidate` instructs the trader to immediately sell all
+   - `Invest` specify an amount of liquid cash to invest.
+   - `Liquidate` instructs the trader to immediately sell all
      holdings.
 2. Create a class (`TraderClient`) to hide details of communication
    protocol.
@@ -117,6 +126,7 @@ allocations with `MemoryClient` and call
 process exits.
 
 ### 3. Statistical Indicators (computed per symbol each run)
+
 1. **Count (N)**
 2. **Mean price** (μ)
 3. **Median price**
@@ -133,6 +143,7 @@ process exits.
 14. **Kurtosis**
 
 ### 4. Risk Controls & Logging
+
 - **Max position size** per symbol & total equity percentage.
 - **Cooldown**: minimum time between trades on same symbol.
 - **Transaction fee/slippage buffer**: price adjustments to avoid whipsaw.
@@ -144,6 +155,7 @@ process exits.
 ### 5. Development Roadmap / TODOs
 
 #### MVP (Alpha)
+
 1. Scaffold project structure and `src/stock/config.ts`.
 2. Implement `src/stock/tracker.ts`:
    - Read window size from `src/stock/config.ts`.
@@ -159,6 +171,7 @@ process exits.
 7. Write quick console output of stats for one symbol.
 
 #### Phase 1 (Beta)
+
 1. Add median & percentiles.
 2. Add SMA & EMA computations, including unit tests.
 3. Implement `src/stock/trader.ts` skeleton:
@@ -168,6 +181,7 @@ process exits.
 6. Basic risk control: max position per symbol.
 
 #### Phase 2 (Feature Complete)
+
 1. Integrate ROC & Bollinger Bands, including unit tests.
 2. Implement drawdown/run‑up metrics.
 3. Add percentile thresholds instead of raw min/max.
@@ -175,16 +189,19 @@ process exits.
 5. Configurable cooldown enforcement.
 
 #### Phase 3 (Advanced)
+
 1. Backtesting harness:
    - Replay historical ticks from JSON and simulate trades.
    - Output a JSON timeline of portfolio value and trade P&L to `/logs/backtest-pnl.json`.
 2. Parameter tuning: script to sweep indicator periods & thresholds.
 3. Extend to portfolio-level diversification metrics (correlations).
-4. *(Optional)* Add skewness/kurtosis and anomaly detection.
+4. _(Optional)_ Add skewness/kurtosis and anomaly detection.
 
 ### 6. Testing & Validation
+
 - End-to-end test: run tracker + trader in simulation mode.
 - Backtest scripts produce P&L reports written to `/logs/backtest-pnl.json`.
 
 ---
-*This spec lays out a clear, incremental path from simple tracking to a robust, parameterized trading engine.*
+
+_This spec lays out a clear, incremental path from simple tracking to a robust, parameterized trading engine._

@@ -28,51 +28,57 @@ Input: digits = "105", target = 5
 Output: ["1*0+5", "10-5"]
  */
 
-import type { NS } from "netscript";
-import { MEM_TAG_FLAGS } from "services/client/memory_tag";
+import type { NS } from 'netscript';
+import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
 
 export async function main(ns: NS) {
-    ns.flags(MEM_TAG_FLAGS);
-    const scriptName = ns.getScriptName();
-    const contractPortNum = ns.args[0];
-    if (typeof contractPortNum !== 'number') {
-        ns.tprintf('%s contract run with non-number answer port argument', scriptName);
-        return;
-    }
-    const contractDataJSON = ns.args[1];
-    if (typeof contractDataJSON !== 'string') {
-        ns.tprintf('%s contract run with non-string data argument. Must be a JSON string containing file, host and contract data.', scriptName);
-        return;
-    }
-    const contractData = JSON.parse(contractDataJSON);
-    ns.tprintf('contract data: %s', JSON.stringify(contractData));
-    const answer = solve(contractData);
-    ns.writePort(contractPortNum, JSON.stringify(answer));
+  ns.flags(MEM_TAG_FLAGS);
+  const scriptName = ns.getScriptName();
+  const contractPortNum = ns.args[0];
+  if (typeof contractPortNum !== 'number') {
+    ns.tprintf(
+      '%s contract run with non-number answer port argument',
+      scriptName,
+    );
+    return;
+  }
+  const contractDataJSON = ns.args[1];
+  if (typeof contractDataJSON !== 'string') {
+    ns.tprintf(
+      '%s contract run with non-string data argument. Must be a JSON string containing file, host and contract data.',
+      scriptName,
+    );
+    return;
+  }
+  const contractData = JSON.parse(contractDataJSON);
+  ns.tprintf('contract data: %s', JSON.stringify(contractData));
+  const answer = solve(contractData);
+  ns.writePort(contractPortNum, JSON.stringify(answer));
 }
 
 export function solve(data: [string, number]): string[] {
-    const [digits, target] = data;
-    const results: string[] = [];
+  const [digits, target] = data;
+  const results: string[] = [];
 
-    function backtrack(index: number, expr: string, prev: number, value: number) {
-        if (index === digits.length) {
-            if (value === target) results.push(expr);
-            return;
-        }
-        for (let i = index + 1; i <= digits.length; i++) {
-            const part = digits.slice(index, i);
-            if (part.length > 1 && part[0] === '0') break;
-            const num = parseInt(part);
-            if (index === 0) {
-                backtrack(i, part, num, num);
-            } else {
-                backtrack(i, `${expr}+${part}`, num, value + num);
-                backtrack(i, `${expr}-${part}`, -num, value - num);
-                backtrack(i, `${expr}*${part}`, prev * num, value - prev + prev * num);
-            }
-        }
+  function backtrack(index: number, expr: string, prev: number, value: number) {
+    if (index === digits.length) {
+      if (value === target) results.push(expr);
+      return;
     }
+    for (let i = index + 1; i <= digits.length; i++) {
+      const part = digits.slice(index, i);
+      if (part.length > 1 && part[0] === '0') break;
+      const num = parseInt(part);
+      if (index === 0) {
+        backtrack(i, part, num, num);
+      } else {
+        backtrack(i, `${expr}+${part}`, num, value + num);
+        backtrack(i, `${expr}-${part}`, -num, value - num);
+        backtrack(i, `${expr}*${part}`, prev * num, value - prev + prev * num);
+      }
+    }
+  }
 
-    backtrack(0, "", 0, 0);
-    return results;
+  backtrack(0, '', 0, 0);
+  return results;
 }

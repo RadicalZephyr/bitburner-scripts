@@ -34,7 +34,6 @@ If you want this script to run automatically when you open Bitburner
 there is a setting in the "Options" menu, "Autoexec Script + Args",
 just write in "start.js".
 
-
 ### Automatic Update
 
 These scripts now come with an automatic updater service that runs
@@ -45,7 +44,6 @@ the new scripts.
 This is a new experimental feature, if you run into problems while
 using it feel free to open an issue and I'll do my best to help you
 troubleshoot it.
-
 
 ### Manual Update
 

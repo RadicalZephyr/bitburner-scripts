@@ -26,119 +26,126 @@ Input: [3, [[0, 1], [0, 2], [1, 2]]]
 Output: []
  */
 
-import type { NS } from "netscript";
-import { MEM_TAG_FLAGS } from "services/client/memory_tag";
+import type { NS } from 'netscript';
+import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
 
 export async function main(ns: NS) {
-    ns.flags(MEM_TAG_FLAGS);
-    const scriptName = ns.getScriptName();
-    const contractPortNum = ns.args[0];
-    if (typeof contractPortNum !== 'number') {
-        ns.tprintf('%s contract run with non-number answer port argument', scriptName);
-        return;
-    }
-    const contractDataJSON = ns.args[1];
-    if (typeof contractDataJSON !== 'string') {
-        ns.tprintf('%s contract run with non-string data argument. Must be a JSON string containing file, host and contract data.', scriptName);
-        return;
-    }
-    const contractData = JSON.parse(contractDataJSON);
-    ns.tprintf('contract data: %s', JSON.stringify(contractData));
-    const answer = solve(contractData);
-    ns.writePort(contractPortNum, JSON.stringify(answer));
+  ns.flags(MEM_TAG_FLAGS);
+  const scriptName = ns.getScriptName();
+  const contractPortNum = ns.args[0];
+  if (typeof contractPortNum !== 'number') {
+    ns.tprintf(
+      '%s contract run with non-number answer port argument',
+      scriptName,
+    );
+    return;
+  }
+  const contractDataJSON = ns.args[1];
+  if (typeof contractDataJSON !== 'string') {
+    ns.tprintf(
+      '%s contract run with non-string data argument. Must be a JSON string containing file, host and contract data.',
+      scriptName,
+    );
+    return;
+  }
+  const contractData = JSON.parse(contractDataJSON);
+  ns.tprintf('contract data: %s', JSON.stringify(contractData));
+  const answer = solve(contractData);
+  ns.writePort(contractPortNum, JSON.stringify(answer));
 }
 
 export function solve(data: [number, [number, number][]]) {
-    const [numVertices, edges] = data;
-    const graph = new Graph(numVertices, edges);
+  const [numVertices, edges] = data;
+  const graph = new Graph(numVertices, edges);
 
-    for (let v = 0; v < numVertices; v++) {
-        if (graph.getColor(v) === undefined) {
-            if (!colorGraphDfs(graph, v, 0)) {
-                return [];
-            }
-        }
+  for (let v = 0; v < numVertices; v++) {
+    if (graph.getColor(v) === undefined) {
+      if (!colorGraphDfs(graph, v, 0)) {
+        return [];
+      }
     }
+  }
 
-    return graph.getColoring();
+  return graph.getColoring();
 }
 
 function nextColor(color: number): number {
-    return (color + 1) % 2;
+  return (color + 1) % 2;
 }
 
 function colorGraphDfs(graph: Graph, v: number, color: number): boolean {
-    graph.colorVertex(v, color);
+  graph.colorVertex(v, color);
 
-    for (const n of graph.neighbors(v)) {
-        if (graph.getColor(n) === undefined) {
-            // If neighbor is uncolored, color it opposite to the current node.
-            if (!colorGraphDfs(graph, n, nextColor(color))) {
-                return false;
-            }
-
-        } else if (graph.getColor(n) === color) {
-            // If graph is colored and it's the same as the current
-            // node's color, then this graph is not bipartite, and
-            // cannot be properly 2-colored
-            return false;
-        }
+  for (const n of graph.neighbors(v)) {
+    if (graph.getColor(n) === undefined) {
+      // If neighbor is uncolored, color it opposite to the current node.
+      if (!colorGraphDfs(graph, n, nextColor(color))) {
+        return false;
+      }
+    } else if (graph.getColor(n) === color) {
+      // If graph is colored and it's the same as the current
+      // node's color, then this graph is not bipartite, and
+      // cannot be properly 2-colored
+      return false;
     }
-    return true;
+  }
+  return true;
 }
 
-type Edge = [
-    start: number,
-    dest: number,
-];
+type Edge = [start: number, dest: number];
 
 type Color = number;
 
 type Vertex = {
-    label: number,
-    color?: Color,
+  label: number;
+  color?: Color;
 };
 
 class Graph {
-    vertices: Vertex[];
-    edges: Edge[];
-    adjacency: Map<number, Set<number>>;
+  vertices: Vertex[];
+  edges: Edge[];
+  adjacency: Map<number, Set<number>>;
 
-    constructor(numVertices: number, edges: Edge[]) {
-        const vertices: Vertex[] = Array.from({ length: numVertices }, (_v, i) => { return { label: i }; });
-        this.vertices = vertices;
-        this.edges = edges;
-        this.adjacency = makeAdjacencyTable(vertices, edges);
-    }
+  constructor(numVertices: number, edges: Edge[]) {
+    const vertices: Vertex[] = Array.from({ length: numVertices }, (_v, i) => {
+      return { label: i };
+    });
+    this.vertices = vertices;
+    this.edges = edges;
+    this.adjacency = makeAdjacencyTable(vertices, edges);
+  }
 
-    getColoring(): Color[] {
-        return this.vertices.map((v) => v.color !== undefined ? v.color : 0);
-    }
+  getColoring(): Color[] {
+    return this.vertices.map((v) => (v.color !== undefined ? v.color : 0));
+  }
 
-    getColor(vertex: number): Color | undefined {
-        return this.vertices.at(vertex)?.color;
-    }
+  getColor(vertex: number): Color | undefined {
+    return this.vertices.at(vertex)?.color;
+  }
 
-    colorVertex(vertex: number, color: Color) {
-        this.vertices.at(vertex).color = color;
-    }
+  colorVertex(vertex: number, color: Color) {
+    this.vertices.at(vertex).color = color;
+  }
 
-    neighbors(vertex: number): number[] {
-        return Array.from(this.adjacency.get(vertex) ?? []);
-    }
+  neighbors(vertex: number): number[] {
+    return Array.from(this.adjacency.get(vertex) ?? []);
+  }
 }
 
-function makeAdjacencyTable(vertices: Vertex[], edges: Edge[]): Map<number, Set<number>> {
-    const adjacencyTable = new Map();
-    for (const v of vertices) {
-        adjacencyTable.set(v.label, new Set());
-    }
+function makeAdjacencyTable(
+  vertices: Vertex[],
+  edges: Edge[],
+): Map<number, Set<number>> {
+  const adjacencyTable = new Map();
+  for (const v of vertices) {
+    adjacencyTable.set(v.label, new Set());
+  }
 
-    for (const e of edges) {
-        const l = e[0];
-        const r = e[1];
-        adjacencyTable.get(l).add(r);
-        adjacencyTable.get(r).add(l);
-    }
-    return adjacencyTable;
+  for (const e of edges) {
+    const l = e[0];
+    const r = e[1];
+    adjacencyTable.get(l).add(r);
+    adjacencyTable.get(r).add(l);
+  }
+  return adjacencyTable;
 }

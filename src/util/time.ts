@@ -1,7 +1,15 @@
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type SetInterval = (handler: TimerHandler, timeout?: number, ...args: any[]) => number;
+type SetInterval = (
+  handler: TimerHandler,
+  timeout?: number,
+  ...args: any[]
+) => number;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type SetTimeout = (handler: TimerHandler, timeout?: number, ...args: any[]) => number;
+type SetTimeout = (
+  handler: TimerHandler,
+  timeout?: number,
+  ...args: any[]
+) => number;
 
 /**
  * Sleep for at least ms milliseconds.
@@ -10,7 +18,7 @@ type SetTimeout = (handler: TimerHandler, timeout?: number, ...args: any[]) => n
  * @returns A Promise that resolves after the sleep has elapsed
  */
 export function sleep(ms: number): Promise<void> {
-    return new Promise(res => globalThis.setTimeout(() => res.call(null), ms));
+  return new Promise((res) => globalThis.setTimeout(() => res.call(null), ms));
 }
 
 /**
@@ -24,7 +32,6 @@ export function sleep(ms: number): Promise<void> {
  * @param args    - Arguments to pass to the function
  */
 export const setInterval: SetInterval = globalThis.setInterval;
-
 
 /**
  * Sets a timer which executes a function or specified piece of code

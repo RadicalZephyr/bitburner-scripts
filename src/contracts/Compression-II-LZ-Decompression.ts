@@ -29,72 +29,78 @@ Example: decoding '5aaabb450723abb' chunk-by-chunk
     5aaabb450723abb  ->  aaabbaaababababaabb
  */
 
-import type { NS } from "netscript";
-import { MEM_TAG_FLAGS } from "services/client/memory_tag";
+import type { NS } from 'netscript';
+import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
 
 export async function main(ns: NS) {
-    ns.flags(MEM_TAG_FLAGS);
-    const scriptName = ns.getScriptName();
-    const contractPortNum = ns.args[0];
-    if (typeof contractPortNum !== 'number') {
-        ns.tprintf('%s contract run with non-number answer port argument', scriptName);
-        return;
-    }
-    const contractDataJSON = ns.args[1];
-    if (typeof contractDataJSON !== 'string') {
-        ns.tprintf('%s contract run with non-string data argument. Must be a JSON string containing file, host and contract data.', scriptName);
-        return;
-    }
-    const contractData = JSON.parse(contractDataJSON);
-    ns.tprintf('contract data: %s', JSON.stringify(contractData));
-    const answer = solve(contractData);
-    ns.writePort(contractPortNum, answer);
+  ns.flags(MEM_TAG_FLAGS);
+  const scriptName = ns.getScriptName();
+  const contractPortNum = ns.args[0];
+  if (typeof contractPortNum !== 'number') {
+    ns.tprintf(
+      '%s contract run with non-number answer port argument',
+      scriptName,
+    );
+    return;
+  }
+  const contractDataJSON = ns.args[1];
+  if (typeof contractDataJSON !== 'string') {
+    ns.tprintf(
+      '%s contract run with non-string data argument. Must be a JSON string containing file, host and contract data.',
+      scriptName,
+    );
+    return;
+  }
+  const contractData = JSON.parse(contractDataJSON);
+  ns.tprintf('contract data: %s', JSON.stringify(contractData));
+  const answer = solve(contractData);
+  ns.writePort(contractPortNum, answer);
 }
 
 function isDigit(c): boolean {
-    return /\d/.test(c);
+  return /\d/.test(c);
 }
 
 const enum ChunkType {
-    Literal,
-    BackRef
+  Literal,
+  BackRef,
 }
 
 export function solve(data: string): string {
-    let uncompressed = "";
-    let i = 0;
+  let uncompressed = '';
+  let i = 0;
 
-    let nextChunkType = ChunkType.Literal;
+  let nextChunkType = ChunkType.Literal;
 
-    while (i < data.length) {
-        const len = parseInt(data[i]);
+  while (i < data.length) {
+    const len = parseInt(data[i]);
 
-        switch (nextChunkType) {
-            case ChunkType.Literal:
-                if (len > 0) {
-                    i += 1;
-                    uncompressed += data.substring(i, i + len);
-                    i += len;
-                } else {
-                    i += 1;
-                }
-                nextChunkType = ChunkType.BackRef;
-                break;
-            case ChunkType.BackRef:
-                if (len > 0 && isDigit(data[i + 1])) {
-                    // Back reference to uncompressed data
-                    const charsBack = parseInt(data[i + 1]);
-                    const start = uncompressed.length - charsBack;
-                    for (let j = start; j < start + len; ++j) {
-                        uncompressed += uncompressed[j];
-                    }
-                    i += 2;
-                } else {
-                    i += 1;
-                }
-                nextChunkType = ChunkType.Literal;
-                break;
+    switch (nextChunkType) {
+      case ChunkType.Literal:
+        if (len > 0) {
+          i += 1;
+          uncompressed += data.substring(i, i + len);
+          i += len;
+        } else {
+          i += 1;
         }
+        nextChunkType = ChunkType.BackRef;
+        break;
+      case ChunkType.BackRef:
+        if (len > 0 && isDigit(data[i + 1])) {
+          // Back reference to uncompressed data
+          const charsBack = parseInt(data[i + 1]);
+          const start = uncompressed.length - charsBack;
+          for (let j = start; j < start + len; ++j) {
+            uncompressed += uncompressed[j];
+          }
+          i += 2;
+        } else {
+          i += 1;
+        }
+        nextChunkType = ChunkType.Literal;
+        break;
     }
-    return uncompressed;
+  }
+  return uncompressed;
 }

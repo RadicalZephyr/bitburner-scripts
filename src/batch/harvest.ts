@@ -1,39 +1,40 @@
-import type { AutocompleteData, NS } from "netscript";
-import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
+import type { AutocompleteData, NS } from 'netscript';
+import { ALLOC_ID, MEM_TAG_FLAGS } from 'services/client/memory_tag';
 
-import { BatchLogistics, BatchPhase, calculatePhaseStartTimes, hostListFromChunks, spawnBatch } from "services/batch";
-
-import { GrowableMemoryClient } from "services/client/growable_memory";
-import { AllocationChunk, parseAndRegisterAlloc } from "services/client/memory";
-import { PortClient } from "services/client/port";
-
-import { TaskSelectorClient, Lifecycle } from "batch/client/task_selector";
-
-import { CONFIG } from "batch/config";
 import {
-    analyzeBatchThreads,
-    BatchThreadAnalysis,
-    fullBatchTime,
-    growthAnalyze
-} from "batch/expected_value";
+  BatchLogistics,
+  BatchPhase,
+  calculatePhaseStartTimes,
+  hostListFromChunks,
+  spawnBatch,
+} from 'services/batch';
 
+import { GrowableMemoryClient } from 'services/client/growable_memory';
+import { AllocationChunk, parseAndRegisterAlloc } from 'services/client/memory';
+import { PortClient } from 'services/client/port';
+
+import { TaskSelectorClient, Lifecycle } from 'batch/client/task_selector';
+
+import { CONFIG } from 'batch/config';
+import {
+  analyzeBatchThreads,
+  BatchThreadAnalysis,
+  fullBatchTime,
+  growthAnalyze,
+} from 'batch/expected_value';
 
 export function autocomplete(data: AutocompleteData): string[] {
-    return data.servers;
+  return data.servers;
 }
 
 export async function main(ns: NS) {
-    ns.disableLog('ALL');
+  ns.disableLog('ALL');
 
-    const flags = ns.flags([
-        ['max-ram', -1],
-        ['help', false],
-        ...MEM_TAG_FLAGS
-    ]);
+  const flags = ns.flags([['max-ram', -1], ['help', false], ...MEM_TAG_FLAGS]);
 
-    const rest = flags._ as string[];
-    if (rest.length === 0 || flags.help) {
-        ns.tprint(`
+  const rest = flags._ as string[];
+  if (rest.length === 0 || flags.help) {
+    ns.tprint(`
 USAGE: run ${ns.getScriptName()} SERVER_NAME
 
 Continually harvest money from the target with batches of
@@ -48,273 +49,323 @@ OPTIONS
 --help           Show this help message
 --max-ram        Limit RAM usage per batch run
 `);
-        return;
+    return;
+  }
+
+  const allocationId = await parseAndRegisterAlloc(ns, flags);
+  if (flags[ALLOC_ID] !== -1 && allocationId === null) {
+    return;
+  }
+
+  const maxRam = flags['max-ram'];
+  if (maxRam !== -1) {
+    if (typeof maxRam !== 'number' || maxRam <= 0) {
+      ns.tprint('--max-ram must be a positive number');
+      return;
     }
+  }
 
-    const allocationId = await parseAndRegisterAlloc(ns, flags);
-    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
-        return;
-    }
+  const target = rest[0];
+  if (typeof target !== 'string' || !ns.serverExists(target)) {
+    ns.tprintf('target %s does not exist', target);
+    return;
+  }
 
-    const maxRam = flags['max-ram'];
-    if (maxRam !== -1) {
-        if (typeof maxRam !== 'number' || maxRam <= 0) {
-            ns.tprint('--max-ram must be a positive number');
-            return;
-        }
-    }
+  const taskSelectorClient = new TaskSelectorClient(ns);
+  const portClient = new PortClient(ns);
+  const donePortId = await portClient.requestPort();
+  if (typeof donePortId !== 'number') {
+    ns.tprint('failed to acquire a port');
+    return;
+  }
+  ns.atExit(() => {
+    portClient.releasePort(donePortId);
+  });
 
-    const target = rest[0];
-    if (typeof target !== 'string' || !ns.serverExists(target)) {
-        ns.tprintf("target %s does not exist", target);
-        return;
-    }
+  let lastHeartbeat = 0;
 
-    const taskSelectorClient = new TaskSelectorClient(ns);
-    const portClient = new PortClient(ns);
-    const donePortId = await portClient.requestPort();
-    if (typeof donePortId !== 'number') {
-        ns.tprint('failed to acquire a port');
-        return;
-    }
-    ns.atExit(() => { portClient.releasePort(donePortId); });
+  const hackPercent =
+    maxRam !== -1
+      ? maxHackPercentForRam(ns, target, maxRam)
+      : CONFIG.maxHackPercent;
 
-    let lastHeartbeat = 0;
+  if (maxRam !== -1 && hackPercent === 0) {
+    ns.tprint(`max-ram ${ns.formatRam(maxRam)} is too small for one batch`);
+    const logistics = calculateBatchLogistics(ns, target);
+    ns.tprint(`Minimal batch:\n${JSON.stringify(logistics, null, 2)}`);
+    return;
+  }
 
-    const hackPercent = maxRam !== -1
-        ? maxHackPercentForRam(ns, target, maxRam)
-        : CONFIG.maxHackPercent;
-
-    if (maxRam !== -1 && hackPercent === 0) {
-        ns.tprint(`max-ram ${ns.formatRam(maxRam)} is too small for one batch`);
-        const logistics = calculateBatchLogistics(ns, target);
-        ns.tprint(`Minimal batch:\n${JSON.stringify(logistics, null, 2)}`);
-        return;
-    }
-
-    const logistics = calculateBatchLogistics(ns, target, hackPercent);
-    let overlapLimit = logistics.overlap;
-    if (maxRam !== -1) {
-        overlapLimit = Math.min(overlapLimit, Math.floor(maxRam / logistics.batchRam));
-    }
-    if (overlapLimit < 1) {
-        ns.tprint(`max-ram ${ns.formatRam(maxRam)} is too small for one batch`);
-        return;
-    }
-
-    const requiredRam = logistics.batchRam * overlapLimit;
-    ns.printf(
-        `%s: batch ram %s, overlap x%d => required %s\nphases: %s`,
-        logistics.target,
-        ns.formatRam(logistics.batchRam),
-        overlapLimit,
-        ns.formatRam(requiredRam),
-        JSON.stringify(logistics.phases, undefined, 2)
+  const logistics = calculateBatchLogistics(ns, target, hackPercent);
+  let overlapLimit = logistics.overlap;
+  if (maxRam !== -1) {
+    overlapLimit = Math.min(
+      overlapLimit,
+      Math.floor(maxRam / logistics.batchRam),
     );
+  }
+  if (overlapLimit < 1) {
+    ns.tprint(`max-ram ${ns.formatRam(maxRam)} is too small for one batch`);
+    return;
+  }
 
-    // Track the allocated batchRam chunk size. When we calculate a
-    // batch for rebalancing the server we need each rebalancing batch
-    // to fit within the batch size that we originally allocated
-    const batchRam = logistics.batchRam;
+  const requiredRam = logistics.batchRam * overlapLimit;
+  ns.printf(
+    `%s: batch ram %s, overlap x%d => required %s\nphases: %s`,
+    logistics.target,
+    ns.formatRam(logistics.batchRam),
+    overlapLimit,
+    ns.formatRam(requiredRam),
+    JSON.stringify(logistics.phases, undefined, 2),
+  );
 
-    const memClient = new GrowableMemoryClient(ns);
-    const allocation = await memClient.requestGrowableAllocation(batchRam, overlapLimit, { shrinkable: true });
-    if (!allocation) return;
+  // Track the allocated batchRam chunk size. When we calculate a
+  // batch for rebalancing the server we need each rebalancing batch
+  // to fit within the batch size that we originally allocated
+  const batchRam = logistics.batchRam;
 
-    allocation.releaseAtExit(ns);
+  const memClient = new GrowableMemoryClient(ns);
+  const allocation = await memClient.requestGrowableAllocation(
+    batchRam,
+    overlapLimit,
+    { shrinkable: true },
+  );
+  if (!allocation) return;
 
-    // Send a Harvest Heartbeat to indicate we're starting the main loop
-    taskSelectorClient.tryHeartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Harvest);
+  allocation.releaseAtExit(ns);
 
-    // Track how many batches can overlap concurrently. If the
-    // calculated overlap drops we release the extra memory back to the
-    // MemoryManager so it can be reused by other processes.
-    let maxOverlap = allocation.numChunks;
-    let currentBatches = 0;
+  // Send a Harvest Heartbeat to indicate we're starting the main loop
+  taskSelectorClient.tryHeartbeat(
+    ns.pid,
+    ns.getScriptName(),
+    target,
+    Lifecycle.Harvest,
+  );
 
-    let hosts = hostListFromChunks(allocation.allocatedChunks);
+  // Track how many batches can overlap concurrently. If the
+  // calculated overlap drops we release the extra memory back to the
+  // MemoryManager so it can be reused by other processes.
+  let maxOverlap = allocation.numChunks;
+  let currentBatches = 0;
 
-    let batches = [];
+  let hosts = hostListFromChunks(allocation.allocatedChunks);
 
-    ns.print(`INFO: spawning initial round of ${maxOverlap} batches`);
-    // Launch one batch per allocated chunk so that the pipeline is
-    // fully populated before entering the steady state loop.
-    for (const host of hosts) {
-        const batchPids = await spawnBatch(ns, host, target, logistics.phases, donePortId, allocation.allocationId);
-        batches.push(batchPids);
+  let batches = [];
+
+  ns.print(`INFO: spawning initial round of ${maxOverlap} batches`);
+  // Launch one batch per allocated chunk so that the pipeline is
+  // fully populated before entering the steady state loop.
+  for (const host of hosts) {
+    const batchPids = await spawnBatch(
+      ns,
+      host,
+      target,
+      logistics.phases,
+      donePortId,
+      allocation.allocationId,
+    );
+    batches.push(batchPids);
+    currentBatches++;
+    if (Date.now() >= lastHeartbeat + CONFIG.heartbeatCadence) {
+      taskSelectorClient.tryHeartbeat(
+        ns.pid,
+        ns.getScriptName(),
+        target,
+        Lifecycle.Harvest,
+      );
+      lastHeartbeat = Date.now();
+    }
+
+    await ns.sleep(logistics.endingPeriod);
+  }
+
+  const finishedPort = ns.getPortHandle(donePortId);
+
+  ns.printf('INFO: launched initial round, going into batch respawn loop');
+  while (true) {
+    allocation.pollGrowth();
+    const newHosts = hostListFromChunks(allocation.allocatedChunks);
+    if (newHosts.length < hosts.length) {
+      batches = cancelRemovedBatches(ns, hosts, newHosts, batches);
+      if (currentBatches >= newHosts.length) {
+        currentBatches %= newHosts.length;
+      }
+    }
+    hosts = newHosts;
+    let batchIndex = currentBatches % hosts.length;
+    if (batchIndex === 0 && hosts.length > batches.length) {
+      ns.print(
+        `INFO: allocation grew to ${hosts.length} chunks. `
+          + `Spawning ${hosts.length - batches.length} additional batches`,
+      );
+      for (let i = batches.length; i < hosts.length; i++) {
+        const extraPids = await spawnBatch(
+          ns,
+          hosts[i],
+          target,
+          logistics.phases,
+          donePortId,
+          allocation.allocationId,
+        );
+        batches[i] = extraPids;
         currentBatches++;
         if (Date.now() >= lastHeartbeat + CONFIG.heartbeatCadence) {
-            taskSelectorClient.tryHeartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Harvest);
-            lastHeartbeat = Date.now();
+          taskSelectorClient.tryHeartbeat(
+            ns.pid,
+            ns.getScriptName(),
+            target,
+            Lifecycle.Harvest,
+          );
+          lastHeartbeat = Date.now();
         }
-
         await ns.sleep(logistics.endingPeriod);
+      }
+    } else if (hosts.length < batches.length) {
+      batches.length = hosts.length;
+      if (currentBatches >= hosts.length) {
+        currentBatches %= hosts.length;
+      }
     }
 
-    const finishedPort = ns.getPortHandle(donePortId);
+    maxOverlap = hosts.length;
 
-    ns.printf("INFO: launched initial round, going into batch respawn loop");
-    while (true) {
-        allocation.pollGrowth();
-        const newHosts = hostListFromChunks(allocation.allocatedChunks);
-        if (newHosts.length < hosts.length) {
-            batches = cancelRemovedBatches(ns, hosts, newHosts, batches);
-            if (currentBatches >= newHosts.length) {
-                currentBatches %= newHosts.length;
-            }
-        }
-        hosts = newHosts;
-        let batchIndex = currentBatches % hosts.length;
-        if (batchIndex === 0 && hosts.length > batches.length) {
-            ns.print(
-                `INFO: allocation grew to ${hosts.length} chunks. ` +
-                `Spawning ${hosts.length - batches.length} additional batches`,
-            );
-            for (let i = batches.length; i < hosts.length; i++) {
-                const extraPids = await spawnBatch(
-                    ns,
-                    hosts[i],
-                    target,
-                    logistics.phases,
-                    donePortId,
-                    allocation.allocationId,
-                );
-                batches[i] = extraPids;
-                currentBatches++;
-                if (Date.now() >= lastHeartbeat + CONFIG.heartbeatCadence) {
-                    taskSelectorClient.tryHeartbeat(
-                        ns.pid,
-                        ns.getScriptName(),
-                        target,
-                        Lifecycle.Harvest,
-                    );
-                    lastHeartbeat = Date.now();
-                }
-                await ns.sleep(logistics.endingPeriod);
-            }
-        } else if (hosts.length < batches.length) {
-            batches.length = hosts.length;
-            if (currentBatches >= hosts.length) {
-                currentBatches %= hosts.length;
-            }
-        }
+    batchIndex = currentBatches % hosts.length;
+    const host = hosts[batchIndex];
 
-        maxOverlap = hosts.length;
-
-        batchIndex = currentBatches % hosts.length;
-        const host = hosts[batchIndex];
-
-        const lastScriptPid = batches[batchIndex]?.at(-1);
-        if (typeof lastScriptPid === "number") {
-            if (finishedPort.peek() === "NULL PORT DATA") {
-                await finishedPort.nextWrite();
-            }
-            const donePid = finishedPort.read();
-            if (typeof donePid === "number" && lastScriptPid !== donePid) {
-                ns.print(`INFO: expected to receive done message from ${lastScriptPid}, got ${donePid}`);
-            }
-        } else {
-            ns.print(`WARN: lastScriptPid was not a number, did scripts fail to launch?`);
-            // Safety sleep to avoid hanging
-            await ns.sleep(10);
-        }
-
-        const actualSecurity = ns.getServerSecurityLevel(target);
-        const minSecurity = ns.getServerMinSecurityLevel(target);
-        const maxMoney = ns.getServerMaxMoney(target);
-        const actualMoney = ns.getServerMoneyAvailable(target);
-
-        let phases = logistics.phases;
-        if (actualSecurity > minSecurity + CONFIG.minSecTolerance || actualMoney < maxMoney * CONFIG.maxMoneyTolerance) {
-            const rebalance = calculateRebalanceBatchLogistics(ns, target, batchRam);
-            if (rebalance.batchRam <= batchRam) {
-                const secDelta = (actualSecurity - minSecurity).toFixed(2);
-                const moneyPct = ns.formatPercent(actualMoney / maxMoney);
-                ns.print(
-                    `INFO: rebalancing ${target} sec +${secDelta} money ${moneyPct} ` +
-                    `ram ${ns.formatRam(rebalance.batchRam)}`
-                );
-                phases = rebalance.phases;
-            }
-        } else {
-            const logistics = calculateBatchLogistics(ns, target, hackPercent);
-            phases = logistics.phases;
-
-            const desiredOverlap = Math.min(overlapLimit, logistics.overlap);
-
-            if (desiredOverlap < allocation.numChunks) {
-                const toRelease = allocation.numChunks - desiredOverlap;
-                const beforeHosts = hosts;
-                const result = await memClient.releaseChunks(
-                    allocation.allocationId,
-                    toRelease,
-                );
-                if (result) {
-                    allocation.allocatedChunks = result.hosts.map(
-                        h => new AllocationChunk(h),
-                    );
-                    const shrinkHosts = hostListFromChunks(allocation.allocatedChunks);
-                    batches = cancelRemovedBatches(ns, beforeHosts, shrinkHosts, batches);
-                    hosts = shrinkHosts;
-                    if (currentBatches >= hosts.length) {
-                        currentBatches %= hosts.length;
-                    }
-                    maxOverlap = hosts.length;
-                    ns.print(`INFO: released ${toRelease} chunks from allocation`);
-                } else {
-                    ns.print(`WARN: failed to release ${toRelease} chunks`);
-                }
-            }
-        }
-
-        const batchPids = await spawnBatch(ns, host, target, phases, donePortId, allocation.allocationId);
-        if (batchPids.length > 0) {
-            batches[batchIndex] = batchPids;
-            currentBatches++;
-        }
-
-        if (currentBatches > maxOverlap) {
-            currentBatches = currentBatches % maxOverlap;
-        }
-        if (Date.now() >= lastHeartbeat + CONFIG.heartbeatCadence + (Math.random() * 500)) {
-            if (taskSelectorClient.tryHeartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Harvest)) {
-                lastHeartbeat = Date.now();
-            }
-        }
+    const lastScriptPid = batches[batchIndex]?.at(-1);
+    if (typeof lastScriptPid === 'number') {
+      if (finishedPort.peek() === 'NULL PORT DATA') {
+        await finishedPort.nextWrite();
+      }
+      const donePid = finishedPort.read();
+      if (typeof donePid === 'number' && lastScriptPid !== donePid) {
+        ns.print(
+          `INFO: expected to receive done message from ${lastScriptPid}, got ${donePid}`,
+        );
+      }
+    } else {
+      ns.print(
+        `WARN: lastScriptPid was not a number, did scripts fail to launch?`,
+      );
+      // Safety sleep to avoid hanging
+      await ns.sleep(10);
     }
+
+    const actualSecurity = ns.getServerSecurityLevel(target);
+    const minSecurity = ns.getServerMinSecurityLevel(target);
+    const maxMoney = ns.getServerMaxMoney(target);
+    const actualMoney = ns.getServerMoneyAvailable(target);
+
+    let phases = logistics.phases;
+    if (
+      actualSecurity > minSecurity + CONFIG.minSecTolerance
+      || actualMoney < maxMoney * CONFIG.maxMoneyTolerance
+    ) {
+      const rebalance = calculateRebalanceBatchLogistics(ns, target, batchRam);
+      if (rebalance.batchRam <= batchRam) {
+        const secDelta = (actualSecurity - minSecurity).toFixed(2);
+        const moneyPct = ns.formatPercent(actualMoney / maxMoney);
+        ns.print(
+          `INFO: rebalancing ${target} sec +${secDelta} money ${moneyPct} `
+            + `ram ${ns.formatRam(rebalance.batchRam)}`,
+        );
+        phases = rebalance.phases;
+      }
+    } else {
+      const logistics = calculateBatchLogistics(ns, target, hackPercent);
+      phases = logistics.phases;
+
+      const desiredOverlap = Math.min(overlapLimit, logistics.overlap);
+
+      if (desiredOverlap < allocation.numChunks) {
+        const toRelease = allocation.numChunks - desiredOverlap;
+        const beforeHosts = hosts;
+        const result = await memClient.releaseChunks(
+          allocation.allocationId,
+          toRelease,
+        );
+        if (result) {
+          allocation.allocatedChunks = result.hosts.map(
+            (h) => new AllocationChunk(h),
+          );
+          const shrinkHosts = hostListFromChunks(allocation.allocatedChunks);
+          batches = cancelRemovedBatches(ns, beforeHosts, shrinkHosts, batches);
+          hosts = shrinkHosts;
+          if (currentBatches >= hosts.length) {
+            currentBatches %= hosts.length;
+          }
+          maxOverlap = hosts.length;
+          ns.print(`INFO: released ${toRelease} chunks from allocation`);
+        } else {
+          ns.print(`WARN: failed to release ${toRelease} chunks`);
+        }
+      }
+    }
+
+    const batchPids = await spawnBatch(
+      ns,
+      host,
+      target,
+      phases,
+      donePortId,
+      allocation.allocationId,
+    );
+    if (batchPids.length > 0) {
+      batches[batchIndex] = batchPids;
+      currentBatches++;
+    }
+
+    if (currentBatches > maxOverlap) {
+      currentBatches = currentBatches % maxOverlap;
+    }
+    if (
+      Date.now()
+      >= lastHeartbeat + CONFIG.heartbeatCadence + Math.random() * 500
+    ) {
+      if (
+        taskSelectorClient.tryHeartbeat(
+          ns.pid,
+          ns.getScriptName(),
+          target,
+          Lifecycle.Harvest,
+        )
+      ) {
+        lastHeartbeat = Date.now();
+      }
+    }
+  }
 }
 
-
 function hostCountMap(hosts: string[]): Map<string, number> {
-    const counts = new Map<string, number>();
-    for (const h of hosts) {
-        const c = counts.get(h) ?? 0;
-        counts.set(h, c + 1);
-    }
-    return counts;
+  const counts = new Map<string, number>();
+  for (const h of hosts) {
+    const c = counts.get(h) ?? 0;
+    counts.set(h, c + 1);
+  }
+  return counts;
 }
 
 function cancelRemovedBatches(
-    ns: NS,
-    prevHosts: string[],
-    newHosts: string[],
-    batches: number[][],
+  ns: NS,
+  prevHosts: string[],
+  newHosts: string[],
+  batches: number[][],
 ): number[][] {
-    const remaining = hostCountMap(newHosts);
-    const keep: number[][] = [];
-    for (let i = 0; i < prevHosts.length; i++) {
-        const host = prevHosts[i];
-        const allowed = remaining.get(host) ?? 0;
-        if (allowed > 0) {
-            remaining.set(host, allowed - 1);
-            keep.push(batches[i]);
-        } else {
-            for (const pid of batches[i] ?? []) {
-                if (ns.isRunning(pid)) ns.kill(pid);
-            }
-        }
+  const remaining = hostCountMap(newHosts);
+  const keep: number[][] = [];
+  for (let i = 0; i < prevHosts.length; i++) {
+    const host = prevHosts[i];
+    const allowed = remaining.get(host) ?? 0;
+    if (allowed > 0) {
+      remaining.set(host, allowed - 1);
+      keep.push(batches[i]);
+    } else {
+      for (const pid of batches[i] ?? []) {
+        if (ns.isRunning(pid)) ns.kill(pid);
+      }
     }
-    return keep;
+  }
+  return keep;
 }
 
 /** Calculate RAM and phase information for a full harvest batch.
@@ -324,37 +375,39 @@ function cancelRemovedBatches(
  * @param hackPercent - Fraction of money to hack each batch (0-1)
  */
 export function calculateBatchLogistics(
-    ns: NS,
-    target: string,
-    hackPercent?: number,
+  ns: NS,
+  target: string,
+  hackPercent?: number,
 ): BatchLogistics {
-    const hackThreads = hackPercent !== undefined
-        ? hackThreadsForPercent(ns, target, hackPercent)
-        : 1;
-    const threads = analyzeBatchThreads(ns, target, hackThreads);
+  const hackThreads =
+    hackPercent !== undefined
+      ? hackThreadsForPercent(ns, target, hackPercent)
+      : 1;
+  const threads = analyzeBatchThreads(ns, target, hackThreads);
 
-    const phases = calculateBatchPhases(ns, target, threads);
+  const phases = calculateBatchPhases(ns, target, threads);
 
-    const hRam = ns.getScriptRam('/batch/h.js', "home") * threads.hackThreads;
-    const gRam = ns.getScriptRam('/batch/g.js', "home") * threads.growThreads;
-    const wRam = ns.getScriptRam('/batch/w.js', "home") *
-        (threads.postHackWeakenThreads + threads.postGrowWeakenThreads);
-    const batchRam = hRam + gRam + wRam;
+  const hRam = ns.getScriptRam('/batch/h.js', 'home') * threads.hackThreads;
+  const gRam = ns.getScriptRam('/batch/g.js', 'home') * threads.growThreads;
+  const wRam =
+    ns.getScriptRam('/batch/w.js', 'home')
+    * (threads.postHackWeakenThreads + threads.postGrowWeakenThreads);
+  const batchRam = hRam + gRam + wRam;
 
-    const batchTime = fullBatchTime(ns, target);
+  const batchTime = fullBatchTime(ns, target);
 
-    const endingPeriod = CONFIG.batchInterval * 4;
-    const overlap = Math.ceil(batchTime / endingPeriod);
-    const requiredRam = batchRam * overlap;
+  const endingPeriod = CONFIG.batchInterval * 4;
+  const overlap = Math.ceil(batchTime / endingPeriod);
+  const requiredRam = batchRam * overlap;
 
-    return {
-        target,
-        batchRam,
-        overlap,
-        endingPeriod,
-        requiredRam,
-        phases,
-    }
+  return {
+    target,
+    batchRam,
+    overlap,
+    endingPeriod,
+    requiredRam,
+    phases,
+  };
 }
 
 /** Calculate the phase order and relative start times for a full
@@ -362,24 +415,48 @@ export function calculateBatchLogistics(
  * milliseconds after the previous one. Durations account for the
  * player's hacking speed multiplier.
  */
-export function calculateBatchPhases(ns: NS, target: string, threads: BatchThreadAnalysis): BatchPhase[] {
-    const hackTime = ns.getHackTime(target);
-    const weakenTime = ns.getWeakenTime(target);
-    const growTime = ns.getGrowTime(target);
+export function calculateBatchPhases(
+  ns: NS,
+  target: string,
+  threads: BatchThreadAnalysis,
+): BatchPhase[] {
+  const hackTime = ns.getHackTime(target);
+  const weakenTime = ns.getWeakenTime(target);
+  const growTime = ns.getGrowTime(target);
 
-    const phases: BatchPhase[] = [
-        { script: "/batch/h.js", start: 0, duration: hackTime, threads: threads.hackThreads },
-        { script: "/batch/w.js", start: 0, duration: weakenTime, threads: threads.postHackWeakenThreads },
-        { script: "/batch/g.js", start: 0, duration: growTime, threads: threads.growThreads },
-        { script: "/batch/w.js", start: 0, duration: weakenTime, threads: threads.postGrowWeakenThreads },
-    ];
+  const phases: BatchPhase[] = [
+    {
+      script: '/batch/h.js',
+      start: 0,
+      duration: hackTime,
+      threads: threads.hackThreads,
+    },
+    {
+      script: '/batch/w.js',
+      start: 0,
+      duration: weakenTime,
+      threads: threads.postHackWeakenThreads,
+    },
+    {
+      script: '/batch/g.js',
+      start: 0,
+      duration: growTime,
+      threads: threads.growThreads,
+    },
+    {
+      script: '/batch/w.js',
+      start: 0,
+      duration: weakenTime,
+      threads: threads.postGrowWeakenThreads,
+    },
+  ];
 
-    return calculatePhaseStartTimes(phases);
+  return calculatePhaseStartTimes(phases);
 }
 
 interface RebalanceBatchLogistics {
-    batchRam: number;
-    phases: BatchPhase[];
+  batchRam: number;
+  phases: BatchPhase[];
 }
 
 /** Calculate threads and timings for a weaken-grow-weaken batch to
@@ -388,103 +465,128 @@ interface RebalanceBatchLogistics {
  *  The returned batch always requires no more RAM than `maxBatchRam`.
  */
 export function calculateRebalanceBatchLogistics(
-    ns: NS,
-    target: string,
-    maxBatchRam: number,
+  ns: NS,
+  target: string,
+  maxBatchRam: number,
 ): RebalanceBatchLogistics {
-    const wRam = ns.getScriptRam('/batch/w.js', 'home');
-    const gRam = ns.getScriptRam('/batch/g.js', 'home');
+  const wRam = ns.getScriptRam('/batch/w.js', 'home');
+  const gRam = ns.getScriptRam('/batch/g.js', 'home');
 
-    const minSec = ns.getServerMinSecurityLevel(target);
-    const curSec = ns.getServerSecurityLevel(target);
-    const deltaSec = curSec - minSec;
-    let weakenThreads = calculateWeakenThreads(deltaSec);
-    let usedRam = weakenThreads * wRam;
+  const minSec = ns.getServerMinSecurityLevel(target);
+  const curSec = ns.getServerSecurityLevel(target);
+  const deltaSec = curSec - minSec;
+  let weakenThreads = calculateWeakenThreads(deltaSec);
+  let usedRam = weakenThreads * wRam;
 
-    if (usedRam > maxBatchRam) {
-        weakenThreads = Math.floor(maxBatchRam / wRam);
-        usedRam = weakenThreads * wRam;
-        const phases = calculateRebalancePhases(ns, target, weakenThreads, 0, 0);
-        return { batchRam: usedRam, phases };
-    }
-
-    const currentMoney = ns.getServerMoneyAvailable(target);
-    let growThreads = growthAnalyze(ns, target, currentMoney);
-
-    let postGrowWeaken = calculateWeakenThreads(ns.growthAnalyzeSecurity(growThreads, target));
-
-    while (growThreads > 0) {
-        postGrowWeaken = calculateWeakenThreads(ns.growthAnalyzeSecurity(growThreads, target));
-        const totalRam = usedRam + growThreads * gRam + postGrowWeaken * wRam;
-        if (totalRam <= maxBatchRam) {
-            usedRam = totalRam;
-            break;
-        }
-        growThreads--;
-    }
-
-    if (growThreads === 0) {
-        postGrowWeaken = 0;
-        usedRam = weakenThreads * wRam;
-    }
-
-    const phases = calculateRebalancePhases(ns, target, weakenThreads, growThreads, postGrowWeaken);
+  if (usedRam > maxBatchRam) {
+    weakenThreads = Math.floor(maxBatchRam / wRam);
+    usedRam = weakenThreads * wRam;
+    const phases = calculateRebalancePhases(ns, target, weakenThreads, 0, 0);
     return { batchRam: usedRam, phases };
+  }
+
+  const currentMoney = ns.getServerMoneyAvailable(target);
+  let growThreads = growthAnalyze(ns, target, currentMoney);
+
+  let postGrowWeaken = calculateWeakenThreads(
+    ns.growthAnalyzeSecurity(growThreads, target),
+  );
+
+  while (growThreads > 0) {
+    postGrowWeaken = calculateWeakenThreads(
+      ns.growthAnalyzeSecurity(growThreads, target),
+    );
+    const totalRam = usedRam + growThreads * gRam + postGrowWeaken * wRam;
+    if (totalRam <= maxBatchRam) {
+      usedRam = totalRam;
+      break;
+    }
+    growThreads--;
+  }
+
+  if (growThreads === 0) {
+    postGrowWeaken = 0;
+    usedRam = weakenThreads * wRam;
+  }
+
+  const phases = calculateRebalancePhases(
+    ns,
+    target,
+    weakenThreads,
+    growThreads,
+    postGrowWeaken,
+  );
+  return { batchRam: usedRam, phases };
 }
 
 function calculateWeakenThreads(deltaSec: number) {
-    return Math.ceil(deltaSec * 20) + 1;
+  return Math.ceil(deltaSec * 20) + 1;
 }
 
 function calculateRebalancePhases(
-    ns: NS,
-    target: string,
-    weakenThreads: number,
-    growThreads: number,
-    postGrowThreads: number,
+  ns: NS,
+  target: string,
+  weakenThreads: number,
+  growThreads: number,
+  postGrowThreads: number,
 ): BatchPhase[] {
-    const weakenTime = ns.getWeakenTime(target);
-    const growTime = ns.getGrowTime(target);
+  const weakenTime = ns.getWeakenTime(target);
+  const growTime = ns.getGrowTime(target);
 
-    let phases: BatchPhase[] = [
-        { script: '/batch/w.js', start: 0, duration: weakenTime, threads: weakenThreads },
-        { script: '/batch/g.js', start: 0, duration: growTime, threads: growThreads },
-        { script: '/batch/w.js', start: 0, duration: weakenTime, threads: postGrowThreads },
-    ];
-    // Remove phases with zero threads so we won't fail to exec a
-    // phase. This helps ensure that the batch "done" message will
-    // always be sent and allow the harvester to continue progressing.
-    phases = phases.filter(p => p.threads > 0);
-    return calculatePhaseStartTimes(phases);
+  let phases: BatchPhase[] = [
+    {
+      script: '/batch/w.js',
+      start: 0,
+      duration: weakenTime,
+      threads: weakenThreads,
+    },
+    {
+      script: '/batch/g.js',
+      start: 0,
+      duration: growTime,
+      threads: growThreads,
+    },
+    {
+      script: '/batch/w.js',
+      start: 0,
+      duration: weakenTime,
+      threads: postGrowThreads,
+    },
+  ];
+  // Remove phases with zero threads so we won't fail to exec a
+  // phase. This helps ensure that the batch "done" message will
+  // always be sent and allow the harvester to continue progressing.
+  phases = phases.filter((p) => p.threads > 0);
+  return calculatePhaseStartTimes(phases);
 }
 
 function maxHackPercentForRam(ns: NS, target: string, maxRam: number): number {
-    const minPercent = (() => {
-        if (canUseFormulas(ns)) {
-            const server = ns.getServer(target);
-            const player = ns.getPlayer();
-            return ns.formulas.hacking.hackPercent(server, player);
-        }
-        return ns.hackAnalyze(target);
-    })();
-
-    const { batchRam: minBatchRam, overlap: minOverlap } =
-        calculateBatchLogistics(ns, target, minPercent);
-
-    if (minBatchRam * minOverlap > maxRam) return minPercent;
-
-    let low = minPercent;
-    let high = CONFIG.maxHackPercent;
-    for (let i = 0; i < 16; i++) {
-        const mid = (low + high) / 2;
-        const { batchRam, overlap } = calculateBatchLogistics(ns, target, mid);
-        if (batchRam * overlap <= maxRam) {
-            low = mid;
-        } else {
-            high = mid;
-        }
+  const minPercent = (() => {
+    if (canUseFormulas(ns)) {
+      const server = ns.getServer(target);
+      const player = ns.getPlayer();
+      return ns.formulas.hacking.hackPercent(server, player);
     }
-    return low;
+    return ns.hackAnalyze(target);
+  })();
+
+  const { batchRam: minBatchRam, overlap: minOverlap } =
+    calculateBatchLogistics(ns, target, minPercent);
+
+  if (minBatchRam * minOverlap > maxRam) return minPercent;
+
+  let low = minPercent;
+  let high = CONFIG.maxHackPercent;
+  for (let i = 0; i < 16; i++) {
+    const mid = (low + high) / 2;
+    const { batchRam, overlap } = calculateBatchLogistics(ns, target, mid);
+    if (batchRam * overlap <= maxRam) {
+      low = mid;
+    } else {
+      high = mid;
+    }
+  }
+  return low;
 }
 
 /** Calculate the number of hack threads needed to steal the given
@@ -496,26 +598,26 @@ function maxHackPercentForRam(ns: NS, target: string, maxRam: number): number {
  * @returns Required hack thread count, adjusted for player hacking multipliers
  */
 export function hackThreadsForPercent(
-    ns: NS,
-    host: string,
-    percent: number,
+  ns: NS,
+  host: string,
+  percent: number,
 ): number {
-    if (percent <= 0) return 0;
+  if (percent <= 0) return 0;
 
-    let hackPercent: number;
-    if (canUseFormulas(ns)) {
-        const server = ns.getServer(host);
-        const player = ns.getPlayer();
-        hackPercent = ns.formulas.hacking.hackPercent(server, player);
-    } else {
-        hackPercent = ns.hackAnalyze(host);
-    }
+  let hackPercent: number;
+  if (canUseFormulas(ns)) {
+    const server = ns.getServer(host);
+    const player = ns.getPlayer();
+    hackPercent = ns.formulas.hacking.hackPercent(server, player);
+  } else {
+    hackPercent = ns.hackAnalyze(host);
+  }
 
-    if (hackPercent <= 0) return 0;
+  if (hackPercent <= 0) return 0;
 
-    return Math.ceil(percent / hackPercent);
+  return Math.ceil(percent / hackPercent);
 }
 
 function canUseFormulas(ns: NS): boolean {
-    return ns.fileExists("Formulas.exe", "home");
+  return ns.fileExists('Formulas.exe', 'home');
 }
