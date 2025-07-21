@@ -3,7 +3,7 @@ import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 import { GrowableMemoryClient } from "services/client/growable_memory";
 
 export async function main(ns: NS) {
-    const flags = ns.flags(MEM_TAG_FLAGS);
+    ns.flags(MEM_TAG_FLAGS);
     const client = new GrowableMemoryClient(ns);
 
     const self = ns.self();

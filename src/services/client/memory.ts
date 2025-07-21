@@ -38,7 +38,7 @@ type Payload =
     | StatusRequest
     | SnapshotRequest;
 
-type ResponsePayload = AllocationResult | FreeRam | MemorySnapshot | null;
+export type ResponsePayload = AllocationResult | FreeRam | MemorySnapshot | null;
 
 export type Message = ClientMessage<MessageType, Payload>;
 
@@ -99,11 +99,9 @@ export interface AllocationRegister {
     numChunks: number;
 }
 
-export interface StatusRequest {
-}
+export type StatusRequest = object;
 
-export interface SnapshotRequest {
-}
+export type SnapshotRequest = object;
 
 
 /**************************************************/

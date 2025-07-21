@@ -11,7 +11,7 @@ import { MemoryClient } from "services/client/memory";
 
 import { collectDependencies } from "util/dependencies";
 
-export function autocomplete(data: AutocompleteData, args: string[]): string[] {
+export function autocomplete(data: AutocompleteData): string[] {
     return data.scripts;
 }
 

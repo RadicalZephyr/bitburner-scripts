@@ -5,7 +5,7 @@ import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 import { collectDependencies } from "util/dependencies";
 
 export async function main(ns: NS) {
-    const flags = ns.flags(MEM_TAG_FLAGS);
+    ns.flags(MEM_TAG_FLAGS);
     const host = ns.self().server;
 
     // We start the Discovery service first because everything else

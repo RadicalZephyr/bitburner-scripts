@@ -16,7 +16,7 @@ import { readAllFromPort, readLoop } from "util/ports";
  * Main loop for the PortAllocator daemon.
  */
 export async function main(ns: NS) {
-    const flags = ns.flags(MEM_TAG_FLAGS);
+    ns.flags(MEM_TAG_FLAGS);
     ns.disableLog("sleep");
 
     const port = ns.getPortHandle(PORT_ALLOCATOR_PORT);
@@ -42,17 +42,19 @@ async function readRequests(
         const msg = next as Message;
         const requestId = msg[1] as string;
 
-        let payload: any;
+        let payload: number | null;
         switch (msg[0]) {
-            case MessageType.PortRequest:
+            case MessageType.PortRequest: {
                 payload = allocator.allocate();
                 ns.print(`SUCCESS: allocated port ${payload}`);
                 break;
-            case MessageType.PortRelease:
+            }
+            case MessageType.PortRelease: {
                 const rel = msg[2] as PortRelease;
                 allocator.release(rel.port);
                 ns.print(`SUCCESS: released port ${rel.port}`);
                 continue;
+            }
         }
         while (!respPort.tryWrite([requestId, payload])) {
             await ns.sleep(20);

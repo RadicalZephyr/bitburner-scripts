@@ -4,7 +4,7 @@ import { ALLOC_ID_ARG, MEM_TAG_FLAGS } from "services/client/memory_tag";
 import { MemoryClient } from "services/client/memory";
 
 export async function main(ns: NS) {
-    const flags = ns.flags(MEM_TAG_FLAGS);
+    ns.flags(MEM_TAG_FLAGS);
     const client = new MemoryClient(ns);
 
     const allocation = await client.requestTransferableAllocation(8, 300);

@@ -3,6 +3,7 @@ import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 
 import { walkNetworkBFS } from "util/walk";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const React: any;
 
 const FACTION_SERVERS = [
@@ -14,7 +15,7 @@ const FACTION_SERVERS = [
 ];
 
 export async function main(ns: NS) {
-    const flags = ns.flags(MEM_TAG_FLAGS);
+    ns.flags(MEM_TAG_FLAGS);
     ns.disableLog("ALL");
     ns.clearLog();
 
@@ -68,7 +69,9 @@ function canInstallBackdoor(ns: NS, info: Server) {
 
 /** Send a command to the terminal by simulating user input. */
 export function sendCommand(command: string): void {
-    const terminalInput: any = globalThis["terminal-input"];
+    const terminalInput = globalThis["terminal-input"];
+    if (!(terminalInput instanceof HTMLInputElement)) return;
+
     terminalInput.value = command;
     const handler = Object.keys(terminalInput)[1];
     terminalInput[handler].onChange({ target: terminalInput });

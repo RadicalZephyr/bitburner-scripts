@@ -13,13 +13,14 @@ import { MemoryClient } from "services/client/memory";
 import { CONFIG } from "services/config";
 
 import { trySendMessage } from "util/client";
+import { extend } from "util/extend";
 import { readAllFromPort, readLoop } from "util/ports";
 import { walkNetworkBFS } from "util/walk";
 import { sleep } from "util/time";
 
 
 export async function main(ns: NS) {
-    const flags = ns.flags(MEM_TAG_FLAGS);
+    ns.flags(MEM_TAG_FLAGS);
     ns.disableLog("sleep");
 
     const cracked = new Set<string>();
@@ -87,7 +88,7 @@ async function readRequests(
         const subscription = msg[2].pushUpdates;
         const validSubscription = isValidSubscription(subscription);
 
-        let payload: any = null;
+        let payload: string[] = null;
         switch (msg[0]) {
             case MessageType.RequestWorkers:
                 if (subscription && validSubscription) {
@@ -246,20 +247,3 @@ function notifySubscriptions(ns: NS, hosts: string[], subscriptions: Subscriptio
         }
     }
 }
-
-/** Efficiently extend `array` with the given `values`. */
-function extend<T>(array: T[], values: T[]): T[] {
-    const l2 = values.length;
-
-    if (l2 === 0)
-        return array;
-
-    const l1 = array.length;
-
-    array.length += l2;
-
-    for (let i = 0; i < l2; i++)
-        array[l1 + i] = values[i];
-
-    return array;
-};

@@ -14,7 +14,7 @@ import {
 import { readAllFromPort } from "util/ports";
 
 export async function main(ns: NS) {
-    const flags = ns.flags(MEM_TAG_FLAGS);
+    ns.flags(MEM_TAG_FLAGS);
     const memPort = ns.getPortHandle(MEMORY_PORT);
     const memResponsePort = ns.getPortHandle(MEMORY_RESPONSE_PORT);
 
@@ -26,7 +26,7 @@ export async function main(ns: NS) {
                 const msg = nextMsg as Message;
                 const requestId = msg[1];
                 switch (msg[0]) {
-                    case MessageType.Request:
+                    case MessageType.Request: {
                         const request = msg[2] as AllocationRequest;
                         ns.tprintf("got mem request: %s", JSON.stringify(request));
                         memResponsePort.write([
@@ -37,7 +37,8 @@ export async function main(ns: NS) {
                             }
                         ]);
                         break;
-                    case MessageType.Release:
+                    }
+                    case MessageType.Release: {
                         const rel = msg[2] as AllocationRelease;
                         ns.tprintf(
                             "received release message for allocation ID: %d pid:%d host:%s",
@@ -47,7 +48,8 @@ export async function main(ns: NS) {
                         );
                         memResponsePort.write([requestId, {}]);
                         break;
-                    case MessageType.Claim:
+                    }
+                    case MessageType.Claim: {
                         const claim = msg[2] as AllocationClaim;
                         ns.tprintf(
                             "received claim message for allocation ID: %d -> pid %d host %s",
@@ -57,11 +59,11 @@ export async function main(ns: NS) {
                         );
                         memResponsePort.write([requestId, {}]);
                         break;
-
+                    }
                 }
             }
             memMessageWaiting = false;
-            await memPort.nextWrite().then(_ => {
+            await memPort.nextWrite().then(() => {
                 memMessageWaiting = true;
             });
         }

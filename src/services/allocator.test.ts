@@ -1,6 +1,6 @@
 import type { NS, ProcessInfo } from "netscript";
 
-import { describe, expect, test } from '@jest/globals';
+import { expect, test } from '@jest/globals';
 
 import { MemoryAllocator } from "./allocator";
 
@@ -346,7 +346,7 @@ test('releaseChunks clamps requestedChunks to zero', () => {
     const id = res!.allocationId;
     const allocation = alloc.allocations.get(id)!;
     // Grow the allocation without updating requestedChunks
-    alloc.growAllocation(allocation as any, 2);
+    alloc.growAllocation(allocation, 2);
 
     const after = alloc.releaseChunks(id, 3);
     expect(after).not.toBeNull();

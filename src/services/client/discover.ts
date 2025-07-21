@@ -11,7 +11,7 @@ export enum MessageType {
 }
 
 export interface Subscription {
-    messageType: any,
+    messageType: number,
     port: number,
 }
 
@@ -28,7 +28,7 @@ export type Payload = RequestWorkers | RequestTargets | null;
 export type Message = ClientMessage<MessageType, Payload>;
 
 /** Hide communication with the discovery service behind a simple API. */
-export class DiscoveryClient extends Client<MessageType, Payload, any> {
+export class DiscoveryClient extends Client<MessageType, Payload, string[]> {
     constructor(ns: NS) {
         super(ns, DISCOVERY_PORT, DISCOVERY_RESPONSE_PORT);
     }

@@ -1,6 +1,6 @@
 import type { NS, NetscriptPort, UserInterfaceTheme } from "netscript";
 import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
-import { parseAndRegisterAlloc } from "services/client/memory";
+import { parseAndRegisterAlloc, ResponsePayload } from "services/client/memory";
 
 import {
     AllocationClaim,
@@ -25,6 +25,7 @@ import { HUD_HEIGHT, HUD_WIDTH, STATUS_WINDOW_WIDTH } from "util/ui";
 
 import { sleep } from "util/time";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const React: any;
 
 
@@ -68,7 +69,7 @@ Example:
     ns.ui.setTailTitle("Memory Allocator");
     ns.ui.resizeTail(HUD_WIDTH, HUD_HEIGHT);
 
-    const [ww, wh] = ns.ui.windowSize();
+    const [ww] = ns.ui.windowSize();
     ns.ui.moveTail(ww - ((2 * HUD_WIDTH) + STATUS_WINDOW_WIDTH), 0);
 
     const log: string[] = [];
@@ -158,9 +159,9 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memResponsePort
     for (const nextMsg of readAllFromPort(ns, memPort)) {
         const msg = nextMsg as Message;
         const requestId: string = msg[1] as string;
-        let payload: any;
+        let payload: ResponsePayload;
         switch (msg[0]) {
-            case MessageType.Worker:
+            case MessageType.Worker: {
                 const hostPayload = msg[2];
                 const hosts = Array.isArray(hostPayload) ? hostPayload : [hostPayload as string];
                 for (const h of hosts) {
@@ -168,8 +169,8 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memResponsePort
                 }
                 // Don't send a response, no one is listening.
                 continue;
-
-            case MessageType.Request:
+            }
+            case MessageType.Request: {
                 const request = msg[2] as AllocationRequest;
                 printLog(
                     `INFO: request pid=${request.pid} filename=${request.filename} ` +
@@ -199,8 +200,8 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memResponsePort
                 }
                 payload = allocation;
                 break;
-
-            case MessageType.GrowableRequest:
+            }
+            case MessageType.GrowableRequest: {
                 const growReq = msg[2] as GrowableAllocationRequest;
                 printLog(
                     `INFO: growable request pid=${growReq.pid} filename=${growReq.filename} ` +
@@ -227,8 +228,8 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memResponsePort
                 }
                 payload = growAlloc;
                 break;
-
-            case MessageType.Release:
+            }
+            case MessageType.Release: {
                 const release = msg[2] as AllocationRelease;
                 if (memoryManager.deallocate(release.allocationId, release.pid, release.hostname)) {
                     printLog(
@@ -242,8 +243,8 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memResponsePort
                 }
                 // Don't send a response, no one is listening.
                 continue;
-
-            case MessageType.ClaimRelease:
+            }
+            case MessageType.ClaimRelease: {
                 const claimRel = msg[2] as AllocationClaimRelease;
                 if (memoryManager.releaseClaim(claimRel.allocationId, claimRel.pid, claimRel.hostname)) {
                     printLog(
@@ -257,8 +258,8 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memResponsePort
                 }
                 // Don't send a response, no one is listening.
                 continue;
-
-            case MessageType.ReleaseChunks:
+            }
+            case MessageType.ReleaseChunks: {
                 const releaseInfo = msg[2] as AllocationChunksRelease;
                 printLog(
                     `INFO: release ${releaseInfo.numChunks} chunks from ` +
@@ -269,8 +270,8 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memResponsePort
                     releaseInfo.numChunks,
                 );
                 break;
-
-            case MessageType.Register:
+            }
+            case MessageType.Register: {
                 const reg = msg[2] as AllocationRegister;
                 printLog(
                     `INFO: register pid=${reg.pid} host=${reg.hostname} ` +
@@ -280,17 +281,17 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memResponsePort
                 memoryManager.registerAllocation(reg);
                 // Don't send a response, no one is listening.
                 continue;
-
-            case MessageType.Status:
+            }
+            case MessageType.Status: {
                 payload = { freeRam: memoryManager.getFreeRamTotal() };
                 break;
-
-            case MessageType.Snapshot:
+            }
+            case MessageType.Snapshot: {
                 printLog(`INFO: processing snapshot request ${requestId}`);
                 payload = memoryManager.getSnapshot();
                 break;
-
-            case MessageType.Claim:
+            }
+            case MessageType.Claim: {
                 const claimInfo = msg[2] as AllocationClaim;
                 if (memoryManager.claimAllocation(claimInfo)) {
                     printLog(
@@ -304,6 +305,7 @@ function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memResponsePort
                 }
                 // Don't send a response, no one is listening.
                 continue;
+            }
         }
         // TODO: make this more robust when the response port is full
         memResponsePort.write([requestId, payload]);
@@ -399,7 +401,7 @@ function LogDisplay({ lines, theme }: LogDisplayProps) {
 interface MemoryRowProps {
     worker: Worker;
     rowIndex: number;
-    cellStyle: any;
+    cellStyle: object;
     theme: UserInterfaceTheme;
 }
 
