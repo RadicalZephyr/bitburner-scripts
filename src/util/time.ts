@@ -1,10 +1,15 @@
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+/* eslint-disable @typescript-eslint/no-explicit-any --
+ *
+ * These functions can actually take any arguments to pass to their
+   callback so `any` is appropriate here.
+ */
+
 type SetInterval = (
     handler: TimerHandler,
     timeout?: number,
     ...args: any[]
 ) => number;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 type SetTimeout = (
     handler: TimerHandler,
     timeout?: number,

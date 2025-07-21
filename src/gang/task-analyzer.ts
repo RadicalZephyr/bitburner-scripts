@@ -137,10 +137,10 @@ export class TaskAnalyzer {
         for (const f of fields) {
             avg[f] = sums[f] / names.length;
         }
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         const firstMemberNonNumber = pickByType(
             firstMember,
-            (v): v is any => typeof v !== 'number',
+            (v): v is any => typeof v !== 'number', // eslint-disable-line @typescript-eslint/no-explicit-any
         );
         return { ...firstMemberNonNumber, ...avg };
     }
