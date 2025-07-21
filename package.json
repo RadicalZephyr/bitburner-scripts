@@ -33,6 +33,7 @@
     "eslint": "^9.31.0",
     "fast-glob": "^3.2.12",
     "jest": "^30.0.4",
+    "prettier": "3.6.2",
     "sync-directory": "^6.0.5",
     "ts-jest": "^29.4.0",
     "typescript": "^5.8.3",
