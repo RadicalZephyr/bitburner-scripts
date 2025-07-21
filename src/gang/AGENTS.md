@@ -8,3 +8,9 @@
 * When making changes or enhancements to the design of the gang
   manager update the spec in `GANG_MANAGER_SPEC.md` to match the
   implementation.
+
+`GANG_MANAGER_SPEC.md` outlines a phased approach for building a full
+gang management system. It details the expected APIs, the progression
+from a minimal MVP to advanced features like territory warfare, and the
+data needed for decision making. Review it before modifying the gang
+scripts so the implementation stays aligned with the plan.

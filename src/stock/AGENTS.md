@@ -13,3 +13,9 @@
   commission.
 * When making changes or enhancements to the design of the stock
   tracker and trader update the spec in `STOCK_TRACKER_SPEC.md`.
+
+`STOCK_TRACKER_SPEC.md` describes the architecture of the stock
+tracking daemon and trader. It lays out how price data is collected,
+which indicators are exposed to clients and how trading decisions are
+made. Refer to the spec when implementing new features so the code and
+documentation remain in sync.

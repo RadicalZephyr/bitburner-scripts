@@ -102,3 +102,16 @@ RAM on each server has been claimed by various scripts so we can avoid
 scripts failing because they tried to `ns.exec` a script on a host
 with not enough memory. The batch hacking system makes extensive use
 of the memory allocator to run it's various scripts.
+
+### Additional Documentation
+
+The batch system is further described in two markdown documents in the
+`docs/` folder:
+
+- [`docs/batch-system-diagram.md`](../../docs/batch-system-diagram.md)
+  contains a flowchart showing how the batch scripts and supporting
+  services communicate.
+- [`docs/memory-management.md`](../../docs/memory-management.md)
+  discusses the design of the memory allocator and approaches for
+  releasing RAM. Both are useful background when modifying the batch
+  scripts or the memory services they rely on.
