@@ -107,8 +107,8 @@ export class Config<Entries extends ReadonlyArray<readonly [string, ConfigValue]
     }
 
     private registerConfig<N extends string, V extends ConfigValue>(spec: readonly [N, V]) {
-        let localStorageKey = this._prefix + "_" + spec[0];
-        let [ser, de] = getSerDeFor(spec[1]) as SerDe<any>;
+        const localStorageKey = this._prefix + "_" + spec[0];
+        const [ser, de] = getSerDeFor(spec[1]) as SerDe<any>;
 
         this.defaultSetters.push(() => setConfigDefault(localStorageKey, ser(spec[1])));
 

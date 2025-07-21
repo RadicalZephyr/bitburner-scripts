@@ -56,7 +56,7 @@ OPTIONS
         return;
     }
 
-    let maxRam = flags['max-ram'];
+    const maxRam = flags['max-ram'];
     if (maxRam !== -1) {
         if (typeof maxRam !== 'number' || maxRam <= 0) {
             ns.tprint('--max-ram must be a positive number');
@@ -64,7 +64,7 @@ OPTIONS
         }
     }
 
-    let target = rest[0];
+    const target = rest[0];
     if (typeof target !== 'string' || !ns.serverExists(target)) {
         ns.tprintf("target %s does not exist", target);
         return;
@@ -81,18 +81,18 @@ OPTIONS
 
     let lastHeartbeat = 0;
 
-    let hackPercent = maxRam !== -1
+    const hackPercent = maxRam !== -1
         ? maxHackPercentForRam(ns, target, maxRam)
         : CONFIG.maxHackPercent;
 
     if (maxRam !== -1 && hackPercent === 0) {
         ns.tprint(`max-ram ${ns.formatRam(maxRam)} is too small for one batch`);
-        let logistics = calculateBatchLogistics(ns, target);
+        const logistics = calculateBatchLogistics(ns, target);
         ns.tprint(`Minimal batch:\n${JSON.stringify(logistics, null, 2)}`);
         return;
     }
 
-    let logistics = calculateBatchLogistics(ns, target, hackPercent);
+    const logistics = calculateBatchLogistics(ns, target, hackPercent);
     let overlapLimit = logistics.overlap;
     if (maxRam !== -1) {
         overlapLimit = Math.min(overlapLimit, Math.floor(maxRam / logistics.batchRam));
@@ -117,8 +117,8 @@ OPTIONS
     // to fit within the batch size that we originally allocated
     const batchRam = logistics.batchRam;
 
-    let memClient = new GrowableMemoryClient(ns);
-    let allocation = await memClient.requestGrowableAllocation(batchRam, overlapLimit, { shrinkable: true });
+    const memClient = new GrowableMemoryClient(ns);
+    const allocation = await memClient.requestGrowableAllocation(batchRam, overlapLimit, { shrinkable: true });
     if (!allocation) return;
 
     allocation.releaseAtExit(ns);
@@ -140,7 +140,7 @@ OPTIONS
     // Launch one batch per allocated chunk so that the pipeline is
     // fully populated before entering the steady state loop.
     for (const host of hosts) {
-        let batchPids = await spawnBatch(ns, host, target, logistics.phases, donePortId, allocation.allocationId);
+        const batchPids = await spawnBatch(ns, host, target, logistics.phases, donePortId, allocation.allocationId);
         batches.push(batchPids);
         currentBatches++;
         if (Date.now() >= lastHeartbeat + CONFIG.heartbeatCadence) {
@@ -204,7 +204,7 @@ OPTIONS
         batchIndex = currentBatches % hosts.length;
         const host = hosts[batchIndex];
 
-        let lastScriptPid = batches[batchIndex]?.at(-1);
+        const lastScriptPid = batches[batchIndex]?.at(-1);
         if (typeof lastScriptPid === "number") {
             if (finishedPort.peek() === "NULL PORT DATA") {
                 await finishedPort.nextWrite();
@@ -237,7 +237,7 @@ OPTIONS
                 phases = rebalance.phases;
             }
         } else {
-            let logistics = calculateBatchLogistics(ns, target, hackPercent);
+            const logistics = calculateBatchLogistics(ns, target, hackPercent);
             phases = logistics.phases;
 
             const desiredOverlap = Math.min(overlapLimit, logistics.overlap);
@@ -267,7 +267,7 @@ OPTIONS
             }
         }
 
-        let batchPids = await spawnBatch(ns, host, target, phases, donePortId, allocation.allocationId);
+        const batchPids = await spawnBatch(ns, host, target, phases, donePortId, allocation.allocationId);
         if (batchPids.length > 0) {
             batches[batchIndex] = batchPids;
             currentBatches++;
@@ -395,9 +395,9 @@ export function calculateRebalanceBatchLogistics(
     const wRam = ns.getScriptRam('/batch/w.js', 'home');
     const gRam = ns.getScriptRam('/batch/g.js', 'home');
 
-    let minSec = ns.getServerMinSecurityLevel(target);
-    let curSec = ns.getServerSecurityLevel(target);
-    let deltaSec = curSec - minSec;
+    const minSec = ns.getServerMinSecurityLevel(target);
+    const curSec = ns.getServerSecurityLevel(target);
+    const deltaSec = curSec - minSec;
     let weakenThreads = calculateWeakenThreads(deltaSec);
     let usedRam = weakenThreads * wRam;
 

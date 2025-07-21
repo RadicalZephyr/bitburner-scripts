@@ -23,14 +23,14 @@ declare global {
 
 export async function main(ns: NS) {
     const flags = ns.flags(MEM_TAG_FLAGS);
-    let scriptName = ns.getScriptName();
-    let contractPortNum = ns.args[0];
+    const scriptName = ns.getScriptName();
+    const contractPortNum = ns.args[0];
     if (typeof contractPortNum !== 'number') {
         ns.tprintf('%s contract run with non-number answer port argument', scriptName);
         return;
     }
 
-    let contractDataJSON = ns.args[1];
+    const contractDataJSON = ns.args[1];
     if (typeof contractDataJSON !== 'string') {
         ns.tprintf('%s contract run with non-string data argument. Must be a JSON string of the contract data.', scriptName);
         return;
@@ -41,15 +41,15 @@ export async function main(ns: NS) {
     // string we read contains quotation marks that need to be
     // stripped. We could use JSON.parse for this, but it seems
     // simpler to just directly strip the quotation marks.
-    let contractData: bigint = BigInt(contractDataJSON.substring(1, contractDataJSON.length - 1));
+    const contractData: bigint = BigInt(contractDataJSON.substring(1, contractDataJSON.length - 1));
     ns.tprintf('contract data: %s', contractData.toString());
-    let answer = solve(contractData);
+    const answer = solve(contractData);
     ns.writePort(contractPortNum, answer.toString());
 }
 
 export function solve(data: bigint): bigint {
-    let s = data;
-    let s_str = s.toString();
+    const s = data;
+    const s_str = s.toString();
 
     // Base an estimate on the square root as such `S = a * (10 **
     // 2n)` which implies that `sqrt(S) = sqrt(a) * (10 ** n)`, where
@@ -57,20 +57,20 @@ export function solve(data: bigint): bigint {
 
     // Calculate sqrt(a), where a is the two most significant digits
     // of s
-    let a = Math.round(Math.sqrt(JSON.parse(s_str.substring(0, 2))));
+    const a = Math.round(Math.sqrt(JSON.parse(s_str.substring(0, 2))));
     // Calculate n from  for the exponent
-    let n = Math.floor((s_str.length - 2) / 2);
+    const n = Math.floor((s_str.length - 2) / 2);
 
     let x_n = BigInt(a) * (10n ** BigInt(n));
 
     // Now iteratively calculate better approximations to the square
     // root of S using Heron's Method
-    let two = BigInt(2);
+    const two = BigInt(2);
 
     while (!(x_n * x_n < s && (x_n + 1n) * (x_n + 1n) > s)) {
         // Exit if a perfect root is found
         if (x_n * x_n == s) return x_n;
-        let x_n1 = (x_n + (s / x_n)) / 2n;
+        const x_n1 = (x_n + (s / x_n)) / 2n;
         // No change in the estimate, time to exit
         if (x_n == x_n1) break;
         x_n = x_n1;

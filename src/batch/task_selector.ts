@@ -63,13 +63,13 @@ export async function main(ns: NS) {
     const taskSelectorPort = ns.getPortHandle(TASK_SELECTOR_PORT);
     const responsePort = ns.getPortHandle(TASK_SELECTOR_RESPONSE_PORT);
 
-    let discovery = new DiscoveryClient(ns);
-    let monitor = new MonitorClient(ns);
-    let memory = new MemoryClient(ns);
-    let manager = new TaskSelector(ns, monitor);
+    const discovery = new DiscoveryClient(ns);
+    const monitor = new MonitorClient(ns);
+    const memory = new MemoryClient(ns);
+    const manager = new TaskSelector(ns, monitor);
 
     ns.print(`INFO: requesting targets from Discovery service`);
-    let targets = await discovery.requestTargets({ messageType: MessageType.NewTarget, port: TASK_SELECTOR_PORT });
+    const targets = await discovery.requestTargets({ messageType: MessageType.NewTarget, port: TASK_SELECTOR_PORT });
 
     ns.print(`INFO: received targets from Discovery service: ${targets.join(", ")}`);
     for (const target of targets) {
@@ -91,10 +91,10 @@ async function readHostsFromPort(
     manager: TaskSelector,
     monitor: MonitorClient
 ) {
-    for (let nextMsg of readAllFromPort(ns, managerPort)) {
+    for (const nextMsg of readAllFromPort(ns, managerPort)) {
         if (typeof nextMsg === "object") {
-            let nextHostMsg = nextMsg as Message;
-            let payload = nextHostMsg[2];
+            const nextHostMsg = nextMsg as Message;
+            const payload = nextHostMsg[2];
             switch (nextHostMsg[0]) {
                 case MessageType.NewTarget:
                     const targets = Array.isArray(payload) ? payload : [payload as string];
@@ -471,7 +471,7 @@ class TaskSelector {
 
     private async launchSow(host: string, threads: number) {
         this.ns.print(`INFO: launching sow on ${host}`);
-        let result = await launch(
+        const result = await launch(
             this.ns,
             "/batch/sow.js",
             {
@@ -498,8 +498,8 @@ class TaskSelector {
 
     private async launchHarvest(host: string, maxRam?: number) {
         this.ns.print(`INFO: launching harvest on ${host}`);
-        let args = maxRam !== undefined ? [host, "--max-ram", maxRam] : [host];
-        let result = await launch(
+        const args = maxRam !== undefined ? [host, "--max-ram", maxRam] : [host];
+        const result = await launch(
             this.ns,
             "/batch/harvest.js",
             {

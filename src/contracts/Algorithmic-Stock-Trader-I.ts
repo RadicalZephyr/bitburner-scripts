@@ -16,20 +16,20 @@ import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 
 export async function main(ns: NS) {
     const flags = ns.flags(MEM_TAG_FLAGS);
-    let scriptName = ns.getScriptName();
-    let contractPortNum = ns.args[0];
+    const scriptName = ns.getScriptName();
+    const contractPortNum = ns.args[0];
     if (typeof contractPortNum !== 'number') {
         ns.tprintf('%s contract run with non-number answer port argument', scriptName);
         return;
     }
-    let contractDataJSON = ns.args[1];
+    const contractDataJSON = ns.args[1];
     if (typeof contractDataJSON !== 'string') {
         ns.tprintf('%s contract run with non-string data argument. Must be a JSON string containing file, host and contract data.', scriptName);
         return;
     }
-    let contractData: any = JSON.parse(contractDataJSON);
+    const contractData: any = JSON.parse(contractDataJSON);
     ns.tprintf('contract data: %s', JSON.stringify(contractData));
-    let answer = solve(contractData);
+    const answer = solve(contractData);
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
 
@@ -40,11 +40,11 @@ type Trade = {
 };
 
 export function solve(data: number[]): any {
-    let profitableTrades: Trade[] = [];
+    const profitableTrades: Trade[] = [];
     for (let i = 0; i < data.length - 1; ++i) {
         for (let j = i + 1; j < data.length; ++j) {
             if (data[i] < data[j]) {
-                let trade = {
+                const trade = {
                     startDay: i,
                     endDay: j,
                     amount: data[j] - data[i]

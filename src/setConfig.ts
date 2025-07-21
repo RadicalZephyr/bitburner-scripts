@@ -43,12 +43,12 @@ Example:
         return;
     }
 
-    let key = rest[0];
+    const key = rest[0];
     if (typeof key !== 'string') {
         ns.tprint("this key isn't a string");
         return;
     }
-    let value = rest[1];
+    const value = rest[1];
 
     for (const config of [BatchConfig, GangConfig, ServiceConfig, StockConfig, HacknetConfig, CorpConfig]) {
         if (Object.hasOwn(config, key)) {

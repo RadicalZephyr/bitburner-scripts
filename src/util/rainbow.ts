@@ -22,7 +22,7 @@ function* variations(word: string) {
 
 async function tryBrute(ns: NS, bag: string[], maxLen = 12) {
     for (let len = 1; len <= maxLen; len++) {
-        let calls = 0;
+        const calls = 0;
         const idx = Array(len).fill(0);
         while (true) {
             const pw = idx.map(i => bag[i]).join('');

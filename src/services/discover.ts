@@ -232,7 +232,7 @@ function registerSubscriber(ns: NS, subscription: ClientSubscription, subscripti
 
 function notifySubscriptions(ns: NS, hosts: string[], subscriptions: Subscription[]) {
     for (const sub of subscriptions) {
-        let hostsToSend = [...sub.missedUpdates, ...hosts];
+        const hostsToSend = [...sub.missedUpdates, ...hosts];
         if (trySendMessage(ns.getPortHandle(sub.port), sub.messageType, hostsToSend)) {
             // Reset failed notifications when we succeed in sending them
             sub.failedNotifications = 0;
@@ -249,16 +249,16 @@ function notifySubscriptions(ns: NS, hosts: string[], subscriptions: Subscriptio
 
 /** Efficiently extend `array` with the given `values`. */
 function extend<T>(array: T[], values: T[]): T[] {
-    var l2 = values.length;
+    const l2 = values.length;
 
     if (l2 === 0)
         return array;
 
-    var l1 = array.length;
+    const l1 = array.length;
 
     array.length += l2;
 
-    for (var i = 0; i < l2; i++)
+    for (let i = 0; i < l2; i++)
         array[l1 + i] = values[i];
 
     return array;

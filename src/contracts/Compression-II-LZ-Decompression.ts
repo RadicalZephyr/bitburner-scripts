@@ -34,20 +34,20 @@ import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 
 export async function main(ns: NS) {
     const flags = ns.flags(MEM_TAG_FLAGS);
-    let scriptName = ns.getScriptName();
-    let contractPortNum = ns.args[0];
+    const scriptName = ns.getScriptName();
+    const contractPortNum = ns.args[0];
     if (typeof contractPortNum !== 'number') {
         ns.tprintf('%s contract run with non-number answer port argument', scriptName);
         return;
     }
-    let contractDataJSON = ns.args[1];
+    const contractDataJSON = ns.args[1];
     if (typeof contractDataJSON !== 'string') {
         ns.tprintf('%s contract run with non-string data argument. Must be a JSON string containing file, host and contract data.', scriptName);
         return;
     }
-    let contractData: any = JSON.parse(contractDataJSON);
+    const contractData: any = JSON.parse(contractDataJSON);
     ns.tprintf('contract data: %s', JSON.stringify(contractData));
-    let answer = solve(contractData);
+    const answer = solve(contractData);
     ns.writePort(contractPortNum, answer);
 }
 
@@ -67,7 +67,7 @@ export function solve(data: string): string {
     let nextChunkType = ChunkType.Literal;
 
     while (i < data.length) {
-        let len = parseInt(data[i]);
+        const len = parseInt(data[i]);
 
         switch (nextChunkType) {
             case ChunkType.Literal:
@@ -83,8 +83,8 @@ export function solve(data: string): string {
             case ChunkType.BackRef:
                 if (len > 0 && isDigit(data[i + 1])) {
                     // Back reference to uncompressed data
-                    let charsBack = parseInt(data[i + 1]);
-                    let start = uncompressed.length - charsBack;
+                    const charsBack = parseInt(data[i + 1]);
+                    const start = uncompressed.length - charsBack;
                     for (let j = start; j < start + len; ++j) {
                         uncompressed += uncompressed[j];
                     }

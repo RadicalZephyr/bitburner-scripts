@@ -5,11 +5,11 @@ import { CONTRACTS } from "all-contracts";
 
 export async function main(ns: NS) {
     const flags = ns.flags(MEM_TAG_FLAGS);
-    let failures = {};
+    const failures = {};
 
     for (const contract of CONTRACTS) {
         if (contract.answer !== "null") {
-            let reward = ns.codingcontract.attempt(contract.answer, contract.file, contract.host);
+            const reward = ns.codingcontract.attempt(contract.answer, contract.file, contract.host);
             if (reward) {
                 ns.tprintf("solved %s, %s", contract.type, reward);
             } else {
@@ -23,7 +23,7 @@ export async function main(ns: NS) {
     }
 
     for (const contractType in failures) {
-        let contractFailures = failures[contractType];
+        const contractFailures = failures[contractType];
         ns.tprintf("failed %s contracts of type %s:", contractFailures.length, contractType);
 
         for (const contract of contractFailures) {

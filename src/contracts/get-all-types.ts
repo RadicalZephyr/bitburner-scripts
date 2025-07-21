@@ -3,7 +3,7 @@ import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 
 export async function main(ns: NS) {
     const flags = ns.flags(MEM_TAG_FLAGS);
-    let contractTypes = ns.codingcontract.getContractTypes().map(contractType => {
+    const contractTypes = ns.codingcontract.getContractTypes().map(contractType => {
         return contractType.replace(':', '').replaceAll(' ', '-');
     });
     ns.tprintf('%s', JSON.stringify(contractTypes));

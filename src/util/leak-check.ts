@@ -51,17 +51,17 @@ function checkWorkers(ns: NS, allocations: AllocationSnapshot[], workers: Worker
             for (const alloc of allocations) {
                 if (ns.isRunning(alloc.pid) || !alloc.hosts.find(h => h.hostname == w.hostname)) continue;
 
-                let allocClaims = alloc.claims.filter((c) => c.hostname === w.hostname && !ns.isRunning(c.pid));
+                const allocClaims = alloc.claims.filter((c) => c.hostname === w.hostname && !ns.isRunning(c.pid));
                 if (allocClaims.length > 0) {
-                    let claims = allocClaims.map(c => `\n    ${c.filename} claimed ${c.numChunks}x${ns.formatRam(c.chunkSize)}`);
+                    const claims = allocClaims.map(c => `\n    ${c.filename} claimed ${c.numChunks}x${ns.formatRam(c.chunkSize)}`);
                     ns.print(
                         `INFO: allocating process ${alloc.pid} running ${alloc.filename}` +
                         `\n  claims: ${claims}`
                     );
                 } else {
-                    let chunkSize = alloc.hosts[0]?.chunkSize;
-                    let hosts = alloc.hosts.map(h => h.hostname);
-                    let totalChunks = alloc.hosts.reduce((sum, h) => sum + h.numChunks, 0);
+                    const chunkSize = alloc.hosts[0]?.chunkSize;
+                    const hosts = alloc.hosts.map(h => h.hostname);
+                    const totalChunks = alloc.hosts.reduce((sum, h) => sum + h.numChunks, 0);
                     ns.print(
                         `INFO: allocating process ${alloc.pid} running ${alloc.filename} ` +
                         `has an unused allocation ${alloc.allocationId} of ${totalChunks}x${ns.formatRam(chunkSize)}`
@@ -80,11 +80,11 @@ function checkWorkers(ns: NS, allocations: AllocationSnapshot[], workers: Worker
 
 function checkAllocations(ns: NS, allocations: AllocationSnapshot[]): void {
     for (const alloc of allocations) {
-        let runningScript = ns.getRunningScript(alloc.pid);
+        const runningScript = ns.getRunningScript(alloc.pid);
         if (!runningScript && alloc.claims.length === 0) {
-            let chunkSize = alloc.hosts[0]?.chunkSize;
-            let hosts = alloc.hosts.map(h => h.hostname);
-            let totalChunks = alloc.hosts.reduce((sum, h) => sum + h.numChunks, 0);
+            const chunkSize = alloc.hosts[0]?.chunkSize;
+            const hosts = alloc.hosts.map(h => h.hostname);
+            const totalChunks = alloc.hosts.reduce((sum, h) => sum + h.numChunks, 0);
             ns.print(`ERROR: allocating process ${alloc.pid} running ${alloc.filename} on ${hosts.join(", ")} has exited and no ` +
                 `other process has claimed this allocation of ${totalChunks}x${ns.formatRam(chunkSize)}`);
         }
@@ -101,7 +101,7 @@ function checkAllocations(ns: NS, allocations: AllocationSnapshot[]): void {
             }
         }
         for (const claim of alloc.claims) {
-            let runningScript = ns.getRunningScript(claim.pid, claim.hostname);
+            const runningScript = ns.getRunningScript(claim.pid, claim.hostname);
             if (!runningScript || runningScript.filename !== claim.filename) {
                 ns.print(`ERROR: exited claimaint process ${claim.pid} running ` +
                     `${claim.filename} on ${claim.hostname} still has an ` +
@@ -117,7 +117,7 @@ function crossCheck(ns: NS, snapshot: MemorySnapshot): void {
             .flatMap(a => a.hosts)
             .filter(h => h.hostname === worker.hostname)
             .reduce((sum, h) => sum + h.chunkSize * h.numChunks, 0);
-        let usedRam = worker.allocatedRam;
+        const usedRam = worker.allocatedRam;
         if (Math.abs(total - usedRam) > 0.001) {
             ns.print(
                 `ERROR: worker ${worker.hostname} reports ${ns.formatRam(usedRam)} ` +

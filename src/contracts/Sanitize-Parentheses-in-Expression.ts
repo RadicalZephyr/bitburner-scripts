@@ -25,20 +25,20 @@ import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 
 export async function main(ns: NS) {
     const flags = ns.flags(MEM_TAG_FLAGS);
-    let scriptName = ns.getScriptName();
-    let contractPortNum = ns.args[0];
+    const scriptName = ns.getScriptName();
+    const contractPortNum = ns.args[0];
     if (typeof contractPortNum !== 'number') {
         ns.tprintf('%s contract run with non-number answer port argument', scriptName);
         return;
     }
-    let contractDataJSON = ns.args[1];
+    const contractDataJSON = ns.args[1];
     if (typeof contractDataJSON !== 'string') {
         ns.tprintf('%s contract run with non-string data argument. Must be a JSON string containing file, host and contract data.', scriptName);
         return;
     }
-    let contractData: any = JSON.parse(contractDataJSON);
+    const contractData: any = JSON.parse(contractDataJSON);
     ns.tprintf('contract data: %s', JSON.stringify(contractData));
-    let answer = solve(contractData);
+    const answer = solve(contractData);
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
 
@@ -47,16 +47,16 @@ export function solve(data: string): any {
         return [data];
     }
 
-    let parenPositions = findParenPositions(data);
-    let solutions = uniqueBalancedParens(data, parenPositions.map((x) => [x]));
+    const parenPositions = findParenPositions(data);
+    const solutions = uniqueBalancedParens(data, parenPositions.map((x) => [x]));
 
     if (solutions.length > 0) {
         return solutions;
     }
 
     for (let m = 2; m < parenPositions.length; m++) {
-        let idxChoices = [...choose(parenPositions, m)];
-        let solutions = uniqueBalancedParens(data, idxChoices);
+        const idxChoices = [...choose(parenPositions, m)];
+        const solutions = uniqueBalancedParens(data, idxChoices);
 
         if (solutions.length > 0) {
             return solutions;
@@ -66,17 +66,17 @@ export function solve(data: string): any {
 }
 
 function uniqueBalancedParens(data: string, idxChoices: number[][]): string[] {
-    let balancedParens: string[] = idxChoices
+    const balancedParens: string[] = idxChoices
         .map((is) => {
             is.sort((a, b) => b - a);
-            let s = data.split('');
+            const s = data.split('');
             for (const i of is) {
                 s.splice(i, 1);
             }
             return s.join('');
         })
         .filter(s => areParensBalanced(s));
-    let uniqueBalancedParens = new Set(balancedParens);
+    const uniqueBalancedParens = new Set(balancedParens);
     return [...uniqueBalancedParens];
 }
 
@@ -100,15 +100,15 @@ function areParensBalanced(s: string): boolean {
 }
 
 function* choose<T>(a: T[], m: number): Iterable<T[]> {
-    let n = a.length;
-    let c = [];
+    const n = a.length;
+    const c = [];
     for (let i = 0; i != m; i++) {
         c.push(a[n - m + i]);
     }
     yield [...c];
-    let p = initTwiddle(m, n);
+    const p = initTwiddle(m, n);
     while (true) {
-        let [done, x, _y, z] = twiddle(p);
+        const [done, x, _y, z] = twiddle(p);
         if (done) {
             return;
         }
@@ -118,7 +118,7 @@ function* choose<T>(a: T[], m: number): Iterable<T[]> {
 }
 
 function initTwiddle(m: number, n: number): number[] {
-    let p = [];
+    const p = [];
     p.push(n + 1);
     let i;
     for (i = 1; i != n - m + 1; i++) {
@@ -159,7 +159,7 @@ function twiddle(p: number[]): [boolean, number, number, number] {
         do {
             j++;
         } while (p[j] > 0);
-        let k = j - 1;
+        const k = j - 1;
         let i = j;
         while (p[i] == 0) {
             p[i++] = -1;

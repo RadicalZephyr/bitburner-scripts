@@ -6,4 +6,4 @@ export type ContractData = {
     answer: any
 };
 
-export let CONTRACTS: ContractData[] = [];
+export const CONTRACTS: ContractData[] = [];

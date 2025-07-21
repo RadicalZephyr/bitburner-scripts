@@ -112,15 +112,15 @@ export async function spawnBatch(ns: NS, host: HostDesignation, target: string, 
     }
 
     const scripts = Array.from(new Set(phases.map(p => p.script)));
-    let dependencies = scripts.map(script => collectDependencies(ns, script)).reduce((c, s) => c.union(s));
+    const dependencies = scripts.map(script => collectDependencies(ns, script)).reduce((c, s) => c.union(s));
     ns.scp([...scripts, ...dependencies], hostname, "home");
 
-    let pids = [];
+    const pids = [];
     for (const [idx, phase] of phases.map((phase, idx) => [idx, phase] as [number, BatchPhase])) {
         if (phase.threads <= 0) continue;
         const script = phase.script;
 
-        let lastArg = idx === phases.length - 1 ? donePort : -1;
+        const lastArg = idx === phases.length - 1 ? donePort : -1;
 
         let retryCount = 0;
         while (true) {

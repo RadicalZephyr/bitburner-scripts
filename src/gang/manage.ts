@@ -105,7 +105,7 @@ function splitMembers(ns: NS, memberNames: string[]): [GangMemberInfo | null, Ga
     const lvl = isHackingGang ? hackLevel : combatLevel;
     const ascResultMult = isHackingGang ? hackResultMult : combatResultMult;
 
-    let members = memberNames.map(m => ns.gang.getMemberInformation(m));
+    const members = memberNames.map(m => ns.gang.getMemberInformation(m));
     members.sort((a, b) => ascMult(a) - ascMult(b));
 
     let ascendingMember: GangMemberInfo | null = null;

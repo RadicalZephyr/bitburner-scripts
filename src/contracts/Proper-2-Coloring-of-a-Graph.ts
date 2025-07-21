@@ -31,26 +31,26 @@ import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 
 export async function main(ns: NS) {
     const flags = ns.flags(MEM_TAG_FLAGS);
-    let scriptName = ns.getScriptName();
-    let contractPortNum = ns.args[0];
+    const scriptName = ns.getScriptName();
+    const contractPortNum = ns.args[0];
     if (typeof contractPortNum !== 'number') {
         ns.tprintf('%s contract run with non-number answer port argument', scriptName);
         return;
     }
-    let contractDataJSON = ns.args[1];
+    const contractDataJSON = ns.args[1];
     if (typeof contractDataJSON !== 'string') {
         ns.tprintf('%s contract run with non-string data argument. Must be a JSON string containing file, host and contract data.', scriptName);
         return;
     }
-    let contractData: any = JSON.parse(contractDataJSON);
+    const contractData: any = JSON.parse(contractDataJSON);
     ns.tprintf('contract data: %s', JSON.stringify(contractData));
-    let answer = solve(contractData);
+    const answer = solve(contractData);
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
 
 export function solve(data: any): any {
-    let [numVertices, edges] = data;
-    let graph = new Graph(numVertices, edges);
+    const [numVertices, edges] = data;
+    const graph = new Graph(numVertices, edges);
 
     for (let v = 0; v < numVertices; v++) {
         if (graph.getColor(v) === undefined) {
@@ -105,7 +105,7 @@ class Graph {
     adjacency: Map<number, Set<number>>;
 
     constructor(numVertices: number, edges: Edge[]) {
-        let vertices: Vertex[] = Array.from({ length: numVertices }, (_v, i) => { return { label: i }; });
+        const vertices: Vertex[] = Array.from({ length: numVertices }, (_v, i) => { return { label: i }; });
         this.vertices = vertices;
         this.edges = edges;
         this.adjacency = makeAdjacencyTable(vertices, edges);
@@ -129,7 +129,7 @@ class Graph {
 }
 
 function makeAdjacencyTable(vertices: Vertex[], edges: Edge[]): Map<number, Set<number>> {
-    let adjacencyTable = new Map();
+    const adjacencyTable = new Map();
     for (const v of vertices) {
         adjacencyTable.set(v.label, new Set());
     }

@@ -15,13 +15,13 @@ export function autocomplete(data: AutocompleteData, _args: string[]): string[] 
 
 export async function main(ns: NS) {
     const flags = ns.flags(MEM_TAG_FLAGS);
-    let target = ns.args[0];
+    const target = ns.args[0];
     if (typeof target !== 'string' || !ns.serverExists(target)) {
         ns.tprintf("target %s does not exist", target);
         return;
     }
 
-    let eValue = expectedValuePerRamSecond(ns, target);
+    const eValue = expectedValuePerRamSecond(ns, target);
     ns.tprint(`${target} ${eValue}`);
 }
 
@@ -136,8 +136,8 @@ export function analyzeBatchThreads(
  */
 export function growthAnalyze(ns: NS, hostname: string, afterHackMoney: number): number {
     if (canUseFormulas(ns)) {
-        let server = ns.getServer(hostname);
-        let player = ns.getPlayer();
+        const server = ns.getServer(hostname);
+        const player = ns.getPlayer();
         server.moneyAvailable = afterHackMoney;
         return Math.ceil(
             ns.formulas.hacking.growThreads(server, player, server.moneyMax)

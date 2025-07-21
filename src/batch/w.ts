@@ -17,7 +17,7 @@ export async function main(ns: NS) {
         sleepTime = 1;
     }
 
-    let donePortId = args[2];
+    const donePortId = args[2];
 
     ns.atExit(() => {
         if (typeof donePortId === 'number' && donePortId !== -1) {

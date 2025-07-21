@@ -51,7 +51,7 @@ OPTIONS
         return;
     }
 
-    let maxThreads = flags['max-threads'];
+    const maxThreads = flags['max-threads'];
     if (maxThreads !== -1) {
         if (typeof maxThreads !== 'number' || maxThreads <= 0) {
             ns.tprint('--max-threads must be a positive number');
@@ -59,13 +59,13 @@ OPTIONS
         }
     }
 
-    let target = rest[0];
+    const target = rest[0];
     if (typeof target !== 'string' || !ns.serverExists(target)) {
         ns.tprintf("target %s does not exist", target);
         return;
     }
 
-    let taskSelectorClient = new TaskSelectorClient(ns);
+    const taskSelectorClient = new TaskSelectorClient(ns);
 
     const maxGrowThreads = neededGrowThreads(ns, target);
     const maxWeakenThreads = weakenAnalyze(ns.growthAnalyzeSecurity(maxGrowThreads));
@@ -97,7 +97,7 @@ OPTIONS
 
     const memClient = new GrowableMemoryClient(ns);
     const allocOptions = { coreDependent: true, shrinkable: true };
-    let allocation = await memClient.requestGrowableAllocation(batchRam, maxOverlap, allocOptions);
+    const allocation = await memClient.requestGrowableAllocation(batchRam, maxOverlap, allocOptions);
     if (!allocation) {
         ns.tprint("ERROR: failed to allocate memory for sow batches");
         return;

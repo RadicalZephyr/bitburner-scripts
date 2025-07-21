@@ -2,7 +2,7 @@ import type { NS, UserInterfaceTheme } from "netscript";
 
 import { CONFIG } from "corp/config";
 
-declare var React: any;
+declare let React: any;
 
 export async function main(ns: NS) {
     ns.disableLog("ALL");

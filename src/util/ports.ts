@@ -12,7 +12,7 @@ export const DONE_SENTINEL: string = "PORT CLOSED";
  */
 export function* readAllFromPort(ns: NS, port: NetscriptPort) {
     while (true) {
-        let nextMsg = port.read();
+        const nextMsg = port.read();
         if (typeof nextMsg === "string" && (nextMsg === EMPTY_SENTINEL || nextMsg === DONE_SENTINEL)) {
             return;
         }

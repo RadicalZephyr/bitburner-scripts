@@ -50,23 +50,23 @@ OPTIONS
 
     const shouldRenameServers = !options['no-rename'];
 
-    let upgradeSpendPercentage = options.spend;
+    const upgradeSpendPercentage = options.spend;
 
     // Find the highest amount of RAM we can purchase a full complement
     // of servers at right now
-    let ram = getHighestPurchasableRamLevel(ns, options.min, upgradeSpendPercentage);
+    const ram = getHighestPurchasableRamLevel(ns, options.min, upgradeSpendPercentage);
     reportServerComplementCost(ns, ram);
 
     if (options['dry-run']) return;
 
-    let memoryClient = new MemoryClient(ns);
+    const memoryClient = new MemoryClient(ns);
 
-    let serverLimit = ns.getPurchasedServerLimit();
-    let currentServers = ns.getPurchasedServers();
+    const serverLimit = ns.getPurchasedServerLimit();
+    const currentServers = ns.getPurchasedServers();
 
     // Buy as many new servers as we can
-    let neededServers = serverLimit - currentServers.length;
-    let serverCost = ns.getPurchasedServerCost(ram);
+    const neededServers = serverLimit - currentServers.length;
+    const serverCost = ns.getPurchasedServerCost(ram);
 
     for (let i = 0; i < neededServers; ++i) {
         if (ns.getServerMoneyAvailable("home") < serverCost) {
@@ -76,13 +76,13 @@ OPTIONS
             await ns.sleep(1000);
         }
 
-        let hostname = ns.purchaseServer(serverName(ram, i), ram);
+        const hostname = ns.purchaseServer(serverName(ram, i), ram);
         if (hostname !== "") {
             await memoryClient.newWorker(hostname);
         }
     }
 
-    let ramOrderedServers = currentServers
+    const ramOrderedServers = currentServers
         .map(host => {
             return { "host": host, ram: ns.getServerMaxRam(host) };
         })
@@ -97,7 +97,7 @@ OPTIONS
 
     // Upgrade all current servers to the new RAM tier
     for (let i = 0; i < ramOrderedServers.length; ++i) {
-        let oldHostname = ramOrderedServers[i];
+        const oldHostname = ramOrderedServers[i];
 
         // Make sure this is actually an upgrade
         if (ns.getServerMaxRam(oldHostname) < ram) {
@@ -108,9 +108,9 @@ OPTIONS
             while (ns.getServerMoneyAvailable("home") < serverCost) {
                 await ns.sleep(1000);
             }
-            let upgradeResult = ns.upgradePurchasedServer(oldHostname, ram);
+            const upgradeResult = ns.upgradePurchasedServer(oldHostname, ram);
             if (upgradeResult) {
-                let newHostname = serverName(ram, i);
+                const newHostname = serverName(ram, i);
                 if (shouldRenameServers && ns.renamePurchasedServer(oldHostname, newHostname)) {
                     await memoryClient.newWorker(newHostname);
                 }
@@ -125,17 +125,17 @@ function serverName(ram: number, i: number) {
 }
 
 function formatGigaBytes(value: number): string {
-    var s = ['GB', 'TB', 'PB'];
-    var e = Math.floor(Math.log(value) / Math.log(1024));
+    const s = ['GB', 'TB', 'PB'];
+    const e = Math.floor(Math.log(value) / Math.log(1024));
     return (value / Math.pow(1024, e)).toFixed(0) + s[e];
 }
 
 /** Return the maximum amount of ram that can be purchased.
  */
 function getHighestPurchasableRamLevel(ns: NS, minRam: number, percentageSpend: number): number {
-    let maxServers = ns.getPurchasedServerLimit();
-    let maxServerTierSpend = ns.getServerMoneyAvailable("home") * percentageSpend;
-    let maxPerServerSpend = maxServerTierSpend / maxServers;
+    const maxServers = ns.getPurchasedServerLimit();
+    const maxServerTierSpend = ns.getServerMoneyAvailable("home") * percentageSpend;
+    const maxPerServerSpend = maxServerTierSpend / maxServers;
 
     // Double minimum RAM so return division returns the right amount
     let ram = minRam * 2;
@@ -150,8 +150,8 @@ function getHighestPurchasableRamLevel(ns: NS, minRam: number, percentageSpend: 
 /** Print the cost breakdown of a server tier with `ram` memory.
  */
 export function reportServerComplementCost(ns: NS, ram: number): void {
-    let maxServers = ns.getPurchasedServerLimit();
-    let serverCost = ns.getPurchasedServerCost(ram);
-    let totalCost = maxServers * serverCost;
+    const maxServers = ns.getPurchasedServerLimit();
+    const serverCost = ns.getPurchasedServerCost(ram);
+    const totalCost = maxServers * serverCost;
     ns.tprint(`you can buy ${maxServers} servers with ${ns.formatRam(ram)} of RAM for $${ns.formatNumber(serverCost)} per server for a total of $${ns.formatNumber(totalCost)}`);
 }

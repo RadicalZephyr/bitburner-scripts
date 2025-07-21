@@ -44,22 +44,22 @@ OPTIONS
         return;
     }
 
-    let goalHost = rest[0];
+    const goalHost = rest[0];
     if (typeof goalHost !== 'string' || !ns.serverExists(goalHost)) {
         ns.tprintf("goal host %s does not exist", goalHost);
         return;
     }
 
-    let network = walkNetworkBFS(ns);
-    let allHosts = new Set(network.keys());
+    const network = walkNetworkBFS(ns);
+    const allHosts = new Set(network.keys());
     if (!allHosts.has(goalHost)) {
         ns.tprint("Did not find goal host %s during network scan");
         return;
     }
 
-    let shortestPaths = dijkstra(network, flags.startingHost);
+    const shortestPaths = dijkstra(network, flags.startingHost);
 
-    let S = [];
+    const S = [];
     let u = goalHost;
 
     if (shortestPaths.get(u) !== null) {
@@ -105,9 +105,9 @@ OPTIONS
  * @param {string} source
  */
 export function dijkstra(network: Map<string, string[]>, source: string): Map<string, string> {
-    let Q: Set<string> = new Set();
-    let dist = new Map();
-    let prev = new Map();
+    const Q: Set<string> = new Set();
+    const dist = new Map();
+    const prev = new Map();
     for (const v of network.keys()) {
         dist.set(v, +Infinity);
         prev.set(v, null);
@@ -115,12 +115,12 @@ export function dijkstra(network: Map<string, string[]>, source: string): Map<st
     }
     dist.set(source, 0);
     while (Array.from(Q.keys()).length > 0) {
-        let u = min_distance(dist, Q);
+        const u = min_distance(dist, Q);
         Q.delete(u);
-        let neighbours = network.get(u);
-        let unvisitedNeighbours = neighbours.filter(v => Q.has(v));
+        const neighbours = network.get(u);
+        const unvisitedNeighbours = neighbours.filter(v => Q.has(v));
         for (const v of unvisitedNeighbours) {
-            let alt = dist.get(u) + 1;
+            const alt = dist.get(u) + 1;
             if (alt < dist.get(v) && dist.get(u) != Infinity) {
                 dist.set(v, alt);
                 prev.set(v, u);

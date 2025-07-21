@@ -21,20 +21,20 @@ import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 
 export async function main(ns: NS) {
     const flags = ns.flags(MEM_TAG_FLAGS);
-    let scriptName = ns.getScriptName();
-    let contractPortNum = ns.args[0];
+    const scriptName = ns.getScriptName();
+    const contractPortNum = ns.args[0];
     if (typeof contractPortNum !== 'number') {
         ns.tprintf('%s contract run with non-number answer port argument', scriptName);
         return;
     }
-    let contractDataJSON = ns.args[1];
+    const contractDataJSON = ns.args[1];
     if (typeof contractDataJSON !== 'string') {
         ns.tprintf('%s contract run with non-string data argument. Must be a JSON string containing file, host and contract data.', scriptName);
         return;
     }
-    let contractData: any = JSON.parse(contractDataJSON);
+    const contractData: any = JSON.parse(contractDataJSON);
     ns.tprintf('contract data: %s', JSON.stringify(contractData));
-    let answer = solve(contractData);
+    const answer = solve(contractData);
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
 
@@ -52,7 +52,7 @@ function mergeRanges(acc: Range[], next: Range): Range[] {
         return [next];
     }
 
-    let last: Range = acc.at(-1);
+    const last: Range = acc.at(-1);
 
     // Sorting means that `last[0] <= next[0]`, so checking if
     // next.start < last.end means these two ranges overlap.

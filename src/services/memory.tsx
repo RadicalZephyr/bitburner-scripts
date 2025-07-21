@@ -37,7 +37,7 @@ export async function main(ns: NS) {
         ...MEM_TAG_FLAGS
     ]);
 
-    let refreshRate = flags['refresh-rate'];
+    const refreshRate = flags['refresh-rate'];
     const rest = flags._ as string[];
     if (rest.length !== 0 || flags.help || typeof refreshRate != 'number') {
         ns.tprint(`
@@ -80,10 +80,10 @@ Example:
         }
     };
 
-    let memPort = ns.getPortHandle(MEMORY_PORT);
-    let memResponsePort = ns.getPortHandle(MEMORY_RESPONSE_PORT);
+    const memPort = ns.getPortHandle(MEMORY_PORT);
+    const memResponsePort = ns.getPortHandle(MEMORY_RESPONSE_PORT);
 
-    let memoryManager = new MemoryAllocator(ns, printLog);
+    const memoryManager = new MemoryAllocator(ns, printLog);
 
     printLog(`INFO: starting memory manager on ${ns.self().server}`);
 
@@ -93,10 +93,10 @@ Example:
         memoryManager.pushWorker("home", 8);
     }
 
-    let discoveryClient = new DiscoveryClient(ns);
+    const discoveryClient = new DiscoveryClient(ns);
 
     printLog(`INFO: requesting workers from Discover service`);
-    let workers = await discoveryClient.requestWorkers({ messageType: MessageType.Worker, port: MEMORY_PORT });
+    const workers = await discoveryClient.requestWorkers({ messageType: MessageType.Worker, port: MEMORY_PORT });
 
     printLog(`INFO: received workers from Discover service: ${workers.join(", ")}`);
     for (const worker of workers) {
@@ -113,7 +113,7 @@ Example:
         numChunks: 1
     });
 
-    let collectionRate = 1000 * 10;
+    const collectionRate = 1000 * 10;
 
     let lastRender = 0;
     let lastCollection = Date.now();
@@ -123,7 +123,7 @@ Example:
     readLoop(ns, memPort, async () => readMemRequestsFromPort(ns, memPort, memResponsePort, memoryManager));
 
     while (true) {
-        let now = Date.now();
+        const now = Date.now();
 
         memoryManager.checkHomeForRamIncrease();
 
@@ -156,7 +156,7 @@ Example:
 
 function readMemRequestsFromPort(ns: NS, memPort: NetscriptPort, memResponsePort: NetscriptPort, memoryManager: MemoryAllocator) {
     for (const nextMsg of readAllFromPort(ns, memPort)) {
-        let msg = nextMsg as Message;
+        const msg = nextMsg as Message;
         const requestId: string = msg[1] as string;
         let payload: any;
         switch (msg[0]) {
@@ -429,10 +429,10 @@ function MemoryBar({ worker, theme }: MemoryBarProps) {
     const usedSeg = Math.min(segments, setAsideSeg + reservedSeg + allocSeg);
     const freeSeg = segments - usedSeg;
 
-    let setAsideBar = "|".repeat(setAsideSeg);
-    let reservedBar = "|".repeat(reservedSeg);
-    let allocBar = "|".repeat(allocSeg);
-    let freeBar = "-".repeat(freeSeg);
+    const setAsideBar = "|".repeat(setAsideSeg);
+    const reservedBar = "|".repeat(reservedSeg);
+    const allocBar = "|".repeat(allocSeg);
+    const freeBar = "-".repeat(freeSeg);
 
     return <>
         <span key="s" style={{ color: theme.infolight }}>{setAsideBar}</span>
@@ -444,7 +444,7 @@ function MemoryBar({ worker, theme }: MemoryBarProps) {
 
 function calculateBarSegments(segmentRam: number, totalRam: number, segments: number): number {
     if (segmentRam > 1 && totalRam > 0) {
-        let numSegments = (segmentRam / totalRam) * segments;
+        const numSegments = (segmentRam / totalRam) * segments;
         return numSegments > 0 && numSegments < 1 ? 1 : Math.round(numSegments);
     } else {
         return 0;

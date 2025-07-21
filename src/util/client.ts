@@ -84,7 +84,7 @@ export async function sendMessageReceiveResponse<Type, Payload, ResponsePayload>
         // first message, then it's probably coming later and other
         // client's messages are before it in the port.
         while (!receivePort.empty()) {
-            let nextMessage = receivePort.peek() as Response<ResponsePayload>;
+            const nextMessage = receivePort.peek() as Response<ResponsePayload>;
             if (nextMessage[0] === requestId) {
                 // N.B. Important to pop our message from the port so
                 // other messages can be processed!

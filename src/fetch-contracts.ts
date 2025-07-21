@@ -79,17 +79,17 @@ OPTIONS
         return;
     }
 
-    let network = walkNetworkBFS(ns);
-    let allHosts = Array.from(network.keys());
+    const network = walkNetworkBFS(ns);
+    const allHosts = Array.from(network.keys());
 
     const contractPortNum = 266; // "CON"
     const contractFile = /\.cct/;
 
-    let contractPort = ns.getPortHandle(contractPortNum);
-    let contracts: ContractData[] = [];
+    const contractPort = ns.getPortHandle(contractPortNum);
+    const contracts: ContractData[] = [];
 
-    let incompleteScriptContracts = [];
-    let missingScriptContracts = [];
+    const incompleteScriptContracts = [];
+    const missingScriptContracts = [];
 
     let count = 0;
 
@@ -97,23 +97,23 @@ OPTIONS
     for (const host of allHosts) {
         if (host == "home") { continue; }
 
-        let files = ns.ls(host).filter(file => contractFile.test(file));
+        const files = ns.ls(host).filter(file => contractFile.test(file));
         for (const file of files) {
-            let contractType = ns.codingcontract.getContractType(file, host).replace(':', '').replaceAll(' ', '-');
+            const contractType = ns.codingcontract.getContractType(file, host).replace(':', '').replaceAll(' ', '-');
 
             if (flags.test !== null && flags.test !== contractType) {
                 continue;
             }
 
-            let data = ns.codingcontract.getData(file, host);
-            let dataJson = JSON.stringify(data, (key, value) =>
+            const data = ns.codingcontract.getData(file, host);
+            const dataJson = JSON.stringify(data, (key, value) =>
                 typeof value === "bigint" ? value.toString() : value);
 
-            let contract: ContractData = { type: contractType, file: file, host: host, data: dataJson, answer: null };
+            const contract: ContractData = { type: contractType, file: file, host: host, data: dataJson, answer: null };
 
             let contractScriptName = ns.sprintf('/contracts/%s.js', contractType)
             if (!ns.fileExists(contractScriptName)) {
-                let incompleteContractScriptName = ns.sprintf('/contracts/incomplete/%s.js', contractType)
+                const incompleteContractScriptName = ns.sprintf('/contracts/incomplete/%s.js', contractType)
                 if (ns.fileExists(incompleteContractScriptName)) {
                     incompleteScriptContracts.push(contract);
 
@@ -132,7 +132,7 @@ OPTIONS
                 }
             }
 
-            let pid = ns.run(contractScriptName, 1, contractPortNum, dataJson);
+            const pid = ns.run(contractScriptName, 1, contractPortNum, dataJson);
             if (pid === 0) {
                 ns.tprintf('failed to run script for contract %s from host %s', contractType, contract['host']);
             }
@@ -158,7 +158,7 @@ OPTIONS
             }
         }
     }
-    let incompleteContractTypes = [...new Set(incompleteScriptContracts.map((c) => c.type))];
+    const incompleteContractTypes = [...new Set(incompleteScriptContracts.map((c) => c.type))];
     if (incompleteContractTypes.length > 0) {
         incompleteContractTypes.sort();
         ns.tprintf('\ncontracts with an incomplete solution: %s', JSON.stringify(incompleteContractTypes, null, 2));
@@ -171,7 +171,7 @@ OPTIONS
         }
     }
 
-    let allContractsFile = "all-contracts.js";
-    let fileData = ns.sprintf('export let CONTRACTS = %s;', JSON.stringify(contracts, null, 2));
+    const allContractsFile = "all-contracts.js";
+    const fileData = ns.sprintf('export let CONTRACTS = %s;', JSON.stringify(contracts, null, 2));
     ns.write(allContractsFile, fileData, 'w');
 }

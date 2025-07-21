@@ -15,19 +15,19 @@ import { readAllFromPort } from "util/ports";
 
 export async function main(ns: NS) {
     const flags = ns.flags(MEM_TAG_FLAGS);
-    let memPort = ns.getPortHandle(MEMORY_PORT);
-    let memResponsePort = ns.getPortHandle(MEMORY_RESPONSE_PORT);
+    const memPort = ns.getPortHandle(MEMORY_PORT);
+    const memResponsePort = ns.getPortHandle(MEMORY_RESPONSE_PORT);
 
     let memMessageWaiting = true;
 
     while (true) {
         if (memMessageWaiting) {
             for (const nextMsg of readAllFromPort(ns, memPort)) {
-                let msg = nextMsg as Message;
+                const msg = nextMsg as Message;
                 const requestId = msg[1];
                 switch (msg[0]) {
                     case MessageType.Request:
-                        let request = msg[2] as AllocationRequest;
+                        const request = msg[2] as AllocationRequest;
                         ns.tprintf("got mem request: %s", JSON.stringify(request));
                         memResponsePort.write([
                             requestId,

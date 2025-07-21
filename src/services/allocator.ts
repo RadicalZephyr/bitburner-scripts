@@ -78,7 +78,7 @@ export class MemoryAllocator {
     /** Check if the home server has increased in RAM. */
     checkHomeForRamIncrease() {
         if (this.workers.has("home")) {
-            let home = this.workers.get("home");
+            const home = this.workers.get("home");
             home.updateRam();
         }
     }
@@ -100,7 +100,7 @@ export class MemoryAllocator {
         for (const [id, allocation] of this.allocations.entries()) {
             if (allocation.claims.length === 0 && !this.ns.isRunning(allocation.pid)) {
                 for (const c of allocation.chunks) {
-                    let worker = this.workers.get(c.hostname);
+                    const worker = this.workers.get(c.hostname);
                     if (worker) {
                         worker.free(c.chunkSize * c.numChunks);
                     }
@@ -223,7 +223,7 @@ export class MemoryAllocator {
             return null;
         }
 
-        let workers = Array.from(this.workers.values());
+        const workers = Array.from(this.workers.values());
 
         const purchased = new Set(this.ns.getPurchasedServers());
 
@@ -266,7 +266,7 @@ export class MemoryAllocator {
             }
         }
 
-        let chunks: AllocationChunk[] = [];
+        const chunks: AllocationChunk[] = [];
         let remainingChunks = numChunks;
 
         for (const worker of workers) {

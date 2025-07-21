@@ -20,24 +20,24 @@ import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 
 export async function main(ns: NS) {
     const flags = ns.flags(MEM_TAG_FLAGS);
-    let scriptName = ns.getScriptName();
-    let contractPortNum = ns.args[0];
+    const scriptName = ns.getScriptName();
+    const contractPortNum = ns.args[0];
     if (typeof contractPortNum !== 'number') {
         ns.tprintf('%s contract run with non-number answer port argument', scriptName);
         return;
     }
-    let contractDataJSON = ns.args[1];
+    const contractDataJSON = ns.args[1];
     if (typeof contractDataJSON !== 'string') {
         ns.tprintf('%s contract run with non-string data argument. Must be a JSON string containing file, host and contract data.', scriptName);
         return;
     }
-    let contractData: any = JSON.parse(contractDataJSON);
+    const contractData: any = JSON.parse(contractDataJSON);
     ns.tprintf('contract data: %s', JSON.stringify(contractData));
-    let answer = solve(contractData);
+    const answer = solve(contractData);
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
 
-export let data = "2261743611";
+export const data = "2261743611";
 
 export function solve(data: string): any {
     if (data.length < 4 || data.length > 12) {
@@ -45,11 +45,11 @@ export function solve(data: string): any {
         // Addresses
         return null;
     }
-    let permutations = PERMUTATIONS[data.length - 4];
+    const permutations = PERMUTATIONS[data.length - 4];
 
     return permutations.map(p => {
-        let [[s1, e1], [s2, e2], [s3, e3], [s4, e4]] = p;
-        let ip: Ip = [
+        const [[s1, e1], [s2, e2], [s3, e3], [s4, e4]] = p;
+        const ip: Ip = [
             data.slice(s1, e1),
             data.slice(s2, e2),
             data.slice(s3, e3),
@@ -69,7 +69,7 @@ function is_valid_ip(ip: Ip): boolean {
             return false;
         }
 
-        let octet_num = Number(octet);
+        const octet_num = Number(octet);
         if (typeof octet_num !== "number" || octet_num < 0 || octet_num > 255) {
             return false;
         }

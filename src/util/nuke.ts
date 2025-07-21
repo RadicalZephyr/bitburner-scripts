@@ -25,7 +25,7 @@ export const portOpeningPrograms: PortProgram[] = [
 /** Get list of all hosts.
  */
 export function getAllHosts(ns: NS): string[] {
-    let existingHosts = publicHosts.filter(h => ns.serverExists(h));
+    const existingHosts = publicHosts.filter(h => ns.serverExists(h));
     return ['home', ...getOwnedServers(ns), ...existingHosts];
 }
 
@@ -83,10 +83,10 @@ export function canNuke(ns: NS, host: string): boolean {
     if (ns.hasRootAccess(host)) { return true; }
 
     // Get number of open ports needed
-    let portsNeeded = ns.getServerNumPortsRequired(host);
+    const portsNeeded = ns.getServerNumPortsRequired(host);
 
     // Check for existence of enough port opening programs
-    let existingPrograms = portOpeningPrograms.filter(p => ns.fileExists(p));
+    const existingPrograms = portOpeningPrograms.filter(p => ns.fileExists(p));
     return existingPrograms.length >= portsNeeded;
 }
 

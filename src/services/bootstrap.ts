@@ -64,19 +64,19 @@ async function startPort(ns: NS, host: string) {
 }
 
 function manualLaunch(ns: NS, script: string, hostname: string) {
-    let dependencies = collectDependencies(ns, script);
-    let files = [script, ...dependencies];
+    const dependencies = collectDependencies(ns, script);
+    const files = [script, ...dependencies];
     if (!ns.scp(files, hostname, "home")) {
-        let error = `failed to send files to ${hostname}`;
+        const error = `failed to send files to ${hostname}`;
         ns.toast(error, "error");
         ns.print(`ERROR: ${error}`);
         ns.ui.openTail();
         return;
     }
 
-    let pid = ns.exec(script, hostname);
+    const pid = ns.exec(script, hostname);
     if (pid === 0) {
-        let error = `failed to launch ${script} on ${hostname}`;
+        const error = `failed to launch ${script} on ${hostname}`;
         ns.toast(error, "error");
         ns.print(`ERROR: ${error}`);
         ns.ui.openTail();

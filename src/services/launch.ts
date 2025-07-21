@@ -45,38 +45,38 @@ OPTIONS
 `);
         return;
     }
-    let script = rest.shift();
+    const script = rest.shift();
     if (typeof script !== 'string' || !ns.fileExists(script)) {
         ns.tprint('script must be an existing script');
         return;
     }
 
-    let threads = flags.threads;
+    const threads = flags.threads;
     if (typeof threads !== 'number') {
         ns.tprint('--threads must be a number');
         return;
     }
 
-    let ram_override = flags.ram_override;
+    const ram_override = flags.ram_override;
     if (ram_override !== null && typeof ram_override !== 'number') {
         ns.tprint('--ram_override must be a number');
         return;
     }
 
-    let coreDependent = flags['core-dependent'];
+    const coreDependent = flags['core-dependent'];
     if (typeof coreDependent !== 'boolean') {
         ns.tprint('--core-dependent must be a boolean');
         return;
     }
 
-    let longRunning = flags['long-running'];
+    const longRunning = flags['long-running'];
     if (typeof longRunning !== 'boolean') {
         ns.tprint('--long-running must be a boolean');
         return;
     }
 
-    let args = rest;
-    let options: LaunchRunOptions = {
+    const args = rest;
+    const options: LaunchRunOptions = {
         threads: threads,
         ramOverride: ram_override as number,
         coreDependent: coreDependent,
@@ -85,7 +85,7 @@ OPTIONS
 
     ns.tprint(`${script} ${JSON.stringify(options)} ${JSON.stringify(args)}`);
 
-    let result = await launch(ns, script, options, ...args);
+    const result = await launch(ns, script, options, ...args);
 
     result.allocation.releaseAtExit(ns);
 
@@ -104,8 +104,8 @@ OPTIONS
  * the home server when possible.
  */
 export async function launch(ns: NS, script: string, threadOrOptions?: number | LaunchRunOptions, ...args: ScriptArg[]) {
-    let scriptRam = ns.getScriptRam(script, "home");
-    let client = new MemoryClient(ns);
+    const scriptRam = ns.getScriptRam(script, "home");
+    const client = new MemoryClient(ns);
 
     let totalThreads: number;
     let coreDependent = false;
@@ -120,7 +120,7 @@ export async function launch(ns: NS, script: string, threadOrOptions?: number | 
         explicitDependencies = threadOrOptions.dependencies ?? [];
     }
 
-    let allocation = await client.requestTransferableAllocation(
+    const allocation = await client.requestTransferableAllocation(
         scriptRam,
         totalThreads,
         {
@@ -134,16 +134,16 @@ export async function launch(ns: NS, script: string, threadOrOptions?: number | 
         return null;
     }
 
-    let dependencies = Array.from(collectDependencies(ns, script));
-    let pids = [];
+    const dependencies = Array.from(collectDependencies(ns, script));
+    const pids = [];
     for (const allocationChunk of allocation.allocatedChunks) {
-        let hostname = allocationChunk.hostname;
-        let threadsHere = allocationChunk.numChunks;
+        const hostname = allocationChunk.hostname;
+        const threadsHere = allocationChunk.numChunks;
 
         if (isNaN(threadsHere)) continue;
 
         ns.scp([...dependencies, ...explicitDependencies], hostname, "home");
-        let pid = ns.exec(script, hostname, threadsHere, ...args, ALLOC_ID_ARG, allocation.allocationId);
+        const pid = ns.exec(script, hostname, threadsHere, ...args, ALLOC_ID_ARG, allocation.allocationId);
         if (!pid) {
             ns.tprintf("failed to spawn %d threads of %s on %s", threadsHere, script, hostname);
         } else {

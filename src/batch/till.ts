@@ -44,7 +44,7 @@ OPTIONS
         return;
     }
 
-    let maxThreads = flags['max-threads'];
+    const maxThreads = flags['max-threads'];
     if (maxThreads !== -1) {
         if (typeof maxThreads !== 'number' || maxThreads <= 0) {
             ns.tprint('--max-threads must be a positive number');
@@ -53,7 +53,7 @@ OPTIONS
         }
     }
 
-    let target = rest[0];
+    const target = rest[0];
     if (typeof target !== 'string' || !ns.serverExists(target)) {
         ns.tprintf("target %s does not exist", target);
         return;
@@ -76,8 +76,8 @@ OPTIONS
         return;
     }
 
-    let requestThreads = maxThreadsCap;
-    let allocation = await memClient.requestGrowableAllocation(
+    const requestThreads = maxThreadsCap;
+    const allocation = await memClient.requestGrowableAllocation(
         scriptRam,
         requestThreads,
         {
@@ -141,9 +141,9 @@ OPTIONS
  *  `target` back to its minimum security level.
  */
 export function calculateWeakenThreads(ns: NS, target: string): number {
-    let minSec = ns.getServerMinSecurityLevel(target);
-    let curSec = ns.getServerSecurityLevel(target);
-    let deltaSec = curSec - minSec;
+    const minSec = ns.getServerMinSecurityLevel(target);
+    const curSec = ns.getServerSecurityLevel(target);
+    const deltaSec = curSec - minSec;
 
     if (deltaSec <= 0 || isNaN(deltaSec)) return 0;
 

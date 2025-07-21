@@ -31,17 +31,17 @@ OPTIONS
         return;
     }
 
-    let shareScript = "/share.js";
-    let maxRam = options['max-ram'];
-    let share_percent = options['share-percent'];
+    const shareScript = "/share.js";
+    const maxRam = options['max-ram'];
+    const share_percent = options['share-percent'];
 
-    let ownedHosts = ns.getPurchasedServers();
+    const ownedHosts = ns.getPurchasedServers();
     await shareHosts(ns, ownedHosts, shareScript, share_percent, maxRam);
 
-    let network = walkNetworkBFS(ns);
-    let allHosts = Array.from(network.keys());
+    const network = walkNetworkBFS(ns);
+    const allHosts = Array.from(network.keys());
 
-    let hosts = usableHosts(ns, allHosts);
+    const hosts = usableHosts(ns, allHosts);
 
     await shareHosts(ns, hosts, shareScript, share_percent, maxRam);
 }
@@ -55,7 +55,7 @@ async function shareHosts(ns: NS, hosts: string[], shareScript: string, shareAmo
     for (const host of hosts) {
         if (maxRam < ns.getServerMaxRam(host))
             continue;
-        let threads = numThreads(ns, host, shareScript, shareAmount);
+        const threads = numThreads(ns, host, shareScript, shareAmount);
         if (threads > 0) {
             ns.printf("calculated num threads of %d", threads);
             ns.scp(shareScript, host, 'home');
@@ -74,8 +74,8 @@ export function availableRam(ns: NS, node: string): number {
  */
 export function numThreads(ns: NS, node: string, hackScript: string, percentage?: number): number {
     percentage = percentage ? percentage : 1.0;
-    let hackScriptRam = ns.getScriptRam(hackScript, "home");
-    let availableNodeRam = availableRam(ns, node);
+    const hackScriptRam = ns.getScriptRam(hackScript, "home");
+    const availableNodeRam = availableRam(ns, node);
     return Math.floor(availableNodeRam * percentage / hackScriptRam);
 }
 
@@ -114,10 +114,10 @@ export function canNuke(ns: NS, host: string): boolean {
     if (ns.hasRootAccess(host)) { return true; }
 
     // Get number of open ports needed
-    let portsNeeded = ns.getServerNumPortsRequired(host);
+    const portsNeeded = ns.getServerNumPortsRequired(host);
 
     // Check for existence of enough port opening programs
-    let existingPrograms = portOpeningPrograms.filter(p => ns.fileExists(p));
+    const existingPrograms = portOpeningPrograms.filter(p => ns.fileExists(p));
     return existingPrograms.length >= portsNeeded;
 }
 

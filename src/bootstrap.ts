@@ -30,16 +30,16 @@ const BOOTSTRAP_SCRIPTS = [
 ];
 
 export async function dynamicBootstrap(_ns: NS) {
-    let ns = _ns as DynImportNS;
+    const ns = _ns as DynImportNS;
 
     let currentDynamicRam = ns.ramOverride();;
 
     for (const script of BOOTSTRAP_SCRIPTS) {
-        let scriptRam = ns.getScriptRam(script);
+        const scriptRam = ns.getScriptRam(script);
 
         currentDynamicRam = ns.ramOverride(Math.max(currentDynamicRam, scriptRam));
 
-        let mod = await ns.dynamicImport(script) as ImportedScript;
+        const mod = await ns.dynamicImport(script) as ImportedScript;
         await mod.main(ns);
 
         await ns.sleep(10);

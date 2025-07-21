@@ -66,7 +66,7 @@ export function getLimitedRawProduction(
 function checkCongestion(ns: NS, division: string, city: CityName, outputs: (Material | Product)[]): boolean {
     const key = `${division}|${city}`;
     let counter = WarehouseCongestionData[key] ?? 0;
-    let stalled = outputs.every(o => o.productionAmount === 0);
+    const stalled = outputs.every(o => o.productionAmount === 0);
     counter = stalled ? counter + 1 : 0;
     WarehouseCongestionData[key] = counter;
     if (counter > 5) {

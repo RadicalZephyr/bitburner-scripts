@@ -42,8 +42,8 @@ OPTIONS
         return;
     }
 
-    let network = walkNetworkBFS(ns);
-    let allHosts = [...network.keys()];
+    const network = walkNetworkBFS(ns);
+    const allHosts = [...network.keys()];
 
     const localeCompare = (a, b) => a.localeCompare(b);
 

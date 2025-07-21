@@ -117,7 +117,7 @@ Example:
     readLoop(ns, monitorPort, async () => readMonitorMessages(ns, monitorPort, workers, lifecycleByHost));
 
     while (true) {
-        let threadsByTarget = countThreadsByTarget(ns, workers, Array.from(lifecycleByHost.keys()));
+        const threadsByTarget = countThreadsByTarget(ns, workers, Array.from(lifecycleByHost.keys()));
 
         tableSortings.harvesting.data = [];
         tableSortings.pendingHarvesting.data = [];
@@ -165,7 +165,7 @@ Example:
                 phaseTargets.sort(sortByFn(phase));
         }
 
-        let theme = ns.ui.getTheme();
+        const theme = ns.ui.getTheme();
 
         ns.clearLog();
         ns.printRaw(<>
@@ -271,16 +271,16 @@ export class TargetThreads {
 }
 
 export function countThreadsByTarget(ns: NS, workers: string[], targets: string[]): Map<string, TargetThreads> {
-    let targetThreads = new Map(targets.map(h => [h, new TargetThreads()]));
+    const targetThreads = new Map(targets.map(h => [h, new TargetThreads()]));
 
     for (const worker of workers) {
         for (const pi of ns.ps(worker)) {
 
-            let target = pi.args[0] === ALLOC_ID_ARG ? pi.args[2] : pi.args[0];
+            const target = pi.args[0] === ALLOC_ID_ARG ? pi.args[2] : pi.args[0];
 
             if (typeof target != 'string') continue;
 
-            let targetThread = targetThreads.get(target);
+            const targetThread = targetThreads.get(target);
             if (!targetThread) {
                 continue;
             }
@@ -418,7 +418,7 @@ function Header({ children, field, sortedBy, setTableSorting }: IHeaderSettings)
     let decB = (<></>);
     let decA = (<></>);
     if (sortedBy.key === field) {
-        let arrow = (sortedBy.dir === Dir.Asc ? "⮝" : "⮟");
+        const arrow = (sortedBy.dir === Dir.Asc ? "⮝" : "⮟");
         decB = <DecB arrow={arrow} />;
         decA = <DecA arrow={arrow} />;
     }

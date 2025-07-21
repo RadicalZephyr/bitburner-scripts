@@ -9,10 +9,10 @@ export async function main(ns: NS) {
     const flags = ns.flags(MEM_TAG_FLAGS);
     ns.disableLog("sleep");
 
-    let script = "/bootstrap.js";
-    let dependencies = collectDependencies(ns, script);
-    let files = [script, ...dependencies];
-    let hostname = "foodnstuff";
+    const script = "/bootstrap.js";
+    const dependencies = collectDependencies(ns, script);
+    const files = [script, ...dependencies];
+    const hostname = "foodnstuff";
 
     if (!ns.scp(files, hostname, "home")) {
         reportError(ns, `failed to send files to ${hostname}`);
@@ -24,7 +24,7 @@ export async function main(ns: NS) {
         return;
     }
 
-    let pid = ns.exec(script, hostname);
+    const pid = ns.exec(script, hostname);
     if (pid === 0) {
         reportError(ns, `failed to launch ${script} on ${hostname}`);
         return;

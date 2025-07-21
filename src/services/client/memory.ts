@@ -221,8 +221,8 @@ export class MemoryClient extends Client<MessageType, Payload, ResponsePayload> 
             `contiguous=${contiguous} coreDependent=${coreDependent} ` +
             `shrinkable=${shrinkable} longRunning=${longRunning}`
         );
-        let pid = this.ns.pid;
-        let payload = {
+        const pid = this.ns.pid;
+        const payload = {
             pid: pid,
             filename: this.ns.self().filename,
             chunkSize: chunkSize,
@@ -232,15 +232,15 @@ export class MemoryClient extends Client<MessageType, Payload, ResponsePayload> 
             shrinkable: shrinkable,
             longRunning: longRunning,
         } as AllocationRequest;
-        let result = await this.sendMessageReceiveResponse(MessageType.Request, payload);
+        const result = await this.sendMessageReceiveResponse(MessageType.Request, payload);
         if (!result) {
             this.ns.print("WARN: allocation request failed");
             return null;
         }
 
-        let allocationResult = result as AllocationResult;
-        let allocatedChunkSize = allocationResult.hosts[0]?.chunkSize;
-        let allocatedNumChunks = allocationResult.hosts.reduce((sum, chunk) => sum + chunk.numChunks, 0);
+        const allocationResult = result as AllocationResult;
+        const allocatedChunkSize = allocationResult.hosts[0]?.chunkSize;
+        const allocatedNumChunks = allocationResult.hosts.reduce((sum, chunk) => sum + chunk.numChunks, 0);
         this.ns.print(
             `SUCCESS: allocated id ${allocationResult.allocationId} ` +
             `${allocatedNumChunks}x${this.ns.formatRam(allocatedChunkSize)} ` +
@@ -271,7 +271,7 @@ export class MemoryClient extends Client<MessageType, Payload, ResponsePayload> 
         numChunks: number,
         options?: AllocOptions,
     ): Promise<HostAllocation[]> {
-        let result = await this.requestTransferableAllocation(
+        const result = await this.requestTransferableAllocation(
             chunkSize,
             numChunks,
             options,
@@ -404,7 +404,7 @@ export async function registerAllocationOwnership(
         trySendMessage(memPort, MessageType.ClaimRelease, release);
     }, "memoryRelease" + name);
 
-    let memPort = ns.getPortHandle(MEMORY_PORT);
+    const memPort = ns.getPortHandle(MEMORY_PORT);
 
     await sendMessage(ns, memPort, MessageType.Claim, claim);
 }
@@ -461,7 +461,7 @@ export class TransferableAllocation {
             hostname: proc.server,
         };
 
-        let memPort = ns.getPortHandle(MEMORY_PORT);
+        const memPort = ns.getPortHandle(MEMORY_PORT);
         sendMessage(ns, memPort, MessageType.Release, release);
     }
 

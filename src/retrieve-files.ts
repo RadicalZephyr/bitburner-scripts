@@ -5,21 +5,21 @@ import { walkNetworkBFS } from "util/walk";
 
 export async function main(ns: NS) {
     const flags = ns.flags(MEM_TAG_FLAGS);
-    let network = walkNetworkBFS(ns);
-    let allHosts = Array.from(network.keys());
+    const network = walkNetworkBFS(ns);
+    const allHosts = Array.from(network.keys());
 
-    let scriptFile = /\.(js|script)/;
-    let textFile = /\.txt/;
-    let litFile = /\.lit/;
+    const scriptFile = /\.(js|script)/;
+    const textFile = /\.txt/;
+    const litFile = /\.lit/;
 
     for (const host of allHosts) {
         if (host == "home") { continue; }
 
-        let files = ns.ls(host).filter(file => !scriptFile.test(file));
-        let qualifiedNames = [];
+        const files = ns.ls(host).filter(file => !scriptFile.test(file));
+        const qualifiedNames = [];
         for (const file of files) {
             if (textFile.test(file)) {
-                let qualifiedName = "/" + host + "/" + file;
+                const qualifiedName = "/" + host + "/" + file;
                 ns.mv(host, file, qualifiedName);
                 qualifiedNames.push(qualifiedName);
             } else if (litFile.test(file)) {

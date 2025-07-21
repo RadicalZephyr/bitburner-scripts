@@ -28,18 +28,18 @@ function walkNetwork(ns: NS, options?: WalkOptions): Map<string, string[]> {
         ? (n) => n.pop()
         : (n) => n.shift();
 
-    let root = 'home';
-    let nodesToExplore = [];
-    let explored = new Set();
-    let network = new Map();
+    const root = 'home';
+    const nodesToExplore = [];
+    const explored = new Set();
+    const network = new Map();
 
     explored.add(root);
     nodesToExplore.push(root);
 
     while (nodesToExplore.length > 0) {
-        let v = nextNode(nodesToExplore);
+        const v = nextNode(nodesToExplore);
 
-        let edges = ns.scan(v);
+        const edges = ns.scan(v);
         network.set(v, edges);
 
         for (const w of edges) {

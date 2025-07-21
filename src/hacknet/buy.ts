@@ -42,10 +42,10 @@ OPTIONS
     }
 
     const returnTimeSeconds = flags["return-time"] * 60 * 60;
-    let totalSpend = ns.getServerMoneyAvailable("home") * flags.spend;
+    const totalSpend = ns.getServerMoneyAvailable("home") * flags.spend;
     ns.print(`INFO: starting with budget $${ns.formatNumber(totalSpend)} and payback time ${ns.tFormat(returnTimeSeconds * 1000)}`);
 
-    let budget: Budget = {
+    const budget: Budget = {
         total: totalSpend,
         remaining: totalSpend
     };
@@ -235,7 +235,7 @@ interface Budget {
 }
 
 function purchaseCandidate(ns: NS, budget: Budget, candidate: UpgradeCandidate) {
-    let hacknetType = ns.hacknet.hashCapacity() > 0 ? "server" : "node";
+    const hacknetType = ns.hacknet.hashCapacity() > 0 ? "server" : "node";
 
     switch (candidate.type) {
         case "node": {
@@ -274,13 +274,13 @@ function purchaseCandidate(ns: NS, budget: Budget, candidate: UpgradeCandidate) 
 }
 
 function printUpgrade(ns: NS, upgrade: UpgradeCandidate) {
-    let hacknetType = ns.hacknet.hashCapacity() > 0 ? "server" : "node";
+    const hacknetType = ns.hacknet.hashCapacity() > 0 ? "server" : "node";
     ns.print(`SUCCESS: upgraded ${upgradeDescription(ns, upgrade)}`);
 }
 
 function upgradeDescription(ns: NS, upgrade: UpgradeCandidate): string {
-    let hacknetType = ns.hacknet.hashCapacity() > 0 ? "server" : "node";
-    let numNodes = ns.hacknet.numNodes();
+    const hacknetType = ns.hacknet.hashCapacity() > 0 ? "server" : "node";
+    const numNodes = ns.hacknet.numNodes();
 
     if (upgrade.type === "node") {
         return `hacknet-${hacknetType}-${numNodes} for $${ns.formatNumber(upgrade.cost)} payback ${ns.tFormat(upgrade.paybackTime * 1000)}`;

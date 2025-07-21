@@ -54,7 +54,7 @@ function predictHackFormula(ns: NS, target: string, threads: number, applyMults:
 
 function growMultiplierForThreads(ns: NS, target: string, threads: number, applyMults: boolean): number {
     const growthMult = applyMults ? ns.getHackingMultipliers().growth : 1;
-    let adjustedThreads = threads * growthMult;
+    const adjustedThreads = threads * growthMult;
     let low = 1;
     let high = 2;
     while (ns.growthAnalyze(target, high) < adjustedThreads) {

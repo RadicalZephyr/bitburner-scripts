@@ -10,11 +10,11 @@ export async function main(ns: NS) {
     ns.ui.moveTail(60, 350);
     ns.ui.resizeTail(825, 800);
 
-    let infiltrations = ns.infiltration.getPossibleLocations().map((loc: any) => ns.infiltration.getInfiltration(loc.name));
+    const infiltrations = ns.infiltration.getPossibleLocations().map((loc: any) => ns.infiltration.getInfiltration(loc.name));
 
     const augInfiltrations = infiltrations.map(augmentInfiltration).sort((a, b) => a.expPerAction - b.expPerAction);
 
-    let theme = ns.ui.getTheme();
+    const theme = ns.ui.getTheme();
 
     ns.clearLog();
     ns.printRaw(<LocationBlock infiltrations={augInfiltrations} theme={theme}></LocationBlock>);

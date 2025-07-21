@@ -171,7 +171,7 @@ function computeVelocity<Type>(first: Sample<Type>, last: Sample<Type>): Sample<
 }
 
 function notifyListeners<Type>(s: Sample<Type>, listeners: StatListener<keyof PickByType<Type, number>>[]) {
-    let remaining = [];
+    const remaining = [];
     for (const l of listeners) {
         const stat = s[l.stat];
         const compare = compareBy(l.condition);

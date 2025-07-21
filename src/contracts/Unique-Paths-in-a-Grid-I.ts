@@ -17,20 +17,20 @@ import { MEM_TAG_FLAGS } from "services/client/memory_tag";
 
 export async function main(ns: NS) {
     const flags = ns.flags(MEM_TAG_FLAGS);
-    let scriptName = ns.getScriptName();
-    let contractPortNum = ns.args[0];
+    const scriptName = ns.getScriptName();
+    const contractPortNum = ns.args[0];
     if (typeof contractPortNum !== 'number') {
         ns.tprintf('%s contract run with non-number answer port argument', scriptName);
         return;
     }
-    let contractDataJSON = ns.args[1];
+    const contractDataJSON = ns.args[1];
     if (typeof contractDataJSON !== 'string') {
         ns.tprintf('%s contract run with non-string data argument. Must be a JSON string containing file, host and contract data.', scriptName);
         return;
     }
-    let contractData: any = JSON.parse(contractDataJSON);
+    const contractData: any = JSON.parse(contractDataJSON);
     ns.tprintf('contract data: %s', JSON.stringify(contractData));
-    let answer = solve(contractData);
+    const answer = solve(contractData);
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
 
@@ -79,8 +79,8 @@ export async function main(ns: NS) {
  *
  */
 export function solve(data: [number, number]): any {
-    let [numRows, numCols] = data;
-    let pathsTable = new Paths(numRows, numCols);
+    const [numRows, numCols] = data;
+    const pathsTable = new Paths(numRows, numCols);
     pathsTable.fillTable();
     return pathsTable.at([numRows - 1, numCols - 1]);
 }
@@ -107,7 +107,7 @@ class Paths {
     }
 
     calculate(pos: Position) {
-        let sum = this.prevNeighbors(pos).map((p) => this.at(p), this).reduce((p, c) => p + c);
+        const sum = this.prevNeighbors(pos).map((p) => this.at(p), this).reduce((p, c) => p + c);
         this.paths[pos[0]][pos[1]] = sum;
     }
 
@@ -116,16 +116,16 @@ class Paths {
     }
 
     prevNeighbors(position: Position): Position[] {
-        let [x, y] = position;
+        const [x, y] = position;
         return [[x - 1, y], [x, y - 1]].filter(([x, y]) => x >= 0 && y >= 0, this) as Position[];
     }
 
 }
 
 function seedTable(numRows: number, numCols: number): number[][] {
-    let firstRow = Array.from({ length: numCols }, (_v, _i) => 1);
-    let rows = Array.from({ length: numRows - 1 }, (_v, _i) => {
-        let row = Array.from({ length: numCols - 1 }, (_v, _i) => 0);
+    const firstRow = Array.from({ length: numCols }, (_v, _i) => 1);
+    const rows = Array.from({ length: numRows - 1 }, (_v, _i) => {
+        const row = Array.from({ length: numCols - 1 }, (_v, _i) => 0);
         row.unshift(1);
         return row;
     });
