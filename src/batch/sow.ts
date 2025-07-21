@@ -103,6 +103,7 @@ OPTIONS
         return;
     }
     allocation.releaseAtExit(ns);
+    allocation.startPolling(true);
 
     // Send a Sow Heartbeat to indicate we're starting the main loop
     taskSelectorClient.tryHeartbeat(ns.pid, ns.getScriptName(), target, Lifecycle.Sow);
@@ -114,7 +115,6 @@ OPTIONS
     while (growNeeded > 0) {
         round += 1;
 
-        allocation.pollGrowth(true);
         const hosts = allocation.allocatedChunks;
         const pids: number[] = [];
 
