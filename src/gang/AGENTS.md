@@ -14,3 +14,5 @@ gang management system. It details the expected APIs, the progression
 from a minimal MVP to advanced features like territory warfare, and the
 data needed for decision making. Review it before modifying the gang
 scripts so the implementation stays aligned with the plan.
+See also [`docs/gang-management.org`](../../docs/gang-management.org) for
+background on gang mechanics and strategy.

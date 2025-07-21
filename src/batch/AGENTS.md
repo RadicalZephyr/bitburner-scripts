@@ -110,3 +110,12 @@ The batch system is further described in two markdown documents in the
   discusses the design of the memory allocator and approaches for
   releasing RAM. Both are useful background when modifying the batch
   scripts or the memory services they rely on.
+- See also [`docs/task-selection.md`](../../docs/task-selection.md) for
+  notes on improving the TaskSelector algorithm.
+- See also [`docs/harvest-timing-diagram.md`](../../docs/harvest-timing-diagram.md)
+  which illustrates the ordering of harvest batch phases.
+- See also [`docs/packing.md`](../../docs/packing.md) and
+  [`docs/tuning.md`](../../docs/tuning.md) for ideas on allocating
+  threads and tuning configuration values.
+- [`docs/batch-hacking.org`](../../docs/batch-hacking.org) provides a
+  high-level architecture overview of the batch system.

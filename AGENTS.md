@@ -33,6 +33,8 @@
   paths specified relative to the `src/` directory. So
   `src/batch/sow.ts` would be referenced as `batch/sow`.
 - Don't remove comments from the code.
+- See also [`docs/contributing.md`](docs/contributing.md) for a quick
+  overview of the build and release workflow.
 
 ## Terminology used to classify hosts
 
