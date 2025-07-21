@@ -7,7 +7,7 @@ const sodiumConfig = {
     input: 'src/lib/sodium.js',
     external: ['typescript-collections', 'sanctuary-type-classes'],
     output: {
-        dir: 'dist/lib/',
+        dir: 'dist/',
         format: 'esm',
     },
     plugins: [resolve()],
@@ -16,7 +16,7 @@ const sodiumConfig = {
 const sanctuaryConfig = {
     input: 'src/lib/sanctuary-type-classes.js',
     output: {
-        dir: 'dist/lib/',
+        dir: 'dist/',
         format: 'esm',
     },
     plugins: [resolve(), commonjs()],
@@ -25,7 +25,7 @@ const sanctuaryConfig = {
 const collectionsConfig = {
     input: 'src/lib/typescript-collections.js',
     output: {
-        dir: 'dist/lib/',
+        dir: 'dist/',
         format: 'esm',
     },
     plugins: [resolve({ browser: true })],

@@ -25,7 +25,8 @@
         "types": ["jest"],
         "paths": {
             "/*": ["*"],
-            "netscript": ["../NetScriptDefinitions.d.ts"]
+            "netscript": ["../NetScriptDefinitions.d.ts"],
+            "sodium": ["./src/lib/sodium.js"]
         }
     }
 }
