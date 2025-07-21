@@ -13,6 +13,21 @@
   formatting. And a clear but concise description of the function. The
   length of the doc comment should be inversely proportional to the
   length and complexity of the function.
+
+  Example:
+
+  ```typescript
+  /**
+   * Get available money on a host.
+   *
+   * @param ns - Netscript API
+   * @param host - Host to query
+   * @returns Amount of money on the server
+   */
+  export function getMoney(ns: NS, host: string): number {
+      return ns.getServerMoneyAvailable(host);
+  }
+  ```
 - Imports should never include the file extension and should be full
   paths specified relative to the `src/` directory. So
   `src/batch/sow.ts` would be referenced as `batch/sow`.
@@ -33,7 +48,7 @@ Any individual host can be both a Worker and a Target simultaneously.
 - Only work on code in the `src` directory.
 - When building UI elements always use colors from the theme, which
   can be retrieved with `ns.ui.getTheme()`.
-- Reference the available Netcript APIs listed in
+- Reference the available Netscript APIs listed in
   `NetScriptDefinitions.d.ts`.
 - When using `Config` values we should never cache the config value in
   a variable. These values can be updated by the user and we always
@@ -49,11 +64,8 @@ You can color code messages passed to `ns.print` by prefixing your
 string with one of these strings:
 
 - `"ERROR: "`: The whole string will be printed in red. Use this prefix to indicate that an error has occurred.
-
 - `"SUCCESS: "`: The whole string will be printed in green, similar to the default theme of the Terminal. Use this prefix to indicate that something is correct.
-
 - `"WARN: "`: The whole string will be printed in yellow. Use this prefix to indicate that you or a user of your script should be careful of something.
-
 - `"INFO: "`: The whole string will be printed in purplish blue. Use this prefix to remind yourself or a user of your script of something. Think of this prefix as indicating an FYI (for your information).
 
 
@@ -110,6 +122,7 @@ OPTIONS
 
 ## Testing Instructions
 
+- Run `npm install` to ensure dependencies are installed
 - Check that the build still works with `npm run build`
 - Check that the unit tests still run with `npx jest`
 - Fix any type errors until the build completes with no errors or warnings
@@ -121,6 +134,9 @@ Prefix every commit message with the name of the folder in source in
 square brackets like "[batch]". If a commit touches files in multiple
 directories use the folder name that the commit is most conceptually
 linked to.
+
+Acceptable prefixes include `[batch]`, `[stock]`, `[util]`, `[services]` and other
+directory names under `src/`.
 
 ## Pull Request Review Instructions
 
