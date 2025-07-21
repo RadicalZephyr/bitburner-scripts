@@ -2,9 +2,8 @@ import type { NS } from "netscript";
 import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
 
 import { parseAndRegisterAlloc } from "services/client/memory";
-import { TrackerClient } from "stock/client/tracker";
+import { Indicators, TrackerClient } from "stock/client/tracker";
 import { CONFIG } from "stock/config";
-import { Indicators } from "stock/indicators";
 
 /** Simple Z-Score based trading daemon. */
 export async function main(ns: NS) {

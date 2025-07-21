@@ -1,3 +1,5 @@
+import { Indicators } from "stock/client/tracker";
+
 export interface TickData {
     ts: number;
     askPrice: number;
@@ -6,32 +8,12 @@ export interface TickData {
     forecast: number;
 }
 
-export interface BasicIndicators {
-    count: number;
-    mean: number;
-    min: number;
-    max: number;
-    std: number;
-}
-
 export interface IndicatorOptions {
     smaPeriods?: number[];
     emaPeriods?: number[];
     rocPeriods?: number[];
     percentiles?: number[];
     bollingerK?: number;
-}
-
-export interface Indicators extends BasicIndicators {
-    median: number;
-    zScore: number;
-    sma: Record<number, number>;
-    ema: Record<number, number>;
-    percentiles: Record<number, number>;
-    roc: Record<number, number>;
-    bollinger: Record<number, { lower: number; upper: number }>;
-    maxDrawdown: number;
-    maxRunUp: number;
 }
 
 /**

@@ -1,4 +1,5 @@
-import type { NS, NetscriptPort } from "netscript";
+import type { NS } from "netscript";
+import { Client } from "util/client";
 
 export const TRACKER_PORT = 30;
 export const TRACKER_RESPONSE_PORT = 31;
@@ -8,50 +9,43 @@ export enum MessageType {
     RequestIndicators,
 }
 
-export type Message = [type: MessageType, requestId: string, payload: any];
-export type Response = [requestId: string, response: any];
+type Payload = Record<string, Indicators>;
 
-export class TrackerClient {
-    ns: NS;
-    port: NetscriptPort;
-    responsePort: NetscriptPort;
+export type Message = [type: MessageType, requestId: string, payload: Payload];
+export type Response = [requestId: string, response: Record<string, Indicators>];
 
+export interface BasicIndicators {
+    count: number;
+    mean: number;
+    min: number;
+    max: number;
+    std: number;
+}
+
+export interface Indicators extends BasicIndicators {
+    median: number;
+    zScore: number;
+    sma: Record<number, number>;
+    ema: Record<number, number>;
+    percentiles: Record<number, number>;
+    roc: Record<number, number>;
+    bollinger: Record<number, { lower: number; upper: number }>;
+    maxDrawdown: number;
+    maxRunUp: number;
+}
+
+export class TrackerClient extends Client<MessageType, object, Payload | null> {
     constructor(ns: NS) {
-        this.ns = ns;
-        this.port = ns.getPortHandle(TRACKER_PORT);
-        this.responsePort = ns.getPortHandle(TRACKER_RESPONSE_PORT);
+        super(ns, TRACKER_PORT, TRACKER_RESPONSE_PORT)
     }
 
     /** Request raw tick data for all tracked symbols. */
     async requestTicks() {
-        return await this.sendMessage(MessageType.RequestTicks, null);
+        return await this.sendMessageReceiveResponse(MessageType.RequestTicks, {});
     }
 
     /** Request computed indicators for all tracked symbols. */
     async requestIndicators() {
-        return await this.sendMessage(MessageType.RequestIndicators, null);
+        return await this.sendMessageReceiveResponse(MessageType.RequestIndicators, {});
     }
-
-    private async sendMessage(type: MessageType, payload: any) {
-        const requestId = makeReqId(this.ns);
-        const message: Message = [type, requestId, payload];
-        while (!this.port.tryWrite(message)) {
-            await this.ns.sleep(200);
-        }
-        while (true) {
-            await this.responsePort.nextWrite();
-            const next = this.responsePort.peek() as Response;
-            if (next[0] === requestId) {
-                this.responsePort.read();
-                return next[1];
-            }
-        }
-    }
-}
-
-function makeReqId(ns: NS) {
-    const pid = ns.pid;
-    const ts = Date.now();
-    const r = Math.floor(Math.random() * 1e6);
-    return `${pid}-${ts}-${r}`;
 }

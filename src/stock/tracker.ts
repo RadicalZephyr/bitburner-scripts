@@ -2,11 +2,12 @@ import type { NS, NetscriptPort } from "netscript";
 import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
 
 import { CONFIG } from "stock/config";
-import { computeIndicators, TickData, Indicators } from "stock/indicators";
+import { computeIndicators, TickData } from "stock/indicators";
 import { computeCorrelations } from "stock/indicators";
 import {
     TRACKER_PORT,
     TRACKER_RESPONSE_PORT,
+    Indicators,
     Message,
     MessageType,
 } from "stock/client/tracker";
@@ -114,12 +115,13 @@ async function processMessages(
     for (const next of readAllFromPort(ns, port)) {
         const msg = next as Message;
         const requestId = msg[1];
-        let response: any = null;
+        let response: Record<string, Indicators> | Record<string, TickData[]> | void = null;
         switch (msg[0]) {
-            case MessageType.RequestTicks:
+            case MessageType.RequestTicks: {
                 response = Object.fromEntries(buffers);
                 break;
-            case MessageType.RequestIndicators:
+            }
+            case MessageType.RequestIndicators: {
                 const res: Record<string, Indicators> = {};
                 for (const [sym, buf] of buffers.entries()) {
                     res[sym] = computeIndicators(buf, {
@@ -132,6 +134,7 @@ async function processMessages(
                 }
                 response = res;
                 break;
+            }
         }
         while (!respPort.tryWrite([requestId, response])) {
             await ns.sleep(20);
