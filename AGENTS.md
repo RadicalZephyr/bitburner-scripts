@@ -32,7 +32,9 @@
 - Imports should never include the file extension and should be full
   paths specified relative to the `src/` directory. So
   `src/batch/sow.ts` would be referenced as `batch/sow`.
-- Don't remove comments from the code.
+- When moving code, retain any existing explanatory comments.
+- Particularly complex code segments should have comments describing
+  important context for why the code is doing what it does.
 - See also [`docs/contributing.md`](docs/contributing.md) for a quick
   overview of the build and release workflow.
 
