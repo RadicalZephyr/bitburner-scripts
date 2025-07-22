@@ -11,6 +11,7 @@ export enum MessageType {
 }
 
 export interface LaunchRunOptions extends RunOptions {
+    contiguous?: boolean;
     coreDependent?: boolean;
     longRunning?: boolean;
     dependencies?: string[];

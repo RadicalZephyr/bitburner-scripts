@@ -85,6 +85,7 @@ export async function launch(
     const client = new MemoryClient(ns);
 
     let totalThreads: number;
+    let contiguous = false;
     let coreDependent = false;
     let longRunning = false;
     let explicitDependencies: string[] = [];
@@ -96,6 +97,7 @@ export async function launch(
             typeof threadOrOptions === 'number' ? threadOrOptions : 1;
     } else {
         totalThreads = threadOrOptions.threads ?? 1;
+        contiguous = threadOrOptions.contiguous ?? false;
         coreDependent = threadOrOptions.coreDependent ?? false;
         longRunning = threadOrOptions.longRunning ?? false;
         explicitDependencies = threadOrOptions.dependencies ?? [];
@@ -105,7 +107,7 @@ export async function launch(
         scriptRam,
         totalThreads,
         {
-            contiguous: false,
+            contiguous,
             coreDependent,
             longRunning,
         },
