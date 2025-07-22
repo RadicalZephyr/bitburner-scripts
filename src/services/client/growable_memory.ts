@@ -1,6 +1,6 @@
 import type { NetscriptPort, NS, ScriptArg, RunOptions } from 'netscript';
 
-import type { LaunchRunOptions } from 'services/launch';
+import type { LaunchRunOptions } from 'services/client/launch';
 import {
     MEMORY_PORT,
     MemoryClient,

@@ -23,7 +23,7 @@ import { calculateBatchLogistics } from 'batch/harvest';
 
 import { DiscoveryClient } from 'services/client/discover';
 import { MemoryClient, parseAndRegisterAlloc } from 'services/client/memory';
-import { launch } from 'services/launch';
+import { LaunchClient } from 'services/client/launch';
 
 import { readAllFromPort, readLoop } from 'util/ports';
 import { sleep } from 'util/time';
@@ -75,7 +75,8 @@ export async function main(ns: NS) {
     const discovery = new DiscoveryClient(ns);
     const monitor = new MonitorClient(ns);
     const memory = new MemoryClient(ns);
-    const manager = new TaskSelector(ns, monitor);
+    const launcher = new LaunchClient(ns);
+    const manager = new TaskSelector(ns, monitor, launcher);
 
     ns.print(`INFO: requesting targets from Discovery service`);
     const targets = await discovery.requestTargets({
@@ -156,6 +157,7 @@ async function readHostsFromPort(
 class TaskSelector {
     ns: NS;
     monitor: MonitorClient;
+    launcher: LaunchClient;
 
     allTargets: Set<string> = new Set();
 
@@ -176,9 +178,10 @@ class TaskSelector {
     launchFailures: Map<string, { count: number; nextAttempt: number }> =
         new Map();
 
-    constructor(ns: NS, monitor: MonitorClient) {
+    constructor(ns: NS, monitor: MonitorClient, launcher: LaunchClient) {
         this.ns = ns;
         this.monitor = monitor;
+        this.launcher = launcher;
     }
 
     /**
@@ -503,8 +506,7 @@ class TaskSelector {
 
     private async launchTill(host: string, threads: number) {
         this.ns.print(`INFO: launching till on ${host}`);
-        const result = await launch(
-            this.ns,
+        const result = await this.launcher.launch(
             '/batch/till.js',
             {
                 threads: 1,
@@ -539,8 +541,7 @@ class TaskSelector {
 
     private async launchSow(host: string, threads: number) {
         this.ns.print(`INFO: launching sow on ${host}`);
-        const result = await launch(
-            this.ns,
+        const result = await this.launcher.launch(
             '/batch/sow.js',
             {
                 threads: 1,
@@ -577,8 +578,7 @@ class TaskSelector {
         this.ns.print(`INFO: launching harvest on ${host}`);
         const args =
             maxRam !== undefined ? [host, '--max-ram', maxRam] : [host];
-        const result = await launch(
-            this.ns,
+        const result = await this.launcher.launch(
             '/batch/harvest.js',
             {
                 threads: 1,
