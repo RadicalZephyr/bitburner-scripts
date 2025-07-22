@@ -3,13 +3,6 @@ import type { FactionWorkType, NS } from 'netscript';
 export async function main(ns: NS) {
     const sing = ns.singularity;
 
-    const factionInvites = sing.checkFactionInvitations();
-
-    for (const f of factionInvites) {
-        if (sing.getFactionEnemies(f).length > 0) continue;
-        sing.joinFaction(f);
-    }
-
     const factions = ns.getPlayer().factions;
 
     for (const f of factions) {
