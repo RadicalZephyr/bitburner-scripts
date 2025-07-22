@@ -31,7 +31,7 @@ Tracks available RAM on each worker host. Scripts communicate over `MEMORY_PORT`
 
 *** Manager (batch/manage.ts)
 
-Listens on `MANAGER_PORT` for messages from `ManagerClient`. New targets are queued for preparation. The manager launches `/batch/till.js`, `/batch/sow.js` and `/batch/harvest.js` through `batch/launch.ts`. Each phase notifies the manager when it finishes.
+Listens on `MANAGER_PORT` for messages from `ManagerClient`. New targets are queued for preparation. The manager launches `/batch/till.js`, `/batch/sow.js` and `/batch/harvest.js` via the Launch service (`launcher.ts`). Each phase notifies the manager when it finishes.
 
 *** Monitor (batch/monitor.tsx)
 
