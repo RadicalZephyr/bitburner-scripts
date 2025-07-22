@@ -138,6 +138,9 @@ directory names under `src/`.
 
 ## Pull Request Review Instructions
 
+When you are asked to review a Pull Request diff, take a deep breath
+and provide a comprehensive review, including:
+
 - Provide a comprehensive critique of the code, focusing on code clarity, quality, and readability.
 - Identify the purpose behind the changes the author made.
 - Discuss the pros and cons of the approach the author took.
