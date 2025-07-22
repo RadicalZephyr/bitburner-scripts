@@ -94,7 +94,7 @@ OPTIONS
             budget -= cost;
             purchasedAugs.push({ purchasePrice: cost, ...aug });
         } else {
-            break;
+            ns.print(`WARN: failed to purchase ${aug.name}`);
         }
     }
 
