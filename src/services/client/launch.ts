@@ -10,11 +10,21 @@ export enum MessageType {
     Launch,
 }
 
+/**
+ * Options for launching a script through the Launch service.
+ *
+ * contiguous:    Request a single contiguous allocation if possible
+ * coreDependent: Prefer hosts with more cores when allocating RAM
+ * longRunning:   Avoid running long jobs on "home" if possible
+ * dependencies:  Extra files to `scp` before execution
+ * ramOverride:   Override the RAM usage passed to {@link NS.exec}
+ */
 export interface LaunchRunOptions extends RunOptions {
     contiguous?: boolean;
     coreDependent?: boolean;
     longRunning?: boolean;
     dependencies?: string[];
+    ramOverride?: number;
 }
 
 export interface LaunchRequest {

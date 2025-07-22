@@ -74,6 +74,9 @@ function isValidRequest(req: LaunchRequest): boolean {
  *
  * This requests an allocation for the script from the memory manager
  * and spawns the script on each allocated host.
+ *
+ * Set `ramOverride` in {@link LaunchRunOptions} to adjust the RAM
+ * passed to {@link NS.exec} for each thread.
  */
 export async function launch(
     ns: NS,
@@ -89,6 +92,7 @@ export async function launch(
     let coreDependent = false;
     let longRunning = false;
     let explicitDependencies: string[] = [];
+    let ramOverride: number | undefined;
     if (
         typeof threadOrOptions === 'number'
         || typeof threadOrOptions === 'undefined'
@@ -101,10 +105,11 @@ export async function launch(
         coreDependent = threadOrOptions.coreDependent ?? false;
         longRunning = threadOrOptions.longRunning ?? false;
         explicitDependencies = threadOrOptions.dependencies ?? [];
+        ramOverride = threadOrOptions.ramOverride;
     }
 
     const allocation = await client.requestTransferableAllocation(
-        scriptRam,
+        ramOverride ?? scriptRam,
         totalThreads,
         {
             contiguous,
@@ -124,10 +129,14 @@ export async function launch(
         const threadsHere = allocationChunk.numChunks;
         if (isNaN(threadsHere)) continue;
         ns.scp([...dependencies, ...explicitDependencies], hostname, 'home');
+        const runOptions =
+            ramOverride !== undefined
+                ? { threads: threadsHere, ramOverride }
+                : threadsHere;
         const pid = ns.exec(
             script,
             hostname,
-            threadsHere,
+            runOptions as never,
             ...args,
             ALLOC_ID_ARG,
             allocation.allocationId,
