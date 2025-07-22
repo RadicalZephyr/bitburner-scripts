@@ -39,6 +39,31 @@ export async function main(ns: NS) {
     ns.clearLog();
     ns.print(JSON.stringify(augs, null, 2));
     ns.ui.renderTail();
+
+    const purchasedAugs = [];
+    let budget = ns.getServerMoneyAvailable('home');
+
+    for (const aug of augs) {
+        const cost = sing.getAugmentationPrice(aug.name);
+
+        if (cost > budget) break;
+
+        const purchased = sing.purchaseAugmentation(aug.faction, aug.name);
+
+        if (purchased) {
+            budget -= cost;
+            purchasedAugs.push({ purchasePrice: cost, ...aug });
+        } else {
+            break;
+        }
+    }
+
+    ns.print(`SUCCESS: purchased ${purchasedAugs.length} augmentations:`);
+    for (const purchase of purchasedAugs) {
+        ns.print(
+            `INFO: ${purchase.name} from ${purchase.faction} for ${purchase.purchasePrice}`,
+        );
+    }
 }
 
 interface Aug {
