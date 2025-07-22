@@ -222,14 +222,21 @@ interface SowBatchLogistics extends BatchLogistics {
 
 function calculateSowBatchLogistics(ns: NS, target: string): SowBatchLogistics {
     const threads = calculateMinimalSowBatch(ns);
+    const perfectRatioGrowThreads = threads.growThreads;
 
     const gRam = ns.getScriptRam('/batch/g.js', 'home') * threads.growThreads;
     const wRam = ns.getScriptRam('/batch/w.js', 'home') * threads.weakenThreads;
     const batchRam = gRam + wRam;
 
     const totalGrowThreads = neededGrowThreads(ns, target);
-    const totalBatches = Math.ceil(totalGrowThreads / threads.growThreads);
+    const batchGrowThreads = Math.min(
+        perfectRatioGrowThreads,
+        totalGrowThreads,
+    );
 
+    const totalBatches = Math.ceil(totalGrowThreads / batchGrowThreads);
+
+    threads.growThreads = batchGrowThreads;
     const phases = calculateSowPhases(ns, target, threads);
 
     const batchTime = ns.getWeakenTime(target);
