@@ -78,7 +78,7 @@ function isValidRequest(req: LaunchRequest): boolean {
  * Set `ramOverride` in {@link LaunchRunOptions} to adjust the RAM
  * passed to {@link NS.exec} for each thread.
  */
-export async function launch(
+async function launch(
     ns: NS,
     script: string,
     threadOrOptions?: number | LaunchRunOptions,
