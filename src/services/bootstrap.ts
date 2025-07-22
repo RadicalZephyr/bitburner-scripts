@@ -1,5 +1,6 @@
 import type { NS } from 'netscript';
 
+import { LaunchClient } from 'services/client/launch';
 import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
 
 import { collectDependencies } from 'util/dependencies';
@@ -14,12 +15,20 @@ export async function main(ns: NS) {
     await ns.sleep(500);
 
     startService(ns, '/services/memory.js', host);
-    startService(ns, '/services/port.js', host);
     startService(ns, '/services/launcher.js', host);
 
     startService(ns, '/services/updater.js', 'n00dles');
 
-    startService(ns, '/services/backdoor-notify.js', host);
+    const client = new LaunchClient(ns);
+
+    await client.launch('/services/port.js', {
+        threads: 1,
+        longRunning: true,
+    });
+    await client.launch('/services/backdoor-notify.js', {
+        threads: 1,
+        longRunning: true,
+    });
 }
 
 function startService(ns: NS, script: string, host: string) {
