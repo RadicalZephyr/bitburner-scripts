@@ -232,12 +232,14 @@ export class GrowableAllocation extends TransferableAllocation {
         const pids: number[] = [];
         for (const chunk of this.allocatedChunks) {
             if (totalThreads <= 0) break;
-            const threadsHere = Math.min(chunk.numChunks, totalThreads);
-            if (threadsHere <= 0) continue;
 
+            const threadsHere = Math.min(chunk.numChunks, totalThreads);
+            if (isNaN(threadsHere) || threadsHere < 1) continue;
+
+            const hostname = chunk.hostname;
             this.ns.scp(
                 [...dependencies, ...explicitDependencies],
-                chunk.hostname,
+                hostname,
                 'home',
             );
             const execArgs = [...args, ALLOC_ID_ARG, this.allocationId];

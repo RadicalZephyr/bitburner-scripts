@@ -125,10 +125,14 @@ async function launch(
     const dependencies = Array.from(collectDependencies(ns, script));
     const pids: number[] = [];
     for (const allocationChunk of allocation.allocatedChunks) {
+        if (totalThreads <= 0) break;
+
+        const threadsHere = Math.min(allocationChunk.numChunks, totalThreads);
+        if (isNaN(threadsHere) || threadsHere < 0) continue;
+
         const hostname = allocationChunk.hostname;
-        const threadsHere = allocationChunk.numChunks;
-        if (isNaN(threadsHere)) continue;
         ns.scp([...dependencies, ...explicitDependencies], hostname, 'home');
+
         const runOptions =
             ramOverride !== undefined
                 ? { threads: threadsHere, ramOverride }
