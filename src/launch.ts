@@ -1,5 +1,7 @@
-import type { AutocompleteData, NS } from 'netscript';
-import { LaunchRunOptions } from './services/client/launch';
+import type { AutocompleteData, NS, ScriptArg } from 'netscript';
+
+import { LaunchRunOptions } from 'services/client/launch';
+import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
 
 export function autocomplete(data: AutocompleteData): string[] {
     return data.scripts;
@@ -8,7 +10,7 @@ export function autocomplete(data: AutocompleteData): string[] {
 export async function main(ns: NS) {
     const args = ns.args;
 
-    let launchedScriptArgs = [];
+    let launchedScriptArgs: ScriptArg[] = [];
 
     const dividerIndex = args.findIndex((arg) => arg === '++');
     if (dividerIndex !== -1) {
@@ -20,6 +22,10 @@ export async function main(ns: NS) {
         // Remove divider from args
         args.pop();
     }
+
+    // TODO: we need to somehow try to reverse engineer the flags that
+    // are being passed to the launched script.
+    const launchedScriptFlags = launchedScriptArgs.filter(isFlag).map(toFlag);
 
     const flags = ns.flags([
         ['threads', 1],
@@ -107,4 +113,12 @@ OPTIONS
 
     ns.tprint(`launcher options: ${JSON.stringify(launchOptions, null, 2)}`);
     ns.tprint(`launched script args: ${JSON.stringify(launchedScriptArgs)}`);
+}
+
+function isFlag(arg: ScriptArg): boolean {
+    return typeof arg === 'string' && arg.startsWith('--');
+}
+
+function toFlag(arg: string): string {
+    return arg.slice(2);
 }
