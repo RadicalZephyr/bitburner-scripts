@@ -13,7 +13,6 @@ export async function main(ns: NS) {
         ['min', DEFAULT_MIN_RAM],
         ['no-upgrade', false],
         ['dry-run', false],
-        ['no-rename', false],
         ['wait', false],
         ['help', false],
         ...MEM_TAG_FLAGS,
@@ -25,7 +24,6 @@ export async function main(ns: NS) {
         || typeof options.min != 'number'
         || typeof options['no-upgrade'] != 'boolean'
         || typeof options['dry-run'] != 'boolean'
-        || typeof options['no-rename'] != 'boolean'
         || typeof options.wait != 'boolean'
     ) {
         ns.tprint(`
@@ -36,7 +34,6 @@ OPTIONS
   --spend       Percentage of money to spend on upgrading (default ${ns.formatPercent(DEFAULT_SPEND)})
   --dry-run     Print out the number and tier of servers you could buy but don't actually buy anything
   --no-upgrade  Don't upgrade existing servers
-  --no-rename   Don't rename the newly purchased servers
   --wait        Wait for money to become available to buy servers
   --help        Show this help message
 `);
@@ -47,8 +44,6 @@ OPTIONS
     if (options[ALLOC_ID] !== -1 && allocationId === null) {
         return;
     }
-
-    const shouldRenameServers = !options['no-rename'];
 
     const upgradeSpendPercentage = options.spend;
 
@@ -68,11 +63,9 @@ OPTIONS
     const serverLimit = ns.getPurchasedServerLimit();
     const currentServers = ns.getPurchasedServers();
 
-    // Buy as many new servers as we can
-    const neededServers = serverLimit - currentServers.length;
     const serverCost = ns.getPurchasedServerCost(ram);
 
-    for (let i = 0; i < neededServers; ++i) {
+    for (let i = currentServers.length; i < serverLimit; ++i) {
         if (ns.getServerMoneyAvailable('home') < serverCost) {
             if (!options.wait) return;
         }
@@ -80,7 +73,7 @@ OPTIONS
             await ns.sleep(1000);
         }
 
-        const hostname = ns.purchaseServer(serverName(ram, i), ram);
+        const hostname = ns.purchaseServer(serverName(i), ram);
         if (hostname !== '') {
             await memoryClient.newWorker(hostname);
         }
@@ -117,29 +110,14 @@ OPTIONS
             while (ns.getServerMoneyAvailable('home') < serverCost) {
                 await ns.sleep(1000);
             }
-            const upgradeResult = ns.upgradePurchasedServer(oldHostname, ram);
-            if (upgradeResult) {
-                const newHostname = serverName(ram, i);
-                if (
-                    shouldRenameServers
-                    && ns.renamePurchasedServer(oldHostname, newHostname)
-                ) {
-                    await memoryClient.newWorker(newHostname);
-                }
-            }
+            ns.upgradePurchasedServer(oldHostname, ram);
         }
         await ns.sleep(100);
     }
 }
 
-function serverName(ram: number, i: number) {
-    return `pserv-${formatGigaBytes(ram)}-${i + 1}`;
-}
-
-function formatGigaBytes(value: number): string {
-    const s = ['GB', 'TB', 'PB'];
-    const e = Math.floor(Math.log(value) / Math.log(1024));
-    return (value / Math.pow(1024, e)).toFixed(0) + s[e];
+function serverName(i: number) {
+    return `pserv-${i + 1}`;
 }
 
 /** Return the maximum amount of ram that can be purchased.
