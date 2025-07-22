@@ -17,6 +17,8 @@ export async function main(ns: NS) {
     await startPort(ns, host);
 
     await startUpdater(ns, 'n00dles');
+
+    await startBackdoor(ns, host);
 }
 
 async function startMemory(ns: NS, host: string) {
@@ -61,6 +63,17 @@ async function startPort(ns: NS, host: string) {
     }
 
     manualLaunch(ns, portScript, host);
+}
+
+async function startBackdoor(ns: NS, host: string) {
+    const backdoorScript = '/services/backdoor-notify.js';
+
+    const backdoorNotify = ns.getRunningScript(backdoorScript, host);
+    if (backdoorNotify !== null) {
+        ns.kill(backdoorNotify.pid);
+    }
+
+    manualLaunch(ns, backdoorScript, host);
 }
 
 function manualLaunch(ns: NS, script: string, hostname: string) {
