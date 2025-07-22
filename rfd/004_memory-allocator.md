@@ -11,8 +11,8 @@ its allocation when it starts and releases those chunks as it
 finishes. The allocator periodically reclaims memory from terminated
 processes and updates reserved RAM totals using the Discovery service.
 
-Launch helper functions in `src/services/launch.ts` integrate the
-memory allocator with `run`, automatically requesting memory and
+The Launch service (`src/services/launcher.ts`) and `LaunchClient`
+integrate the memory allocator with `run`, automatically requesting memory and
 releasing it when the spawned script exits. Long‑running services keep
 their allocation for the life of the process. This design keeps the
 batch hacking system from overcommitting RAM and allows multiple

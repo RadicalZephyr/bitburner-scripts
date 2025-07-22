@@ -15,6 +15,7 @@ export async function main(ns: NS) {
 
     startService(ns, '/services/memory.js', host);
     startService(ns, '/services/port.js', host);
+    startService(ns, '/services/launcher.js', host);
 
     startService(ns, '/services/updater.js', 'n00dles');
 
