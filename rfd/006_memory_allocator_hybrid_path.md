@@ -115,7 +115,7 @@ const effectiveFree = maxRam – allocRam – reservedEMA – safetyMarginGB;
 Provide an alias:
 
 ```bash
-alias aa="run /scripts/launch.js"
+alias launch="run launch.js"
 ```
 
 With identical CLI semantics, most ad‑hoc scripts now opt‑in automatically.
@@ -135,8 +135,12 @@ interface Registration {
 registerAllocation(host, pid, ram);
 unregister(pid);
 
-// in launch.ts
-function makeAllocArgs(uuid: string, userArgs: ScriptArg[]): ScriptArg[];
+// via LaunchClient
+function launch(
+    script: string,
+    options: LaunchRunOptions,
+    ...args: ScriptArg[]
+): Promise<{ allocation: TransferableAllocation; pids: number[] } | null>;
 ```
 
 Runtime state (per host):
