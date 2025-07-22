@@ -23,11 +23,11 @@ export async function main(ns: NS) {
 
     await client.launch('/services/port.js', {
         threads: 1,
-        longRunning: true,
+        alloc: { longRunning: true },
     });
     await client.launch('/services/backdoor-notify.js', {
         threads: 1,
-        longRunning: true,
+        alloc: { longRunning: true },
     });
 }
 

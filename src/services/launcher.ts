@@ -87,10 +87,8 @@ async function launch(
     const scriptRam = ns.getScriptRam(script, 'home');
     const client = new MemoryClient(ns);
 
+    let allocOptions = {};
     let totalThreads: number;
-    let contiguous = false;
-    let coreDependent = false;
-    let longRunning = false;
     let explicitDependencies: string[] = [];
     let ramOverride: number | undefined;
     if (
@@ -100,10 +98,8 @@ async function launch(
         totalThreads =
             typeof threadOrOptions === 'number' ? threadOrOptions : 1;
     } else {
+        allocOptions = threadOrOptions.alloc ?? {};
         totalThreads = threadOrOptions.threads ?? 1;
-        contiguous = threadOrOptions.contiguous ?? false;
-        coreDependent = threadOrOptions.coreDependent ?? false;
-        longRunning = threadOrOptions.longRunning ?? false;
         explicitDependencies = threadOrOptions.dependencies ?? [];
         ramOverride = threadOrOptions.ramOverride;
     }
@@ -111,11 +107,7 @@ async function launch(
     const allocation = await client.requestTransferableAllocation(
         ramOverride ?? scriptRam,
         totalThreads,
-        {
-            contiguous,
-            coreDependent,
-            longRunning,
-        },
+        allocOptions,
     );
     if (!allocation) {
         ns.print(`WARN: failed to launch ${script}, could not allocate memory`);

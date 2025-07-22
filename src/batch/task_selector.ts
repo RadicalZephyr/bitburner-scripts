@@ -510,7 +510,7 @@ class TaskSelector {
             '/batch/till.js',
             {
                 threads: 1,
-                longRunning: true,
+                alloc: { longRunning: true },
             },
             host,
             '--max-threads',
@@ -545,7 +545,7 @@ class TaskSelector {
             '/batch/sow.js',
             {
                 threads: 1,
-                longRunning: true,
+                alloc: { longRunning: true },
             },
             host,
             '--max-threads',
@@ -582,7 +582,7 @@ class TaskSelector {
             '/batch/harvest.js',
             {
                 threads: 1,
-                longRunning: true,
+                alloc: { longRunning: true },
             },
             ...args,
         );

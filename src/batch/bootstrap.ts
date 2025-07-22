@@ -8,11 +8,11 @@ export async function main(ns: NS) {
     const client = new LaunchClient(ns);
     await client.launch('/batch/task_selector.js', {
         threads: 1,
-        longRunning: true,
+        alloc: { longRunning: true },
     });
 
     await client.launch('/batch/monitor.js', {
         threads: 1,
-        longRunning: true,
+        alloc: { longRunning: true },
     });
 }

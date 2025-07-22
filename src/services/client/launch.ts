@@ -1,5 +1,5 @@
 import type { NS, ScriptArg, RunOptions } from 'netscript';
-import type { HostAllocation } from 'services/client/memory';
+import type { AllocOptions, HostAllocation } from 'services/client/memory';
 import { TransferableAllocation } from 'services/client/memory';
 import { Client, Message as ClientMessage } from 'util/client';
 
@@ -11,20 +11,13 @@ export enum MessageType {
 }
 
 /**
- * Options for launching a script through the Launch service.
+ * Options for running a script remotely.
  *
- * contiguous:    Request a single contiguous allocation if possible
- * coreDependent: Prefer hosts with more cores when allocating RAM
- * longRunning:   Avoid running long jobs on "home" if possible
  * dependencies:  Extra files to `scp` before execution
- * ramOverride:   Override the RAM usage passed to {@link NS.exec}
  */
 export interface LaunchRunOptions extends RunOptions {
-    contiguous?: boolean;
-    coreDependent?: boolean;
-    longRunning?: boolean;
+    alloc?: AllocOptions;
     dependencies?: string[];
-    ramOverride?: number;
 }
 
 export interface LaunchRequest {
