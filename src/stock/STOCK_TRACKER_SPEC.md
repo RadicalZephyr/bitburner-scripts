@@ -42,7 +42,7 @@ the entire stocks folder to the home server:
 `ns.scp(ns.ls("/stocks"), "home")`.
 
 The tracker daemon may be launched on a remote worker through the
-memory manager and `services/launch.ts`. When running remotely, ensure
+Launch service (`src/services/launcher.ts`). When running remotely, ensure
 the `/stocks/SYMBOL.json` files are copied to that host before the
 tracker starts and synced back to `home` periodically or when the
 daemon exits. Otherwise the data will be lost if the remote worker is
@@ -119,7 +119,7 @@ Persist and load configuration values from `LocalStorage` using the
 #### 2.7 Stock Bootstrap Script (`src/stock/bootstrap.ts`)
 
 Similar to other `bootstrap.ts` scripts, this script should use the
-`launch` function from `src/services/launch.ts` to execute the tracker
+`LaunchClient` from `src/services/client/launch.ts` to execute the tracker
 and trader service daemons. The bootstrap should request RAM
 allocations with `MemoryClient` and call
 `registerAllocationOwnership` so that allocations are released when the
