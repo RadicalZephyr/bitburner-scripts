@@ -19,9 +19,12 @@ export async function main(ns: NS) {
 
     const donePortId = args[2];
 
+    const hostname = ns.self().server;
+
     ns.atExit(() => {
         if (typeof donePortId === 'number' && donePortId !== -1) {
-            ns.writePort(donePortId, ns.pid);
+            const msg = { host: hostname, pid: ns.pid };
+            ns.writePort(donePortId, msg);
         }
     });
 

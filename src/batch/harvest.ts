@@ -43,6 +43,11 @@ export async function main(ns: NS) {
     await harvestPipeline(ns, args.target, setup);
 }
 
+interface DoneMsg {
+    pid: number;
+    host: string;
+}
+
 interface ParsedArgs {
     target: string;
     maxRam: number;
@@ -216,6 +221,7 @@ async function harvestPipeline(ns: NS, target: string, setup: HarvestSetup) {
 
     let hosts = hostListFromChunks(allocation.allocatedChunks);
     let batches: number[][] = [];
+    const pidHostMap = new Map<number, string>();
 
     ns.print(`INFO: spawning initial round of ${maxOverlap} batches`);
     // Launch one batch per allocated chunk so that the pipeline is
@@ -230,6 +236,8 @@ async function harvestPipeline(ns: NS, target: string, setup: HarvestSetup) {
             allocation.allocationId,
         );
         batches.push(batchPids);
+        const lastPid = batchPids.at(-1);
+        if (typeof lastPid === 'number') pidHostMap.set(lastPid, host);
         currentBatches++;
         if (Date.now() >= lastHeartbeat + CONFIG.heartbeatCadence) {
             taskSelectorClient.tryHeartbeat(
@@ -257,8 +265,8 @@ async function harvestPipeline(ns: NS, target: string, setup: HarvestSetup) {
             }
         }
         hosts = newHosts;
-        let batchIndex = currentBatches % hosts.length;
-        if (batchIndex === 0 && hosts.length > batches.length) {
+        const spawnIndex = currentBatches % hosts.length;
+        if (spawnIndex === 0 && hosts.length > batches.length) {
             ns.print(
                 `INFO: allocation grew to ${hosts.length} chunks. `
                     + `Spawning ${hosts.length - batches.length} additional batches`,
@@ -273,6 +281,9 @@ async function harvestPipeline(ns: NS, target: string, setup: HarvestSetup) {
                     allocation.allocationId,
                 );
                 batches[i] = extraPids;
+                const lastPid = extraPids.at(-1);
+                if (typeof lastPid === 'number')
+                    pidHostMap.set(lastPid, hosts[i]);
                 currentBatches++;
                 if (Date.now() >= lastHeartbeat + CONFIG.heartbeatCadence) {
                     taskSelectorClient.tryHeartbeat(
@@ -293,25 +304,48 @@ async function harvestPipeline(ns: NS, target: string, setup: HarvestSetup) {
         }
 
         maxOverlap = hosts.length;
-        batchIndex = currentBatches % hosts.length;
-        const host = hosts[batchIndex];
 
-        const lastScriptPid = batches[batchIndex]?.at(-1);
-        if (typeof lastScriptPid === 'number') {
-            if (finishedPort.peek() === 'NULL PORT DATA') {
-                await finishedPort.nextWrite();
-            }
-            const donePid = finishedPort.read();
-            if (typeof donePid === 'number' && lastScriptPid !== donePid) {
-                ns.print(
-                    `INFO: expected to receive done message from ${lastScriptPid}, got ${donePid}`,
-                );
-            }
-        } else {
+        if (finishedPort.peek() === 'NULL PORT DATA') {
+            await finishedPort.nextWrite();
+        }
+        const msg = finishedPort.read();
+        const doneMsg = parseDoneMsg(ns, msg);
+        if (!doneMsg) {
             ns.print(
-                `WARN: lastScriptPid was not a number, did scripts fail to launch?`,
+                `WARN: malformed batch completion message ${JSON.stringify(msg)}`,
             );
             await ns.sleep(10);
+            continue;
+        }
+
+        const donePid = doneMsg.pid;
+        const msgHost = doneMsg.host;
+
+        const mappedHost = pidHostMap.get(donePid);
+        if (mappedHost !== undefined && mappedHost !== msgHost) {
+            ns.print(
+                `WARN: completion host mismatch for pid ${donePid}. expected ${mappedHost}, got ${msgHost}`,
+            );
+        }
+        pidHostMap.delete(donePid);
+
+        let batchIndex = batches.findIndex((p) => p?.includes(donePid));
+        if (batchIndex === -1) {
+            batchIndex = hosts.indexOf(msgHost);
+        }
+        if (batchIndex === -1) {
+            ns.print(
+                `WARN: could not determine batch index for host ${msgHost}`,
+            );
+            batchIndex = currentBatches % hosts.length;
+        }
+
+        let host = msgHost;
+        if (!hosts.includes(host)) {
+            ns.print(
+                `ERROR: host ${host} from completion message not in host list`,
+            );
+            host = mappedHost ?? host;
         }
 
         const actualSecurity = ns.getServerSecurityLevel(target);
@@ -392,6 +426,8 @@ async function harvestPipeline(ns: NS, target: string, setup: HarvestSetup) {
         );
         if (batchPids.length > 0) {
             batches[batchIndex] = batchPids;
+            const lastPid = batchPids.at(-1);
+            if (typeof lastPid === 'number') pidHostMap.set(lastPid, host);
             currentBatches++;
         }
 
@@ -677,4 +713,19 @@ function maxHackPercentForRam(ns: NS, target: string, maxRam: number): number {
 
 function canUseFormulas(ns: NS): boolean {
     return ns.fileExists('Formulas.exe', 'home');
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function parseDoneMsg(ns: NS, msg: any): DoneMsg | null {
+    if (
+        typeof msg === 'object'
+        && msg !== null
+        && Object.hasOwn(msg, 'pid')
+        && Object.hasOwn(msg, 'host')
+        && typeof msg.pid === 'number'
+        && typeof msg.host === 'string'
+    ) {
+        return msg as DoneMsg;
+    }
+    return null;
 }
