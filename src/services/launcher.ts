@@ -8,7 +8,11 @@ import {
     LaunchResponse,
     LaunchRunOptions,
 } from 'services/client/launch';
-import { MemoryClient, TransferableAllocation } from 'services/client/memory';
+import {
+    MemoryClient,
+    TransferableAllocation,
+    AllocOptions,
+} from 'services/client/memory';
 import { readAllFromPort, readLoop } from 'util/ports';
 import { collectDependencies } from 'util/dependencies';
 
@@ -69,6 +73,50 @@ function isValidRequest(req: LaunchRequest): boolean {
     );
 }
 
+async function allocateMemory(
+    ns: NS,
+    client: MemoryClient,
+    script: string,
+    ram: number,
+    threads: number,
+    options: AllocOptions,
+): Promise<TransferableAllocation | null> {
+    const allocation = await client.requestTransferableAllocation(
+        ram,
+        threads,
+        options,
+    );
+    if (!allocation) {
+        ns.print(`WARN: failed to launch ${script}, could not allocate memory`);
+    }
+    return allocation;
+}
+
+function transferFiles(ns: NS, host: string, files: string[]): void {
+    ns.scp(files, host, 'home');
+}
+
+function execScript(
+    ns: NS,
+    script: string,
+    host: string,
+    threads: number,
+    ramOverride: number | undefined,
+    allocationId: number,
+    args: ScriptArg[],
+): number {
+    const runOptions =
+        ramOverride !== undefined ? { threads, ramOverride } : threads;
+    return ns.exec(
+        script,
+        host,
+        runOptions as never,
+        ...args,
+        ALLOC_ID_ARG,
+        allocationId,
+    );
+}
+
 /**
  * Launch a script on a host with enough free memory.
  *
@@ -104,13 +152,15 @@ async function launch(
         ramOverride = threadOrOptions.ramOverride;
     }
 
-    const allocation = await client.requestTransferableAllocation(
+    const allocation = await allocateMemory(
+        ns,
+        client,
+        script,
         ramOverride ?? scriptRam,
         totalThreads,
         allocOptions,
     );
     if (!allocation) {
-        ns.print(`WARN: failed to launch ${script}, could not allocate memory`);
         return null;
     }
 
@@ -123,19 +173,16 @@ async function launch(
         if (isNaN(threadsHere) || threadsHere < 0) continue;
 
         const hostname = allocationChunk.hostname;
-        ns.scp([...dependencies, ...explicitDependencies], hostname, 'home');
+        transferFiles(ns, hostname, [...dependencies, ...explicitDependencies]);
 
-        const runOptions =
-            ramOverride !== undefined
-                ? { threads: threadsHere, ramOverride }
-                : threadsHere;
-        const pid = ns.exec(
+        const pid = execScript(
+            ns,
             script,
             hostname,
-            runOptions as never,
-            ...args,
-            ALLOC_ID_ARG,
+            threadsHere,
+            ramOverride,
             allocation.allocationId,
+            args,
         );
         if (!pid) {
             ns.tprintf(
