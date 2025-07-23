@@ -24,7 +24,7 @@ export async function main(ns: NS) {
 
     // keep the script alive so React effects continue to run
     while (true) {
-        await ns.sleep(60_000);
+        await ns.asleep(60_000);
     }
 }
 
