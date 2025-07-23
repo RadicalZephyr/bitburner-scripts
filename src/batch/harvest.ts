@@ -20,11 +20,9 @@ import { TaskSelectorClient, Lifecycle } from 'batch/client/task_selector';
 
 import { CONFIG } from 'batch/config';
 import {
-    analyzeBatchThreads,
-    BatchThreadAnalysis,
-    fullBatchTime,
+    calculateBatchLogistics,
     growthAnalyze,
-    hackThreadsForPercent,
+    maxHackPercentForMemory,
 } from 'batch/expected_value';
 
 export function autocomplete(data: AutocompleteData): string[] {
@@ -129,10 +127,13 @@ async function prepareHarvest(
         portClient.releasePort(donePortId);
     });
 
+    const memClient = new GrowableMemoryClient(ns);
+    const memInfo = await memClient.getFreeRam();
+
     const hackPercent =
         args.maxRam !== -1
             ? maxHackPercentForRam(ns, args.target, args.maxRam)
-            : CONFIG.maxHackPercent;
+            : maxHackPercentForMemory(ns, args.target, memInfo);
 
     if (args.maxRam !== -1 && hackPercent === 0) {
         ns.tprint(
@@ -172,7 +173,6 @@ async function prepareHarvest(
     // batch for rebalancing the server we need each rebalancing batch
     // to fit within the batch size that we originally allocated
     const batchRam = logistics.batchRam;
-    const memClient = new GrowableMemoryClient(ns);
     const allocation = await memClient.requestGrowableAllocation(
         batchRam,
         overlapLimit,
@@ -482,92 +482,6 @@ function cancelRemovedBatches(
         }
     }
     return keep;
-}
-
-/** Calculate RAM and phase information for a full harvest batch.
- *
- * @param ns          - Netscript API instance
- * @param target      - Hostname of the target server
- * @param hackPercent - Fraction of money to hack each batch (0-1)
- */
-export function calculateBatchLogistics(
-    ns: NS,
-    target: string,
-    hackPercent?: number,
-): BatchLogistics {
-    const hackThreads =
-        hackPercent !== undefined
-            ? hackThreadsForPercent(ns, target, hackPercent)
-            : 1;
-    const threads = analyzeBatchThreads(ns, target, hackThreads);
-
-    const phases = calculateBatchPhases(ns, target, threads);
-
-    const hRam = ns.getScriptRam('/batch/h.js', 'home') * threads.hackThreads;
-    const gRam = ns.getScriptRam('/batch/g.js', 'home') * threads.growThreads;
-    const wRam =
-        ns.getScriptRam('/batch/w.js', 'home')
-        * (threads.postHackWeakenThreads + threads.postGrowWeakenThreads);
-    const batchRam = hRam + gRam + wRam;
-
-    const batchTime = fullBatchTime(ns, target);
-
-    const endingPeriod = CONFIG.batchInterval * 4;
-    const overlap = Math.ceil(batchTime / endingPeriod);
-    const requiredRam = batchRam * overlap;
-
-    return {
-        target,
-        batchRam,
-        overlap,
-        endingPeriod,
-        requiredRam,
-        phases,
-    };
-}
-
-/** Calculate the phase order and relative start times for a full
- * H-W-G-W batch so that each script ends `CONFIG.batchInterval`
- * milliseconds after the previous one. Durations account for the
- * player's hacking speed multiplier.
- */
-export function calculateBatchPhases(
-    ns: NS,
-    target: string,
-    threads: BatchThreadAnalysis,
-): BatchPhase[] {
-    const hackTime = ns.getHackTime(target);
-    const weakenTime = ns.getWeakenTime(target);
-    const growTime = ns.getGrowTime(target);
-
-    const phases: BatchPhase[] = [
-        {
-            script: '/batch/h.js',
-            start: 0,
-            duration: hackTime,
-            threads: threads.hackThreads,
-        },
-        {
-            script: '/batch/w.js',
-            start: 0,
-            duration: weakenTime,
-            threads: threads.postHackWeakenThreads,
-        },
-        {
-            script: '/batch/g.js',
-            start: 0,
-            duration: growTime,
-            threads: threads.growThreads,
-        },
-        {
-            script: '/batch/w.js',
-            start: 0,
-            duration: weakenTime,
-            threads: threads.postGrowWeakenThreads,
-        },
-    ];
-
-    return calculatePhaseStartTimes(phases);
 }
 
 interface RebalanceBatchLogistics {

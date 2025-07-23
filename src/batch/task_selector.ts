@@ -15,14 +15,20 @@ import {
 } from 'batch/client/monitor';
 
 import { CONFIG } from 'batch/config';
-import { expectedValuePerRamSecond } from 'batch/expected_value';
-
+import {
+    calculateBatchLogistics,
+    expectedValueForMemory,
+    maxHackPercentForMemory,
+} from 'batch/expected_value';
 import { calculateWeakenThreads } from 'batch/till';
 import { calculateSowThreads } from 'batch/sow';
-import { calculateBatchLogistics } from 'batch/harvest';
 
 import { DiscoveryClient } from 'services/client/discover';
-import { MemoryClient, parseAndRegisterAlloc } from 'services/client/memory';
+import {
+    MemoryClient,
+    parseAndRegisterAlloc,
+    type FreeRam,
+} from 'services/client/memory';
 import { LaunchClient } from 'services/client/launch';
 
 import { readAllFromPort, readLoop } from 'util/ports';
@@ -365,23 +371,33 @@ class TaskSelector {
         this.launchedTasks = stillWaiting;
     }
 
-    async launchPendingTasks(freeRam: number) {
+    async launchPendingTasks(memInfo: FreeRam) {
         await this.checkLaunchedTasks();
         if (this.launchedTasks.length > 0) return;
 
         const harvestTasks = [...this.pendingHarvestTargets]
             .filter(
-                (h) => canHarvest(this.ns, h) && worthHarvesting(this.ns, h),
+                (h) =>
+                    canHarvest(this.ns, h)
+                    && worthHarvesting(this.ns, h, memInfo),
             )
-            .map((h) => ({
-                host: h,
-                value: expectedValuePerRamSecond(
+            .map((h) => {
+                const hackPercent = maxHackPercentForMemory(
                     this.ns,
                     h,
-                    CONFIG.maxHackPercent,
-                ),
-                ...calculateBatchLogistics(this.ns, h),
-            }))
+                    memInfo,
+                );
+                const logistics = calculateBatchLogistics(
+                    this.ns,
+                    h,
+                    hackPercent,
+                );
+                return {
+                    host: h,
+                    value: expectedValueForMemory(this.ns, h, memInfo),
+                    ...logistics,
+                };
+            })
             .sort((a, b) => b.value - a.value);
 
         const harvestScriptRam = this.ns.getScriptRam(
@@ -399,7 +415,10 @@ class TaskSelector {
         for (const task of harvestTasks) {
             const lf = this.launchFailures.get(task.host);
             if (lf && lf.nextAttempt > Date.now()) continue;
-            if (harvestScriptRam + task.requiredRam * task.overlap <= freeRam) {
+            if (
+                harvestScriptRam + task.requiredRam * task.overlap
+                <= memInfo.freeRam
+            ) {
                 await this.launchHarvest(task.host);
                 return;
             }
@@ -407,10 +426,10 @@ class TaskSelector {
         }
 
         const minimalHarvestRam = hRam + gRam + 2 * wRam;
-        if (fallbackHarvest && freeRam > minimalHarvestRam) {
+        if (fallbackHarvest && memInfo.freeRam > minimalHarvestRam) {
             const lf = this.launchFailures.get(fallbackHarvest);
             if (!lf || lf.nextAttempt <= Date.now()) {
-                await this.launchHarvest(fallbackHarvest, freeRam);
+                await this.launchHarvest(fallbackHarvest, memInfo.freeRam);
                 return;
             }
         }
@@ -440,7 +459,7 @@ class TaskSelector {
                 );
                 const total = growThreads + weakenThreads;
                 const ram = growThreads * gRam + weakenThreads * wRam;
-                if (sowScriptRam + ram <= freeRam) {
+                if (sowScriptRam + ram <= memInfo.freeRam) {
                     await this.launchSow(host, total);
                     return;
                 }
@@ -448,11 +467,13 @@ class TaskSelector {
             }
 
             const minimalSowRam = sowScriptRam + gRam + wRam;
-            if (fallback && freeRam > minimalSowRam) {
+            if (fallback && memInfo.freeRam > minimalSowRam) {
                 const lf = this.launchFailures.get(fallback);
                 if (!lf || lf.nextAttempt <= Date.now()) {
                     const maxRamPerThread = Math.max(gRam, wRam);
-                    const threads = Math.floor(freeRam / maxRamPerThread);
+                    const threads = Math.floor(
+                        memInfo.freeRam / maxRamPerThread,
+                    );
                     if (threads > 0) {
                         await this.launchSow(fallback, threads);
                         return;
@@ -482,7 +503,7 @@ class TaskSelector {
                 if (lf && lf.nextAttempt > Date.now()) continue;
                 const threads = calculateWeakenThreads(this.ns, host);
                 const ram = threads * wRam;
-                if (tillScriptRam + ram <= freeRam) {
+                if (tillScriptRam + ram <= memInfo.freeRam) {
                     await this.launchTill(host, threads);
                     return;
                 }
@@ -490,11 +511,11 @@ class TaskSelector {
             }
 
             const minimalTillRam = tillScriptRam + wRam;
-            if (fallback && freeRam > minimalTillRam) {
+            if (fallback && memInfo.freeRam > minimalTillRam) {
                 const lf = this.launchFailures.get(fallback);
                 if (!lf || lf.nextAttempt <= Date.now()) {
                     const threadRam = wRam;
-                    const threads = Math.floor(freeRam / threadRam);
+                    const threads = Math.floor(memInfo.freeRam / threadRam);
                     if (threads > 0) {
                         await this.launchTill(fallback, threads);
                         return;
@@ -613,16 +634,16 @@ async function tick(ns: NS, memory: MemoryClient, manager: TaskSelector) {
     manager.updateVelocity();
 
     const status = await memory.getFreeRam();
-    await manager.launchPendingTasks(status.freeRam);
+    await manager.launchPendingTasks(status);
 }
 
 function canHarvest(ns: NS, hostname: string) {
     return ns.getHackingLevel() >= ns.getServerRequiredHackingLevel(hostname);
 }
 
-function worthHarvesting(ns: NS, hostname: string) {
+function worthHarvesting(ns: NS, hostname: string, memInfo: FreeRam) {
     return (
-        expectedValuePerRamSecond(ns, hostname, CONFIG.maxHackPercent)
+        expectedValueForMemory(ns, hostname, memInfo)
         > CONFIG.expectedValueThreshold
     );
 }

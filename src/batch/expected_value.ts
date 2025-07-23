@@ -1,5 +1,13 @@
 import type { AutocompleteData, NS } from 'netscript';
+
 import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
+import { FreeChunk, FreeRam } from 'services/client/memory';
+import {
+    BatchLogistics,
+    BatchPhase,
+    calculatePhaseStartTimes,
+} from 'services/batch';
+
 import { CONFIG } from 'batch/config';
 
 export interface BatchThreadAnalysis {
@@ -104,6 +112,106 @@ export function fullBatchTime(ns: NS, host: string): number {
     return ns.getWeakenTime(host) + 2 * CONFIG.batchInterval;
 }
 
+/**
+ * Determine how many full batch allocations fit in the provided chunks.
+ *
+ * @param chunks    - List of worker chunks and free RAM sizes
+ * @param batchRam  - RAM required for a single batch
+ * @returns Number of batches that can fit in memory
+ */
+export function availableBatchCount(
+    chunks: FreeChunk[],
+    batchRam: number,
+): number {
+    if (batchRam <= 0) return 0;
+    return chunks.reduce((sum, c) => sum + Math.floor(c.freeRam / batchRam), 0);
+}
+
+/**
+ * Find the maximum hack percent that can run with the provided memory info.
+ *
+ * The search first attempts to satisfy the full overlap requirement. If even
+ * the minimal batch cannot fit, it relaxes the requirement to just a single
+ * batch.
+ *
+ * @param ns      - Netscript API instance
+ * @param host    - Hostname of the target server
+ * @param memInfo - Current free memory snapshot
+ * @returns Largest hack percent that fits in memory
+ */
+export function maxHackPercentForMemory(
+    ns: NS,
+    host: string,
+    memInfo: FreeRam,
+): number {
+    const minPercent = (() => {
+        if (canUseFormulas(ns)) {
+            const server = ns.getServer(host);
+            const player = ns.getPlayer();
+            return ns.formulas.hacking.hackPercent(server, player);
+        }
+        return ns.hackAnalyze(host);
+    })();
+
+    const minLog = calculateBatchLogistics(ns, host, minPercent);
+    const minChunks = availableBatchCount(memInfo.chunks, minLog.batchRam);
+    if (minChunks === 0 || memInfo.freeRam < minLog.batchRam) return 0;
+
+    const checkFull =
+        minChunks >= minLog.overlap && memInfo.freeRam >= minLog.requiredRam;
+
+    let low = minPercent;
+    let high = CONFIG.maxHackPercent;
+    for (let i = 0; i < 16; i++) {
+        const mid = (low + high) / 2;
+        const log = calculateBatchLogistics(ns, host, mid);
+        const chunks = availableBatchCount(memInfo.chunks, log.batchRam);
+        const fitsFull = checkFull
+            ? log.requiredRam <= memInfo.freeRam && chunks >= log.overlap
+            : log.batchRam <= memInfo.freeRam && chunks >= 1;
+        if (fitsFull) {
+            low = mid;
+        } else {
+            high = mid;
+        }
+    }
+
+    return low;
+}
+
+/**
+ * Estimate expected value per RAM-second using current memory limits.
+ *
+ * @param ns      - Netscript API instance
+ * @param host    - Hostname of the target server
+ * @param memInfo - Current free memory snapshot
+ * @returns Expected value per RAM-second
+ */
+export function expectedValueForMemory(
+    ns: NS,
+    host: string,
+    memInfo: FreeRam,
+): number {
+    const hackPercent = maxHackPercentForMemory(ns, host, memInfo);
+    if (hackPercent === 0) return 0;
+
+    const logistics = calculateBatchLogistics(ns, host, hackPercent);
+    const batchCount = Math.min(
+        logistics.overlap,
+        availableBatchCount(memInfo.chunks, logistics.batchRam),
+    );
+    if (batchCount === 0) return 0;
+
+    const hackThreads = hackThreadsForPercent(ns, host, hackPercent);
+    const hackValue = successfulHackValue(ns, host, hackThreads);
+    const expectedHackValue = hackValue * ns.hackAnalyzeChance(host);
+
+    const profitPerSecond =
+        (expectedHackValue * batchCount) / fullBatchTime(ns, host);
+    const requiredRam = logistics.batchRam * batchCount;
+    return profitPerSecond / requiredRam;
+}
+
 function successfulHackValue(ns: NS, host: string, threads: number): number {
     const maxMoney = ns.getServerMaxMoney(host);
 
@@ -181,6 +289,93 @@ export function growthAnalyze(
         const growMultiplier = maxMoney / Math.max(1, afterHackMoney);
         return Math.ceil(ns.growthAnalyze(hostname, growMultiplier));
     }
+}
+
+/** Calculate RAM and phase information for a full harvest batch.
+ *
+ * @param ns          - Netscript API instance
+ * @param target      - Hostname of the target server
+ * @param hackPercent - Fraction of money to hack each batch (0-1)
+ */
+
+export function calculateBatchLogistics(
+    ns: NS,
+    target: string,
+    hackPercent?: number,
+): BatchLogistics {
+    const hackThreads =
+        hackPercent !== undefined
+            ? hackThreadsForPercent(ns, target, hackPercent)
+            : 1;
+    const threads = analyzeBatchThreads(ns, target, hackThreads);
+
+    const phases = calculateBatchPhases(ns, target, threads);
+
+    const hRam = ns.getScriptRam('/batch/h.js', 'home') * threads.hackThreads;
+    const gRam = ns.getScriptRam('/batch/g.js', 'home') * threads.growThreads;
+    const wRam =
+        ns.getScriptRam('/batch/w.js', 'home')
+        * (threads.postHackWeakenThreads + threads.postGrowWeakenThreads);
+    const batchRam = hRam + gRam + wRam;
+
+    const batchTime = fullBatchTime(ns, target);
+
+    const endingPeriod = CONFIG.batchInterval * 4;
+    const overlap = Math.ceil(batchTime / endingPeriod);
+    const requiredRam = batchRam * overlap;
+
+    return {
+        target,
+        batchRam,
+        overlap,
+        endingPeriod,
+        requiredRam,
+        phases,
+    };
+}
+
+/** Calculate the phase order and relative start times for a full
+ * H-W-G-W batch so that each script ends `CONFIG.batchInterval`
+ * milliseconds after the previous one. Durations account for the
+ * player's hacking speed multiplier.
+ */
+export function calculateBatchPhases(
+    ns: NS,
+    target: string,
+    threads: BatchThreadAnalysis,
+): BatchPhase[] {
+    const hackTime = ns.getHackTime(target);
+    const weakenTime = ns.getWeakenTime(target);
+    const growTime = ns.getGrowTime(target);
+
+    const phases: BatchPhase[] = [
+        {
+            script: '/batch/h.js',
+            start: 0,
+            duration: hackTime,
+            threads: threads.hackThreads,
+        },
+        {
+            script: '/batch/w.js',
+            start: 0,
+            duration: weakenTime,
+            threads: threads.postHackWeakenThreads,
+        },
+        {
+            script: '/batch/g.js',
+            start: 0,
+            duration: growTime,
+            threads: threads.growThreads,
+        },
+        {
+            script: '/batch/w.js',
+            start: 0,
+            duration: weakenTime,
+            threads: threads.postGrowWeakenThreads,
+        },
+    ];
+
+    return calculatePhaseStartTimes(phases);
 }
 
 function weakenThreadsNeeded(securityDecrease: number): number {
