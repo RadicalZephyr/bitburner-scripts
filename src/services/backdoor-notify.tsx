@@ -145,7 +145,9 @@ function needsBackdoor(info: Server) {
 }
 
 function canInstallBackdoor(ns: NS, info: Server) {
-    return ns.getHackingLevel() >= info.requiredHackingSkill;
+    return (
+        ns.getHackingLevel() >= info.requiredHackingSkill && info.hasAdminRights
+    );
 }
 
 /** Send a command to the terminal by simulating user input. */
