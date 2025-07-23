@@ -31,6 +31,18 @@ export function autocomplete(data: AutocompleteData): string[] {
     return data.servers;
 }
 
+export async function main(ns: NS) {
+    ns.disableLog('ALL');
+
+    const args = await parseArgs(ns);
+    if (!args) return;
+
+    const setup = await prepareHarvest(ns, args);
+    if (!setup) return;
+
+    await harvestPipeline(ns, args.target, setup);
+}
+
 interface ParsedArgs {
     target: string;
     maxRam: number;
@@ -402,18 +414,6 @@ async function harvestPipeline(ns: NS, target: string, setup: HarvestSetup) {
             }
         }
     }
-}
-
-export async function main(ns: NS) {
-    ns.disableLog('ALL');
-
-    const args = await parseArgs(ns);
-    if (!args) return;
-
-    const setup = await prepareHarvest(ns, args);
-    if (!setup) return;
-
-    await harvestPipeline(ns, args.target, setup);
 }
 
 function hostCountMap(hosts: string[]): Map<string, number> {
