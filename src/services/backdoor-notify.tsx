@@ -43,13 +43,7 @@ function BackdoorNotifier({ ns }: BackdoorNotifierProps) {
 
     React.useEffect(() => {
         const id = globalThis.setInterval(() => {
-            const factionMissing: string[] = [];
-            for (const host of FACTION_SERVERS) {
-                const info = ns.getServer(host);
-                if (needsBackdoor(info) && canInstallBackdoor(ns, info)) {
-                    factionMissing.push(host);
-                }
-            }
+            const { factionMissing, missing } = backdoorableServers(ns);
 
             if (factionMissing.length > 0 && !tailOpen.current) {
                 tailOpen.current = true;
@@ -57,19 +51,6 @@ function BackdoorNotifier({ ns }: BackdoorNotifierProps) {
             } else if (factionMissing.length === 0 && tailOpen.current) {
                 tailOpen.current = false;
                 ns.ui.closeTail();
-            }
-
-            const network = walkNetworkBFS(ns);
-            const missing: string[] = [];
-            for (const host of network.keys()) {
-                const info = ns.getServer(host);
-                if (
-                    !FACTION_SERVERS.includes(host)
-                    && needsBackdoor(info)
-                    && canInstallBackdoor(ns, info)
-                ) {
-                    missing.push(host);
-                }
             }
 
             setFactionServers(factionMissing);
@@ -128,6 +109,31 @@ function ServerDisplay({ title, servers, theme }: ServerDisplayProps) {
             </ul>
         </div>
     );
+}
+
+function backdoorableServers(ns: NS) {
+    const factionMissing: string[] = [];
+    for (const host of FACTION_SERVERS) {
+        const info = ns.getServer(host);
+        if (needsBackdoor(info) && canInstallBackdoor(ns, info)) {
+            factionMissing.push(host);
+        }
+    }
+
+    const network = walkNetworkBFS(ns);
+    const missing: string[] = [];
+    for (const host of network.keys()) {
+        const info = ns.getServer(host);
+        if (
+            !FACTION_SERVERS.includes(host)
+            && needsBackdoor(info)
+            && canInstallBackdoor(ns, info)
+        ) {
+            missing.push(host);
+        }
+    }
+
+    return { factionMissing, missing };
 }
 
 function needsBackdoor(info: Server) {
