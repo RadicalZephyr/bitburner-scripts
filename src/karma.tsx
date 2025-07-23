@@ -24,33 +24,52 @@ export async function main(ns: NS) {
         textAlign: 'left',
     } as const;
 
+    ns.clearLog();
+    ns.printRaw(<Karma ns={ns} cellStyle={cellStyle} />);
+    ns.ui.renderTail();
+
     while (true) {
         const [ww] = ns.ui.windowSize();
         ns.ui.moveTail(ww - STATUS_WINDOW_WIDTH, STATUS_WINDOW_HEIGHT);
-
-        const player = ns.getPlayer();
-
-        ns.clearLog();
-        ns.printRaw(
-            <>
-                <table>
-                    <tbody>
-                        <trow>
-                            <td style={cellStyle}>Karma: </td>
-                            <td style={cellStyle}>
-                                {ns.formatNumber(player.karma)}
-                            </td>
-                        </trow>
-                        <trow>
-                            <td style={cellStyle}>Victims: </td>
-                            <td style={cellStyle}>{player.numPeopleKilled}</td>
-                        </trow>
-                    </tbody>
-                </table>
-            </>,
-        );
-        ns.ui.renderTail();
-
-        await ns.sleep(200);
+        await ns.asleep(1000);
     }
+}
+
+interface KarmaProps {
+    ns: NS;
+    cellStyle: object;
+}
+
+function Karma({ ns, cellStyle }: KarmaProps) {
+    const [karma, setKarma] = React.useState(0);
+    const [numKilled, setNumKilled] = React.useState(0);
+
+    React.useEffect(() => {
+        const id = globalThis.setInterval(() => {
+            const player = ns.getPlayer();
+            setKarma(player.karma);
+            setNumKilled(player.numPeopleKilled);
+        });
+
+        return () => {
+            globalThis.clearInterval(id);
+        };
+    });
+
+    return (
+        <>
+            <table>
+                <tbody>
+                    <trow>
+                        <td style={cellStyle}>Karma: </td>
+                        <td style={cellStyle}>{ns.formatNumber(karma)}</td>
+                    </trow>
+                    <trow>
+                        <td style={cellStyle}>Victims: </td>
+                        <td style={cellStyle}>{numKilled}</td>
+                    </trow>
+                </tbody>
+            </table>
+        </>
+    );
 }
