@@ -14,62 +14,84 @@ const FACTION_SERVERS = [
     'The-Cave',
 ];
 
+interface BackdoorNotifierProps {
+    ns: NS;
+}
+
+function BackdoorNotifier({ ns }: BackdoorNotifierProps) {
+    const [factionServers, setFactionServers] = React.useState([] as string[]);
+    const [servers, setServers] = React.useState([] as string[]);
+    const [theme, setTheme] = React.useState(
+        ns.ui.getTheme() as UserInterfaceTheme,
+    );
+
+    const tailOpen = React.useRef(false);
+
+    React.useEffect(() => {
+        const id = globalThis.setInterval(() => {
+            const factionMissing: string[] = [];
+            for (const host of FACTION_SERVERS) {
+                const info = ns.getServer(host);
+                if (needsBackdoor(info) && canInstallBackdoor(ns, info)) {
+                    factionMissing.push(host);
+                }
+            }
+
+            if (factionMissing.length > 0 && !tailOpen.current) {
+                tailOpen.current = true;
+                ns.ui.openTail();
+            } else if (factionMissing.length === 0 && tailOpen.current) {
+                tailOpen.current = false;
+                ns.ui.closeTail();
+            }
+
+            const network = walkNetworkBFS(ns);
+            const missing: string[] = [];
+            for (const host of network.keys()) {
+                const info = ns.getServer(host);
+                if (
+                    !FACTION_SERVERS.includes(host)
+                    && needsBackdoor(info)
+                    && canInstallBackdoor(ns, info)
+                ) {
+                    missing.push(host);
+                }
+            }
+
+            setFactionServers(factionMissing);
+            setServers(missing);
+            setTheme(ns.ui.getTheme());
+            ns.ui.renderTail();
+        }, 200);
+
+        return () => {
+            globalThis.clearInterval(id);
+        };
+    }, [ns]);
+
+    return (
+        <>
+            <ServerDisplay
+                title={'Faction Servers'}
+                servers={factionServers}
+                theme={theme}
+            />
+            <ServerDisplay title={'Servers'} servers={servers} theme={theme} />
+        </>
+    );
+}
+
 export async function main(ns: NS) {
     ns.flags(MEM_TAG_FLAGS);
     ns.disableLog('ALL');
     ns.clearLog();
 
-    let tailOpen = false;
+    ns.printRaw(<BackdoorNotifier ns={ns} />);
+    ns.ui.renderTail();
 
+    // keep the script alive so React effects continue to run
     while (true) {
-        const factionMissingBackdoor = [];
-        for (const host of FACTION_SERVERS) {
-            const info = ns.getServer(host);
-            if (needsBackdoor(info) && canInstallBackdoor(ns, info)) {
-                factionMissingBackdoor.push(host);
-                if (!tailOpen) {
-                    tailOpen = true;
-                    ns.ui.openTail();
-                }
-            }
-        }
-        if (tailOpen && factionMissingBackdoor.length === 0) {
-            tailOpen = false;
-            ns.ui.closeTail();
-        }
-
-        const network = walkNetworkBFS(ns);
-        const missingBackdoor: string[] = [];
-
-        for (const host of network.keys()) {
-            const info = ns.getServer(host);
-            if (
-                !FACTION_SERVERS.includes(host)
-                && needsBackdoor(info)
-                && canInstallBackdoor(ns, info)
-            ) {
-                missingBackdoor.push(host);
-            }
-        }
-
-        const theme = ns.ui.getTheme();
-        ns.clearLog();
-        ns.printRaw(
-            <>
-                <ServerDisplay
-                    title={'Faction Servers'}
-                    servers={factionMissingBackdoor}
-                    theme={theme}
-                />
-                <ServerDisplay
-                    title={'Servers'}
-                    servers={missingBackdoor}
-                    theme={theme}
-                />
-            </>,
-        );
-        ns.ui.renderTail();
-        await ns.sleep(200);
+        await ns.sleep(60_000);
     }
 }
 
