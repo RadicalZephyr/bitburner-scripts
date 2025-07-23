@@ -83,8 +83,10 @@ export function expectedValuePerRamSecond(
     const hackValue = successfulHackValue(ns, host, hackThreads);
     const expectedHackValue = hackValue * ns.hackAnalyzeChance(host);
 
+    const batchesPerSecond = 1000 / logistics.endingPeriod;
     const profitPerSecond =
-        (expectedHackValue * batchCount) / fullBatchTime(ns, host);
+        (expectedHackValue * batchCount * batchesPerSecond)
+        / fullBatchTime(ns, host);
     const requiredRam = logistics.requiredRam;
 
     return profitPerSecond / requiredRam;
@@ -195,9 +197,12 @@ export function expectedValueForMemory(
     const hackValue = successfulHackValue(ns, host, hackThreads);
     const expectedHackValue = hackValue * ns.hackAnalyzeChance(host);
 
+    const batchesPerSecond = 1000 / logistics.endingPeriod;
     const profitPerSecond =
-        (expectedHackValue * batchCount) / fullBatchTime(ns, host);
+        (expectedHackValue * batchCount * batchesPerSecond)
+        / fullBatchTime(ns, host);
     const requiredRam = logistics.batchRam * batchCount;
+
     return profitPerSecond / requiredRam;
 }
 
