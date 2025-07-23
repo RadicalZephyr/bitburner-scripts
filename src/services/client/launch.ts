@@ -13,6 +13,7 @@ export enum MessageType {
 /**
  * Options for running a script remotely.
  *
+ * alloc: Optional flags to request specific allocation strategies {@link AllocOptions}
  * dependencies:  Extra files to `scp` before execution
  */
 export interface LaunchRunOptions extends RunOptions {
