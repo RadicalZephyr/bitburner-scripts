@@ -111,6 +111,35 @@ OPTIONS
 }
 ```
 
+## Script File Organization
+
+We organize the content of all script files in a consistent manner to
+make navigating the code easier and quicker. Scripts should be
+organized as follows:
+
+```
+{{ imports }}
+
+{{ autocompleteFunction }}
+
+{{ mainFunction }}
+
+{{ exportedTypeDefinitions }}
+
+{{ typeDefinitions }}
+
+{{ exportedFunctions }}
+
+{{ classDefinitions }}
+
+{{ helperFunctions }}
+```
+
+- Any of these sections may be omitted if there is no corresponding
+  content.
+- Main functions should remain short and lean, delegating to helper
+  functions for the majority of their functionality.
+
 ## Limitations of the Netscript2 Runtime Environment
 
 - There is a bug in the implementation of `NetscriptPort.nextWrite`
