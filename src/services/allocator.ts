@@ -43,6 +43,11 @@ function hasAllocTag(proc: ProcessInfo): boolean {
 
 export type LogFn = (line: string) => void;
 
+export interface FreeChunk {
+    hostname: string;
+    freeRam: number;
+}
+
 export class MemoryAllocator {
     ns: NS;
     printLog: LogFn;
@@ -101,15 +106,26 @@ export class MemoryAllocator {
     }
 
     /**
+     * Get a list of available free RAM chunks on each worker.
+     *
+     * @returns Array describing free RAM per worker
+     */
+    getFreeChunks(): FreeChunk[] {
+        const chunks: FreeChunk[] = [];
+        for (const w of this.workers.values()) {
+            if (w.freeRam > 0) {
+                chunks.push({ hostname: w.hostname, freeRam: w.freeRam });
+            }
+        }
+        return chunks;
+    }
+
+    /**
      * Query total free RAM across all workers.
      * @returns Total free RAM across all workers in GB
      */
     getFreeRamTotal(): number {
-        let total = 0;
-        for (const w of this.workers.values()) {
-            total += w.freeRam;
-        }
-        return total;
+        return this.getFreeChunks().reduce((sum, c) => sum + c.freeRam, 0);
     }
 
     /** Check for allocations belonging to terminated processes. */

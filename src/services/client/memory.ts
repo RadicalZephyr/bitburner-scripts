@@ -150,8 +150,14 @@ export interface AllocationResult {
     hosts: HostAllocation[];
 }
 
+export interface FreeChunk {
+    hostname: string;
+    freeRam: number;
+}
+
 export interface FreeRam {
     freeRam: number;
+    chunks: FreeChunk[];
 }
 
 /**
@@ -372,7 +378,7 @@ export class MemoryClient extends Client<
      *
      * @returns Total free RAM across all workers
      */
-    async getFreeRam(): Promise<number> {
+    async getFreeRam(): Promise<FreeRam> {
         const payload: StatusRequest = {};
         const result = await this.sendMessageReceiveResponse(
             MessageType.Status,
@@ -380,10 +386,10 @@ export class MemoryClient extends Client<
         );
         if (!result) {
             this.ns.print('WARN: status request failed');
-            return 0;
+            return { freeRam: 0, chunks: [] };
         }
         const status = result as FreeRam;
-        return status.freeRam;
+        return status;
     }
 }
 

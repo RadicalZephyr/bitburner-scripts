@@ -9,7 +9,7 @@ export async function main(ns: NS) {
     const self = ns.self();
     client.registerAllocation(self.server, self.ramUsage, 1);
 
-    const freeRam = await client.getFreeRam();
+    const { freeRam } = await client.getFreeRam();
     ns.tprintf(`free ram: ${ns.formatRam(freeRam)}`);
 
     const chunks = Math.floor((freeRam - 16) / 8);

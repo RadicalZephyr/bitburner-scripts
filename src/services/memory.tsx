@@ -311,7 +311,10 @@ function readMemRequestsFromPort(
                 continue;
             }
             case MessageType.Status: {
-                payload = { freeRam: memoryManager.getFreeRamTotal() };
+                payload = {
+                    freeRam: memoryManager.getFreeRamTotal(),
+                    chunks: memoryManager.getFreeChunks(),
+                };
                 break;
             }
             case MessageType.Snapshot: {

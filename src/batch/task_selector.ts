@@ -612,8 +612,8 @@ class TaskSelector {
 async function tick(ns: NS, memory: MemoryClient, manager: TaskSelector) {
     manager.updateVelocity();
 
-    const freeRam = await memory.getFreeRam();
-    await manager.launchPendingTasks(freeRam);
+    const status = await memory.getFreeRam();
+    await manager.launchPendingTasks(status.freeRam);
 }
 
 function canHarvest(ns: NS, hostname: string) {

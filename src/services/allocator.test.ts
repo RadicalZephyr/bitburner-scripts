@@ -434,3 +434,14 @@ test('releaseChunks clamps requestedChunks to zero', () => {
     const updated = alloc.allocations.get(id)!;
     expect(updated.requestedChunks).toBe(0);
 });
+
+test('getFreeChunks returns workers with available RAM', () => {
+    const hosts = { h1: { max: 16, used: 4 }, h2: { max: 8, used: 8 } };
+    const ns = makeNS(hosts, {});
+    const alloc = new MemoryAllocator(ns);
+    alloc.pushWorker('h1');
+    alloc.pushWorker('h2');
+
+    const free = alloc.getFreeChunks();
+    expect(free).toEqual([{ hostname: 'h1', freeRam: 12 }]);
+});
