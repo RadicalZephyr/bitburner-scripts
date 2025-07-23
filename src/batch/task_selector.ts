@@ -415,10 +415,7 @@ class TaskSelector {
         for (const task of harvestTasks) {
             const lf = this.launchFailures.get(task.host);
             if (lf && lf.nextAttempt > Date.now()) continue;
-            if (
-                harvestScriptRam + task.requiredRam * task.overlap
-                <= memInfo.freeRam
-            ) {
+            if (harvestScriptRam + task.requiredRam <= memInfo.freeRam) {
                 await this.launchHarvest(task.host);
                 return;
             }
