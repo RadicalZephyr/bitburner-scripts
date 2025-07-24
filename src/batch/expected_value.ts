@@ -77,16 +77,13 @@ export function expectedValuePerRamSecond(
     hackPercent: number = CONFIG.maxHackPercent,
 ): number {
     const logistics = calculateBatchLogistics(ns, host, hackPercent);
-    const batchCount = logistics.overlap;
 
     const hackThreads = hackThreadsForPercent(ns, host, hackPercent);
     const hackValue = successfulHackValue(ns, host, hackThreads);
     const expectedHackValue = hackValue * ns.hackAnalyzeChance(host);
 
     const batchesPerSecond = 1000 / logistics.endingPeriod;
-    const profitPerSecond =
-        (expectedHackValue * batchCount * batchesPerSecond)
-        / fullBatchTime(ns, host);
+    const profitPerSecond = expectedHackValue * batchesPerSecond;
     const requiredRam = logistics.requiredRam;
 
     return profitPerSecond / requiredRam;
@@ -198,9 +195,9 @@ export function expectedValueForMemory(
     const expectedHackValue = hackValue * ns.hackAnalyzeChance(host);
 
     const batchesPerSecond = 1000 / logistics.endingPeriod;
+    const overlapCompleteness = batchCount / logistics.overlap;
     const profitPerSecond =
-        (expectedHackValue * batchCount * batchesPerSecond)
-        / fullBatchTime(ns, host);
+        expectedHackValue * batchesPerSecond * overlapCompleteness;
     const requiredRam = logistics.batchRam * batchCount;
 
     return profitPerSecond / requiredRam;
