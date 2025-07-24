@@ -354,10 +354,18 @@ export function harvestBatchEndingPeriod(): number {
     return CONFIG.batchInterval * 4;
 }
 
-/** Calculate the phase order and relative start times for a full
+/**
+ * Calculate relative start times for a batch.
+ *
+ * Calculate the phase order and relative start times for a full
  * H-W-G-W batch so that each script ends `CONFIG.batchInterval`
  * milliseconds after the previous one. Durations account for the
  * player's hacking speed multiplier.
+ *
+ * @param ns      - Netscript API instance
+ * @param target  - Target server
+ * @param threads - Batch thread sizes
+ * @returns A list of ordered phases with start time delays so they all end in phase order.
  */
 export function calculateBatchPhases(
     ns: NS,
