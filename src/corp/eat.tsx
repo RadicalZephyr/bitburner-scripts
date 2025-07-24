@@ -10,13 +10,12 @@ export async function main(ns: NS) {
     ns.clearLog();
     ns.ui.openTail();
 
-    while (true) {
-        const theme = ns.ui.getTheme();
-        ns.clearLog();
-        ns.printRaw(<EatIt theme={theme} />);
-        ns.ui.renderTail();
+    ns.clearLog();
+    ns.printRaw(<EatIt ns={ns} />);
+    ns.ui.renderTail();
 
-        await ns.sleep(1000);
+    while (true) {
+        await ns.asleep(60_000);
     }
 }
 
@@ -58,17 +57,31 @@ function stopEating() {
 }
 
 interface IEatItProps {
-    theme: UserInterfaceTheme;
+    ns: NS;
 }
 
-function EatIt({ theme }: IEatItProps) {
+function EatIt({ ns }: IEatItProps) {
+    const [theme, setTheme] = React.useState(
+        ns.ui.getTheme() as UserInterfaceTheme,
+    );
+
+    React.useEffect(() => {
+        const id = globalThis.setInterval(() => {
+            setTheme(ns.ui.getTheme());
+        }, 200);
+
+        return () => {
+            globalThis.clearInterval(id);
+        };
+    }, [ns]);
+
     const buttonClass =
         'MuiButtonBase-root MuiButton-root MuiButton-text MuiButton-textPrimary MuiButton-sizeMedium MuiButton-textSizeMedium MuiButton-root MuiButton-text MuiButton-textPrimary MuiButton-sizeMedium MuiButton-textSizeMedium css-u8jh2y';
     return (
         <>
             <h1>Eat All The Noodles!</h1>
             <button
-                class={buttonClass}
+                className={buttonClass}
                 style={{ color: theme.successlight }}
                 onClick={() => startEating()}
             >
