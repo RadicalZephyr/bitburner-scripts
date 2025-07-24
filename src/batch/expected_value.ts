@@ -78,12 +78,12 @@ export function expectedValuePerRamSecond(
 ): number {
     const logistics = calculateBatchLogistics(ns, host, hackPercent);
 
-    const hackThreads = hackThreadsForPercent(ns, host, hackPercent);
-    const hackValue = successfulHackValue(ns, host, hackThreads);
-    const expectedHackValue = hackValue * ns.hackAnalyzeChance(host);
-
-    const batchesPerSecond = 1000 / logistics.endingPeriod;
-    const profitPerSecond = expectedHackValue * batchesPerSecond;
+    const profitPerSecond = harvestProfit(
+        ns,
+        host,
+        hackPercent,
+        logistics.endingPeriod,
+    );
     const requiredRam = logistics.requiredRam;
 
     return profitPerSecond / requiredRam;
@@ -190,17 +190,42 @@ export function expectedValueForMemory(
     );
     if (batchCount === 0) return 0;
 
-    const hackThreads = hackThreadsForPercent(ns, host, hackPercent);
-    const hackValue = successfulHackValue(ns, host, hackThreads);
-    const expectedHackValue = hackValue * ns.hackAnalyzeChance(host);
+    const profitPerSecond = harvestProfit(
+        ns,
+        host,
+        hackPercent,
+        logistics.endingPeriod,
+    );
 
-    const batchesPerSecond = 1000 / logistics.endingPeriod;
     const overlapCompleteness = batchCount / logistics.overlap;
-    const profitPerSecond =
-        expectedHackValue * batchesPerSecond * overlapCompleteness;
+    const scaledProfitPerSecond = profitPerSecond * overlapCompleteness;
     const requiredRam = logistics.batchRam * batchCount;
 
-    return profitPerSecond / requiredRam;
+    return scaledProfitPerSecond / requiredRam;
+}
+
+/**
+ * Calculate the expected profit of hacking this target.
+ *
+ * @param ns           - Netscript API instance
+ * @param target       - Target server
+ * @param hackPercent  - Percent of server money to hack each batch
+ * @param endingPeriod - Batch ending period {@see harvestBatchEndingPeriod}
+ * @returns Calculated profits per second
+ */
+
+export function harvestProfit(
+    ns: NS,
+    target: string,
+    hackPercent: number,
+    endingPeriod: number,
+) {
+    const hackThreads = hackThreadsForPercent(ns, target, hackPercent);
+    const hackValue = successfulHackValue(ns, target, hackThreads);
+    const expectedHackValue = hackValue * ns.hackAnalyzeChance(target);
+
+    const batchesPerSecond = 1000 / endingPeriod;
+    return expectedHackValue * batchesPerSecond;
 }
 
 function successfulHackValue(ns: NS, host: string, threads: number): number {
