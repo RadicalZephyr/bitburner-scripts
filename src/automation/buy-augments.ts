@@ -66,6 +66,7 @@ OPTIONS
                 baseCost,
             });
         }
+        await ns.sleep(10);
     }
 
     augs.sort((a, b) => b.baseCost - a.baseCost);
@@ -94,17 +95,12 @@ OPTIONS
 
         if (purchased) {
             budget -= cost;
+            ns.print(`INFO: ${aug.name} from ${aug.faction} for ${cost}`);
             purchasedAugs.push({ purchasePrice: cost, ...aug });
         } else {
             ns.print(`WARN: failed to purchase ${aug.name}`);
         }
-    }
-
-    ns.print(`SUCCESS: purchased ${purchasedAugs.length} augmentations:`);
-    for (const purchase of purchasedAugs) {
-        ns.print(
-            `INFO: ${purchase.name} from ${purchase.faction} for ${purchase.purchasePrice}`,
-        );
+        await ns.asleep(10);
     }
 }
 
