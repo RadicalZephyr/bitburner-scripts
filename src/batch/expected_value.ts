@@ -311,7 +311,7 @@ export function calculateBatchLogistics(
 
     const batchTime = fullBatchTime(ns, target);
 
-    const endingPeriod = CONFIG.batchInterval * 4;
+    const endingPeriod = harvestBatchEndingPeriod();
     const overlap = Math.ceil(batchTime / endingPeriod);
     const requiredRam = batchRam * overlap;
 
@@ -323,6 +323,34 @@ export function calculateBatchLogistics(
         requiredRam,
         phases,
     };
+}
+
+/**
+ * Calculate how long the critical period during batch ending is.
+ *
+ * @remarks One of the premises of batch hacking is that the number of
+ * threads in each phase and the phase ordering is calculated such
+ * that after all phases of a batch are complete the target will be
+ * left in the same state it was in before the batch started.
+ *
+ * For this to actually hold true, batches phases need to end in the
+ * correct order, and batches need to end serially with no
+ * interleaving of phases from different batches.
+ *
+ * Because each Netscript action takes some time to actually commit,
+ * we need to plan for an interval between each phase of a batch
+ * ending the `CONFIG.batchInterval`. Similarly, we need to have an
+ * interval between the last phase of one batch ending and the first
+ * phase of the next batch ending.
+ *
+ * This function calculates the duration when one batch has exclusive
+ * "ending rights" to a particular target.
+ *
+ * @returns The time in milliseconds for all phases of a batch to
+ * complete.
+ */
+export function harvestBatchEndingPeriod(): number {
+    return CONFIG.batchInterval * 4;
 }
 
 /** Calculate the phase order and relative start times for a full
