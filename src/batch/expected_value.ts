@@ -207,17 +207,16 @@ export function expectedValueForMemory(
 }
 
 function successfulHackValue(ns: NS, host: string, threads: number): number {
-    const maxMoney = ns.getServerMaxMoney(host);
+    const server = ns.getServer(host);
 
     if (canUseFormulas(ns)) {
-        const server = ns.getServer(host);
         const player = ns.getPlayer();
         server.moneyAvailable = server.moneyMax;
         const percent = ns.formulas.hacking.hackPercent(server, player);
         return threads * server.moneyMax * percent;
     }
 
-    return threads * maxMoney * ns.hackAnalyze(host);
+    return threads * server.moneyMax * ns.hackAnalyze(host);
 }
 
 /**
@@ -234,7 +233,7 @@ export function analyzeBatchThreads(
     hackThreads: number = 1,
 ): BatchThreadAnalysis {
     const stolen = successfulHackValue(ns, host, hackThreads);
-    const maxMoney = ns.getServerMaxMoney(host);
+    const maxMoney = ns.getServer(host).moneyMax;
     const afterHackMoney = Math.max(1, maxMoney - stolen);
 
     const growThreads = growthAnalyze(ns, host, afterHackMoney);
@@ -280,7 +279,7 @@ export function growthAnalyze(
         // N.B. from testing this calculation tracks very closely with
         // the formulas value, _except_ as the afterHackMoney
         // approaches zero the error grows super-linearly
-        const maxMoney = ns.getServerMaxMoney(hostname);
+        const maxMoney = ns.getServer(hostname).moneyMax;
         const growMultiplier = maxMoney / Math.max(1, afterHackMoney);
         return Math.ceil(ns.growthAnalyze(hostname, growMultiplier));
     }
