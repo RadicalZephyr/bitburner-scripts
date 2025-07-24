@@ -15,5 +15,4 @@ import BSTreeKV from 'typescript-collections/BSTreeKV';
  *
  * @see BSTreeKV
  */
-export default class BSTree<T> extends BSTreeKV<T, T> {
-}
+export default class BSTree<T> extends BSTreeKV<T, T> {}

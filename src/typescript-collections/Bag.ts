@@ -3,7 +3,6 @@ import Dictionary from 'typescript-collections/Dictionary';
 import Set from 'typescript-collections/Set';
 
 export default class Bag<T> {
-
     private toStrF: (item: T) => string;
     private dictionary: Dictionary<T, any>;
     private nElements: number;
@@ -33,7 +32,6 @@ export default class Bag<T> {
         this.nElements = 0;
     }
 
-
     /**
      * Adds nCopies of the specified object to this bag.
      * @param {Object} element element to add.
@@ -42,7 +40,6 @@ export default class Bag<T> {
      * @return {boolean} true unless element is undefined.
      */
     add(element: T, nCopies: number = 1): boolean {
-
         if (util.isUndefined(element) || nCopies <= 0) {
             return false;
         }
@@ -50,7 +47,7 @@ export default class Bag<T> {
         if (!this.contains(element)) {
             const node = {
                 value: element,
-                copies: nCopies
+                copies: nCopies,
             };
             this.dictionary.setValue(element, node);
         } else {
@@ -66,7 +63,6 @@ export default class Bag<T> {
      * @return {number} the number of copies of the object, 0 if not found
      */
     count(element: T): number {
-
         if (!this.contains(element)) {
             return 0;
         } else {
@@ -94,7 +90,6 @@ export default class Bag<T> {
      * @return {boolean} true if at least 1 element was removed.
      */
     remove(element: T, nCopies: number = 1) {
-
         if (util.isUndefined(element) || nCopies <= 0) {
             return false;
         }
@@ -156,7 +151,7 @@ export default class Bag<T> {
      * optionally return false.
      */
     forEach(callback: util.ILoopFunction<T>) {
-        this.dictionary.forEach(function(k, v) {
+        this.dictionary.forEach(function (k, v) {
             const value = v.value;
             const copies = v.copies;
             for (let i = 0; i < copies; i++) {
@@ -190,5 +185,4 @@ export default class Bag<T> {
         this.nElements = 0;
         this.dictionary.clear();
     }
-
-}// End of bag
+} // End of bag

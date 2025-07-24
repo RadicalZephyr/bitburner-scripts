@@ -5,7 +5,6 @@ import * as arrays from 'typescript-collections/arrays';
 import Dictionary from 'typescript-collections/Dictionary';
 
 export default class Set<T> {
-
     /**
      * Dictionary key and value holds the elements in the set.
      * @type {Object}
@@ -34,8 +33,6 @@ export default class Set<T> {
     constructor(toStringFunction?: (item: T) => string) {
         this.dictionary = new Dictionary<T, any>(toStringFunction);
     }
-
-
 
     /**
      * Returns true if this set contains the specified element.
@@ -68,7 +65,7 @@ export default class Set<T> {
      */
     intersection(otherSet: Set<T>): void {
         const set = this;
-        this.forEach(function(element: T): boolean {
+        this.forEach(function (element: T): boolean {
             if (!otherSet.contains(element)) {
                 set.remove(element);
             }
@@ -83,7 +80,7 @@ export default class Set<T> {
      */
     union(otherSet: Set<T>): void {
         const set = this;
-        otherSet.forEach(function(element: T): boolean {
+        otherSet.forEach(function (element: T): boolean {
             set.add(element);
             return true;
         });
@@ -96,7 +93,7 @@ export default class Set<T> {
      */
     difference(otherSet: Set<T>): void {
         const set = this;
-        otherSet.forEach(function(element: T): boolean {
+        otherSet.forEach(function (element: T): boolean {
             set.remove(element);
             return true;
         });
@@ -108,13 +105,12 @@ export default class Set<T> {
      * @return {boolean} true if this set is a subset of the given set.
      */
     isSubsetOf(otherSet: Set<T>): boolean {
-
         if (this.size() > otherSet.size()) {
             return false;
         }
 
         let isSub = true;
-        this.forEach(function(element) {
+        this.forEach(function (element) {
             if (!otherSet.contains(element)) {
                 isSub = false;
                 return false;
@@ -145,7 +141,7 @@ export default class Set<T> {
      * optionally return false.
      */
     forEach(callback: util.ILoopFunction<T>): void {
-        this.dictionary.forEach(function(k, v) {
+        this.dictionary.forEach(function (k, v) {
             return callback(v);
         });
     }
@@ -182,9 +178,9 @@ export default class Set<T> {
     }
 
     /*
-    * Provides a string representation for display
-    */
+     * Provides a string representation for display
+     */
     toString(): string {
         return arrays.toString(this.toArray());
     }
-}// end of Set
+} // end of Set

@@ -2,7 +2,6 @@ import * as util from 'typescript-collections/util';
 import LinkedList from 'typescript-collections/LinkedList';
 
 export default class Queue<T> {
-
     /**
      * List containing the elements.
      * @type collections.LinkedList
@@ -20,7 +19,6 @@ export default class Queue<T> {
     constructor() {
         this.list = new LinkedList<T>();
     }
-
 
     /**
      * Inserts the specified element into the end of this queue.
@@ -55,7 +53,6 @@ export default class Queue<T> {
      * @return {*} the head of this queue, or undefined if this queue is empty.
      */
     peek(): T | undefined {
-
         if (this.list.size() !== 0) {
             return this.list.first();
         }
@@ -118,5 +115,4 @@ export default class Queue<T> {
     forEach(callback: util.ILoopFunction<T>) {
         this.list.forEach(callback);
     }
-
 } // End of queue

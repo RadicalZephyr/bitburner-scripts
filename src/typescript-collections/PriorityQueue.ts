@@ -2,7 +2,6 @@ import * as util from 'typescript-collections/util';
 import Heap from 'typescript-collections/Heap';
 
 export default class PriorityQueue<T> {
-
     private heap: Heap<T>;
     /**
      * Creates an empty priority queue.
@@ -116,5 +115,4 @@ export default class PriorityQueue<T> {
     forEach(callback: util.ILoopFunction<T>) {
         this.heap.forEach(callback);
     }
-
 } // end of priority queue

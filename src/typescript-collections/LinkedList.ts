@@ -8,7 +8,6 @@ export interface ILinkedListNode<T> {
 }
 
 export default class LinkedList<T> {
-
     /**
      * First node in the list
      * @type {Object}
@@ -35,7 +34,7 @@ export default class LinkedList<T> {
      * which together represent a sequence.
      * @constructor
      */
-    constructor() { }
+    constructor() {}
 
     /**
      * Adds an element to this list.
@@ -83,7 +82,6 @@ export default class LinkedList<T> {
      * empty.
      */
     first(): T | undefined {
-
         if (this.firstNode !== null) {
             return this.firstNode.element;
         }
@@ -96,7 +94,6 @@ export default class LinkedList<T> {
      * empty.
      */
     last(): T | undefined {
-
         if (this.lastNode !== null) {
             return this.lastNode.element;
         }
@@ -110,7 +107,6 @@ export default class LinkedList<T> {
      * out of bounds.
      */
     elementAtIndex(index: number): T | undefined {
-
         const node = this.nodeAtIndex(index);
         if (node === null) {
             return undefined;
@@ -139,7 +135,6 @@ export default class LinkedList<T> {
      * element.
      */
     indexOf(item: T, equalsFunction?: util.IEqualsFunction<T>): number {
-
         const equalsF = equalsFunction || util.defaultEquals;
         if (util.isUndefined(item)) {
             return -1;
@@ -155,7 +150,6 @@ export default class LinkedList<T> {
         }
         return -1;
     }
-
 
     /**
      * Returns true if this list contains the specified element.
@@ -176,7 +170,7 @@ export default class LinkedList<T> {
      * otherwise.
      */
     contains(item: T, equalsFunction?: util.IEqualsFunction<T>): boolean {
-        return (this.indexOf(item, equalsFunction) >= 0);
+        return this.indexOf(item, equalsFunction) >= 0;
     }
 
     /**
@@ -204,8 +198,8 @@ export default class LinkedList<T> {
 
         while (currentNode !== null) {
             if (equalsF(currentNode.element, item)) {
-
-                if (previous === null) { // currentNode is the first node
+                if (previous === null) {
+                    // currentNode is the first node
                     this.firstNode = currentNode.next;
                     if (currentNode === this.lastNode) {
                         this.lastNode = null;
@@ -260,7 +254,11 @@ export default class LinkedList<T> {
     /**
      * @private
      */
-    private equalsAux(n1: ILinkedListNode<T> | null, n2: ILinkedListNode<T> | null, eqF: util.IEqualsFunction<T>): boolean {
+    private equalsAux(
+        n1: ILinkedListNode<T> | null,
+        n2: ILinkedListNode<T> | null,
+        eqF: util.IEqualsFunction<T>,
+    ): boolean {
         while (n1 !== null && n2 !== null) {
             if (!eqF(n1.element, n2.element)) {
                 return false;
@@ -277,7 +275,12 @@ export default class LinkedList<T> {
      * @return {*} removed element or undefined if the index is out of bounds.
      */
     removeElementAtIndex(index: number): T | undefined {
-        if (index < 0 || index >= this.nElements || this.firstNode === null || this.lastNode === null) {
+        if (
+            index < 0
+            || index >= this.nElements
+            || this.firstNode === null
+            || this.lastNode === null
+        ) {
             return undefined;
         }
         let element: T | undefined;
@@ -379,11 +382,10 @@ export default class LinkedList<T> {
      * @private
      */
     private nodeAtIndex(index: number): ILinkedListNode<T> | null {
-
         if (index < 0 || index >= this.nElements) {
             return null;
         }
-        if (index === (this.nElements - 1)) {
+        if (index === this.nElements - 1) {
             return this.lastNode;
         }
         let node = this.firstNode;
@@ -399,7 +401,7 @@ export default class LinkedList<T> {
     private createNode(item: T): ILinkedListNode<T> {
         return {
             element: item,
-            next: null
+            next: null,
         };
     }
 } // End of linked list

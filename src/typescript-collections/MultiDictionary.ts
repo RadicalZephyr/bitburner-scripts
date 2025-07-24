@@ -3,7 +3,6 @@ import Dictionary from 'typescript-collections/Dictionary';
 import * as arrays from 'typescript-collections/arrays';
 
 export default class MultiDictionary<K, V> {
-
     // Cannot do:
     // class MultiDictionary<K,V> extends Dictionary<K,Array<V>> {
     // Since we want to reuse the function name setValue and types in signature become incompatible
@@ -47,7 +46,11 @@ export default class MultiDictionary<K, V> {
      *
      * @param allowDuplicateValues
      */
-    constructor(toStrFunction?: (key: K) => string, valuesEqualsFunction?: util.IEqualsFunction<V>, allowDuplicateValues = false) {
+    constructor(
+        toStrFunction?: (key: K) => string,
+        valuesEqualsFunction?: util.IEqualsFunction<V>,
+        allowDuplicateValues = false,
+    ) {
         this.dict = new Dictionary<K, Array<V>>(toStrFunction);
         this.equalsF = valuesEqualsFunction || util.defaultEquals;
         this.allowDuplicate = allowDuplicateValues;
@@ -77,7 +80,6 @@ export default class MultiDictionary<K, V> {
      * @return {boolean} true if the value was not already associated with that key.
      */
     setValue(key: K, value: V): boolean {
-
         if (util.isUndefined(key) || util.isUndefined(value)) {
             return false;
         }
@@ -112,7 +114,10 @@ export default class MultiDictionary<K, V> {
             return !util.isUndefined(v);
         }
         const array = this.dict.getValue(key);
-        if (!util.isUndefined(array) && arrays.remove(array, value, this.equalsF)) {
+        if (
+            !util.isUndefined(array)
+            && arrays.remove(array, value, this.equalsF)
+        ) {
             if (array.length === 0) {
                 this.dict.remove(key);
             }
@@ -177,4 +182,4 @@ export default class MultiDictionary<K, V> {
     isEmpty(): boolean {
         return this.dict.isEmpty();
     }
-}// end of multi dictionary
+} // end of multi dictionary

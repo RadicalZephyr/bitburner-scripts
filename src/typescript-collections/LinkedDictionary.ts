@@ -1,4 +1,7 @@
-import { IDictionaryPair, default as Dictionary } from 'typescript-collections/Dictionary';
+import {
+    IDictionaryPair,
+    default as Dictionary,
+} from 'typescript-collections/Dictionary';
 
 import * as util from 'typescript-collections/util';
 
@@ -11,7 +14,10 @@ class LinkedDictionaryPair<K, V> implements IDictionaryPair<K, V> {
     prev: LinkedDictionaryPair<K, V> | HeadOrTailLinkedDictionaryPair<K, V>;
     next: LinkedDictionaryPair<K, V> | HeadOrTailLinkedDictionaryPair<K, V>;
 
-    constructor(public key: K, public value: V) { }
+    constructor(
+        public key: K,
+        public value: V,
+    ) {}
 
     unlink() {
         this.prev.next = this.next;
@@ -23,7 +29,9 @@ class LinkedDictionaryPair<K, V> implements IDictionaryPair<K, V> {
  * The head and tail elements of the list have null key and value properties but they
  * usually link to normal nodes.
  */
-class HeadOrTailLinkedDictionaryPair<K, V> implements IDictionaryPair<null, null> {
+class HeadOrTailLinkedDictionaryPair<K, V>
+    implements IDictionaryPair<null, null>
+{
     prev: LinkedDictionaryPair<K, V> | HeadOrTailLinkedDictionaryPair<K, V>;
     next: LinkedDictionaryPair<K, V> | HeadOrTailLinkedDictionaryPair<K, V>;
     key: null = null;
@@ -35,8 +43,9 @@ class HeadOrTailLinkedDictionaryPair<K, V> implements IDictionaryPair<null, null
     }
 }
 
-function isHeadOrTailLinkedDictionaryPair<K, V>(p: HeadOrTailLinkedDictionaryPair<K, V> | LinkedDictionaryPair<K, V>)
-    : p is HeadOrTailLinkedDictionaryPair<K, V> {
+function isHeadOrTailLinkedDictionaryPair<K, V>(
+    p: HeadOrTailLinkedDictionaryPair<K, V> | LinkedDictionaryPair<K, V>,
+): p is HeadOrTailLinkedDictionaryPair<K, V> {
     return !p.next;
 }
 
@@ -68,12 +77,14 @@ export default class LinkedDictionary<K, V> extends Dictionary<K, V> {
     /**
      * Retrieves a linked dictionary from the table internally
      */
-    private getLinkedDictionaryPair(key: K): LinkedDictionaryPair<K, V> | undefined {
+    private getLinkedDictionaryPair(
+        key: K,
+    ): LinkedDictionaryPair<K, V> | undefined {
         if (util.isUndefined(key)) {
             return undefined;
         }
         const k = '$' + this.toStr(key);
-        const pair = <LinkedDictionaryPair<K, V>>(this.table[k]);
+        const pair = <LinkedDictionaryPair<K, V>>this.table[k];
         return pair;
     }
 
@@ -126,7 +137,10 @@ export default class LinkedDictionary<K, V> extends Dictionary<K, V> {
      * It places the new value indexed by key into the table, but maintains
      * its place in the linked ordering.
      */
-    private replace(oldPair: LinkedDictionaryPair<K, V>, newPair: LinkedDictionaryPair<K, V>) {
+    private replace(
+        oldPair: LinkedDictionaryPair<K, V>,
+        newPair: LinkedDictionaryPair<K, V>,
+    ) {
         const k = '$' + this.toStr(newPair.key);
 
         // set the new Pair's links to existingPair's links
@@ -147,7 +161,6 @@ export default class LinkedDictionary<K, V> extends Dictionary<K, V> {
         // To make up for the fact that the number of elements was decremented,
         // We need to increase it by one.
         ++this.nElements;
-
     }
 
     /**
@@ -163,7 +176,6 @@ export default class LinkedDictionary<K, V> extends Dictionary<K, V> {
      * there was no mapping for the key or if the key/value are undefined.
      */
     setValue(key: K, value: V): V | undefined {
-
         if (util.isUndefined(key) || util.isUndefined(value)) {
             return undefined;
         }
@@ -186,7 +198,6 @@ export default class LinkedDictionary<K, V> extends Dictionary<K, V> {
 
             return undefined;
         }
-
     }
 
     /**
@@ -235,7 +246,6 @@ export default class LinkedDictionary<K, V> extends Dictionary<K, V> {
             crawlNode = crawlNode.next;
         }
     }
-
 } // End of LinkedDictionary
 // /**
 //  * Returns true if this dictionary is equal to the given dictionary.

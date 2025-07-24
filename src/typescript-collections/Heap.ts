@@ -69,7 +69,7 @@ export default class Heap<T> {
      * @private
      */
     private leftChildIndex(nodeIndex: number): number {
-        return (2 * nodeIndex) + 1;
+        return 2 * nodeIndex + 1;
     }
     /**
      * Returns the index of the right child of the node at the given index.
@@ -79,7 +79,7 @@ export default class Heap<T> {
      * @private
      */
     private rightChildIndex(nodeIndex: number): number {
-        return (2 * nodeIndex) + 2;
+        return 2 * nodeIndex + 2;
     }
     /**
      * Returns the index of the parent of the node at the given index.
@@ -99,7 +99,6 @@ export default class Heap<T> {
      * @private
      */
     private minIndex(leftChild: number, rightChild: number): number {
-
         if (rightChild >= this.data.length) {
             if (leftChild >= this.data.length) {
                 return -1;
@@ -107,7 +106,9 @@ export default class Heap<T> {
                 return leftChild;
             }
         } else {
-            if (this.compare(this.data[leftChild], this.data[rightChild]) <= 0) {
+            if (
+                this.compare(this.data[leftChild], this.data[rightChild]) <= 0
+            ) {
                 return leftChild;
             } else {
                 return rightChild;
@@ -120,9 +121,11 @@ export default class Heap<T> {
      * @private
      */
     private siftUp(index: number): void {
-
         let parent = this.parentIndex(index);
-        while (index > 0 && this.compare(this.data[parent], this.data[index]) > 0) {
+        while (
+            index > 0
+            && this.compare(this.data[parent], this.data[index]) > 0
+        ) {
             arrays.swap(this.data, parent, index);
             index = parent;
             parent = this.parentIndex(index);
@@ -134,17 +137,22 @@ export default class Heap<T> {
      * @private
      */
     private siftDown(nodeIndex: number): void {
-
         //smaller child index
-        let min = this.minIndex(this.leftChildIndex(nodeIndex),
-            this.rightChildIndex(nodeIndex));
+        let min = this.minIndex(
+            this.leftChildIndex(nodeIndex),
+            this.rightChildIndex(nodeIndex),
+        );
 
-        while (min >= 0 && this.compare(this.data[nodeIndex],
-            this.data[min]) > 0) {
+        while (
+            min >= 0
+            && this.compare(this.data[nodeIndex], this.data[min]) > 0
+        ) {
             arrays.swap(this.data, min, nodeIndex);
             nodeIndex = min;
-            min = this.minIndex(this.leftChildIndex(nodeIndex),
-                this.rightChildIndex(nodeIndex));
+            min = this.minIndex(
+                this.leftChildIndex(nodeIndex),
+                this.rightChildIndex(nodeIndex),
+            );
         }
     }
     /**
@@ -153,7 +161,6 @@ export default class Heap<T> {
      * heap is empty.
      */
     peek(): T | undefined {
-
         if (this.data.length > 0) {
             return this.data[0];
         } else {
@@ -180,7 +187,6 @@ export default class Heap<T> {
      * undefined if the heap is empty.
      */
     removeRoot(): T | undefined {
-
         if (this.data.length > 0) {
             const obj = this.data[0];
             this.data[0] = this.data[this.data.length - 1];

@@ -1,5 +1,5 @@
 const _hasOwnProperty = Object.prototype.hasOwnProperty;
-export const has = function(obj: any, prop: any) {
+export const has = function (obj: any, prop: any) {
     return _hasOwnProperty.call(obj, prop);
 };
 
@@ -97,7 +97,7 @@ export function makeString<T>(item: T, join: string = ','): string {
  * @function
  */
 export function isFunction(func: any): boolean {
-    return (typeof func) === 'function';
+    return typeof func === 'function';
 }
 
 /**
@@ -105,7 +105,7 @@ export function isFunction(func: any): boolean {
  * @function
  */
 export function isUndefined(obj: any): obj is undefined {
-    return (typeof obj) === 'undefined';
+    return typeof obj === 'undefined';
 }
 
 /**
@@ -120,9 +120,11 @@ export function isString(obj: any): boolean {
  * Reverses a compare function.
  * @function
  */
-export function reverseCompareFunction<T>(compareFunction?: ICompareFunction<T>): ICompareFunction<T> {
+export function reverseCompareFunction<T>(
+    compareFunction?: ICompareFunction<T>,
+): ICompareFunction<T> {
     if (isUndefined(compareFunction) || !isFunction(compareFunction)) {
-        return function(a, b) {
+        return function (a, b) {
             if (a < b) {
                 return 1;
             } else if (a === b) {
@@ -132,7 +134,7 @@ export function reverseCompareFunction<T>(compareFunction?: ICompareFunction<T>)
             }
         };
     } else {
-        return function(d: T, v: T) {
+        return function (d: T, v: T) {
             return compareFunction(d, v) * -1;
         };
     }
@@ -142,8 +144,10 @@ export function reverseCompareFunction<T>(compareFunction?: ICompareFunction<T>)
  * Returns an equal function given a compare function.
  * @function
  */
-export function compareToEquals<T>(compareFunction: ICompareFunction<T>): IEqualsFunction<T> {
-    return function(a: T, b: T) {
+export function compareToEquals<T>(
+    compareFunction: ICompareFunction<T>,
+): IEqualsFunction<T> {
+    return function (a: T, b: T) {
         return compareFunction(a, b) === 0;
     };
 }

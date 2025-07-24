@@ -8,7 +8,6 @@ export interface IDictionaryPair<K, V> {
 }
 
 export default class Dictionary<K, V> {
-
     /**
      * Object holding the key-value pairs.
      * @type {Object}
@@ -30,7 +29,6 @@ export default class Dictionary<K, V> {
      * @protected
      */
     protected toStr: (key: K) => string;
-
 
     /**
      * Creates an empty dictionary.
@@ -56,7 +54,6 @@ export default class Dictionary<K, V> {
         this.toStr = toStrFunction || util.defaultToString;
     }
 
-
     /**
      * Returns the value to which this dictionary maps the specified key.
      * Returns undefined if this dictionary contains no mapping for this key.
@@ -72,7 +69,6 @@ export default class Dictionary<K, V> {
         return pair.value;
     }
 
-
     /**
      * Associates the specified value with the specified key in this dictionary.
      * If the dictionary previously contained a mapping for this key, the old
@@ -84,7 +80,6 @@ export default class Dictionary<K, V> {
      * there was no mapping for the key or if the key/value are undefined.
      */
     setValue(key: K, value: V): V | undefined {
-
         if (util.isUndefined(key) || util.isUndefined(value)) {
             return undefined;
         }
@@ -100,7 +95,7 @@ export default class Dictionary<K, V> {
         }
         this.table[k] = {
             key: key,
-            value: value
+            value: value,
         };
         return ret;
     }

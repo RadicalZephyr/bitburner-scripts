@@ -1,4 +1,3 @@
-
 enum Direction {
     BEFORE,
     AFTER,
@@ -14,11 +13,13 @@ export interface FlatTreeNode {
 }
 
 export default class MultiRootTree {
-
     rootIds: Array<string>;
     nodes: { [id: string]: Array<string> };
 
-    constructor(rootIds: Array<string> = [], nodes: { [id: string]: Array<string> } = {}) {
+    constructor(
+        rootIds: Array<string> = [],
+        nodes: { [id: string]: Array<string> } = {},
+    ) {
         this.rootIds = rootIds;
         this.nodes = nodes;
 
@@ -47,7 +48,6 @@ export default class MultiRootTree {
             this.nodes[nodeKey] = [];
         }
     }
-
 
     getRootIds() {
         const clone = this.rootIds.slice();
@@ -107,7 +107,12 @@ export default class MultiRootTree {
             }
         }
 
-        function traverse(startId: string, nodes: { [id: string]: Array<string> }, returnArray: Array<any>, level = 0) {
+        function traverse(
+            startId: string,
+            nodes: { [id: string]: Array<string> },
+            returnArray: Array<any>,
+            level = 0,
+        ) {
             if (!startId || !nodes || !returnArray || !nodes[startId]) {
                 return;
             }
@@ -147,12 +152,14 @@ export default class MultiRootTree {
         this.swapRootPositionWithRootPosition(leftIndex, rightIndex);
     }
 
-    swapRootPositionWithRootPosition(swapRootPosition: number, withRootPosition: number) {
+    swapRootPositionWithRootPosition(
+        swapRootPosition: number,
+        withRootPosition: number,
+    ) {
         const temp = this.rootIds[withRootPosition];
         this.rootIds[withRootPosition] = this.rootIds[swapRootPosition];
         this.rootIds[swapRootPosition] = temp;
     }
-
 
     deleteId(id: string) {
         this.rootDeleteId(id);
@@ -186,7 +193,11 @@ export default class MultiRootTree {
             if (this.nodes.hasOwnProperty(nodeKey)) {
                 const foundNodeIdIndex = this.findNodeId(nodeKey, belowId);
                 if (foundNodeIdIndex > -1) {
-                    this.insertIdIntoNode(nodeKey, insertId, foundNodeIdIndex + 1);
+                    this.insertIdIntoNode(
+                        nodeKey,
+                        insertId,
+                        foundNodeIdIndex + 1,
+                    );
                 }
             }
         }
@@ -203,7 +214,7 @@ export default class MultiRootTree {
         } else {
             if (position < 0) {
                 const length = this.rootIds.length;
-                this.rootIds.splice((position + length + 1), 0, id);
+                this.rootIds.splice(position + length + 1, 0, id);
             } else {
                 this.rootIds.splice(position, 0, id);
             }
@@ -220,7 +231,7 @@ export default class MultiRootTree {
         } else {
             if (position < 0) {
                 const length = this.nodes[nodeKey].length;
-                this.nodes[nodeKey].splice((position + length + 1), 0, id);
+                this.nodes[nodeKey].splice(position + length + 1, 0, id);
             } else {
                 this.nodes[nodeKey].splice(position, 0, id);
             }
@@ -228,7 +239,6 @@ export default class MultiRootTree {
     }
 
     private moveId(moveId: string, beforeId: string, direction: Direction) {
-
         const sourceId = moveId;
         const sourceRootIndex = this.findRootId(sourceId);
         let sourceNodeKey: string;
@@ -279,7 +289,6 @@ export default class MultiRootTree {
                 if (targetRootIndex > sourceRootIndex) {
                     targetRootIndex--;
                 } else {
-
                 }
 
                 switch (direction) {
@@ -308,10 +317,18 @@ export default class MultiRootTree {
                         if (index > -1) {
                             switch (direction) {
                                 case Direction.BEFORE:
-                                    this.insertIdIntoNode(nodeKey, sourceId, index);
+                                    this.insertIdIntoNode(
+                                        nodeKey,
+                                        sourceId,
+                                        index,
+                                    );
                                     break;
                                 case Direction.AFTER:
-                                    this.insertIdIntoNode(nodeKey, sourceId, index + 1);
+                                    this.insertIdIntoNode(
+                                        nodeKey,
+                                        sourceId,
+                                        index + 1,
+                                    );
                                     break;
                                 case Direction.INSIDE_AT_START:
                                     this.nodeInsertAtStart(targetId, sourceId);
@@ -355,7 +372,6 @@ export default class MultiRootTree {
                         this.nodeInsertAtEnd(targetId, sourceId);
                         break;
                 }
-
             } else {
                 // moving node (source) ABOVE node (target)
 
@@ -376,10 +392,18 @@ export default class MultiRootTree {
                         if (index > -1) {
                             switch (direction) {
                                 case Direction.BEFORE:
-                                    this.insertIdIntoNode(nodeKey, sourceId, index);
+                                    this.insertIdIntoNode(
+                                        nodeKey,
+                                        sourceId,
+                                        index,
+                                    );
                                     break;
                                 case Direction.AFTER:
-                                    this.insertIdIntoNode(nodeKey, sourceId, index + 1);
+                                    this.insertIdIntoNode(
+                                        nodeKey,
+                                        sourceId,
+                                        index + 1,
+                                    );
                                     break;
                                 case Direction.INSIDE_AT_START:
                                     this.nodeInsertAtStart(targetId, sourceId);
@@ -392,7 +416,6 @@ export default class MultiRootTree {
                         }
                     }
                 }
-
             }
         }
     }
@@ -442,7 +465,6 @@ export default class MultiRootTree {
         delete this.nodes[nodeKey];
     }
 
-
     private findRootId(id: string): number {
         return this.rootIds.indexOf(id);
     }
@@ -454,7 +476,6 @@ export default class MultiRootTree {
     private findNode(nodeKey: string) {
         return this.nodes[nodeKey];
     }
-
 
     private nodeInsertAtStart(nodeKey: string, id: string) {
         this.nodes[nodeKey].unshift(id);

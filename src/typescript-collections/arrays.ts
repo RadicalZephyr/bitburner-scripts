@@ -10,7 +10,11 @@ import * as util from 'typescript-collections/util';
  * @return {number} the position of the first occurrence of the specified element
  * within the specified array, or -1 if not found.
  */
-export function indexOf<T>(array: T[], item: T, equalsFunction?: util.IEqualsFunction<T>): number {
+export function indexOf<T>(
+    array: T[],
+    item: T,
+    equalsFunction?: util.IEqualsFunction<T>,
+): number {
     const equals = equalsFunction || util.defaultEquals;
     const length = array.length;
     for (let i = 0; i < length; i++) {
@@ -31,7 +35,11 @@ export function indexOf<T>(array: T[], item: T, equalsFunction?: util.IEqualsFun
  * @return {number} the position of the last occurrence of the specified element
  * within the specified array or -1 if not found.
  */
-export function lastIndexOf<T>(array: T[], item: T, equalsFunction?: util.IEqualsFunction<T>): number {
+export function lastIndexOf<T>(
+    array: T[],
+    item: T,
+    equalsFunction?: util.IEqualsFunction<T>,
+): number {
     const equals = equalsFunction || util.defaultEquals;
     const length = array.length;
     for (let i = length - 1; i >= 0; i--) {
@@ -50,10 +58,13 @@ export function lastIndexOf<T>(array: T[], item: T, equalsFunction?: util.IEqual
  * check equality between 2 elements.
  * @return {boolean} true if the specified array contains the specified element.
  */
-export function contains<T>(array: T[], item: T, equalsFunction?: util.IEqualsFunction<T>): boolean {
+export function contains<T>(
+    array: T[],
+    item: T,
+    equalsFunction?: util.IEqualsFunction<T>,
+): boolean {
     return indexOf(array, item, equalsFunction) >= 0;
 }
-
 
 /**
  * Removes the first ocurrence of the specified element from the specified array.
@@ -63,7 +74,11 @@ export function contains<T>(array: T[], item: T, equalsFunction?: util.IEqualsFu
  * check equality between 2 elements.
  * @return {boolean} true if the array changed after this call.
  */
-export function remove<T>(array: T[], item: T, equalsFunction?: util.IEqualsFunction<T>): boolean {
+export function remove<T>(
+    array: T[],
+    item: T,
+    equalsFunction?: util.IEqualsFunction<T>,
+): boolean {
     const index = indexOf(array, item, equalsFunction);
     if (index < 0) {
         return false;
@@ -82,7 +97,11 @@ export function remove<T>(array: T[], item: T, equalsFunction?: util.IEqualsFunc
  * @return {number} the number of elements in the specified array
  * equal to the specified object.
  */
-export function frequency<T>(array: T[], item: T, equalsFunction?: util.IEqualsFunction<T>): number {
+export function frequency<T>(
+    array: T[],
+    item: T,
+    equalsFunction?: util.IEqualsFunction<T>,
+): number {
     const equals = equalsFunction || util.defaultEquals;
     const length = array.length;
     let freq = 0;
@@ -105,7 +124,11 @@ export function frequency<T>(array: T[], item: T, equalsFunction?: util.IEqualsF
  * check equality between elemements in the arrays.
  * @return {boolean} true if the two arrays are equal
  */
-export function equals<T>(array1: T[], array2: T[], equalsFunction?: util.IEqualsFunction<T>): boolean {
+export function equals<T>(
+    array1: T[],
+    array2: T[],
+    equalsFunction?: util.IEqualsFunction<T>,
+): boolean {
     const equals = equalsFunction || util.defaultEquals;
 
     if (array1.length !== array2.length) {

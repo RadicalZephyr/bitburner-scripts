@@ -2,7 +2,6 @@ import Dictionary from 'typescript-collections/Dictionary';
 import * as util from 'typescript-collections/util';
 
 export default class FactoryDictionary<K, V> extends Dictionary<K, V> {
-
     /**
      * Factory to create default values.
      * @type {function(Object):string}
@@ -38,12 +37,14 @@ export default class FactoryDictionary<K, V> extends Dictionary<K, V> {
      * is not appropriate, a custom function which receives a key and returns a
      * unique string must be provided.
      */
-    constructor(defaultFactoryFunction: () => V, toStrFunction?: (key: K) => string) {
+    constructor(
+        defaultFactoryFunction: () => V,
+        toStrFunction?: (key: K) => string,
+    ) {
         super(toStrFunction);
 
         this.defaultFactoryFunction = defaultFactoryFunction;
     }
-
 
     /**
      * Associates the specified default value with the specified key in this dictionary,
