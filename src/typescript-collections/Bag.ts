@@ -152,7 +152,7 @@ export default class Bag<T> {
      * optionally return false.
      */
     forEach(callback: util.ILoopFunction<T>) {
-        this.dictionary.forEach(function(k, v) {
+        this.dictionary.forEach(function (k, v) {
             const value = v.value;
             const copies = v.copies;
             for (let i = 0; i < copies; i++) {

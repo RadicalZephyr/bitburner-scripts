@@ -231,7 +231,7 @@ export default class BSTreeKV<K, V extends K> {
      */
     toArray(): V[] {
         const array: Array<V> = [];
-        this.inorderTraversal(function(element: V): boolean {
+        this.inorderTraversal(function (element: V): boolean {
             array.push(element);
             return true;
         });

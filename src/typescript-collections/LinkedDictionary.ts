@@ -18,7 +18,7 @@ class LinkedDictionaryPair<K, V> implements IDictionaryPair<K, V> {
     constructor(
         public key: K,
         public value: V,
-    ) { }
+    ) {}
 
     unlink() {
         this.prev.next = this.next;
@@ -31,7 +31,8 @@ class LinkedDictionaryPair<K, V> implements IDictionaryPair<K, V> {
  * usually link to normal nodes.
  */
 class HeadOrTailLinkedDictionaryPair<K, V>
-    implements IDictionaryPair<null, null> {
+    implements IDictionaryPair<null, null>
+{
     prev: LinkedDictionaryPair<K, V> | HeadOrTailLinkedDictionaryPair<K, V>;
     next: LinkedDictionaryPair<K, V> | HeadOrTailLinkedDictionaryPair<K, V>;
     key: null = null;

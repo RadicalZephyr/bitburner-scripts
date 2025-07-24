@@ -35,7 +35,7 @@ export default class LinkedList<T> {
      * which together represent a sequence.
      * @constructor
      */
-    constructor() { }
+    constructor() {}
 
     /**
      * Adds an element to this list.

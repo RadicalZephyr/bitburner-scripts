@@ -379,7 +379,7 @@ export class Transaction {
     private static onStartHooks: (() => void)[] = [];
     private static runningOnStartHooks: boolean = false;
 
-    constructor() { }
+    constructor() {}
 
     inCallback: number = 0;
     private toRegen: boolean = false;
@@ -436,9 +436,9 @@ export class Transaction {
                 existing === null
                     ? action
                     : () => {
-                        existing();
-                        action();
-                    };
+                          existing();
+                          action();
+                      };
         this.postQ[childIx] = neu;
     }
 

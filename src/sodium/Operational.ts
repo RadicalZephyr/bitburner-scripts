@@ -160,7 +160,7 @@ export class Operational {
 }
 
 class MergeState<A> {
-    constructor() { }
+    constructor() {}
     left: A = null;
     left_present: boolean = false;
     right: A = null;
@@ -892,7 +892,7 @@ class LazySample<A> {
 }
 
 class ApplyState<A, B> {
-    constructor() { }
+    constructor() {}
     f: (a: A) => B = null;
     f_present: boolean = false;
     a: A = null;
@@ -1139,12 +1139,12 @@ export class Cell<A> {
                 aa: A,
             ) => (bb: B) => (cc: C) => (dd: D) => (ee: E) => (ff: F) => G =
                 (aa: A) =>
-                    (bb: B) =>
-                        (cc: C) =>
-                            (dd: D) =>
-                                (ee: E) =>
-                                    (ff: F) =>
-                                        fn(aa, bb, cc, dd, ee, ff),
+                (bb: B) =>
+                (cc: C) =>
+                (dd: D) =>
+                (ee: E) =>
+                (ff: F) =>
+                    fn(aa, bb, cc, dd, ee, ff),
             cf = this.map(mf);
         return Cell.apply(
             Cell.apply(
@@ -1173,7 +1173,7 @@ export class Cell<A> {
         const out = new StreamWithSend<A>(null);
         let vertex = new Vertex('tracking', 0, [
             new Source(this.vertex, () => {
-                let cleanup2: () => void = () => { };
+                let cleanup2: () => void = () => {};
                 let updateDeps = (a: A) => {
                     let lastCleanups2 = cleanup2;
                     let deps = extractor(a).map((dep) => dep.getVertex__());
@@ -1342,13 +1342,13 @@ export class Cell<A> {
                         last_ca === null
                             ? null
                             : Operational.value(last_ca).listen_(
-                                out.getVertex__(),
-                                (a: A) => {
-                                    outValue = a;
-                                    pump();
-                                },
-                                false,
-                            );
+                                  out.getVertex__(),
+                                  (a: A) => {
+                                      outValue = a;
+                                      pump();
+                                  },
+                                  false,
+                              );
                     const kill1 = cca_value.listen_(
                         out.getVertex__(),
                         (ca: Cell<A>) => {

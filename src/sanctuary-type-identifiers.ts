@@ -111,6 +111,6 @@ export function type(x: any): string {
         && typeof x.constructor[$$type] === 'string'
         ? x.constructor[$$type]
         : Object.prototype.toString
-            .call(x)
-            .slice('[object '.length, -']'.length);
+              .call(x)
+              .slice('[object '.length, -']'.length);
 }
