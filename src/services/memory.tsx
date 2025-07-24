@@ -118,7 +118,6 @@ Example:
 
     const collectionRate = 1000 * 10;
 
-    let lastRender = 0;
     let lastCollection = Date.now();
     let lastGrowCheck = 0;
     const growCheckRate = 1000;
@@ -127,25 +126,18 @@ Example:
         readMemRequestsFromPort(ns, memPort, memResponsePort, memoryManager),
     );
 
+    ns.clearLog();
+    ns.printRaw(
+        <div style={{ display: 'flex', gap: '1em' }}>
+            <MemoryDisplay ns={ns} manager={memoryManager}></MemoryDisplay>
+            <LogDisplay ns={ns} lines={log}></LogDisplay>
+        </div>,
+    );
+
     while (true) {
         const now = Date.now();
 
         memoryManager.checkHomeForRamIncrease();
-
-        if (lastRender + refreshRate < now) {
-            const theme = ns.ui.getTheme();
-            ns.clearLog();
-            ns.printRaw(
-                <div style={{ display: 'flex', gap: '1em' }}>
-                    <MemoryDisplay
-                        manager={memoryManager}
-                        theme={theme}
-                    ></MemoryDisplay>
-                    <LogDisplay lines={log} theme={theme}></LogDisplay>
-                </div>,
-            );
-            lastRender = now;
-        }
 
         if (lastCollection + collectionRate < now) {
             printLog('INFO: running garbage collection');
@@ -372,8 +364,8 @@ async function growAllocations(ns: NS, memoryManager: MemoryAllocator) {
 }
 
 interface MemoryDisplayProps {
+    ns: NS;
     manager: MemoryAllocator;
-    theme: UserInterfaceTheme;
 }
 
 /**
@@ -382,8 +374,25 @@ interface MemoryDisplayProps {
  * @param manager - The allocator to read usage from.
  * @param theme - The UI theme.
  */
-function MemoryDisplay({ manager, theme }: MemoryDisplayProps) {
-    const workers = Array.from(manager.workers.values());
+function MemoryDisplay({ ns, manager }: MemoryDisplayProps) {
+    const [workers, setWorkers] = React.useState(
+        Array.from(manager.workers.values()),
+    );
+    const [theme, setTheme] = React.useState(
+        ns.ui.getTheme() as UserInterfaceTheme,
+    );
+
+    React.useEffect(() => {
+        const id = globalThis.setInterval(() => {
+            setWorkers(Array.from(manager.workers.values()));
+            setTheme(ns.ui.getTheme());
+        }, 1000);
+
+        return () => {
+            globalThis.clearInterval(id);
+        };
+    }, [ns, manager]);
+
     const cellStyle = { padding: '0 0.5em' } as const;
     return (
         <div style={{ fontFamily: 'monospace' }}>
@@ -404,8 +413,8 @@ function MemoryDisplay({ manager, theme }: MemoryDisplayProps) {
 }
 
 interface LogDisplayProps {
+    ns: NS;
     lines: string[];
-    theme: UserInterfaceTheme;
 }
 
 /**
@@ -414,7 +423,22 @@ interface LogDisplayProps {
  * @param lines - Log messages to display.
  * @param theme - The UI theme.
  */
-function LogDisplay({ lines, theme }: LogDisplayProps) {
+function LogDisplay({ ns, lines: extLines }: LogDisplayProps) {
+    const [lines, setLines] = React.useState(extLines);
+    const [theme, setTheme] = React.useState(
+        ns.ui.getTheme() as UserInterfaceTheme,
+    );
+
+    React.useEffect(() => {
+        const id = globalThis.setInterval(() => {
+            setLines(extLines);
+            setTheme(ns.ui.getTheme());
+        }, 1000);
+        return () => {
+            globalThis.clearInterval(id);
+        };
+    }, [ns, extLines]);
+
     const rowStyle = (idx: number) =>
         idx % 2 === 1 ? { backgroundColor: theme.well } : {};
 
