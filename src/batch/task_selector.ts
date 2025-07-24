@@ -442,7 +442,7 @@ class TaskSelector {
             if (
                 harvestScriptRam + task.requiredRam <= memInfo.freeRam
                 && availableBatchCount(memInfo.chunks, task.batchRam)
-                >= task.overlap
+                    >= task.overlap
             ) {
                 await this.launchHarvest(task);
                 return;
