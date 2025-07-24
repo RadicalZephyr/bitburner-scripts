@@ -212,6 +212,7 @@ function successfulHackValue(ns: NS, host: string, threads: number): number {
     if (canUseFormulas(ns)) {
         const server = ns.getServer(host);
         const player = ns.getPlayer();
+        server.moneyAvailable = server.moneyMax;
         const percent = ns.formulas.hacking.hackPercent(server, player);
         return threads * server.moneyMax * percent;
     }
