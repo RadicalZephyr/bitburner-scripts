@@ -2,6 +2,8 @@ import { Dictionary, Set } from 'typescript-collections';
 import { Stream, StreamWithSend } from 'sodium/Stream';
 import { Vertex, Source } from 'sodium/Vertex';
 
+/* eslint-disable prefer-const */
+
 export class Router<A, K> {
     private _inStream: Stream<A>;
     private _table: Dictionary<K, StreamWithSend<A>[]>;

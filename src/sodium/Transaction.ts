@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable prefer-const */
+
 import * as Collections from 'typescript-collections';
 
 let totalRegistrations: number = 0;
@@ -376,7 +379,7 @@ export class Transaction {
     private static onStartHooks: (() => void)[] = [];
     private static runningOnStartHooks: boolean = false;
 
-    constructor() {}
+    constructor() { }
 
     inCallback: number = 0;
     private toRegen: boolean = false;
@@ -433,9 +436,9 @@ export class Transaction {
                 existing === null
                     ? action
                     : () => {
-                          existing();
-                          action();
-                      };
+                        existing();
+                        action();
+                    };
         this.postQ[childIx] = neu;
     }
 

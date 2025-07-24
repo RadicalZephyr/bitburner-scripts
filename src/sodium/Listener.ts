@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import { Source, Vertex } from 'sodium/Vertex';
 
 export class Listener<A> {

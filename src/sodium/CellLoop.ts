@@ -1,8 +1,9 @@
 import { Cell } from 'sodium/Cell';
-import { Lazy } from 'sodium/Lazy';
 import { LazyCell } from 'sodium/LazyCell';
 import { Transaction } from 'sodium/Transaction';
 import { StreamLoop } from 'sodium/Stream';
+
+/* eslint-disable @typescript-eslint/no-this-alias */
 
 /**
  * A forward reference for a {@link Cell} equivalent to the Cell that is referenced.

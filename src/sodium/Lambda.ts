@@ -2,6 +2,8 @@ import type { Stream } from 'sodium/Stream';
 import type { Cell } from 'sodium/Cell';
 import { Source } from 'sodium/Vertex';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 export class Lambda1<A, B> {
     constructor(f: (a: A) => B, deps: Array<Stream<any> | Cell<any>>) {
         this.f = f;
