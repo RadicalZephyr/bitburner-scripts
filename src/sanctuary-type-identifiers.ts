@@ -103,10 +103,12 @@
 var $$type: string = '@@type';
 
 export function type(x: any): string {
-    return x != null &&
-        x.constructor != null &&
-        x.constructor.prototype !== x &&
-        typeof x.constructor[$$type] === 'string' ?
-        x.constructor[$$type] :
-        Object.prototype.toString.call(x).slice('[object '.length, -']'.length);
+    return x != null
+        && x.constructor != null
+        && x.constructor.prototype !== x
+        && typeof x.constructor[$$type] === 'string'
+        ? x.constructor[$$type]
+        : Object.prototype.toString
+              .call(x)
+              .slice('[object '.length, -']'.length);
 }

@@ -68,18 +68,18 @@
 //.
 //. ## API
 
-import { type } from "sanctuary-type-identifiers";
+import { type } from 'sanctuary-type-identifiers';
 
 //  concat_ :: Array a -> Array a -> Array a
 function concat_(xs) {
-    return function(ys) {
+    return function (ys) {
         return xs.concat(ys);
     };
 }
 
 //  constant :: a -> b -> a
 function constant(x) {
-    return function(y) {
+    return function (y) {
         return x;
     };
 }
@@ -95,11 +95,13 @@ function has(k, o) {
 }
 
 //  identity :: a -> a
-function identity(x) { return x; }
+function identity(x) {
+    return x;
+}
 
 //  pair :: a -> b -> Array2 a b
 function pair(x) {
-    return function(y) {
+    return function (y) {
         return [x, y];
     };
 }
@@ -111,7 +113,7 @@ function sameType(x, y) {
 
 //  thrush :: a -> (a -> b) -> b
 function thrush(x) {
-    return function(f) {
+    return function (f) {
         return f(x);
     };
 }
@@ -119,10 +121,14 @@ function thrush(x) {
 //  type Iteration a = { value :: a, done :: Boolean }
 
 //  iterationNext :: a -> Iteration a
-function iterationNext(x) { return { value: x, done: false }; }
+function iterationNext(x) {
+    return { value: x, done: false };
+}
 
 //  iterationDone :: a -> Iteration a
-function iterationDone(x) { return { value: x, done: true }; }
+function iterationDone(x) {
+    return { value: x, done: true };
+}
 
 //# TypeClass :: (String, String, Array TypeClass, a -> Boolean) -> TypeClass
 //.
@@ -182,8 +188,12 @@ export class TypeClass {
         this.url = url;
         this.dependencies = dependencies;
         this.methods = {};
-        this.test = function(x) {
-            return dependencies.every(function(d) { return d.test(x); }) && test(x);
+        this.test = function (x) {
+            return (
+                dependencies.every(function (d) {
+                    return d.test(x);
+                }) && test(x)
+            );
         };
     }
 }
@@ -220,53 +230,59 @@ function implPath(path) {
 }
 
 //  functionName :: Function -> String
-var functionName = has('name', function f() { }) ?
-    function functionName(f) { return f.name; } :
-    /* istanbul ignore next */
-    function functionName(f) {
-        var match = /function (\w*)/.match(f);
-        return match == null ? '' : match[1];
-    };
+var functionName = has('name', function f() {})
+    ? function functionName(f) {
+          return f.name;
+      }
+    : /* istanbul ignore next */
+      function functionName(f) {
+          var match = /function (\w*)/.match(f);
+          return match == null ? '' : match[1];
+      };
 
 //  $ :: (String, Array TypeClass, StrMap (Array Location)) -> TypeClass
 function $(_name, dependencies, requirements) {
     function getBoundMethod(_name) {
         var name = 'fantasy-land/' + _name;
-        return requirements[_name] === Constructor ?
-            function(typeRep) {
-                var f = funcPath([name], typeRep);
-                return f == null && typeof typeRep === 'function' ?
-                    implPath([functionName(typeRep), name]) :
-                    f;
-            } :
-            function(x) {
-                var isPrototype = x != null &&
-                    x.constructor != null &&
-                    x.constructor.prototype === x;
-                var m = null;
-                if (!isPrototype) m = funcPath([name], x);
-                if (m == null) m = implPath([type(x), 'prototype', name]);
-                return m && m.bind(x);
-            };
+        return requirements[_name] === Constructor
+            ? function (typeRep) {
+                  var f = funcPath([name], typeRep);
+                  return f == null && typeof typeRep === 'function'
+                      ? implPath([functionName(typeRep), name])
+                      : f;
+              }
+            : function (x) {
+                  var isPrototype =
+                      x != null
+                      && x.constructor != null
+                      && x.constructor.prototype === x;
+                  var m = null;
+                  if (!isPrototype) m = funcPath([name], x);
+                  if (m == null) m = implPath([type(x), 'prototype', name]);
+                  return m && m.bind(x);
+              };
     }
 
-    var version = '9.0.0';  // updated programmatically
+    var version = '9.0.0'; // updated programmatically
     var keys = Object.keys(requirements);
 
     var typeClass = new TypeClass(
         'sanctuary-type-classes/' + _name,
-        'https://github.com/sanctuary-js/sanctuary-type-classes/tree/v' + version
-        + '#' + _name,
+        'https://github.com/sanctuary-js/sanctuary-type-classes/tree/v'
+            + version
+            + '#'
+            + _name,
         dependencies,
-        function(x) {
-            return keys.every(function(_name) {
-                var arg = requirements[_name] === Constructor ? x.constructor : x;
+        function (x) {
+            return keys.every(function (_name) {
+                var arg =
+                    requirements[_name] === Constructor ? x.constructor : x;
                 return getBoundMethod(_name)(arg) != null;
             });
-        }
+        },
     );
 
-    typeClass.methods = keys.reduce(function(methods, _name) {
+    typeClass.methods = keys.reduce(function (methods, _name) {
         methods[_name] = getBoundMethod(_name);
         return methods;
     }, {});
@@ -542,7 +558,9 @@ export var Foldable = $('Foldable', [], { reduce: Value });
 //. > Traversable.test('')
 //. false
 //. ```
-export var Traversable = $('Traversable', [Functor, Foldable], { traverse: Value });
+export var Traversable = $('Traversable', [Functor, Foldable], {
+    traverse: Value,
+});
 
 //# Extend :: TypeClass
 //.
@@ -605,30 +623,30 @@ function Undefined$prototype$lte(other) {
 
 //  Boolean$prototype$equals :: Boolean ~> Boolean -> Boolean
 function Boolean$prototype$equals(other) {
-    return typeof this === 'object' ?
-        equals(this.valueOf(), other.valueOf()) :
-        this === other;
+    return typeof this === 'object'
+        ? equals(this.valueOf(), other.valueOf())
+        : this === other;
 }
 
 //  Boolean$prototype$lte :: Boolean ~> Boolean -> Boolean
 function Boolean$prototype$lte(other) {
-    return typeof this === 'object' ?
-        lte(this.valueOf(), other.valueOf()) :
-        this === false || other === true;
+    return typeof this === 'object'
+        ? lte(this.valueOf(), other.valueOf())
+        : this === false || other === true;
 }
 
 //  Number$prototype$equals :: Number ~> Number -> Boolean
 function Number$prototype$equals(other) {
-    return typeof this === 'object' ?
-        equals(this.valueOf(), other.valueOf()) :
-        isNaN(this) && isNaN(other) || this === other;
+    return typeof this === 'object'
+        ? equals(this.valueOf(), other.valueOf())
+        : (isNaN(this) && isNaN(other)) || this === other;
 }
 
 //  Number$prototype$lte :: Number ~> Number -> Boolean
 function Number$prototype$lte(other) {
-    return typeof this === 'object' ?
-        lte(this.valueOf(), other.valueOf()) :
-        isNaN(this) || this <= other;
+    return typeof this === 'object'
+        ? lte(this.valueOf(), other.valueOf())
+        : isNaN(this) || this <= other;
 }
 
 //  Date$prototype$equals :: Date ~> Date -> Boolean
@@ -643,12 +661,14 @@ function Date$prototype$lte(other) {
 
 //  RegExp$prototype$equals :: RegExp ~> RegExp -> Boolean
 function RegExp$prototype$equals(other) {
-    return other.source === this.source &&
-        other.global === this.global &&
-        other.ignoreCase === this.ignoreCase &&
-        other.multiline === this.multiline &&
-        other.sticky === this.sticky &&
-        other.unicode === this.unicode;
+    return (
+        other.source === this.source
+        && other.global === this.global
+        && other.ignoreCase === this.ignoreCase
+        && other.multiline === this.multiline
+        && other.sticky === this.sticky
+        && other.unicode === this.unicode
+    );
 }
 
 //  String$empty :: () -> String
@@ -658,16 +678,16 @@ function String$empty() {
 
 //  String$prototype$equals :: String ~> String -> Boolean
 function String$prototype$equals(other) {
-    return typeof this === 'object' ?
-        equals(this.valueOf(), other.valueOf()) :
-        this === other;
+    return typeof this === 'object'
+        ? equals(this.valueOf(), other.valueOf())
+        : this === other;
 }
 
 //  String$prototype$lte :: String ~> String -> Boolean
 function String$prototype$lte(other) {
-    return typeof this === 'object' ?
-        lte(this.valueOf(), other.valueOf()) :
-        this <= other;
+    return typeof this === 'object'
+        ? lte(this.valueOf(), other.valueOf())
+        : this <= other;
 }
 
 //  String$prototype$concat :: String ~> String -> String
@@ -740,12 +760,16 @@ function Array$prototype$concat(other) {
 
 //  Array$prototype$filter :: Array a ~> (a -> Boolean) -> Array a
 function Array$prototype$filter(pred) {
-    return this.filter(function(x) { return pred(x); });
+    return this.filter(function (x) {
+        return pred(x);
+    });
 }
 
 //  Array$prototype$map :: Array a ~> (a -> b) -> Array b
 function Array$prototype$map(f) {
-    return this.map(function(x) { return f(x); });
+    return this.map(function (x) {
+        return f(x);
+    });
 }
 
 //  Array$prototype$ap :: Array a ~> Array (a -> b) -> Array b
@@ -785,21 +809,25 @@ function Array$prototype$traverse(typeRep, f) {
     var xs = this;
     function go(idx, n) {
         switch (n) {
-            case 0: return of(typeRep, []);
-            case 2: return lift2(pair, f(xs[idx]), f(xs[idx + 1]));
+            case 0:
+                return of(typeRep, []);
+            case 2:
+                return lift2(pair, f(xs[idx]), f(xs[idx + 1]));
             default:
                 var m = Math.floor(n / 4) * 2;
                 return lift2(concat_, go(idx, m), go(idx + m, n - m));
         }
     }
-    return this.length % 2 === 1 ?
-        lift2(concat_, map(Array$of, f(this[0])), go(1, this.length - 1)) :
-        go(0, this.length);
+    return this.length % 2 === 1
+        ? lift2(concat_, map(Array$of, f(this[0])), go(1, this.length - 1))
+        : go(0, this.length);
 }
 
 //  Array$prototype$extend :: Array a ~> (Array a -> b) -> Array b
 function Array$prototype$extend(f) {
-    return this.map(function(_, idx, xs) { return f(xs.slice(idx)); });
+    return this.map(function (_, idx, xs) {
+        return f(xs.slice(idx));
+    });
 }
 
 //  Arguments$prototype$equals :: Arguments ~> Arguments -> Boolean
@@ -814,8 +842,7 @@ function Arguments$prototype$lte(other) {
 
 //  Error$prototype$equals :: Error ~> Error -> Boolean
 function Error$prototype$equals(other) {
-    return equals(this.name, other.name) &&
-        equals(this.message, other.message);
+    return equals(this.name, other.name) && equals(this.message, other.message);
 }
 
 //  Object$empty :: () -> StrMap a
@@ -832,8 +859,12 @@ function Object$zero() {
 function Object$prototype$equals(other) {
     var self = this;
     var keys = Object.keys(this).sort();
-    return equals(keys, Object.keys(other).sort()) &&
-        keys.every(function(k) { return equals(self[k], other[k]); });
+    return (
+        equals(keys, Object.keys(other).sort())
+        && keys.every(function (k) {
+            return equals(self[k], other[k]);
+        })
+    );
 }
 
 //  Object$prototype$lte :: StrMap a ~> StrMap a -> Boolean
@@ -854,7 +885,9 @@ function Object$prototype$lte(other) {
 //  Object$prototype$concat :: StrMap a ~> StrMap a -> StrMap a
 function Object$prototype$concat(other) {
     var result = {};
-    function assign(k) { result[k] = this[k]; }
+    function assign(k) {
+        result[k] = this[k];
+    }
     forEachKey(this, assign);
     forEachKey(other, assign);
     return result;
@@ -863,21 +896,25 @@ function Object$prototype$concat(other) {
 //  Object$prototype$filter :: StrMap a ~> (a -> Boolean) -> StrMap a
 function Object$prototype$filter(pred) {
     var result = {};
-    forEachKey(this, function(k) { if (pred(this[k])) result[k] = this[k]; });
+    forEachKey(this, function (k) {
+        if (pred(this[k])) result[k] = this[k];
+    });
     return result;
 }
 
 //  Object$prototype$map :: StrMap a ~> (a -> b) -> StrMap b
 function Object$prototype$map(f) {
     var result = {};
-    forEachKey(this, function(k) { result[k] = f(this[k]); });
+    forEachKey(this, function (k) {
+        result[k] = f(this[k]);
+    });
     return result;
 }
 
 //  Object$prototype$ap :: StrMap a ~> StrMap (a -> b) -> StrMap b
 function Object$prototype$ap(other) {
     var result = {};
-    forEachKey(this, function(k) {
+    forEachKey(this, function (k) {
         if (has(k, other)) result[k] = other[k](this[k]);
     });
     return result;
@@ -889,22 +926,28 @@ var Object$prototype$alt = Object$prototype$concat;
 //  Object$prototype$reduce :: StrMap a ~> ((b, a) -> b, b) -> b
 function Object$prototype$reduce(f, initial) {
     var self = this;
-    function reducer(acc, k) { return f(acc, self[k]); }
+    function reducer(acc, k) {
+        return f(acc, self[k]);
+    }
     return Object.keys(this).sort().reduce(reducer, initial);
 }
 
 //  Object$prototype$traverse :: Applicative f => StrMap a ~> (TypeRep f, a -> f b) -> f (StrMap b)
 function Object$prototype$traverse(typeRep, f) {
     var self = this;
-    return Object.keys(this).reduce(function(applicative, k) {
-        function set(o) {
-            return function(v) {
-                var singleton = {}; singleton[k] = v;
-                return Object$prototype$concat.call(o, singleton);
-            };
-        }
-        return lift2(set, applicative, f(self[k]));
-    }, of(typeRep, {}));
+    return Object.keys(this).reduce(
+        function (applicative, k) {
+            function set(o) {
+                return function (v) {
+                    var singleton = {};
+                    singleton[k] = v;
+                    return Object$prototype$concat.call(o, singleton);
+                };
+            }
+            return lift2(set, applicative, f(self[k]));
+        },
+        of(typeRep, {}),
+    );
 }
 
 //  Function$id :: () -> a -> a
@@ -914,12 +957,14 @@ function Function$id() {
 
 //  Function$of :: b -> (a -> b)
 function Function$of(x) {
-    return function(_) { return x; };
+    return function (_) {
+        return x;
+    };
 }
 
 //  Function$chainRec :: ((a -> c, b -> c, a) -> (z -> c), a) -> (z -> b)
 function Function$chainRec(f, x) {
-    return function(a) {
+    return function (a) {
         var step = iterationNext(x);
         while (!step.done) {
             step = f(iterationNext, iterationDone, step.value)(a);
@@ -936,98 +981,112 @@ function Function$prototype$equals(other) {
 //  Function$prototype$compose :: (a -> b) ~> (b -> c) -> (a -> c)
 function Function$prototype$compose(other) {
     var semigroupoid = this;
-    return function(x) { return other(semigroupoid(x)); };
+    return function (x) {
+        return other(semigroupoid(x));
+    };
 }
 
 //  Function$prototype$map :: (a -> b) ~> (b -> c) -> (a -> c)
 function Function$prototype$map(f) {
     var functor = this;
-    return function(x) { return f(functor(x)); };
+    return function (x) {
+        return f(functor(x));
+    };
 }
 
 //  Function$prototype$promap :: (b -> c) ~> (a -> b, c -> d) -> (a -> d)
 function Function$prototype$promap(f, g) {
     var profunctor = this;
-    return function(x) { return g(profunctor(f(x))); };
+    return function (x) {
+        return g(profunctor(f(x)));
+    };
 }
 
 //  Function$prototype$ap :: (a -> b) ~> (a -> b -> c) -> (a -> c)
 function Function$prototype$ap(f) {
     var apply = this;
-    return function(x) { return f(x)(apply(x)); };
+    return function (x) {
+        return f(x)(apply(x));
+    };
 }
 
 //  Function$prototype$chain :: (a -> b) ~> (b -> a -> c) -> (a -> c)
 function Function$prototype$chain(f) {
     var chain = this;
-    return function(x) { return f(chain(x))(x); };
+    return function (x) {
+        return f(chain(x))(x);
+    };
 }
 
 //  Function$prototype$extend :: Semigroup a => (a -> b) ~> ((a -> b) -> c) -> (a -> c)
 function Function$prototype$extend(f) {
     var extend = this;
-    return function(x) {
-        return f(function(y) { return extend(concat(x, y)); });
+    return function (x) {
+        return f(function (y) {
+            return extend(concat(x, y));
+        });
     };
 }
 
 //  Function$prototype$contramap :: (b -> c) ~> (a -> b) -> (a -> c)
 function Function$prototype$contramap(f) {
     var contravariant = this;
-    return function(x) { return contravariant(f(x)); };
+    return function (x) {
+        return contravariant(f(x));
+    };
 }
 
 /* eslint-disable key-spacing */
 var implementations = {
     Null: {
-        'prototype': {
+        prototype: {
             'fantasy-land/equals': Null$prototype$equals,
-            'fantasy-land/lte': Null$prototype$lte
-        }
+            'fantasy-land/lte': Null$prototype$lte,
+        },
     },
     Undefined: {
-        'prototype': {
+        prototype: {
             'fantasy-land/equals': Undefined$prototype$equals,
-            'fantasy-land/lte': Undefined$prototype$lte
-        }
+            'fantasy-land/lte': Undefined$prototype$lte,
+        },
     },
     Boolean: {
-        'prototype': {
+        prototype: {
             'fantasy-land/equals': Boolean$prototype$equals,
-            'fantasy-land/lte': Boolean$prototype$lte
-        }
+            'fantasy-land/lte': Boolean$prototype$lte,
+        },
     },
     Number: {
-        'prototype': {
+        prototype: {
             'fantasy-land/equals': Number$prototype$equals,
-            'fantasy-land/lte': Number$prototype$lte
-        }
+            'fantasy-land/lte': Number$prototype$lte,
+        },
     },
     Date: {
-        'prototype': {
+        prototype: {
             'fantasy-land/equals': Date$prototype$equals,
-            'fantasy-land/lte': Date$prototype$lte
-        }
+            'fantasy-land/lte': Date$prototype$lte,
+        },
     },
     RegExp: {
-        'prototype': {
-            'fantasy-land/equals': RegExp$prototype$equals
-        }
+        prototype: {
+            'fantasy-land/equals': RegExp$prototype$equals,
+        },
     },
     String: {
         'fantasy-land/empty': String$empty,
-        'prototype': {
+        prototype: {
             'fantasy-land/equals': String$prototype$equals,
             'fantasy-land/lte': String$prototype$lte,
-            'fantasy-land/concat': String$prototype$concat
-        }
+            'fantasy-land/concat': String$prototype$concat,
+        },
     },
     Array: {
         'fantasy-land/empty': Array$empty,
         'fantasy-land/of': Array$of,
         'fantasy-land/chainRec': Array$chainRec,
         'fantasy-land/zero': Array$zero,
-        'prototype': {
+        prototype: {
             'fantasy-land/equals': Array$prototype$equals,
             'fantasy-land/lte': Array$prototype$lte,
             'fantasy-land/concat': Array$prototype$concat,
@@ -1038,24 +1097,24 @@ var implementations = {
             'fantasy-land/alt': Array$prototype$alt,
             'fantasy-land/reduce': Array$prototype$reduce,
             'fantasy-land/traverse': Array$prototype$traverse,
-            'fantasy-land/extend': Array$prototype$extend
-        }
+            'fantasy-land/extend': Array$prototype$extend,
+        },
     },
     Arguments: {
-        'prototype': {
+        prototype: {
             'fantasy-land/equals': Arguments$prototype$equals,
-            'fantasy-land/lte': Arguments$prototype$lte
-        }
+            'fantasy-land/lte': Arguments$prototype$lte,
+        },
     },
     Error: {
-        'prototype': {
-            'fantasy-land/equals': Error$prototype$equals
-        }
+        prototype: {
+            'fantasy-land/equals': Error$prototype$equals,
+        },
     },
     Object: {
         'fantasy-land/empty': Object$empty,
         'fantasy-land/zero': Object$zero,
-        'prototype': {
+        prototype: {
             'fantasy-land/equals': Object$prototype$equals,
             'fantasy-land/lte': Object$prototype$lte,
             'fantasy-land/concat': Object$prototype$concat,
@@ -1064,14 +1123,14 @@ var implementations = {
             'fantasy-land/ap': Object$prototype$ap,
             'fantasy-land/alt': Object$prototype$alt,
             'fantasy-land/reduce': Object$prototype$reduce,
-            'fantasy-land/traverse': Object$prototype$traverse
-        }
+            'fantasy-land/traverse': Object$prototype$traverse,
+        },
     },
     Function: {
         'fantasy-land/id': Function$id,
         'fantasy-land/of': Function$of,
         'fantasy-land/chainRec': Function$chainRec,
-        'prototype': {
+        prototype: {
             'fantasy-land/equals': Function$prototype$equals,
             'fantasy-land/compose': Function$prototype$compose,
             'fantasy-land/map': Function$prototype$map,
@@ -1079,9 +1138,9 @@ var implementations = {
             'fantasy-land/ap': Function$prototype$ap,
             'fantasy-land/chain': Function$prototype$chain,
             'fantasy-land/extend': Function$prototype$extend,
-            'fantasy-land/contramap': Function$prototype$contramap
-        }
-    }
+            'fantasy-land/contramap': Function$prototype$contramap,
+        },
+    },
 };
 /* eslint-enable key-spacing */
 
@@ -1113,7 +1172,7 @@ var implementations = {
 //. > equals(Cons('foo', Cons('bar', Nil)), Cons('bar', Cons('foo', Nil)))
 //. false
 //. ```
-export var equals = (function() {
+export var equals = (function () {
     //  $pairs :: Array (Array2 Any Any)
     var $pairs = [];
 
@@ -1122,18 +1181,24 @@ export var equals = (function() {
 
         //  This algorithm for comparing circular data structures was
         //  suggested in <http://stackoverflow.com/a/40622794/312785>.
-        if ($pairs.some(function(p) { return p[0] === x && p[1] === y; })) {
+        if (
+            $pairs.some(function (p) {
+                return p[0] === x && p[1] === y;
+            })
+        ) {
             return true;
         }
 
         $pairs.push([x, y]);
         try {
-            return Setoid.test(x) && Setoid.test(y) && Setoid.methods.equals(x)(y);
+            return (
+                Setoid.test(x) && Setoid.test(y) && Setoid.methods.equals(x)(y)
+            );
         } finally {
             $pairs.pop();
         }
     };
-}());
+})();
 
 //# lt :: (a, b) -> Boolean
 //.
@@ -1184,7 +1249,7 @@ export function lt(x, y) {
 //. > lte(1, 0)
 //. false
 //. ```
-export var lte = (function() {
+export var lte = (function () {
     //  $pairs :: Array (Array2 Any Any)
     var $pairs = [];
 
@@ -1193,7 +1258,11 @@ export var lte = (function() {
 
         //  This algorithm for comparing circular data structures was
         //  suggested in <http://stackoverflow.com/a/40622794/312785>.
-        if ($pairs.some(function(p) { return p[0] === x && p[1] === y; })) {
+        if (
+            $pairs.some(function (p) {
+                return p[0] === x && p[1] === y;
+            })
+        ) {
             return equals(x, y);
         }
 
@@ -1204,7 +1273,7 @@ export var lte = (function() {
             $pairs.pop();
         }
     };
-}());
+})();
 
 //# gt :: (a, b) -> Boolean
 //.
@@ -1447,7 +1516,9 @@ export function filter(pred, filterable) {
 //. Nothing
 //. ```
 export function reject(pred, filterable) {
-    return filter(function(x) { return !pred(x); }, filterable);
+    return filter(function (x) {
+        return !pred(x);
+    }, filterable);
 }
 
 //# takeWhile :: Filterable f => (a -> Boolean, f a) -> f a
@@ -1471,7 +1542,9 @@ export function reject(pred, filterable) {
 //. ```
 export function takeWhile(pred, filterable) {
     var take = true;
-    return filter(function(x) { return take = take && pred(x); }, filterable);
+    return filter(function (x) {
+        return (take = take && pred(x));
+    }, filterable);
 }
 
 //# dropWhile :: Filterable f => (a -> Boolean, f a) -> f a
@@ -1495,7 +1568,9 @@ export function takeWhile(pred, filterable) {
 //. ```
 export function dropWhile(pred, filterable) {
     var take = false;
-    return filter(function(x) { return take = take || !pred(x); }, filterable);
+    return filter(function (x) {
+        return (take = take || !pred(x));
+    }, filterable);
 }
 
 //# map :: Functor f => (a -> b, f a) -> f b
@@ -1902,7 +1977,13 @@ export function reduce(f, x, foldable) {
 export function size(foldable) {
     //  Fast path for arrays.
     if (Array.isArray(foldable)) return foldable.length;
-    return reduce(function(n, _) { return n + 1; }, 0, foldable);
+    return reduce(
+        function (n, _) {
+            return n + 1;
+        },
+        0,
+        foldable,
+    );
 }
 
 //# elem :: (Setoid a, Foldable f) => (a, f a) -> Boolean
@@ -1936,9 +2017,13 @@ export function size(foldable) {
 //. false
 //. ```
 export function elem(x, foldable) {
-    return reduce(function(b, y) { return b || equals(x, y); },
+    return reduce(
+        function (b, y) {
+            return b || equals(x, y);
+        },
         false,
-        foldable);
+        foldable,
+    );
 }
 
 //# foldMap :: (Monoid m, Foldable f) => (TypeRep m, a -> m, f a) -> m
@@ -1954,9 +2039,13 @@ export function elem(x, foldable) {
 //. 'sincostan'
 //. ```
 export function foldMap(typeRep, f, foldable) {
-    return reduce(function(monoid, x) { return concat(monoid, f(x)); },
+    return reduce(
+        function (monoid, x) {
+            return concat(monoid, f(x));
+        },
         empty(typeRep),
-        foldable);
+        foldable,
+    );
 }
 
 //# reverse :: (Applicative f, Foldable f, Monoid (f a)) => f a -> f a
@@ -1977,9 +2066,13 @@ export function reverse(foldable) {
     //  Fast path for arrays.
     if (Array.isArray(foldable)) return foldable.slice().reverse();
     var F = foldable.constructor;
-    return reduce(function(xs, x) { return concat(of(F, x), xs); },
+    return reduce(
+        function (xs, x) {
+            return concat(of(F, x), xs);
+        },
         empty(F),
-        foldable);
+        foldable,
+    );
 }
 
 //# sort :: (Ord a, Applicative f, Foldable f, Monoid (f a)) => f a -> f a
@@ -2031,21 +2124,32 @@ export function sort(foldable) {
 //. Cons('red', Cons('blue', Cons('green', Nil)))
 //. ```
 export function sortBy(f, foldable) {
-    var rs = reduce(function(rs, x) {
-        rs.push({ idx: rs.length, x: x, fx: f(x) });
-        return rs;
-    }, [], foldable);
+    var rs = reduce(
+        function (rs, x) {
+            rs.push({ idx: rs.length, x: x, fx: f(x) });
+            return rs;
+        },
+        [],
+        foldable,
+    );
 
-    var lte_ = (function(r) {
+    var lte_ = (function (r) {
         switch (typeof (r && r.fx)) {
-            case 'number': return function(x, y) { return x <= y || x !== x; };
-            case 'string': return function(x, y) { return x <= y; };
-            default: return lte;
+            case 'number':
+                return function (x, y) {
+                    return x <= y || x !== x;
+                };
+            case 'string':
+                return function (x, y) {
+                    return x <= y;
+                };
+            default:
+                return lte;
         }
-    }(rs[0]));
+    })(rs[0]);
 
-    rs.sort(function(a, b) {
-        return lte_(a.fx, b.fx) ? lte_(b.fx, a.fx) ? a.idx - b.idx : -1 : 1;
+    rs.sort(function (a, b) {
+        return lte_(a.fx, b.fx) ? (lte_(b.fx, a.fx) ? a.idx - b.idx : -1) : 1;
     });
 
     if (Array.isArray(foldable)) {

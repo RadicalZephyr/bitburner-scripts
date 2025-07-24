@@ -1,23 +1,36 @@
 import {
-    Lambda1, Lambda1_deps, Lambda1_toFunction,
-    Lambda2, Lambda2_deps, Lambda2_toFunction,
-    Lambda3, Lambda3_deps, Lambda3_toFunction,
-    Lambda4, Lambda4_deps, Lambda4_toFunction,
-    Lambda5, Lambda5_deps, Lambda5_toFunction,
-    Lambda6, Lambda6_deps, Lambda6_toFunction,
-    toSources, lambda1
-} from "sodium/Lambda";
-import { Lazy } from "sodium/Lazy";
-import { Listener } from "sodium/Listener";
-import { Tuple2 } from "sodium/Tuple2";
+    Lambda1,
+    Lambda1_deps,
+    Lambda1_toFunction,
+    Lambda2,
+    Lambda2_deps,
+    Lambda2_toFunction,
+    Lambda3,
+    Lambda3_deps,
+    Lambda3_toFunction,
+    Lambda4,
+    Lambda4_deps,
+    Lambda4_toFunction,
+    Lambda5,
+    Lambda5_deps,
+    Lambda5_toFunction,
+    Lambda6,
+    Lambda6_deps,
+    Lambda6_toFunction,
+    toSources,
+    lambda1,
+} from 'sodium/Lambda';
+import { Lazy } from 'sodium/Lazy';
+import { Listener } from 'sodium/Listener';
+import { Tuple2 } from 'sodium/Tuple2';
 
-import { CoalesceHandler } from "sodium/CoalesceHandler";
+import { CoalesceHandler } from 'sodium/CoalesceHandler';
 //import { StreamLoop } from "sodium/StreamLoop";
-import * as Z from "sanctuary-type-classes";
+import * as Z from 'sanctuary-type-classes';
 
-import { Transaction } from "sodium/Transaction";
-import { Unit } from "sodium/Unit";
-import { Source, Vertex } from "sodium/Vertex";
+import { Transaction } from 'sodium/Transaction';
+import { Unit } from 'sodium/Unit';
+import { Source, Vertex } from 'sodium/Vertex';
 
 export class Operational {
     /**
@@ -66,9 +79,12 @@ export class Operational {
     static value<A>(c: Cell<A>): Stream<A> {
         return Transaction.run(() => {
             const sSpark = new StreamWithSend<Unit>();
-            Transaction.currentTransaction.prioritized(sSpark.getVertex__(), () => {
-                sSpark.send_(Unit.UNIT);
-            });
+            Transaction.currentTransaction.prioritized(
+                sSpark.getVertex__(),
+                () => {
+                    sSpark.send_(Unit.UNIT);
+                },
+            );
             const sInitial = sSpark.snapshot1(c);
             return Operational.updates(c).orElse(sInitial);
         });
@@ -79,9 +95,11 @@ export class Operational {
      * initiated transaction. Same as {@link split(Stream)} but it works on a single value.
      */
     static defer<A>(s: Stream<A>): Stream<A> {
-        return Operational.split<A>(s.map((a: A) => {
-            return [a];
-        }));
+        return Operational.split<A>(
+            s.map((a: A) => {
+                return [a];
+            }),
+        );
     }
 
     /**
@@ -93,22 +111,28 @@ export class Operational {
      */
     static split<A>(s: Stream<Array<A>>): Stream<A> {
         const out = new StreamWithSend<A>(null);
-        out.setVertex__(new Vertex("split", 0, [
-            new Source(
-                s.getVertex__(),
-                () => {
+        out.setVertex__(
+            new Vertex('split', 0, [
+                new Source(s.getVertex__(), () => {
                     out.getVertex__().childrn.push(s.getVertex__());
                     let cleanups: (() => void)[] = [];
                     cleanups.push(
-                        s.listen_(Vertex.NULL, (as: Array<A>) => {
-                            for (let i = 0; i < as.length; i++) {
-                                Transaction.currentTransaction.post(i, () => {
-                                    Transaction.run(() => {
-                                        out.send_(as[i]);
-                                    });
-                                });
-                            }
-                        }, false)
+                        s.listen_(
+                            Vertex.NULL,
+                            (as: Array<A>) => {
+                                for (let i = 0; i < as.length; i++) {
+                                    Transaction.currentTransaction.post(
+                                        i,
+                                        () => {
+                                            Transaction.run(() => {
+                                                out.send_(as[i]);
+                                            });
+                                        },
+                                    );
+                                }
+                            },
+                            false,
+                        ),
                     );
                     cleanups.push(() => {
                         let chs = out.getVertex__().childrn;
@@ -120,19 +144,18 @@ export class Operational {
                         }
                     });
                     return () => {
-                        cleanups.forEach(cleanup => cleanup());
+                        cleanups.forEach((cleanup) => cleanup());
                         cleanups.splice(0, cleanups.length);
-                    }
-                }
-            )
-        ]
-        ));
+                    };
+                }),
+            ]),
+        );
         return out;
     }
 }
 
 class MergeState<A> {
-    constructor() { }
+    constructor() {}
     left: A = null;
     left_present: boolean = false;
     right: A = null;
@@ -141,7 +164,7 @@ class MergeState<A> {
 
 export class Stream<A> {
     constructor(vertex?: Vertex) {
-        this.vertex = vertex ? vertex : new Vertex("Stream", 0, []);
+        this.vertex = vertex ? vertex : new Vertex('Stream', 0, []);
     }
 
     getVertex__(): Vertex {
@@ -163,16 +186,20 @@ export class Stream<A> {
     map<B>(f: ((a: A) => B) | Lambda1<A, B>): Stream<B> {
         const out = new StreamWithSend<B>(null);
         const ff = Lambda1_toFunction(f);
-        out.vertex = new Vertex("map", 0, [
-            new Source(
-                this.vertex,
-                () => {
-                    return this.listen_(out.vertex, (a: A) => {
-                        out.send_(ff(a));
-                    }, false);
-                }
-            )
-        ].concat(toSources(Lambda1_deps(f)))
+        out.vertex = new Vertex(
+            'map',
+            0,
+            [
+                new Source(this.vertex, () => {
+                    return this.listen_(
+                        out.vertex,
+                        (a: A) => {
+                            out.send_(ff(a));
+                        },
+                        false,
+                    );
+                }),
+            ].concat(toSources(Lambda1_deps(f))),
         );
         return out;
     }
@@ -183,17 +210,17 @@ export class Stream<A> {
      */
     mapTo<B>(b: B): Stream<B> {
         const out = new StreamWithSend<B>(null);
-        out.vertex = new Vertex("mapTo", 0, [
-            new Source(
-                this.vertex,
-                () => {
-                    return this.listen_(out.vertex, (a: A) => {
+        out.vertex = new Vertex('mapTo', 0, [
+            new Source(this.vertex, () => {
+                return this.listen_(
+                    out.vertex,
+                    (a: A) => {
                         out.send_(b);
-                    }, false);
-                }
-            )
-        ]
-        );
+                    },
+                    false,
+                );
+            }),
+        ]);
         return out;
     }
 
@@ -228,7 +255,10 @@ export class Stream<A> {
      * @param f Function to combine the values. It may construct FRP logic or use
      *    {@link Cell#sample()}. Apart from this the function must be <em>referentially transparent</em>.
      */
-    merge(s: Stream<A>, f: ((left: A, right: A) => A) | Lambda2<A, A, A>): Stream<A> {
+    merge(
+        s: Stream<A>,
+        f: ((left: A, right: A) => A) | Lambda2<A, A, A>,
+    ): Stream<A> {
         const ff = Lambda2_toFunction(f);
         const mergeState = new MergeState<A>();
         let pumping = false;
@@ -238,40 +268,51 @@ export class Stream<A> {
                 return;
             }
             pumping = true;
-            Transaction.currentTransaction.prioritized(out.getVertex__(), () => {
-                if (mergeState.left_present && mergeState.right_present) {
-                    out.send_(ff(mergeState.left, mergeState.right));
-                } else if (mergeState.left_present) {
-                    out.send_(mergeState.left);
-                } else if (mergeState.right_present) {
-                    out.send_(mergeState.right);
-                }
-                mergeState.left = null;
-                mergeState.left_present = false;
-                mergeState.right = null;
-                mergeState.right_present = false;
-                pumping = false;
-            });
+            Transaction.currentTransaction.prioritized(
+                out.getVertex__(),
+                () => {
+                    if (mergeState.left_present && mergeState.right_present) {
+                        out.send_(ff(mergeState.left, mergeState.right));
+                    } else if (mergeState.left_present) {
+                        out.send_(mergeState.left);
+                    } else if (mergeState.right_present) {
+                        out.send_(mergeState.right);
+                    }
+                    mergeState.left = null;
+                    mergeState.left_present = false;
+                    mergeState.right = null;
+                    mergeState.right_present = false;
+                    pumping = false;
+                },
+            );
         };
-        const vertex = new Vertex("merge", 0,
+        const vertex = new Vertex(
+            'merge',
+            0,
             [
-                new Source(
-                    this.vertex,
-                    () => this.listen_(out.vertex, (a: A) => {
-                        mergeState.left = a;
-                        mergeState.left_present = true;
-                        pump();
-                    }, false)
+                new Source(this.vertex, () =>
+                    this.listen_(
+                        out.vertex,
+                        (a: A) => {
+                            mergeState.left = a;
+                            mergeState.left_present = true;
+                            pump();
+                        },
+                        false,
+                    ),
                 ),
-                new Source(
-                    s.vertex,
-                    () => s.listen_(out.vertex, (a: A) => {
-                        mergeState.right = a;
-                        mergeState.right_present = true;
-                        pump();
-                    }, false)
-                )
-            ].concat(toSources(Lambda2_deps(f)))
+                new Source(s.vertex, () =>
+                    s.listen_(
+                        out.vertex,
+                        (a: A) => {
+                            mergeState.right = a;
+                            mergeState.right_present = true;
+                            pump();
+                        },
+                        false,
+                    ),
+                ),
+            ].concat(toSources(Lambda2_deps(f))),
         );
         out.vertex = vertex;
         return out;
@@ -283,17 +324,20 @@ export class Stream<A> {
     filter(f: ((a: A) => boolean) | Lambda1<A, boolean>): Stream<A> {
         const out = new StreamWithSend<A>(null);
         const ff = Lambda1_toFunction(f);
-        out.vertex = new Vertex("filter", 0, [
-            new Source(
-                this.vertex,
-                () => {
-                    return this.listen_(out.vertex, (a: A) => {
-                        if (ff(a))
-                            out.send_(a);
-                    }, false);
-                }
-            )
-        ].concat(toSources(Lambda1_deps(f)))
+        out.vertex = new Vertex(
+            'filter',
+            0,
+            [
+                new Source(this.vertex, () => {
+                    return this.listen_(
+                        out.vertex,
+                        (a: A) => {
+                            if (ff(a)) out.send_(a);
+                        },
+                        false,
+                    );
+                }),
+            ].concat(toSources(Lambda1_deps(f))),
         );
         return out;
     }
@@ -304,18 +348,17 @@ export class Stream<A> {
      */
     filterNotNull(): Stream<A> {
         const out = new StreamWithSend<A>(null);
-        out.vertex = new Vertex("filterNotNull", 0, [
-            new Source(
-                this.vertex,
-                () => {
-                    return this.listen_(out.vertex, (a: A) => {
-                        if (a !== null)
-                            out.send_(a);
-                    }, false);
-                }
-            )
-        ]
-        );
+        out.vertex = new Vertex('filterNotNull', 0, [
+            new Source(this.vertex, () => {
+                return this.listen_(
+                    out.vertex,
+                    (a: A) => {
+                        if (a !== null) out.send_(a);
+                    },
+                    false,
+                );
+            }),
+        ]);
         return out;
     }
 
@@ -335,45 +378,52 @@ export class Stream<A> {
      */
     snapshot1<B>(c: Cell<B>): Stream<B> {
         const out = new StreamWithSend<B>(null);
-        out.vertex = new Vertex("snapshot1", 0, [
-            new Source(
-                this.vertex,
-                () => {
-                    return this.listen_(out.vertex, (a: A) => {
+        out.vertex = new Vertex('snapshot1', 0, [
+            new Source(this.vertex, () => {
+                return this.listen_(
+                    out.vertex,
+                    (a: A) => {
                         out.send_(c.sampleNoTrans__());
-                    }, false);
-                }
-            ),
-            new Source(c.getVertex__(), null)
-        ]
-        );
+                    },
+                    false,
+                );
+            }),
+            new Source(c.getVertex__(), null),
+        ]);
         return out;
     }
 
     /**
      * Return a stream whose events are the result of the combination using the specified
      * function of the input stream's event value and the value of the cell at that time.
- * <P>
- * There is an implicit delay: State updates caused by event firings being held with
- * {@link Stream#hold(Object)} don't become visible as the cell's current value until
- * the following transaction. To put this another way, {@link Stream#snapshot(Cell, Lambda2)}
- * always sees the value of a cell as it was before any state changes from the current
- * transaction.
- */
-    snapshot<B, C>(b: Cell<B>, f_: ((a: A, b: B) => C) | Lambda2<A, B, C>): Stream<C> {
+     * <P>
+     * There is an implicit delay: State updates caused by event firings being held with
+     * {@link Stream#hold(Object)} don't become visible as the cell's current value until
+     * the following transaction. To put this another way, {@link Stream#snapshot(Cell, Lambda2)}
+     * always sees the value of a cell as it was before any state changes from the current
+     * transaction.
+     */
+    snapshot<B, C>(
+        b: Cell<B>,
+        f_: ((a: A, b: B) => C) | Lambda2<A, B, C>,
+    ): Stream<C> {
         const out = new StreamWithSend<C>(null);
         const ff = Lambda2_toFunction(f_);
-        out.vertex = new Vertex("snapshot", 0, [
-            new Source(
-                this.vertex,
-                () => {
-                    return this.listen_(out.vertex, (a: A) => {
-                        out.send_(ff(a, b.sampleNoTrans__()));
-                    }, false);
-                }
-            ),
-            new Source(b.getVertex__(), null)
-        ].concat(toSources(Lambda2_deps(f_)))
+        out.vertex = new Vertex(
+            'snapshot',
+            0,
+            [
+                new Source(this.vertex, () => {
+                    return this.listen_(
+                        out.vertex,
+                        (a: A) => {
+                            out.send_(ff(a, b.sampleNoTrans__()));
+                        },
+                        false,
+                    );
+                }),
+                new Source(b.getVertex__(), null),
+            ].concat(toSources(Lambda2_deps(f_))),
         );
         return out;
     }
@@ -381,28 +431,38 @@ export class Stream<A> {
     /**
      * Return a stream whose events are the result of the combination using the specified
      * function of the input stream's event value and the value of the cells at that time.
- * <P>
- * There is an implicit delay: State updates caused by event firings being held with
- * {@link Stream#hold(Object)} don't become visible as the cell's current value until
- * the following transaction. To put this another way, snapshot()
- * always sees the value of a cell as it was before any state changes from the current
- * transaction.
- */
-    snapshot3<B, C, D>(b: Cell<B>, c: Cell<C>, f_: ((a: A, b: B, c: C) => D) | Lambda3<A, B, C, D>): Stream<D> {
+     * <P>
+     * There is an implicit delay: State updates caused by event firings being held with
+     * {@link Stream#hold(Object)} don't become visible as the cell's current value until
+     * the following transaction. To put this another way, snapshot()
+     * always sees the value of a cell as it was before any state changes from the current
+     * transaction.
+     */
+    snapshot3<B, C, D>(
+        b: Cell<B>,
+        c: Cell<C>,
+        f_: ((a: A, b: B, c: C) => D) | Lambda3<A, B, C, D>,
+    ): Stream<D> {
         const out = new StreamWithSend<D>(null);
         const ff = Lambda3_toFunction(f_);
-        out.vertex = new Vertex("snapshot", 0, [
-            new Source(
-                this.vertex,
-                () => {
-                    return this.listen_(out.vertex, (a: A) => {
-                        out.send_(ff(a, b.sampleNoTrans__(), c.sampleNoTrans__()));
-                    }, false);
-                }
-            ),
-            new Source(b.getVertex__(), null),
-            new Source(c.getVertex__(), null)
-        ].concat(toSources(Lambda3_deps(f_)))
+        out.vertex = new Vertex(
+            'snapshot',
+            0,
+            [
+                new Source(this.vertex, () => {
+                    return this.listen_(
+                        out.vertex,
+                        (a: A) => {
+                            out.send_(
+                                ff(a, b.sampleNoTrans__(), c.sampleNoTrans__()),
+                            );
+                        },
+                        false,
+                    );
+                }),
+                new Source(b.getVertex__(), null),
+                new Source(c.getVertex__(), null),
+            ].concat(toSources(Lambda3_deps(f_))),
         );
         return out;
     }
@@ -410,31 +470,45 @@ export class Stream<A> {
     /**
      * Return a stream whose events are the result of the combination using the specified
      * function of the input stream's event value and the value of the cells at that time.
- * <P>
- * There is an implicit delay: State updates caused by event firings being held with
- * {@link Stream#hold(Object)} don't become visible as the cell's current value until
- * the following transaction. To put this another way, snapshot()
- * always sees the value of a cell as it was before any state changes from the current
- * transaction.
- */
-    snapshot4<B, C, D, E>(b: Cell<B>, c: Cell<C>, d: Cell<D>,
-        f_: ((a: A, b: B, c: C, d: D) => E) | Lambda4<A, B, C, D, E>): Stream<E> {
+     * <P>
+     * There is an implicit delay: State updates caused by event firings being held with
+     * {@link Stream#hold(Object)} don't become visible as the cell's current value until
+     * the following transaction. To put this another way, snapshot()
+     * always sees the value of a cell as it was before any state changes from the current
+     * transaction.
+     */
+    snapshot4<B, C, D, E>(
+        b: Cell<B>,
+        c: Cell<C>,
+        d: Cell<D>,
+        f_: ((a: A, b: B, c: C, d: D) => E) | Lambda4<A, B, C, D, E>,
+    ): Stream<E> {
         const out = new StreamWithSend<E>(null);
         const ff = Lambda4_toFunction(f_);
-        out.vertex = new Vertex("snapshot", 0, [
-            new Source(
-                this.vertex,
-                () => {
-                    return this.listen_(out.vertex, (a: A) => {
-                        out.send_(ff(a, b.sampleNoTrans__(), c.sampleNoTrans__(),
-                            d.sampleNoTrans__()));
-                    }, false);
-                }
-            ),
-            new Source(b.getVertex__(), null),
-            new Source(c.getVertex__(), null),
-            new Source(d.getVertex__(), null)
-        ].concat(toSources(Lambda4_deps(f_)))
+        out.vertex = new Vertex(
+            'snapshot',
+            0,
+            [
+                new Source(this.vertex, () => {
+                    return this.listen_(
+                        out.vertex,
+                        (a: A) => {
+                            out.send_(
+                                ff(
+                                    a,
+                                    b.sampleNoTrans__(),
+                                    c.sampleNoTrans__(),
+                                    d.sampleNoTrans__(),
+                                ),
+                            );
+                        },
+                        false,
+                    );
+                }),
+                new Source(b.getVertex__(), null),
+                new Source(c.getVertex__(), null),
+                new Source(d.getVertex__(), null),
+            ].concat(toSources(Lambda4_deps(f_))),
         );
         return out;
     }
@@ -442,32 +516,48 @@ export class Stream<A> {
     /**
      * Return a stream whose events are the result of the combination using the specified
      * function of the input stream's event value and the value of the cells at that time.
- * <P>
- * There is an implicit delay: State updates caused by event firings being held with
- * {@link Stream#hold(Object)} don't become visible as the cell's current value until
- * the following transaction. To put this another way, snapshot()
- * always sees the value of a cell as it was before any state changes from the current
- * transaction.
- */
-    snapshot5<B, C, D, E, F>(b: Cell<B>, c: Cell<C>, d: Cell<D>, e: Cell<E>,
-        f_: ((a: A, b: B, c: C, d: D, e: E) => F) | Lambda5<A, B, C, D, E, F>): Stream<F> {
+     * <P>
+     * There is an implicit delay: State updates caused by event firings being held with
+     * {@link Stream#hold(Object)} don't become visible as the cell's current value until
+     * the following transaction. To put this another way, snapshot()
+     * always sees the value of a cell as it was before any state changes from the current
+     * transaction.
+     */
+    snapshot5<B, C, D, E, F>(
+        b: Cell<B>,
+        c: Cell<C>,
+        d: Cell<D>,
+        e: Cell<E>,
+        f_: ((a: A, b: B, c: C, d: D, e: E) => F) | Lambda5<A, B, C, D, E, F>,
+    ): Stream<F> {
         const out = new StreamWithSend<F>(null);
         const ff = Lambda5_toFunction(f_);
-        out.vertex = new Vertex("snapshot", 0, [
-            new Source(
-                this.vertex,
-                () => {
-                    return this.listen_(out.vertex, (a: A) => {
-                        out.send_(ff(a, b.sampleNoTrans__(), c.sampleNoTrans__(),
-                            d.sampleNoTrans__(), e.sampleNoTrans__()));
-                    }, false);
-                }
-            ),
-            new Source(b.getVertex__(), null),
-            new Source(c.getVertex__(), null),
-            new Source(d.getVertex__(), null),
-            new Source(e.getVertex__(), null)
-        ].concat(toSources(Lambda5_deps(f_)))
+        out.vertex = new Vertex(
+            'snapshot',
+            0,
+            [
+                new Source(this.vertex, () => {
+                    return this.listen_(
+                        out.vertex,
+                        (a: A) => {
+                            out.send_(
+                                ff(
+                                    a,
+                                    b.sampleNoTrans__(),
+                                    c.sampleNoTrans__(),
+                                    d.sampleNoTrans__(),
+                                    e.sampleNoTrans__(),
+                                ),
+                            );
+                        },
+                        false,
+                    );
+                }),
+                new Source(b.getVertex__(), null),
+                new Source(c.getVertex__(), null),
+                new Source(d.getVertex__(), null),
+                new Source(e.getVertex__(), null),
+            ].concat(toSources(Lambda5_deps(f_))),
         );
         return out;
     }
@@ -475,48 +565,67 @@ export class Stream<A> {
     /**
      * Return a stream whose events are the result of the combination using the specified
      * function of the input stream's event value and the value of the cells at that time.
- * <P>
- * There is an implicit delay: State updates caused by event firings being held with
- * {@link Stream#hold(Object)} don't become visible as the cell's current value until
- * the following transaction. To put this another way, snapshot()
- * always sees the value of a cell as it was before any state changes from the current
- * transaction.
- */
-    snapshot6<B, C, D, E, F, G>(b: Cell<B>, c: Cell<C>, d: Cell<D>, e: Cell<E>, f: Cell<F>,
-        f_: ((a: A, b: B, c: C, d: D, e: E, f: F) => G) | Lambda6<A, B, C, D, E, F, G>): Stream<G> {
+     * <P>
+     * There is an implicit delay: State updates caused by event firings being held with
+     * {@link Stream#hold(Object)} don't become visible as the cell's current value until
+     * the following transaction. To put this another way, snapshot()
+     * always sees the value of a cell as it was before any state changes from the current
+     * transaction.
+     */
+    snapshot6<B, C, D, E, F, G>(
+        b: Cell<B>,
+        c: Cell<C>,
+        d: Cell<D>,
+        e: Cell<E>,
+        f: Cell<F>,
+        f_:
+            | ((a: A, b: B, c: C, d: D, e: E, f: F) => G)
+            | Lambda6<A, B, C, D, E, F, G>,
+    ): Stream<G> {
         const out = new StreamWithSend<G>(null);
         const ff = Lambda6_toFunction(f_);
-        out.vertex = new Vertex("snapshot", 0, [
-            new Source(
-                this.vertex,
-                () => {
-                    return this.listen_(out.vertex, (a: A) => {
-                        out.send_(ff(a, b.sampleNoTrans__(), c.sampleNoTrans__(),
-                            d.sampleNoTrans__(), e.sampleNoTrans__(),
-                            f.sampleNoTrans__()));
-                    }, false);
-                }
-            ),
-            new Source(b.getVertex__(), null),
-            new Source(c.getVertex__(), null),
-            new Source(d.getVertex__(), null),
-            new Source(e.getVertex__(), null),
-            new Source(f.getVertex__(), null)
-        ].concat(toSources(Lambda6_deps(f_)))
+        out.vertex = new Vertex(
+            'snapshot',
+            0,
+            [
+                new Source(this.vertex, () => {
+                    return this.listen_(
+                        out.vertex,
+                        (a: A) => {
+                            out.send_(
+                                ff(
+                                    a,
+                                    b.sampleNoTrans__(),
+                                    c.sampleNoTrans__(),
+                                    d.sampleNoTrans__(),
+                                    e.sampleNoTrans__(),
+                                    f.sampleNoTrans__(),
+                                ),
+                            );
+                        },
+                        false,
+                    );
+                }),
+                new Source(b.getVertex__(), null),
+                new Source(c.getVertex__(), null),
+                new Source(d.getVertex__(), null),
+                new Source(e.getVertex__(), null),
+                new Source(f.getVertex__(), null),
+            ].concat(toSources(Lambda6_deps(f_))),
         );
         return out;
     }
 
     /**
      * Create a {@link Cell} with the specified initial value, that is updated
- * by this stream's event values.
- * <p>
- * There is an implicit delay: State updates caused by event firings don't become
- * visible as the cell's current value as viewed by {@link Stream#snapshot(Cell, Lambda2)}
- * until the following transaction. To put this another way,
- * {@link Stream#snapshot(Cell, Lambda2)} always sees the value of a cell as it was before
- * any state changes from the current transaction.
- */
+     * by this stream's event values.
+     * <p>
+     * There is an implicit delay: State updates caused by event firings don't become
+     * visible as the cell's current value as viewed by {@link Stream#snapshot(Cell, Lambda2)}
+     * until the following transaction. To put this another way,
+     * {@link Stream#snapshot(Cell, Lambda2)} always sees the value of a cell as it was before
+     * any state changes from the current transaction.
+     */
     hold(initValue: A): Cell<A> {
         return new Cell<A>(initValue, this);
     }
@@ -535,22 +644,37 @@ export class Stream<A> {
      *    {@link Cell#sample()} in which case it is equivalent to {@link Stream#snapshot(Cell)}ing the
      *    cell. Apart from this the function must be <em>referentially transparent</em>.
      */
-    collect<B, S>(initState: S, f: ((a: A, s: S) => Tuple2<B, S>) | Lambda2<A, S, Tuple2<B, S>>): Stream<B> {
-        return this.collectLazy(new Lazy<S>(() => { return initState; }), f);
+    collect<B, S>(
+        initState: S,
+        f: ((a: A, s: S) => Tuple2<B, S>) | Lambda2<A, S, Tuple2<B, S>>,
+    ): Stream<B> {
+        return this.collectLazy(
+            new Lazy<S>(() => {
+                return initState;
+            }),
+            f,
+        );
     }
 
     /**
      * A variant of {@link collect(Object, Lambda2)} that takes an initial state returned by
      * {@link Cell#sampleLazy()}.
      */
-    collectLazy<B, S>(initState: Lazy<S>, f: ((a: A, s: S) => Tuple2<B, S>) | Lambda2<A, S, Tuple2<B, S>>): Stream<B> {
+    collectLazy<B, S>(
+        initState: Lazy<S>,
+        f: ((a: A, s: S) => Tuple2<B, S>) | Lambda2<A, S, Tuple2<B, S>>,
+    ): Stream<B> {
         const ea = this;
         return Transaction.run(() => {
             const es = new StreamLoop<S>(),
                 s = es.holdLazy(initState),
                 ebs = ea.snapshot(s, f),
-                eb = ebs.map((bs: Tuple2<B, S>) => { return bs.a; }),
-                es_out = ebs.map((bs: Tuple2<B, S>) => { return bs.b; });
+                eb = ebs.map((bs: Tuple2<B, S>) => {
+                    return bs.a;
+                }),
+                es_out = ebs.map((bs: Tuple2<B, S>) => {
+                    return bs.b;
+                });
             es.loop(es_out);
             return eb;
         });
@@ -563,14 +687,22 @@ export class Stream<A> {
      *    cell. Apart from this the function must be <em>referentially transparent</em>.
      */
     accum<S>(initState: S, f: ((a: A, s: S) => S) | Lambda2<A, S, S>): Cell<S> {
-        return this.accumLazy(new Lazy<S>(() => { return initState; }), f);
+        return this.accumLazy(
+            new Lazy<S>(() => {
+                return initState;
+            }),
+            f,
+        );
     }
 
     /**
      * A variant of {@link accum(Object, Lambda2)} that takes an initial state returned by
      * {@link Cell#sampleLazy()}.
      */
-    accumLazy<S>(initState: Lazy<S>, f: ((a: A, s: S) => S) | Lambda2<A, S, S>): Cell<S> {
+    accumLazy<S>(
+        initState: Lazy<S>,
+        f: ((a: A, s: S) => S) | Lambda2<A, S, S>,
+    ): Cell<S> {
         const ea = this;
         return Transaction.run(() => {
             const es = new StreamLoop<S>(),
@@ -616,9 +748,11 @@ export class Stream<A> {
         });
     }
 
-    listen_(target: Vertex,
+    listen_(
+        target: Vertex,
         h: (a: A) => void,
-        suppressEarlierFirings: boolean): () => void {
+        suppressEarlierFirings: boolean,
+    ): () => void {
         if (this.vertex.register(target))
             Transaction.currentTransaction.requestRegen();
         const listener = new Listener<A>(h, target);
@@ -628,8 +762,7 @@ export class Stream<A> {
             Transaction.currentTransaction.prioritized(target, () => {
                 // Anything sent already in this transaction must be sent now so that
                 // there's no order dependency between send and listen.
-                for (let i = 0; i < firings.length; i++)
-                    h(firings[i]);
+                for (let i = 0; i < firings.length; i++) h(firings[i]);
             });
         }
         return () => {
@@ -641,11 +774,9 @@ export class Stream<A> {
                     break;
                 }
             }
-            if (removed)
-                this.vertex.deregister(target);
+            if (removed) this.vertex.deregister(target);
         };
     }
-
 
     /**
      * Fantasy-land Algebraic Data Type Compatability.
@@ -654,14 +785,14 @@ export class Stream<A> {
      */
 
     //map :: Functor f => f a ~> (a -> b) -> f b
-    'fantasy-land/map'<B>(f: ((a: A) => B)): Stream<B> {
+    'fantasy-land/map'<B>(f: (a: A) => B): Stream<B> {
         return this.map(f);
     }
 
     //concat :: Semigroup a => a ~> a -> a
     'fantasy-land/concat'(a: Stream<A>): Stream<A> {
         return this.merge(a, (left: any, right) => {
-            return (Z.Semigroup.test(left)) ? Z.concat(left, right) : left;
+            return Z.Semigroup.test(left) ? Z.concat(left, right) : left;
         });
     }
 
@@ -676,7 +807,8 @@ export class StreamWithSend<A> extends Stream<A> {
         super(vertex);
     }
 
-    setVertex__(vertex: Vertex) {  // TO DO figure out how to hide this
+    setVertex__(vertex: Vertex) {
+        // TO DO figure out how to hide this
         this.vertex = vertex;
     }
 
@@ -689,17 +821,19 @@ export class StreamWithSend<A> extends Stream<A> {
         const listeners = this.listeners.slice();
         for (let i = 0; i < listeners.length; i++) {
             const h = listeners[i].h;
-            Transaction.currentTransaction.prioritized(listeners[i].target, () => {
-                Transaction.currentTransaction.inCallback++;
-                try {
-                    h(a);
-                    Transaction.currentTransaction.inCallback--;
-                }
-                catch (err) {
-                    Transaction.currentTransaction.inCallback--;
-                    throw err;
-                }
-            });
+            Transaction.currentTransaction.prioritized(
+                listeners[i].target,
+                () => {
+                    Transaction.currentTransaction.inCallback++;
+                    try {
+                        h(a);
+                        Transaction.currentTransaction.inCallback--;
+                    } catch (err) {
+                        Transaction.currentTransaction.inCallback--;
+                        throw err;
+                    }
+                },
+            );
         }
     }
 }
@@ -708,13 +842,15 @@ export class StreamWithSend<A> extends Stream<A> {
  * A forward reference for a {@link Stream} equivalent to the Stream that is referenced.
  */
 export class StreamLoop<A> extends StreamWithSend<A> {
-    assigned__: boolean = false;  // to do: Figure out how to hide this
+    assigned__: boolean = false; // to do: Figure out how to hide this
 
     constructor() {
         super();
-        this.vertex.name = "StreamLoop";
+        this.vertex.name = 'StreamLoop';
         if (Transaction.currentTransaction === null)
-            throw new Error("StreamLoop/CellLoop must be used within an explicit transaction");
+            throw new Error(
+                'StreamLoop/CellLoop must be used within an explicit transaction',
+            );
     }
 
     /**
@@ -725,17 +861,18 @@ export class StreamLoop<A> extends StreamWithSend<A> {
      */
     loop(sa_out: Stream<A>): void {
         if (this.assigned__)
-            throw new Error("StreamLoop looped more than once");
+            throw new Error('StreamLoop looped more than once');
         this.assigned__ = true;
         this.vertex.addSource(
-            new Source(
-                sa_out.getVertex__(),
-                () => {
-                    return sa_out.listen_(this.vertex, (a: A) => {
+            new Source(sa_out.getVertex__(), () => {
+                return sa_out.listen_(
+                    this.vertex,
+                    (a: A) => {
                         this.send_(a);
-                    }, false);
-                }
-            )
+                    },
+                    false,
+                );
+            }),
         );
     }
 }
@@ -750,7 +887,7 @@ class LazySample<A> {
 }
 
 class ApplyState<A, B> {
-    constructor() { }
+    constructor() {}
     f: (a: A) => B = null;
     f_present: boolean = false;
     a: A = null;
@@ -762,26 +899,24 @@ export class Cell<A> {
     protected value: A;
     protected valueUpdate: A;
     private cleanup: () => void;
-    protected lazyInitValue: Lazy<A>;  // Used by LazyCell
+    protected lazyInitValue: Lazy<A>; // Used by LazyCell
     private vertex: Vertex;
 
     constructor(initValue: A, str?: Stream<A>) {
         this.value = initValue;
         if (!str) {
             this.str = new Stream<A>();
-            this.vertex = new Vertex("ConstCell", 0, []);
-        }
-        else
-            Transaction.run(() => this.setStream(str));
+            this.vertex = new Vertex('ConstCell', 0, []);
+        } else Transaction.run(() => this.setStream(str));
     }
 
     protected setStream(str: Stream<A>) {
         this.str = str;
         const me = this,
-            src = new Source(
-                str.getVertex__(),
-                () => {
-                    return str.listen_(me.vertex, (a: A) => {
+            src = new Source(str.getVertex__(), () => {
+                return str.listen_(
+                    me.vertex,
+                    (a: A) => {
                         if (me.valueUpdate == null) {
                             Transaction.currentTransaction.last(() => {
                                 me.value = me.valueUpdate;
@@ -790,10 +925,11 @@ export class Cell<A> {
                             });
                         }
                         me.valueUpdate = a;
-                    }, false);
-                }
-            );
-        this.vertex = new Vertex("Cell", 0, [src]);
+                    },
+                    false,
+                );
+            });
+        this.vertex = new Vertex('Cell', 0, [src]);
         // We do a trick here of registering the source for the duration of the current
         // transaction so that we are guaranteed to catch any stream events that
         // occur in the same transaction.
@@ -801,7 +937,7 @@ export class Cell<A> {
         // A new temporary vertex null is constructed here as a performance work-around to avoid
         // having too many children in Vertex.NULL as a deregister operation is O(n^2) where
         // n is the number of children in the vertex.
-        let tmpVertexNULL = new Vertex("Cell::setStream", 1e12, []);
+        let tmpVertexNULL = new Vertex('Cell::setStream', 1e12, []);
         this.vertex.register(tmpVertexNULL);
         Transaction.currentTransaction.last(() => {
             this.vertex.deregister(tmpVertexNULL);
@@ -812,7 +948,8 @@ export class Cell<A> {
         return this.vertex;
     }
 
-    getStream__(): Stream<A> {  // TO DO: Figure out how to hide this
+    getStream__(): Stream<A> {
+        // TO DO: Figure out how to hide this
         return this.str;
     }
 
@@ -838,10 +975,13 @@ export class Cell<A> {
      * by something that is ultimately being listened to.
      */
     sample(): A {
-        return Transaction.run(() => { return this.sampleNoTrans__(); });
+        return Transaction.run(() => {
+            return this.sampleNoTrans__();
+        });
     }
 
-    sampleNoTrans__(): A {  // TO DO figure out how to hide this
+    sampleNoTrans__(): A {
+        // TO DO figure out how to hide this
         return this.value;
     }
 
@@ -855,19 +995,19 @@ export class Cell<A> {
         return Transaction.run(() => me.sampleLazyNoTrans__());
     }
 
-    sampleLazyNoTrans__(): Lazy<A> {  // TO DO figure out how to hide this
+    sampleLazyNoTrans__(): Lazy<A> {
+        // TO DO figure out how to hide this
         const me = this,
             s = new LazySample<A>(me);
         Transaction.currentTransaction.sample(() => {
-            s.value = me.valueUpdate != null ? me.valueUpdate : me.sampleNoTrans__();
+            s.value =
+                me.valueUpdate != null ? me.valueUpdate : me.sampleNoTrans__();
             s.hasValue = true;
             s.cell = null;
         });
         return new Lazy<A>(() => {
-            if (s.hasValue)
-                return s.value;
-            else
-                return s.cell.sample();
+            if (s.hasValue) return s.value;
+            else return s.cell.sample();
         });
     }
 
@@ -879,7 +1019,9 @@ export class Cell<A> {
     map<B>(f: ((a: A) => B) | Lambda1<A, B>): Cell<B> {
         const c = this;
         return Transaction.run(() =>
-            Operational.updates(c).map(f).holdLazy(c.sampleLazy().map(Lambda1_toFunction(f)))
+            Operational.updates(c)
+                .map(f)
+                .holdLazy(c.sampleLazy().map(Lambda1_toFunction(f))),
         );
     }
 
@@ -888,13 +1030,13 @@ export class Cell<A> {
      * function applied to the input cells' values.
      * @param fn Function to apply. It must be <em>referentially transparent</em>.
      */
-    lift<B, C>(b: Cell<B>,
-        fn0: ((a: A, b: B) => C) |
-            Lambda2<A, B, C>): Cell<C> {
+    lift<B, C>(
+        b: Cell<B>,
+        fn0: ((a: A, b: B) => C) | Lambda2<A, B, C>,
+    ): Cell<C> {
         const fn = Lambda2_toFunction(fn0),
             cf = this.map((aa: A) => (bb: B) => fn(aa, bb));
-        return Cell.apply(cf, b,
-            toSources(Lambda2_deps(fn0)));
+        return Cell.apply(cf, b, toSources(Lambda2_deps(fn0)));
     }
 
     /**
@@ -902,17 +1044,21 @@ export class Cell<A> {
      * function applied to the input cells' values.
      * @param fn Function to apply. It must be <em>referentially transparent</em>.
      */
-    lift3<B, C, D>(b: Cell<B>, c: Cell<C>,
-        fn0: ((a: A, b: B, c: C) => D) |
-            Lambda3<A, B, C, D>): Cell<D> {
+    lift3<B, C, D>(
+        b: Cell<B>,
+        c: Cell<C>,
+        fn0: ((a: A, b: B, c: C) => D) | Lambda3<A, B, C, D>,
+    ): Cell<D> {
         const fn = Lambda3_toFunction(fn0),
             mf: (aa: A) => (bb: B) => (cc: C) => D =
-                (aa: A) => (bb: B) => (cc: C) => fn(aa, bb, cc),
+                (aa: A) => (bb: B) => (cc: C) =>
+                    fn(aa, bb, cc),
             cf = this.map(mf);
         return Cell.apply(
             Cell.apply<B, (c: C) => D>(cf, b),
             c,
-            toSources(Lambda3_deps(fn0)));
+            toSources(Lambda3_deps(fn0)),
+        );
     }
 
     /**
@@ -920,19 +1066,22 @@ export class Cell<A> {
      * function applied to the input cells' values.
      * @param fn Function to apply. It must be <em>referentially transparent</em>.
      */
-    lift4<B, C, D, E>(b: Cell<B>, c: Cell<C>, d: Cell<D>,
-        fn0: ((a: A, b: B, c: C, d: D) => E) |
-            Lambda4<A, B, C, D, E>): Cell<E> {
+    lift4<B, C, D, E>(
+        b: Cell<B>,
+        c: Cell<C>,
+        d: Cell<D>,
+        fn0: ((a: A, b: B, c: C, d: D) => E) | Lambda4<A, B, C, D, E>,
+    ): Cell<E> {
         const fn = Lambda4_toFunction(fn0),
             mf: (aa: A) => (bb: B) => (cc: C) => (dd: D) => E =
-                (aa: A) => (bb: B) => (cc: C) => (dd: D) => fn(aa, bb, cc, dd),
+                (aa: A) => (bb: B) => (cc: C) => (dd: D) =>
+                    fn(aa, bb, cc, dd),
             cf = this.map(mf);
         return Cell.apply(
-            Cell.apply(
-                Cell.apply<B, (c: C) => (d: D) => E>(cf, b),
-                c),
+            Cell.apply(Cell.apply<B, (c: C) => (d: D) => E>(cf, b), c),
             d,
-            toSources(Lambda4_deps(fn0)));
+            toSources(Lambda4_deps(fn0)),
+        );
     }
 
     /**
@@ -940,21 +1089,29 @@ export class Cell<A> {
      * function applied to the input cells' values.
      * @param fn Function to apply. It must be <em>referentially transparent</em>.
      */
-    lift5<B, C, D, E, F>(b: Cell<B>, c: Cell<C>, d: Cell<D>, e: Cell<E>,
-        fn0: ((a: A, b: B, c: C, d: D, e: E) => F) |
-            Lambda5<A, B, C, D, E, F>): Cell<F> {
+    lift5<B, C, D, E, F>(
+        b: Cell<B>,
+        c: Cell<C>,
+        d: Cell<D>,
+        e: Cell<E>,
+        fn0: ((a: A, b: B, c: C, d: D, e: E) => F) | Lambda5<A, B, C, D, E, F>,
+    ): Cell<F> {
         const fn = Lambda5_toFunction(fn0),
             mf: (aa: A) => (bb: B) => (cc: C) => (dd: D) => (ee: E) => F =
-                (aa: A) => (bb: B) => (cc: C) => (dd: D) => (ee: E) => fn(aa, bb, cc, dd, ee),
+                (aa: A) => (bb: B) => (cc: C) => (dd: D) => (ee: E) =>
+                    fn(aa, bb, cc, dd, ee),
             cf = this.map(mf);
         return Cell.apply(
             Cell.apply(
                 Cell.apply(
                     Cell.apply<B, (c: C) => (d: D) => (e: E) => F>(cf, b),
-                    c),
-                d),
+                    c,
+                ),
+                d,
+            ),
             e,
-            toSources(Lambda5_deps(fn0)));
+            toSources(Lambda5_deps(fn0)),
+        );
     }
 
     /**
@@ -962,23 +1119,45 @@ export class Cell<A> {
      * function applied to the input cells' values.
      * @param fn Function to apply. It must be <em>referentially transparent</em>.
      */
-    lift6<B, C, D, E, F, G>(b: Cell<B>, c: Cell<C>, d: Cell<D>, e: Cell<E>, f: Cell<F>,
-        fn0: ((a: A, b: B, c: C, d: D, e: E, f: F) => G) |
-            Lambda6<A, B, C, D, E, F, G>): Cell<G> {
+    lift6<B, C, D, E, F, G>(
+        b: Cell<B>,
+        c: Cell<C>,
+        d: Cell<D>,
+        e: Cell<E>,
+        f: Cell<F>,
+        fn0:
+            | ((a: A, b: B, c: C, d: D, e: E, f: F) => G)
+            | Lambda6<A, B, C, D, E, F, G>,
+    ): Cell<G> {
         const fn = Lambda6_toFunction(fn0),
-            mf: (aa: A) => (bb: B) => (cc: C) => (dd: D) => (ee: E) => (ff: F) => G =
-                (aa: A) => (bb: B) => (cc: C) => (dd: D) => (ee: E) => (ff: F) => fn(aa, bb, cc, dd, ee, ff),
+            mf: (
+                aa: A,
+            ) => (bb: B) => (cc: C) => (dd: D) => (ee: E) => (ff: F) => G =
+                (aa: A) =>
+                (bb: B) =>
+                (cc: C) =>
+                (dd: D) =>
+                (ee: E) =>
+                (ff: F) =>
+                    fn(aa, bb, cc, dd, ee, ff),
             cf = this.map(mf);
         return Cell.apply(
             Cell.apply(
                 Cell.apply(
                     Cell.apply(
-                        Cell.apply<B, (c: C) => (d: D) => (e: E) => (f: F) => G>(cf, b),
-                        c),
-                    d),
-                e),
+                        Cell.apply<
+                            B,
+                            (c: C) => (d: D) => (e: E) => (f: F) => G
+                        >(cf, b),
+                        c,
+                    ),
+                    d,
+                ),
+                e,
+            ),
             f,
-            toSources(Lambda6_deps(fn0)));
+            toSources(Lambda6_deps(fn0)),
+        );
     }
 
     /**
@@ -987,50 +1166,45 @@ export class Cell<A> {
      */
     public tracking(extractor: (a: A) => (Stream<any> | Cell<any>)[]): Cell<A> {
         const out = new StreamWithSend<A>(null);
-        let vertex = new Vertex("tracking", 0, [
-            new Source(
-                this.vertex,
-                () => {
-                    let cleanup2: () => void = () => { };
-                    let updateDeps =
-                        (a: A) => {
-                            let lastCleanups2 = cleanup2;
-                            let deps = extractor(a).map(dep => dep.getVertex__());
-                            for (let i = 0; i < deps.length; ++i) {
-                                let dep = deps[i];
-                                vertex.childrn.push(dep);
-                                dep.increment(Vertex.NULL);
-                            }
-                            cleanup2 = () => {
-                                for (let i = 0; i < deps.length; ++i) {
-                                    let dep = deps[i];
-                                    for (let j = 0; j < vertex.childrn.length; ++j) {
-                                        if (vertex.childrn[j] === dep) {
-                                            vertex.childrn.splice(j, 1);
-                                            break;
-                                        }
-                                    }
-                                    dep.decrement(Vertex.NULL);
-                                }
-                            };
-                            lastCleanups2();
-                        };
-                    updateDeps(this.sample());
-                    var cleanup1 =
-                        Operational.updates(this).listen_(
-                            vertex,
-                            (a: A) => {
-                                updateDeps(a);
-                                out.send_(a);
-                            },
-                            false
-                        );
-                    return () => {
-                        cleanup1();
-                        cleanup2();
+        let vertex = new Vertex('tracking', 0, [
+            new Source(this.vertex, () => {
+                let cleanup2: () => void = () => {};
+                let updateDeps = (a: A) => {
+                    let lastCleanups2 = cleanup2;
+                    let deps = extractor(a).map((dep) => dep.getVertex__());
+                    for (let i = 0; i < deps.length; ++i) {
+                        let dep = deps[i];
+                        vertex.childrn.push(dep);
+                        dep.increment(Vertex.NULL);
                     }
-                }
-            )
+                    cleanup2 = () => {
+                        for (let i = 0; i < deps.length; ++i) {
+                            let dep = deps[i];
+                            for (let j = 0; j < vertex.childrn.length; ++j) {
+                                if (vertex.childrn[j] === dep) {
+                                    vertex.childrn.splice(j, 1);
+                                    break;
+                                }
+                            }
+                            dep.decrement(Vertex.NULL);
+                        }
+                    };
+                    lastCleanups2();
+                };
+                updateDeps(this.sample());
+                var cleanup1 = Operational.updates(this).listen_(
+                    vertex,
+                    (a: A) => {
+                        updateDeps(a);
+                        out.send_(a);
+                    },
+                    false,
+                );
+                return () => {
+                    cleanup1();
+                    cleanup2();
+                };
+            }),
         ]);
         out.setVertex__(vertex);
         return out.holdLazy(this.sampleLazy());
@@ -1043,19 +1217,24 @@ export class Cell<A> {
         return Cell._liftArray(ca, 0, ca.length);
     }
 
-    private static _liftArray<A>(ca: Cell<A>[], fromInc: number, toExc: number): Cell<A[]> {
+    private static _liftArray<A>(
+        ca: Cell<A>[],
+        fromInc: number,
+        toExc: number,
+    ): Cell<A[]> {
         if (toExc - fromInc == 0) {
             return new Cell<A[]>([]);
         } else if (toExc - fromInc == 1) {
-            return ca[fromInc].map(a => [a]);
+            return ca[fromInc].map((a) => [a]);
         } else {
             let pivot = Math.floor((fromInc + toExc) / 2);
             // the thunk boxing/unboxing here is a performance hack for lift when there are simutaneous changing cells.
-            return Cell._liftArray(ca, fromInc, pivot).lift(
-                Cell._liftArray(ca, pivot, toExc),
-                (array1, array2) => () => array1.concat(array2)
-            )
-                .map(x => x());
+            return Cell._liftArray(ca, fromInc, pivot)
+                .lift(
+                    Cell._liftArray(ca, pivot, toExc),
+                    (array1, array2) => () => array1.concat(array2),
+                )
+                .map((x) => x());
         }
     }
 
@@ -1063,7 +1242,11 @@ export class Cell<A> {
      * Apply a value inside a cell to a function inside a cell. This is the
      * primitive for all function lifting.
      */
-    static apply<A, B>(cf: Cell<(a: A) => B>, ca: Cell<A>, sources?: Source[]): Cell<B> {
+    static apply<A, B>(
+        cf: Cell<(a: A) => B>,
+        ca: Cell<A>,
+        sources?: Source[],
+    ): Cell<B> {
         return Transaction.run(() => {
             let pumping = false;
             const state = new ApplyState<A, B>(),
@@ -1075,39 +1258,52 @@ export class Cell<A> {
                         return;
                     }
                     pumping = true;
-                    Transaction.currentTransaction.prioritized(out.getVertex__(), () => {
-                        let f = state.f_present ? state.f : cf.sampleNoTrans__();
-                        let a = state.a_present ? state.a : ca.sampleNoTrans__();
-                        out.send_(f(a));
-                        pumping = false;
-                    });
+                    Transaction.currentTransaction.prioritized(
+                        out.getVertex__(),
+                        () => {
+                            let f = state.f_present
+                                ? state.f
+                                : cf.sampleNoTrans__();
+                            let a = state.a_present
+                                ? state.a
+                                : ca.sampleNoTrans__();
+                            out.send_(f(a));
+                            pumping = false;
+                        },
+                    );
                 },
-                src1 = new Source(
-                    cf_updates.getVertex__(),
-                    () => {
-                        return cf_updates.listen_(out.getVertex__(), (f: (a: A) => B) => {
+                src1 = new Source(cf_updates.getVertex__(), () => {
+                    return cf_updates.listen_(
+                        out.getVertex__(),
+                        (f: (a: A) => B) => {
                             state.f = f;
                             state.f_present = true;
                             pump();
-                        }, false);
-                    }
-                ),
-                src2 = new Source(
-                    ca_updates.getVertex__(),
-                    () => {
-                        return ca_updates.listen_(out.getVertex__(), (a: A) => {
+                        },
+                        false,
+                    );
+                }),
+                src2 = new Source(ca_updates.getVertex__(), () => {
+                    return ca_updates.listen_(
+                        out.getVertex__(),
+                        (a: A) => {
                             state.a = a;
                             state.a_present = true;
                             pump();
-                        }, false);
-                    }
-                );
-            out.setVertex__(new Vertex("apply", 0,
-                [src1, src2].concat(sources ? sources : [])
-            ));
-            return out.holdLazy(new Lazy<B>(() =>
-                cf.sampleNoTrans__()(ca.sampleNoTrans__())
-            ));
+                        },
+                        false,
+                    );
+                });
+            out.setVertex__(
+                new Vertex(
+                    'apply',
+                    0,
+                    [src1, src2].concat(sources ? sources : []),
+                ),
+            );
+            return out.holdLazy(
+                new Lazy<B>(() => cf.sampleNoTrans__()(ca.sampleNoTrans__())),
+            );
         });
     }
 
@@ -1125,37 +1321,53 @@ export class Cell<A> {
                     return;
                 }
                 pumping = true;
-                Transaction.currentTransaction.prioritized(out.getVertex__(), () => {
-                    out.send_(outValue);
-                    outValue = null;
-                    pumping = false;
-                });
+                Transaction.currentTransaction.prioritized(
+                    out.getVertex__(),
+                    () => {
+                        out.send_(outValue);
+                        outValue = null;
+                        pumping = false;
+                    },
+                );
             };
             let last_ca: Cell<A> = null;
             const cca_value = Operational.value(cca),
-                src = new Source(
-                    cca_value.getVertex__(),
-                    () => {
-                        let kill2: () => void = last_ca === null ? null :
-                            Operational.value(last_ca).listen_(out.getVertex__(),
-                                (a: A) => { outValue = a; pump(); }, false);
-                        const kill1 = cca_value.listen_(out.getVertex__(), (ca: Cell<A>) => {
+                src = new Source(cca_value.getVertex__(), () => {
+                    let kill2: () => void =
+                        last_ca === null
+                            ? null
+                            : Operational.value(last_ca).listen_(
+                                  out.getVertex__(),
+                                  (a: A) => {
+                                      outValue = a;
+                                      pump();
+                                  },
+                                  false,
+                              );
+                    const kill1 = cca_value.listen_(
+                        out.getVertex__(),
+                        (ca: Cell<A>) => {
                             last_ca = ca;
                             // Connect before disconnect to avoid memory bounce, when switching to same cell twice.
-                            let nextKill2 = Operational.value(ca).listen_(out.getVertex__(),
+                            let nextKill2 = Operational.value(ca).listen_(
+                                out.getVertex__(),
                                 (a: A) => {
                                     outValue = a;
                                     pump();
                                 },
-                                false);
-                            if (kill2 !== null)
-                                kill2();
+                                false,
+                            );
+                            if (kill2 !== null) kill2();
                             kill2 = nextKill2;
-                        }, false);
-                        return () => { kill1(); kill2(); };
-                    }
-                );
-            out.setVertex__(new Vertex("switchC", 0, [src]));
+                        },
+                        false,
+                    );
+                    return () => {
+                        kill1();
+                        kill2();
+                    };
+                });
+            out.setVertex__(new Vertex('switchC', 0, [src]));
             return out.holdLazy(za);
         });
     }
@@ -1169,20 +1381,30 @@ export class Cell<A> {
                 h2 = (a: A) => {
                     out.send_(a);
                 },
-                src = new Source(
-                    csa.getVertex__(),
-                    () => {
-                        let kill2 = csa.sampleNoTrans__().listen_(out.getVertex__(), h2, false);
-                        const kill1 = csa.getStream__().listen_(out.getVertex__(), (sa: Stream<A>) => {
+                src = new Source(csa.getVertex__(), () => {
+                    let kill2 = csa
+                        .sampleNoTrans__()
+                        .listen_(out.getVertex__(), h2, false);
+                    const kill1 = csa.getStream__().listen_(
+                        out.getVertex__(),
+                        (sa: Stream<A>) => {
                             // Connect before disconnect to avoid memory bounce, when switching to same stream twice.
-                            let nextKill2 = sa.listen_(out.getVertex__(), h2, true);
+                            let nextKill2 = sa.listen_(
+                                out.getVertex__(),
+                                h2,
+                                true,
+                            );
                             kill2();
                             kill2 = nextKill2;
-                        }, false);
-                        return () => { kill1(); kill2(); };
-                    }
-                );
-            out.setVertex__(new Vertex("switchS", 0, [src]));
+                        },
+                        false,
+                    );
+                    return () => {
+                        kill1();
+                        kill2();
+                    };
+                });
+            out.setVertex__(new Vertex('switchS', 0, [src]));
             return out;
         });
     }
@@ -1192,20 +1414,16 @@ export class Cell<A> {
      * propergated. This function insures only distinct changes get propergated.
      */
     calm(eq: (a: A, b: A) => boolean): Cell<A> {
-        return Operational
-            .updates(this)
-            .collectLazy(
-                this.sampleLazy(),
-                (newValue, oldValue) => {
-                    let result: A;
-                    if (eq(newValue, oldValue)) {
-                        result = null;
-                    } else {
-                        result = newValue;
-                    }
-                    return new Tuple2(result, newValue);
+        return Operational.updates(this)
+            .collectLazy(this.sampleLazy(), (newValue, oldValue) => {
+                let result: A;
+                if (eq(newValue, oldValue)) {
+                    result = null;
+                } else {
+                    result = newValue;
                 }
-            )
+                return new Tuple2(result, newValue);
+            })
             .filterNotNull()
             .holdLazy(this.sampleLazy());
     }
@@ -1229,7 +1447,7 @@ export class Cell<A> {
      *   or {@link StreamSink#send(Object)} in the handler.
      *   An exception will be thrown, because you are not meant to use this to create
      *   your own primitives.
- */
+     */
     listen(h: (a: A) => void): () => void {
         return Transaction.run(() => {
             return Operational.value(this).listen(h);
@@ -1248,7 +1466,7 @@ export class Cell<A> {
     }
 
     //map :: Functor f => f a ~> (a -> b) -> f b
-    'fantasy-land/map'<B>(f: ((a: A) => B)): Cell<B> {
+    'fantasy-land/map'<B>(f: (a: A) => B): Cell<B> {
         return this.map(f);
     }
 
@@ -1262,13 +1480,13 @@ export class LazyCell<A> extends Cell<A> {
     constructor(lazyInitValue: Lazy<A>, str?: Stream<A>) {
         super(null, null);
         Transaction.run(() => {
-            if (str)
-                this.setStream(str);
+            if (str) this.setStream(str);
             this.lazyInitValue = lazyInitValue;
         });
     }
 
-    sampleNoTrans__(): A {  // Override
+    sampleNoTrans__(): A {
+        // Override
         if (this.value == null && this.lazyInitValue != null) {
             this.value = this.lazyInitValue.get();
             this.lazyInitValue = null;

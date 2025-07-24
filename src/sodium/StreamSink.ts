@@ -1,10 +1,14 @@
 import {
-    Lambda1, Lambda1_deps, Lambda1_toFunction,
-    Lambda2, Lambda2_deps, Lambda2_toFunction
-} from "sodium/Lambda";
-import { StreamWithSend } from "sodium/Stream";
-import { CoalesceHandler } from "sodium/CoalesceHandler";
-import { Transaction } from "sodium/Transaction";
+    Lambda1,
+    Lambda1_deps,
+    Lambda1_toFunction,
+    Lambda2,
+    Lambda2_deps,
+    Lambda2_toFunction,
+} from 'sodium/Lambda';
+import { StreamWithSend } from 'sodium/Stream';
+import { CoalesceHandler } from 'sodium/CoalesceHandler';
+import { Transaction } from 'sodium/Transaction';
 import { Vertex } from 'sodium/Vertex';
 
 /**
@@ -17,9 +21,10 @@ export class StreamSink<A> extends StreamWithSend<A> {
 
     constructor(f?: ((l: A, r: A) => A) | Lambda2<A, A, A>) {
         super();
-        if (!f)
-            f = <(l: A, r: A) => A>((l: A, r: A) => {
-                throw new Error("send() called more than once per transaction, which isn't allowed. Did you want to combine the events? Then pass a combining function to your StreamSink constructor.");
+        if (!f) f = <(l: A, r: A) => A>((l: A, r: A) => {
+                throw new Error(
+                    "send() called more than once per transaction, which isn't allowed. Did you want to combine the events? Then pass a combining function to your StreamSink constructor.",
+                );
             });
         this.coalescer = new CoalesceHandler<A>(f, this);
     }
@@ -27,27 +32,31 @@ export class StreamSink<A> extends StreamWithSend<A> {
     private coalescer: CoalesceHandler<A>;
 
     send(a: A): void {
-        Transaction.run<void>(
-            () => {
-                // We throw this error if we send into FRP logic that has been constructed
-                // but nothing is listening to it yet. We need to do it this way because
-                // it's the only way to manage memory in a language with no finalizers.
-                if (!this.disableListenCheck) {
-                    if (this.vertex.refCount() == 0) {
-                        throw new Error("send() was invoked before listeners were registered");
-                    }
+        Transaction.run<void>(() => {
+            // We throw this error if we send into FRP logic that has been constructed
+            // but nothing is listening to it yet. We need to do it this way because
+            // it's the only way to manage memory in a language with no finalizers.
+            if (!this.disableListenCheck) {
+                if (this.vertex.refCount() == 0) {
+                    throw new Error(
+                        'send() was invoked before listeners were registered',
+                    );
                 }
-                //
-                if (Transaction.currentTransaction.inCallback > 0)
-                    throw new Error("You are not allowed to use send() inside a Sodium callback");
-                this.coalescer.send_(a);
             }
-        )
+            //
+            if (Transaction.currentTransaction.inCallback > 0)
+                throw new Error(
+                    'You are not allowed to use send() inside a Sodium callback',
+                );
+            this.coalescer.send_(a);
+        });
     }
 
-    listen_(target: Vertex,
+    listen_(
+        target: Vertex,
         h: (a: A) => void,
-        suppressEarlierFirings: boolean): () => void {
+        suppressEarlierFirings: boolean,
+    ): () => void {
         let result = super.listen_(target, h, suppressEarlierFirings);
         this.disableListenCheck = true;
         return result;

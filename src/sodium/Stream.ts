@@ -1,1 +1,1 @@
-export { Stream, StreamLoop, StreamWithSend } from "sodium/Operational";
+export { Stream, StreamLoop, StreamWithSend } from 'sodium/Operational';

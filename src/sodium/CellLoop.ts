@@ -1,8 +1,8 @@
-import { Cell } from "sodium/Cell";
-import { Lazy } from "sodium/Lazy";
-import { LazyCell } from "sodium/LazyCell";
-import { Transaction } from "sodium/Transaction";
-import { StreamLoop } from "sodium/Stream";
+import { Cell } from 'sodium/Cell';
+import { Lazy } from 'sodium/Lazy';
+import { LazyCell } from 'sodium/LazyCell';
+import { Transaction } from 'sodium/Transaction';
+import { StreamLoop } from 'sodium/Stream';
 
 /**
  * A forward reference for a {@link Cell} equivalent to the Cell that is referenced.
@@ -28,7 +28,7 @@ export class CellLoop<A> extends LazyCell<A> {
 
     sampleNoTrans__(): A {
         if (!(<StreamLoop<A>>this.getStream__()).assigned__)
-            throw new Error("CellLoop sampled before it was looped");
+            throw new Error('CellLoop sampled before it was looped');
         return super.sampleNoTrans__();
     }
 }

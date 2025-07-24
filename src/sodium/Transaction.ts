@@ -13,12 +13,8 @@ export class Source {
     //
     // rank-independent souces DO NOT bump up the rank of the vertex containing those sources.
     // rank-depdendent sources DO bump up the rank of the vertex containing thoses sources when required.
-    constructor(
-        origin: Vertex,
-        register_: () => () => void
-    ) {
-        if (origin === null)
-            throw new Error("null origin!");
+    constructor(origin: Vertex, register_: () => () => void) {
+        if (origin === null) throw new Error('null origin!');
         this.origin = origin;
         this.register_ = register_;
     }
@@ -30,8 +26,7 @@ export class Source {
     register(target: Vertex): void {
         if (!this.registered) {
             this.registered = true;
-            if (this.register_ !== null)
-                this.deregister_ = this.register_();
+            if (this.register_ !== null) this.deregister_ = this.register_();
             else {
                 // Note: The use of Vertex.NULL here instead of "target" is not a bug, this is done to create a
                 // rank-independent source. (see note at constructor for more details.). The origin vertex still gets
@@ -46,36 +41,41 @@ export class Source {
                             break;
                         }
                     }
-                }
+                };
             }
         }
     }
     deregister(target: Vertex): void {
         if (this.registered) {
             this.registered = false;
-            if (this.deregister_ !== null)
-                this.deregister_();
+            if (this.deregister_ !== null) this.deregister_();
         }
     }
 }
 
-export enum Color { black, gray, white, purple };
+export enum Color {
+    black,
+    gray,
+    white,
+    purple,
+}
 let roots: Vertex[] = [];
 let nextID: number = 0;
 let verbose: boolean = false;
 
-export function setVerbose(v: boolean): void { verbose = v; }
+export function setVerbose(v: boolean): void {
+    verbose = v;
+}
 
 export function describeAll(v: Vertex, visited: Collections.Set<number>) {
     if (visited.contains(v.id)) return;
     visited.add(v.id);
     let chs = v.children();
-    for (let i = 0; i < chs.length; i++)
-        describeAll(chs[i], visited);
+    for (let i = 0; i < chs.length; i++) describeAll(chs[i], visited);
 }
 
 export class Vertex {
-    static NULL: Vertex = new Vertex("user", 1e12, []);
+    static NULL: Vertex = new Vertex('user', 1e12, []);
     static collectingCycles: boolean = false;
     static toBeFreedList: Vertex[] = [];
     id: number;
@@ -91,7 +91,9 @@ export class Vertex {
     sources: Source[];
     targets: Vertex[] = [];
     childrn: Vertex[] = [];
-    refCount(): number { return this.targets.length; };
+    refCount(): number {
+        return this.targets.length;
+    }
     visited: boolean = false;
     register(target: Vertex): boolean {
         return this.increment(target);
@@ -108,8 +110,7 @@ export class Vertex {
         }
         this.targets.push(target);
         target.childrn.push(this);
-        if (target.ensureBiggerThan(this.rank))
-            anyChanged = true;
+        if (target.ensureBiggerThan(this.rank)) anyChanged = true;
         totalRegistrations++;
         return anyChanged;
     }
@@ -138,8 +139,7 @@ export class Vertex {
 
     addSource(src: Source): void {
         this.sources.push(src);
-        if (this.refCount() > 0)
-            src.register(this);
+        if (this.refCount() > 0) src.register(this);
     }
 
     private ensureBiggerThan(limit: number): boolean {
@@ -148,8 +148,7 @@ export class Vertex {
             //throw new Error("Vertex cycle detected.");
             return false;
         }
-        if (this.rank > limit)
-            return false;
+        if (this.rank > limit) return false;
 
         this.visited = true;
         this.rank = limit + 1;
@@ -162,15 +161,33 @@ export class Vertex {
     descr(): string {
         let colStr: string = null;
         switch (this.color) {
-            case Color.black: colStr = "black"; break;
-            case Color.gray: colStr = "gray"; break;
-            case Color.white: colStr = "white"; break;
-            case Color.purple: colStr = "purple"; break;
+            case Color.black:
+                colStr = 'black';
+                break;
+            case Color.gray:
+                colStr = 'gray';
+                break;
+            case Color.white:
+                colStr = 'white';
+                break;
+            case Color.purple:
+                colStr = 'purple';
+                break;
         }
-        let str = this.id + " " + this.name + " [" + this.refCount() + "/" + this.refCountAdj + "] " + colStr + " ->";
+        let str =
+            this.id
+            + ' '
+            + this.name
+            + ' ['
+            + this.refCount()
+            + '/'
+            + this.refCountAdj
+            + '] '
+            + colStr
+            + ' ->';
         let chs = this.children();
         for (let i = 0; i < chs.length; i++) {
-            str = str + " " + chs[i].id;
+            str = str + ' ' + chs[i].id;
         }
         return str;
     }
@@ -184,7 +201,9 @@ export class Vertex {
     buffered: boolean = false;
     refCountAdj: number = 0;
 
-    children(): Vertex[] { return this.childrn; }
+    children(): Vertex[] {
+        return this.childrn;
+    }
 
     increment(referrer: Vertex): boolean {
         return this.incRefCount(referrer);
@@ -192,21 +211,17 @@ export class Vertex {
 
     decrement(referrer: Vertex): void {
         this.decRefCount(referrer);
-        if (this.refCount() == 0)
-            this.release();
-        else
-            this.possibleRoots();
+        if (this.refCount() == 0) this.release();
+        else this.possibleRoots();
     }
 
     release(): void {
         this.color = Color.black;
-        if (!this.buffered)
-            this.free();
+        if (!this.buffered) this.free();
     }
 
     free(): void {
-        while (this.targets.length > 0)
-            this.decRefCount(this.targets[0]);
+        while (this.targets.length > 0) this.decRefCount(this.targets[0]);
     }
 
     possibleRoots(): void {
@@ -260,8 +275,7 @@ export class Vertex {
             if (roots[i].color == Color.purple) {
                 roots[i].markGray();
                 newRoots.push(roots[i]);
-            }
-            else {
+            } else {
                 roots[i].buffered = false;
                 if (roots[i].color == Color.black && roots[i].refCount() == 0)
                     Vertex.toBeFreedList.push(roots[i]);
@@ -271,8 +285,7 @@ export class Vertex {
     }
 
     static scanRoots(): void {
-        for (let i = 0; i < roots.length; i++)
-            roots[i].scan();
+        for (let i = 0; i < roots.length; i++) roots[i].scan();
     }
 
     static collectRoots(): void {
@@ -280,7 +293,8 @@ export class Vertex {
             roots[i].buffered = false;
             roots[i].collectWhite();
         }
-        if (verbose) { // double check adjRefCount is zero for all vertices reachable by roots
+        if (verbose) {
+            // double check adjRefCount is zero for all vertices reachable by roots
             let stack: Vertex[] = roots.slice(0);
             let visited: Collections.Set<number> = new Collections.Set();
             while (stack.length != 0) {
@@ -311,13 +325,11 @@ export class Vertex {
 
     scan(): void {
         if (this.color == Color.gray) {
-            if (this.refCount() + this.refCountAdj > 0)
-                this.scanBlack();
+            if (this.refCount() + this.refCountAdj > 0) this.scanBlack();
             else {
                 this.color = Color.white;
                 let chs = this.children();
-                for (let i = 0; i < chs.length; i++)
-                    chs[i].scan();
+                for (let i = 0; i < chs.length; i++) chs[i].scan();
             }
         }
     }
@@ -327,8 +339,7 @@ export class Vertex {
         this.color = Color.black;
         let chs = this.children();
         for (let i = 0; i < chs.length; i++) {
-            if (chs[i].color != Color.black)
-                chs[i].scanBlack();
+            if (chs[i].color != Color.black) chs[i].scanBlack();
         }
     }
 
@@ -337,8 +348,7 @@ export class Vertex {
             this.color = Color.black;
             this.refCountAdj = 0;
             let chs = this.children();
-            for (let i = 0; i < chs.length; i++)
-                chs[i].collectWhite();
+            for (let i = 0; i < chs.length; i++) chs[i].collectWhite();
             Vertex.toBeFreedList.push(this);
         }
     }
@@ -366,7 +376,7 @@ export class Transaction {
     private static onStartHooks: (() => void)[] = [];
     private static runningOnStartHooks: boolean = false;
 
-    constructor() { }
+    constructor() {}
 
     inCallback: number = 0;
     private toRegen: boolean = false;
@@ -375,16 +385,19 @@ export class Transaction {
         this.toRegen = true;
     }
 
-    prioritizedQ: Collections.PriorityQueue<Entry> = new Collections.PriorityQueue<Entry>((a, b) => {
-        // Note: Low priority numbers are treated as "greater" according to this
-        // comparison, so that the lowest numbers are highest priority and go first.
-        if (a.rank.rank < b.rank.rank) return 1;
-        if (a.rank.rank > b.rank.rank) return -1;
-        if (a.seq < b.seq) return 1;
-        if (a.seq > b.seq) return -1;
-        return 0;
-    });
-    private entries: Collections.Set<Entry> = new Collections.Set<Entry>((a) => a.toString());
+    prioritizedQ: Collections.PriorityQueue<Entry> =
+        new Collections.PriorityQueue<Entry>((a, b) => {
+            // Note: Low priority numbers are treated as "greater" according to this
+            // comparison, so that the lowest numbers are highest priority and go first.
+            if (a.rank.rank < b.rank.rank) return 1;
+            if (a.rank.rank > b.rank.rank) return -1;
+            if (a.seq < b.seq) return 1;
+            if (a.seq > b.seq) return -1;
+            return 0;
+        });
+    private entries: Collections.Set<Entry> = new Collections.Set<Entry>((a) =>
+        a.toString(),
+    );
     private sampleQ: Array<() => void> = [];
     private lastQ: Array<() => void> = [];
     private postQ: Array<() => void> = null;
@@ -405,25 +418,24 @@ export class Transaction {
     }
 
     public static _collectCyclesAtEnd(): void {
-        Transaction.run(() => Transaction.collectCyclesAtEnd = true);
+        Transaction.run(() => (Transaction.collectCyclesAtEnd = true));
     }
 
     /**
      * Add an action to run after all last() actions.
      */
     post(childIx: number, action: () => void): void {
-        if (this.postQ == null)
-            this.postQ = [];
+        if (this.postQ == null) this.postQ = [];
         // If an entry exists already, combine the old one with the new one.
-        while (this.postQ.length <= childIx)
-            this.postQ.push(null);
+        while (this.postQ.length <= childIx) this.postQ.push(null);
         const existing = this.postQ[childIx],
             neu =
-                existing === null ? action
+                existing === null
+                    ? action
                     : () => {
-                        existing();
-                        action();
-                    };
+                          existing();
+                          action();
+                      };
         this.postQ[childIx] = neu;
     }
 
@@ -455,14 +467,12 @@ export class Transaction {
 
             const sq = this.sampleQ;
             this.sampleQ = [];
-            for (let i = 0; i < sq.length; i++)
-                sq[i]();
+            for (let i = 0; i < sq.length; i++) sq[i]();
 
             if (this.prioritizedQ.isEmpty() && this.sampleQ.length < 1) break;
         }
 
-        for (let i = 0; i < this.lastQ.length; i++)
-            this.lastQ[i]();
+        for (let i = 0; i < this.lastQ.length; i++) this.lastQ[i]();
         this.lastQ = [];
         if (this.postQ != null) {
             for (let i = 0; i < this.postQ.length; i++) {
@@ -474,19 +484,16 @@ export class Transaction {
                             try {
                                 this.postQ[i]();
                                 Transaction.currentTransaction.close();
-                            }
-                            catch (err) {
+                            } catch (err) {
                                 Transaction.currentTransaction.close();
                                 throw err;
                             }
-                        }
-                        else {
+                        } else {
                             Transaction.currentTransaction = null;
                             this.postQ[i]();
                         }
                         Transaction.currentTransaction = parent;
-                    }
-                    catch (err) {
+                    } catch (err) {
                         Transaction.currentTransaction = parent;
                         throw err;
                     }
@@ -515,8 +522,7 @@ export class Transaction {
                 try {
                     for (let i = 0; i < Transaction.onStartHooks.length; i++)
                         Transaction.onStartHooks[i]();
-                }
-                finally {
+                } finally {
                     Transaction.runningOnStartHooks = false;
                 }
             }
@@ -533,8 +539,7 @@ export class Transaction {
                 }
             }
             return a;
-        }
-        catch (err) {
+        } catch (err) {
             if (transWas === null) {
                 Transaction.currentTransaction.close();
                 Transaction.currentTransaction = null;
