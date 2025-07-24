@@ -1,5 +1,6 @@
 import * as util from 'typescript-collections/util';
 import * as arrays from 'typescript-collections/arrays';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 // A linked list node
 export interface ILinkedListNode<T> {
@@ -34,7 +35,7 @@ export default class LinkedList<T> {
      * which together represent a sequence.
      * @constructor
      */
-    constructor() {}
+    constructor() { }
 
     /**
      * Adds an element to this list.

@@ -1,5 +1,7 @@
 import * as util from 'typescript-collections/util';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import * as arrays from 'typescript-collections/arrays';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 // Used internally by dictionary
 export interface IDictionaryPair<K, V> {

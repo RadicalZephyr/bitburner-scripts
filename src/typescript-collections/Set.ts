@@ -4,6 +4,9 @@ import * as arrays from 'typescript-collections/arrays';
 
 import Dictionary from 'typescript-collections/Dictionary';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-this-alias */
+
 export default class Set<T> {
     /**
      * Dictionary key and value holds the elements in the set.
@@ -65,7 +68,7 @@ export default class Set<T> {
      */
     intersection(otherSet: Set<T>): void {
         const set = this;
-        this.forEach(function (element: T): boolean {
+        this.forEach(function(element: T): boolean {
             if (!otherSet.contains(element)) {
                 set.remove(element);
             }
@@ -80,7 +83,7 @@ export default class Set<T> {
      */
     union(otherSet: Set<T>): void {
         const set = this;
-        otherSet.forEach(function (element: T): boolean {
+        otherSet.forEach(function(element: T): boolean {
             set.add(element);
             return true;
         });
@@ -93,7 +96,7 @@ export default class Set<T> {
      */
     difference(otherSet: Set<T>): void {
         const set = this;
-        otherSet.forEach(function (element: T): boolean {
+        otherSet.forEach(function(element: T): boolean {
             set.remove(element);
             return true;
         });
@@ -110,7 +113,7 @@ export default class Set<T> {
         }
 
         let isSub = true;
-        this.forEach(function (element) {
+        this.forEach(function(element) {
             if (!otherSet.contains(element)) {
                 isSub = false;
                 return false;
@@ -141,7 +144,7 @@ export default class Set<T> {
      * optionally return false.
      */
     forEach(callback: util.ILoopFunction<T>): void {
-        this.dictionary.forEach(function (k, v) {
+        this.dictionary.forEach(function(k, v) {
             return callback(v);
         });
     }

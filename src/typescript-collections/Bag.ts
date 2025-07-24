@@ -1,6 +1,7 @@
 import * as util from 'typescript-collections/util';
 import Dictionary from 'typescript-collections/Dictionary';
 import Set from 'typescript-collections/Set';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 export default class Bag<T> {
     private toStrF: (item: T) => string;
@@ -151,7 +152,7 @@ export default class Bag<T> {
      * optionally return false.
      */
     forEach(callback: util.ILoopFunction<T>) {
-        this.dictionary.forEach(function (k, v) {
+        this.dictionary.forEach(function(k, v) {
             const value = v.value;
             const copies = v.copies;
             for (let i = 0; i < copies; i++) {

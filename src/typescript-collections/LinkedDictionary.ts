@@ -2,6 +2,7 @@ import {
     IDictionaryPair,
     default as Dictionary,
 } from 'typescript-collections/Dictionary';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import * as util from 'typescript-collections/util';
 
@@ -17,7 +18,7 @@ class LinkedDictionaryPair<K, V> implements IDictionaryPair<K, V> {
     constructor(
         public key: K,
         public value: V,
-    ) {}
+    ) { }
 
     unlink() {
         this.prev.next = this.next;
@@ -30,8 +31,7 @@ class LinkedDictionaryPair<K, V> implements IDictionaryPair<K, V> {
  * usually link to normal nodes.
  */
 class HeadOrTailLinkedDictionaryPair<K, V>
-    implements IDictionaryPair<null, null>
-{
+    implements IDictionaryPair<null, null> {
     prev: LinkedDictionaryPair<K, V> | HeadOrTailLinkedDictionaryPair<K, V>;
     next: LinkedDictionaryPair<K, V> | HeadOrTailLinkedDictionaryPair<K, V>;
     key: null = null;
@@ -208,6 +208,7 @@ export default class LinkedDictionary<K, V> extends Dictionary<K, V> {
      */
     keys(): K[] {
         const array: K[] = [];
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         this.forEach((key, value) => {
             array.push(key);
         });

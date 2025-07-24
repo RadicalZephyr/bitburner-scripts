@@ -1,5 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 const _hasOwnProperty = Object.prototype.hasOwnProperty;
-export const has = function (obj: any, prop: any) {
+export const has = function(obj: any, prop: any) {
     return _hasOwnProperty.call(obj, prop);
 };
 
@@ -124,7 +126,7 @@ export function reverseCompareFunction<T>(
     compareFunction?: ICompareFunction<T>,
 ): ICompareFunction<T> {
     if (isUndefined(compareFunction) || !isFunction(compareFunction)) {
-        return function (a, b) {
+        return function(a, b) {
             if (a < b) {
                 return 1;
             } else if (a === b) {
@@ -134,7 +136,7 @@ export function reverseCompareFunction<T>(
             }
         };
     } else {
-        return function (d: T, v: T) {
+        return function(d: T, v: T) {
             return compareFunction(d, v) * -1;
         };
     }
@@ -147,7 +149,7 @@ export function reverseCompareFunction<T>(
 export function compareToEquals<T>(
     compareFunction: ICompareFunction<T>,
 ): IEqualsFunction<T> {
-    return function (a: T, b: T) {
+    return function(a: T, b: T) {
         return compareFunction(a, b) === 0;
     };
 }
