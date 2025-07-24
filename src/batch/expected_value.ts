@@ -50,8 +50,11 @@ export function hackThreadsForPercent(
 
     let hackPercent: number;
     if (canUseFormulas(ns)) {
-        const server = ns.getServer(host);
         const player = ns.getPlayer();
+        const server = ns.getServer(host);
+        server.moneyAvailable = server.moneyMax;
+        server.hackDifficulty = server.minDifficulty;
+
         hackPercent = ns.formulas.hacking.hackPercent(server, player);
     } else {
         hackPercent = ns.hackAnalyze(host);
@@ -222,7 +225,7 @@ export function harvestProfit(
 ) {
     const hackThreads = hackThreadsForPercent(ns, target, hackPercent);
     const hackValue = successfulHackValue(ns, target, hackThreads);
-    const expectedHackValue = hackValue * ns.hackAnalyzeChance(target);
+    const expectedHackValue = hackValue * hackAnalyzeChance(ns, target);
 
     const batchesPerSecond = 1000 / endingPeriod;
     return expectedHackValue * batchesPerSecond;
@@ -240,6 +243,18 @@ function successfulHackValue(ns: NS, host: string, threads: number): number {
     }
 
     return threads * server.moneyMax * ns.hackAnalyze(host);
+}
+
+function hackAnalyzeChance(ns: NS, target: string) {
+    if (canUseFormulas(ns)) {
+        const player = ns.getPlayer();
+        const server = ns.getServer(target);
+        server.moneyAvailable = server.moneyMax;
+        server.hackDifficulty = server.minDifficulty;
+        return ns.formulas.hacking.hackChance(server, player);
+    } else {
+        return ns.hackAnalyzeChance(target);
+    }
 }
 
 /**
