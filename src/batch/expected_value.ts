@@ -1,4 +1,4 @@
-import type { AutocompleteData, NS } from 'netscript';
+import type { AutocompleteData, NS, Server } from 'netscript';
 
 import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
 import { FreeChunk, FreeRam } from 'services/client/memory';
@@ -51,9 +51,7 @@ export function hackThreadsForPercent(
     let hackPercent: number;
     if (canUseFormulas(ns)) {
         const player = ns.getPlayer();
-        const server = ns.getServer(host);
-        server.moneyAvailable = server.moneyMax;
-        server.hackDifficulty = server.minDifficulty;
+        const server = idealServer(ns, host);
 
         hackPercent = ns.formulas.hacking.hackPercent(server, player);
     } else {
@@ -232,12 +230,10 @@ export function harvestProfit(
 }
 
 function successfulHackValue(ns: NS, host: string, threads: number): number {
-    const server = ns.getServer(host);
+    const server = idealServer(ns, host);
 
     if (canUseFormulas(ns)) {
         const player = ns.getPlayer();
-        server.moneyAvailable = server.moneyMax;
-        server.hackDifficulty = server.minDifficulty;
         const percent = ns.formulas.hacking.hackPercent(server, player);
         return threads * server.moneyMax * percent;
     }
@@ -248,9 +244,7 @@ function successfulHackValue(ns: NS, host: string, threads: number): number {
 function hackAnalyzeChance(ns: NS, target: string) {
     if (canUseFormulas(ns)) {
         const player = ns.getPlayer();
-        const server = ns.getServer(target);
-        server.moneyAvailable = server.moneyMax;
-        server.hackDifficulty = server.minDifficulty;
+        const server = idealServer(ns, target);
         return ns.formulas.hacking.hackChance(server, player);
     } else {
         return ns.hackAnalyzeChance(target);
@@ -454,4 +448,11 @@ function weakenThreadsNeeded(securityDecrease: number): number {
 
 function canUseFormulas(ns: NS): boolean {
     return ns.fileExists('Formulas.exe', 'home');
+}
+
+function idealServer(ns: NS, host: string): Server {
+    const server = ns.getServer(host);
+    server.moneyAvailable = server.moneyMax;
+    server.hackDifficulty = server.minDifficulty;
+    return server;
 }
