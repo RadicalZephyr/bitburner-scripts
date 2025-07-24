@@ -16,7 +16,11 @@ import {
     Message as MonitorMessage,
 } from 'batch/client/monitor';
 
-import { expectedValuePerRamSecond } from 'batch/expected_value';
+import {
+    expectedValuePerRamSecond,
+    harvestBatchEndingPeriod,
+    harvestProfit,
+} from 'batch/expected_value';
 import { CONFIG } from 'batch/config';
 
 import { DiscoveryClient } from 'services/client/discover';
@@ -411,6 +415,7 @@ export type HostInfo = {
     pids: number[];
 
     harvestMoney: number;
+    expectedProfit: number;
     expectedValue: number;
     hckLevel: number;
     maxMoney: number;
@@ -442,6 +447,12 @@ export function hostInfo(
     const secPlus = sec - minSec;
 
     const harvestMoney = targetThreads.harvestMoney;
+    const expectedProfit = harvestProfit(
+        ns,
+        target,
+        CONFIG.maxHackPercent,
+        harvestBatchEndingPeriod(),
+    );
     const expectedValue = expectedValuePerRamSecond(
         ns,
         target,
@@ -453,6 +464,7 @@ export function hostInfo(
         pids,
 
         harvestMoney,
+        expectedProfit,
         expectedValue,
         hckLevel,
         maxMoney,
@@ -520,6 +532,15 @@ export function ServerBlock({
                                 field={'harvestMoney'}
                             >
                                 $/s
+                            </Header>
+                        </th>
+                        <th style={cellStyle}>
+                            <Header
+                                sortedBy={phase}
+                                setTableSorting={setTableSorting}
+                                field={'expectedProfit'}
+                            >
+                                E($/s)
                             </Header>
                         </th>
                         <th style={cellStyle}>
@@ -685,6 +706,9 @@ function ServerRow({
             </td>
             <td style={cellStyle}>
                 {`$${ns.formatNumber(host.harvestMoney, 2)}`}
+            </td>
+            <td style={cellStyle}>
+                {`$${ns.formatNumber(host.expectedProfit, 2)}`}
             </td>
             <td style={cellStyle}>
                 {`$${ns.formatNumber(host.expectedValue, 2)}`}
