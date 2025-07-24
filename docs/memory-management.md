@@ -58,3 +58,27 @@ The allocator service is now split into distinct modules:
 
 This separation keeps the allocator logic testable while the daemon file
 focuses on orchestration and rendering.
+
+### Status structure
+
+The allocator exposes a `Status` message so other scripts can see how
+much memory is currently free. The response is now an object describing
+both the total free RAM and how that memory is distributed across
+workers:
+
+```typescript
+interface FreeChunk {
+    hostname: string;
+    freeRam: number;
+}
+
+interface FreeRam {
+    freeRam: number;
+    chunks: FreeChunk[];
+}
+```
+
+`freeRam` is the total amount of memory available across all workers and
+`chunks` lists the free RAM on each individual host. Consumers should
+inspect the chunk list when deciding how many batches can actually fit
+into memory.
