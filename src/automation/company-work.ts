@@ -9,6 +9,7 @@ export async function main(ns: NS) {
         cmpEnum.BladeIndustries,
         cmpEnum.ClarkeIncorporated,
         cmpEnum.ECorp,
+        cmpEnum.FourSigma,
         cmpEnum.FulcrumTechnologies,
         cmpEnum.KuaiGongInternational,
         cmpEnum.MegaCorp,
