@@ -683,15 +683,15 @@ function ServerRow({
                     queuePidsForTail={queuePidsForTail}
                 />
             </td>
-            <td
-                style={cellStyle}
-            >{`$${ns.formatNumber(host.harvestMoney, 2)}`}</td>
-            <td
-                style={cellStyle}
-            >{`$${ns.formatNumber(host.expectedValue, 2)}`}</td>
-            <td
-                style={cellStyle}
-            >{`${ns.formatNumber(host.hckLevel, 0, 1000000, true)}`}</td>
+            <td style={cellStyle}>
+                {`$${ns.formatNumber(host.harvestMoney, 2)}`}
+            </td>
+            <td style={cellStyle}>
+                {`$${ns.formatNumber(host.expectedValue, 2)}`}
+            </td>
+            <td style={cellStyle}>
+                {`${ns.formatNumber(host.hckLevel, 0, 1000000, true)}`}
+            </td>
             <td style={cellStyle}>{`$${ns.formatNumber(host.maxMoney, 2)}`}</td>
             <td style={cellStyle}>{formatPercent(ns, host.moneyPercent)}</td>
             <td style={cellStyle}>{formatSecurity(ns, host.secPlus)}</td>
