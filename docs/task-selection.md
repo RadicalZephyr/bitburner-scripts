@@ -48,3 +48,10 @@ The allocator should detect this and return an error saying
 
 - Reserve RAM for tilling and sowing _all_ targets below harvest
   phase, assign the rest to harvesting.
+
+### Harvest gain threshold
+
+`harvestGainThreshold` controls when a new harvest is worthwhile. The task
+selector skips any harvest whose expected profit is less than this fraction of
+the combined profits from existing harvests. This avoids spending RAM on
+nearly unprofitable harvests.

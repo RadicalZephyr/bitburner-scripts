@@ -6,6 +6,7 @@ const entries = [
     ['hackLevelVelocityThreshold', 0.05],
     ['harvestRetryMax', 5],
     ['harvestRetryWait', 50],
+    ['harvestGainThreshold', 0.001],
     ['heartbeatCadence', 2000],
     ['heartbeatTimeoutMs', 3000],
     ['launchFailBackoffMs', 2000],

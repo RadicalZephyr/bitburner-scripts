@@ -192,6 +192,7 @@ class TaskSelector {
     velocity: number = 0;
     launchFailures: Map<string, { count: number; nextAttempt: number }> =
         new Map();
+    activeHarvestProfits: Map<string, number> = new Map();
 
     constructor(ns: NS, monitor: MonitorClient, launcher: LaunchClient) {
         this.ns = ns;
@@ -210,6 +211,13 @@ class TaskSelector {
      */
     async pushTarget(target: string) {
         if (!this.allTargets.has(target)) this.allTargets.add(target);
+
+        if (
+            this.harvestTargets.has(target)
+            || this.pendingHarvestTargets.includes(target)
+        ) {
+            this.activeHarvestProfits.delete(target);
+        }
 
         this.pendingTillTargets = this.pendingTillTargets.filter(
             (h) => h !== target,
@@ -384,7 +392,11 @@ class TaskSelector {
         await this.checkLaunchedTasks();
         if (this.launchedTasks.length > 0) return;
 
-        const harvestTasks: HarvestTask[] = [...this.pendingHarvestTargets]
+        const totalProfit = Array.from(
+            this.activeHarvestProfits.values(),
+        ).reduce((acc, p) => acc + p, 0);
+
+        let harvestTasks: HarvestTask[] = [...this.pendingHarvestTargets]
             .filter((h) => canHarvest(this.ns, h))
             .map((h) => {
                 const hackPercent = maxHackPercentForMemory(
@@ -423,6 +435,12 @@ class TaskSelector {
             })
             .filter((t): t is HarvestTask => t !== null)
             .sort((a, b) => b.value - a.value);
+
+        if (totalProfit > 0) {
+            harvestTasks = harvestTasks.filter(
+                (t) => t.profit >= totalProfit * CONFIG.harvestGainThreshold,
+            );
+        }
 
         const harvestScriptRam = this.ns.getScriptRam(
             '/batch/harvest.js',
@@ -657,8 +675,9 @@ class TaskSelector {
             this.pendingHarvestTargets = this.pendingHarvestTargets.filter(
                 (h) => h !== host,
             );
+            this.activeHarvestProfits.set(host, task.profit);
             const pid = result.pids[0];
-            const task: LaunchedTask = {
+            const launch: LaunchedTask = {
                 pid,
                 host,
                 type: 'harvest',
@@ -666,7 +685,7 @@ class TaskSelector {
                 expectedTime: undefined,
                 time: Date.now(),
             };
-            this.launchedTasks.push(task);
+            this.launchedTasks.push(launch);
             await this.monitor.harvesting(host);
         }
     }
