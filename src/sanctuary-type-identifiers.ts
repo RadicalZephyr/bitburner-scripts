@@ -100,8 +100,10 @@
 //. [2]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/toString
 //. [3]: #algorithm
 
+// eslint-disable-next-line no-var
 var $$type: string = '@@type';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function type(x: any): string {
     return x != null
         && x.constructor != null
@@ -109,6 +111,6 @@ export function type(x: any): string {
         && typeof x.constructor[$$type] === 'string'
         ? x.constructor[$$type]
         : Object.prototype.toString
-              .call(x)
-              .slice('[object '.length, -']'.length);
+            .call(x)
+            .slice('[object '.length, -']'.length);
 }

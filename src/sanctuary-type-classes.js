@@ -30,7 +30,6 @@
 //.
 //. ## Type-class hierarchy
 //.
-/* eslint-disable max-len */
 //. <pre>
 //.  Setoid   Semigroupoid  Semigroup   Foldable        Functor      Contravariant  Filterable
 //. (equals)    (compose)    (concat)   (reduce)         (map)        (contramap)    (filter)
@@ -64,9 +63,10 @@
 //.                                             Alternative    Monad     ChainRec
 //.                                                                     (chainRec)
 //. </pre>
-/* eslint-enable max-len */
 //.
 //. ## API
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-this-alias */
 
 import { type } from 'sanctuary-type-identifiers';
 
@@ -746,6 +746,7 @@ function Array$prototype$equals(other) {
 
 //  Array$prototype$lte :: Array a ~> Array a -> Boolean
 function Array$prototype$lte(other) {
+    // eslint-disable-next-line no-constant-condition
     for (var idx = 0; true; idx += 1) {
         if (idx === this.length) return true;
         if (idx === other.length) return false;
@@ -1036,7 +1037,6 @@ function Function$prototype$contramap(f) {
     };
 }
 
-/* eslint-disable key-spacing */
 var implementations = {
     Null: {
         prototype: {
@@ -1142,7 +1142,6 @@ var implementations = {
         },
     },
 };
-/* eslint-enable key-spacing */
 
 //# equals :: (a, b) -> Boolean
 //.
