@@ -95,7 +95,7 @@ describe('memory aware expected value', () => {
 
         const high = expectedValueForMemory(ns, host, ample);
         const low = expectedValueForMemory(ns, host, limited);
-        expect(low).toBeLessThan(high);
-        expect(expectedValueForMemory(ns, host, none)).toBe(0);
+        expect(low.expectedValue).toBeLessThan(high.expectedValue);
+        expect(expectedValueForMemory(ns, host, none).expectedValue).toBe(0);
     });
 });

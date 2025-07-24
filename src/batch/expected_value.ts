@@ -168,6 +168,12 @@ export function maxHackPercentForMemory(
     return low;
 }
 
+export interface ExpectedValue {
+    hackPercent: number;
+    profit: number;
+    expectedValue: number;
+}
+
 /**
  * Estimate expected value per RAM-second using current memory limits.
  *
@@ -180,16 +186,17 @@ export function expectedValueForMemory(
     ns: NS,
     host: string,
     memInfo: FreeRam,
-): number {
-    const hackPercent = maxHackPercentForMemory(ns, host, memInfo);
-    if (hackPercent === 0) return 0;
+    hackPercent?: number,
+): ExpectedValue {
+    hackPercent = hackPercent ?? maxHackPercentForMemory(ns, host, memInfo);
+    if (hackPercent === 0) return { hackPercent, profit: 0, expectedValue: 0 };
 
     const logistics = calculateBatchLogistics(ns, host, hackPercent);
     const batchCount = Math.min(
         logistics.overlap,
         availableBatchCount(memInfo.chunks, logistics.batchRam),
     );
-    if (batchCount === 0) return 0;
+    if (batchCount === 0) return { hackPercent, profit: 0, expectedValue: 0 };
 
     const profitPerSecond = harvestProfit(
         ns,
@@ -201,8 +208,9 @@ export function expectedValueForMemory(
     const overlapCompleteness = batchCount / logistics.overlap;
     const scaledProfitPerSecond = profitPerSecond * overlapCompleteness;
     const requiredRam = logistics.batchRam * batchCount;
+    const expectedValue = scaledProfitPerSecond / requiredRam;
 
-    return scaledProfitPerSecond / requiredRam;
+    return { hackPercent, profit: scaledProfitPerSecond, expectedValue };
 }
 
 /**

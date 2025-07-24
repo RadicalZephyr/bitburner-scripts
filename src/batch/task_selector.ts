@@ -51,6 +51,8 @@ interface LaunchedTask extends InProgressTask {
 
 interface HarvestTask extends BatchLogistics {
     host: string;
+    hackPercent: number;
+    profit: number;
     value: number;
 }
 
@@ -403,11 +405,18 @@ class TaskSelector {
                     return null;
                 }
 
-                const value = expectedValueForMemory(this.ns, h, memInfo);
+                const { profit, expectedValue: value } = expectedValueForMemory(
+                    this.ns,
+                    h,
+                    memInfo,
+                    hackPercent,
+                );
                 if (value <= CONFIG.expectedValueThreshold) return null;
 
                 return {
                     host: h,
+                    hackPercent,
+                    profit,
                     value,
                     ...logistics,
                 };
