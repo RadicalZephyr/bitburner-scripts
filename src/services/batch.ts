@@ -62,7 +62,7 @@ export function hostListFromChunks(chunks: AllocationChunk[]): string[] {
  * Calculate the relative start delays so that all phases finish in order.
  *
  * Modifies the passed phases array so that the relative start times
-   cause each phase to end in order.
+ * cause each phase to end in order.
  *
  * @param phases - The phases to run
  * @returns - Returns the phase array passed in modified with correct start times
