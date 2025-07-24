@@ -40,14 +40,16 @@ OPTIONS
     const sing = ns.singularity;
 
     ns.disableLog('ALL');
-    const factions = ns.getPlayer().factions;
+    const player = ns.getPlayer();
+    const factions = player.factions;
 
+    const ownedAugs: Set<string> = new Set(sing.getOwnedAugmentations(true));
     const uniqueAugs: Set<string> = new Set();
     const augs: Aug[] = [];
 
     for (const f of factions) {
         for (const aug of sing.getAugmentationsFromFaction(f)) {
-            if (uniqueAugs.has(aug)) continue;
+            if (ownedAugs.has(aug) || uniqueAugs.has(aug)) continue;
 
             uniqueAugs.add(aug);
 
