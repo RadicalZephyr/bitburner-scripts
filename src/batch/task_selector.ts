@@ -435,25 +435,29 @@ class TaskSelector {
         const gRam = this.ns.getScriptRam('/batch/g.js', 'home');
         const wRam = this.ns.getScriptRam('/batch/w.js', 'home');
 
-        let fallbackHarvest: string | null = null;
+        let fallbackHarvest: HarvestTask | null = null;
         for (const task of harvestTasks) {
             const lf = this.launchFailures.get(task.host);
             if (lf && lf.nextAttempt > Date.now()) continue;
             if (
                 harvestScriptRam + task.requiredRam <= memInfo.freeRam
                 && availableBatchCount(memInfo.chunks, task.batchRam)
-                    >= task.overlap
+                >= task.overlap
             ) {
-                await this.launchHarvest(task.host);
+                await this.launchHarvest(task);
                 return;
             }
-            if (!fallbackHarvest) fallbackHarvest = task.host;
+            if (!fallbackHarvest || fallbackHarvest.value < task.value)
+                fallbackHarvest = task;
         }
 
         const minimalHarvestRam = hRam + gRam + 2 * wRam;
         if (fallbackHarvest && memInfo.freeRam > minimalHarvestRam) {
-            const lf = this.launchFailures.get(fallbackHarvest);
-            const minLog = calculateBatchLogistics(this.ns, fallbackHarvest);
+            const lf = this.launchFailures.get(fallbackHarvest.host);
+            const minLog = calculateBatchLogistics(
+                this.ns,
+                fallbackHarvest.host,
+            );
             const fits =
                 availableBatchCount(memInfo.chunks, minLog.batchRam) >= 1;
             if ((!lf || lf.nextAttempt <= Date.now()) && fits) {
@@ -632,7 +636,8 @@ class TaskSelector {
         }
     }
 
-    private async launchHarvest(host: string, maxRam?: number) {
+    private async launchHarvest(task: HarvestTask, maxRam?: number) {
+        const host = task.host;
         this.ns.print(`INFO: launching harvest on ${host}`);
         const args =
             maxRam !== undefined ? [host, '--max-ram', maxRam] : [host];
