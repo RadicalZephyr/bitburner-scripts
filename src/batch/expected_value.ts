@@ -135,7 +135,7 @@ export function maxHackPercentForMemory(
 ): number {
     const minPercent = (() => {
         if (canUseFormulas(ns)) {
-            const server = ns.getServer(host);
+            const server = idealServer(ns, host);
             const player = ns.getPlayer();
             return ns.formulas.hacking.hackPercent(server, player);
         }
@@ -301,8 +301,8 @@ export function growthAnalyze(
     afterHackMoney: number,
 ): number {
     if (canUseFormulas(ns)) {
-        const server = ns.getServer(hostname);
         const player = ns.getPlayer();
+        const server = idealServer(ns, hostname);
         server.moneyAvailable = afterHackMoney;
         return Math.ceil(
             ns.formulas.hacking.growThreads(server, player, server.moneyMax),
