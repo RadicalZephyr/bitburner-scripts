@@ -23,8 +23,6 @@ import { fromFixed, MemoryAllocator, Worker } from 'services/allocator';
 import { readAllFromPort, readLoop } from 'util/ports';
 import { HUD_HEIGHT, HUD_WIDTH, STATUS_WINDOW_WIDTH } from 'util/ui';
 
-import { sleep } from 'util/time';
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const React: any;
 
@@ -160,7 +158,7 @@ Example:
             await growAllocations(ns, memoryManager);
             lastGrowCheck = now;
         }
-        await sleep(50);
+        await ns.asleep(50);
     }
 }
 

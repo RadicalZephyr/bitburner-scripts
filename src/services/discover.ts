@@ -16,7 +16,6 @@ import { trySendMessage } from 'util/client';
 import { extend } from 'util/extend';
 import { readAllFromPort, readLoop } from 'util/ports';
 import { walkNetworkBFS } from 'util/walk';
-import { sleep } from 'util/time';
 
 export async function main(ns: NS) {
     ns.flags(MEM_TAG_FLAGS);
@@ -65,7 +64,7 @@ export async function main(ns: NS) {
             discovery.pushHosts(newHosts);
         }
 
-        await sleep(CONFIG.discoverWalkIntervalMs);
+        await ns.asleep(CONFIG.discoverWalkIntervalMs);
     }
 }
 
