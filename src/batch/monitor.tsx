@@ -1,9 +1,4 @@
-import type {
-    NetscriptPort,
-    NS,
-    ReactElement,
-    UserInterfaceTheme,
-} from 'netscript';
+import type { NetscriptPort, NS, UserInterfaceTheme } from 'netscript';
 import {
     ALLOC_ID,
     ALLOC_ID_ARG,
@@ -630,7 +625,7 @@ export function ServerBlock({
 }
 
 interface IHeaderSettings {
-    children?: ReactElement;
+    children?: string;
     field: string;
     sortedBy: SortBy;
     setTableSorting: (column: string) => void;

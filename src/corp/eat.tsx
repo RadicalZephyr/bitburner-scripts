@@ -82,14 +82,14 @@ function EatIt({ ns }: IEatItProps) {
                 style={{ color: theme.successlight }}
                 onClick={() => startEating()}
             >
-                Eat it!<span class="MuiTouchRipple-root css-w0pj6f"></span>
+                Eat it!<span className="MuiTouchRipple-root css-w0pj6f"></span>
             </button>
             <button
-                class={buttonClass}
+                className={buttonClass}
                 style={{ color: theme.errorlight }}
                 onClick={() => stopEating()}
             >
-                STOP!<span class="MuiTouchRipple-root css-w0pj6f"></span>
+                STOP!<span className="MuiTouchRipple-root css-w0pj6f"></span>
             </button>
         </>
     );

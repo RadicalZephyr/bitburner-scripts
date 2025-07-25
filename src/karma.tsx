@@ -57,14 +57,14 @@ function Karma({ ns, cellStyle }: KarmaProps) {
         <>
             <table>
                 <tbody>
-                    <trow>
+                    <tr>
                         <td style={cellStyle}>Karma: </td>
                         <td style={cellStyle}>{ns.formatNumber(karma)}</td>
-                    </trow>
-                    <trow>
+                    </tr>
+                    <tr>
                         <td style={cellStyle}>Victims: </td>
                         <td style={cellStyle}>{numKilled}</td>
-                    </trow>
+                    </tr>
                 </tbody>
             </table>
         </>
