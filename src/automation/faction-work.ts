@@ -11,6 +11,7 @@ export async function main(ns: NS) {
 
 class Faction {
     name: string;
+    rep: number;
     favor: number;
     targetRep: number;
 
@@ -18,7 +19,7 @@ class Faction {
         this.name = name;
 
         const sing = ns.singularity;
-
+        this.rep = sing.getFactionRep(name);
         this.favor = sing.getFactionFavor(name);
         const augs = sing.getAugmentationsFromFaction(name);
 
