@@ -1,4 +1,4 @@
-import type { FactionWorkType, NS } from 'netscript';
+import type { FactionWorkType, NS, Singularity } from 'netscript';
 import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
 
 export async function main(ns: NS) {
@@ -6,6 +6,37 @@ export async function main(ns: NS) {
 
     const sing = ns.singularity;
 
+    await workForFactions(ns, sing);
+}
+
+class Faction {
+    name: string;
+    favor: number;
+    targetRep: number;
+
+    constructor(ns: NS, name: string) {
+        this.name = name;
+
+        const sing = ns.singularity;
+
+        this.favor = sing.getFactionFavor(name);
+        const augs = sing.getAugmentationsFromFaction(name);
+
+        if (augs.length < 1) {
+            this.targetRep = 0;
+            return;
+        }
+
+        augs.sort(
+            (a, b) =>
+                sing.getAugmentationRepReq(b) - sing.getAugmentationRepReq(a),
+        );
+
+        this.targetRep = sing.getAugmentationRepReq(augs[0]);
+    }
+}
+
+async function workForFactions(ns: NS, sing: Singularity) {
     const factions = ns
         .getPlayer()
         .factions.map((name) => new Faction(ns, name));
@@ -64,38 +95,11 @@ export async function main(ns: NS) {
     }
 }
 
-class Faction {
-    name: string;
-    favor: number;
-    targetRep: number;
-
-    constructor(ns: NS, name: string) {
-        this.name = name;
-
-        const sing = ns.singularity;
-
-        this.favor = sing.getFactionFavor(name);
-        const augs = sing.getAugmentationsFromFaction(name);
-
-        if (augs.length < 1) {
-            this.targetRep = 0;
-            return;
-        }
-
-        augs.sort(
-            (a, b) =>
-                sing.getAugmentationRepReq(b) - sing.getAugmentationRepReq(a),
-        );
-
-        this.targetRep = sing.getAugmentationRepReq(augs[0]);
-    }
-}
-
 function haveNeededRepForFaction(ns: NS, faction: Faction) {
     const sing = ns.singularity;
     return (
         faction.targetRep <= sing.getFactionRep(faction.name)
         || faction.favor + sing.getFactionFavorGain(faction.name)
-            >= ns.getFavorToDonate()
+        >= ns.getFavorToDonate()
     );
 }
