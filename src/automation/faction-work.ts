@@ -1,4 +1,4 @@
-import type { FactionWorkType, NS, Singularity } from 'netscript';
+import type { FactionName, FactionWorkType, NS, Singularity } from 'netscript';
 import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
 
 export async function main(ns: NS) {
@@ -44,17 +44,10 @@ async function workForFactions(ns: NS, sing: Singularity) {
         unfinishedFactions.sort((a, b) => a.targetRep - b.targetRep);
 
         const faction = unfinishedFactions.pop();
-        const f = faction.name;
+        const f = faction.name as FactionName;
 
-        const augs = sing.getAugmentationsFromFaction(f);
-        if (augs.length < 1) continue;
-
-        augs.sort(
-            (a, b) =>
-                sing.getAugmentationRepReq(b) - sing.getAugmentationRepReq(a),
-        );
-
-        const targetRep = sing.getAugmentationRepReq(augs[0]);
+        const targetRep = getTargetRep(ns, f);
+        if (targetRep < faction.rep) continue;
 
         const workTypes = sing.getFactionWorkTypes(f);
         if (workTypes.length < 1) continue;
@@ -84,6 +77,19 @@ async function workForFactions(ns: NS, sing: Singularity) {
 
         unfinishedFactions = getUnfinishedFactions(ns);
     }
+}
+
+function getTargetRep(ns: NS, f: FactionName) {
+    const sing = ns.singularity;
+
+    const augs = sing.getAugmentationsFromFaction(f);
+    if (augs.length < 1) return 0;
+
+    augs.sort(
+        (a, b) => sing.getAugmentationRepReq(b) - sing.getAugmentationRepReq(a),
+    );
+
+    return sing.getAugmentationRepReq(augs[0]);
 }
 
 function getUnfinishedFactions(ns: NS) {
