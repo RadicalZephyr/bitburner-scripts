@@ -1,7 +1,7 @@
-import type { NS } from 'netscript';
+import type { GangGenInfo, GangMemberInfo, NS } from 'netscript';
 import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
 
-import { StreamSink, Transaction } from 'sodium';
+import { CellSink, StreamSink, Transaction } from 'sodium';
 
 export async function main(ns: NS) {
     ns.flags(MEM_TAG_FLAGS);
@@ -12,9 +12,16 @@ export async function main(ns: NS) {
         return;
     }
 
-    const { sTick } = setup();
+    const { sTick, cGangInfo, cMembers } = setup(ns);
 
     while (true) {
+        // Update all cells in a transaction to minimize the number of transactions.
+        Transaction.run(() => {
+            cGangInfo.send(ns.gang.getGangInformation());
+            cMembers.send(memberInfoMap(ns));
+        });
+
+        // Send tick in a separate transaction so the cells contain their new values.
         sTick.send(null);
         await ns.gang.nextUpdate();
     }
@@ -22,11 +29,23 @@ export async function main(ns: NS) {
 
 interface GangSystem {
     sTick: StreamSink<void>;
+    cGangInfo: CellSink<GangGenInfo>;
+    cMembers: CellSink<Map<string, GangMemberInfo>>;
 }
 
-function setup(): GangSystem {
+function setup(ns: NS): GangSystem {
     return Transaction.run(() => {
         const sTick: StreamSink<void> = new StreamSink();
-        return { sTick };
+        const cGangInfo = new CellSink(ns.gang.getGangInformation());
+        const cMembers = new CellSink(memberInfoMap(ns));
+        return { sTick, cGangInfo, cMembers };
     });
+}
+
+function memberInfoMap(ns: NS): Map<string, GangMemberInfo> {
+    return new Map(
+        ns.gang
+            .getMemberNames()
+            .map((n) => [n, ns.gang.getMemberInformation(n)]),
+    );
 }
