@@ -11,6 +11,7 @@ class Faction {
     name: string;
     rep: number;
     favor: number;
+    favorToGain: number;
     targetRep: number;
 
     constructor(ns: NS, name: string) {
@@ -19,6 +20,8 @@ class Faction {
         const sing = ns.singularity;
         this.rep = sing.getFactionRep(name);
         this.favor = sing.getFactionFavor(name);
+        this.favorToGain = sing.getFactionFavorGain(name);
+
         const augs = sing.getAugmentationsFromFaction(name);
 
         if (augs.length < 1) {
