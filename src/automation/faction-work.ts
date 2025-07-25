@@ -37,12 +37,7 @@ class Faction {
 }
 
 async function workForFactions(ns: NS, sing: Singularity) {
-    const factions = ns
-        .getPlayer()
-        .factions.map((name) => new Faction(ns, name));
-    let unfinishedFactions = factions.filter(
-        (f) => !haveNeededRepForFaction(ns, f),
-    );
+    let unfinishedFactions = getUnfinishedFactions(ns);
 
     while (unfinishedFactions.length > 0) {
         unfinishedFactions.sort((a, b) => a.targetRep - b.targetRep);
@@ -86,13 +81,15 @@ async function workForFactions(ns: NS, sing: Singularity) {
             await ns.sleep(1000);
         }
 
-        const factions = ns
-            .getPlayer()
-            .factions.map((name) => new Faction(ns, name));
-        unfinishedFactions = factions.filter(
-            (f) => !haveNeededRepForFaction(ns, f),
-        );
+        unfinishedFactions = getUnfinishedFactions(ns);
     }
+}
+
+function getUnfinishedFactions(ns: NS) {
+    const factions = ns
+        .getPlayer()
+        .factions.map((name) => new Faction(ns, name));
+    return factions.filter((f) => !haveNeededRepForFaction(ns, f));
 }
 
 function haveNeededRepForFaction(ns: NS, faction: Faction) {
