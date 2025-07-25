@@ -84,13 +84,12 @@ async function workUntilMax(ns: NS, c: CompanyName) {
         const myJob = ns.getPlayer().jobs[c];
         const nextJob = bestJob(ns, c);
         if (myJob !== nextJob.name) {
-            if (sing.applyToCompany(c, nextJob.field)) {
+            if (!sing.applyToCompany(c, nextJob.field)) {
                 ns.print(
                     'WARN: failed to apply to job that we should have been hireable for.',
                 );
             }
         }
-
         if (!sing.workForCompany(c, false)) return;
 
         await ns.sleep(60_000);
