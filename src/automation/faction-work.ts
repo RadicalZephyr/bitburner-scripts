@@ -96,6 +96,6 @@ function haveNeededRepForFaction(ns: NS, faction: Faction) {
     return (
         faction.targetRep <= sing.getFactionRep(faction.name)
         || faction.favor + sing.getFactionFavorGain(faction.name)
-        >= ns.getFavorToDonate()
+            >= ns.getFavorToDonate()
     );
 }
