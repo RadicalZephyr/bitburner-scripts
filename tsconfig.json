@@ -26,8 +26,7 @@
         "types": ["jest"],
         "paths": {
             "/*": ["*"],
-            "netscript": ["../NetScriptDefinitions.d.ts"],
-            "@react": ["lib/react.ts"]
+            "netscript": ["../NetScriptDefinitions.d.ts"]
         }
     }
 }

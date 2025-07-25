@@ -23,6 +23,8 @@ import { fromFixed, MemoryAllocator, Worker } from 'services/allocator';
 import { readAllFromPort, readLoop } from 'util/ports';
 import { HUD_HEIGHT, HUD_WIDTH, STATUS_WINDOW_WIDTH } from 'util/ui';
 
+import {} from 'lib/react';
+
 let printLog: (msg: string) => void;
 
 export async function main(ns: NS) {
