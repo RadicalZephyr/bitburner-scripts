@@ -1,8 +1,11 @@
 import type { CompanyName, NS, CompanyPositionInfo, Player } from 'netscript';
+import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
 
 import { CONFIG } from 'automation/config';
 
 export async function main(ns: NS) {
+    ns.flags(MEM_TAG_FLAGS);
+
     const sing = ns.singularity;
 
     const cmpEnum = ns.enums.CompanyName;

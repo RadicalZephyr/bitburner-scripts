@@ -1,6 +1,9 @@
 import type { FactionWorkType, NS } from 'netscript';
+import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
 
 export async function main(ns: NS) {
+    ns.flags(MEM_TAG_FLAGS);
+
     const sing = ns.singularity;
 
     const factions = ns
@@ -93,6 +96,6 @@ function haveNeededRepForFaction(ns: NS, faction: Faction) {
     return (
         faction.targetRep <= sing.getFactionRep(faction.name)
         || faction.favor + sing.getFactionFavorGain(faction.name)
-            >= ns.getFavorToDonate()
+        >= ns.getFavorToDonate()
     );
 }
