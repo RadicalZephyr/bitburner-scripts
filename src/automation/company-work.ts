@@ -93,7 +93,10 @@ async function workUntilMax(ns: NS, c: CompanyName) {
                 );
             }
         }
-        if (!sing.workForCompany(c, false)) return;
+        if (!sing.workForCompany(c, false)) {
+            ns.print('WARN: failed to start work for company.');
+            return;
+        }
 
         await ns.sleep(60_000);
     }
