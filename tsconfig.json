@@ -11,6 +11,8 @@
         "module": "esnext",
         "target": "esnext",
         "moduleResolution": "node",
+        "jsx": "react",
+        "allowUmdGlobalAccess": true,
         "skipLibCheck": true,
         "noImplicitReturns": true,
         "noImplicitThis": true,
@@ -21,7 +23,6 @@
         "outDir": "dist/",
         "baseUrl": "src/",
         "allowJs": true,
-        "jsx": "react",
         "types": ["jest"],
         "paths": {
             "/*": ["*"],

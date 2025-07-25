@@ -6,9 +6,6 @@ import type {
 } from 'netscript';
 import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-declare const React: any;
-
 export async function main(ns: NS) {
     ns.flags(MEM_TAG_FLAGS);
     ns.disableLog('ALL');

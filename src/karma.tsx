@@ -7,9 +7,6 @@ import {
     KARMA_HEIGHT,
 } from 'util/ui';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-declare const React: any;
-
 export async function main(ns: NS) {
     ns.flags(MEM_TAG_FLAGS);
     ns.disableLog('ALL');

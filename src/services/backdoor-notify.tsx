@@ -3,9 +3,6 @@ import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
 
 import { walkNetworkBFS } from 'util/walk';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-declare const React: any;
-
 const FACTION_SERVERS = [
     'CSEC',
     'avmnite-02h',

@@ -23,9 +23,6 @@ import { fromFixed, MemoryAllocator, Worker } from 'services/allocator';
 import { readAllFromPort, readLoop } from 'util/ports';
 import { HUD_HEIGHT, HUD_WIDTH, STATUS_WINDOW_WIDTH } from 'util/ui';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-declare const React: any;
-
 let printLog: (msg: string) => void;
 
 export async function main(ns: NS) {

@@ -32,9 +32,6 @@ import { readAllFromPort, readLoop } from 'util/ports';
 import { HUD_HEIGHT, HUD_WIDTH, STATUS_WINDOW_WIDTH } from 'util/ui';
 import { sleep } from 'util/time';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-declare const React: any;
-
 export async function main(ns: NS) {
     const flags = ns.flags([
         ['refreshrate', 200],

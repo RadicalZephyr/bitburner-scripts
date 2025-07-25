@@ -2,9 +2,6 @@ import type { NS, UserInterfaceTheme } from 'netscript';
 
 import { CONFIG } from 'corp/config';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-declare let React: any;
-
 export async function main(ns: NS) {
     ns.disableLog('ALL');
     ns.clearLog();
