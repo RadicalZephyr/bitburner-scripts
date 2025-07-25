@@ -1,5 +1,7 @@
 import type { CompanyName, NS, CompanyPositionInfo, Player } from 'netscript';
 
+import { CONFIG } from 'automation/config';
+
 export async function main(ns: NS) {
     const sing = ns.singularity;
 
@@ -18,6 +20,9 @@ export async function main(ns: NS) {
     ];
 
     for (const c of companies) {
+        const companyRep = sing.getCompanyRep(c);
+        if (companyRep >= CONFIG.companyRepForFaction) continue;
+
         const jobToApply = bestJob(ns, c);
         if (!sing.applyToCompany(c, jobToApply.field)) {
             ns.print(`WARN: failed to apply to ${c}`);
