@@ -1,4 +1,4 @@
-import type { FactionName, FactionWorkType, NS } from 'netscript';
+import type { FactionWorkType, NS } from 'netscript';
 import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
 
 export async function main(ns: NS) {
@@ -14,7 +14,7 @@ class Faction {
     favorToGain: number;
     targetRep: number;
 
-    constructor(ns: NS, name: string) {
+    constructor(ns: NS, name: string, ownedAugs: Set<string>) {
         this.name = name;
 
         const sing = ns.singularity;
@@ -22,7 +22,9 @@ class Faction {
         this.favor = sing.getFactionFavor(name);
         this.favorToGain = sing.getFactionFavorGain(name);
 
-        const augs = sing.getAugmentationsFromFaction(name);
+        const augs = sing
+            .getAugmentationsFromFaction(name)
+            .filter((aug) => !ownedAugs.has(aug));
 
         if (augs.length < 1) {
             this.targetRep = 0;
@@ -41,64 +43,54 @@ class Faction {
 async function workForFactions(ns: NS) {
     const sing = ns.singularity;
 
-    let unfinishedFactions = getUnfinishedFactions(ns);
+    const ownedAugs = getOwnedAugs(ns);
 
-    while (unfinishedFactions.length > 0) {
-        unfinishedFactions.sort((a, b) => a.targetRep - b.targetRep);
+    while (true) {
+        const unfinishedFactions = getUnfinishedFactions(ns, ownedAugs);
+        if (unfinishedFactions.length === 0) return;
 
-        const faction = unfinishedFactions.pop();
-        const f = faction.name as FactionName;
+        unfinishedFactions.sort((a, b) => a.rep - b.rep);
 
-        const targetRep = getTargetRep(ns, f);
-        if (targetRep < faction.rep) continue;
+        const lowestRepFaction = unfinishedFactions[0];
 
-        const workTypes = sing.getFactionWorkTypes(f);
-        if (workTypes.length < 1) continue;
+        const workType = getBestWorkTypeForFaction(ns, lowestRepFaction.name);
 
-        const player = ns.getPlayer();
-        const favor = sing.getFactionFavor(f);
-        if (favor > ns.getFavorToDonate()) continue;
-
-        function factionGains(w: FactionWorkType) {
-            return ns.formulas.work.factionGains(player, w, favor);
+        if (!sing.workForFaction(lowestRepFaction.name, workType, false)) {
+            ns.print(
+                `WARN: could not start working ${workType} for ${lowestRepFaction.name}`,
+            );
+            return;
         }
 
-        function compareWorkGains(a: FactionWorkType, b: FactionWorkType) {
-            return factionGains(b).reputation - factionGains(a).reputation;
-        }
-
-        workTypes.sort(compareWorkGains);
-
-        sing.workForFaction(f, workTypes[0]);
-
-        while (
-            targetRep > sing.getFactionRep(f)
-            && favor + sing.getFactionFavorGain(f) < ns.getFavorToDonate()
-        ) {
-            await ns.sleep(1000);
-        }
-
-        unfinishedFactions = getUnfinishedFactions(ns);
+        await ns.sleep(10_000);
     }
 }
 
-function getTargetRep(ns: NS, f: FactionName) {
-    const sing = ns.singularity;
+function getBestWorkTypeForFaction(ns: NS, faction: string): FactionWorkType {
+    const player = ns.getPlayer();
+    const workTypes = ns.singularity.getFactionWorkTypes(faction).map((w) => {
+        const favor = ns.singularity.getFactionFavor(faction);
+        const gains = ns.formulas.work.factionGains(player, w, favor);
+        return {
+            type: w,
+            ...gains,
+        };
+    });
 
-    const augs = sing.getAugmentationsFromFaction(f);
-    if (augs.length < 1) return 0;
+    workTypes.sort((a, b) => b.reputation - a.reputation);
 
-    augs.sort(
-        (a, b) => sing.getAugmentationRepReq(b) - sing.getAugmentationRepReq(a),
-    );
-
-    return sing.getAugmentationRepReq(augs[0]);
+    return workTypes[0].type;
 }
 
-function getUnfinishedFactions(ns: NS) {
+function getOwnedAugs(ns: NS): Set<string> {
+    const reset = ns.getResetInfo();
+    return new Set(reset.ownedAugs.keys());
+}
+
+function getUnfinishedFactions(ns: NS, ownedAugs: Set<string>) {
     const factions = ns
         .getPlayer()
-        .factions.map((name) => new Faction(ns, name));
+        .factions.map((name) => new Faction(ns, name, ownedAugs));
     return factions.filter((f) => !haveNeededRepForFaction(ns, f));
 }
 
@@ -107,6 +99,6 @@ function haveNeededRepForFaction(ns: NS, faction: Faction) {
     return (
         faction.targetRep <= sing.getFactionRep(faction.name)
         || faction.favor + sing.getFactionFavorGain(faction.name)
-        >= ns.getFavorToDonate()
+            >= ns.getFavorToDonate()
     );
 }
