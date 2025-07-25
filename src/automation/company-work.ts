@@ -91,7 +91,7 @@ async function workUntilMax(ns: NS, c: CompanyName) {
             }
         }
 
-        if (!sing.workForCompany(c, true)) return;
+        if (!sing.workForCompany(c, false)) return;
 
         await ns.sleep(60_000);
     }
