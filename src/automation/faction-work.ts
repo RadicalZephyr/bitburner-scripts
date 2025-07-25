@@ -1,12 +1,10 @@
-import type { FactionName, FactionWorkType, NS, Singularity } from 'netscript';
+import type { FactionName, FactionWorkType, NS } from 'netscript';
 import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
 
 export async function main(ns: NS) {
     ns.flags(MEM_TAG_FLAGS);
 
-    const sing = ns.singularity;
-
-    await workForFactions(ns, sing);
+    await workForFactions(ns);
 }
 
 class Faction {
@@ -37,7 +35,9 @@ class Faction {
     }
 }
 
-async function workForFactions(ns: NS, sing: Singularity) {
+async function workForFactions(ns: NS) {
+    const sing = ns.singularity;
+
     let unfinishedFactions = getUnfinishedFactions(ns);
 
     while (unfinishedFactions.length > 0) {
