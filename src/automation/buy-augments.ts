@@ -82,11 +82,19 @@ OPTIONS
     }
 }
 
-interface Aug {
+class Aug {
     name: string;
     faction: string;
     rep: number;
     baseCost: number;
+
+    constructor(ns: NS, augName: string, faction: string) {
+        this.name = augName;
+        this.faction = faction;
+        const sing = ns.singularity;
+        this.rep = sing.getAugmentationRepReq(augName);
+        this.baseCost = sing.getAugmentationBasePrice(augName);
+    }
 }
 
 async function getUnpurchasedAugmentations(
@@ -99,24 +107,18 @@ async function getUnpurchasedAugmentations(
     const augs: Map<string, Aug> = new Map();
 
     for (const f of factions) {
-        for (const aug of sing.getAugmentationsFromFaction(f)) {
-            if (ownedAugs.has(aug) || augs.has(aug)) continue;
+        for (const augName of sing.getAugmentationsFromFaction(f)) {
+            if (ownedAugs.has(augName) || augs.has(augName)) continue;
 
-            const rep = sing.getAugmentationRepReq(aug);
-            const baseCost = sing.getAugmentationBasePrice(aug);
+            const aug = new Aug(ns, augName, f);
 
             const factionRep = sing.getFactionRep(f);
             const factionFavor = sing.getFactionFavor(f);
             const favorToDonate = ns.getFavorToDonate();
 
-            if (factionFavor < favorToDonate && factionRep < rep) continue;
+            if (factionFavor < favorToDonate && factionRep < aug.rep) continue;
 
-            augs.set(aug, {
-                name: aug,
-                faction: f,
-                rep,
-                baseCost,
-            });
+            augs.set(augName, aug);
         }
         await ns.sleep(10);
     }
