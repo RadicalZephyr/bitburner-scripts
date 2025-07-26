@@ -63,12 +63,13 @@ OPTIONS
     let budget =
         ns.getServerMoneyAvailable('home') * augmentationSpendPercentage;
 
+    const ownedAugs: Set<string> = new Set(sing.getOwnedAugmentations(true));
     for (const aug of augList) {
         const cost = sing.getAugmentationPrice(aug.name);
 
         if (cost > budget) break;
 
-        const purchased = purchaseAugmentation(ns, augs, aug);
+        const purchased = purchaseAugmentation(ns, ownedAugs, augs, aug);
 
         if (purchased) {
             budget -= cost;
@@ -124,6 +125,7 @@ async function getUnpurchasedAugmentations(
 
 function purchaseAugmentation(
     ns: NS,
+    ownedAugs: Set<string>,
     augMap: Map<string, Aug>,
     aug: Aug,
 ): boolean {
@@ -132,10 +134,12 @@ function purchaseAugmentation(
     const preReqs = sing.getAugmentationPrereq(aug.name);
 
     for (const pre of preReqs) {
+        if (ownedAugs.has(pre)) continue;
+
         const preReqAug = augMap.get(pre);
         if (!preReqAug) return false;
 
-        const result = purchaseAugmentation(ns, augMap, preReqAug);
+        const result = purchaseAugmentation(ns, ownedAugs, augMap, preReqAug);
 
         if (!result) return false;
     }
