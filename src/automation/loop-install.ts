@@ -133,13 +133,23 @@ async function buyNeuroFlux(ns: NS) {
         const factionRep = ns.singularity.getFactionRep(bestFaction);
         const neuro = new Aug(ns, nfgName, bestFaction);
 
-        if (factionRep < neuro.rep && !buyReputation(ns, neuro)) return;
+        if (factionRep < neuro.rep) buyReputation(ns, neuro);
 
-        const res = sing.purchaseAugmentation(neuro.faction, neuro.name);
-        if (!res) return;
+        if (canAfford(ns, cost)) {
+            const res = sing.purchaseAugmentation(neuro.faction, neuro.name);
+            if (!res) {
+                ns.print(`finished buying NeuroFlux Governor`);
+                return;
+            }
+            cost = augCost(ns, neuro.name);
+        }
 
         await ns.asleep(10_000);
     }
+}
+
+function canAfford(ns: NS, cost: number): boolean {
+    return ns.getServerMoneyAvailable('home') >= cost;
 }
 
 function canBuyWithinMaxTime(
