@@ -43,7 +43,7 @@ OPTIONS
     const player = ns.getPlayer();
     const factions = player.factions;
 
-    const augs = await getUnpurchasedAugmentations(sing, factions, ns);
+    const augs = await getUnpurchasedAugmentations(ns, factions);
 
     const augList = Array.from(augs.values());
     augList.sort((a, b) => b.baseCost - a.baseCost);
@@ -89,10 +89,11 @@ interface Aug {
 }
 
 async function getUnpurchasedAugmentations(
-    sing: Singularity,
-    factions: string[],
     ns: NS,
+    factions: string[],
 ): Promise<Map<string, Aug>> {
+    const sing = ns.singularity;
+
     const ownedAugs: Set<string> = new Set(sing.getOwnedAugmentations(true));
     const augs: Map<string, Aug> = new Map();
 
