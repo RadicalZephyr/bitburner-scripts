@@ -66,7 +66,7 @@ export async function awaitRound(
                         + Math.random() * 500;
                 }
             }
-            await ns.sleep(1000);
+            await ns.asleep(1000);
         }
     }
 

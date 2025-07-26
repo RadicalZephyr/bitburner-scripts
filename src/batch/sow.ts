@@ -165,7 +165,7 @@ OPTIONS
             );
             pids.push(...ps);
             printRoundProgress(ns, info);
-            await ns.sleep(sowBatchLogistics.endingPeriod);
+            await ns.asleep(sowBatchLogistics.endingPeriod);
         }
 
         const sendHb = () =>

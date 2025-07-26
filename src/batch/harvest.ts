@@ -249,7 +249,7 @@ async function harvestPipeline(ns: NS, target: string, setup: HarvestSetup) {
             lastHeartbeat = Date.now();
         }
 
-        await ns.sleep(logistics.endingPeriod);
+        await ns.asleep(logistics.endingPeriod);
     }
 
     const finishedPort = ns.getPortHandle(donePortId);
@@ -269,7 +269,7 @@ async function harvestPipeline(ns: NS, target: string, setup: HarvestSetup) {
         if (spawnIndex === 0 && hosts.length > batches.length) {
             ns.print(
                 `INFO: allocation grew to ${hosts.length} chunks. `
-                    + `Spawning ${hosts.length - batches.length} additional batches`,
+                + `Spawning ${hosts.length - batches.length} additional batches`,
             );
             for (let i = batches.length; i < hosts.length; i++) {
                 const extraPids = await spawnBatch(
@@ -294,7 +294,7 @@ async function harvestPipeline(ns: NS, target: string, setup: HarvestSetup) {
                     );
                     lastHeartbeat = Date.now();
                 }
-                await ns.sleep(logistics.endingPeriod);
+                await ns.asleep(logistics.endingPeriod);
             }
         } else if (hosts.length < batches.length) {
             batches.length = hosts.length;
@@ -314,7 +314,7 @@ async function harvestPipeline(ns: NS, target: string, setup: HarvestSetup) {
             ns.print(
                 `WARN: malformed batch completion message ${JSON.stringify(msg)}`,
             );
-            await ns.sleep(10);
+            await ns.asleep(10);
             continue;
         }
 
@@ -368,7 +368,7 @@ async function harvestPipeline(ns: NS, target: string, setup: HarvestSetup) {
                 const moneyPct = ns.formatPercent(actualMoney / maxMoney);
                 ns.print(
                     `INFO: rebalancing ${target} sec +${secDelta} money ${moneyPct} `
-                        + `ram ${ns.formatRam(rebalance.batchRam)}`,
+                    + `ram ${ns.formatRam(rebalance.batchRam)}`,
                 );
                 phases = rebalance.phases;
             }
