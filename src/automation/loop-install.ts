@@ -163,7 +163,12 @@ function canBuyWithinMaxTime(
     const myMoney = ns.getServerMoneyAvailable('home');
     const moneyToEarn = cost - myMoney;
 
-    const timeToEarn = moneyToEarn / moneyTracker.velocity('hacking');
+    const hackMoneyVelocity = moneyTracker.velocity('hacking');
+    // TODO: this is a bit suspect, if we stop hacking then this
+    // velocity remains zero and we keep looping forever.
+    if (hackMoneyVelocity === 0) return true;
+
+    const timeToEarn = moneyToEarn / hackMoneyVelocity;
     ns.print(
         `time to earn next NeuroFlux Governor level: ${ns.tFormat(timeToEarn)}`,
     );
