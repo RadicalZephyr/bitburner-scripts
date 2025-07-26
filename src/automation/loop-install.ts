@@ -172,6 +172,10 @@ async function buyNeuroFlux(ns: NS) {
 
         if (factionRep < neuro.rep) buyReputation(ns, neuro);
 
+        // Wait to give the game time to update reputation and our
+        // cash before trying to purchase augmentations.
+        await ns.asleep(1000);
+
         if (canAfford(ns, cost)) {
             const res = sing.purchaseAugmentation(neuro.faction, neuro.name);
             if (!res) {
