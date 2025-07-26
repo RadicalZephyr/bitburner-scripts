@@ -68,7 +68,7 @@ OPTIONS
 
         if (cost > budget) break;
 
-        const purchased = purchaseAugmentation(sing, augs, aug);
+        const purchased = purchaseAugmentation(ns, augs, aug);
 
         if (purchased) {
             budget -= cost;
@@ -105,7 +105,10 @@ async function getUnpurchasedAugmentations(
             const baseCost = sing.getAugmentationBasePrice(aug);
 
             const factionRep = sing.getFactionRep(f);
-            if (factionRep < rep) continue;
+            const factionFavor = sing.getFactionFavor(f);
+            const favorToDonate = ns.getFavorToDonate();
+
+            if (factionFavor < favorToDonate && factionRep < rep) continue;
 
             augs.set(aug, {
                 name: aug,
@@ -120,21 +123,42 @@ async function getUnpurchasedAugmentations(
 }
 
 function purchaseAugmentation(
-    sing: Singularity,
+    ns: NS,
     augMap: Map<string, Aug>,
     aug: Aug,
 ): boolean {
+    const sing = ns.singularity;
+
     const preReqs = sing.getAugmentationPrereq(aug.name);
 
     for (const pre of preReqs) {
         const preReqAug = augMap.get(pre);
         if (!preReqAug) return false;
 
-        const result = purchaseAugmentation(sing, augMap, preReqAug);
+        const result = purchaseAugmentation(ns, augMap, preReqAug);
+
         if (!result) return false;
     }
+
+    const factionRep = sing.getFactionRep(aug.faction);
+    if (factionRep < aug.rep && !buyReputation(ns, aug)) return false;
 
     sing.purchaseAugmentation(aug.faction, aug.name);
 
     return true;
+}
+
+function buyReputation(ns: NS, aug: Aug): boolean {
+    const sing = ns.singularity;
+
+    const factionFavor = sing.getFactionFavor(aug.faction);
+    const favorToDonate = ns.getFavorToDonate();
+    if (factionFavor < favorToDonate) return false;
+
+    const factionRep = sing.getFactionRep(aug.faction);
+    const repDelta = aug.rep - factionRep;
+
+    const player = ns.getPlayer();
+    const donation = ns.formulas.reputation.donationForRep(repDelta, player);
+    return ns.singularity.donateToFaction(aug.faction, donation);
 }
