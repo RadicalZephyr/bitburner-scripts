@@ -37,6 +37,8 @@ export async function main(ns: NS) {
     ns.run('start.js');
     await ns.sleep(10_000);
 
+    ns.run('batch/harvest.js', 1, 'n00dles');
+    await ns.sleep(10_000);
     ns.run('automation/hack.js');
 
     await trainCombat(ns, 1200);
