@@ -33,6 +33,7 @@ import {
 } from 'services/client/memory';
 import { LaunchClient } from 'services/client/launch';
 
+import { growthAnalyze } from 'util/growthAnalyze';
 import { readAllFromPort, readLoop } from 'util/ports';
 import { sleep } from 'util/time';
 import { HUD_HEIGHT, KARMA_HEIGHT } from 'util/ui';
@@ -361,8 +362,7 @@ class TaskSelector {
     private estimateSowTime(host: string, threads: number): number {
         const maxMoney = this.ns.getServerMaxMoney(host);
         const curMoney = this.ns.getServerMoneyAvailable(host);
-        const ratio = curMoney > 0 ? maxMoney / curMoney : maxMoney;
-        const growThreads = Math.ceil(this.ns.growthAnalyze(host, ratio, 1));
+        const growThreads = growthAnalyze(this.ns, host, maxMoney, curMoney);
         if (threads <= 0) return 0;
         const rounds = Math.ceil(growThreads / threads);
         return rounds * this.ns.getWeakenTime(host);

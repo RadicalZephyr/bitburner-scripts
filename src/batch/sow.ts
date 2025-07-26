@@ -20,6 +20,7 @@ import {
 } from 'batch/progress';
 
 import { TaskSelectorClient, Lifecycle } from 'batch/client/task_selector';
+import { growthAnalyze } from 'util/growthAnalyze';
 
 export function autocomplete(data: AutocompleteData): string[] {
     return data.servers;
@@ -190,20 +191,8 @@ function neededGrowThreads(ns: NS, target: string) {
     const maxMoney = ns.getServerMaxMoney(target);
     const currentMoney = ns.getServerMoneyAvailable(target);
 
-    const neededGrowRatio =
-        currentMoney > 0 ? maxMoney / currentMoney : maxMoney;
-    const totalGrowThreads = growthAnalyze(ns, target, neededGrowRatio);
+    const totalGrowThreads = growthAnalyze(ns, target, maxMoney, currentMoney);
     return totalGrowThreads;
-}
-
-/** Calculate the number of threads needed to build the server by a
- *  certain multiplier. The result accounts for the player's grow
- *  thread multiplier.
- */
-function growthAnalyze(ns: NS, target: string, growAmount: number): number {
-    if (growAmount <= 0 || !Number.isFinite(growAmount)) return 0;
-
-    return Math.ceil(ns.growthAnalyze(target, growAmount, 1));
 }
 
 function weakenAnalyze(weakenAmount: number): number {
