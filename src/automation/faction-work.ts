@@ -95,10 +95,8 @@ function getUnfinishedFactions(ns: NS, ownedAugs: Set<string>) {
 }
 
 function haveNeededRepForFaction(ns: NS, faction: Faction) {
-    const sing = ns.singularity;
     return (
-        faction.targetRep <= sing.getFactionRep(faction.name)
-        || faction.favor + sing.getFactionFavorGain(faction.name)
-            >= ns.getFavorToDonate()
+        faction.targetRep <= faction.rep
+        || faction.favor + faction.favorToGain >= ns.getFavorToDonate()
     );
 }
