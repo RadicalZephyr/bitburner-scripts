@@ -119,9 +119,11 @@ async function buyNeuroFlux(ns: NS) {
 
     const nfgName = 'NeuroFlux Governor';
 
-    const bestFaction = getBestFaction(ns);
-    if (!bestFaction)
-        throw new Error('no faction to buy NeuroFlux Governor from');
+    let bestFaction = getBestFaction(ns);
+    while (!bestFaction) {
+        await ns.asleep(10_000);
+        bestFaction = getBestFaction(ns);
+    }
 
     let cost = augCost(ns, nfgName);
 
