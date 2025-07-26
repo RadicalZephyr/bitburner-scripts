@@ -201,7 +201,7 @@ function neededGrowThreads(ns: NS, target: string) {
  *  thread multiplier.
  */
 function growthAnalyze(ns: NS, target: string, growAmount: number): number {
-    if (growAmount <= 0) return 0;
+    if (growAmount <= 0 || !Number.isFinite(growAmount)) return 0;
 
     return Math.ceil(ns.growthAnalyze(target, growAmount, 1));
 }
