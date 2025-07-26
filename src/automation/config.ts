@@ -4,7 +4,7 @@ const entries = [
     ['companyRepForFaction', 400_000],
     ['moneyTrackerCadence', 10_000],
     ['moneyTrackerHistoryLen', 3],
-    ['maxTimeToEarnNeuroFlux', 60_000 * 30],
+    ['maxTimeToEarnNeuroFlux', 60 * 30],
 ] as const;
 
 export const CONFIG: ConfigInstance<typeof entries> = new Config(
