@@ -43,6 +43,10 @@ export async function main(ns: NS) {
     study(ns, zbU, algClass);
 
     await buyNeuroFlux(ns);
+
+    // The final step, this eventually restarts this script after a
+    // fresh install.
+    ns.singularity.installAugmentations('automation/loop-install.js');
 }
 
 function purchaseTor(ns: NS) {
