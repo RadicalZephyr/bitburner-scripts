@@ -43,9 +43,9 @@ class Faction {
 async function workForFactions(ns: NS) {
     const sing = ns.singularity;
 
-    const ownedAugs = getOwnedAugs(ns);
-
     while (true) {
+        const ownedAugs = getOwnedAugs(ns);
+
         const unfinishedFactions = getUnfinishedFactions(ns, ownedAugs);
         if (unfinishedFactions.length === 0) return;
 
