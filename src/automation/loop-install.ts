@@ -1,0 +1,100 @@
+import type {
+    CityName,
+    GymLocationName,
+    GymType,
+    NS,
+    UniversityClassType,
+    UniversityLocationName,
+} from 'netscript';
+
+export async function main(ns: NS) {
+    ns.run('automation/join-factions.js');
+
+    purchaseTor(ns);
+    travelTo(ns, ns.enums.CityName.Volhaven);
+
+    const zbU = ns.enums.LocationName.VolhavenZBInstituteOfTechnology;
+    const algClass = ns.enums.UniversityClassType.algorithms;
+    study(ns, zbU, algClass);
+
+    await untilHackLevel(ns, 1000);
+
+    ns.run('start.js');
+    await ns.sleep(10_000);
+
+    ns.run('automation/hack.js');
+
+    await trainCombat(ns, 1200);
+}
+
+function purchaseTor(ns: NS) {
+    if (ns.getServerMoneyAvailable('home') < 200_000)
+        throw new Error('not enough money to purchase TOR');
+    if (!ns.singularity.purchaseTor())
+        throw new Error('could not purchase TOR');
+}
+
+function travelTo(ns: NS, city: CityName) {
+    if (ns.getServerMoneyAvailable('home') < 200_000)
+        throw new Error(`not enough money to travel to ${city}`);
+    if (!ns.singularity.travelToCity(city))
+        throw new Error(`failed to travel to ${city}`);
+}
+
+function study(
+    ns: NS,
+    uni: UniversityLocationName | `${UniversityLocationName}`,
+    course: UniversityClassType,
+) {
+    if (!ns.singularity.universityCourse(uni, course, false))
+        throw new Error(`could not study ${course} at ${uni}`);
+}
+
+async function untilHackLevel(ns: NS, targetLevel: number) {
+    while (true) {
+        const hackLevel = ns.getHackingLevel();
+        if (hackLevel >= targetLevel) return;
+        await ns.sleep(1000);
+    }
+}
+
+async function trainCombat(ns: NS, targetLevel: number) {
+    const powerhouseGym = ns.enums.LocationName.Sector12PowerhouseGym;
+    const GymType = ns.enums.GymType;
+
+    travelTo(ns, ns.enums.CityName.Sector12);
+
+    const combatSkills = new Set([
+        'strength',
+        'defense',
+        'dexterity',
+        'agility',
+    ]);
+    while (true) {
+        const playerSkills = ns.getPlayer().skills;
+        const skillsToTrain = Object.keys(playerSkills)
+            .filter((s) => combatSkills.has(s))
+            .map((s) => {
+                return { name: s, level: playerSkills[s] };
+            })
+            .filter((s) => s.level < targetLevel);
+
+        if (skillsToTrain.length === 0) return;
+
+        skillsToTrain.sort((a, b) => a.level - b.level);
+
+        const skill = skillsToTrain[0];
+        gymWorkout(ns, powerhouseGym, GymType[skill.name]);
+
+        await ns.sleep(10_000);
+    }
+}
+
+function gymWorkout(
+    ns: NS,
+    location: GymLocationName | `${GymLocationName}`,
+    stat: GymType,
+) {
+    if (!ns.singularity.gymWorkout(location, stat, false))
+        throw new Error(`failed to workout ${stat} at ${location}`);
+}
