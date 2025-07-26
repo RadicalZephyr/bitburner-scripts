@@ -88,7 +88,7 @@ OPTIONS
     await buyNeuroFluxGovernor(ns, budget);
 }
 
-class Aug {
+export class Aug {
     name: string;
     faction: string;
     rep: number;
@@ -164,7 +164,14 @@ function purchaseAugmentation(
     return false;
 }
 
-function buyReputation(ns: NS, aug: Aug): boolean {
+/**
+ * Buy reputation needed to buy this augment.
+ *
+ * @param ns  - Netscript API instance
+ * @param aug - Augment to buy reputation for
+ * @returns False if unable to buy donate money for reputation
+ */
+export function buyReputation(ns: NS, aug: Aug): boolean {
     const sing = ns.singularity;
 
     const factionFavor = sing.getFactionFavor(aug.faction);
@@ -208,11 +215,24 @@ async function buyNeuroFluxGovernor(ns: NS, budget: number) {
     }
 }
 
-function augCost(ns: NS, augName: string): number {
+/**
+ * Get the cost of buying an augmentation
+ *
+ * @param ns      - Netscript API instance
+ * @param augName - Augmentation name
+ * @returns Cost of buying this augmentation
+ */
+export function augCost(ns: NS, augName: string): number {
     return ns.singularity.getAugmentationPrice(augName);
 }
 
-function getBestFaction(ns: NS): string | null {
+/**
+ * Find the best faction for buying NeuroFlux Governor levels
+ *
+ * @param ns  - Netscript API instance
+ * @returns Name of Faction with most favor or rep, null if you are not in any factions
+ */
+export function getBestFaction(ns: NS): string | null {
     const factions = ns.getPlayer().factions.map((f) => {
         return {
             name: f,

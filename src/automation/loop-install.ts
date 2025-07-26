@@ -2,10 +2,21 @@ import type {
     CityName,
     GymLocationName,
     GymType,
+    MoneySource,
     NS,
     UniversityClassType,
     UniversityLocationName,
 } from 'netscript';
+
+import {
+    Aug,
+    augCost,
+    buyReputation,
+    getBestFaction,
+} from 'automation/buy-augments';
+import { CONFIG } from 'automation/config';
+
+import { StatTracker } from 'util/stat-tracker';
 
 export async function main(ns: NS) {
     ns.run('automation/join-factions.js');
@@ -25,6 +36,8 @@ export async function main(ns: NS) {
     ns.run('automation/hack.js');
 
     await trainCombat(ns, 1200);
+
+    await buyNeuroFlux(ns);
 }
 
 function purchaseTor(ns: NS) {
@@ -97,4 +110,75 @@ function gymWorkout(
 ) {
     if (!ns.singularity.gymWorkout(location, stat, false))
         throw new Error(`failed to workout ${stat} at ${location}`);
+}
+
+async function buyNeuroFlux(ns: NS) {
+    const sing = ns.singularity;
+
+    const nfgName = 'NeuroFlux Governor';
+
+    const bestFaction = getBestFaction(ns);
+    if (!bestFaction)
+        throw new Error('no faction to buy NeuroFlux Governor from');
+
+    let cost = augCost(ns, nfgName);
+
+    const moneyTracker = await primedMoneyTracker(ns);
+
+    while (canBuyWithin(ns, moneyTracker, cost)) {
+        const factionRep = ns.singularity.getFactionRep(bestFaction);
+        const neuro = new Aug(ns, nfgName, bestFaction);
+
+        if (factionRep < neuro.rep && !buyReputation(ns, neuro)) return;
+
+        const res = sing.purchaseAugmentation(neuro.faction, neuro.name);
+        if (!res) return;
+
+        await ns.asleep(10_000);
+    }
+}
+
+function canBuyWithin(
+    ns: NS,
+    moneyTracker: StatTracker<MoneySource>,
+    cost: number,
+): boolean {
+    const myMoney = ns.getServerMoneyAvailable('home');
+    const moneyToEarn = cost - myMoney;
+
+    const timeToEarn = moneyToEarn / moneyTracker.velocity('hacking');
+
+    return timeToEarn <= CONFIG.maxTimeToEarnNeuroFlux;
+}
+
+async function primedMoneyTracker(ns: NS): Promise<StatTracker<MoneySource>> {
+    const moneyTracker = new StatTracker<MoneySource>(
+        CONFIG.moneyTrackerHistoryLen,
+    );
+
+    for (let i = 0; i < CONFIG.moneyTrackerHistoryLen; i++) {
+        await updateMoneyTracker(ns, moneyTracker);
+    }
+    tickUpdates(ns, moneyTracker);
+
+    return moneyTracker;
+}
+
+async function tickUpdates(ns: NS, moneyTracker: StatTracker<MoneySource>) {
+    let running = true;
+    ns.atExit(() => {
+        running = false;
+    }, 'loopInstall-tickMoneyTrackerUpdates');
+
+    while (running) {
+        await updateMoneyTracker(ns, moneyTracker);
+    }
+}
+
+async function updateMoneyTracker(
+    ns: NS,
+    moneyTracker: StatTracker<MoneySource>,
+) {
+    moneyTracker.update(ns.getMoneySources().sinceInstall);
+    await ns.asleep(CONFIG.moneyTrackerCadence);
 }
