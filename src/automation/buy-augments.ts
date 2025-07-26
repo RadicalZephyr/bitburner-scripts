@@ -42,6 +42,8 @@ OPTIONS
     const sing = ns.singularity;
 
     ns.disableLog('ALL');
+    ns.enableLog('singularity.purchaseAugmentation');
+
     const player = ns.getPlayer();
     const factions = player.factions;
 
@@ -158,6 +160,7 @@ function purchaseAugmentation(
         ownedAugs.add(aug.name);
         return true;
     }
+    ns.print(`ERROR: couldn't buy ${aug.name} from ${aug.faction}`);
     return false;
 }
 
