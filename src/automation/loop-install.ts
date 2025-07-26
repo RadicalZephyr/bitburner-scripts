@@ -19,13 +19,15 @@ import { CONFIG } from 'automation/config';
 import { StatTracker } from 'util/stat-tracker';
 
 export async function main(ns: NS) {
+    const Volhaven = ns.enums.CityName.Volhaven;
+    const zbU = ns.enums.LocationName.VolhavenZBInstituteOfTechnology;
+    const algClass = ns.enums.UniversityClassType.algorithms;
+
     ns.run('automation/join-factions.js');
 
     purchaseTor(ns);
-    travelTo(ns, ns.enums.CityName.Volhaven);
 
-    const zbU = ns.enums.LocationName.VolhavenZBInstituteOfTechnology;
-    const algClass = ns.enums.UniversityClassType.algorithms;
+    travelTo(ns, Volhaven);
     study(ns, zbU, algClass);
 
     await untilHackLevel(ns, 1000);
@@ -37,6 +39,7 @@ export async function main(ns: NS) {
 
     await trainCombat(ns, 1200);
 
+    travelTo(ns, Volhaven);
     study(ns, zbU, algClass);
 
     await buyNeuroFlux(ns);
