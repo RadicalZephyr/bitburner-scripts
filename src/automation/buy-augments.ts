@@ -68,7 +68,7 @@ OPTIONS
 
         if (cost > budget) break;
 
-        const purchased = sing.purchaseAugmentation(aug.faction, aug.name);
+        const purchased = purchaseAugmentation(sing, augs, aug);
 
         if (purchased) {
             budget -= cost;
@@ -116,4 +116,24 @@ async function getUnpurchasedAugmentations(
         await ns.sleep(10);
     }
     return augs;
+}
+
+function purchaseAugmentation(
+    sing: Singularity,
+    augMap: Map<string, Aug>,
+    aug: Aug,
+): boolean {
+    const preReqs = sing.getAugmentationPrereq(aug.name);
+
+    for (const pre of preReqs) {
+        const preReqAug = augMap.get(pre);
+        if (!preReqAug) return false;
+
+        const result = purchaseAugmentation(sing, augMap, preReqAug);
+        if (!result) return false;
+    }
+
+    sing.purchaseAugmentation(aug.faction, aug.name);
+
+    return true;
 }
