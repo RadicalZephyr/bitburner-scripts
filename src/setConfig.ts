@@ -8,6 +8,7 @@ import { CONFIG as ServiceConfig } from 'services/config';
 import { CONFIG as StockConfig } from 'stock/config';
 import { CONFIG as HacknetConfig } from 'hacknet/config';
 import { CONFIG as CorpConfig } from 'corp/config';
+import { CONFIG as AutomationConfig } from 'automation/config';
 
 export function autocomplete(): string[] {
     return allConfigValues();
@@ -57,6 +58,7 @@ Example:
         StockConfig,
         HacknetConfig,
         CorpConfig,
+        AutomationConfig,
     ]) {
         if (Object.hasOwn(config, key)) {
             const prev = config[key];
@@ -83,6 +85,7 @@ function allConfigValues(): string[] {
         ...Object.keys(StockConfig),
         ...Object.keys(HacknetConfig),
         ...Object.keys(CorpConfig),
+        ...Object.keys(AutomationConfig),
     ];
     return allKeys.filter((k: string) => !commonKeys.has(k));
 }
