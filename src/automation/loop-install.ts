@@ -43,7 +43,7 @@ export async function main(ns: NS) {
 function purchaseTor(ns: NS) {
     if (ns.getServerMoneyAvailable('home') < 200_000)
         throw new Error('not enough money to purchase TOR');
-    if (!ns.singularity.purchaseTor())
+    if (!ns.hasTorRouter() && !ns.singularity.purchaseTor())
         throw new Error('could not purchase TOR');
 }
 
