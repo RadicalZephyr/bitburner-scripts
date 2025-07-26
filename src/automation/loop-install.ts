@@ -23,6 +23,8 @@ export async function main(ns: NS) {
     const zbU = ns.enums.LocationName.VolhavenZBInstituteOfTechnology;
     const algClass = ns.enums.UniversityClassType.algorithms;
 
+    ns.ui.openTail();
+
     ns.run('automation/join-factions.js');
 
     purchaseTor(ns);
