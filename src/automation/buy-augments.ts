@@ -181,6 +181,11 @@ async function buyNeuroFluxGovernor(ns: NS, budget: number) {
     const nfgName = 'NeuroFlux Governor';
 
     const bestFaction = getBestFaction(ns);
+    if (!bestFaction) {
+        ns.print('WARN: no factions to buy NeuroFlux Governor from.');
+        return;
+    }
+
     let cost = augCost(ns, nfgName);
 
     while (cost <= budget) {
@@ -203,7 +208,7 @@ function augCost(ns: NS, augName: string): number {
     return ns.singularity.getAugmentationPrice(augName);
 }
 
-function getBestFaction(ns: NS): string {
+function getBestFaction(ns: NS): string | null {
     const factions = ns.getPlayer().factions.map((f) => {
         return {
             name: f,
