@@ -1,4 +1,4 @@
-import type { NS } from 'netscript';
+import type { NS, Singularity } from 'netscript';
 
 import { ALLOC_ID, MEM_TAG_FLAGS } from 'services/client/memory_tag';
 import { parseAndRegisterAlloc } from 'services/client/memory';
@@ -43,31 +43,7 @@ OPTIONS
     const player = ns.getPlayer();
     const factions = player.factions;
 
-    const ownedAugs: Set<string> = new Set(sing.getOwnedAugmentations(true));
-    const uniqueAugs: Set<string> = new Set();
-    const augs: Aug[] = [];
-
-    for (const f of factions) {
-        for (const aug of sing.getAugmentationsFromFaction(f)) {
-            if (ownedAugs.has(aug) || uniqueAugs.has(aug)) continue;
-
-            uniqueAugs.add(aug);
-
-            const rep = sing.getAugmentationRepReq(aug);
-            const baseCost = sing.getAugmentationBasePrice(aug);
-
-            const factionRep = sing.getFactionRep(f);
-            if (factionRep < rep) continue;
-
-            augs.push({
-                name: aug,
-                faction: f,
-                rep,
-                baseCost,
-            });
-        }
-        await ns.sleep(10);
-    }
+    const augs: Aug[] = await getUnpurchasedAugmentations(sing, factions, ns);
 
     augs.sort((a, b) => b.baseCost - a.baseCost);
 
@@ -109,4 +85,37 @@ interface Aug {
     faction: string;
     rep: number;
     baseCost: number;
+}
+
+async function getUnpurchasedAugmentations(
+    sing: Singularity,
+    factions: string[],
+    ns: NS,
+) {
+    const ownedAugs: Set<string> = new Set(sing.getOwnedAugmentations(true));
+    const uniqueAugs: Set<string> = new Set();
+    const augs: Aug[] = [];
+
+    for (const f of factions) {
+        for (const aug of sing.getAugmentationsFromFaction(f)) {
+            if (ownedAugs.has(aug) || uniqueAugs.has(aug)) continue;
+
+            uniqueAugs.add(aug);
+
+            const rep = sing.getAugmentationRepReq(aug);
+            const baseCost = sing.getAugmentationBasePrice(aug);
+
+            const factionRep = sing.getFactionRep(f);
+            if (factionRep < rep) continue;
+
+            augs.push({
+                name: aug,
+                faction: f,
+                rep,
+                baseCost,
+            });
+        }
+        await ns.sleep(10);
+    }
+    return augs;
 }
