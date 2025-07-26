@@ -180,6 +180,7 @@ export function buyReputation(ns: NS, aug: Aug): boolean {
 
     const factionRep = sing.getFactionRep(aug.faction);
     const repDelta = aug.rep - factionRep;
+    if (repDelta <= 0) return false;
 
     const player = ns.getPlayer();
     const donation = ns.formulas.reputation.donationForRep(repDelta, player);
