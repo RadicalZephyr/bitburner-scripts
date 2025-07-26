@@ -48,6 +48,8 @@ export async function main(ns: NS) {
     travelTo(ns, Volhaven);
     study(ns, zbU, algClass);
 
+    // Sleep for ten minutes to let the hacking get up to speed
+    await ns.sleep(10 * 60 * 1000);
     await buyNeuroFlux(ns);
 
     // The final step, this eventually restarts this script after a
