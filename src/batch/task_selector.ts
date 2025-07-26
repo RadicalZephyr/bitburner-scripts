@@ -363,7 +363,7 @@ class TaskSelector {
         const maxMoney = this.ns.getServerMaxMoney(host);
         const curMoney = this.ns.getServerMoneyAvailable(host);
         const growThreads = growthAnalyze(this.ns, host, maxMoney, curMoney);
-        if (threads <= 0) return 0;
+        if (threads <= 0 || !Number.isFinite(threads)) return 0;
         const rounds = Math.ceil(growThreads / threads);
         return rounds * this.ns.getWeakenTime(host);
     }
