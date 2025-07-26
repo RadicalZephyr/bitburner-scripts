@@ -37,6 +37,8 @@ export async function main(ns: NS) {
 
     await trainCombat(ns, 1200);
 
+    study(ns, zbU, algClass);
+
     await buyNeuroFlux(ns);
 }
 
