@@ -164,7 +164,9 @@ function canBuyWithinMaxTime(
     const moneyToEarn = cost - myMoney;
 
     const timeToEarn = moneyToEarn / moneyTracker.velocity('hacking');
-
+    ns.print(
+        `time to earn next NeuroFlux Governor level: ${ns.tFormat(timeToEarn)}`,
+    );
     return timeToEarn <= CONFIG.maxTimeToEarnNeuroFlux;
 }
 
