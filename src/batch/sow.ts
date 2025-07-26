@@ -92,7 +92,7 @@ OPTIONS
     }
 
     let sowBatchLogistics = calculateSowBatchLogistics(ns, target);
-    const { batchRam, phases, overlap } = sowBatchLogistics;
+    const { batchRam, phases, totalBatches } = sowBatchLogistics;
 
     const totalBatchThreads = phases.reduce((s, p) => s + p.threads, 0);
     const maxOverlapCap = Math.floor(maxThreadsCap / totalBatchThreads);
@@ -102,7 +102,7 @@ OPTIONS
         return;
     }
 
-    const maxOverlap = Math.min(maxOverlapCap, overlap);
+    const maxOverlap = Math.min(maxOverlapCap, totalBatches);
 
     const memClient = new GrowableMemoryClient(ns);
     const allocOptions = { coreDependent: true, shrinkable: true };
