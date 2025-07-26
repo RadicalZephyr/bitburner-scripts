@@ -43,12 +43,13 @@ OPTIONS
     const player = ns.getPlayer();
     const factions = player.factions;
 
-    const augs: Aug[] = await getUnpurchasedAugmentations(sing, factions, ns);
+    const augs = await getUnpurchasedAugmentations(sing, factions, ns);
 
-    augs.sort((a, b) => b.baseCost - a.baseCost);
+    const augList = Array.from(augs.values());
+    augList.sort((a, b) => b.baseCost - a.baseCost);
 
     ns.clearLog();
-    ns.print(JSON.stringify(augs, null, 2));
+    ns.print(JSON.stringify(augList, null, 2));
     ns.ui.renderTail();
 
     if (options['dry-run']) {
@@ -62,7 +63,7 @@ OPTIONS
     let budget =
         ns.getServerMoneyAvailable('home') * augmentationSpendPercentage;
 
-    for (const aug of augs) {
+    for (const aug of augList) {
         const cost = sing.getAugmentationPrice(aug.name);
 
         if (cost > budget) break;
@@ -91,16 +92,13 @@ async function getUnpurchasedAugmentations(
     sing: Singularity,
     factions: string[],
     ns: NS,
-) {
+): Promise<Map<string, Aug>> {
     const ownedAugs: Set<string> = new Set(sing.getOwnedAugmentations(true));
-    const uniqueAugs: Set<string> = new Set();
-    const augs: Aug[] = [];
+    const augs: Map<string, Aug> = new Map();
 
     for (const f of factions) {
         for (const aug of sing.getAugmentationsFromFaction(f)) {
-            if (ownedAugs.has(aug) || uniqueAugs.has(aug)) continue;
-
-            uniqueAugs.add(aug);
+            if (ownedAugs.has(aug) || augs.has(aug)) continue;
 
             const rep = sing.getAugmentationRepReq(aug);
             const baseCost = sing.getAugmentationBasePrice(aug);
@@ -108,7 +106,7 @@ async function getUnpurchasedAugmentations(
             const factionRep = sing.getFactionRep(f);
             if (factionRep < rep) continue;
 
-            augs.push({
+            augs.set(aug, {
                 name: aug,
                 faction: f,
                 rep,
