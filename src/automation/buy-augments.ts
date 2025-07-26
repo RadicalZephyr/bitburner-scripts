@@ -1,4 +1,4 @@
-import type { NS, Singularity } from 'netscript';
+import type { NS } from 'netscript';
 
 import { ALLOC_ID, MEM_TAG_FLAGS } from 'services/client/memory_tag';
 import { parseAndRegisterAlloc } from 'services/client/memory';
