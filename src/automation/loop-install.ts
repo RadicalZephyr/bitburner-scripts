@@ -163,6 +163,8 @@ function canBuyWithinMaxTime(
     const myMoney = ns.getServerMoneyAvailable('home');
     const moneyToEarn = cost - myMoney;
 
+    if (Number.isFinite(moneyToEarn) && moneyToEarn <= 0) return true;
+
     const hackMoneyVelocity = moneyTracker.velocity('hacking');
     // TODO: this is a bit suspect, if we stop hacking then this
     // velocity remains zero and we keep looping forever.
