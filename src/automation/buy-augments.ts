@@ -153,9 +153,12 @@ function purchaseAugmentation(
     const factionRep = sing.getFactionRep(aug.faction);
     if (factionRep < aug.rep && !buyReputation(ns, aug)) return false;
 
-    sing.purchaseAugmentation(aug.faction, aug.name);
-
-    return true;
+    const res = sing.purchaseAugmentation(aug.faction, aug.name);
+    if (res) {
+        ownedAugs.add(aug.name);
+        return true;
+    }
+    return false;
 }
 
 function buyReputation(ns: NS, aug: Aug): boolean {
