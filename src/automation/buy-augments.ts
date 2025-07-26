@@ -8,6 +8,7 @@ const DEFAULT_SPEND = 1.0;
 export async function main(ns: NS) {
     const options = ns.flags([
         ['spend', DEFAULT_SPEND],
+        ['neuroflux', false],
         ['dry-run', false],
         ['help', false],
         ...MEM_TAG_FLAGS,
@@ -25,9 +26,10 @@ Purchase augmentations you have enough rep for from all your factions,
 in order from most expensive to least.
 
 OPTIONS
-  --dry-run  Print out the augmentations you could buy, but don't actually buy anything
-  --spend    Percentage of money to spend on augmentations (default ${ns.formatPercent(DEFAULT_SPEND)})
-  --help     Show this help message
+  --dry-run    Print out the augmentations you could buy, but don't actually buy anything
+  --spend      Percentage of money to spend on augmentations (default ${ns.formatPercent(DEFAULT_SPEND)})
+  --neuroflux  Buy Neuroflux Governor levels after buying all other augments
+  --help       Show this help message
 `);
         return;
     }
@@ -80,6 +82,10 @@ OPTIONS
         }
         await ns.asleep(10);
     }
+
+    if (!options.neuroflux) return;
+
+    await buyNeuroFluxGovernor(ns, budget);
 }
 
 class Aug {
@@ -167,4 +173,51 @@ function buyReputation(ns: NS, aug: Aug): boolean {
     const player = ns.getPlayer();
     const donation = ns.formulas.reputation.donationForRep(repDelta, player);
     return ns.singularity.donateToFaction(aug.faction, donation);
+}
+
+async function buyNeuroFluxGovernor(ns: NS, budget: number) {
+    const sing = ns.singularity;
+
+    const nfgName = 'NeuroFlux Governor';
+
+    const bestFaction = getBestFaction(ns);
+    let cost = augCost(ns, nfgName);
+
+    while (cost <= budget) {
+        const factionRep = ns.singularity.getFactionRep(bestFaction);
+        const neuro = new Aug(ns, nfgName, bestFaction);
+
+        if (factionRep < neuro.rep && !buyReputation(ns, neuro)) return;
+
+        const res = sing.purchaseAugmentation(neuro.faction, neuro.name);
+        if (!res) return;
+
+        budget -= cost;
+        await ns.sleep(10);
+
+        cost = augCost(ns, nfgName);
+    }
+}
+
+function augCost(ns: NS, augName: string): number {
+    return ns.singularity.getAugmentationPrice(augName);
+}
+
+function getBestFaction(ns: NS): string {
+    const factions = ns.getPlayer().factions.map((f) => {
+        return {
+            name: f,
+            rep: ns.singularity.getFactionRep(f),
+            favor: ns.singularity.getFactionFavor(f),
+        };
+    });
+    const favorFactions = factions
+        .filter((f) => f.favor >= ns.getFavorToDonate())
+        .sort((a, b) => b.rep - a.rep);
+    if (favorFactions.length >= 1) return favorFactions[0].name;
+
+    factions.sort((a, b) => b.rep - a.rep);
+    if (factions.length >= 1) return factions[0].name;
+
+    return null;
 }
