@@ -61,7 +61,6 @@ OPTIONS
 
     const augmentationSpendPercentage = options.spend;
 
-    const purchasedAugs = [];
     let budget =
         ns.getServerMoneyAvailable('home') * augmentationSpendPercentage;
 
@@ -76,7 +75,6 @@ OPTIONS
         if (purchased) {
             budget -= cost;
             ns.print(`INFO: ${aug.name} from ${aug.faction} for ${cost}`);
-            purchasedAugs.push({ purchasePrice: cost, ...aug });
         } else {
             ns.print(`WARN: failed to purchase ${aug.name}`);
         }
