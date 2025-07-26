@@ -125,7 +125,7 @@ async function buyNeuroFlux(ns: NS) {
 
     const moneyTracker = await primedMoneyTracker(ns);
 
-    while (canBuyWithin(ns, moneyTracker, cost)) {
+    while (canBuyWithinMaxTime(ns, moneyTracker, cost)) {
         const factionRep = ns.singularity.getFactionRep(bestFaction);
         const neuro = new Aug(ns, nfgName, bestFaction);
 
@@ -138,7 +138,7 @@ async function buyNeuroFlux(ns: NS) {
     }
 }
 
-function canBuyWithin(
+function canBuyWithinMaxTime(
     ns: NS,
     moneyTracker: StatTracker<MoneySource>,
     cost: number,
