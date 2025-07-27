@@ -5,7 +5,13 @@ import { parseAndRegisterAlloc } from 'services/client/memory';
 import { canInstallBackdoor, needsBackdoor } from 'util/backdoor';
 import { shortestPath } from 'util/shortest-path';
 
-const FACTION_SERVERS = ['CSEC', 'avmnite-02h', 'I.I.I.I', 'run4theh111z'];
+const FACTION_SERVERS = [
+    'CSEC',
+    'avmnite-02h',
+    'I.I.I.I',
+    'run4theh111z',
+    'fulcrumassets',
+];
 
 export async function main(ns: NS) {
     const flags = ns.flags(MEM_TAG_FLAGS);
