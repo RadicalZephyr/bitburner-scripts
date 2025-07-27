@@ -2,7 +2,7 @@ import type { NS, AutocompleteData } from 'netscript';
 import { ALLOC_ID, MEM_TAG_FLAGS } from 'services/client/memory_tag';
 import { parseAndRegisterAlloc } from 'services/client/memory';
 
-import { walkNetworkBFS } from 'util/walk';
+import { shortestPath } from 'util/shortest-path';
 
 export function autocomplete(data: AutocompleteData): string[] {
     return data.servers;
@@ -54,36 +54,9 @@ OPTIONS
         return;
     }
 
-    const network = walkNetworkBFS(ns);
-    const allHosts = new Set(network.keys());
-    if (!allHosts.has(goalHost)) {
-        ns.tprint('Did not find goal host %s during network scan');
-        return;
-    }
+    const path = await shortestPath(ns, flags.startingHost, goalHost);
 
-    const shortestPaths = dijkstra(network, flags.startingHost);
-
-    const S = [];
-    let u = goalHost;
-
-    if (shortestPaths.get(u) !== null) {
-        while (u !== null) {
-            S.push(u);
-            const serverInfo = ns.getServer(u);
-            if (serverInfo.backdoorInstalled) {
-                // Short-circuit when we hit a server with a backdoor
-                break;
-            }
-            u = shortestPaths.get(u);
-            await ns.sleep(1);
-        }
-    }
-    S.reverse();
-    if (S[0] == flags.startingHost) {
-        S.shift();
-    }
-
-    const goCommand = `go ${S.join(' ; go ')}`;
+    const goCommand = `go ${path.join(' ; go ')}`;
 
     if (flags.goto) {
         // Acquire a reference to the terminal text field
@@ -106,59 +79,4 @@ OPTIONS
     } else {
         ns.tprintf(`path to ${goalHost}:\n ${goCommand}`);
     }
-}
-
-/** Find the shortest paths from all hosts to the source host.
- *
- * @param {Map<string, string[]>} network
- * @param {string} source
- */
-export function dijkstra(
-    network: Map<string, string[]>,
-    source: string,
-): Map<string, string> {
-    const Q: Set<string> = new Set();
-    const dist = new Map();
-    const prev = new Map();
-    for (const v of network.keys()) {
-        dist.set(v, +Infinity);
-        prev.set(v, null);
-        Q.add(v);
-    }
-    dist.set(source, 0);
-    while (Array.from(Q.keys()).length > 0) {
-        const u = min_distance(dist, Q);
-        Q.delete(u);
-        const neighbours = network.get(u);
-        const unvisitedNeighbours = neighbours.filter((v) => Q.has(v));
-        for (const v of unvisitedNeighbours) {
-            const alt = dist.get(u) + 1;
-            if (alt < dist.get(v) && dist.get(u) != Infinity) {
-                dist.set(v, alt);
-                prev.set(v, u);
-            }
-        }
-    }
-
-    return prev;
-}
-
-/** Find the node with the minimum known distance.
- *
- * @param {Map<string, number} dist
- * @param {Set<string>} unvisited
- */
-function min_distance(
-    dist: Map<string, number>,
-    unvisited: Set<string>,
-): string {
-    let least = Infinity;
-    let leastV = null;
-    for (const v of unvisited.keys()) {
-        if (dist.get(v) < least) {
-            least = dist.get(v);
-            leastV = v;
-        }
-    }
-    return leastV;
 }
