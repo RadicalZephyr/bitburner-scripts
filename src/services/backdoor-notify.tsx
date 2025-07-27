@@ -1,6 +1,7 @@
-import type { NS, Server, UserInterfaceTheme } from 'netscript';
+import type { NS, UserInterfaceTheme } from 'netscript';
 import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
 
+import { canInstallBackdoor, needsBackdoor } from 'util/backdoor';
 import { walkNetworkBFS } from 'util/walk';
 
 const FACTION_SERVERS = [
@@ -131,20 +132,6 @@ function backdoorableServers(ns: NS) {
     }
 
     return { factionMissing, missing };
-}
-
-function needsBackdoor(info: Server) {
-    return !(
-        info.hostname === 'home'
-        || info.purchasedByPlayer
-        || info.backdoorInstalled
-    );
-}
-
-function canInstallBackdoor(ns: NS, info: Server) {
-    return (
-        ns.getHackingLevel() >= info.requiredHackingSkill && info.hasAdminRights
-    );
 }
 
 /** Send a command to the terminal by simulating user input. */
