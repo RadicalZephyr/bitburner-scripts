@@ -146,18 +146,14 @@ export function maxHackPercentForMemory(
     const minChunks = availableBatchCount(memInfo.chunks, minLog.batchRam);
     if (minChunks === 0 || memInfo.freeRam < minLog.batchRam) return 0;
 
-    const checkFull = fitsFullBatch(memInfo, minLog);
+    if (!fitsFullBatch(memInfo, minLog)) return minPercent;
 
     let low = minPercent;
     let high = CONFIG.maxHackPercent;
     for (let i = 0; i < 16; i++) {
         const mid = (low + high) / 2;
         const log = calculateBatchLogistics(ns, host, mid);
-        const chunks = availableBatchCount(memInfo.chunks, log.batchRam);
-        const fitsFull = checkFull
-            ? fitsFullBatch(memInfo, log)
-            : log.batchRam <= memInfo.freeRam && chunks >= 1;
-        if (fitsFull) {
+        if (fitsFullBatch(memInfo, log)) {
             low = mid;
         } else {
             high = mid;
