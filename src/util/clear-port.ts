@@ -38,8 +38,12 @@ OPTIONS
         for (let i = 1; i <= maxPort; i++) {
             ns.clearPort(i);
             if (i % 500 === 0) {
-                await ns.sleep(10);
+                await ns.sleep(0);
             }
         }
     }
+
+    const finishedMsg = 'finished clearing all ports';
+    ns.toast(finishedMsg);
+    ns.tprint(finishedMsg);
 }
