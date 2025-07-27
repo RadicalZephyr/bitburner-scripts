@@ -136,11 +136,11 @@ async function prepareHarvest(
             : maxHackPercentForMemory(ns, args.target, memInfo);
 
     if (args.maxRam !== -1 && hackPercent === 0) {
-        ns.tprint(
+        ns.print(
             `max-ram ${ns.formatRam(args.maxRam)} is too small for one batch`,
         );
         const logistics = calculateBatchLogistics(ns, args.target);
-        ns.tprint(`Minimal batch:\n${JSON.stringify(logistics, null, 2)}`);
+        ns.print(`Minimal batch:\n${JSON.stringify(logistics, null, 2)}`);
         return null;
     }
 
@@ -153,7 +153,7 @@ async function prepareHarvest(
         );
     }
     if (overlapLimit < 1) {
-        ns.tprint(
+        ns.print(
             `max-ram ${ns.formatRam(args.maxRam)} is too small for one batch`,
         );
         return null;
