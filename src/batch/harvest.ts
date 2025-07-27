@@ -130,14 +130,11 @@ async function prepareHarvest(
     const memClient = new GrowableMemoryClient(ns);
     const memInfo = await memClient.getFreeRam();
 
-    const hackPercent =
-        args.maxRam !== -1
-            ? maxHackPercentForRam(ns, args.target, args.maxRam)
-            : maxHackPercentForMemory(ns, args.target, memInfo);
+    const hackPercent = maxHackPercentForMemory(ns, args.target, memInfo);
 
-    if (args.maxRam !== -1 && hackPercent === 0) {
+    if (hackPercent === 0) {
         ns.print(
-            `max-ram ${ns.formatRam(args.maxRam)} is too small for one batch`,
+            `total free RAM ${ns.formatRam(memInfo.freeRam)} is too small for one minimal batch`,
         );
         const logistics = calculateBatchLogistics(ns, args.target);
         ns.print(`Minimal batch:\n${JSON.stringify(logistics, null, 2)}`);
@@ -594,39 +591,6 @@ function calculateRebalancePhases(
     // always be sent and allow the harvester to continue progressing.
     phases = phases.filter((p) => p.threads > 0);
     return calculatePhaseStartTimes(phases);
-}
-
-function maxHackPercentForRam(ns: NS, target: string, maxRam: number): number {
-    const minPercent = (() => {
-        if (canUseFormulas(ns)) {
-            const server = ns.getServer(target);
-            const player = ns.getPlayer();
-            return ns.formulas.hacking.hackPercent(server, player);
-        }
-        return ns.hackAnalyze(target);
-    })();
-
-    const { batchRam: minBatchRam, overlap: minOverlap } =
-        calculateBatchLogistics(ns, target, minPercent);
-
-    if (minBatchRam * minOverlap > maxRam) return minPercent;
-
-    let low = minPercent;
-    let high = CONFIG.maxHackPercent;
-    for (let i = 0; i < 16; i++) {
-        const mid = (low + high) / 2;
-        const { batchRam, overlap } = calculateBatchLogistics(ns, target, mid);
-        if (batchRam * overlap <= maxRam) {
-            low = mid;
-        } else {
-            high = mid;
-        }
-    }
-    return low;
-}
-
-function canUseFormulas(ns: NS): boolean {
-    return ns.fileExists('Formulas.exe', 'home');
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
