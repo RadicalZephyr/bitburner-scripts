@@ -14,10 +14,10 @@ This script gracefully shuts down the batch hacking system by killing all
 harvest scripts and the manager, monitor, discovery and memory services.
 
 OPTIONS:
---help         Show this help message
+  --help         Show this help message
 
 Example:
-> run ${ns.getScriptName()}
+  > run ${ns.getScriptName()}
 `);
         return;
     }
