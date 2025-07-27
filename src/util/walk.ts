@@ -4,10 +4,22 @@ import type { NS } from 'netscript';
 // Network Walking Utilities
 //////////////////////////////////////////
 
+/**
+ * Scan the network using breadth first search.
+ *
+ * @param ns - Netscript API instance
+ * @returns Network map of connected hosts
+ */
 export function walkNetworkBFS(ns: NS): Map<string, string[]> {
     return walkNetwork(ns, { order: 'breadth' });
 }
 
+/**
+ * Scan the network using depth first search.
+ *
+ * @param ns - Netscript API instance
+ * @returns Network map of connected hosts
+ */
 export function walkNetworkDFS(ns: NS): Map<string, string[]> {
     return walkNetwork(ns, { order: 'depth' });
 }
