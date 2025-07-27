@@ -27,11 +27,13 @@ OPTIONS
     // If no ports are specified, default to clearing all ports
     if (rest.length === 0) flags.all = true;
 
+    let clearedPorts = 0;
     let maxPort = 99999;
     for (const arg of rest) {
         const portNum = Number(arg);
         if (Number.isFinite(portNum)) {
             ns.clearPort(portNum);
+            clearedPorts += 1;
             if (maxPort < portNum) {
                 maxPort = portNum;
             }
@@ -41,13 +43,14 @@ OPTIONS
     if (flags.all) {
         for (let i = 1; i <= maxPort; i++) {
             ns.clearPort(i);
+            clearedPorts += 1;
             if (i % 500 === 0) {
                 await ns.sleep(0);
             }
         }
     }
 
-    const finishedMsg = 'finished clearing all ports';
+    const finishedMsg = `finished clearing ${clearedPorts} ports`;
     ns.toast(finishedMsg);
     ns.tprint(finishedMsg);
 }
