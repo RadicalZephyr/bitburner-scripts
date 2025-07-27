@@ -13,7 +13,7 @@ export async function main(ns: NS) {
         return;
     }
 
-    allocation.releaseAtExit(ns, 'mem-test');
+    allocation.releaseAtExit(ns);
     ns.tprintf('initial allocation: %s', JSON.stringify(allocation));
     await ns.sleep(3000);
 

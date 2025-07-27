@@ -21,6 +21,7 @@ import { CONFIG } from 'services/config';
 import { sendMessage } from 'util/client';
 import { readAllFromPort } from 'util/ports';
 import { collectDependencies } from 'util/dependencies';
+import { makeFuid } from 'util/fuid';
 
 /** Client helper for growable allocations. */
 export class GrowableMemoryClient extends MemoryClient {
@@ -176,13 +177,13 @@ export class GrowableAllocation extends TransferableAllocation {
     /**
      * Release the allocation when the script exits.
      */
-    releaseAtExit(ns: NS, name?: string) {
+    releaseAtExit(ns: NS) {
         const rel = this.release.bind(this, ns);
         ns.atExit(
             () => {
                 rel();
             },
-            'memoryRelease' + (name ?? ''),
+            'memoryRelease-' + makeFuid(ns),
         );
         ns.print(
             `INFO: registered atExit release for allocation ${this.allocationId}`,

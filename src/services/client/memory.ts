@@ -9,6 +9,7 @@ import {
     sendMessage,
     trySendMessage,
 } from 'util/client';
+import { makeFuid } from 'util/fuid';
 
 export const MEMORY_PORT: number = 3;
 export const MEMORY_RESPONSE_PORT: number = 4;
@@ -294,7 +295,7 @@ export class MemoryClient extends Client<
             return null;
         }
 
-        result.releaseAtExit(this.ns, 'Owned');
+        result.releaseAtExit(this.ns);
         return result.allocatedChunks;
     }
 
@@ -400,7 +401,6 @@ export class MemoryClient extends Client<
 export async function registerAllocationOwnership(
     ns: NS,
     allocationId: number,
-    name: string = '',
 ) {
     const self = ns.self();
     const claim: AllocationClaim = {
@@ -418,14 +418,17 @@ export async function registerAllocationOwnership(
             + `${claim.numChunks}x${ns.formatRam(claim.chunkSize)} `
             + `${claim.filename}`,
     );
-    ns.atExit(() => {
-        const release: AllocationClaimRelease = {
-            allocationId: allocationId,
-            pid: self.pid,
-            hostname: self.server,
-        };
-        trySendMessage(memPort, MessageType.ClaimRelease, release);
-    }, 'memoryRelease' + name);
+    ns.atExit(
+        () => {
+            const release: AllocationClaimRelease = {
+                allocationId: allocationId,
+                pid: self.pid,
+                hostname: self.server,
+            };
+            trySendMessage(memPort, MessageType.ClaimRelease, release);
+        },
+        'registerAllocationOwnership-memoryRelease-' + makeFuid(ns),
+    );
 
     const memPort = ns.getPortHandle(MEMORY_PORT);
 
@@ -448,7 +451,6 @@ export async function registerAllocationOwnership(
 export async function parseAndRegisterAlloc(
     ns: NS,
     flags: Record<string, unknown>,
-    name = 'self',
 ): Promise<number | null> {
     const allocId = flags[ALLOC_ID];
     if (allocId === undefined || allocId === -1) {
@@ -459,7 +461,7 @@ export async function parseAndRegisterAlloc(
         return null;
     }
 
-    await registerAllocationOwnership(ns, allocId, name);
+    await registerAllocationOwnership(ns, allocId);
     return allocId;
 }
 
@@ -490,11 +492,14 @@ export class TransferableAllocation {
         sendMessage(ns, memPort, MessageType.Release, release);
     }
 
-    releaseAtExit(ns: NS, name?: string) {
+    releaseAtExit(ns: NS) {
         const release = this.release.bind(this, ns);
-        ns.atExit(() => {
-            release();
-        }, 'memoryRelease' + name);
+        ns.atExit(
+            () => {
+                release();
+            },
+            'memoryRelease-' + makeFuid(ns),
+        );
         ns.print(
             `INFO: registered atExit release for allocation ${this.allocationId}`,
         );

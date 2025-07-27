@@ -17,7 +17,7 @@ import { readAllFromPort } from 'util/ports';
 export async function main(ns: NS) {
     const flags = ns.flags([...MEM_TAG_FLAGS]);
 
-    const allocationId = await parseAndRegisterAlloc(ns, flags, 'tracker');
+    const allocationId = await parseAndRegisterAlloc(ns, flags);
     if (flags[ALLOC_ID] !== -1 && allocationId === null) {
         return;
     }

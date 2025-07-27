@@ -9,7 +9,7 @@ import { CONFIG } from 'stock/config';
 export async function main(ns: NS) {
     const flags = ns.flags([...MEM_TAG_FLAGS]);
 
-    const allocationId = await parseAndRegisterAlloc(ns, flags, 'trader');
+    const allocationId = await parseAndRegisterAlloc(ns, flags);
     if (flags[ALLOC_ID] !== -1 && allocationId === null) {
         return;
     }

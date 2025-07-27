@@ -23,7 +23,7 @@ export async function main(ns: NS) {
     ns.tprintf(
         `first allocation ${firstAlloc.allocationId} has ${firstAlloc.numChunks} chunks`,
     );
-    firstAlloc.releaseAtExit(ns, 'growable-first');
+    firstAlloc.releaseAtExit(ns);
 
     const growAlloc = await client.requestGrowableAllocation(8, 32);
     if (!growAlloc) {
@@ -33,7 +33,7 @@ export async function main(ns: NS) {
     ns.tprintf(
         `growable allocation ${growAlloc.allocationId} has ${growAlloc.numChunks} chunks`,
     );
-    growAlloc.releaseAtExit(ns, 'growable-grow');
+    growAlloc.releaseAtExit(ns);
 
     if (growAlloc.numChunks !== 1) {
         ns.tprintf(
