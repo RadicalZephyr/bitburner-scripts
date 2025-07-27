@@ -22,6 +22,11 @@ export async function main(ns: NS) {
     }
 
     while (true) {
+        if (!FACTION_SERVERS.some((h) => needsBackdoor(ns.getServer(h)))) {
+            ns.print('SUCCESS: finished backdooring all faction servers!');
+            return;
+        }
+
         const factionMissing = backdoorableFactionServers(ns);
 
         const startingHost = ns.singularity.getCurrentServer();
