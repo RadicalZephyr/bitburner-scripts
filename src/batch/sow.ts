@@ -61,14 +61,14 @@ OPTIONS
     const maxThreads = flags['max-threads'];
     if (maxThreads !== -1) {
         if (typeof maxThreads !== 'number' || maxThreads <= 0) {
-            ns.tprint('--max-threads must be a positive number');
+            ns.print('--max-threads must be a positive number');
             return;
         }
     }
 
     const target = rest[0];
     if (typeof target !== 'string' || !ns.serverExists(target)) {
-        ns.tprintf('target %s does not exist', target);
+        ns.printf('target %s does not exist', target);
         return;
     }
 
@@ -112,7 +112,7 @@ OPTIONS
         allocOptions,
     );
     if (!allocation) {
-        ns.tprint('ERROR: failed to allocate memory for sow batches');
+        ns.print('ERROR: failed to allocate memory for sow batches');
         return;
     }
     allocation.releaseAtExit(ns);
