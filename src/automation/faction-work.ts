@@ -2,9 +2,24 @@ import type { FactionWorkType, NS } from 'netscript';
 import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
 
 export async function main(ns: NS) {
-    ns.flags(MEM_TAG_FLAGS);
+    const flags = ns.flags([
+        ['focus', false],
+        ['help', false],
+        ...MEM_TAG_FLAGS,
+    ]);
 
-    await workForFactions(ns);
+    if (flags.help || typeof flags.focus !== 'boolean') {
+        ns.print(`
+USAGE: run ${ns.getScriptName()}
+
+Continuously monitor for faction invitations and accept them aslong as that faction has no enemies.
+
+OPTIONS
+  --help           Show this help message
+`);
+    }
+
+    await workForFactions(ns, flags.focus as boolean);
 }
 
 class Faction {
@@ -40,7 +55,7 @@ class Faction {
     }
 }
 
-async function workForFactions(ns: NS) {
+async function workForFactions(ns: NS, focus: boolean) {
     const sing = ns.singularity;
 
     while (true) {
@@ -55,7 +70,7 @@ async function workForFactions(ns: NS) {
 
         const workType = getBestWorkTypeForFaction(ns, lowestRepFaction.name);
 
-        if (!sing.workForFaction(lowestRepFaction.name, workType, false)) {
+        if (!sing.workForFaction(lowestRepFaction.name, workType, focus)) {
             ns.print(
                 `WARN: could not start working ${workType} for ${lowestRepFaction.name}`,
             );
