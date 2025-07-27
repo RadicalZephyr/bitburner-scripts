@@ -61,7 +61,7 @@ function backdoorableFactionServers(ns: NS) {
 function traverseNetworkPath(ns: NS, path: string[]) {
     for (const host of path) {
         const currentHost = ns.singularity.getCurrentServer();
-        if (ns.singularity.connect(host))
+        if (!ns.singularity.connect(host))
             throw new Error(`failed to connect to ${host} from ${currentHost}`);
     }
 }
