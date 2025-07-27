@@ -23,6 +23,10 @@ OPTIONS
     }
 
     const rest: string[] = flags._ as string[];
+
+    // If no ports are specified, default to clearing all ports
+    if (rest.length === 0) flags.all = true;
+
     let maxPort = 99999;
     for (const arg of rest) {
         const portNum = Number(arg);
