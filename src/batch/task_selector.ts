@@ -628,8 +628,6 @@ class TaskSelector {
                 alloc: { longRunning: true },
             },
             host,
-            '--max-threads',
-            threads,
         );
         if (!result || result.pids.length === 0) {
             this.recordLaunchFailure(host);

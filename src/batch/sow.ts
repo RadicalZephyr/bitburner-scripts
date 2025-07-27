@@ -29,11 +29,7 @@ export function autocomplete(data: AutocompleteData): string[] {
 export async function main(ns: NS) {
     ns.disableLog('ALL');
 
-    const flags = ns.flags([
-        ['max-threads', -1],
-        ['help', false],
-        ...MEM_TAG_FLAGS,
-    ]);
+    const flags = ns.flags([['help', false], ...MEM_TAG_FLAGS]);
 
     const rest = flags._ as string[];
     if (rest.length === 0 || flags.help) {
@@ -48,7 +44,6 @@ Example:
 
 OPTIONS
 --help           Show this help message
---max-threads    Cap the number of threads spawned
 `);
         return;
     }
@@ -56,14 +51,6 @@ OPTIONS
     const allocationId = await parseAndRegisterAlloc(ns, flags);
     if (flags[ALLOC_ID] !== -1 && allocationId === null) {
         return;
-    }
-
-    const maxThreads = flags['max-threads'];
-    if (maxThreads !== -1) {
-        if (typeof maxThreads !== 'number' || maxThreads <= 0) {
-            ns.print('--max-threads must be a positive number');
-            return;
-        }
     }
 
     const target = rest[0];
@@ -74,41 +61,14 @@ OPTIONS
 
     const taskSelectorClient = new TaskSelectorClient(ns);
 
-    const maxGrowThreads = neededGrowThreads(ns, target);
-    const maxWeakenThreads = weakenAnalyze(
-        ns.growthAnalyzeSecurity(maxGrowThreads),
-    );
-    let maxThreadsCap = maxGrowThreads + maxWeakenThreads;
-
-    if (maxThreadsCap < 1 || isNaN(maxThreadsCap)) {
-        ns.printf(`no need to sow ${target}`);
-        ns.toast(`finished sowing ${target}!`, 'success');
-        taskSelectorClient.finishedSowing(target);
-        return;
-    }
-
-    if (maxThreads !== -1) {
-        maxThreadsCap = Math.min(maxThreadsCap, maxThreads);
-    }
-
     let sowBatchLogistics = calculateSowBatchLogistics(ns, target);
-    const { batchRam, phases, totalBatches } = sowBatchLogistics;
-
-    const totalBatchThreads = phases.reduce((s, p) => s + p.threads, 0);
-    const maxOverlapCap = Math.floor(maxThreadsCap / totalBatchThreads);
-
-    if (maxOverlapCap < 1) {
-        ns.print('max threads was smaller than minimum batch size');
-        return;
-    }
-
-    const maxOverlap = Math.min(maxOverlapCap, totalBatches);
+    const { batchRam, totalBatches } = sowBatchLogistics;
 
     const memClient = new GrowableMemoryClient(ns);
     const allocOptions = { coreDependent: true, shrinkable: true };
     const allocation = await memClient.requestGrowableAllocation(
         batchRam,
-        maxOverlap,
+        totalBatches,
         allocOptions,
     );
     if (!allocation) {
