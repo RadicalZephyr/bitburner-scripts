@@ -1,4 +1,5 @@
 import type { NS, NetscriptPort } from 'netscript';
+import { makeFuid } from './fuid';
 
 export type Message<Type, Payload> = [
     type: Type,
@@ -119,8 +120,5 @@ export async function sendMessageReceiveResponse<
 }
 
 function makeReqId(ns: NS) {
-    const pid = ns.pid;
-    const ts = Date.now();
-    const r = Math.floor(Math.random() * 1e6);
-    return `${pid}-${ts}-${r}`;
+    return makeFuid(ns);
 }
