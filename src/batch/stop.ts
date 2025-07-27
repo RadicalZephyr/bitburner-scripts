@@ -1,6 +1,7 @@
 import type { NS } from 'netscript';
 import { ALLOC_ID, MEM_TAG_FLAGS } from 'services/client/memory_tag';
 import { parseAndRegisterAlloc } from 'services/client/memory';
+import { killEverywhere } from 'util/kill';
 
 export async function main(ns: NS) {
     const flags = ns.flags([['help', false], ...MEM_TAG_FLAGS]);
@@ -27,5 +28,12 @@ Example:
     }
 
     const scripts = ['batch/harvest.js', 'batch/sow.js', 'batch/till.js'];
-    ns.spawn('stopworld.js', { threads: 1, spawnDelay: 0 }, ...scripts);
+    await killEverywhere(ns, ...scripts);
+    await killEverywhere(ns, 'batch/h.js');
+    await killEverywhere(ns, 'batch/g.js');
+    await killEverywhere(ns, 'batch/w.js');
+
+    const msg = 'stopped all batch hacking scripts';
+    ns.toast(msg, 'success');
+    ns.tprint('SUCCESS: ' + msg);
 }
