@@ -44,6 +44,8 @@ export async function main(ns: NS) {
             const path = await shortestPath(ns, currentHost, startingHost);
             traverseNetworkPath(ns, path);
         }
+
+        await ns.sleep(10_000);
     }
 }
 
