@@ -4,13 +4,16 @@ import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
 import { main as serviceBootstrap } from 'services/bootstrap';
 import { main as batchBootstrap } from 'batch/bootstrap';
 import { main as automationBootstrap } from 'automation/bootstrap';
+import { SourceFileClient } from 'services/client/source_file';
 
 export async function main(ns: NS) {
     ns.flags(MEM_TAG_FLAGS);
     await serviceBootstrap(ns);
     await batchBootstrap(ns);
 
-    if (canUseSingularity(ns)) {
+    const client = new SourceFileClient(ns);
+    const sf4 = await client.getLevel(4);
+    if (sf4 > 0) {
         await automationBootstrap(ns);
     }
 }
@@ -42,9 +45,4 @@ export async function dynamicBootstrap(_ns: NS) {
 
         await ns.sleep(10);
     }
-}
-
-function canUseSingularity(ns: NS): boolean {
-    const sourceFiles = ns.singularity.getOwnedSourceFiles();
-    return -1 !== sourceFiles.findIndex((sf) => sf.n === 4);
 }
