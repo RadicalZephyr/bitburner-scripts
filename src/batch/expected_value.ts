@@ -146,8 +146,7 @@ export function maxHackPercentForMemory(
     const minChunks = availableBatchCount(memInfo.chunks, minLog.batchRam);
     if (minChunks === 0 || memInfo.freeRam < minLog.batchRam) return 0;
 
-    const checkFull =
-        minChunks >= minLog.overlap && memInfo.freeRam >= minLog.requiredRam;
+    const checkFull = fitsFullBatch(memInfo, minLog);
 
     let low = minPercent;
     let high = CONFIG.maxHackPercent;
@@ -156,7 +155,7 @@ export function maxHackPercentForMemory(
         const log = calculateBatchLogistics(ns, host, mid);
         const chunks = availableBatchCount(memInfo.chunks, log.batchRam);
         const fitsFull = checkFull
-            ? log.requiredRam <= memInfo.freeRam && chunks >= log.overlap
+            ? fitsFullBatch(memInfo, log)
             : log.batchRam <= memInfo.freeRam && chunks >= 1;
         if (fitsFull) {
             low = mid;
@@ -166,6 +165,11 @@ export function maxHackPercentForMemory(
     }
 
     return low;
+}
+
+function fitsFullBatch(memInfo: FreeRam, log: BatchLogistics): boolean {
+    const chunks = availableBatchCount(memInfo.chunks, log.batchRam);
+    return chunks >= log.overlap && memInfo.freeRam >= log.requiredRam;
 }
 
 export interface ExpectedValue {
