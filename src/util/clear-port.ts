@@ -26,7 +26,7 @@ OPTIONS
     let maxPort = 99999;
     for (const arg of rest) {
         const portNum = Number(arg);
-        if (!Number.isNaN(portNum)) {
+        if (Number.isFinite(portNum)) {
             ns.clearPort(portNum);
             if (maxPort < portNum) {
                 maxPort = portNum;
