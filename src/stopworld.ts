@@ -2,7 +2,7 @@ import type { NS, AutocompleteData } from 'netscript';
 import { ALLOC_ID, MEM_TAG_FLAGS } from 'services/client/memory_tag';
 import { parseAndRegisterAlloc } from 'services/client/memory';
 
-import { walkNetworkBFS } from 'util/walk';
+import { killEverywhere } from 'util/kill';
 
 export function autocomplete(data: AutocompleteData): string[] {
     return data.scripts;
@@ -32,18 +32,10 @@ Example:
         return;
     }
 
-    const targetScripts = new Set(flags._ as string[]);
+    const targetScripts = flags._ as string[];
 
-    const networkGraph = walkNetworkBFS(ns);
-    for (const host of networkGraph.keys()) {
-        if (targetScripts.size > 0) {
-            ns.ps(host)
-                .filter((pi) => targetScripts.has(pi.filename))
-                .forEach((pi) => ns.kill(pi.pid));
-        } else {
-            ns.killall(host, true);
-        }
-    }
+    await killEverywhere(ns, ...targetScripts);
+
     const message = 'SUCCESS: finished stopping scripts';
     ns.toast(message);
     ns.tprint(message);
