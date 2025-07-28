@@ -1,14 +1,14 @@
 import type { CompanyName, CompanyPositionInfo, Player, NS } from 'netscript';
 import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
+
+import { CONFIG } from 'automation/config';
+
+import { Toggle, FocusToggle } from 'util/focus';
 import {
     KARMA_HEIGHT,
     STATUS_WINDOW_HEIGHT,
     STATUS_WINDOW_WIDTH,
 } from '/util/ui';
-
-import { CONFIG } from 'automation/config';
-
-import { Toggle, FocusToggle } from 'util/focus';
 
 export async function main(ns: NS) {
     const flags = ns.flags([
