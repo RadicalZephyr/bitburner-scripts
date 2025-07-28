@@ -18,7 +18,7 @@ export async function main(ns: NS) {
         ns.print(`
 USAGE: run ${ns.getScriptName()}
 
-Continuously monitor for faction invitations and accept them aslong as that faction has no enemies.
+Continuously monitor for faction invitations and accept them as long as that faction has no enemies.
 
 OPTIONS
   --help           Show this help message
