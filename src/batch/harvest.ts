@@ -289,6 +289,7 @@ async function harvestPipeline(ns: NS, target: string, setup: HarvestSetup) {
             ns.print('INFO: harvest shutdown complete');
             return;
         }
+
         allocation.pollGrowth();
         const newHosts = hostListFromChunks(allocation.allocatedChunks);
         if (newHosts.length < hosts.length) {
@@ -490,11 +491,6 @@ async function harvestPipeline(ns: NS, target: string, setup: HarvestSetup) {
             ) {
                 lastHeartbeat = Date.now();
             }
-        }
-
-        if (shuttingDown.value && batches.every((b) => b.length === 0)) {
-            ns.print('INFO: harvest shutdown complete');
-            return;
         }
     }
 }
