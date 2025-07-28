@@ -1,4 +1,4 @@
-import type { NS, SourceFileLvl } from 'netscript';
+import type { NS } from 'netscript';
 import { Client, Message as ClientMessage } from 'util/client';
 
 export const SOURCE_FILE_PORT = 19;
@@ -16,7 +16,7 @@ export interface RequestLevel {
 export type Payload = RequestLevel | null;
 export type Message = ClientMessage<MessageType, Payload>;
 
-export type ResponsePayload = number | SourceFileLvl[];
+export type ResponsePayload = number | Record<number, number>;
 
 /** Client for the SourceFile service. */
 export class SourceFileClient extends Client<
@@ -46,13 +46,13 @@ export class SourceFileClient extends Client<
     /**
      * Retrieve all owned Source Files.
      *
-     * @returns Array of owned Source Files and their levels
+     * @returns Mapping of Source File number to level
      */
-    async getAll(): Promise<SourceFileLvl[]> {
+    async getAll(): Promise<Record<number, number>> {
         const res = (await this.sendMessageReceiveResponse(
             MessageType.RequestAll,
             null,
-        )) as SourceFileLvl[];
-        return Array.isArray(res) ? res : [];
+        )) as Record<number, number>;
+        return res && typeof res === 'object' ? res : {};
     }
 }

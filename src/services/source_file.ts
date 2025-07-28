@@ -1,4 +1,4 @@
-import type { NS, NetscriptPort, SourceFileLvl } from 'netscript';
+import type { NS, NetscriptPort } from 'netscript';
 import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
 import {
     Message,
@@ -27,9 +27,7 @@ export async function main(ns: NS) {
         levels.set(sf.n, sf.lvl);
     }
 
-    await readLoop(ns, port, () =>
-        readRequests(ns, port, respPort, levels, owned),
-    );
+    await readLoop(ns, port, () => readRequests(ns, port, respPort, levels));
 }
 
 async function readRequests(
@@ -37,12 +35,12 @@ async function readRequests(
     port: NetscriptPort,
     resp: NetscriptPort,
     levels: Map<number, number>,
-    all: SourceFileLvl[],
 ) {
     for (const next of readAllFromPort(ns, port)) {
         const msg = next as Message;
-        const requestId = msg[1] as string;
-        let payload: number | SourceFileLvl[];
+        const requestId = msg[1];
+        if (typeof requestId !== 'string') continue;
+        let payload: number | Record<number, number>;
         switch (msg[0]) {
             case MessageType.RequestLevel: {
                 const req = msg[2] as RequestLevel;
@@ -50,7 +48,7 @@ async function readRequests(
                 break;
             }
             case MessageType.RequestAll:
-                payload = all;
+                payload = Object.fromEntries(levels);
                 break;
             default:
                 payload = 0;

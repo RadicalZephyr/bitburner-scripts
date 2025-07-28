@@ -13,7 +13,7 @@ export async function main(ns: NS) {
     const level = await client.getLevel(sf);
     ns.tprintf(`SF${sf} level: ${level}`);
     const all = await client.getAll();
-    const fromAll = all.find((s) => s.n === sf)?.lvl ?? 0;
+    const fromAll = all[sf] ?? 0;
     if (fromAll !== level) {
         ns.tprintf('ERROR: service returned inconsistent data');
     }
