@@ -1,4 +1,4 @@
-import type { FactionWorkType, NS, UserInterfaceTheme } from 'netscript';
+import type { FactionWorkType, NS } from 'netscript';
 import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
 import {
     KARMA_HEIGHT,
@@ -6,6 +6,7 @@ import {
     STATUS_WINDOW_WIDTH,
 } from '/util/ui';
 
+import { Toggle, FocusToggle } from 'util/focus';
 export async function main(ns: NS) {
     const flags = ns.flags([
         ['focus', false],
@@ -41,55 +42,6 @@ OPTIONS
 
     await workForFactions(ns, focus);
     ns.tprint('finished faction work');
-}
-
-class Toggle {
-    ns: NS;
-    value: boolean;
-
-    constructor(ns: NS, value: boolean) {
-        this.ns = ns;
-        this.value = value;
-    }
-
-    toggle() {
-        this.value = !this.value;
-        this.ns.singularity.setFocus(this.value);
-    }
-}
-
-interface FocusProps {
-    ns: NS;
-    focus: Toggle;
-}
-
-const buttonClass =
-    'MuiButtonBase-root MuiButton-root MuiButton-text MuiButton-textPrimary MuiButton-sizeMedium MuiButton-textSizeMedium MuiButton-root MuiButton-text MuiButton-textPrimary MuiButton-sizeMedium MuiButton-textSizeMedium css-u8jh2y';
-
-function FocusToggle({ ns, focus }: FocusProps) {
-    const [theme, setTheme] = React.useState(
-        ns.ui.getTheme() as UserInterfaceTheme,
-    );
-
-    React.useEffect(() => {
-        const id = globalThis.setInterval(() => {
-            setTheme(ns.ui.getTheme());
-        }, 200);
-
-        return () => {
-            globalThis.clearInterval(id);
-        };
-    }, [ns]);
-
-    return (
-        <button
-            className={buttonClass}
-            style={{ color: theme.successlight }}
-            onClick={() => focus.toggle()}
-        >
-            Toggle Focus
-        </button>
-    );
 }
 
 class Faction {
