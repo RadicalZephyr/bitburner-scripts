@@ -76,6 +76,8 @@ async function workForCompanies(ns: NS, focus: Toggle) {
     const sing = ns.singularity;
 
     while (true) {
+        const myJobs = ns.getPlayer().jobs;
+
         const unfinished = companies
             .map((c) => new Company(ns, c))
             .filter((c) => c.rep < CONFIG.companyRepForFaction);
@@ -86,8 +88,10 @@ async function workForCompanies(ns: NS, focus: Toggle) {
         const target = unfinished[0];
 
         const job = bestJob(ns, target.name);
-        if (!sing.applyToCompany(target.name, job.field)) {
-            ns.print(`WARN: failed to apply to ${target.name}`);
+        if (myJobs[target.name] !== job.name) {
+            if (!sing.applyToCompany(target.name, job.field)) {
+                ns.print(`WARN: failed to apply to ${target.name}`);
+            }
         }
 
         if (!sing.workForCompany(target.name, focus.value)) {
