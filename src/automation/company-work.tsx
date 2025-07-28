@@ -25,6 +25,9 @@ Work for companies until reaching the reputation needed for their faction invite
 
 OPTIONS
   --help           Show this help message
+
+CONFIGURATION
+  AUTO_companyRepForFaction  Sets the target reputation for getting invited to the company faction.
 `);
         return;
     }
