@@ -419,7 +419,7 @@ class TaskSelector {
                 if (
                     hackPercent === 0
                     || availableBatchCount(memInfo.chunks, logistics.batchRam)
-                    < 1
+                        < 1
                 ) {
                     return null;
                 }
@@ -467,7 +467,7 @@ class TaskSelector {
             if (
                 harvestScriptRam + task.requiredRam <= memInfo.freeRam
                 && availableBatchCount(memInfo.chunks, task.batchRam)
-                >= task.overlap
+                    >= task.overlap
             ) {
                 await this.launchHarvest(task);
                 return;
