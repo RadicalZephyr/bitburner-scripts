@@ -1,4 +1,5 @@
-import type { NS, UserInterfaceTheme } from 'netscript';
+import type { NS } from 'netscript';
+import { useTheme } from 'util/useTheme';
 
 import { CONFIG } from 'corp/config';
 
@@ -58,19 +59,7 @@ interface IEatItProps {
 }
 
 function EatIt({ ns }: IEatItProps) {
-    const [theme, setTheme] = React.useState(
-        ns.ui.getTheme() as UserInterfaceTheme,
-    );
-
-    React.useEffect(() => {
-        const id = globalThis.setInterval(() => {
-            setTheme(ns.ui.getTheme());
-        }, 200);
-
-        return () => {
-            globalThis.clearInterval(id);
-        };
-    }, [ns]);
+    const theme = useTheme(ns);
 
     const buttonClass =
         'MuiButtonBase-root MuiButton-root MuiButton-text MuiButton-textPrimary MuiButton-sizeMedium MuiButton-textSizeMedium MuiButton-root MuiButton-text MuiButton-textPrimary MuiButton-sizeMedium MuiButton-textSizeMedium css-u8jh2y';

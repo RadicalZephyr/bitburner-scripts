@@ -1,4 +1,5 @@
-import type { NS, UserInterfaceTheme } from 'netscript';
+import type { NS } from 'netscript';
+import { useTheme } from 'util/useTheme';
 
 /** Toggle focus mode for work actions. */
 export class Toggle {
@@ -32,19 +33,7 @@ const buttonClass =
  * @returns The focus toggle button
  */
 export function FocusToggle({ ns, focus }: FocusProps) {
-    const [theme, setTheme] = React.useState(
-        ns.ui.getTheme() as UserInterfaceTheme,
-    );
-
-    React.useEffect(() => {
-        const id = globalThis.setInterval(() => {
-            setTheme(ns.ui.getTheme());
-        }, 200);
-
-        return () => {
-            globalThis.clearInterval(id);
-        };
-    }, [ns]);
+    const theme = useTheme(ns);
 
     return (
         <button

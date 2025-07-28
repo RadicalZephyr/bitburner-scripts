@@ -1,4 +1,5 @@
 import type { NS, UserInterfaceTheme } from 'netscript';
+import { useTheme } from 'util/useTheme';
 import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
 
 import { canInstallBackdoor, needsBackdoor } from 'util/backdoor';
@@ -33,9 +34,7 @@ interface BackdoorNotifierProps {
 function BackdoorNotifier({ ns }: BackdoorNotifierProps) {
     const [factionServers, setFactionServers] = React.useState([] as string[]);
     const [servers, setServers] = React.useState([] as string[]);
-    const [theme, setTheme] = React.useState(
-        ns.ui.getTheme() as UserInterfaceTheme,
-    );
+    const theme = useTheme(ns);
 
     const tailOpen = React.useRef(false);
 
@@ -53,7 +52,6 @@ function BackdoorNotifier({ ns }: BackdoorNotifierProps) {
 
             setFactionServers(factionMissing);
             setServers(missing);
-            setTheme(ns.ui.getTheme());
             ns.ui.renderTail();
         }, 200);
 

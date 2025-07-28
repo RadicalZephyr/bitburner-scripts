@@ -1,4 +1,5 @@
 import type { NS, NetscriptPort, UserInterfaceTheme } from 'netscript';
+import { useTheme } from 'util/useTheme';
 import { ALLOC_ID, MEM_TAG_FLAGS } from 'services/client/memory_tag';
 import { parseAndRegisterAlloc, ResponsePayload } from 'services/client/memory';
 
@@ -377,14 +378,11 @@ function MemoryDisplay({ ns, manager }: MemoryDisplayProps) {
     const [workers, setWorkers] = React.useState(
         Array.from(manager.workers.values()),
     );
-    const [theme, setTheme] = React.useState(
-        ns.ui.getTheme() as UserInterfaceTheme,
-    );
+    const theme = useTheme(ns, 1000);
 
     React.useEffect(() => {
         const id = globalThis.setInterval(() => {
             setWorkers(Array.from(manager.workers.values()));
-            setTheme(ns.ui.getTheme());
         }, 1000);
 
         return () => {
@@ -424,14 +422,11 @@ interface LogDisplayProps {
  */
 function LogDisplay({ ns, lines: extLines }: LogDisplayProps) {
     const [lines, setLines] = React.useState(extLines);
-    const [theme, setTheme] = React.useState(
-        ns.ui.getTheme() as UserInterfaceTheme,
-    );
+    const theme = useTheme(ns, 1000);
 
     React.useEffect(() => {
         const id = globalThis.setInterval(() => {
             setLines(extLines);
-            setTheme(ns.ui.getTheme());
         }, 1000);
         return () => {
             globalThis.clearInterval(id);
