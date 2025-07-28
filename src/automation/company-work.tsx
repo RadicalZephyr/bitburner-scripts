@@ -48,45 +48,6 @@ OPTIONS
     ns.tprint('finished company work');
 }
 
-function bestJob(ns: NS, c: CompanyName) {
-    const sing = ns.singularity;
-
-    const favor = sing.getCompanyFavor(c);
-    const player = ns.getPlayer();
-
-    const companyRep = sing.getCompanyRep(c);
-
-    const jobs = sing
-        .getCompanyPositions(c)
-        .map((j) => {
-            const jobInfo = sing.getCompanyPositionInfo(c, j);
-            const gains = ns.formulas.work.companyGains(player, c, j, favor);
-            return {
-                name: j,
-                ...jobInfo,
-                ...gains,
-            };
-        })
-        .filter((j) => {
-            return isHireable(player, companyRep, j);
-        })
-        .sort((a, b) => b.reputation - a.reputation);
-
-    return jobs[0];
-}
-
-function isHireable(
-    player: Player,
-    companyRep: number,
-    info: CompanyPositionInfo,
-) {
-    if (companyRep < info.requiredReputation) return false;
-    for (const skill in player.skills) {
-        if (player[skill] < info.requiredSkills[skill]) return false;
-    }
-    return true;
-}
-
 class Company {
     name: CompanyName;
     rep: number;
@@ -136,4 +97,43 @@ async function workForCompanies(ns: NS, focus: Toggle) {
 
         await ns.asleep(60_000);
     }
+}
+
+function bestJob(ns: NS, c: CompanyName) {
+    const sing = ns.singularity;
+
+    const favor = sing.getCompanyFavor(c);
+    const player = ns.getPlayer();
+
+    const companyRep = sing.getCompanyRep(c);
+
+    const jobs = sing
+        .getCompanyPositions(c)
+        .map((j) => {
+            const jobInfo = sing.getCompanyPositionInfo(c, j);
+            const gains = ns.formulas.work.companyGains(player, c, j, favor);
+            return {
+                name: j,
+                ...jobInfo,
+                ...gains,
+            };
+        })
+        .filter((j) => {
+            return isHireable(player, companyRep, j);
+        })
+        .sort((a, b) => b.reputation - a.reputation);
+
+    return jobs[0];
+}
+
+function isHireable(
+    player: Player,
+    companyRep: number,
+    info: CompanyPositionInfo,
+) {
+    if (companyRep < info.requiredReputation) return false;
+    for (const skill in player.skills) {
+        if (player[skill] < info.requiredSkills[skill]) return false;
+    }
+    return true;
 }
