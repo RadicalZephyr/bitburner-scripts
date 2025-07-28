@@ -24,11 +24,12 @@
 ### Automation
 
 - Company work automation handles multiple corporations and respects a configurable reputation goal [#187][pr-187].
-- Faction work script overhauled with best work selection and optional focus toggle [#188][pr-188].
+- Faction work script overhauled with best work selection and added focus toggle [#188][pr-188].
 - Augmentation purchasing supports reputation donations and NeuroFlux levels [#189][pr-189].
 - Loop install script automates late bitnode progression, purchasing programs, training skills and purchasing augmentations before reinstalling [#190][pr-190].
 - Add a script to install backdoors on faction servers as soon as it becomes possible [#193][pr-193].
 - Automation bootstrap launches faction, backdoor, and RAM upgrade tasks when Source File\u202f4 is owned [#195][pr-195].
+- Company work automation works for all faction-giving companies evenly and added focus toggle [#198][pr-198].
 
 ### Utilities
 
@@ -74,6 +75,7 @@
 [pr-192]: https://github.com/RadicalZephyr/bitburner-scripts/pull/192
 [pr-193]: https://github.com/RadicalZephyr/bitburner-scripts/pull/193
 [pr-195]: https://github.com/RadicalZephyr/bitburner-scripts/pull/195
+[pr-198]: https://github.com/RadicalZephyr/bitburner-scripts/pull/198
 
 ## v2.1.0
 
