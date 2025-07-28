@@ -1,6 +1,7 @@
 import type { NetscriptPort, NS } from 'netscript';
 import { ALLOC_ID, MEM_TAG_FLAGS } from 'services/client/memory_tag';
 
+import { HarvestClient } from 'batch/client/harvest';
 import {
     TASK_SELECTOR_PORT,
     TASK_SELECTOR_RESPONSE_PORT,
@@ -56,6 +57,10 @@ interface HarvestTask extends BatchLogistics {
     hackPercent: number;
     profit: number;
     value: number;
+}
+
+interface LaunchedHarvestTask extends HarvestTask {
+    client: HarvestClient;
 }
 
 function makeCompareLevel(ns: NS): (ta: string, tb: string) => number {
@@ -194,8 +199,8 @@ class TaskSelector {
     velocity: number = 0;
     launchFailures: Map<string, { count: number; nextAttempt: number }> =
         new Map();
-    activeHarvestProfits: Map<string, number> = new Map();
-    harvestPorts: Map<string, number> = new Map();
+
+    launchedHarvestTasks: Map<string, LaunchedHarvestTask> = new Map();
 
     constructor(ns: NS, monitor: MonitorClient, launcher: LaunchClient) {
         this.ns = ns;
@@ -219,8 +224,7 @@ class TaskSelector {
             this.harvestTargets.has(target)
             || this.pendingHarvestTargets.includes(target)
         ) {
-            this.activeHarvestProfits.delete(target);
-            this.harvestPorts.delete(target);
+            this.launchedHarvestTasks.delete(target);
         }
 
         this.pendingTillTargets = this.pendingTillTargets.filter(
@@ -396,8 +400,8 @@ class TaskSelector {
         if (this.launchedTasks.length > 0) return;
 
         const totalProfit = Array.from(
-            this.activeHarvestProfits.values(),
-        ).reduce((acc, p) => acc + p, 0);
+            this.launchedHarvestTasks.values(),
+        ).reduce((acc, t) => acc + t.profit, 0);
 
         let harvestTasks: HarvestTask[] = [...this.pendingHarvestTargets]
             .filter((h) => canHarvest(this.ns, h))
@@ -415,7 +419,7 @@ class TaskSelector {
                 if (
                     hackPercent === 0
                     || availableBatchCount(memInfo.chunks, logistics.batchRam)
-                        < 1
+                    < 1
                 ) {
                     return null;
                 }
@@ -463,7 +467,7 @@ class TaskSelector {
             if (
                 harvestScriptRam + task.requiredRam <= memInfo.freeRam
                 && availableBatchCount(memInfo.chunks, task.batchRam)
-                    >= task.overlap
+                >= task.overlap
             ) {
                 await this.launchHarvest(task);
                 return;
@@ -687,9 +691,10 @@ class TaskSelector {
             this.pendingHarvestTargets = this.pendingHarvestTargets.filter(
                 (h) => h !== host,
             );
-            this.activeHarvestProfits.set(host, task.profit);
+
+            const client = new HarvestClient(this.ns, portId);
+            this.launchedHarvestTasks.set(host, { client, ...task });
             const pid = result.pids[0];
-            this.harvestPorts.set(host, portId);
             const launch: LaunchedTask = {
                 pid,
                 host,
