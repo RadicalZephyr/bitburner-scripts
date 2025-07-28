@@ -23,6 +23,7 @@ Continuously monitor for faction invitations and accept them aslong as that fact
 OPTIONS
   --help           Show this help message
 `);
+        return;
     }
 
     ns.disableLog('ALL');
