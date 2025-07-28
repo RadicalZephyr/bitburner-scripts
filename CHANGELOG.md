@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+- Batch reliability and configuration
+    - sow.ts now merges new memory chunks automatically and scales batch size when possible.
+    - Added `openTailOnFail` and `taskSelectorTickMs` options to tune batch behavior.
+    - The monitor de-duplicates worker entries.
+
+- Updater and service improvements
+    - The updater service registers its memory usage with the allocator, preventing RAM accounting issues.
+    - Core services use an asynchronous port read loop for consistent
+      and lower latency message processing.
+
+- Utility and configuration updates
+    - Boolean settings accept additional values (`yes`, `on`, `1`) and persist correctly.
+    - Several helper scripts and services were adjusted to use constant bindings and improved logging.
+
 - Added Source File service (`/services/source_file.ts`) which tracks
   and returns owned Source File levels. Includes a helper
   `getSourceFileLevel` for quick queries.
