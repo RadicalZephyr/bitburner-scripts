@@ -32,6 +32,7 @@ import {
     type FreeRam,
 } from 'services/client/memory';
 import { LaunchClient } from 'services/client/launch';
+import { PortClient } from 'services/client/port';
 
 import { growthAnalyze } from 'util/growthAnalyze';
 import { readAllFromPort, readLoop } from 'util/ports';
@@ -194,6 +195,7 @@ class TaskSelector {
     launchFailures: Map<string, { count: number; nextAttempt: number }> =
         new Map();
     activeHarvestProfits: Map<string, number> = new Map();
+    harvestPorts: Map<string, number> = new Map();
 
     constructor(ns: NS, monitor: MonitorClient, launcher: LaunchClient) {
         this.ns = ns;
@@ -218,6 +220,7 @@ class TaskSelector {
             || this.pendingHarvestTargets.includes(target)
         ) {
             this.activeHarvestProfits.delete(target);
+            this.harvestPorts.delete(target);
         }
 
         this.pendingTillTargets = this.pendingTillTargets.filter(
@@ -655,8 +658,18 @@ class TaskSelector {
     private async launchHarvest(task: HarvestTask, maxRam?: number) {
         const host = task.host;
         this.ns.print(`INFO: launching harvest on ${host}`);
+        const portClient = new PortClient(this.ns);
+        const portId = await portClient.requestPort();
+        if (typeof portId !== 'number') {
+            this.ns.print('WARN: failed to acquire control port');
+            this.recordLaunchFailure(host);
+            return;
+        }
+
         const args =
-            maxRam !== undefined ? [host, '--max-ram', maxRam] : [host];
+            maxRam !== undefined
+                ? [host, '--max-ram', maxRam, '--port-id', portId]
+                : [host, '--port-id', portId];
         const result = await this.launcher.launch(
             '/batch/harvest.js',
             {
@@ -667,6 +680,7 @@ class TaskSelector {
         );
         if (!result || result.pids.length === 0) {
             this.recordLaunchFailure(host);
+            await portClient.releasePort(portId);
             return;
         }
         if (result.pids.length >= 1) {
@@ -675,6 +689,7 @@ class TaskSelector {
             );
             this.activeHarvestProfits.set(host, task.profit);
             const pid = result.pids[0];
+            this.harvestPorts.set(host, portId);
             const launch: LaunchedTask = {
                 pid,
                 host,
