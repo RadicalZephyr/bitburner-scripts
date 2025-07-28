@@ -56,3 +56,15 @@ export class SourceFileClient extends Client<
         return res && typeof res === 'object' ? res : {};
     }
 }
+
+/**
+ * Get the owned level of the given source file.
+ *
+ * @param ns - Netscript API instance
+ * @param n  - Source file number to fetch
+ * @returns The level of the given source file, zero if not owned.
+ */
+export async function getSourceFileLevel(ns: NS, n: number): Promise<number> {
+    const client = new SourceFileClient(ns);
+    return await client.getLevel(n);
+}
