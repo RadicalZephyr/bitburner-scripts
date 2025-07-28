@@ -18,7 +18,7 @@
 
 - Discovery, memory, and other daemons run asynchronous `readLoop`s for lower latency [#160][pr-160].
 - New Launch service replaces `launch.ts` for remote script execution [#173][pr-173];
-  - Expanded options with `ramOverride` support [#175][pr-175].
+    - Expanded options with `ramOverride` support [#175][pr-175].
 - Source File service exposes owned Source File levels for other scripts [#195][pr-195].
 
 ### Automation
@@ -49,8 +49,6 @@
 - Memory management guide expanded with the new `FreeRam` structure and memory-aware calculations [#184][pr-184].
 - Unit tests cover expected value calculations with limited memory [#184][pr-184].
 - AGENTS guidelines clarified for PR reviewers [#189][pr-189].
-
----
 
 [pr-160]: https://github.com/RadicalZephyr/bitburner-scripts/pull/160
 [pr-166]: https://github.com/RadicalZephyr/bitburner-scripts/pull/166
