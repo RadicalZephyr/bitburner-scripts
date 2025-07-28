@@ -15,12 +15,16 @@ export async function main(ns: NS) {
     await ns.sleep(500);
 
     startService(ns, '/services/memory.js', host);
-    startService(ns, '/services/source_file.js', host);
     startService(ns, '/services/launcher.js', host);
 
     startService(ns, '/services/updater.js', 'n00dles');
 
     const client = new LaunchClient(ns);
+
+    await client.launch('/services/source_file.js', {
+        threads: 1,
+        alloc: { longRunning: true },
+    });
 
     await client.launch('/services/port.js', {
         threads: 1,
