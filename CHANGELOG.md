@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+- Added Source File service (`/services/source_file.ts`) which tracks
+  and returns owned Source File levels. Includes a helper
+  `getSourceFileLevel` for quick queries.
+- `services/bootstrap.ts` now launches the Source File service alongside
+  other core daemons.
+- Introduced `automation/bootstrap.ts`, a launcher that starts faction,
+  backdoor, and RAM upgrade scripts when automation is enabled.
+- `bootstrap.ts` only starts automation tasks when Source File 4 is
+  owned, using the new service to check the level.
+
 ## v2.1.0
 
 - Services bootstrap now launches the updater on `n00dles` to avoid running too many scripts on `foodnstuff`.
