@@ -15,6 +15,11 @@ import {
 } from 'services/client/growable_memory';
 import { AllocationChunk, parseAndRegisterAlloc } from 'services/client/memory';
 import { PortClient } from 'services/client/port';
+import {
+    Message,
+    MessageType as HarvestMessageType,
+} from 'batch/client/harvest';
+import { readAllFromPort, readLoop } from 'util/ports';
 
 import { TaskSelectorClient, Lifecycle } from 'batch/client/task_selector';
 
@@ -50,6 +55,7 @@ interface ParsedArgs {
     target: string;
     maxRam: number;
     allocationId: number | null;
+    portId: number;
 }
 
 interface HarvestSetup {
@@ -60,12 +66,15 @@ interface HarvestSetup {
     memClient: GrowableMemoryClient;
     taskSelectorClient: TaskSelectorClient;
     donePortId: number;
+    portId: number;
+    shuttingDown: { value: boolean };
     batchRam: number;
 }
 
 async function parseArgs(ns: NS): Promise<ParsedArgs | null> {
     const flags = ns.flags([
         ['max-ram', -1],
+        ['port-id', -1],
         ['help', false],
         ...MEM_TAG_FLAGS,
     ]);
@@ -86,6 +95,7 @@ Example:
 OPTIONS
   --help           Show this help message
   --max-ram        Limit RAM usage per batch run
+  --port-id        Control port for shutdown messages
 `);
         return null;
     }
@@ -103,13 +113,19 @@ OPTIONS
         }
     }
 
+    const portId = flags['port-id'];
+    if (typeof portId !== 'number' || !Number.isInteger(portId) || portId < 1) {
+        ns.tprint('--port-id must be a valid port number');
+        return null;
+    }
+
     const target = rest[0];
     if (typeof target !== 'string' || !ns.serverExists(target)) {
         ns.tprintf('target %s does not exist', target);
         return null;
     }
 
-    return { target, maxRam, allocationId };
+    return { target, maxRam, allocationId, portId };
 }
 
 async function prepareHarvest(
@@ -125,6 +141,18 @@ async function prepareHarvest(
     }
     ns.atExit(() => {
         portClient.releasePort(donePortId);
+        portClient.releasePort(args.portId);
+    });
+
+    const shuttingDown = { value: false };
+    const controlPort = ns.getPortHandle(args.portId);
+    readLoop(ns, controlPort, async () => {
+        for (const msg of readAllFromPort(ns, controlPort)) {
+            const m = msg as Message;
+            if (Array.isArray(m) && m[0] === HarvestMessageType.Shutdown) {
+                shuttingDown.value = true;
+            }
+        }
     });
 
     const memClient = new GrowableMemoryClient(ns);
@@ -196,6 +224,8 @@ async function prepareHarvest(
         memClient,
         taskSelectorClient,
         donePortId,
+        portId: args.portId,
+        shuttingDown,
         batchRam,
     };
 }
@@ -209,6 +239,7 @@ async function harvestPipeline(ns: NS, target: string, setup: HarvestSetup) {
         memClient,
         taskSelectorClient,
         donePortId,
+        shuttingDown,
         batchRam,
     } = setup;
 
@@ -224,6 +255,7 @@ async function harvestPipeline(ns: NS, target: string, setup: HarvestSetup) {
     // Launch one batch per allocated chunk so that the pipeline is
     // fully populated before entering the steady state loop.
     for (const host of hosts) {
+        if (shuttingDown.value) break;
         const batchPids = await spawnBatch(
             ns,
             host,
@@ -252,7 +284,21 @@ async function harvestPipeline(ns: NS, target: string, setup: HarvestSetup) {
     const finishedPort = ns.getPortHandle(donePortId);
     ns.printf('INFO: launched initial round, going into batch respawn loop');
 
+    let killed = false;
     while (true) {
+        if (shuttingDown.value) {
+            if (!killed) {
+                for (const pids of batches) {
+                    for (const pid of pids) {
+                        if (ns.isRunning(pid)) ns.kill(pid);
+                    }
+                    pids.length = 0;
+                }
+                killed = true;
+                ns.print('INFO: harvest shutdown complete');
+                return;
+            }
+        }
         allocation.pollGrowth();
         const newHosts = hostListFromChunks(allocation.allocatedChunks);
         if (newHosts.length < hosts.length) {
@@ -263,7 +309,11 @@ async function harvestPipeline(ns: NS, target: string, setup: HarvestSetup) {
         }
         hosts = newHosts;
         const spawnIndex = currentBatches % hosts.length;
-        if (spawnIndex === 0 && hosts.length > batches.length) {
+        if (
+            !shuttingDown.value
+            && spawnIndex === 0
+            && hosts.length > batches.length
+        ) {
             ns.print(
                 `INFO: allocation grew to ${hosts.length} chunks. `
                     + `Spawning ${hosts.length - batches.length} additional batches`,
@@ -413,19 +463,24 @@ async function harvestPipeline(ns: NS, target: string, setup: HarvestSetup) {
             }
         }
 
-        const batchPids = await spawnBatch(
-            ns,
-            host,
-            target,
-            phases,
-            donePortId,
-            allocation.allocationId,
-        );
-        if (batchPids.length > 0) {
-            batches[batchIndex] = batchPids;
-            const lastPid = batchPids.at(-1);
-            if (typeof lastPid === 'number') pidHostMap.set(lastPid, host);
-            currentBatches++;
+        let batchPids: number[] = [];
+        if (!shuttingDown.value) {
+            batchPids = await spawnBatch(
+                ns,
+                host,
+                target,
+                phases,
+                donePortId,
+                allocation.allocationId,
+            );
+            if (batchPids.length > 0) {
+                batches[batchIndex] = batchPids;
+                const lastPid = batchPids.at(-1);
+                if (typeof lastPid === 'number') pidHostMap.set(lastPid, host);
+                currentBatches++;
+            }
+        } else {
+            batches[batchIndex] = [];
         }
 
         if (currentBatches > maxOverlap) {
