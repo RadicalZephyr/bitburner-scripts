@@ -284,10 +284,20 @@ async function harvestPipeline(ns: NS, target: string, setup: HarvestSetup) {
     const finishedPort = ns.getPortHandle(donePortId);
     ns.printf('INFO: launched initial round, going into batch respawn loop');
 
+    let killed = false;
     while (true) {
-        if (shuttingDown.value && batches.every((b) => b.length === 0)) {
-            ns.print('INFO: harvest shutdown complete');
-            return;
+        if (shuttingDown.value) {
+            if (!killed) {
+                for (const pids of batches) {
+                    for (const pid of pids) {
+                        if (ns.isRunning(pid)) ns.kill(pid);
+                    }
+                    pids.length = 0;
+                }
+                killed = true;
+                ns.print('INFO: harvest shutdown complete');
+                return;
+            }
         }
 
         allocation.pollGrowth();
