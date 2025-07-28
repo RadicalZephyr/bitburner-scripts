@@ -6,13 +6,12 @@ import { LaunchClient } from 'services/client/launch';
 export async function main(ns: NS) {
     ns.flags(MEM_TAG_FLAGS);
     const client = new LaunchClient(ns);
-    await client.launch('/batch/task_selector.js', {
-        threads: 1,
-        alloc: { longRunning: true },
-    });
+    const services = ['/batch/task_selector.js', '/batch/monitor.js'];
 
-    await client.launch('/batch/monitor.js', {
-        threads: 1,
-        alloc: { longRunning: true },
-    });
+    for (const script of services) {
+        await client.launch(script, {
+            threads: 1,
+            alloc: { longRunning: true },
+        });
+    }
 }

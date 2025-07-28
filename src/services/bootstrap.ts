@@ -21,19 +21,18 @@ export async function main(ns: NS) {
 
     const client = new LaunchClient(ns);
 
-    await client.launch('/services/source_file.js', {
-        threads: 1,
-        alloc: { longRunning: true },
-    });
+    const services = [
+        '/services/source_file.js',
+        '/services/port.js',
+        '/services/backdoor-notify.js',
+    ];
 
-    await client.launch('/services/port.js', {
-        threads: 1,
-        alloc: { longRunning: true },
-    });
-    await client.launch('/services/backdoor-notify.js', {
-        threads: 1,
-        alloc: { longRunning: true },
-    });
+    for (const script of services) {
+        await client.launch(script, {
+            threads: 1,
+            alloc: { longRunning: true },
+        });
+    }
 }
 
 function startService(ns: NS, script: string, host: string) {

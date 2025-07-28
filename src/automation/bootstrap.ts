@@ -7,18 +7,16 @@ export async function main(ns: NS) {
     ns.flags(MEM_TAG_FLAGS);
 
     const client = new LaunchClient(ns);
-    await client.launch('/automation/join-factions.js', {
-        threads: 1,
-        alloc: { longRunning: true },
-    });
+    const services = [
+        '/automation/join-factions.js',
+        '/automation/backdoor-servers.js',
+        '/automation/upgrade-ram.js',
+    ];
 
-    await client.launch('/automation/backdoor-servers.js', {
-        threads: 1,
-        alloc: { longRunning: true },
-    });
-
-    await client.launch('/automation/upgrade-ram.js', {
-        threads: 1,
-        alloc: { longRunning: true },
-    });
+    for (const script of services) {
+        await client.launch(script, {
+            threads: 1,
+            alloc: { longRunning: true },
+        });
+    }
 }
