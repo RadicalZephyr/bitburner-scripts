@@ -21,8 +21,6 @@ import {
 } from 'batch/client/harvest';
 import { readAllFromPort, readLoop } from 'util/ports';
 
-let shuttingDown = false;
-
 import { TaskSelectorClient, Lifecycle } from 'batch/client/task_selector';
 
 import { CONFIG } from 'batch/config';
@@ -69,6 +67,7 @@ interface HarvestSetup {
     taskSelectorClient: TaskSelectorClient;
     donePortId: number;
     portId: number;
+    shuttingDown: { value: boolean };
     batchRam: number;
 }
 
@@ -145,12 +144,13 @@ async function prepareHarvest(
         portClient.releasePort(args.portId);
     });
 
+    const shuttingDown = { value: false };
     const controlPort = ns.getPortHandle(args.portId);
     readLoop(ns, controlPort, async () => {
         for (const msg of readAllFromPort(ns, controlPort)) {
             const m = msg as Message;
             if (Array.isArray(m) && m[0] === HarvestMessageType.Shutdown) {
-                shuttingDown = true;
+                shuttingDown.value = true;
             }
         }
     });
@@ -225,6 +225,7 @@ async function prepareHarvest(
         taskSelectorClient,
         donePortId,
         portId: args.portId,
+        shuttingDown,
         batchRam,
     };
 }
@@ -238,6 +239,7 @@ async function harvestPipeline(ns: NS, target: string, setup: HarvestSetup) {
         memClient,
         taskSelectorClient,
         donePortId,
+        shuttingDown,
         batchRam,
     } = setup;
 
@@ -253,7 +255,7 @@ async function harvestPipeline(ns: NS, target: string, setup: HarvestSetup) {
     // Launch one batch per allocated chunk so that the pipeline is
     // fully populated before entering the steady state loop.
     for (const host of hosts) {
-        if (shuttingDown) break;
+        if (shuttingDown.value) break;
         const batchPids = await spawnBatch(
             ns,
             host,
@@ -283,7 +285,7 @@ async function harvestPipeline(ns: NS, target: string, setup: HarvestSetup) {
     ns.printf('INFO: launched initial round, going into batch respawn loop');
 
     while (true) {
-        if (shuttingDown && batches.every((b) => b.length === 0)) {
+        if (shuttingDown.value && batches.every((b) => b.length === 0)) {
             ns.print('INFO: harvest shutdown complete');
             return;
         }
@@ -298,7 +300,7 @@ async function harvestPipeline(ns: NS, target: string, setup: HarvestSetup) {
         hosts = newHosts;
         const spawnIndex = currentBatches % hosts.length;
         if (
-            !shuttingDown
+            !shuttingDown.value
             && spawnIndex === 0
             && hosts.length > batches.length
         ) {
@@ -452,7 +454,7 @@ async function harvestPipeline(ns: NS, target: string, setup: HarvestSetup) {
         }
 
         let batchPids: number[] = [];
-        if (!shuttingDown) {
+        if (!shuttingDown.value) {
             batchPids = await spawnBatch(
                 ns,
                 host,
@@ -490,7 +492,7 @@ async function harvestPipeline(ns: NS, target: string, setup: HarvestSetup) {
             }
         }
 
-        if (shuttingDown && batches.every((b) => b.length === 0)) {
+        if (shuttingDown.value && batches.every((b) => b.length === 0)) {
             ns.print('INFO: harvest shutdown complete');
             return;
         }
