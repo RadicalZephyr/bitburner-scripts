@@ -1,0 +1,192 @@
+import type {
+    CompanyName,
+    CompanyPositionInfo,
+    Player,
+    NS,
+    UserInterfaceTheme,
+} from 'netscript';
+import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
+import {
+    KARMA_HEIGHT,
+    STATUS_WINDOW_HEIGHT,
+    STATUS_WINDOW_WIDTH,
+} from '/util/ui';
+
+import { CONFIG } from 'automation/config';
+
+class Toggle {
+    ns: NS;
+    value: boolean;
+
+    constructor(ns: NS, value: boolean) {
+        this.ns = ns;
+        this.value = value;
+    }
+
+    toggle() {
+        this.value = !this.value;
+        this.ns.singularity.setFocus(this.value);
+    }
+}
+
+interface FocusProps {
+    ns: NS;
+    focus: Toggle;
+}
+
+const buttonClass =
+    'MuiButtonBase-root MuiButton-root MuiButton-text MuiButton-textPrimary MuiButton-sizeMedium MuiButton-textSizeMedium MuiButton-root MuiButton-text MuiButton-textPrimary MuiButton-sizeMedium MuiButton-textSizeMedium css-u8jh2y';
+
+function FocusToggle({ ns, focus }: FocusProps) {
+    const [theme, setTheme] = React.useState(
+        ns.ui.getTheme() as UserInterfaceTheme,
+    );
+
+    React.useEffect(() => {
+        const id = globalThis.setInterval(() => {
+            setTheme(ns.ui.getTheme());
+        }, 200);
+
+        return () => {
+            globalThis.clearInterval(id);
+        };
+    }, [ns]);
+
+    return (
+        <button
+            className={buttonClass}
+            style={{ color: theme.successlight }}
+            onClick={() => focus.toggle()}
+        >
+            Toggle Focus
+        </button>
+    );
+}
+
+export async function main(ns: NS) {
+    const flags = ns.flags([
+        ['focus', false],
+        ['help', false],
+        ...MEM_TAG_FLAGS,
+    ]);
+
+    if (flags.help || typeof flags.focus !== 'boolean') {
+        ns.print(`
+USAGE: run ${ns.getScriptName()}
+
+Work for companies until reaching the reputation needed for their faction invite.
+
+OPTIONS
+  --help           Show this help message
+`);
+        return;
+    }
+
+    ns.disableLog('ALL');
+    ns.clearLog();
+
+    ns.ui.openTail();
+    ns.ui.resizeTail(STATUS_WINDOW_WIDTH, KARMA_HEIGHT);
+    const [ww] = ns.ui.windowSize();
+    ns.ui.moveTail(
+        ww - STATUS_WINDOW_WIDTH,
+        STATUS_WINDOW_HEIGHT + KARMA_HEIGHT,
+    );
+
+    const focus = new Toggle(ns, flags.focus as boolean);
+    ns.printRaw(<FocusToggle ns={ns} focus={focus} />);
+    ns.ui.renderTail();
+
+    await workForCompanies(ns, focus);
+    ns.tprint('finished company work');
+}
+
+function bestJob(ns: NS, c: CompanyName) {
+    const sing = ns.singularity;
+
+    const favor = sing.getCompanyFavor(c);
+    const player = ns.getPlayer();
+
+    const companyRep = sing.getCompanyRep(c);
+
+    const jobs = sing
+        .getCompanyPositions(c)
+        .map((j) => {
+            const jobInfo = sing.getCompanyPositionInfo(c, j);
+            const gains = ns.formulas.work.companyGains(player, c, j, favor);
+            return {
+                name: j,
+                ...jobInfo,
+                ...gains,
+            };
+        })
+        .filter((j) => {
+            return isHireable(player, companyRep, j);
+        })
+        .sort((a, b) => b.reputation - a.reputation);
+
+    return jobs[0];
+}
+
+function isHireable(
+    player: Player,
+    companyRep: number,
+    info: CompanyPositionInfo,
+) {
+    if (companyRep < info.requiredReputation) return false;
+    for (const skill in player.skills) {
+        if (player[skill] < info.requiredSkills[skill]) return false;
+    }
+    return true;
+}
+
+class Company {
+    name: CompanyName;
+    rep: number;
+
+    constructor(ns: NS, name: CompanyName) {
+        this.name = name;
+        this.rep = ns.singularity.getCompanyRep(name);
+    }
+}
+
+async function workForCompanies(ns: NS, focus: Toggle) {
+    const cmpEnum = ns.enums.CompanyName;
+    const companies: CompanyName[] = [
+        cmpEnum.BachmanAndAssociates,
+        cmpEnum.BladeIndustries,
+        cmpEnum.ClarkeIncorporated,
+        cmpEnum.ECorp,
+        cmpEnum.FourSigma,
+        cmpEnum.FulcrumTechnologies,
+        cmpEnum.KuaiGongInternational,
+        cmpEnum.MegaCorp,
+        cmpEnum.NWO,
+        cmpEnum.OmniTekIncorporated,
+    ];
+
+    const sing = ns.singularity;
+
+    while (true) {
+        const unfinished = companies
+            .map((c) => new Company(ns, c))
+            .filter((c) => c.rep < CONFIG.companyRepForFaction);
+
+        if (unfinished.length === 0) return;
+
+        unfinished.sort((a, b) => a.rep - b.rep);
+        const target = unfinished[0];
+
+        const job = bestJob(ns, target.name);
+        if (!sing.applyToCompany(target.name, job.field)) {
+            ns.print(`WARN: failed to apply to ${target.name}`);
+        }
+
+        if (!sing.workForCompany(target.name, focus.value)) {
+            ns.print(`WARN: failed to start work for ${target.name}`);
+            return;
+        }
+
+        await ns.asleep(60_000);
+    }
+}
