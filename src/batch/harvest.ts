@@ -294,6 +294,7 @@ async function harvestPipeline(ns: NS, target: string, setup: HarvestSetup) {
             }
         }
         hosts = newHosts;
+        if (hosts.length === 0) break;
         const spawnIndex = currentBatches % hosts.length;
         if (
             !shuttingDown.value
