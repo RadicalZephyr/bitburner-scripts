@@ -3,6 +3,7 @@
 const { spawn } = require('node:child_process');
 const readline = require('node:readline');
 const express = require('express');
+const querystring = require('querystring');
 
 const engine = spawn('./katago', ['gtp'], {
     stdio: ['pipe', 'pipe', 'inherit'],
@@ -78,9 +79,10 @@ app.get('/komi/:value', async (req, res) => {
 
 app.get('/set_free_handicap/:encoded', async (req, res) => {
     try {
-        const data = Buffer.from(req.params.encoded, 'base64').toString('utf8');
+        const data = querystring.unescape(req.params.encoded);
         const vertices = JSON.parse(data);
         const joined = vertices.join(' ');
+        console.log(`set_free_handicap ${joined}`);
         const reply = await sendCommand(`set_free_handicap ${joined}`);
         res.json(reply);
     } catch (err) {
