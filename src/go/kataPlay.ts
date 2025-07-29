@@ -1,7 +1,7 @@
 import type { NS } from 'netscript';
 
 import { GtpClient } from 'go/GtpClient';
-import { filterMapBoard, Node, Vertex } from 'go/types';
+import { filterMapBoard, Move, Node, Vertex } from 'go/types';
 
 export async function main(ns: NS) {
     const client = new GtpClient(ns);
@@ -22,6 +22,21 @@ async function setupExistingGame(ns: NS, client: GtpClient) {
     const gameState = ns.go.getGameState();
     await client.komi(gameState.komi);
 
-    const disabled = disabledNodes(board);
-    await client.setFreeHandicap(disabled);
+    const positions = filterMapBoard(board, vertexToMove);
+    await client.setPosition(positions);
+}
+
+function vertexToMove(node: Node, vertex: Vertex): Move | null {
+    switch (node) {
+        case Node.BLACK: {
+            return ['black', vertex];
+        }
+        case Node.DISABLED:
+        case Node.WHITE: {
+            return ['white', vertex];
+        }
+        case Node.EMPTY: {
+            return null;
+        }
+    }
 }
