@@ -164,6 +164,12 @@ function parseResponse(o: any): Response {
     return o as Response;
 }
 
+/**
+ * Convert a GTP vertex to a 0-based multidimensional board array index.
+ *
+ * @param vertex - Vertex to convert
+ * @returns x and y indices
+ */
 export function toIndices(vertex: Vertex): [number, number] {
     if (vertex === 'pass') return [-1, -1];
 
@@ -178,6 +184,13 @@ export function toIndices(vertex: Vertex): [number, number] {
     return [x, y];
 }
 
+/**
+ * Convert a 0-based multidimensional board array index to a GTP vertex.
+ *
+ * @param x - Column index
+ * @param y - Row index
+ * @returns Vertex corresponding to indices
+ */
 export function toVertex(x: number, y: number): Vertex {
     if (x >= COL_NAMES.length)
         throw new Error(`tried to generate vertex with invalid col index ${x}`);
