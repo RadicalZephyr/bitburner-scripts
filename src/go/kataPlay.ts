@@ -4,6 +4,8 @@ import { GtpClient, toIndices, toVertex } from 'go/GtpClient';
 import { filterMapBoard, Move, Node, Vertex } from 'go/types';
 
 export async function main(ns: NS) {
+    ns.disableLog('ALL');
+
     const client = new GtpClient(ns);
 
     while (true) {

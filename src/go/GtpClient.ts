@@ -125,6 +125,8 @@ export class GtpClient {
 
     private async send(cmd: Command, payload?: string): Promise<string> {
         const argument = payload !== undefined ? `/${payload}` : '';
+        this.ns.print(`INFO: sending ${cmd}${argument}`);
+
         const responseStatus = await this.ns.wget(
             `http://${URL}:${PORT}/${cmd}${argument}`,
             RESPONSE_FILE,
@@ -142,6 +144,10 @@ export class GtpClient {
         const response = parseResponse(JSON.parse(this.ns.read(RESPONSE_FILE)));
         if (response.status !== 'OK')
             throw new Error(`request ${cmd} failed: ${response.response}`);
+
+        this.ns.print(
+            `SUCCESS: received successful response '${response.response}'`,
+        );
 
         return response.response;
     }
