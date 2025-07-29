@@ -46,7 +46,7 @@ export const ROW_NAMES = [
 
 export type Row = (typeof ROW_NAMES)[number];
 
-export type Vertex = `${Col}${Row}`;
+export type Vertex = 'pass' | `${Col}${Row}`;
 
 export type Color = 'white' | 'w' | 'W' | 'black' | 'b' | 'B';
 

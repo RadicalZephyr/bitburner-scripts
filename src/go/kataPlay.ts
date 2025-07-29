@@ -53,14 +53,20 @@ async function playGame(ns: NS, client: GtpClient) {
         const myMove = await client.genmove('black');
 
         const [x, y] = toIndices(myMove);
+        const isPassMove = x === -1 && y === -1;
 
-        if (!validMoves[x][y])
+        if (!(validMoves[x][y] || isPassMove))
             throw new Error(
                 `tried to play invalid move ${myMove} (${x}, ${y})`,
             );
 
-        // Play the selected move
-        const opponentMove = await ns.go.makeMove(x, y);
+        let opponentMove;
+        if (isPassMove) {
+            opponentMove = await ns.go.passTurn();
+        } else {
+            // Play the selected move
+            opponentMove = await ns.go.makeMove(x, y);
+        }
 
         switch (opponentMove.type) {
             case 'move': {

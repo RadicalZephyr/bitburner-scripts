@@ -158,6 +158,8 @@ function parseResponse(o: any): Response {
 }
 
 export function toIndices(vertex: Vertex): [number, number] {
+    if (vertex === 'pass') return [-1, -1];
+
     const x = ROW_NAMES.findIndex((rowName) =>
         vertex.startsWith(rowName.toString()),
     );
