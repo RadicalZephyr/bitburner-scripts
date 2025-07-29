@@ -37,33 +37,47 @@ function sendCommand(cmd) {
     });
 }
 
+function ok(msg) {
+    return {
+        status: 'OK',
+        response: msg,
+    };
+}
+
+function error(msg) {
+    return {
+        status: 'ERROR',
+        msg,
+    };
+}
+
 const app = express();
 const PORT = 18924;
 
 app.get('/boardsize/:n', async (req, res) => {
     try {
         const reply = await sendCommand(`boardsize ${req.params.n}`);
-        res.send(reply);
+        res.json(ok(reply));
     } catch (err) {
-        res.status(500).send(String(err));
+        res.status(500).json(error(String(err)));
     }
 });
 
 app.get('/clear_board', async (_req, res) => {
     try {
         const reply = await sendCommand('clear_board');
-        res.send(reply);
+        res.json(ok(reply));
     } catch (err) {
-        res.status(500).send(String(err));
+        res.status(500).json(error(String(err)));
     }
 });
 
 app.get('/komi/:value', async (req, res) => {
     try {
         const reply = await sendCommand(`komi ${req.params.value}`);
-        res.send(reply);
+        res.json(ok(reply));
     } catch (err) {
-        res.status(500).send(String(err));
+        res.status(500).json(error(String(err)));
     }
 });
 
@@ -73,9 +87,9 @@ app.get('/set_free_handicap/:encoded', async (req, res) => {
         const vertices = JSON.parse(data);
         const joined = vertices.join(' ');
         const reply = await sendCommand(`set_free_handicap ${joined}`);
-        res.send(reply);
+        res.json(ok(reply));
     } catch (err) {
-        res.status(400).send(String(err));
+        res.status(400).json(error(String(err)));
     }
 });
 
@@ -84,9 +98,9 @@ app.get('/play/:vertex', async (req, res) => {
         const vertex = req.params.vertex;
         await sendCommand(`play black ${vertex}`);
         const genmove = await sendCommand(`genmove white`);
-        res.send(genmove);
+        res.json(ok(genmove));
     } catch (err) {
-        res.status(500).send(String(err));
+        res.status(500).json(error(String(err)));
     }
 });
 
