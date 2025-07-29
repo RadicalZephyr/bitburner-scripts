@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
+
 const { spawn } = require('node:child_process');
 const readline = require('node:readline');
 const express = require('express');
@@ -29,7 +31,7 @@ rl.on('line', (line) => {
  * @returns {Promise<string>} Resolves with the engine reply.
  */
 function sendCommand(cmd) {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         pending.push(resolve);
         engine.stdin.write(cmd + '\n');
     });
