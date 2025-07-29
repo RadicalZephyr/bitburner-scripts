@@ -59,7 +59,7 @@ app.get('/boardsize/:n', async (req, res) => {
         const reply = await sendCommand(`boardsize ${req.params.n}`);
         res.json(ok(reply));
     } catch (err) {
-        res.status(500).json(error(String(err)));
+        res.json(error(String(err)));
     }
 });
 
@@ -68,7 +68,7 @@ app.get('/clear_board', async (_req, res) => {
         const reply = await sendCommand('clear_board');
         res.json(ok(reply));
     } catch (err) {
-        res.status(500).json(error(String(err)));
+        res.json(error(String(err)));
     }
 });
 
@@ -77,7 +77,7 @@ app.get('/komi/:value', async (req, res) => {
         const reply = await sendCommand(`komi ${req.params.value}`);
         res.json(ok(reply));
     } catch (err) {
-        res.status(500).json(error(String(err)));
+        res.json(error(String(err)));
     }
 });
 
@@ -89,7 +89,7 @@ app.get('/set_free_handicap/:encoded', async (req, res) => {
         const reply = await sendCommand(`set_free_handicap ${joined}`);
         res.json(ok(reply));
     } catch (err) {
-        res.status(400).json(error(String(err)));
+        res.json(error(String(err)));
     }
 });
 
@@ -100,7 +100,7 @@ app.get('/play/:vertex', async (req, res) => {
         const genmove = await sendCommand(`genmove white`);
         res.json(ok(genmove));
     } catch (err) {
-        res.status(500).json(error(String(err)));
+        res.json(error(String(err)));
     }
 });
 
