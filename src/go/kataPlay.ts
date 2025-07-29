@@ -10,13 +10,6 @@ export async function main(ns: NS) {
     await playGame(ns, client);
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function disabledNodes(board: string[]): Vertex[] {
-    return filterMapBoard(board, (node, vertex) =>
-        node === Node.DISABLED ? vertex : undefined,
-    );
-}
-
 async function setupExistingGame(ns: NS, client: GtpClient) {
     await client.clearBoard();
 
