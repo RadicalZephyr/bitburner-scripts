@@ -14,13 +14,15 @@ type Command =
     | 'play'
     | 'genmove'
     | 'kata-search';
+
 interface Response {
     status: 'OK' | 'ERROR';
     response: string;
 }
-const RESPONSE_FILE = 'response.json';
+
 export class GtpClient {
     ns: NS;
+    requestId: number = 1;
 
     constructor(ns: NS) {
         this.ns = ns;
@@ -123,6 +125,12 @@ export class GtpClient {
         return lowcaseVertex;
     }
 
+    private responseFile() {
+        const file = `response${this.requestId}.json`;
+        this.requestId += 1;
+        return file;
+    }
+
     private async send(cmd: Command, payload?: string): Promise<string> {
         const url = CONFIG.gtpProxyHost;
         const port = CONFIG.gtpProxyPort;
@@ -130,20 +138,23 @@ export class GtpClient {
         const argument = payload !== undefined ? `/${payload}` : '';
         this.ns.print(`INFO: sending ${cmd}${argument}`);
 
+        const responseFile = this.responseFile();
         const responseStatus = await this.ns.wget(
             `http://${url}:${port}/${cmd}${argument}`,
-            RESPONSE_FILE,
+            responseFile,
         );
 
         if (!responseStatus) {
             throw new Error('wget failed to retrieve file');
         }
 
-        if (!this.ns.fileExists(RESPONSE_FILE)) {
+        if (!this.ns.fileExists(responseFile)) {
             throw new Error('wget failed to write file');
         }
+        const responseContent = this.ns.read(responseFile);
+        this.ns.rm(responseFile);
 
-        const response = parseResponse(JSON.parse(this.ns.read(RESPONSE_FILE)));
+        const response = parseResponse(JSON.parse(responseContent));
         if (response.status !== 'OK')
             throw new Error(`request ${cmd} failed: ${response.response}`);
 
