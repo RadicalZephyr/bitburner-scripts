@@ -58,7 +58,8 @@ type Command =
     | 'clear_board'
     | 'komi'
     | 'set_free_handicap'
-    | 'play';
+    | 'play'
+    | 'genmove';
 
 interface Response {
     status: 'OK' | 'ERROR';
@@ -95,8 +96,12 @@ class GtpClient {
         );
     }
 
-    async play(vertex: string) {
-        await this.send('play', vertex);
+    async play(color: string, vertex: string) {
+        await this.send('play', `${color}/${vertex}`);
+    }
+
+    async genmove(color: string): string {
+        return await this.send('genmove', color);
     }
 
     async send(cmd: Command, payload: string): Promise<string> {
