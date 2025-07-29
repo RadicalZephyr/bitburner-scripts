@@ -122,6 +122,16 @@ app.get('/genmove/:color', async (req, res) => {
     }
 });
 
+app.get('/kata-search/:color', async (req, res) => {
+    try {
+        const color = req.params.color;
+        const reply = await sendCommand(`kata-search ${color}`);
+        res.json(reply);
+    } catch (err) {
+        res.json(error(String(err)));
+    }
+});
+
 const server = app.listen(PORT, 'localhost', () => {
     console.log(`GTP proxy listening on http://localhost:${PORT}`);
 });

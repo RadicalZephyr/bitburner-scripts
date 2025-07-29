@@ -63,7 +63,8 @@ type Command =
     | 'set_free_handicap'
     | 'set_position'
     | 'play'
-    | 'genmove';
+    | 'genmove'
+    | 'kata-search';
 
 interface Response {
     status: 'OK' | 'ERROR';
@@ -113,6 +114,10 @@ class GtpClient {
 
     async genmove(color: string): string {
         return await this.send('genmove', color);
+    }
+
+    async kataSearch(color: string): string {
+        return await this.send('kata-search', color);
     }
 
     async send(cmd: Command, payload: string): Promise<string> {
