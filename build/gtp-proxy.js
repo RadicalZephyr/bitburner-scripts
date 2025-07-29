@@ -90,12 +90,22 @@ app.get('/set_free_handicap/:encoded', async (req, res) => {
     }
 });
 
-app.get('/play/:vertex', async (req, res) => {
+app.get('/play/:color/:vertex', async (req, res) => {
     try {
+        const color = req.params.color;
         const vertex = req.params.vertex;
-        await sendCommand(`play black ${vertex}`);
-        const genmove = await sendCommand(`genmove white`);
-        res.json(genmove);
+        const reply = await sendCommand(`play ${color} ${vertex}`);
+        res.json(reply);
+    } catch (err) {
+        res.json(error(String(err)));
+    }
+});
+
+app.get('/genmove/:color', async (req, res) => {
+    try {
+        const color = req.params.color;
+        const reply = await sendCommand(`genmove ${color}`);
+        res.json(reply);
     } catch (err) {
         res.json(error(String(err)));
     }
