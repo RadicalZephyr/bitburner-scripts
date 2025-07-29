@@ -95,8 +95,12 @@ export class GtpClient {
      * @param color - color to generate move for
      * @returns vertex to play move at
      */
-    async genmove(color: Color): Promise<string> {
-        return await this.send('genmove', color);
+    async genmove(color: Color): Promise<Vertex> {
+        const vertex = await this.send('genmove', color);
+        const lowcaseVertex = vertex.toLocaleLowerCase().trim();
+        if (!isVertex(lowcaseVertex))
+            throw new Error(`genmove returned invalid vertex ${lowcaseVertex}`);
+        return lowcaseVertex;
     }
 
     /**
@@ -109,8 +113,14 @@ export class GtpClient {
      * @param color - color to generate move for
      * @returns vertex to play move at
      */
-    async kataSearch(color: Color): Promise<string> {
-        return await this.send('kata-search', color);
+    async kataSearch(color: Color): Promise<Vertex> {
+        const vertex = await this.send('kata-search', color);
+        const lowcaseVertex = vertex.toLocaleLowerCase().trim();
+        if (!isVertex(lowcaseVertex))
+            throw new Error(
+                `kata-search returned invalid vertex ${lowcaseVertex}`,
+            );
+        return lowcaseVertex;
     }
 
     private async send(cmd: Command, payload: string): Promise<string> {
@@ -171,4 +181,12 @@ export function toVertex(x: number, y: number): Vertex {
     const col = COL_NAMES[x];
     const row = ROW_NAMES[y];
     return `${col}${row}` as Vertex;
+}
+
+function isVertex(s: string): s is Vertex {
+    const x = ROW_NAMES.findIndex((rowName) =>
+        s.startsWith(rowName.toString()),
+    );
+    const y = COL_NAMES.findIndex((colName) => s.endsWith(colName));
+    return x !== -1 && y !== -1;
 }
