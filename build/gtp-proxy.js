@@ -16,7 +16,9 @@ rl.on('line', (line) => {
     if (line.trim() === '') {
         const resolve = pending.shift();
         if (resolve) {
-            resolve(buffer.join('\n'));
+            const response = buffer.join('\n');
+            const status = response.startsWith('=') ? 'OK' : 'ERROR';
+            resolve({ status, response: response.slice(2) });
         }
         buffer = [];
     } else {
@@ -37,13 +39,6 @@ function sendCommand(cmd) {
     });
 }
 
-function ok(msg) {
-    return {
-        status: 'OK',
-        response: msg,
-    };
-}
-
 function error(msg) {
     return {
         status: 'ERROR',
@@ -57,7 +52,7 @@ const PORT = 18924;
 app.get('/boardsize/:n', async (req, res) => {
     try {
         const reply = await sendCommand(`boardsize ${req.params.n}`);
-        res.json(ok(reply));
+        res.json(reply);
     } catch (err) {
         res.json(error(String(err)));
     }
@@ -66,7 +61,7 @@ app.get('/boardsize/:n', async (req, res) => {
 app.get('/clear_board', async (_req, res) => {
     try {
         const reply = await sendCommand('clear_board');
-        res.json(ok(reply));
+        res.json(reply);
     } catch (err) {
         res.json(error(String(err)));
     }
@@ -75,7 +70,7 @@ app.get('/clear_board', async (_req, res) => {
 app.get('/komi/:value', async (req, res) => {
     try {
         const reply = await sendCommand(`komi ${req.params.value}`);
-        res.json(ok(reply));
+        res.json(reply);
     } catch (err) {
         res.json(error(String(err)));
     }
@@ -87,7 +82,7 @@ app.get('/set_free_handicap/:encoded', async (req, res) => {
         const vertices = JSON.parse(data);
         const joined = vertices.join(' ');
         const reply = await sendCommand(`set_free_handicap ${joined}`);
-        res.json(ok(reply));
+        res.json(reply);
     } catch (err) {
         res.json(error(String(err)));
     }
@@ -98,7 +93,7 @@ app.get('/play/:vertex', async (req, res) => {
         const vertex = req.params.vertex;
         await sendCommand(`play black ${vertex}`);
         const genmove = await sendCommand(`genmove white`);
-        res.json(ok(genmove));
+        res.json(genmove);
     } catch (err) {
         res.json(error(String(err)));
     }
