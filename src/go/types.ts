@@ -93,10 +93,10 @@ export function filterMapBoard<T>(
     callbackFn: BoardCallbackFn<T>,
 ): T[] {
     const result = [];
-    for (let i = 0; i < board.length; i++) {
+    for (let i = 0; i < board.length && i < COL_NAMES.length; i++) {
         const col = COL_NAMES[i] satisfies Col;
         const column = board[i].split('');
-        for (let j = 0; j < column.length; j++) {
+        for (let j = 0; j < column.length && j < ROW_NAMES.length; j++) {
             const node = column[j] as Node;
             const row = ROW_NAMES[j] satisfies Row;
             const vertex = `${col}${row}` satisfies Vertex;
