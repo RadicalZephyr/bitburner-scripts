@@ -84,12 +84,9 @@ app.get('/set_free_handicap/:encoded', async (req, res) => {
 app.get('/play/:vertex', async (req, res) => {
     try {
         const vertex = req.params.vertex;
-        await sendCommand(`play ${vertex}`);
-        const genmove = await sendCommand(
-            `id=${nextId} genmove ${engineColor}`,
-        );
+        await sendCommand(`play black ${vertex}`);
+        const genmove = await sendCommand(`id=${nextId} genmove white`);
         nextId += 1;
-        engineColor = engineColor === 'white' ? 'black' : 'white';
         res.send(genmove);
     } catch (err) {
         res.status(500).send(String(err));
