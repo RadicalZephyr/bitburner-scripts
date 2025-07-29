@@ -1,9 +1,7 @@
 import type { NS } from 'netscript';
 
 import { GtpClient } from 'go/GtpClient';
-import { filterMapBoard, Vertex } from 'go/types';
-
-const DISABLED_NODE = '#';
+import { filterMapBoard, Node, Vertex } from 'go/types';
 
 export async function main(ns: NS) {
     const client = new GtpClient(ns);
@@ -11,7 +9,7 @@ export async function main(ns: NS) {
 
 function disabledNodes(board: string[]): Vertex[] {
     return filterMapBoard(board, (node, vertex) =>
-        node === DISABLED_NODE ? vertex : undefined,
+        node === Node.DISABLED ? vertex : undefined,
     );
 }
 

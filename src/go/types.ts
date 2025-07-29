@@ -54,6 +54,13 @@ export type Move = [Color, Vertex];
 
 export const NODES = ['.' as const, 'O' as const, 'X' as const, '#' as const];
 
+export const Node = {
+    EMPTY: '.' as const,
+    WHITE: 'O' as const,
+    BLACK: 'X' as const,
+    DISABLED: '#' as const,
+} as const;
+
 /**
  * Possible node types on the Go board state.
  *
