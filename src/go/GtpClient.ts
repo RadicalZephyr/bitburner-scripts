@@ -39,7 +39,7 @@ export class GtpClient {
      * Clear the current board from the engine.
      */
     async clearBoard() {
-        await this.send('clear_board', undefined);
+        await this.send('clear_board');
     }
 
     /**
@@ -123,9 +123,10 @@ export class GtpClient {
         return lowcaseVertex;
     }
 
-    private async send(cmd: Command, payload: string): Promise<string> {
+    private async send(cmd: Command, payload?: string): Promise<string> {
+        const argument = payload !== undefined ? `/${payload}` : '';
         const responseStatus = await this.ns.wget(
-            `http://${URL}:${PORT}/${cmd}/${payload}`,
+            `http://${URL}:${PORT}/${cmd}${argument}`,
             RESPONSE_FILE,
         );
 
