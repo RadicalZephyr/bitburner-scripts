@@ -102,7 +102,9 @@ function randomNearInvalidMove(
     const validMoves = ns.go.analysis.getValidMoves();
     const moveOptions = [];
     for (let i = x - 2; i <= x + 2; i++) {
+        if (i < 0 || i > validMoves.length) continue;
         for (let j = y - 2; j <= y + 2; j++) {
+            if (j < 0 || j > validMoves[i].length) continue;
             if (validMoves[i][j]) {
                 moveOptions.push([i, j]);
             }
