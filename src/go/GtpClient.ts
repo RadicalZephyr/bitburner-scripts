@@ -185,6 +185,7 @@ export function toVertex(x: number, y: number): Vertex {
 }
 
 function isVertex(s: string): s is Vertex {
+    if (s === 'pass') return true;
     const x = columnIndex(s);
     const y = rowIndex(s);
     return x !== -1 && y !== -1;

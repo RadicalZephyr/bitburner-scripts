@@ -55,7 +55,7 @@ async function playGame(ns: NS, client: GtpClient) {
         const [x, y] = toIndices(myMove);
         const isPassMove = x === -1 && y === -1;
 
-        if (!(validMoves[x][y] || isPassMove))
+        if (!(isPassMove || validMoves[x][y]))
             throw new Error(
                 `tried to play invalid move ${myMove} (${x}, ${y})`,
             );
