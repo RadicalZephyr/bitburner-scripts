@@ -82,18 +82,39 @@ class GtpClient {
         this.ns = ns;
     }
 
+    /**
+     * Set the board size for the next game.
+     *
+     * @param n - integer board size
+     */
     async boardsize(n: number) {
         await this.send('boardsize', `${n}`);
     }
 
+    /**
+     * Clear the current board from the engine.
+     */
     async clearBoard() {
         await this.send('clear_board', undefined);
     }
 
+    /**
+     * Set komi value for the game.
+     *
+     * @param value - floating point komi value
+     */
     async komi(value: number) {
         await this.send('komi', value.toFixed(3));
     }
 
+    /**
+     * Set an entire board position at once.
+     *
+     * This avoids biasing KataGos analysis with a sequence of `play`
+     * commands that don't represent actual play.
+     *
+     * @param positions - list of alternating color and vertex pairs
+     */
     async setPosition(positions: string[]) {
         await this.send(
             'set_position',
@@ -101,6 +122,11 @@ class GtpClient {
         );
     }
 
+    /**
+     * Set free placement handicap stones for black.
+     *
+     * @param vertices - vertices to place handicap stones on
+     */
     async setFreeHandicap(vertices: string[]) {
         await this.send(
             'set_free_handicap',
@@ -108,19 +134,41 @@ class GtpClient {
         );
     }
 
+    /**
+     * Inform the engine of a move played outside the engine.
+     *
+     * @param color - color to play move for
+     * @param vertex - vertex to play move at
+     */
     async play(color: string, vertex: string) {
         await this.send('play', `${color}/${vertex}`);
     }
 
+    /**
+     * Retrieve the next move KataGo wants to play.
+     *
+     * @param color - color to generate move for
+     * @returns vertex to play move at
+     */
     async genmove(color: string): string {
         return await this.send('genmove', color);
     }
 
+    /**
+     * Retrieve the next move KataGo wants to play, without playing it
+     * in the engine.
+     *
+     * If this move is valid, client _must_ follow up by calling
+     * `GtpClient.play()` with this move to inform the engine.
+     *
+     * @param color - color to generate move for
+     * @returns vertex to play move at
+     */
     async kataSearch(color: string): string {
         return await this.send('kata-search', color);
     }
 
-    async send(cmd: Command, payload: string): Promise<string> {
+    private async send(cmd: Command, payload: string): Promise<string> {
         const responseStatus = await this.ns.wget(
             `http://${URL}:${PORT}/${cmd}/${payload}`,
             RESPONSE_FILE,
