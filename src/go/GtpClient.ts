@@ -138,7 +138,6 @@ export class GtpClient {
         if (!responseStatus) {
             throw new Error('wget failed to retrieve file');
         }
-        await this.ns.sleep(30); // TODO: is this necessary?
 
         if (!this.ns.fileExists(RESPONSE_FILE)) {
             throw new Error('wget failed to write file');
