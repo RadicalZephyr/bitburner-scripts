@@ -1,6 +1,8 @@
 import type { NS } from 'netscript';
 
 import { COL_NAMES, Color, Move, ROW_NAMES, Vertex } from 'go/types';
+
+import { CONFIG } from 'go/config';
 import { extend } from 'util/extend';
 
 type Command =
@@ -16,8 +18,6 @@ interface Response {
     status: 'OK' | 'ERROR';
     response: string;
 }
-const URL = '100.125.231.45';
-const PORT = '18924';
 const RESPONSE_FILE = 'response.json';
 export class GtpClient {
     ns: NS;
@@ -124,11 +124,14 @@ export class GtpClient {
     }
 
     private async send(cmd: Command, payload?: string): Promise<string> {
+        const url = CONFIG.gtpProxyHost;
+        const port = CONFIG.gtpProxyPort;
+
         const argument = payload !== undefined ? `/${payload}` : '';
         this.ns.print(`INFO: sending ${cmd}${argument}`);
 
         const responseStatus = await this.ns.wget(
-            `http://${URL}:${PORT}/${cmd}${argument}`,
+            `http://${url}:${port}/${cmd}${argument}`,
             RESPONSE_FILE,
         );
 
