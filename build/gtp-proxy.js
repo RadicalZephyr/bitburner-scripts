@@ -85,7 +85,7 @@ app.get('/play/:vertex', async (req, res) => {
     try {
         const vertex = req.params.vertex;
         await sendCommand(`play black ${vertex}`);
-        const genmove = await sendCommand(`id=${nextId} genmove white`);
+        const genmove = await sendCommand(`${nextId} genmove white`);
         nextId += 1;
         res.send(genmove);
     } catch (err) {
