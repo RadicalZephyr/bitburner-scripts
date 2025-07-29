@@ -1,6 +1,6 @@
 import type { NS } from 'netscript';
 
-import { Color, Move, Vertex } from 'go/types';
+import { COL_NAMES, Color, Move, ROW_NAMES, Vertex } from 'go/types';
 import { extend } from 'util/extend';
 
 type Command =
@@ -145,4 +145,30 @@ function parseResponse(o: any): Response {
         );
 
     return o as Response;
+}
+
+export function toIndices(vertex: Vertex): [number, number] {
+    const x = ROW_NAMES.findIndex((rowName) =>
+        vertex.startsWith(rowName.toString()),
+    );
+    if (x === -1)
+        throw new Error(`tried to transform invalid vertex ${vertex}`);
+
+    const y = COL_NAMES.findIndex((colName) => vertex.endsWith(colName));
+    if (y === -1)
+        throw new Error(`tried to transform invalid vertex ${vertex}`);
+
+    return [x, y];
+}
+
+export function toVertex(x: number, y: number): Vertex {
+    if (x >= COL_NAMES.length)
+        throw new Error(`tried to generate vertex with invalid col index ${x}`);
+
+    if (y >= ROW_NAMES.length)
+        throw new Error(`tried to generate vertex with invalid row index ${y}`);
+
+    const col = COL_NAMES[x];
+    const row = ROW_NAMES[y];
+    return `${col}${row}` as Vertex;
 }
