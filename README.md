@@ -77,7 +77,7 @@ Some scripts in this repository rely on [KataGo][KataGo] to generate
 Go moves. Download a [KataGo release][katago-release] for your system
 and unpack it so the `katago` binary lives next to
 `default_gtp.cfg` in this project. Download a KataGo trained
-[network][katago-network] and unpack it to `default_modle.bin.gz` next
+[network][katago-network] and unpack it to `default_model.bin.gz` next
 to `default_gtp.cfg`.
 
 Run the benchmark script to determine the correct `numSearchThreads`
