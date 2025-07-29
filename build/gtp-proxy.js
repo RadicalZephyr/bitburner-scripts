@@ -94,7 +94,6 @@ app.get('/set_free_handicap/:encoded', async (req, res) => {
         const data = querystring.unescape(req.params.encoded);
         const vertices = JSON.parse(data);
         const joined = vertices.join(' ');
-        console.log(`set_free_handicap ${joined}`);
         const reply = await sendCommand(`set_free_handicap ${joined}`);
         res.json(reply);
     } catch (err) {
