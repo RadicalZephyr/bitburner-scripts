@@ -1,43 +1,24 @@
 import type { NS } from 'netscript';
+
 import { GtpClient } from 'go/GtpClient';
+import { COL_NAMES, ROW_NAMES, Vertex } from 'go/types';
 
 const INVALID_NODE = '#';
-
-const ROW_NAMES = [
-    'a',
-    'b',
-    'c',
-    'd',
-    'e',
-    'f',
-    'g',
-    'h',
-    'j',
-    'k',
-    'l',
-    'm',
-    'n',
-    'o',
-    'p',
-    'q',
-    'r',
-    's',
-    't',
-];
 
 export async function main(ns: NS) {
     const client = new GtpClient(ns);
 }
 
-function disabledNodes(board: string[]): string[] {
+function disabledNodes(board: string[]): Vertex[] {
     const nodes = [];
     for (let i = 0; i < board.length; i++) {
-        const row = ROW_NAMES[i];
+        const col = COL_NAMES[i];
         const columnArray = board[i].split('');
-        for (let col = 0; col < board.length; col++) {
-            const node = columnArray[col];
+        for (let j = 0; j < board.length; j++) {
+            const node = columnArray[j];
+            const row = ROW_NAMES[j];
             if (node === INVALID_NODE) {
-                nodes.push(`${row}${col + 1}`);
+                nodes.push(`${col}${row}` as Vertex);
             }
         }
     }

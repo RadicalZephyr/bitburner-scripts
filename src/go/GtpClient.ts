@@ -1,5 +1,8 @@
 import type { NS } from 'netscript';
 
+import { Color, Move, Vertex } from 'go/types';
+import { extend } from 'util/extend';
+
 type Command =
     | 'boardsize'
     | 'clear_board'
@@ -56,10 +59,11 @@ export class GtpClient {
      *
      * @param positions - list of alternating color and vertex pairs
      */
-    async setPosition(positions: string[]) {
+    async setPosition(positions: Move[]) {
+        const flatPositions = positions.reduce((acc, n) => extend(acc, n), []);
         await this.send(
             'set_position',
-            encodeURIComponent(JSON.stringify(positions)),
+            encodeURIComponent(JSON.stringify(flatPositions)),
         );
     }
 
@@ -68,7 +72,7 @@ export class GtpClient {
      *
      * @param vertices - vertices to place handicap stones on
      */
-    async setFreeHandicap(vertices: string[]) {
+    async setFreeHandicap(vertices: Vertex[]) {
         await this.send(
             'set_free_handicap',
             encodeURIComponent(JSON.stringify(vertices)),
@@ -81,7 +85,7 @@ export class GtpClient {
      * @param color - color to play move for
      * @param vertex - vertex to play move at
      */
-    async play(color: string, vertex: string) {
+    async play(color: Color, vertex: Vertex) {
         await this.send('play', `${color}/${vertex}`);
     }
 
@@ -91,7 +95,7 @@ export class GtpClient {
      * @param color - color to generate move for
      * @returns vertex to play move at
      */
-    async genmove(color: string): Promise<string> {
+    async genmove(color: Color): Promise<string> {
         return await this.send('genmove', color);
     }
 
@@ -105,7 +109,7 @@ export class GtpClient {
      * @param color - color to generate move for
      * @returns vertex to play move at
      */
-    async kataSearch(color: string): Promise<string> {
+    async kataSearch(color: Color): Promise<string> {
         return await this.send('kata-search', color);
     }
 
