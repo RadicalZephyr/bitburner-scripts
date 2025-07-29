@@ -16,7 +16,7 @@ interface Response {
     status: 'OK' | 'ERROR';
     response: string;
 }
-const URL = '192.168.132.47';
+const URL = '100.125.231.45';
 const PORT = '18924';
 const RESPONSE_FILE = 'response.json';
 export class GtpClient {
