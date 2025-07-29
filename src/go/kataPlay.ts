@@ -6,6 +6,11 @@ import { filterMapBoard, Move, Node, Vertex } from 'go/types';
 export async function main(ns: NS) {
     const client = new GtpClient(ns);
 
+    const gameState = ns.go.getGameState();
+
+    if (gameState.currentPlayer === 'None') {
+        ns.go.resetBoardState('Daedalus', 13);
+    }
     await setupExistingGame(ns, client);
     await playGame(ns, client);
 }
