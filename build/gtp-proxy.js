@@ -1,10 +1,11 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 
-const cors = require('cors');
 const { spawn } = require('node:child_process');
 const readline = require('node:readline');
 const express = require('express');
 const querystring = require('querystring');
+const cors = require('cors');
+const morgan = require('morgan');
 
 const engine = spawn('./katago', ['gtp'], {
     stdio: ['pipe', 'pipe', 'inherit'],
@@ -51,7 +52,7 @@ function error(msg) {
 const app = express();
 const PORT = 18924;
 
-app.use(cors);
+app.use(cors(), morgan('dev'));
 
 app.get('/boardsize/:n', async (req, res) => {
     try {
@@ -135,8 +136,9 @@ app.get('/kata-search/:color', async (req, res) => {
     }
 });
 
-const server = app.listen(PORT, 'localhost', () => {
-    console.log(`GTP proxy listening on http://localhost:${PORT}`);
+const INTERFACE = '100.125.231.45';
+const server = app.listen(PORT, INTERFACE, () => {
+    console.log(`GTP proxy listening on http://${INTERFACE}:${PORT}`);
 });
 
 function shutdown() {
