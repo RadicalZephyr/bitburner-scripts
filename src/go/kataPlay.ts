@@ -5,8 +5,11 @@ import { filterMapBoard, Move, Node, Vertex } from 'go/types';
 
 export async function main(ns: NS) {
     const client = new GtpClient(ns);
+
+    await setupExistingGame(ns, client);
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function disabledNodes(board: string[]): Vertex[] {
     return filterMapBoard(board, (node, vertex) =>
         node === Node.DISABLED ? vertex : undefined,
