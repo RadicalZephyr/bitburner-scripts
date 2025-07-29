@@ -150,7 +150,7 @@ class GtpClient {
      * @param color - color to generate move for
      * @returns vertex to play move at
      */
-    async genmove(color: string): string {
+    async genmove(color: string): Promise<string> {
         return await this.send('genmove', color);
     }
 
@@ -164,7 +164,7 @@ class GtpClient {
      * @param color - color to generate move for
      * @returns vertex to play move at
      */
-    async kataSearch(color: string): string {
+    async kataSearch(color: string): Promise<string> {
         return await this.send('kata-search', color);
     }
 
