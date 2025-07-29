@@ -145,5 +145,5 @@ function getRandomMove(ns: NS) {
 
     // Choose one of the found moves at random
     const randomIndex = Math.floor(Math.random() * moveOptions.length);
-    return moveOptions[randomIndex] ?? [];
+    return moveOptions[randomIndex] ?? [-1, -1];
 }
