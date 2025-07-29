@@ -51,3 +51,53 @@ export type Vertex = `${Col}${Row}`;
 export type Color = 'white' | 'w' | 'W' | 'black' | 'b' | 'B';
 
 export type Move = [Color, Vertex];
+
+export const NODES = ['.' as const, 'O' as const, 'X' as const, '#' as const];
+
+/**
+ * Possible node types on the Go board state.
+ *
+ * '.' - empty
+ * 'O' - white
+ * 'X' - black
+ * '#' - disabled
+ */
+export type Node = (typeof NODES)[number];
+
+export type BoardCallbackFn<T> = (
+    node: Node,
+    vertex: Vertex,
+    board: string[],
+) => T;
+
+/**
+ * Combined filter and map operation.
+ *
+ * Call a defined callback funtion on each element of the board and
+ * returns an array that contains the results. The returned array
+ * contains only mapped values that are truthy.
+ *
+ * @param board - Board representation
+ * @param callbackFn - A function that accepts up to three arguments. The map method calls the callbackfn function one time for each vertex in the board.
+ * @returns Array of mapped values that are truthy.
+ */
+export function filterMapBoard<T>(
+    board: string[],
+    callbackFn: BoardCallbackFn<T>,
+): T[] {
+    const result = [];
+    for (let i = 0; i < board.length; i++) {
+        const col = COL_NAMES[i] satisfies Col;
+        const column = board[i].split('');
+        for (let j = 0; j < column.length; j++) {
+            const node = column[j] as Node;
+            const row = ROW_NAMES[j] satisfies Row;
+            const vertex = `${col}${row}` satisfies Vertex;
+            const mapped = callbackFn(node, vertex, board);
+            if (mapped) {
+                result.push(mapped);
+            }
+        }
+    }
+    return result;
+}
