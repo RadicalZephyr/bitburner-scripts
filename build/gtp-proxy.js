@@ -43,7 +43,7 @@ function sendCommand(cmd) {
 function error(msg) {
     return {
         status: 'ERROR',
-        msg,
+        response: msg,
     };
 }
 
