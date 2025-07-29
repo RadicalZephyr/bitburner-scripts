@@ -161,13 +161,11 @@ function parseResponse(o: any): Response {
 export function toIndices(vertex: Vertex): [number, number] {
     if (vertex === 'pass') return [-1, -1];
 
-    const x = ROW_NAMES.findIndex((rowName) =>
-        vertex.startsWith(rowName.toString()),
-    );
+    const x = columnIndex(vertex);
     if (x === -1)
         throw new Error(`tried to transform invalid vertex ${vertex}`);
 
-    const y = COL_NAMES.findIndex((colName) => vertex.endsWith(colName));
+    const y = rowIndex(vertex);
     if (y === -1)
         throw new Error(`tried to transform invalid vertex ${vertex}`);
 
@@ -187,9 +185,15 @@ export function toVertex(x: number, y: number): Vertex {
 }
 
 function isVertex(s: string): s is Vertex {
-    const x = ROW_NAMES.findIndex((rowName) =>
-        s.startsWith(rowName.toString()),
-    );
-    const y = COL_NAMES.findIndex((colName) => s.endsWith(colName));
+    const x = columnIndex(s);
+    const y = rowIndex(s);
     return x !== -1 && y !== -1;
+}
+
+function columnIndex(s: string): number {
+    return COL_NAMES.findIndex((colName) => s.startsWith(colName));
+}
+
+function rowIndex(s: string): number {
+    return ROW_NAMES.findIndex((rowName) => s.endsWith(rowName.toString()));
 }
