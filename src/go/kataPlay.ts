@@ -15,7 +15,11 @@ export async function main(ns: NS) {
             ns.go.resetBoardState('Daedalus', 9);
         }
         await setupExistingGame(ns, client);
-        await playGame(ns, client);
+        try {
+            await playGame(ns, client);
+        } catch (err) {
+            ns.print(`error ${String(err)}`);
+        }
     }
 }
 
