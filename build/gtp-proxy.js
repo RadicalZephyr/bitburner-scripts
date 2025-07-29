@@ -37,8 +37,6 @@ function sendCommand(cmd) {
 
 const app = express();
 const PORT = 18924;
-let nextId = 1;
-let engineColor = 'white';
 
 app.get('/boardsize/:n', async (req, res) => {
     try {
@@ -51,8 +49,6 @@ app.get('/boardsize/:n', async (req, res) => {
 
 app.get('/clear_board', async (_req, res) => {
     try {
-        nextId = 1;
-        engineColor = 'white';
         const reply = await sendCommand('clear_board');
         res.send(reply);
     } catch (err) {
@@ -85,8 +81,7 @@ app.get('/play/:vertex', async (req, res) => {
     try {
         const vertex = req.params.vertex;
         await sendCommand(`play black ${vertex}`);
-        const genmove = await sendCommand(`${nextId} genmove white`);
-        nextId += 1;
+        const genmove = await sendCommand(`genmove white`);
         res.send(genmove);
     } catch (err) {
         res.status(500).send(String(err));
