@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 
+const cors = require('cors');
 const { spawn } = require('node:child_process');
 const readline = require('node:readline');
 const express = require('express');
@@ -49,6 +50,8 @@ function error(msg) {
 
 const app = express();
 const PORT = 18924;
+
+app.use(cors);
 
 app.get('/boardsize/:n', async (req, res) => {
     try {
