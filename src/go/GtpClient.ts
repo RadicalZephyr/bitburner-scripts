@@ -196,5 +196,8 @@ function columnIndex(s: string): number {
 }
 
 function rowIndex(s: string): number {
-    return ROW_NAMES.findIndex((rowName) => s.endsWith(rowName.toString()));
+    const match = s.match(/(\d+)$/);
+    if (!match) return -1;
+    const row = Number.parseInt(match[1], 10);
+    return ROW_NAMES.findIndex((rowName) => rowName === row);
 }
