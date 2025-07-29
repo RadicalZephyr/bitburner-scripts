@@ -26,16 +26,6 @@ const ROW_NAMES = [
 
 export async function main(ns: NS) {
     const client = new GtpClient(ns);
-    await client.clearBoard();
-
-    const board = ns.go.getBoardState();
-    await client.boardsize(board.length);
-
-    const gameState = ns.go.getGameState();
-    await client.komi(gameState.komi);
-
-    const disabled = disabledNodes(board);
-    await client.setFreeHandicap(disabled);
 }
 
 function disabledNodes(board: string[]): string[] {
@@ -51,6 +41,19 @@ function disabledNodes(board: string[]): string[] {
         }
     }
     return nodes;
+}
+
+async function setupExistingGame(ns: NS, client: GtpClient) {
+    await client.clearBoard();
+
+    const board = ns.go.getBoardState();
+    await client.boardsize(board.length);
+
+    const gameState = ns.go.getGameState();
+    await client.komi(gameState.komi);
+
+    const disabled = disabledNodes(board);
+    await client.setFreeHandicap(disabled);
 }
 
 type Command =
