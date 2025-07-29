@@ -61,6 +61,7 @@ type Command =
     | 'clear_board'
     | 'komi'
     | 'set_free_handicap'
+    | 'set_position'
     | 'play'
     | 'genmove';
 
@@ -90,6 +91,13 @@ class GtpClient {
 
     async komi(value: number) {
         await this.send('komi', value.toFixed(3));
+    }
+
+    async setPosition(positions: string[]) {
+        await this.send(
+            'set_position',
+            encodeURIComponent(JSON.stringify(positions)),
+        );
     }
 
     async setFreeHandicap(vertices: string[]) {
