@@ -12,7 +12,7 @@ export async function main(ns: NS) {
         const gameState = ns.go.getGameState();
 
         if (gameState.currentPlayer === 'None') {
-            ns.go.resetBoardState('Daedalus', 13);
+            ns.go.resetBoardState('Daedalus', 9);
         }
         await setupExistingGame(ns, client);
         await playGame(ns, client);
