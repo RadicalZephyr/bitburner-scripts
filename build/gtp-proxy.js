@@ -136,7 +136,7 @@ app.get('/kata-search/:color', async (req, res) => {
     }
 });
 
-const INTERFACE = '100.125.231.45';
+const INTERFACE = '0.0.0.0';
 const server = app.listen(PORT, INTERFACE, () => {
     console.log(`GTP proxy listening on http://${INTERFACE}:${PORT}`);
 });
