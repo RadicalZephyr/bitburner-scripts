@@ -70,3 +70,39 @@ whenever you want to fetch a new release of these scripts:
 get-external-bootstrap
 external-bootstrap
 ```
+
+### KataGo Integration
+
+Some scripts in this repository rely on [KataGo][KataGo] to generate
+Go moves. Download a [KataGo release][katago-release] for your system
+and unpack it so the `katago` binary lives next to
+`default_gtp.cfg` in this project. Download a KataGo trained
+[network][katago-network] and unpack it to `default_modle.bin.gz` next
+to `default_gtp.cfg`.
+
+Run the benchmark script to determine the correct `numSearchThreads`
+to use on your system.
+
+```bash
+./katago benchmark
+```
+
+[KataGo]: https://github.com/lightvector/KataGo
+[katago-release]: https://github.com/lightvector/KataGo/releases/
+[katago-network]: https://katagotraining.org/networks/
+
+Start the local HTTP proxy that communicates with KataGo:
+
+```bash
+npm run gtp-proxy
+```
+
+With the proxy running you can execute scripts such as `kataPlay.js`
+from Bitburner (found under `dist/go` after building):
+
+```bash
+run dist/go/kataPlay.js
+```
+
+Leave the proxy running while interacting with these scripts so they
+can send GTP commands to KataGo.
