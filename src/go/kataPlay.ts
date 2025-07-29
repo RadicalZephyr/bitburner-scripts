@@ -25,9 +25,17 @@ const ROW_NAMES = [
 ];
 
 export async function main(ns: NS) {
+    const client = new GtpClient(ns);
+    await client.clearBoard();
+
     const board = ns.go.getBoardState();
+    await client.boardsize(board.length);
+
+    const gameState = ns.go.getGameState();
+    await client.komi(gameState.komi);
+
     const disabled = disabledNodes(board);
-    ns.tprint(`disabled nodes: ${JSON.stringify(disabled)}`);
+    await client.setFreeHandicap(disabled);
 }
 
 function disabledNodes(board: string[]): string[] {
