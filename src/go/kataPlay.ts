@@ -1,12 +1,13 @@
 import type { NS } from 'netscript';
 
-import { GtpClient } from 'go/GtpClient';
+import { GtpClient, toIndices, toVertex } from 'go/GtpClient';
 import { filterMapBoard, Move, Node, Vertex } from 'go/types';
 
 export async function main(ns: NS) {
     const client = new GtpClient(ns);
 
     await setupExistingGame(ns, client);
+    await playGame(ns, client);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -40,6 +41,43 @@ function vertexToMove(node: Node, vertex: Vertex): Move | null {
         }
         case Node.EMPTY: {
             return null;
+        }
+    }
+}
+
+async function playGame(ns: NS, client: GtpClient) {
+    while (true) {
+        const validMoves = ns.go.analysis.getValidMoves();
+
+        // Have the engine generate the next move
+        const myMove = await client.genmove('black');
+
+        const [x, y] = toIndices(myMove);
+
+        if (!validMoves[x][y])
+            throw new Error(
+                `tried to play invalid move ${myMove} (${x}, ${y})`,
+            );
+
+        // Play the selected move
+        const opponentMove = await ns.go.makeMove(x, y);
+
+        switch (opponentMove.type) {
+            case 'move': {
+                await client.play(
+                    'white',
+                    toVertex(opponentMove.x, opponentMove.y),
+                );
+                break;
+            }
+            case 'pass': {
+                // TODO: do we need to handle this in some other way?
+                await ns.sleep(10);
+                break;
+            }
+            case 'gameOver': {
+                return;
+            }
         }
     }
 }
