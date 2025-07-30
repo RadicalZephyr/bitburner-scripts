@@ -182,6 +182,20 @@ linked to.
 Acceptable prefixes include `[batch]`, `[stock]`, `[util]`, `[services]` and other
 directory names under `src/`.
 
+For wide reaching changes that are not specific to one subsection of
+the code, it is acceptable to instead use a prefix like `[refactor]`.
+
+Other specific prefixes for specific parts of the code:
+
+- Changes to `AGENTS.md` files should be prefixed with `[AGENTS]`.
+- Changes to the scripts in the `build/` directory should be prefixed with `[build]`
+
+The first word after the prefix should be capitalized.
+
+The body of the commit should contain a summary of the intent of the
+changes. Very simple pull requests that are adequately explained by
+the summary line may omit the body.
+
 ## Pull Request Review Instructions
 
 When you are asked to review a Pull Request diff,
