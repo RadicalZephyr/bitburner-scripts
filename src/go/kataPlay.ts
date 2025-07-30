@@ -71,27 +71,27 @@ async function playGame(ns: NS, client: GtpClient) {
         // Have the engine generate the next move
         const myMove = await client.genmove('black');
 
-        let [x, y] = toIndices(myMove);
-        const isPassMove = x === -1 && y === -1;
-
-        if (!(isPassMove || validMoves[x][y])) {
-            const board = ns.go.getBoardState();
-            const validMoves = ns.go.analysis.getValidMoves();
-
-            const [x1, y1] = randomNearInvalidMove(validMoves, [x, y]);
-            if (x1 !== -1 && y1 !== -1) {
-                x = x1;
-                y = y1;
-            } else {
-                [x, y] = getRandomMove(board, validMoves);
-            }
-        }
-
         let opponentMove;
-        if (isPassMove) {
+        if (myMove === 'pass') {
             opponentMove = await ns.go.passTurn();
+        } else if (myMove === 'resign') {
+            throw new Error(`ERROR: engine returned 'resign' unexpectedly!`);
         } else {
-            // Play the selected move
+            let [x, y] = toIndices(myMove);
+            const isPassMove = x === -1 && y === -1;
+
+            if (!(isPassMove || validMoves[x][y])) {
+                const board = ns.go.getBoardState();
+                const validMoves = ns.go.analysis.getValidMoves();
+
+                const [x1, y1] = randomNearInvalidMove(validMoves, [x, y]);
+                if (x1 !== -1 && y1 !== -1) {
+                    x = x1;
+                    y = y1;
+                } else {
+                    [x, y] = getRandomMove(board, validMoves);
+                }
+            }
             opponentMove = await ns.go.makeMove(x, y);
         }
 
@@ -104,7 +104,6 @@ async function playGame(ns: NS, client: GtpClient) {
                 break;
             }
             case 'pass': {
-                // TODO: do we need to handle this in some other way?
                 await ns.sleep(10);
                 break;
             }

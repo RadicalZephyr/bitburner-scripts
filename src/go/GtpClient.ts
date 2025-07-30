@@ -1,6 +1,6 @@
 import type { NS } from 'netscript';
 
-import { Color, Move, Vertex, isVertex } from 'go/types';
+import { Color, Move, MoveResponse, Vertex, isMoveResponse } from 'go/types';
 
 import { CONFIG } from 'go/config';
 import { extend } from 'util/extend';
@@ -97,10 +97,10 @@ export class GtpClient {
      * @param color - color to generate move for
      * @returns vertex to play move at
      */
-    async genmove(color: Color): Promise<Vertex> {
+    async genmove(color: Color): Promise<MoveResponse> {
         const vertex = await this.send('genmove', color);
         const lowcaseVertex = vertex.toLocaleLowerCase().trim();
-        if (!isVertex(lowcaseVertex))
+        if (!isMoveResponse(lowcaseVertex))
             throw new Error(`genmove returned invalid vertex ${lowcaseVertex}`);
         return lowcaseVertex;
     }
@@ -115,10 +115,10 @@ export class GtpClient {
      * @param color - color to generate move for
      * @returns vertex to play move at
      */
-    async kataSearch(color: Color): Promise<Vertex> {
+    async kataSearch(color: Color): Promise<MoveResponse> {
         const vertex = await this.send('kata-search', color);
         const lowcaseVertex = vertex.toLocaleLowerCase().trim();
-        if (!isVertex(lowcaseVertex))
+        if (!isMoveResponse(lowcaseVertex))
             throw new Error(
                 `kata-search returned invalid vertex ${lowcaseVertex}`,
             );

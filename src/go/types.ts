@@ -46,7 +46,9 @@ export const ROW_NAMES = [
 
 export type Row = (typeof ROW_NAMES)[number];
 
-export type Vertex = 'pass' | 'resign' | `${Col}${Row}`;
+export type Vertex = `${Col}${Row}`;
+
+export type MoveResponse = 'pass' | 'resign' | Vertex;
 
 export type Color = 'white' | 'w' | 'W' | 'black' | 'b' | 'B';
 
@@ -116,10 +118,20 @@ export function filterMapBoard<T>(
  * @returns Whether the candidate is a valid Vertex
  */
 export function isVertex(s: string): s is Vertex {
-    if (s === 'pass') return true;
     const x = columnIndex(s);
     const y = rowIndex(s);
     return x !== -1 && y !== -1;
+}
+
+/**
+ * Type predicate for ResponseMoves.
+ *
+ * @param s - candidate ResponseMove string
+ * @returns Whether  the candidate is a valid ResponseMove
+ */
+export function isMoveResponse(s: string): s is MoveResponse {
+    if (s === 'pass' || s === 'resign') return true;
+    return isVertex(s);
 }
 
 /**
@@ -129,8 +141,6 @@ export function isVertex(s: string): s is Vertex {
  * @returns x and y indices
  */
 export function toIndices(vertex: Vertex): [number, number] {
-    if (vertex === 'pass') return [-1, -1];
-
     const x = columnIndex(vertex);
     if (x === -1)
         throw new Error(`tried to transform invalid vertex ${vertex}`);
