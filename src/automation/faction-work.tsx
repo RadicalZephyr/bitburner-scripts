@@ -1,18 +1,25 @@
-import type { FactionWorkType, NS } from 'netscript';
+import type { AutocompleteData, FactionWorkType, NS } from 'netscript';
 import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
+import { FlagsSchema } from 'util/flags';
+
+import { Toggle, FocusToggle } from 'util/focus';
 import {
     KARMA_HEIGHT,
     STATUS_WINDOW_HEIGHT,
     STATUS_WINDOW_WIDTH,
-} from '/util/ui';
+} from 'util/ui';
 
-import { Toggle, FocusToggle } from 'util/focus';
+const FLAGS = [
+    ['focus', false],
+    ['help', false],
+] satisfies FlagsSchema;
+
+export function autocomplete(data: AutocompleteData): string[] {
+    data.flags(FLAGS);
+    return [];
+}
 export async function main(ns: NS) {
-    const flags = ns.flags([
-        ['focus', false],
-        ['help', false],
-        ...MEM_TAG_FLAGS,
-    ]);
+    const flags = ns.flags([...FLAGS, ...MEM_TAG_FLAGS]);
 
     if (flags.help || typeof flags.focus !== 'boolean') {
         ns.print(`
