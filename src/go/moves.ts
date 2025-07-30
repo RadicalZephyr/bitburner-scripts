@@ -112,3 +112,12 @@ export interface Component {
 }
 
 export function connectedComponents(board: string[]): Component[] {}
+
+/*
+ * Get index vertices that are liberties of the given vertex.
+ *
+ * @param board  - Board to check liberties on
+ * @param [x, y] - index vertex to check liberties of
+ * @returns a list of IdxVertex that are liberties of the given vertex
+ */
+export function liberties(board: string[], [x, y]: IdxVertex): IdxVertex[] {}
