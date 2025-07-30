@@ -1,8 +1,20 @@
-import type { NS } from 'netscript';
+import type { AutocompleteData, NS } from 'netscript';
 import { ALLOC_ID, MEM_TAG_FLAGS } from 'services/client/memory_tag';
 import { parseAndRegisterAlloc } from 'services/client/memory';
+import { FlagsSchema } from 'util/flags';
+
 import { CONFIG } from 'stock/config';
 import { computeIndicators, TickData } from 'stock/indicators';
+
+const FLAGS = [
+    ['cash', 1_000_000],
+    ['help', false],
+] satisfies FlagsSchema;
+
+export function autocomplete(data: AutocompleteData): string[] {
+    data.flags(FLAGS);
+    return [];
+}
 
 /** Parameters controlling the trading strategy for a simulation. */
 export interface StrategyParams {
@@ -117,11 +129,7 @@ export function simulateTrades(
 }
 
 export async function main(ns: NS) {
-    const flags = ns.flags([
-        ['cash', 1_000_000],
-        ['help', false],
-        ...MEM_TAG_FLAGS,
-    ]);
+    const flags = ns.flags([...FLAGS, ...MEM_TAG_FLAGS]);
     if (flags.help) {
         ns.tprint(`USAGE: run ${ns.getScriptName()} [--cash CASH]`);
         ns.tprint('Simulate trades using historical tick data.');
