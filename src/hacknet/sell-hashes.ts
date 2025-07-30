@@ -1,14 +1,22 @@
-import type { NS } from 'netscript';
+import type { AutocompleteData, NS } from 'netscript';
 import { ALLOC_ID, MEM_TAG_FLAGS } from 'services/client/memory_tag';
 import { parseAndRegisterAlloc } from 'services/client/memory';
-import { CONFIG } from './config';
+import { FlagsSchema } from 'util/flags';
+
+import { CONFIG } from 'hacknet/config';
+
+const FLAGS = [
+    ['continue', false],
+    ['help', false],
+] satisfies FlagsSchema;
+
+export function autocomplete(data: AutocompleteData): string[] {
+    data.flags(FLAGS);
+    return [];
+}
 
 export async function main(ns: NS) {
-    const flags = ns.flags([
-        ['continue', false],
-        ['help', false],
-        ...MEM_TAG_FLAGS,
-    ]);
+    const flags = ns.flags([...FLAGS, ...MEM_TAG_FLAGS]);
 
     const hashCapacity = ns.hacknet.hashCapacity();
     if (
