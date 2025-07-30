@@ -105,3 +105,10 @@ export function neighbors(board: string[], [x, y]: IdxVertex): IdxVertex[] {
     }
     return validNeighbors;
 }
+
+export interface Component {
+    node: Node;
+    vertices: Set<IdxVertex>;
+}
+
+export function connectedComponents(board: string[]): Component[] {}
