@@ -106,8 +106,19 @@ handler will have a unique name.
 Use this general structure:
 
 ```typescript
+import type { NS, AutocompleteData, ScriptArg } from 'netscript';
+import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
+import { FlagsSchema } from 'util/flags';
+
+const FLAGS = [['help', false]] satisfies FlagsSchema;
+
+export function autocomplete(data: AutocompleteData): string[] {
+    data.flags(FLAGS);
+    return [];
+}
+
 export async function main(ns: NS) {
-    const flags = ns.flags([['help', false]]);
+    const flags = ns.flags([...FLAGS, ...MEM_TAG_FLAGS]);
 
     if (flags.help) {
         ns.tprint(`
