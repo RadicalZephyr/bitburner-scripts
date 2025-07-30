@@ -1,8 +1,15 @@
 import type { GoOpponent, NS } from 'netscript';
 
-import { GtpClient, toIndices, toVertex } from 'go/GtpClient';
+import { GtpClient } from 'go/GtpClient';
 import { randomNearInvalidMove, getRandomMove } from 'go/moves';
-import { filterMapBoard, Move, Node, Vertex } from 'go/types';
+import {
+    filterMapBoard,
+    Move,
+    Node,
+    Vertex,
+    toIndices,
+    toVertex,
+} from 'go/types';
 
 import { CONFIG } from 'go/config';
 

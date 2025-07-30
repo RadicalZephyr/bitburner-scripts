@@ -1,6 +1,6 @@
 import type { NS } from 'netscript';
 
-import { COL_NAMES, Color, Move, ROW_NAMES, Vertex } from 'go/types';
+import { Color, Move, Vertex, isVertex } from 'go/types';
 
 import { CONFIG } from 'go/config';
 import { extend } from 'util/extend';
@@ -175,61 +175,4 @@ function parseResponse(o: any): Response {
         );
 
     return o as Response;
-}
-
-/**
- * Convert a GTP vertex to a 0-based multidimensional board array index.
- *
- * @param vertex - Vertex to convert
- * @returns x and y indices
- */
-export function toIndices(vertex: Vertex): [number, number] {
-    if (vertex === 'pass') return [-1, -1];
-
-    const x = columnIndex(vertex);
-    if (x === -1)
-        throw new Error(`tried to transform invalid vertex ${vertex}`);
-
-    const y = rowIndex(vertex);
-    if (y === -1)
-        throw new Error(`tried to transform invalid vertex ${vertex}`);
-
-    return [x, y];
-}
-
-/**
- * Convert a 0-based multidimensional board array index to a GTP vertex.
- *
- * @param x - Column index
- * @param y - Row index
- * @returns Vertex corresponding to indices
- */
-export function toVertex(x: number, y: number): Vertex {
-    if (x >= COL_NAMES.length)
-        throw new Error(`tried to generate vertex with invalid col index ${x}`);
-
-    if (y >= ROW_NAMES.length)
-        throw new Error(`tried to generate vertex with invalid row index ${y}`);
-
-    const col = COL_NAMES[x];
-    const row = ROW_NAMES[y];
-    return `${col}${row}` as Vertex;
-}
-
-function isVertex(s: string): s is Vertex {
-    if (s === 'pass') return true;
-    const x = columnIndex(s);
-    const y = rowIndex(s);
-    return x !== -1 && y !== -1;
-}
-
-function columnIndex(s: string): number {
-    return COL_NAMES.findIndex((colName) => s.startsWith(colName));
-}
-
-function rowIndex(s: string): number {
-    const match = s.match(/(\d+)$/);
-    if (!match) return -1;
-    const row = Number.parseInt(match[1], 10);
-    return ROW_NAMES.findIndex((rowName) => rowName === row);
 }
