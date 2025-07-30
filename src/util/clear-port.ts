@@ -1,9 +1,20 @@
-import type { NS } from 'netscript';
+import type { AutocompleteData, NS } from 'netscript';
 import { ALLOC_ID, MEM_TAG_FLAGS } from 'services/client/memory_tag';
 import { parseAndRegisterAlloc } from 'services/client/memory';
+import { FlagsSchema } from 'util/flags';
+
+const FLAGS = [
+    ['all', false],
+    ['help', false],
+] satisfies FlagsSchema;
+
+export function autocomplete(data: AutocompleteData): string[] {
+    data.flags(FLAGS);
+    return [];
+}
 
 export async function main(ns: NS) {
-    const flags = ns.flags([['all', false], ['help', false], ...MEM_TAG_FLAGS]);
+    const flags = ns.flags([...FLAGS, ...MEM_TAG_FLAGS]);
     if (flags.help || typeof flags.all != 'boolean') {
         ns.tprint(`USAGE: run ${ns.getScriptName()} [-all] PORT_NUM...
 
