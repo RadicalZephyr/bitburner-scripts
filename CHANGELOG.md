@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Repository Wide Improvements
+
+- Added support for autocompleting flags to all scripts [#213][pr-213].
+
 ### Batch hacking
 
 - Introduce `taskSelectorTickMs` and `discoverWalkIntervalMs` config options for smoother port loops and discovery timing [#160][pr-160].
@@ -82,6 +86,7 @@
 [pr-195]: https://github.com/RadicalZephyr/bitburner-scripts/pull/195
 [pr-198]: https://github.com/RadicalZephyr/bitburner-scripts/pull/198
 [pr-206]: https://github.com/RadicalZephyr/bitburner-scripts/pull/206
+[pr-213]: https://github.com/RadicalZephyr/bitburner-scripts/pull/213
 [pr-214]: https://github.com/RadicalZephyr/bitburner-scripts/pull/214
 
 ## v2.1.0
