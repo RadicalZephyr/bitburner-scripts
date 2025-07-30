@@ -117,7 +117,7 @@ export function filterMapBoard<T>(
  * Type predicate for validating a string is a Vertex.
  *
  * @param s - candidate Vertex string
- * @returns Whether the candidate is a valid Vertex
+ * @returns whether the candidate is a valid Vertex
  */
 export function isVertex(s: string): s is Vertex {
     const x = columnIndex(s);
@@ -129,11 +129,21 @@ export function isVertex(s: string): s is Vertex {
  * Type predicate for ResponseMoves.
  *
  * @param s - candidate ResponseMove string
- * @returns Whether  the candidate is a valid ResponseMove
+ * @returns whether the candidate is a valid ResponseMove
  */
 export function isMoveResponse(s: string): s is MoveResponse {
     if (s === 'pass' || s === 'resign') return true;
     return isVertex(s);
+}
+
+/**
+ * Type predicate for Nodes.
+ *
+ * @param s - candidate Node string
+ * @returns whether the candidate is a valid Node
+ */
+export function isNode(s: string): s is Node {
+    return NODES.includes(s as Node);
 }
 
 /**

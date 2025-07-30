@@ -1,4 +1,4 @@
-import { IdxVertex } from 'go/types';
+import { IdxVertex, Node, isNode } from 'go/types';
 
 /**
  * Choose one of the empty points near to the invalid move the AI
@@ -56,6 +56,23 @@ export function getRandomMove(board: string[], validMoves: boolean[][]) {
     // Choose one of the found moves at random
     const randomIndex = Math.floor(Math.random() * moveOptions.length);
     return moveOptions[randomIndex] ?? [-1, -1];
+}
+
+/**
+ * Get the node type at the given vertex.
+ *
+ * @param board - Board to retrieve vertex from
+ * @param [x, y] - Index vertex to get node of
+ * @returns Node value at the given vertex
+ */
+export function nodeAt(board: string[], [x, y]: IdxVertex): Node | null {
+    if (x < 0 || x >= board.length || y < 0 || y >= board[0].length)
+        return null;
+
+    const node = board[x][y];
+    if (!isNode(node)) return null;
+
+    return node;
 }
 
 /**
