@@ -171,6 +171,8 @@ export function toVertex(x: number, y: number): Vertex {
     return `${col}${row}` as Vertex;
 }
 
+const VERTEX_RE = /^([a-hj-t])(\d+)$/;
+
 /**
  * Translate a Vertex string to the corresponding column index.
  *
@@ -178,7 +180,10 @@ export function toVertex(x: number, y: number): Vertex {
  * @returns zero based column index
  */
 export function columnIndex(s: string): number {
-    return COL_NAMES.findIndex((colName) => s.startsWith(colName));
+    const match = s.match(VERTEX_RE);
+    if (!match) return -1;
+    const col = match[1];
+    return COL_NAMES.findIndex((colName) => colName === col);
 }
 
 /**
@@ -188,8 +193,8 @@ export function columnIndex(s: string): number {
  * @returns zero based row index
  */
 export function rowIndex(s: string): number {
-    const match = s.match(/(\d+)$/);
+    const match = s.match(VERTEX_RE);
     if (!match) return -1;
-    const row = Number.parseInt(match[1], 10);
+    const row = Number.parseInt(match[2], 10);
     return ROW_NAMES.findIndex((rowName) => rowName === row);
 }

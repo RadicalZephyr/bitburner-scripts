@@ -101,4 +101,8 @@ describe('type predicates', () => {
         expect(isVertex('e0')).toBeFalsy();
         expect(isVertex('t0')).toBeFalsy();
     });
+
+    test('tricky invalid vertices', () => {
+        expect(isVertex('ab1')).toBeFalsy();
+    });
 });
