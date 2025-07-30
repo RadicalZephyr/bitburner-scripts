@@ -1,6 +1,8 @@
 import type { AutocompleteData, NS } from 'netscript';
 import { ALLOC_ID, MEM_TAG_FLAGS } from 'services/client/memory_tag';
 import { parseAndRegisterAlloc } from 'services/client/memory';
+import { FlagsSchema } from 'util/flags';
+
 import type { ContractData } from 'all-contracts';
 
 import { walkNetworkBFS } from 'util/walk';
@@ -36,7 +38,14 @@ const ALL_CONTRACT_TYPES = [
     'Unique-Paths-in-a-Grid-I',
 ];
 
+const FLAGS = [
+    ['test', null] as const,
+    ['count', -1],
+    ['help', false],
+] satisfies FlagsSchema;
+
 export function autocomplete(data: AutocompleteData, args: string[]): string[] {
+    data.flags(FLAGS);
     if (
         args[args.length - 1] === '--test'
         || args[args.length - 2] === '--test'
@@ -48,12 +57,7 @@ export function autocomplete(data: AutocompleteData, args: string[]): string[] {
 }
 
 export async function main(ns: NS) {
-    const flags = ns.flags([
-        ['test', null],
-        ['count', -1],
-        ['help', false],
-        ...MEM_TAG_FLAGS,
-    ]);
+    const flags = ns.flags([...FLAGS, ...MEM_TAG_FLAGS]);
 
     if (
         flags.help
