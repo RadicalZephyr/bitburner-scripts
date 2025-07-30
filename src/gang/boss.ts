@@ -1,6 +1,19 @@
-import type { GangMemberInfo, MoneySource, NS } from 'netscript';
+import type {
+    AutocompleteData,
+    GangMemberInfo,
+    MoneySource,
+    NS,
+} from 'netscript';
 import { ALLOC_ID, MEM_TAG_FLAGS } from 'services/client/memory_tag';
 import { parseAndRegisterAlloc } from 'services/client/memory';
+import { FlagsSchema } from 'util/flags';
+
+const FLAGS = [['help', false]] satisfies FlagsSchema;
+
+export function autocomplete(data: AutocompleteData): string[] {
+    data.flags(FLAGS);
+    return [];
+}
 
 import { AscensionReviewBoard } from 'gang/ascension-review';
 import { purchaseBestGear } from 'gang/equipment-manager';
@@ -129,7 +142,7 @@ const MAX_MEMBERS = 12;
  * @param ns - Netscript API
  */
 export async function main(ns: NS) {
-    const flags = ns.flags([['help', false], ...MEM_TAG_FLAGS]);
+    const flags = ns.flags([...FLAGS, ...MEM_TAG_FLAGS]);
 
     if (typeof flags.help !== 'boolean' || flags.help) {
         ns.tprint(`USAGE: run ${ns.getScriptName()}

@@ -1,4 +1,5 @@
 import type {
+    AutocompleteData,
     GangMemberAscension,
     GangMemberInfo,
     MoneySource,
@@ -6,6 +7,11 @@ import type {
 } from 'netscript';
 import { ALLOC_ID, MEM_TAG_FLAGS } from 'services/client/memory_tag';
 import { parseAndRegisterAlloc } from 'services/client/memory';
+
+const FLAGS = [['help', false]] satisfies [
+    string,
+    string | number | boolean | string[],
+][];
 import { CONFIG } from 'gang/config';
 import { purchaseBestGear } from 'gang/equipment-manager';
 import { TaskAnalyzer } from 'gang/task-analyzer';
@@ -13,8 +19,13 @@ import { NAMES } from 'gang/names';
 
 import { StatTracker } from 'util/stat-tracker';
 
+export function autocomplete(data: AutocompleteData): string[] {
+    data.flags(FLAGS);
+    return [];
+}
+
 export async function main(ns: NS) {
-    const flags = ns.flags([['help', false], ...MEM_TAG_FLAGS]);
+    const flags = ns.flags([...FLAGS, ...MEM_TAG_FLAGS]);
 
     if (flags.help) {
         ns.tprint(`USAGE: run ${ns.getScriptName()}
