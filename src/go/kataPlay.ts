@@ -67,12 +67,15 @@ async function playGame(ns: NS, client: GtpClient) {
         const isPassMove = x === -1 && y === -1;
 
         if (!(isPassMove || validMoves[x][y])) {
-            const [x1, y1] = randomNearInvalidMove(ns, [x, y]);
+            const board = ns.go.getBoardState();
+            const validMoves = ns.go.analysis.getValidMoves();
+
+            const [x1, y1] = randomNearInvalidMove(validMoves, [x, y]);
             if (x1 !== -1 && y1 !== -1) {
                 x = x1;
                 y = y1;
             } else {
-                [x, y] = getRandomMove(ns);
+                [x, y] = getRandomMove(board, validMoves);
             }
         }
 
@@ -105,10 +108,9 @@ async function playGame(ns: NS, client: GtpClient) {
 }
 
 function randomNearInvalidMove(
-    ns: NS,
+    validMoves: boolean[][],
     [x, y]: [number, number],
 ): [number, number] {
-    const validMoves = ns.go.analysis.getValidMoves();
     const moveOptions = [];
     for (let i = x - 2; i <= x + 2; i++) {
         if (i < 0 || i >= validMoves.length) continue;
@@ -127,9 +129,7 @@ function randomNearInvalidMove(
 /**
  * Choose one of the empty points on the board at random to play
  */
-function getRandomMove(ns: NS) {
-    const board = ns.go.getBoardState();
-    const validMoves = ns.go.analysis.getValidMoves();
+function getRandomMove(board: string[], validMoves: boolean[][]) {
     const moveOptions = [];
     const size = board[0].length;
 
