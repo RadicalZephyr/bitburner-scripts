@@ -21,6 +21,10 @@
     - Expanded options with `ramOverride` support [#175][pr-175].
 - Source File service exposes owned Source File levels for other scripts [#195][pr-195].
 
+### IPvGO
+
+- Introduce `kataPlay.ts` which plays IPvGO using a KataGo HTTP proxy; setup instructions cover running the proxy and script [#206][pr-206].
+
 ### Automation
 
 - Company work automation handles multiple corporations and respects a configurable reputation goal [#187][pr-187].
@@ -76,6 +80,7 @@
 [pr-193]: https://github.com/RadicalZephyr/bitburner-scripts/pull/193
 [pr-195]: https://github.com/RadicalZephyr/bitburner-scripts/pull/195
 [pr-198]: https://github.com/RadicalZephyr/bitburner-scripts/pull/198
+[pr-206]: https://github.com/RadicalZephyr/bitburner-scripts/pull/206
 
 ## v2.1.0
 
