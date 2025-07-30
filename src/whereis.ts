@@ -1,27 +1,26 @@
-import type { NS, AutocompleteData } from 'netscript';
+import type { NS, AutocompleteData, ScriptArg } from 'netscript';
 import { ALLOC_ID, MEM_TAG_FLAGS } from 'services/client/memory_tag';
 import { parseAndRegisterAlloc } from 'services/client/memory';
+import { FlagsSchema } from 'util/flags';
 
 import { shortestPath } from 'util/shortest-path';
 
+const FLAGS = [
+    ['goto', false],
+    ['startingHost', ''],
+    ['help', false],
+] satisfies FlagsSchema;
+
 export function autocomplete(data: AutocompleteData): string[] {
+    data.flags(FLAGS);
     return data.servers;
 }
 
 export async function main(ns: NS) {
-    const flags = ns.flags([
-        ['goto', false],
-        ['startingHost', ns.self().server],
-        ['help', false],
-        ...MEM_TAG_FLAGS,
-    ]);
+    const flags = ns.flags([...FLAGS, ...MEM_TAG_FLAGS]);
 
-    const rest = flags._ as string[];
-    if (
-        rest.length === 0
-        || flags.help
-        || typeof flags.startingHost != 'string'
-    ) {
+    const rest = flags._ as ScriptArg[];
+    if (rest.length === 0 || flags.help) {
         ns.tprint(`
 USAGE: run ${ns.getScriptName()} SERVER_NAME
 
@@ -43,8 +42,9 @@ OPTIONS
         return;
     }
 
-    if (!ns.serverExists(flags.startingHost)) {
-        ns.tprintf('start host %s does not exist', flags.startingHost);
+    const startingHost = parseStartingHost(ns, flags.startingHost);
+    if (!ns.serverExists(startingHost)) {
+        ns.tprintf('start host %s does not exist', startingHost);
         return;
     }
 
@@ -54,7 +54,7 @@ OPTIONS
         return;
     }
 
-    const path = await shortestPath(ns, flags.startingHost, goalHost);
+    const path = await shortestPath(ns, startingHost, goalHost);
 
     const goCommand = `go ${path.join(' ; go ')}`;
 
@@ -79,4 +79,11 @@ OPTIONS
     } else {
         ns.tprintf(`path to ${goalHost}:\n ${goCommand}`);
     }
+}
+
+function parseStartingHost(ns: NS, startingHost: ScriptArg | string[]): string {
+    if (typeof startingHost === 'string' && startingHost !== '') {
+        return startingHost;
+    }
+    return ns.self().server;
 }
