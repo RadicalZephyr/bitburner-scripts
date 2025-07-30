@@ -137,7 +137,7 @@ Example:
         readMonitorMessages(ns, monitorPort, workers, lifecycleByHost),
     );
 
-    const moneyTracker: MoneyTracker = await primedMoneyTracker(ns);
+    const moneyTracker: MoneyTracker = await primedMoneyTracker(ns, 3, 1000);
 
     while (true) {
         const threadsByTarget = countThreadsByTarget(
