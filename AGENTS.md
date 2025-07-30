@@ -131,6 +131,10 @@ Example:
 
 OPTIONS
   --help   Show this help message
+  {{ other FLAGS options }}
+
+CONFIGURATION
+  {{ CONFIG values used }}
 `);
         return;
     }
