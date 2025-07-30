@@ -177,7 +177,7 @@ organized as follows:
 
 - Run `npm install` to ensure dependencies are installed
 - Check that the build still works with `npm run build`
-- Check that the unit tests still run with `npx jest`
+- Check that the unit tests pass with `npm run codex-test`
 - Check that the code conforms to quality standards with `npx eslint src/`
 - Fix any type or lint errors until the build completes with no errors or warnings
 
