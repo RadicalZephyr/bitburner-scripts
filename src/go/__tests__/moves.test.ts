@@ -1,6 +1,6 @@
 import { describe, expect, test } from '@jest/globals';
 
-import { neighbors, nodeAt } from 'go/moves';
+import { connectedComponents, neighbors, nodeAt } from 'go/moves';
 import { Node } from 'go/types';
 
 describe('nodeAt', () => {
@@ -53,6 +53,43 @@ describe('neighbors', () => {
         expect(neighbors(board, [2, 2])).toStrictEqual([
             [1, 2],
             [2, 1],
+        ]);
+    });
+});
+
+describe('connected components', () => {
+    test('simple row components', () => {
+        expect(connectedComponents(['###', '...', 'XXX'])).toStrictEqual([
+            [1, 1, 1],
+            [0, 0, 0],
+            [2, 2, 2],
+        ]);
+    });
+
+    test('simple column components', () => {
+        expect(connectedComponents(['X.O', 'X.O', 'X.O'])).toStrictEqual([
+            [1, 0, 2],
+            [1, 0, 2],
+            [1, 0, 2],
+        ]);
+    });
+
+    test('complex component', () => {
+        expect(connectedComponents(['X.O', 'XXX', 'O.X'])).toStrictEqual([
+            [1, 0, 2],
+            [1, 1, 1],
+            [3, 0, 1],
+        ]);
+    });
+
+    test('multiple complex components', () => {
+        expect(
+            connectedComponents(['#X.O', 'OXXX', 'O..X', 'OOOX']),
+        ).toStrictEqual([
+            [1, 2, 0, 3],
+            [4, 2, 2, 2],
+            [4, 0, 0, 2],
+            [4, 4, 4, 2],
         ]);
     });
 });

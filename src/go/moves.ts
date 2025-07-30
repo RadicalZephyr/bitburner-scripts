@@ -105,3 +105,88 @@ export function neighbors(board: string[], [x, y]: IdxVertex): IdxVertex[] {
     }
     return validNeighbors;
 }
+
+type ConnectedComponents = number[][];
+
+export interface Component {
+    node: Node;
+    vertices: Set<IdxVertex>;
+}
+
+/**
+ * Find all connected components on the board.
+ *
+ * @param board
+ */
+export function connectedComponents(board: string[]): ConnectedComponents {
+    function findComponents(components: ConnectedComponents, label: number) {
+        for (let x = 0; x < components.length; x++) {
+            for (let y = 0; y < components[0].length; y++) {
+                if (components[x][y] === -1) {
+                    label += 1;
+                    search(components, label, x, y);
+                }
+            }
+        }
+    }
+
+    function search(
+        components: ConnectedComponents,
+        label: number,
+        x: number,
+        y: number,
+    ) {
+        components[x][y] = label;
+        const ns = ccNeighbors(components, [x, y]);
+        for (const [nX, nY] of ns) {
+            if (components[nX][nY] === -1 && board[x][y] === board[nX][nY]) {
+                search(components, label, nX, nY);
+            }
+        }
+    }
+
+    function ccNeighbors(
+        components: ConnectedComponents,
+        [x, y]: IdxVertex,
+    ): IdxVertex[] {
+        const colLow = 0;
+        const colHigh = components.length - 1;
+        const rowLow = 0;
+        const rowHigh = components[0].length - 1;
+
+        const neighborDeltas = [
+            [0, -1],
+            [-1, 0],
+            [1, 0],
+            [0, 1],
+        ];
+
+        const validNeighbors = [];
+        for (const [dX, dY] of neighborDeltas) {
+            const nX = x + dX;
+            const nY = y + dY;
+            if (nX < colLow || nX > colHigh || nY < rowLow || nY > rowHigh)
+                continue;
+            validNeighbors.push([nX, nY]);
+        }
+        return validNeighbors;
+    }
+
+    function negate(components: ConnectedComponents) {
+        for (let x = 0; x < components.length; x++) {
+            for (let y = 0; y < components.length; y++) {
+                if (board[x][y] !== '.') components[x][y] = -1; // thing
+            }
+        }
+    }
+
+    const components: number[][] = Array(board.length)
+        .fill([])
+        .map(() => Array(board[0].length).fill(0));
+    negate(components);
+
+    const label = 0;
+    findComponents(components, label);
+
+    return components;
+}
