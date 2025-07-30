@@ -20,8 +20,6 @@ export const COL_NAMES = [
     't' as const,
 ];
 
-export type Col = (typeof COL_NAMES)[number];
-
 export const ROW_NAMES = [
     1 as const,
     2 as const,
@@ -43,6 +41,8 @@ export const ROW_NAMES = [
     18 as const,
     19 as const,
 ];
+
+export type Col = (typeof COL_NAMES)[number];
 
 export type Row = (typeof ROW_NAMES)[number];
 
