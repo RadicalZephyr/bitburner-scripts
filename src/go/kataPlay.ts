@@ -1,7 +1,9 @@
-import type { NS } from 'netscript';
+import type { GoOpponent, NS } from 'netscript';
 
 import { GtpClient, toIndices, toVertex } from 'go/GtpClient';
 import { filterMapBoard, Move, Node, Vertex } from 'go/types';
+
+import { CONFIG } from 'go/config';
 
 export async function main(ns: NS) {
     ns.disableLog('ALL');
@@ -12,7 +14,10 @@ export async function main(ns: NS) {
         const gameState = ns.go.getGameState();
 
         if (gameState.currentPlayer === 'None') {
-            ns.go.resetBoardState('Daedalus', 9);
+            ns.go.resetBoardState(
+                CONFIG.goOpponent as GoOpponent,
+                CONFIG.boardSize as 5 | 7 | 9 | 13,
+            );
         }
         await setupExistingGame(ns, client);
         try {
