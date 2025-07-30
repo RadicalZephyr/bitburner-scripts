@@ -30,6 +30,11 @@ describe('type predicates', () => {
         expect(isMoveResponse('t19')).toBeTruthy();
     });
 
+    test('isMoveResponse rejects arbitrary strings', () => {
+        expect(isMoveResponse('aoeu')).toBeFalsy();
+        expect(isMoveResponse('32hxoe')).toBeFalsy();
+    });
+
     const vertices = [];
     for (const row of ROW_NAMES) {
         for (const col of COL_NAMES) {
