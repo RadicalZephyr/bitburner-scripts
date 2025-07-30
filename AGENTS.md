@@ -126,7 +126,7 @@ OPTIONS
 }
 ```
 
-## Script File Organization
+### Script File Organization
 
 We organize the content of all script files in a consistent manner to
 make navigating the code easier and quicker. Scripts should be
