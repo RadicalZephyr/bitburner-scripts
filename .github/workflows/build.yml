@@ -64,7 +64,7 @@ jobs:
               run: npx eslint src/
 
             - name: Test
-              run: npm exec jest
+              run: npm exec jest -- --config ci-jest.config.js
 
             - name: Formatting Check
               run: npx prettier . --check
