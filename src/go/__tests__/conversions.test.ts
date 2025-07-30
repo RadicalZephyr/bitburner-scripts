@@ -3,11 +3,47 @@ import { describe, expect, test } from '@jest/globals';
 import {
     COL_NAMES,
     ROW_NAMES,
+    Node,
     isMoveResponse,
     isVertex,
+    filterMapBoard,
     toIndices,
     toVertex,
 } from 'go/types';
+
+describe('filterMapBoard', () => {
+    // 1 2 3 4
+    const board = [
+        'O..X', // A
+        '.OO.', // B
+        'X##X', // C
+        'XOXO', // D
+    ];
+
+    test('selects empty nodes', () => {
+        expect(
+            filterMapBoard(board, (n, v) => (Node.EMPTY === n ? v : null)),
+        ).toStrictEqual(['a2', 'a3', 'b1', 'b4']);
+    });
+
+    test('selects white nodes', () => {
+        expect(
+            filterMapBoard(board, (n, v) => (Node.WHITE === n ? v : null)),
+        ).toStrictEqual(['a1', 'b2', 'b3', 'd2', 'd4']);
+    });
+
+    test('selects black nodes', () => {
+        expect(
+            filterMapBoard(board, (n, v) => (Node.BLACK === n ? v : null)),
+        ).toStrictEqual(['a4', 'c1', 'c4', 'd1', 'd3']);
+    });
+
+    test('selects disabled nodes', () => {
+        expect(
+            filterMapBoard(board, (n, v) => (Node.DISABLED === n ? v : null)),
+        ).toStrictEqual(['c2', 'c3']);
+    });
+});
 
 describe('vertex/index conversions', () => {
     test('converts basic vertices to indices and back', () => {
