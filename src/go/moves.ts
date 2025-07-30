@@ -1,3 +1,5 @@
+import { IdxVertex } from 'go/types';
+
 /**
  * Choose one of the empty points near to the invalid move the AI
  * wants to play.
@@ -54,4 +56,35 @@ export function getRandomMove(board: string[], validMoves: boolean[][]) {
     // Choose one of the found moves at random
     const randomIndex = Math.floor(Math.random() * moveOptions.length);
     return moveOptions[randomIndex] ?? [-1, -1];
+}
+
+/**
+ * List of valid neighbor IdxVertex of the given vertex.
+ *
+ * @param board  - Board to check neighbors for
+ * @param [x, y] - index vertex to get valid neighbors of
+ * @returns A list of IdxVertex that are valid neighbor vertices of the given vertex
+ */
+export function neighbors(board: string[], [x, y]: IdxVertex): IdxVertex[] {
+    const colLow = 0;
+    const colHigh = board.length - 1;
+    const rowLow = 0;
+    const rowHigh = board[0].length - 1;
+
+    const neighborDeltas = [
+        [-1, 0],
+        [0, -1],
+        [1, 0],
+        [0, 1],
+    ];
+
+    const validNeighbors = [];
+    for (const [dX, dY] of neighborDeltas) {
+        const nX = x + dX;
+        const nY = y + dY;
+        if (nX < colLow || nX > colHigh || nY < rowLow || nY > rowHigh)
+            continue;
+        validNeighbors.push([nX, nY]);
+    }
+    return validNeighbors;
 }

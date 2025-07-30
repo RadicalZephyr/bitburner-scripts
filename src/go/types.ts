@@ -48,6 +48,8 @@ export type Row = (typeof ROW_NAMES)[number];
 
 export type Vertex = `${Col}${Row}`;
 
+export type IdxVertex = [number, number];
+
 export type MoveResponse = 'pass' | 'resign' | Vertex;
 
 export type Color = 'white' | 'w' | 'W' | 'black' | 'b' | 'B';
@@ -140,7 +142,7 @@ export function isMoveResponse(s: string): s is MoveResponse {
  * @param vertex - Vertex to convert
  * @returns x and y indices
  */
-export function toIndices(vertex: Vertex): [number, number] {
+export function toIndices(vertex: Vertex): IdxVertex {
     const x = columnIndex(vertex);
     if (x === -1)
         throw new Error(`tried to transform invalid vertex ${vertex}`);
