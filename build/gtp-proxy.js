@@ -17,11 +17,11 @@ let buffer = [];
 
 rl.on('line', (line) => {
     if (line.trim() === '') {
-        const resolve = pending.shift();
-        if (resolve) {
+        const p = pending.shift();
+        if (p?.resolve && typeof p.resolve === 'function') {
             const response = buffer.join('\n');
             const status = response.startsWith('=') ? 'OK' : 'ERROR';
-            resolve({ status, response: response.slice(2) });
+            p.resolve({ status, response: response.slice(2) });
         }
         buffer = [];
     } else {
@@ -36,8 +36,8 @@ rl.on('line', (line) => {
  * @returns {Promise<string>} Resolves with the engine reply.
  */
 function sendCommand(cmd) {
-    return new Promise((resolve) => {
-        pending.push(resolve);
+    return new Promise((resolve, reject) => {
+        pending.push({ resolve, reject });
         engine.stdin.write(cmd + '\n');
     });
 }
@@ -145,6 +145,15 @@ function shutdown() {
     engine.kill();
     server.close(() => process.exit());
 }
+
+engine.on('exit', () => {
+    for (const p of pending) {
+        if (typeof p.reject === 'function') {
+            p.reject('engine shutdown');
+        }
+    }
+    server.close(() => process.exit());
+});
 
 process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);
