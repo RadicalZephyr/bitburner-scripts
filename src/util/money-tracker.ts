@@ -1,4 +1,6 @@
 import type { MoneySource, NS } from 'netscript';
+
+import { makeFuid } from 'util/fuid';
 import { StatTracker } from 'util/stat-tracker';
 
 export type MoneyTracker = StatTracker<MoneySource>;
@@ -39,9 +41,12 @@ export async function tickMoneyTrackerUpdates(
     cadence = 10_000,
 ) {
     let running = true;
-    ns.atExit(() => {
-        running = false;
-    }, 'moneyTracker-tickUpdates');
+    ns.atExit(
+        () => {
+            running = false;
+        },
+        `moneyTracker-tickUpdates-${makeFuid(ns)}`,
+    );
 
     while (running) {
         await updateMoneyTracker(ns, tracker, cadence);
