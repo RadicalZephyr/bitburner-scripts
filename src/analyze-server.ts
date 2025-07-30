@@ -1,13 +1,17 @@
 import type { NS, AutocompleteData } from 'netscript';
 import { ALLOC_ID, MEM_TAG_FLAGS } from 'services/client/memory_tag';
 import { parseAndRegisterAlloc } from 'services/client/memory';
+import { FlagsSchema } from 'util/flags';
+
+const FLAGS = [['help', false]] satisfies FlagsSchema;
 
 export function autocomplete(data: AutocompleteData): string[] {
+    data.flags(FLAGS);
     return data.servers;
 }
 
 export async function main(ns: NS) {
-    const args = ns.flags([['help', false], ...MEM_TAG_FLAGS]);
+    const args = ns.flags([...FLAGS, ...MEM_TAG_FLAGS]);
     if (args.help || ns.args.length > 1) {
         ns.tprint('This script does a more detailed analysis of a server.');
         ns.tprint(`Usage: run ${ns.getScriptName()} SERVER`);
