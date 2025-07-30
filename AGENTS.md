@@ -79,6 +79,21 @@ string with one of these strings:
 - Always format percentage values with `ns.formatPercent()`
 - Always format money values with `ns.formatNumber()`
 
+### Using `ns.atExit` safely
+
+The `ns.atExit` API provides a powerful capability to register code to
+run when a script exits for any reason. It has a significant potential
+gotcha though, in that the optional second `name` argument must be
+unique. If multiple `atExit` handler functions are registered with the
+same name (or no name), then only the last one gets saved and
+eventually run.
+
+When building reusable APIs that rely on `atExit` for proper cleanup
+it is best-practice to always append an `Fuid` (`src/util/fuid.ts`) to
+the descriptive name of your `atExit` handler to ensure that even if
+the API is called multiple times in the same script, each `atExit`
+handler will have a unique name.
+
 ## Authoring New Scripts
 
 - Every script command-line argument, whether a flag or positional argument, should be type-checked using the typescript idiom (`typeof x != "string"`). The script should return early with an error message if the argument type is incorrect.
