@@ -2,7 +2,6 @@ import type {
     CityName,
     GymLocationName,
     GymType,
-    MoneySource,
     NS,
     UniversityClassType,
     UniversityLocationName,
