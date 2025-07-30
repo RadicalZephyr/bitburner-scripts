@@ -1,15 +1,19 @@
 import type { NS, AutocompleteData } from 'netscript';
 import { ALLOC_ID, MEM_TAG_FLAGS } from 'services/client/memory_tag';
 import { parseAndRegisterAlloc } from 'services/client/memory';
+import { FlagsSchema } from 'util/flags';
 
 import { killEverywhere } from 'util/kill';
 
+const FLAGS = [['help', false]] satisfies FlagsSchema;
+
 export function autocomplete(data: AutocompleteData): string[] {
+    data.flags(FLAGS);
     return data.scripts;
 }
 
 export async function main(ns: NS) {
-    const flags = ns.flags([['help', false], ...MEM_TAG_FLAGS]);
+    const flags = ns.flags([...FLAGS, ...MEM_TAG_FLAGS]);
 
     if (flags.help) {
         ns.tprint(`
