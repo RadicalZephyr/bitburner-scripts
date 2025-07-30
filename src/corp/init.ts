@@ -1,12 +1,20 @@
-import type { NS } from 'netscript';
+import type { AutocompleteData, NS } from 'netscript';
+import { FlagsSchema } from 'util/flags';
 
 import { AGRI_DIVISION, CITIES, CORPORATION_NAME } from 'corp/constants';
 
+const FLAGS = [
+    ['self', false],
+    ['help', false],
+] satisfies FlagsSchema;
+
+export function autocomplete(data: AutocompleteData): string[] {
+    data.flags(FLAGS);
+    return [];
+}
+
 export async function main(ns: NS) {
-    const flags = ns.flags([
-        ['self', false],
-        ['help', false],
-    ]);
+    const flags = ns.flags(FLAGS);
 
     if (
         (typeof flags.help !== 'boolean' && flags.help)
