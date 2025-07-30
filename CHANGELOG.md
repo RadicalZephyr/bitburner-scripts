@@ -48,6 +48,7 @@
 
 - Backdoor notifier rewritten as a React component with automatic tail management [#178][pr-178].
 - Monitor HUD displays expected profit per second alongside expected value [#185][pr-185].
+- Monitor HUD displays total hacking profit-per-second [#214][pr-214].
 
 ### Documentation and tests
 
@@ -81,6 +82,7 @@
 [pr-195]: https://github.com/RadicalZephyr/bitburner-scripts/pull/195
 [pr-198]: https://github.com/RadicalZephyr/bitburner-scripts/pull/198
 [pr-206]: https://github.com/RadicalZephyr/bitburner-scripts/pull/206
+[pr-214]: https://github.com/RadicalZephyr/bitburner-scripts/pull/214
 
 ## v2.1.0
 
