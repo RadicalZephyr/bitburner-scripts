@@ -1,6 +1,7 @@
-import type { NS } from 'netscript';
+import type { AutocompleteData, NS } from 'netscript';
 import { ALLOC_ID, MEM_TAG_FLAGS } from 'services/client/memory_tag';
 import { parseAndRegisterAlloc } from 'services/client/memory';
+import { FlagsSchema } from 'util/flags';
 
 import { CONFIG as BatchConfig } from 'batch/config';
 import { CONFIG as GangConfig } from 'gang/config';
@@ -11,16 +12,18 @@ import { CONFIG as CorpConfig } from 'corp/config';
 import { CONFIG as AutomationConfig } from 'automation/config';
 import { CONFIG as GoConfig } from 'go/config';
 
-export function autocomplete(): string[] {
+const FLAGS = [
+    ['show', false],
+    ['help', false],
+] satisfies FlagsSchema;
+
+export function autocomplete(data: AutocompleteData): string[] {
+    data.flags(FLAGS);
     return allConfigValues();
 }
 
 export async function main(ns: NS) {
-    const flags = ns.flags([
-        ['show', false],
-        ['help', false],
-        ...MEM_TAG_FLAGS,
-    ]);
+    const flags = ns.flags([...FLAGS, ...MEM_TAG_FLAGS]);
 
     if (flags.show) {
         ns.tprint(`All config values: ${allConfigValues().join(', ')}`);
