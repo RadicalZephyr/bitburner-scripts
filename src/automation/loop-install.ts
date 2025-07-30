@@ -16,7 +16,7 @@ import {
 } from 'automation/buy-augments';
 import { CONFIG } from 'automation/config';
 
-import { StatTracker } from 'util/stat-tracker';
+import { MoneyTracker, primedMoneyTracker } from 'util/money-tracker';
 
 export async function main(ns: NS) {
     const Volhaven = ns.enums.CityName.Volhaven;
@@ -170,7 +170,11 @@ async function buyNeuroFlux(ns: NS) {
 
     let cost = augCost(ns, nfgName);
 
-    const moneyTracker = await primedMoneyTracker(ns);
+    const moneyTracker = await primedMoneyTracker(
+        ns,
+        CONFIG.moneyTrackerHistoryLen,
+        CONFIG.moneyTrackerCadence,
+    );
 
     while (canBuyWithinMaxTime(ns, moneyTracker, cost)) {
         const factionRep = ns.singularity.getFactionRep(bestFaction);
@@ -201,7 +205,7 @@ function canAfford(ns: NS, cost: number): boolean {
 
 function canBuyWithinMaxTime(
     ns: NS,
-    moneyTracker: StatTracker<MoneySource>,
+    moneyTracker: MoneyTracker,
     cost: number,
 ): boolean {
     const myMoney = ns.getServerMoneyAvailable('home');
@@ -221,36 +225,4 @@ function canBuyWithinMaxTime(
         `time to earn next NeuroFlux Governor level: ${ns.tFormat(timeToEarn * 1000)}`,
     );
     return timeToEarn <= CONFIG.maxTimeToEarnNeuroFlux;
-}
-
-async function primedMoneyTracker(ns: NS): Promise<StatTracker<MoneySource>> {
-    const moneyTracker = new StatTracker<MoneySource>(
-        CONFIG.moneyTrackerHistoryLen,
-    );
-
-    for (let i = 0; i < CONFIG.moneyTrackerHistoryLen; i++) {
-        await updateMoneyTracker(ns, moneyTracker);
-    }
-    tickUpdates(ns, moneyTracker);
-
-    return moneyTracker;
-}
-
-async function tickUpdates(ns: NS, moneyTracker: StatTracker<MoneySource>) {
-    let running = true;
-    ns.atExit(() => {
-        running = false;
-    }, 'loopInstall-tickMoneyTrackerUpdates');
-
-    while (running) {
-        await updateMoneyTracker(ns, moneyTracker);
-    }
-}
-
-async function updateMoneyTracker(
-    ns: NS,
-    moneyTracker: StatTracker<MoneySource>,
-) {
-    moneyTracker.update(ns.getMoneySources().sinceInstall);
-    await ns.asleep(CONFIG.moneyTrackerCadence);
 }

@@ -22,6 +22,8 @@ import { DiscoveryClient } from 'services/client/discover';
 import { TaskSelectorClient } from 'batch/client/task_selector';
 import { parseAndRegisterAlloc } from 'services/client/memory';
 
+import { MoneyTracker, primedMoneyTracker } from 'util/money-tracker';
+
 import { extend } from 'util/extend';
 import { readAllFromPort, readLoop } from 'util/ports';
 import { HUD_HEIGHT, HUD_WIDTH, STATUS_WINDOW_WIDTH } from 'util/ui';
@@ -135,12 +137,16 @@ Example:
         readMonitorMessages(ns, monitorPort, workers, lifecycleByHost),
     );
 
+    const moneyTracker: MoneyTracker = await primedMoneyTracker(ns);
+
     while (true) {
         const threadsByTarget = countThreadsByTarget(
             ns,
             workers,
             Array.from(lifecycleByHost.keys()),
         );
+
+        const hackMoneyPerSec = moneyTracker.velocity('hacking');
 
         tableSortings.harvesting.data = [];
         tableSortings.pendingHarvesting.data = [];
@@ -202,6 +208,7 @@ Example:
                     phase={tableSortings.harvesting}
                     setTableSorting={setTableSorting.bind(null, 'harvesting')}
                     theme={theme}
+                    moneyPerSec={hackMoneyPerSec}
                 ></ServerBlock>
                 <ServerBlock
                     ns={ns}
@@ -489,6 +496,7 @@ interface IBlockSettings {
     setTableSorting: (column: string) => void;
     queuePidsForTail: (pids: number[]) => void;
     theme: UserInterfaceTheme;
+    moneyPerSec?: number;
 }
 
 export function ServerBlock({
@@ -498,12 +506,16 @@ export function ServerBlock({
     setTableSorting,
     queuePidsForTail,
     theme,
+    moneyPerSec,
 }: IBlockSettings) {
     const cellStyle = { padding: '0 0.5em' };
     return (
         <>
             <h2>
                 {title} - {phase.data.length} targets
+                {moneyPerSec !== undefined
+                    ? ` ($${ns.formatNumber(moneyPerSec, 2)}/s)`
+                    : ''}
             </h2>
             <table>
                 <thead>
