@@ -1,7 +1,13 @@
-import type { NS, NetscriptPort, UserInterfaceTheme } from 'netscript';
+import type {
+    AutocompleteData,
+    NS,
+    NetscriptPort,
+    UserInterfaceTheme,
+} from 'netscript';
 import { useTheme } from 'util/useTheme';
 import { ALLOC_ID, MEM_TAG_FLAGS } from 'services/client/memory_tag';
 import { parseAndRegisterAlloc, ResponsePayload } from 'services/client/memory';
+import { FlagsSchema } from 'util/flags';
 
 import {
     AllocationClaim,
@@ -28,12 +34,18 @@ import {} from 'lib/react';
 
 let printLog: (msg: string) => void;
 
+const FLAGS = [
+    ['refresh-rate', 1000],
+    ['help', false],
+] satisfies FlagsSchema;
+
+export function autocomplete(data: AutocompleteData): string[] {
+    data.flags(FLAGS);
+    return [];
+}
+
 export async function main(ns: NS) {
-    const flags = ns.flags([
-        ['refresh-rate', 1000],
-        ['help', false],
-        ...MEM_TAG_FLAGS,
-    ]);
+    const flags = ns.flags([...FLAGS, ...MEM_TAG_FLAGS]);
 
     const refreshRate = flags['refresh-rate'];
     const rest = flags._ as string[];
