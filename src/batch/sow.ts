@@ -1,5 +1,6 @@
 import type { AutocompleteData, NS } from 'netscript';
 import { ALLOC_ID, MEM_TAG_FLAGS } from 'services/client/memory_tag';
+import { FlagsSchema } from 'util/flags';
 
 import {
     BatchLogistics,
@@ -22,14 +23,17 @@ import {
 import { TaskSelectorClient, Lifecycle } from 'batch/client/task_selector';
 import { growthAnalyze } from 'util/growthAnalyze';
 
+const FLAGS = [['help', false]] satisfies FlagsSchema;
+
 export function autocomplete(data: AutocompleteData): string[] {
+    data.flags(FLAGS);
     return data.servers;
 }
 
 export async function main(ns: NS) {
     ns.disableLog('ALL');
 
-    const flags = ns.flags([['help', false], ...MEM_TAG_FLAGS]);
+    const flags = ns.flags([...FLAGS, ...MEM_TAG_FLAGS]);
 
     const rest = flags._ as string[];
     if (rest.length === 0 || flags.help) {

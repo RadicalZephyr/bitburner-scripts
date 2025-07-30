@@ -1,12 +1,26 @@
-import type { NS } from 'netscript';
+import type { AutocompleteData, NS } from 'netscript';
 import { ALLOC_ID, MEM_TAG_FLAGS } from 'services/client/memory_tag';
+import { FlagsSchema } from 'util/flags';
+
 import {
     parseAndRegisterAlloc,
     MemoryClient,
     TransferableAllocation,
 } from 'services/client/memory';
+
 import { calculateWeakenThreads } from 'batch/till';
 import { calculateSowThreads } from 'batch/sow';
+
+const FLAGS = [
+    ['iterations', 5],
+    ['max-threads', 1],
+    ['help', false],
+] satisfies FlagsSchema;
+
+export function autocomplete(data: AutocompleteData): string[] {
+    data.flags(FLAGS);
+    return data.servers;
+}
 
 function canUseFormulas(ns: NS): boolean {
     return ns.fileExists('Formulas.exe', 'home');
@@ -158,12 +172,7 @@ async function resetServer(
 
 export async function main(ns: NS) {
     ns.disableLog('ALL');
-    const flags = ns.flags([
-        ['iterations', 5],
-        ['max-threads', 1],
-        ['help', false],
-        ...MEM_TAG_FLAGS,
-    ]);
+    const flags = ns.flags([...FLAGS, ...MEM_TAG_FLAGS]);
     const rest = flags._ as string[];
     if (rest.length === 0 || flags.help) {
         ns.tprint(`

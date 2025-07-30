@@ -4,6 +4,7 @@ import {
     ALLOC_ID_ARG,
     MEM_TAG_FLAGS,
 } from 'services/client/memory_tag';
+import { FlagsSchema } from 'util/flags';
 
 import { TaskSelectorClient, Lifecycle } from 'batch/client/task_selector';
 
@@ -13,18 +14,20 @@ import { parseAndRegisterAlloc } from 'services/client/memory';
 import { CONFIG } from 'batch/config';
 import { awaitRound, calculateRoundInfo, RoundInfo } from 'batch/progress';
 
+const FLAGS = [
+    ['max-threads', -1],
+    ['help', false],
+] satisfies FlagsSchema;
+
 export function autocomplete(data: AutocompleteData): string[] {
+    data.flags(FLAGS);
     return data.servers;
 }
 
 export async function main(ns: NS) {
     ns.disableLog('ALL');
 
-    const flags = ns.flags([
-        ['max-threads', -1],
-        ['help', false],
-        ...MEM_TAG_FLAGS,
-    ]);
+    const flags = ns.flags([...FLAGS, ...MEM_TAG_FLAGS]);
 
     const rest = flags._ as string[];
     if (rest.length === 0 || flags.help) {

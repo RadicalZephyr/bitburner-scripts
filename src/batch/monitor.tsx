@@ -1,9 +1,15 @@
-import type { NetscriptPort, NS, UserInterfaceTheme } from 'netscript';
+import type {
+    AutocompleteData,
+    NetscriptPort,
+    NS,
+    UserInterfaceTheme,
+} from 'netscript';
 import {
     ALLOC_ID,
     ALLOC_ID_ARG,
     MEM_TAG_FLAGS,
 } from 'services/client/memory_tag';
+import { FlagsSchema } from 'util/flags';
 
 import {
     MONITOR_PORT,
@@ -29,12 +35,18 @@ import { readAllFromPort, readLoop } from 'util/ports';
 import { HUD_HEIGHT, HUD_WIDTH, STATUS_WINDOW_WIDTH } from 'util/ui';
 import { sleep } from 'util/time';
 
+const FLAGS = [
+    ['refreshrate', 200],
+    ['help', false],
+] satisfies FlagsSchema;
+
+export function autocomplete(data: AutocompleteData): string[] {
+    data.flags(FLAGS);
+    return [];
+}
+
 export async function main(ns: NS) {
-    const flags = ns.flags([
-        ['refreshrate', 200],
-        ['help', false],
-        ...MEM_TAG_FLAGS,
-    ]);
+    const flags = ns.flags([...FLAGS, ...MEM_TAG_FLAGS]);
 
     const rest = flags._ as string[];
     if (

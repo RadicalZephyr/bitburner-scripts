@@ -1,5 +1,6 @@
 import type { AutocompleteData, NS } from 'netscript';
 import { ALLOC_ID, MEM_TAG_FLAGS } from 'services/client/memory_tag';
+import { FlagsSchema } from 'util/flags';
 
 import {
     BatchLogistics,
@@ -30,7 +31,14 @@ import {
     maxHackPercentForMemory,
 } from 'batch/expected_value';
 
+const FLAGS = [
+    ['max-ram', -1],
+    ['port-id', -1],
+    ['help', false],
+] satisfies FlagsSchema;
+
 export function autocomplete(data: AutocompleteData): string[] {
+    data.flags(FLAGS);
     return data.servers;
 }
 
@@ -72,12 +80,7 @@ interface HarvestSetup {
 }
 
 async function parseArgs(ns: NS): Promise<ParsedArgs | null> {
-    const flags = ns.flags([
-        ['max-ram', -1],
-        ['port-id', -1],
-        ['help', false],
-        ...MEM_TAG_FLAGS,
-    ]);
+    const flags = ns.flags([...FLAGS, ...MEM_TAG_FLAGS]);
 
     const rest = flags._ as string[];
     if (rest.length === 0 || flags.help) {
