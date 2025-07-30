@@ -111,5 +111,6 @@ async function playGame(ns: NS, client: GtpClient) {
                 return;
             }
         }
+        await ns.sleep(0);
     }
 }
