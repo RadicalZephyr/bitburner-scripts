@@ -514,7 +514,7 @@ export function ServerBlock({
             <h2>
                 {title} - {phase.data.length} targets
                 {moneyPerSec !== undefined
-                    ? ` ($${ns.formatNumber(moneyPerSec, 2)}/s)`
+                    ? ` for $${ns.formatNumber(moneyPerSec)}/s`
                     : ''}
             </h2>
             <table>
