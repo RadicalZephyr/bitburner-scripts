@@ -82,7 +82,7 @@ export type BoardCallbackFn<T> = (
 /**
  * Combined filter and map operation.
  *
- * Call a defined callback funtion on each element of the board and
+ * Call a defined callback function on each element of the board and
  * returns an array that contains the results. The returned array
  * contains only mapped values that are truthy.
  *
