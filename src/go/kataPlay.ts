@@ -1,4 +1,5 @@
-import type { GoOpponent, NS } from 'netscript';
+import type { AutocompleteData, GoOpponent, NS } from 'netscript';
+import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { GtpClient } from 'go/GtpClient';
 import { randomNearInvalidMove, getRandomMove } from 'go/moves';
@@ -13,8 +14,26 @@ import {
 
 import { CONFIG } from 'go/config';
 
+const FLAGS = [['help', false]] as const satisfies FlagsSchema;
+
+export function autocomplete(data: AutocompleteData): string[] {
+    data.flags(FLAGS);
+    return [];
+}
+
 export async function main(ns: NS) {
+    const flags = await parseFlags(ns, FLAGS);
+
     ns.disableLog('ALL');
+
+    if (flags.help) {
+        ns.tprint(`
+USAGE: run ${ns.getScriptName()}
+
+Plays IPvGO games using the GtpClient to communicate with an external Go engine.
+`);
+        return;
+    }
 
     const client = new GtpClient(ns);
 
