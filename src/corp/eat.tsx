@@ -1,9 +1,13 @@
 import type { NS } from 'netscript';
+import { parseFlags } from 'util/flags';
+
 import { useTheme } from 'util/useTheme';
 
 import { CONFIG } from 'corp/config';
 
 export async function main(ns: NS) {
+    await parseFlags(ns, []);
+
     ns.disableLog('ALL');
     ns.clearLog();
     ns.ui.openTail();

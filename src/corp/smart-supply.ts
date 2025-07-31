@@ -5,6 +5,7 @@ import type {
     Material,
     Product,
 } from 'netscript';
+import { parseFlags } from 'util/flags';
 
 /** Data tracked between cycles for calculating input requirements. */
 const SmartSupplyData: Record<string, number> = {};
@@ -144,6 +145,8 @@ function buyInputs(
 }
 
 export async function main(ns: NS) {
+    await parseFlags(ns, []);
+
     const corp = ns.corporation;
     if (!corp.hasCorporation()) {
         ns.tprint('ERROR: you must create a corporation first');
