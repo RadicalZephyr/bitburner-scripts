@@ -1,18 +1,13 @@
 import type { NS } from 'netscript';
-import { ALLOC_ID, MEM_TAG_FLAGS } from 'services/client/memory_tag';
+import { parseFlags } from 'util/flags';
 
-import { parseAndRegisterAlloc } from 'services/client/memory';
 import { Indicators, TrackerClient } from 'stock/client/tracker';
+
 import { CONFIG } from 'stock/config';
 
 /** Simple Z-Score based trading daemon. */
 export async function main(ns: NS) {
-    const flags = ns.flags([...MEM_TAG_FLAGS]);
-
-    const allocationId = await parseAndRegisterAlloc(ns, flags);
-    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
-        return;
-    }
+    await parseFlags(ns, []);
 
     const client = new TrackerClient(ns);
     const symbols = ns.stock.getSymbols();

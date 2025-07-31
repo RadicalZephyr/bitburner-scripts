@@ -1,5 +1,5 @@
 import type { NS, NetscriptPort } from 'netscript';
-import { ALLOC_ID, MEM_TAG_FLAGS } from 'services/client/memory_tag';
+import { parseFlags } from 'util/flags';
 
 import { CONFIG } from 'stock/config';
 import { computeIndicators, TickData } from 'stock/indicators';
@@ -11,16 +11,11 @@ import {
     Message,
     MessageType,
 } from 'stock/client/tracker';
-import { parseAndRegisterAlloc } from 'services/client/memory';
+
 import { readAllFromPort } from 'util/ports';
 
 export async function main(ns: NS) {
-    const flags = ns.flags([...MEM_TAG_FLAGS]);
-
-    const allocationId = await parseAndRegisterAlloc(ns, flags);
-    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
-        return;
-    }
+    await parseFlags(ns, []);
 
     ns.disableLog('ALL');
     ns.ui.openTail();

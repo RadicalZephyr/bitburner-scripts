@@ -1,7 +1,5 @@
 import type { AutocompleteData, NS } from 'netscript';
-import { ALLOC_ID, MEM_TAG_FLAGS } from 'services/client/memory_tag';
-import { parseAndRegisterAlloc } from 'services/client/memory';
-import { FlagsSchema } from 'util/flags';
+import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { CONFIG } from 'stock/config';
 import { computeIndicators, TickData } from 'stock/indicators';
@@ -129,15 +127,11 @@ export function simulateTrades(
 }
 
 export async function main(ns: NS) {
-    const flags = ns.flags([...FLAGS, ...MEM_TAG_FLAGS]);
+    const flags = await parseFlags(ns, FLAGS);
+
     if (flags.help) {
         ns.tprint(`USAGE: run ${ns.getScriptName()} [--cash CASH]`);
         ns.tprint('Simulate trades using historical tick data.');
-        return;
-    }
-
-    const allocationId = await parseAndRegisterAlloc(ns, flags);
-    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
         return;
     }
 
