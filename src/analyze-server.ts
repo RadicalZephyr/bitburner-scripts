@@ -1,9 +1,7 @@
 import type { NS, AutocompleteData } from 'netscript';
-import { ALLOC_ID, MEM_TAG_FLAGS } from 'services/client/memory_tag';
-import { parseAndRegisterAlloc } from 'services/client/memory';
-import { FlagsSchema } from 'util/flags';
+import { FlagsSchema, parseFlags } from 'util/flags';
 
-const FLAGS = [['help', false]] satisfies FlagsSchema;
+const FLAGS = [['help', false]] as const satisfies FlagsSchema;
 
 export function autocomplete(data: AutocompleteData): string[] {
     data.flags(FLAGS);
@@ -11,17 +9,12 @@ export function autocomplete(data: AutocompleteData): string[] {
 }
 
 export async function main(ns: NS) {
-    const args = ns.flags([...FLAGS, ...MEM_TAG_FLAGS]);
+    const args = await parseFlags(ns, FLAGS);
     if (args.help || ns.args.length > 1) {
         ns.tprint('This script does a more detailed analysis of a server.');
         ns.tprint(`Usage: run ${ns.getScriptName()} SERVER`);
         ns.tprint('Example:');
         ns.tprint(`> run ${ns.getScriptName()} n00dles`);
-        return;
-    }
-
-    const allocationId = await parseAndRegisterAlloc(ns, args);
-    if (args[ALLOC_ID] !== -1 && allocationId === null) {
         return;
     }
 

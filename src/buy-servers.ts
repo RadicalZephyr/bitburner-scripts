@@ -1,7 +1,5 @@
 import type { AutocompleteData, NS } from 'netscript';
-import { ALLOC_ID, MEM_TAG_FLAGS } from 'services/client/memory_tag';
-import { parseAndRegisterAlloc } from 'services/client/memory';
-import { FlagsSchema } from 'util/flags';
+import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { MemoryClient } from 'services/client/memory';
 
@@ -23,7 +21,7 @@ export function autocomplete(data: AutocompleteData): string[] {
 }
 
 export async function main(ns: NS) {
-    const options = ns.flags([...FLAGS, ...MEM_TAG_FLAGS]);
+    const options = await parseFlags(ns, FLAGS);
 
     if (
         options.help
@@ -44,11 +42,6 @@ OPTIONS
   --wait        Wait for money to become available to buy servers
   --help        Show this help message
 `);
-        return;
-    }
-
-    const allocationId = await parseAndRegisterAlloc(ns, options);
-    if (options[ALLOC_ID] !== -1 && allocationId === null) {
         return;
     }
 

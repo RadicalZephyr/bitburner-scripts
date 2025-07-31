@@ -1,7 +1,5 @@
 import type { AutocompleteData, NS } from 'netscript';
-import { ALLOC_ID, MEM_TAG_FLAGS } from 'services/client/memory_tag';
-import { parseAndRegisterAlloc } from 'services/client/memory';
-import { FlagsSchema } from 'util/flags';
+import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { walkNetworkBFS } from 'util/walk';
 
@@ -9,7 +7,7 @@ const FLAGS = [
     ['share-percent', 0.75],
     ['max-ram', 32],
     ['help', false],
-] satisfies FlagsSchema;
+] as const satisfies FlagsSchema;
 
 export function autocomplete(data: AutocompleteData): string[] {
     data.flags(FLAGS);
@@ -17,7 +15,7 @@ export function autocomplete(data: AutocompleteData): string[] {
 }
 
 export async function main(ns: NS) {
-    const options = ns.flags([...FLAGS, ...MEM_TAG_FLAGS]);
+    const options = await parseFlags(ns, FLAGS);
 
     if (
         options.help
@@ -32,11 +30,6 @@ OPTIONS
   --max-ram RAM     Only run share on servers with RAM less than or equal to RAM
   --share-percent P Specify the percentage of usable hosts to share [0-1]
 `);
-        return;
-    }
-
-    const allocationId = await parseAndRegisterAlloc(ns, options);
-    if (options[ALLOC_ID] !== -1 && allocationId === null) {
         return;
     }
 

@@ -1,7 +1,5 @@
 import type { AutocompleteData, NS } from 'netscript';
-import { ALLOC_ID, MEM_TAG_FLAGS } from 'services/client/memory_tag';
-import { parseAndRegisterAlloc } from 'services/client/memory';
-import { FlagsSchema } from 'util/flags';
+import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { CONFIG as BatchConfig } from 'batch/config';
 import { CONFIG as GangConfig } from 'gang/config';
@@ -23,7 +21,7 @@ export function autocomplete(data: AutocompleteData): string[] {
 }
 
 export async function main(ns: NS) {
-    const flags = ns.flags([...FLAGS, ...MEM_TAG_FLAGS]);
+    const flags = await parseFlags(ns, FLAGS);
 
     if (flags.show) {
         ns.tprint(`All config values: ${allConfigValues().join(', ')}`);
@@ -40,11 +38,6 @@ This script associates the given KEY with the given VALUE in the global localSto
 Example:
 > run ${ns.getScriptName()} config-name config-value
 `);
-        return;
-    }
-
-    const allocationId = await parseAndRegisterAlloc(ns, flags);
-    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
         return;
     }
 

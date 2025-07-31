@@ -1,7 +1,5 @@
 import type { AutocompleteData, NS } from 'netscript';
-import { ALLOC_ID, MEM_TAG_FLAGS } from 'services/client/memory_tag';
-import { parseAndRegisterAlloc } from 'services/client/memory';
-import { FlagsSchema } from 'util/flags';
+import { FlagsSchema, parseFlags } from 'util/flags';
 
 import type { ContractData } from 'all-contracts';
 
@@ -42,7 +40,7 @@ const FLAGS = [
     ['test', null] as const,
     ['count', -1],
     ['help', false],
-] satisfies FlagsSchema;
+] as const satisfies FlagsSchema;
 
 export function autocomplete(data: AutocompleteData, args: string[]): string[] {
     data.flags(FLAGS);
@@ -57,7 +55,7 @@ export function autocomplete(data: AutocompleteData, args: string[]): string[] {
 }
 
 export async function main(ns: NS) {
-    const flags = ns.flags([...FLAGS, ...MEM_TAG_FLAGS]);
+    const flags = await parseFlags(ns, FLAGS);
 
     if (
         flags.help
@@ -72,11 +70,6 @@ OPTIONS
   --test CONTRACT_NAME  Test a specific contract type
   --count N             Only process N contracts
 `);
-        return;
-    }
-
-    const allocationId = await parseAndRegisterAlloc(ns, flags);
-    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
         return;
     }
 
