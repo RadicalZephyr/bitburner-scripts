@@ -5,6 +5,7 @@
 ### Repository Wide Improvements
 
 - Added support for autocompleting flags to all scripts [#213][pr-213].
+- Help messages now list all CONFIG values used by each script. [#218][pr-218].
 
 ### Batch hacking
 
@@ -88,6 +89,7 @@
 [pr-206]: https://github.com/RadicalZephyr/bitburner-scripts/pull/206
 [pr-213]: https://github.com/RadicalZephyr/bitburner-scripts/pull/213
 [pr-214]: https://github.com/RadicalZephyr/bitburner-scripts/pull/214
+[pr-218]: https://github.com/RadicalZephyr/bitburner-scripts/pull/218
 
 ## v2.1.0
 
