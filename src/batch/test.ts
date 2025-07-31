@@ -1,12 +1,7 @@
 import type { AutocompleteData, NS } from 'netscript';
-import { ALLOC_ID, MEM_TAG_FLAGS } from 'services/client/memory_tag';
-import { FlagsSchema } from 'util/flags';
+import { FlagsSchema, parseFlags } from 'util/flags';
 
-import {
-    parseAndRegisterAlloc,
-    MemoryClient,
-    TransferableAllocation,
-} from 'services/client/memory';
+import { MemoryClient, TransferableAllocation } from 'services/client/memory';
 
 import { calculateWeakenThreads } from 'batch/till';
 import { calculateSowThreads } from 'batch/sow';
@@ -15,7 +10,7 @@ const FLAGS = [
     ['iterations', 5],
     ['max-threads', 1],
     ['help', false],
-] satisfies FlagsSchema;
+] as const satisfies FlagsSchema;
 
 export function autocomplete(data: AutocompleteData): string[] {
     data.flags(FLAGS);
@@ -171,9 +166,11 @@ async function resetServer(
 }
 
 export async function main(ns: NS) {
+    const flags = await parseFlags(ns, FLAGS);
+
     ns.disableLog('ALL');
-    const flags = ns.flags([...FLAGS, ...MEM_TAG_FLAGS]);
-    const rest = flags._ as string[];
+
+    const rest = flags._;
     if (rest.length === 0 || flags.help) {
         ns.tprint(`
 USAGE: run ${ns.getScriptName()} TARGET [options]
@@ -189,10 +186,6 @@ OPTIONS
         return;
     }
 
-    const allocationId = await parseAndRegisterAlloc(ns, flags);
-    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
-        return;
-    }
     const target = rest[0];
     if (typeof target !== 'string' || !ns.serverExists(target)) {
         ns.tprintf('target %s does not exist', target);

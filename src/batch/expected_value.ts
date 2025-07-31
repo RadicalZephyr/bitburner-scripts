@@ -1,6 +1,6 @@
 import type { AutocompleteData, NS, Server } from 'netscript';
+import { parseFlags } from 'util/flags';
 
-import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
 import { FreeChunk, FreeRam } from 'services/client/memory';
 import {
     BatchLogistics,
@@ -22,7 +22,8 @@ export function autocomplete(data: AutocompleteData): string[] {
 }
 
 export async function main(ns: NS) {
-    ns.flags(MEM_TAG_FLAGS);
+    await parseFlags(ns, []);
+
     const target = ns.args[0];
     if (typeof target !== 'string' || !ns.serverExists(target)) {
         ns.tprintf('target %s does not exist', target);

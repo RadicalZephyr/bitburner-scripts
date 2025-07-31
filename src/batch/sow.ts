@@ -1,6 +1,5 @@
 import type { AutocompleteData, NS } from 'netscript';
-import { ALLOC_ID, MEM_TAG_FLAGS } from 'services/client/memory_tag';
-import { FlagsSchema } from 'util/flags';
+import { FlagsSchema, parseFlags } from 'util/flags';
 
 import {
     BatchLogistics,
@@ -9,7 +8,6 @@ import {
     spawnBatch,
 } from 'services/batch';
 
-import { parseAndRegisterAlloc } from 'services/client/memory';
 import { GrowableMemoryClient } from 'services/client/growable_memory';
 
 import { CONFIG } from 'batch/config';
@@ -23,7 +21,7 @@ import {
 import { TaskSelectorClient, Lifecycle } from 'batch/client/task_selector';
 import { growthAnalyze } from 'util/growthAnalyze';
 
-const FLAGS = [['help', false]] satisfies FlagsSchema;
+const FLAGS = [['help', false]] as const satisfies FlagsSchema;
 
 export function autocomplete(data: AutocompleteData): string[] {
     data.flags(FLAGS);
@@ -31,11 +29,11 @@ export function autocomplete(data: AutocompleteData): string[] {
 }
 
 export async function main(ns: NS) {
+    const flags = await parseFlags(ns, FLAGS);
+
     ns.disableLog('ALL');
 
-    const flags = ns.flags([...FLAGS, ...MEM_TAG_FLAGS]);
-
-    const rest = flags._ as string[];
+    const rest = flags._;
     if (rest.length === 0 || flags.help) {
         ns.tprint(`
 USAGE: run ${ns.getScriptName()} SERVER_NAME
@@ -49,11 +47,6 @@ Example:
 OPTIONS
 --help           Show this help message
 `);
-        return;
-    }
-
-    const allocationId = await parseAndRegisterAlloc(ns, flags);
-    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
         return;
     }
 

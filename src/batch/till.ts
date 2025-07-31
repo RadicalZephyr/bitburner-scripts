@@ -1,23 +1,18 @@
 import type { AutocompleteData, NS } from 'netscript';
-import {
-    ALLOC_ID,
-    ALLOC_ID_ARG,
-    MEM_TAG_FLAGS,
-} from 'services/client/memory_tag';
-import { FlagsSchema } from 'util/flags';
+import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { TaskSelectorClient, Lifecycle } from 'batch/client/task_selector';
+import { awaitRound, calculateRoundInfo, RoundInfo } from 'batch/progress';
 
 import { GrowableMemoryClient } from 'services/client/growable_memory';
-import { parseAndRegisterAlloc } from 'services/client/memory';
+import { ALLOC_ID_ARG } from 'services/client/memory_tag';
 
 import { CONFIG } from 'batch/config';
-import { awaitRound, calculateRoundInfo, RoundInfo } from 'batch/progress';
 
 const FLAGS = [
     ['max-threads', -1],
     ['help', false],
-] satisfies FlagsSchema;
+] as const satisfies FlagsSchema;
 
 export function autocomplete(data: AutocompleteData): string[] {
     data.flags(FLAGS);
@@ -25,11 +20,11 @@ export function autocomplete(data: AutocompleteData): string[] {
 }
 
 export async function main(ns: NS) {
+    const flags = await parseFlags(ns, FLAGS);
+
     ns.disableLog('ALL');
 
-    const flags = ns.flags([...FLAGS, ...MEM_TAG_FLAGS]);
-
-    const rest = flags._ as string[];
+    const rest = flags._;
     if (rest.length === 0 || flags.help) {
         ns.tprint(`
 USAGE: run ${ns.getScriptName()} SERVER_NAME
@@ -43,11 +38,6 @@ OPTIONS
   --help           Show this help message
   --max-threads    Cap the number of threads spawned
 `);
-        return;
-    }
-
-    const allocationId = await parseAndRegisterAlloc(ns, flags);
-    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
         return;
     }
 

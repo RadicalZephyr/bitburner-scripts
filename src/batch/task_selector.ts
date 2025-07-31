@@ -1,5 +1,5 @@
 import type { NetscriptPort, NS } from 'netscript';
-import { ALLOC_ID, MEM_TAG_FLAGS } from 'services/client/memory_tag';
+import { parseFlags } from 'util/flags';
 
 import { HarvestClient } from 'batch/client/harvest';
 import {
@@ -27,11 +27,7 @@ import { calculateWeakenThreads } from 'batch/till';
 import { calculateSowThreads } from 'batch/sow';
 
 import { DiscoveryClient } from 'services/client/discover';
-import {
-    MemoryClient,
-    parseAndRegisterAlloc,
-    type FreeRam,
-} from 'services/client/memory';
+import { MemoryClient, type FreeRam } from 'services/client/memory';
 import { LaunchClient } from 'services/client/launch';
 import { PortClient } from 'services/client/port';
 
@@ -73,12 +69,7 @@ function makeCompareLevel(ns: NS): (ta: string, tb: string) => number {
 }
 
 export async function main(ns: NS) {
-    const flags = ns.flags([...MEM_TAG_FLAGS]);
-
-    const allocationId = await parseAndRegisterAlloc(ns, flags);
-    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
-        return;
-    }
+    await parseFlags(ns, []);
 
     ns.disableLog('ALL');
     ns.ui.openTail();

@@ -4,12 +4,7 @@ import type {
     NS,
     UserInterfaceTheme,
 } from 'netscript';
-import {
-    ALLOC_ID,
-    ALLOC_ID_ARG,
-    MEM_TAG_FLAGS,
-} from 'services/client/memory_tag';
-import { FlagsSchema } from 'util/flags';
+import { FlagsSchema, parseFlags } from 'util/flags';
 
 import {
     MONITOR_PORT,
@@ -25,8 +20,8 @@ import {
 import { CONFIG } from 'batch/config';
 
 import { DiscoveryClient } from 'services/client/discover';
+import { ALLOC_ID_ARG } from 'services/client/memory_tag';
 import { TaskSelectorClient } from 'batch/client/task_selector';
-import { parseAndRegisterAlloc } from 'services/client/memory';
 
 import { MoneyTracker, primedMoneyTracker } from 'util/money-tracker';
 
@@ -38,7 +33,7 @@ import { sleep } from 'util/time';
 const FLAGS = [
     ['refreshrate', 200],
     ['help', false],
-] satisfies FlagsSchema;
+] as const satisfies FlagsSchema;
 
 export function autocomplete(data: AutocompleteData): string[] {
     data.flags(FLAGS);
@@ -46,7 +41,7 @@ export function autocomplete(data: AutocompleteData): string[] {
 }
 
 export async function main(ns: NS) {
-    const flags = ns.flags([...FLAGS, ...MEM_TAG_FLAGS]);
+    const flags = await parseFlags(ns, FLAGS);
 
     const rest = flags._ as string[];
     if (
@@ -66,11 +61,6 @@ Example:
 
 > run ${ns.getScriptName()}
 `);
-        return;
-    }
-
-    const allocationId = await parseAndRegisterAlloc(ns, flags);
-    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
         return;
     }
 

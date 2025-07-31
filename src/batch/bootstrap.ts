@@ -1,10 +1,11 @@
 import type { NS } from 'netscript';
-import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
+import { parseFlags } from 'util/flags';
 
 import { LaunchClient } from 'services/client/launch';
 
 export async function main(ns: NS) {
-    ns.flags(MEM_TAG_FLAGS);
+    await parseFlags(ns, []);
+
     const client = new LaunchClient(ns);
     const services = ['/batch/task_selector.js', '/batch/monitor.js'];
 

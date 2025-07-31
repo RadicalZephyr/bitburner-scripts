@@ -1,6 +1,5 @@
 import type { AutocompleteData, NS } from 'netscript';
-import { ALLOC_ID, MEM_TAG_FLAGS } from 'services/client/memory_tag';
-import { FlagsSchema } from 'util/flags';
+import { FlagsSchema, parseFlags } from 'util/flags';
 
 import {
     BatchLogistics,
@@ -14,28 +13,30 @@ import {
     GrowableMemoryClient,
     GrowableAllocation,
 } from 'services/client/growable_memory';
-import { AllocationChunk, parseAndRegisterAlloc } from 'services/client/memory';
+import { AllocationChunk } from 'services/client/memory';
+
 import { PortClient } from 'services/client/port';
 import {
     Message,
     MessageType as HarvestMessageType,
 } from 'batch/client/harvest';
-import { readAllFromPort, readLoop } from 'util/ports';
-
 import { TaskSelectorClient, Lifecycle } from 'batch/client/task_selector';
 
-import { CONFIG } from 'batch/config';
 import {
     calculateBatchLogistics,
     growthAnalyze,
     maxHackPercentForMemory,
 } from 'batch/expected_value';
 
+import { CONFIG } from 'batch/config';
+
+import { readAllFromPort, readLoop } from 'util/ports';
+
 const FLAGS = [
     ['max-ram', -1],
     ['port-id', -1],
     ['help', false],
-] satisfies FlagsSchema;
+] as const satisfies FlagsSchema;
 
 export function autocomplete(data: AutocompleteData): string[] {
     data.flags(FLAGS);
@@ -62,7 +63,6 @@ interface DoneMsg {
 interface ParsedArgs {
     target: string;
     maxRam: number;
-    allocationId: number | null;
     portId: number;
 }
 
@@ -80,7 +80,7 @@ interface HarvestSetup {
 }
 
 async function parseArgs(ns: NS): Promise<ParsedArgs | null> {
-    const flags = ns.flags([...FLAGS, ...MEM_TAG_FLAGS]);
+    const flags = await parseFlags(ns, FLAGS);
 
     const rest = flags._ as string[];
     if (rest.length === 0 || flags.help) {
@@ -100,11 +100,6 @@ OPTIONS
   --max-ram        Limit RAM usage per batch run
   --port-id        Control port for shutdown messages
 `);
-        return null;
-    }
-
-    const allocationId = await parseAndRegisterAlloc(ns, flags);
-    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
         return null;
     }
 
@@ -128,7 +123,7 @@ OPTIONS
         return null;
     }
 
-    return { target, maxRam, allocationId, portId };
+    return { target, maxRam, portId };
 }
 
 async function prepareHarvest(

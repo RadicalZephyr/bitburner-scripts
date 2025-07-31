@@ -1,7 +1,5 @@
 import type { AutocompleteData, NS } from 'netscript';
-import { ALLOC_ID, MEM_TAG_FLAGS } from 'services/client/memory_tag';
-import { parseAndRegisterAlloc } from 'services/client/memory';
-import { FlagsSchema } from 'util/flags';
+import { FlagsSchema, parseFlags } from 'util/flags';
 
 const FLAGS = [['help', false]] satisfies FlagsSchema;
 
@@ -11,9 +9,9 @@ export function autocomplete(data: AutocompleteData): string[] {
 }
 
 export async function main(ns: NS) {
-    const flags = ns.flags([...FLAGS, ...MEM_TAG_FLAGS]);
+    const flags = await parseFlags(ns, FLAGS);
 
-    const targets = (flags._ as string[]).filter((t) => typeof t === 'string');
+    const targets = flags._.filter((t) => typeof t === 'string');
     if (targets.length === 0 || flags.help) {
         ns.tprint(`
 USAGE: run ${ns.getScriptName()} TARGET [...TARGETS]
@@ -23,11 +21,6 @@ Benchmark sow thread allocation algorithms on TARGETS.
 OPTIONS
   --help   Show this help message
 `);
-        return;
-    }
-
-    const allocationId = await parseAndRegisterAlloc(ns, flags);
-    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
         return;
     }
 
