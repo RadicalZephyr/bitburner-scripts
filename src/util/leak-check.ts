@@ -1,5 +1,5 @@
 import type { NS } from 'netscript';
-import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
+import { parseFlags } from 'util/flags';
 
 import {
     MemoryClient,
@@ -9,7 +9,8 @@ import {
 } from 'services/client/memory';
 
 export async function main(ns: NS) {
-    ns.flags(MEM_TAG_FLAGS);
+    await parseFlags(ns, []);
+
     ns.disableLog('ALL');
     ns.ui.openTail();
 

@@ -1,12 +1,10 @@
 import type { AutocompleteData, NS } from 'netscript';
-import { ALLOC_ID, MEM_TAG_FLAGS } from 'services/client/memory_tag';
-import { parseAndRegisterAlloc } from 'services/client/memory';
-import { FlagsSchema } from 'util/flags';
+import { FlagsSchema, parseFlags } from 'util/flags';
 
 const FLAGS = [
     ['all', false],
     ['help', false],
-] satisfies FlagsSchema;
+] as const satisfies FlagsSchema;
 
 export function autocomplete(data: AutocompleteData): string[] {
     data.flags(FLAGS);
@@ -14,7 +12,8 @@ export function autocomplete(data: AutocompleteData): string[] {
 }
 
 export async function main(ns: NS) {
-    const flags = ns.flags([...FLAGS, ...MEM_TAG_FLAGS]);
+    const flags = await parseFlags(ns, FLAGS);
+
     if (flags.help || typeof flags.all != 'boolean') {
         ns.tprint(`USAGE: run ${ns.getScriptName()} [-all] PORT_NUM...
 
@@ -25,11 +24,6 @@ OPTIONS
  --all    Clear all port numbers from 0 up until 99,999 or the first specified port number
  --help   Displays this help message
 `);
-        return;
-    }
-
-    const allocationId = await parseAndRegisterAlloc(ns, flags);
-    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
         return;
     }
 
