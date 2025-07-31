@@ -1,5 +1,6 @@
 import type { NS, NetscriptPort } from 'netscript';
 import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
+import { FlagsSchema } from 'util/flags';
 
 import {
     DISCOVERY_PORT,
@@ -17,8 +18,29 @@ import { extend } from 'util/extend';
 import { readAllFromPort, readLoop } from 'util/ports';
 import { walkNetworkBFS } from 'util/walk';
 
+const FLAGS = [['help', false]] satisfies FlagsSchema;
+
 export async function main(ns: NS) {
-    ns.flags(MEM_TAG_FLAGS);
+    const flags = ns.flags([...FLAGS, ...MEM_TAG_FLAGS]);
+    if (typeof flags.help !== 'boolean' || flags.help) {
+        ns.tprint(`
+USAGE: run ${ns.getScriptName()}
+
+Discover servers, gain root, and publish updates for other scripts.
+
+Example:
+  > run ${ns.getScriptName()}
+
+OPTIONS
+  --help   Show this help message
+
+CONFIGURATION
+  DISCOVERY_discoverWalkIntervalMs  Delay between network scans
+  DISCOVERY_subscriptionMaxRetries  Failed notification retry limit
+`);
+        return;
+    }
+
     ns.disableLog('sleep');
 
     const cracked = new Set<string>();

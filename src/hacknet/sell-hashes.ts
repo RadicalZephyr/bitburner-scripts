@@ -20,18 +20,25 @@ export async function main(ns: NS) {
 
     const hashCapacity = ns.hacknet.hashCapacity();
     if (
-        flags.help
+        typeof flags.help !== 'boolean'
+        || flags.help
         || typeof flags.continue !== 'boolean'
         || hashCapacity === 0
     ) {
         ns.tprint(`
-Usage: run ${ns.getScriptName()} [--help]
+USAGE: run ${ns.getScriptName()} [--continue]
 
 Sell all the hashes for cash. Only works with Hacknet Servers not nodes.
 
+Example:
+  > run ${ns.getScriptName()}
+
 OPTIONS
+  --help      Show this help message
   --continue  Continue to sell hashes perpetually
-  --help      Display this message
+
+CONFIGURATION
+  HACKNET_sellSleepTime  Delay between sales when --continue is used
 `);
         return;
     }

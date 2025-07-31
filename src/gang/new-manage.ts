@@ -40,10 +40,13 @@ Automate gang recruitment and task assignments.
 Example:
   > run ${ns.getScriptName()}
 
-CONFIG VALUES
-  GANG_hackTrainVelocity      The threshold for when we're done hack training
-  GANG_combatTrainVelocity    The threshold for when we're done combat training
-  GANG_charismaTrainVelocity  The threshold for when we're done charisma training
+OPTIONS
+  --help   Show this help message
+
+CONFIGURATION
+  GANG_hackTrainVelocity      Threshold where hack training stops
+  GANG_combatTrainVelocity    Threshold where combat training stops
+  GANG_charismaTrainVelocity  Threshold where charisma training stops
 `);
         return;
     }

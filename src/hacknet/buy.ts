@@ -23,7 +23,8 @@ export async function main(ns: NS) {
     const flags = ns.flags([...FLAGS, ...MEM_TAG_FLAGS]);
 
     if (
-        flags.help
+        typeof flags.help !== 'boolean'
+        || flags.help
         || typeof flags['return-time'] !== 'number'
         || flags['return-time'] <= 0
         || typeof flags.spend !== 'number'
@@ -31,14 +32,20 @@ export async function main(ns: NS) {
         || flags.spend > 1
     ) {
         ns.tprint(`
-Usage: run ${ns.getScriptName()} [--return-time HOURS] [--spend 0-1] [--help]
+USAGE: run ${ns.getScriptName()} [--return-time HOURS] [--spend 0-1]
 
 Buy hacknet nodes/servers and upgrades that can pay for themselves within a time limit.
 
+Example:
+  > run ${ns.getScriptName()} --spend 0.5
+
 OPTIONS
+  --help         Show this help message
   --return-time  Desired payback time window (default ${DEFAULT_RETURN_TIME} hours)
   --spend        Portion of money to spend (default ${ns.formatPercent(DEFAULT_SPEND)})
-  --help         Display this message
+
+CONFIGURATION
+  HACKNET_paybackTimeTolerance  Payback time delta threshold when comparing upgrades
 `);
         return;
     }

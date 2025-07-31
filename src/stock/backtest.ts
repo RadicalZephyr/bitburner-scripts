@@ -130,9 +130,30 @@ export function simulateTrades(
 
 export async function main(ns: NS) {
     const flags = ns.flags([...FLAGS, ...MEM_TAG_FLAGS]);
-    if (flags.help) {
-        ns.tprint(`USAGE: run ${ns.getScriptName()} [--cash CASH]`);
-        ns.tprint('Simulate trades using historical tick data.');
+    if (typeof flags.help !== 'boolean' || flags.help) {
+        ns.tprint(`
+USAGE: run ${ns.getScriptName()} [--cash CASH]
+
+Simulate trades using historical tick data.
+
+Example:
+  > run ${ns.getScriptName()} --cash 5000000
+
+OPTIONS
+  --help   Show this help message
+  --cash   Starting cash for the simulation
+
+CONFIGURATION
+  STOCK_dataPath      Directory containing tick history
+  STOCK_buyPercentile Buy percentile for trades
+  STOCK_sellPercentile Sell percentile for trades
+  STOCK_maxPosition   Maximum shares per symbol
+  STOCK_cooldownMs    Minimum time between trades
+  STOCK_smaPeriod     SMA period for indicators
+  STOCK_emaPeriod     EMA period for indicators
+  STOCK_rocPeriod     ROC period for indicators
+  STOCK_bollingerK    Bollinger band multiplier
+`);
         return;
     }
 

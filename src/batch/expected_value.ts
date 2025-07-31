@@ -1,6 +1,7 @@
 import type { AutocompleteData, NS, Server } from 'netscript';
 
 import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
+import { FlagsSchema } from 'util/flags';
 import { FreeChunk, FreeRam } from 'services/client/memory';
 import {
     BatchLogistics,
@@ -21,11 +22,33 @@ export function autocomplete(data: AutocompleteData): string[] {
     return data.servers;
 }
 
+const FLAGS = [['help', false]] satisfies FlagsSchema;
+
 export async function main(ns: NS) {
-    ns.flags(MEM_TAG_FLAGS);
-    const target = ns.args[0];
-    if (typeof target !== 'string' || !ns.serverExists(target)) {
-        ns.tprintf('target %s does not exist', target);
+    const flags = ns.flags([...FLAGS, ...MEM_TAG_FLAGS]);
+
+    const target = (flags._ as string[])[0];
+    if (
+        typeof flags.help !== 'boolean'
+        || flags.help
+        || typeof target !== 'string'
+        || !ns.serverExists(target)
+    ) {
+        ns.tprint(`
+USAGE: run ${ns.getScriptName()} SERVER_NAME
+
+Print the expected value per RAM-second for harvesting SERVER_NAME.
+
+Example:
+  > run ${ns.getScriptName()} n00dles
+
+OPTIONS
+  --help   Show this help message
+
+CONFIGURATION
+  BATCH_maxHackPercent  Default hack percent when estimating value
+  BATCH_batchInterval   Interval between batch phases
+`);
         return;
     }
 

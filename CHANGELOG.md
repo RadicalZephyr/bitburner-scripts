@@ -5,6 +5,7 @@
 ### Repository Wide Improvements
 
 - Added support for autocompleting flags to all scripts [#213][pr-213].
+- Scripts now document CONFIG values in their help messages.
 
 ### Batch hacking
 

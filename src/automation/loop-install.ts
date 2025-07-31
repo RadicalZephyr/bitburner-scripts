@@ -16,8 +16,32 @@ import {
 import { CONFIG } from 'automation/config';
 
 import { MoneyTracker, primedMoneyTracker } from 'util/money-tracker';
+import { FlagsSchema } from 'util/flags';
+
+const FLAGS = [['help', false]] satisfies FlagsSchema;
 
 export async function main(ns: NS) {
+    const flags = ns.flags(FLAGS);
+    if (typeof flags.help !== 'boolean' || flags.help) {
+        ns.tprint(`
+USAGE: run ${ns.getScriptName()}
+
+Automate an end-to-end install loop to prep hacking, buy augments and reinstall.
+
+Example:
+  > run ${ns.getScriptName()}
+
+OPTIONS
+  --help   Show this help message
+
+CONFIGURATION
+  AUTO_moneyTrackerHistoryLen  Number of samples for money velocity
+  AUTO_moneyTrackerCadence     Interval between money samples
+  AUTO_maxTimeToEarnNeuroFlux  Max time allowed to earn next NFG
+`);
+        return;
+    }
+
     const Volhaven = ns.enums.CityName.Volhaven;
     const zbU = ns.enums.LocationName.VolhavenZBInstituteOfTechnology;
     const algClass = ns.enums.UniversityClassType.algorithms;

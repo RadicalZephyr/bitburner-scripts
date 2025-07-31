@@ -30,7 +30,11 @@ export async function main(ns: NS) {
     const flags = ns.flags([...FLAGS, ...MEM_TAG_FLAGS]);
 
     const rest = flags._ as string[];
-    if (rest.length === 0 || flags.help) {
+    if (
+        rest.length === 0
+        || typeof flags.help !== 'boolean'
+        || flags.help
+    ) {
         ns.tprint(`
 USAGE: run ${ns.getScriptName()} SERVER_NAME
 
@@ -40,8 +44,11 @@ Example:
   > run ${ns.getScriptName()} n00dles
 
 OPTIONS
-  --help           Show this help message
-  --max-threads    Cap the number of threads spawned
+  --help         Show this help message
+  --max-threads  Cap the number of threads spawned
+
+CONFIGURATION
+  BATCH_heartbeatCadence  Interval between heartbeat updates
 `);
         return;
     }

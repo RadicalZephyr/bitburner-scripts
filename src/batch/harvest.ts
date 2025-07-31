@@ -83,14 +83,15 @@ async function parseArgs(ns: NS): Promise<ParsedArgs | null> {
     const flags = ns.flags([...FLAGS, ...MEM_TAG_FLAGS]);
 
     const rest = flags._ as string[];
-    if (rest.length === 0 || flags.help) {
+    if (
+        rest.length === 0
+        || typeof flags.help !== 'boolean'
+        || flags.help
+    ) {
         ns.tprint(`
 USAGE: run ${ns.getScriptName()} SERVER_NAME
 
-Continually harvest money from the target with batches of
-hack/weaken/grow/weaken scripts. Thread counts for each type of script
-are calculated to maintain the target at maximum money and minimum
-security.
+Continually harvest money from the target with batches of hack/weaken/grow/weaken scripts. Thread counts are tuned to keep the server at max money and minimum security.
 
 Example:
   > run ${ns.getScriptName()} n00dles
@@ -99,6 +100,11 @@ OPTIONS
   --help           Show this help message
   --max-ram        Limit RAM usage per batch run
   --port-id        Control port for shutdown messages
+
+CONFIGURATION
+  BATCH_heartbeatCadence  Interval between heartbeat updates
+  BATCH_minSecTolerance   Security level delta before rebalancing
+  BATCH_maxMoneyTolerance Money percentage threshold for rebalancing
 `);
         return null;
     }

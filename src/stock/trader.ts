@@ -1,13 +1,37 @@
 import type { NS } from 'netscript';
 import { ALLOC_ID, MEM_TAG_FLAGS } from 'services/client/memory_tag';
+import { FlagsSchema } from 'util/flags';
 
 import { parseAndRegisterAlloc } from 'services/client/memory';
 import { Indicators, TrackerClient } from 'stock/client/tracker';
 import { CONFIG } from 'stock/config';
 
+const FLAGS = [['help', false]] satisfies FlagsSchema;
+
 /** Simple Z-Score based trading daemon. */
 export async function main(ns: NS) {
-    const flags = ns.flags([...MEM_TAG_FLAGS]);
+    const flags = ns.flags([...FLAGS, ...MEM_TAG_FLAGS]);
+
+    if (typeof flags.help !== 'boolean' || flags.help) {
+        ns.tprint(`
+USAGE: run ${ns.getScriptName()}
+
+Automated stock trader that uses Z-score signals from the tracker daemon.
+
+Example:
+  > run ${ns.getScriptName()}
+
+OPTIONS
+  --help   Show this help message
+
+CONFIGURATION
+  STOCK_maxPosition   Maximum shares per symbol
+  STOCK_buyPercentile Buy percentile for trades
+  STOCK_sellPercentile Sell percentile for trades
+  STOCK_cooldownMs    Minimum time between trades
+`);
+        return;
+    }
 
     const allocationId = await parseAndRegisterAlloc(ns, flags);
     if (flags[ALLOC_ID] !== -1 && allocationId === null) {

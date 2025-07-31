@@ -36,18 +36,25 @@ export async function main(ns: NS) {
     const flags = ns.flags([...FLAGS, ...MEM_TAG_FLAGS]);
 
     const rest = flags._ as string[];
-    if (rest.length === 0 || flags.help) {
+    if (
+        rest.length === 0
+        || typeof flags.help !== 'boolean'
+        || flags.help
+    ) {
         ns.tprint(`
 USAGE: run ${ns.getScriptName()} SERVER_NAME
 
-Launch as many grow and weaken threads as needed to maximize money
-of SERVER_NAME while keeping security at a minimum.
+Launch grow/weaken batches until the target has max money and minimal security.
 
 Example:
-> run ${ns.getScriptName()} n00dles
+  > run ${ns.getScriptName()} n00dles
 
 OPTIONS
---help           Show this help message
+  --help   Show this help message
+
+CONFIGURATION
+  BATCH_heartbeatCadence  Interval between heartbeat updates
+  BATCH_batchInterval     Delay between batch phases
 `);
         return;
     }

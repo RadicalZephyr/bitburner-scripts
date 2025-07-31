@@ -2,8 +2,30 @@ import type { NS } from 'netscript';
 import { useTheme } from 'util/useTheme';
 
 import { CONFIG } from 'corp/config';
+import { FlagsSchema } from 'util/flags';
+
+const FLAGS = [['help', false]] satisfies FlagsSchema;
 
 export async function main(ns: NS) {
+    const flags = ns.flags(FLAGS);
+    if (typeof flags.help !== 'boolean' || flags.help) {
+        ns.tprint(`
+USAGE: run ${ns.getScriptName()}
+
+Render a simple UI for spamming the Eat Noodles button.
+
+Example:
+  > run ${ns.getScriptName()}
+
+OPTIONS
+  --help   Show this help message
+
+CONFIGURATION
+  CORP_noodleEatingInterval  Frequency of clicks when eating noodles
+`);
+        return;
+    }
+
     ns.disableLog('ALL');
     ns.clearLog();
     ns.ui.openTail();

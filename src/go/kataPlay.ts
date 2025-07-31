@@ -12,8 +12,31 @@ import {
 } from 'go/types';
 
 import { CONFIG } from 'go/config';
+import { FlagsSchema } from 'util/flags';
+
+const FLAGS = [['help', false]] satisfies FlagsSchema;
 
 export async function main(ns: NS) {
+    const flags = ns.flags(FLAGS);
+    if (typeof flags.help !== 'boolean' || flags.help) {
+        ns.tprint(`
+USAGE: run ${ns.getScriptName()}
+
+Play endless games of Go against the built-in engine.
+
+Example:
+  > run ${ns.getScriptName()}
+
+OPTIONS
+  --help   Show this help message
+
+CONFIGURATION
+  GO_goOpponent  Opponent AI name
+  GO_boardSize   Board size used when starting games
+`);
+        return;
+    }
+
     ns.disableLog('ALL');
 
     const client = new GtpClient(ns);

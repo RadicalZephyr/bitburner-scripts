@@ -51,20 +51,24 @@ export async function main(ns: NS) {
     const rest = flags._ as string[];
     if (
         rest.length !== 0
+        || typeof flags.help !== 'boolean'
         || flags.help
-        || typeof flags.refreshrate != 'number'
+        || typeof flags.refreshrate !== 'number'
     ) {
         ns.tprint(`
 USAGE: run ${ns.getScriptName()}
 
 This script helps visualize the money and security of all servers.
 
-OPTIONS
---refreshrate   Time to sleep between refreshing server data
-
 Example:
+  > run ${ns.getScriptName()}
 
-> run ${ns.getScriptName()}
+OPTIONS
+  --help         Show this help message
+  --refreshrate  Time to sleep between refreshing server data
+
+CONFIGURATION
+  BATCH_maxHackPercent  Max hack percent used when estimating profit
 `);
         return;
     }

@@ -27,20 +27,25 @@ export function autocomplete(data: AutocompleteData): string[] {
 export async function main(ns: NS) {
     const flags = ns.flags([...FLAGS, ...MEM_TAG_FLAGS]);
 
-    if (flags.help) {
-        ns.tprint(`USAGE: run ${ns.getScriptName()}
+    if (typeof flags.help !== 'boolean' || flags.help) {
+        ns.tprint(`
+USAGE: run ${ns.getScriptName()}
 
 Automate gang recruitment and task assignments.
 
 Example:
   > run ${ns.getScriptName()}
 
-CONFIG VALUES
+OPTIONS
+  --help   Show this help message
+
+CONFIGURATION
   GANG_ascendThreshold   Ascension multiplier required to ascend
   GANG_trainingPercent   Fraction of members training
-  GANG_maxWantedPenalty  Maximum wanted penalty before switching members to cooling tasks
+  GANG_maxWantedPenalty  Maximum wanted penalty before cooling tasks
   GANG_minWantedLevel    Wanted level where heating resumes
-  GANG_jobCheckInterval  Delay between evaluations`);
+  GANG_jobCheckInterval  Delay between evaluations
+`);
         return;
     }
 

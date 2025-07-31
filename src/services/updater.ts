@@ -2,6 +2,7 @@ import type { NS } from 'netscript';
 
 import { MemoryClient } from 'services/client/memory';
 import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
+import { FlagsSchema } from 'util/flags';
 
 import { CONFIG } from 'services/config';
 
@@ -17,8 +18,28 @@ const REMOTE_URL =
 const BOOTSTRAP_URL =
     'https://github.com/RadicalZephyr/bitburner-scripts/raw/refs/heads/latest-files/bootstrap.js';
 
+const FLAGS = [['help', false]] satisfies FlagsSchema;
+
 export async function main(ns: NS) {
-    ns.flags(MEM_TAG_FLAGS);
+    const flags = ns.flags([...FLAGS, ...MEM_TAG_FLAGS]);
+    if (typeof flags.help !== 'boolean' || flags.help) {
+        ns.tprint(`
+USAGE: run ${ns.getScriptName()}
+
+Check for updated scripts and prompt to install them if a new version is available.
+
+Example:
+  > run ${ns.getScriptName()}
+
+OPTIONS
+  --help   Show this help message
+
+CONFIGURATION
+  DISCOVERY_updateCheckIntervalMs  Delay between update checks
+`);
+        return;
+    }
+
     ns.disableLog('sleep');
 
     const scriptInfo = ns.self();

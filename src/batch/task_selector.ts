@@ -1,5 +1,6 @@
 import type { NetscriptPort, NS } from 'netscript';
 import { ALLOC_ID, MEM_TAG_FLAGS } from 'services/client/memory_tag';
+import { FlagsSchema } from 'util/flags';
 
 import { HarvestClient } from 'batch/client/harvest';
 import {
@@ -38,6 +39,12 @@ import { PortClient } from 'services/client/port';
 import { growthAnalyze } from 'util/growthAnalyze';
 import { readAllFromPort, readLoop } from 'util/ports';
 import { sleep } from 'util/time';
+
+const FLAGS = [['help', false]] satisfies FlagsSchema;
+
+export function autocomplete(): string[] {
+    return [];
+}
 import { HUD_HEIGHT, KARMA_HEIGHT } from 'util/ui';
 
 interface InProgressTask {
@@ -73,7 +80,35 @@ function makeCompareLevel(ns: NS): (ta: string, tb: string) => number {
 }
 
 export async function main(ns: NS) {
-    const flags = ns.flags([...MEM_TAG_FLAGS]);
+    const flags = ns.flags([...FLAGS, ...MEM_TAG_FLAGS]);
+
+    if (typeof flags.help !== 'boolean' || flags.help) {
+        ns.tprint(`
+USAGE: run ${ns.getScriptName()}
+
+Manage hacking lifecycle tasks across all discovered servers.
+
+Example:
+  > run ${ns.getScriptName()}
+
+OPTIONS
+  --help   Show this help message
+
+CONFIGURATION
+  BATCH_taskSelectorTickMs     Delay between task selection cycles
+  BATCH_minSecTolerance        Security level delta before rebalance
+  BATCH_maxMoneyTolerance      Money percent threshold before rebalance
+  BATCH_launchFailLimit        Max consecutive launch failures
+  BATCH_launchFailBackoffMs    Base backoff for launch retries
+  BATCH_heartbeatTimeoutMs     Time to consider a task stale
+  BATCH_expectedValueThreshold Minimum expected value to harvest
+  BATCH_harvestGainThreshold   Profit share to keep harvesting
+  BATCH_maxSowTargets          Max simultaneous sow targets
+  BATCH_maxTillTargets         Max simultaneous till targets
+  BATCH_hackLevelVelocityThreshold  Level velocity threshold for tasks
+`);
+        return;
+    }
 
     const allocationId = await parseAndRegisterAlloc(ns, flags);
     if (flags[ALLOC_ID] !== -1 && allocationId === null) {

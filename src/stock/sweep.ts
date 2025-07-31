@@ -19,9 +19,24 @@ export function autocomplete(data: AutocompleteData): string[] {
 
 export async function main(ns: NS) {
     const flags = ns.flags([...FLAGS, ...MEM_TAG_FLAGS]);
-    if (flags.help) {
-        ns.tprint(`USAGE: run ${ns.getScriptName()} [--cash CASH]`);
-        ns.tprint('Sweep parameter combinations for backtesting.');
+    if (typeof flags.help !== 'boolean' || flags.help) {
+        ns.tprint(`
+USAGE: run ${ns.getScriptName()} [--cash CASH]
+
+Sweep parameter combinations for backtesting.
+
+Example:
+  > run ${ns.getScriptName()} --cash 5000000
+
+OPTIONS
+  --help   Show this help message
+  --cash   Starting cash for the simulation
+
+CONFIGURATION
+  STOCK_dataPath    Directory containing tick history
+  STOCK_maxPosition Maximum shares per symbol
+  STOCK_cooldownMs  Minimum time between trades
+`);
         return;
     }
 
