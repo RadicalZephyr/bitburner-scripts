@@ -1,6 +1,5 @@
 import type { NS } from 'netscript';
-import { ALLOC_ID, MEM_TAG_FLAGS } from 'services/client/memory_tag';
-import { parseAndRegisterAlloc } from 'services/client/memory';
+import { parseFlags } from 'util/flags';
 
 import { canInstallBackdoor, needsBackdoor } from 'util/backdoor';
 import { shortestPath } from 'util/shortest-path';
@@ -14,12 +13,7 @@ const FACTION_SERVERS = [
 ];
 
 export async function main(ns: NS) {
-    const flags = ns.flags(MEM_TAG_FLAGS);
-
-    const allocationId = await parseAndRegisterAlloc(ns, flags);
-    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
-        return;
-    }
+    await parseFlags(ns, []);
 
     while (true) {
         if (!FACTION_SERVERS.some((h) => needsBackdoor(ns.getServer(h)))) {

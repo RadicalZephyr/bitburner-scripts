@@ -1,8 +1,8 @@
 import type { FactionName, NS } from 'netscript';
-import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
+import { parseFlags } from 'util/flags';
 
 export async function main(ns: NS) {
-    ns.flags(MEM_TAG_FLAGS);
+    await parseFlags(ns, []);
 
     acceptInvites(ns);
     pursueInvites(ns);

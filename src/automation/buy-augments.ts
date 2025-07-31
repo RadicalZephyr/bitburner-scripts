@@ -1,8 +1,5 @@
 import type { AutocompleteData, NS } from 'netscript';
-
-import { ALLOC_ID, MEM_TAG_FLAGS } from 'services/client/memory_tag';
-import { parseAndRegisterAlloc } from 'services/client/memory';
-import { FlagsSchema } from 'util/flags';
+import { FlagsSchema, parseFlags } from 'util/flags';
 
 const DEFAULT_SPEND = 1.0;
 
@@ -11,7 +8,7 @@ const FLAGS = [
     ['neuroflux', false],
     ['dry-run', false],
     ['help', false],
-] satisfies FlagsSchema;
+] as const satisfies FlagsSchema;
 
 export function autocomplete(data: AutocompleteData): string[] {
     data.flags(FLAGS);
@@ -19,13 +16,9 @@ export function autocomplete(data: AutocompleteData): string[] {
 }
 
 export async function main(ns: NS) {
-    const options = ns.flags([...FLAGS, ...MEM_TAG_FLAGS]);
+    const options = await parseFlags(ns, FLAGS);
 
-    if (
-        options.help
-        || typeof options.spend != 'number'
-        || typeof options['dry-run'] != 'boolean'
-    ) {
+    if (options.help) {
         ns.tprint(`
 Usage: ${ns.getScriptName()} [OPTIONS]
 
@@ -38,11 +31,6 @@ OPTIONS
   --neuroflux  Buy Neuroflux Governor levels after buying all other augments
   --help       Show this help message
 `);
-        return;
-    }
-
-    const allocationId = await parseAndRegisterAlloc(ns, options);
-    if (options[ALLOC_ID] !== -1 && allocationId === null) {
         return;
     }
 

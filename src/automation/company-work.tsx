@@ -5,8 +5,7 @@ import type {
     Player,
     NS,
 } from 'netscript';
-import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
-import { FlagsSchema } from 'util/flags';
+import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { CONFIG } from 'automation/config';
 
@@ -20,7 +19,7 @@ import {
 const FLAGS = [
     ['focus', false],
     ['help', false],
-] satisfies FlagsSchema;
+] as const satisfies FlagsSchema;
 
 export function autocomplete(data: AutocompleteData): string[] {
     data.flags(FLAGS);
@@ -28,9 +27,9 @@ export function autocomplete(data: AutocompleteData): string[] {
 }
 
 export async function main(ns: NS) {
-    const flags = ns.flags([...FLAGS, ...MEM_TAG_FLAGS]);
+    const flags = await parseFlags(ns, FLAGS);
 
-    if (flags.help || typeof flags.focus !== 'boolean') {
+    if (flags.help) {
         ns.print(`
 USAGE: run ${ns.getScriptName()}
 

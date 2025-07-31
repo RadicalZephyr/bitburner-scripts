@@ -1,6 +1,5 @@
 import type { AutocompleteData, FactionWorkType, NS } from 'netscript';
-import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
-import { FlagsSchema } from 'util/flags';
+import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { Toggle, FocusToggle } from 'util/focus';
 import {
@@ -12,14 +11,14 @@ import {
 const FLAGS = [
     ['focus', false],
     ['help', false],
-] satisfies FlagsSchema;
+] as const satisfies FlagsSchema;
 
 export function autocomplete(data: AutocompleteData): string[] {
     data.flags(FLAGS);
     return [];
 }
 export async function main(ns: NS) {
-    const flags = ns.flags([...FLAGS, ...MEM_TAG_FLAGS]);
+    const flags = await parseFlags(ns, FLAGS);
 
     if (flags.help || typeof flags.focus !== 'boolean') {
         ns.print(`

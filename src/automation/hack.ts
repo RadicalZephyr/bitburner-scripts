@@ -1,12 +1,7 @@
 import type { AutocompleteData, NS } from 'netscript';
+import { FlagsSchema, parseFlags } from 'util/flags';
 
-import { ALLOC_ID, MEM_TAG_FLAGS } from 'services/client/memory_tag';
-import { parseAndRegisterAlloc } from 'services/client/memory';
-
-const FLAGS = [['help', false]] satisfies [
-    string,
-    string | number | boolean | string[],
-][];
+const FLAGS = [['help', false]] as const satisfies FlagsSchema;
 
 export function autocomplete(data: AutocompleteData): string[] {
     data.flags(FLAGS);
@@ -14,7 +9,7 @@ export function autocomplete(data: AutocompleteData): string[] {
 }
 
 export async function main(ns: NS) {
-    const flags = ns.flags([...FLAGS, ...MEM_TAG_FLAGS]);
+    const flags = await parseFlags(ns, FLAGS);
 
     const rest = flags._ as string[];
     if (flags.help || rest.length > 1) {
@@ -31,11 +26,6 @@ OPTIONS:
   --help  Show this help message
 
 `);
-        return;
-    }
-
-    const allocationId = await parseAndRegisterAlloc(ns, flags);
-    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
         return;
     }
 
