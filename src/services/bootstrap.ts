@@ -1,12 +1,13 @@
 import type { NS } from 'netscript';
+import { parseFlags } from 'util/flags';
 
 import { LaunchClient } from 'services/client/launch';
-import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
 
 import { collectDependencies } from 'util/dependencies';
 
 export async function main(ns: NS) {
-    ns.flags(MEM_TAG_FLAGS);
+    await parseFlags(ns, []);
+
     const host = ns.self().server;
 
     // We start the Discovery service first because everything else

@@ -1,10 +1,13 @@
 import type { NS } from 'netscript';
-import { ALLOC_ID_ARG, MEM_TAG_FLAGS } from 'services/client/memory_tag';
+import { parseFlags } from 'util/flags';
+
+import { ALLOC_ID_ARG } from 'services/client/memory_tag';
 
 import { MemoryClient } from 'services/client/memory';
 
 export async function main(ns: NS) {
-    ns.flags(MEM_TAG_FLAGS);
+    await parseFlags(ns, []);
+
     const client = new MemoryClient(ns);
 
     const allocation = await client.requestTransferableAllocation(8, 300);

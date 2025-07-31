@@ -1,7 +1,7 @@
 import type { NS } from 'netscript';
+import { parseFlags } from 'util/flags';
 
 import { MemoryClient } from 'services/client/memory';
-import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
 
 import { CONFIG } from 'services/config';
 
@@ -18,7 +18,8 @@ const BOOTSTRAP_URL =
     'https://github.com/RadicalZephyr/bitburner-scripts/raw/refs/heads/latest-files/bootstrap.js';
 
 export async function main(ns: NS) {
-    ns.flags(MEM_TAG_FLAGS);
+    await parseFlags(ns, []);
+
     ns.disableLog('sleep');
 
     const scriptInfo = ns.self();

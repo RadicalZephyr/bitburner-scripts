@@ -1,5 +1,5 @@
 import type { NS, NetscriptPort } from 'netscript';
-import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
+import { parseFlags } from 'util/flags';
 
 import {
     PORT_ALLOCATOR_PORT,
@@ -16,7 +16,8 @@ import { readAllFromPort, readLoop } from 'util/ports';
  * Main loop for the PortAllocator daemon.
  */
 export async function main(ns: NS) {
-    ns.flags(MEM_TAG_FLAGS);
+    await parseFlags(ns, []);
+
     ns.disableLog('sleep');
 
     const port = ns.getPortHandle(PORT_ALLOCATOR_PORT);

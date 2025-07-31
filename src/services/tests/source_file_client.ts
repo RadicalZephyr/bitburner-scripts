@@ -1,13 +1,12 @@
 import type { AutocompleteData, NS } from 'netscript';
-import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
-import { FlagsSchema } from 'util/flags';
+import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { SourceFileClient } from 'services/client/source_file';
 
 const FLAGS = [
     ['sf', 4],
     ['help', false],
-] satisfies FlagsSchema;
+] as const satisfies FlagsSchema;
 
 export function autocomplete(data: AutocompleteData): string[] {
     data.flags(FLAGS);
@@ -15,7 +14,8 @@ export function autocomplete(data: AutocompleteData): string[] {
 }
 
 export async function main(ns: NS) {
-    const flags = ns.flags([...FLAGS, ...MEM_TAG_FLAGS]);
+    const flags = await parseFlags(ns, FLAGS);
+
     const sf = flags.sf;
     if (flags.help || typeof sf !== 'number') {
         ns.tprint(`Usage: run ${ns.getScriptName()} --sf N`);

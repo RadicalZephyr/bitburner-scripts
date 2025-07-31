@@ -1,5 +1,5 @@
 import type { NS, NetscriptPort } from 'netscript';
-import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
+import { parseFlags } from 'util/flags';
 
 import {
     DISCOVERY_PORT,
@@ -18,7 +18,8 @@ import { readAllFromPort, readLoop } from 'util/ports';
 import { walkNetworkBFS } from 'util/walk';
 
 export async function main(ns: NS) {
-    ns.flags(MEM_TAG_FLAGS);
+    await parseFlags(ns, []);
+
     ns.disableLog('sleep');
 
     const cracked = new Set<string>();

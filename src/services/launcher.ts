@@ -1,5 +1,8 @@
 import type { NS, NetscriptPort, ScriptArg } from 'netscript';
-import { MEM_TAG_FLAGS, ALLOC_ID_ARG } from 'services/client/memory_tag';
+import { parseFlags } from 'util/flags';
+
+import { ALLOC_ID_ARG } from 'services/client/memory_tag';
+
 import {
     LAUNCH_PORT,
     LAUNCH_RESPONSE_PORT,
@@ -9,11 +12,13 @@ import {
     LaunchRunOptions,
 } from 'services/client/launch';
 import { MemoryClient, TransferableAllocation } from 'services/client/memory';
+
 import { readAllFromPort, readLoop } from 'util/ports';
 import { collectDependencies } from 'util/dependencies';
 
 export async function main(ns: NS) {
-    ns.flags(MEM_TAG_FLAGS);
+    await parseFlags(ns, []);
+
     ns.disableLog('sleep');
 
     const memClient = new MemoryClient(ns);

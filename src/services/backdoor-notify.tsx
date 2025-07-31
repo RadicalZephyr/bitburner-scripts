@@ -1,8 +1,8 @@
 import type { NS, UserInterfaceTheme } from 'netscript';
-import { useTheme } from 'util/useTheme';
-import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
+import { parseFlags } from 'util/flags';
 
 import { canInstallBackdoor, needsBackdoor } from 'util/backdoor';
+import { useTheme } from 'util/useTheme';
 import { walkNetworkBFS } from 'util/walk';
 
 const FACTION_SERVERS = [
@@ -14,7 +14,8 @@ const FACTION_SERVERS = [
 ];
 
 export async function main(ns: NS) {
-    ns.flags(MEM_TAG_FLAGS);
+    await parseFlags(ns, []);
+
     ns.disableLog('ALL');
     ns.clearLog();
 

@@ -4,10 +4,9 @@ import type {
     NetscriptPort,
     UserInterfaceTheme,
 } from 'netscript';
+import { FlagsSchema, parseFlags } from 'util/flags';
+
 import { useTheme } from 'util/useTheme';
-import { ALLOC_ID, MEM_TAG_FLAGS } from 'services/client/memory_tag';
-import { parseAndRegisterAlloc, ResponsePayload } from 'services/client/memory';
-import { FlagsSchema } from 'util/flags';
 
 import {
     AllocationClaim,
@@ -21,6 +20,7 @@ import {
     AllocationChunksRelease,
     AllocationRegister,
     MEMORY_RESPONSE_PORT,
+    ResponsePayload,
 } from 'services/client/memory';
 
 import { DiscoveryClient } from 'services/client/discover';
@@ -45,7 +45,7 @@ export function autocomplete(data: AutocompleteData): string[] {
 }
 
 export async function main(ns: NS) {
-    const flags = ns.flags([...FLAGS, ...MEM_TAG_FLAGS]);
+    const flags = await parseFlags(ns, FLAGS);
 
     const refreshRate = flags['refresh-rate'];
     const rest = flags._ as string[];
@@ -65,11 +65,6 @@ Example:
 
 > run ${ns.getScriptName()}
 `);
-        return;
-    }
-
-    const allocationId = await parseAndRegisterAlloc(ns, flags);
-    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
         return;
     }
 

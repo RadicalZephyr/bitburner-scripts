@@ -1,5 +1,6 @@
 import type { NS, NetscriptPort } from 'netscript';
-import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
+import { parseFlags } from 'util/flags';
+
 import {
     Message,
     MessageType,
@@ -8,10 +9,12 @@ import {
     RequestLevel,
 } from 'services/client/source_file';
 import { MemoryClient } from 'services/client/memory';
+
 import { readAllFromPort, readLoop } from 'util/ports';
 
 export async function main(ns: NS) {
-    ns.flags(MEM_TAG_FLAGS);
+    await parseFlags(ns, []);
+
     ns.disableLog('sleep');
 
     const memClient = new MemoryClient(ns);

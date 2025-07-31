@@ -1,9 +1,11 @@
 import type { NS } from 'netscript';
-import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
+import { parseFlags } from 'util/flags';
+
 import { GrowableMemoryClient } from 'services/client/growable_memory';
 
 export async function main(ns: NS) {
-    ns.flags(MEM_TAG_FLAGS);
+    await parseFlags(ns, []);
+
     const client = new GrowableMemoryClient(ns);
 
     const self = ns.self();
