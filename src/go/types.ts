@@ -75,11 +75,30 @@ export const Node = {
  */
 export type Node = (typeof NODES)[number];
 
+export type Board = Node[][];
+
 export type BoardCallbackFn<T> = (
     node: Node,
     vertex: Vertex,
     board: string[],
 ) => T;
+
+export function typedBoard(board: string[]): Board {
+    const splitBoard = board.map((col) => col.split(''));
+
+    const validTypedBoard = splitBoard.every((col) =>
+        col.every((n) => (NODES as string[]).includes(n)),
+    );
+    if (!validTypedBoard) {
+        const badPositions = filterMapBoard(board, (n, v) =>
+            !NODES.includes(n) ? [n, v] : null,
+        );
+        throw new Error(
+            `Unknown node types found at ${JSON.stringify(badPositions, null, 2)}`,
+        );
+    }
+    return splitBoard as Board;
+}
 
 /**
  * Combined filter and map operation.

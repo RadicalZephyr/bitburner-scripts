@@ -9,6 +9,7 @@ import {
     filterMapBoard,
     toIndices,
     toVertex,
+    typedBoard,
 } from 'go/types';
 
 describe('filterMapBoard', () => {
@@ -104,5 +105,14 @@ describe('type predicates', () => {
 
     test('tricky invalid vertices', () => {
         expect(isVertex('ab1')).toBeFalsy();
+    });
+});
+
+describe('typedBoard conversion', () => {
+    test('empty board', () => {
+        expect(typeBoard(['..', '..'])).toStrictEqual([
+            ['.', ''],
+            ['.', ''],
+        ]);
     });
 });
