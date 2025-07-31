@@ -5,13 +5,8 @@ import type {
     MoneySource,
     NS,
 } from 'netscript';
-import { ALLOC_ID, MEM_TAG_FLAGS } from 'services/client/memory_tag';
-import { parseAndRegisterAlloc } from 'services/client/memory';
+import { FlagsSchema, parseFlags } from 'util/flags';
 
-const FLAGS = [['help', false]] satisfies [
-    string,
-    string | number | boolean | string[],
-][];
 import { CONFIG } from 'gang/config';
 import { purchaseBestGear } from 'gang/equipment-manager';
 import { TaskAnalyzer } from 'gang/task-analyzer';
@@ -19,13 +14,15 @@ import { NAMES } from 'gang/names';
 
 import { StatTracker } from 'util/stat-tracker';
 
+const FLAGS = [['help', false]] as const satisfies FlagsSchema;
+
 export function autocomplete(data: AutocompleteData): string[] {
     data.flags(FLAGS);
     return [];
 }
 
 export async function main(ns: NS) {
-    const flags = ns.flags([...FLAGS, ...MEM_TAG_FLAGS]);
+    const flags = await parseFlags(ns, FLAGS);
 
     if (flags.help) {
         ns.tprint(`USAGE: run ${ns.getScriptName()}
@@ -41,11 +38,6 @@ CONFIG VALUES
   GANG_maxWantedPenalty  Maximum wanted penalty before switching members to cooling tasks
   GANG_minWantedLevel    Wanted level where heating resumes
   GANG_jobCheckInterval  Delay between evaluations`);
-        return;
-    }
-
-    const allocationId = await parseAndRegisterAlloc(ns, flags);
-    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
         return;
     }
 

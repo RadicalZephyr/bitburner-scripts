@@ -5,18 +5,7 @@ import type {
     GangMemberInfo,
     NS,
 } from 'netscript';
-import { ALLOC_ID, MEM_TAG_FLAGS } from 'services/client/memory_tag';
-import { parseAndRegisterAlloc } from 'services/client/memory';
-
-const FLAGS = [['help', false]] satisfies [
-    string,
-    string | number | boolean | string[],
-][];
-
-export function autocomplete(data: AutocompleteData): string[] {
-    data.flags(FLAGS);
-    return [];
-}
+import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { CONFIG } from 'gang/config';
 import { NAMES } from 'gang/names';
@@ -28,8 +17,15 @@ import {
     Threshold,
 } from 'util/stat-tracker';
 
+const FLAGS = [['help', false]] as const satisfies FlagsSchema;
+
+export function autocomplete(data: AutocompleteData): string[] {
+    data.flags(FLAGS);
+    return [];
+}
+
 export async function main(ns: NS) {
-    const flags = ns.flags([...FLAGS, ...MEM_TAG_FLAGS]);
+    const flags = await parseFlags(ns, FLAGS);
 
     if (typeof flags.help !== 'boolean' || flags.help) {
         ns.tprint(`
@@ -45,11 +41,6 @@ CONFIG VALUES
   GANG_combatTrainVelocity    The threshold for when we're done combat training
   GANG_charismaTrainVelocity  The threshold for when we're done charisma training
 `);
-        return;
-    }
-
-    const allocationId = await parseAndRegisterAlloc(ns, flags);
-    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
         return;
     }
 
