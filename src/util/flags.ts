@@ -1,5 +1,12 @@
 import type { NS, ScriptArg } from 'netscript';
 
+import {
+    ALLOC_ID,
+    ALLOC_ID_DEFAULT,
+    MEM_TAG_FLAGS,
+} from 'services/client/memory_tag';
+import { parseAndRegisterAlloc } from 'services/client/memory';
+
 type FlagsFn = NS['flags'];
 
 /**
@@ -37,11 +44,23 @@ export type ParsedFlags<S extends readonly [string, DefaultValue][]> = {
  * @param schema - Flags schema
  * @returns object containing keys for all flags and '_' containing non-flag arguments
  */
-export function parseFlags<S extends readonly [string, DefaultValue][]>(
+export async function parseFlags<S extends readonly [string, DefaultValue][]>(
     ns: NS,
     schema: S,
-): ParsedFlags<S> {
-    const options = ns.flags(schema as unknown as FlagsSchema);
+): Promise<ParsedFlags<S>> {
+    const options = ns.flags([
+        ...schema,
+        ...MEM_TAG_FLAGS,
+    ] as unknown as FlagsSchema);
+
+    const allocationId = await parseAndRegisterAlloc(ns, options);
+    if (
+        typeof options[ALLOC_ID] === 'number'
+        && options[ALLOC_ID] !== ALLOC_ID_DEFAULT
+        && allocationId === null
+    ) {
+        throw new Error(`failed to register allocation id ${allocationId}`);
+    }
 
     for (const [key, def] of schema) {
         if (typeof options[key] !== typeof def) {
