@@ -243,7 +243,6 @@ async function harvestPipeline(ns: NS, target: string, setup: HarvestSetup) {
         taskSelectorClient,
         donePortId,
         shuttingDown,
-        batchRam,
     } = setup;
 
     let lastHeartbeat = 0;
@@ -385,71 +384,39 @@ async function harvestPipeline(ns: NS, target: string, setup: HarvestSetup) {
             host = mappedHost ?? host;
         }
 
-        const actualSecurity = ns.getServerSecurityLevel(target);
-        const minSecurity = ns.getServerMinSecurityLevel(target);
-        const maxMoney = ns.getServerMaxMoney(target);
-        const actualMoney = ns.getServerMoneyAvailable(target);
+        const newLogistics = calculateBatchLogistics(ns, target, hackPercent);
+        const phases = newLogistics.phases;
 
-        let phases = logistics.phases;
-        if (
-            actualSecurity > minSecurity + CONFIG.minSecTolerance
-            || actualMoney < maxMoney * CONFIG.maxMoneyTolerance
-        ) {
-            const rebalance = calculateRebalanceBatchLogistics(
-                ns,
-                target,
-                batchRam,
+        const desiredOverlap = Math.min(overlapLimit, newLogistics.overlap);
+
+        if (desiredOverlap < allocation.numChunks) {
+            const toRelease = allocation.numChunks - desiredOverlap;
+            const beforeHosts = hosts;
+            const result = await memClient.releaseChunks(
+                allocation.allocationId,
+                toRelease,
             );
-            if (rebalance.batchRam <= batchRam) {
-                const secDelta = (actualSecurity - minSecurity).toFixed(2);
-                const moneyPct = ns.formatPercent(actualMoney / maxMoney);
-                ns.print(
-                    `INFO: rebalancing ${target} sec +${secDelta} money ${moneyPct} `
-                        + `ram ${ns.formatRam(rebalance.batchRam)}`,
+            if (result) {
+                allocation.allocatedChunks = result.hosts.map(
+                    (h) => new AllocationChunk(h),
                 );
-                phases = rebalance.phases;
-            }
-        } else {
-            const newLogistics = calculateBatchLogistics(
-                ns,
-                target,
-                hackPercent,
-            );
-            phases = newLogistics.phases;
-
-            const desiredOverlap = Math.min(overlapLimit, newLogistics.overlap);
-
-            if (desiredOverlap < allocation.numChunks) {
-                const toRelease = allocation.numChunks - desiredOverlap;
-                const beforeHosts = hosts;
-                const result = await memClient.releaseChunks(
-                    allocation.allocationId,
-                    toRelease,
+                const shrinkHosts = hostListFromChunks(
+                    allocation.allocatedChunks,
                 );
-                if (result) {
-                    allocation.allocatedChunks = result.hosts.map(
-                        (h) => new AllocationChunk(h),
-                    );
-                    const shrinkHosts = hostListFromChunks(
-                        allocation.allocatedChunks,
-                    );
-                    batches = cancelRemovedBatches(
-                        ns,
-                        beforeHosts,
-                        shrinkHosts,
-                        batches,
-                    );
-                    hosts = shrinkHosts;
-                    if (currentBatches >= hosts.length) {
-                        currentBatches %= hosts.length;
-                    }
-                    maxOverlap = hosts.length;
-                    ns.print(
-                        `INFO: released ${toRelease} chunks from allocation`,
-                    );
-                } else {
-                    ns.print(`WARN: failed to release ${toRelease} chunks`);
+                batches = cancelRemovedBatches(
+                    ns,
+                    beforeHosts,
+                    shrinkHosts,
+                    batches,
+                );
+                hosts = shrinkHosts;
+                if (currentBatches >= hosts.length) {
+                    currentBatches %= hosts.length;
                 }
+                maxOverlap = hosts.length;
+                ns.print(`INFO: released ${toRelease} chunks from allocation`);
+            } else {
+                ns.print(`WARN: failed to release ${toRelease} chunks`);
             }
         }
 
