@@ -4,7 +4,9 @@
     "description": "My awesome scripts for automating Bitburner",
     "scripts": {
         "build": "tsc",
-        "codex-test": "npx jest --config codex-jest.config.js",
+        "lint": "eslint src/",
+        "codex-test": "jest --config codex-jest.config.js",
+        "format": "prettier --write .",
         "clean": "find dist -depth ! -name 'dist' ! -name .gitkeep -delete",
         "watch:init": "node build/init.js",
         "watch:transpile": "tsc -w --preserveWatchOutput",

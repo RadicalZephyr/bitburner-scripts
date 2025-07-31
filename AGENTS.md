@@ -177,12 +177,12 @@ organized as follows:
 - Run `npm install` to ensure dependencies are installed
 - Check that the build still works with `npm run build`
 - Check that the unit tests pass with `npm run codex-test`
-- Check that the code conforms to quality standards with `npx eslint src/`
+- Check that the code conforms to quality standards with `npm run lint`
 - Fix any type or lint errors until the build completes with no errors or warnings
 
 ## Commit Authoring Convention
 
-- Before committing run `npx prettier . --write` to format code.
+- Before committing run `npm run format` to format code.
 
 Prefix every commit message with the name of the folder in source in
 square brackets like "[batch]". If a commit touches files in multiple
