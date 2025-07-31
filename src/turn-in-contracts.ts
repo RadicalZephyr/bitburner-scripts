@@ -1,12 +1,12 @@
 import type { NS } from 'netscript';
-import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
+import { parseFlags } from 'util/flags';
 
 import { CONTRACTS } from 'all-contracts';
 
 export async function main(ns: NS) {
-    ns.flags(MEM_TAG_FLAGS);
-    const failures = {};
+    await parseFlags(ns, []);
 
+    const failures = {};
     for (const contract of CONTRACTS) {
         if (contract.answer !== 'null') {
             const reward = ns.codingcontract.attempt(

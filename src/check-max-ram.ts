@@ -1,5 +1,5 @@
 import type { NS } from 'netscript';
-import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
+import { parseFlags } from 'util/flags';
 
 import {
     getHighestPurchasableRamLevel,
@@ -7,7 +7,8 @@ import {
 } from 'util/server';
 
 export async function main(ns: NS) {
-    ns.flags(MEM_TAG_FLAGS);
+    await parseFlags(ns, []);
+
     const percentSpend = ns.args[0] ? ns.args[0] : 1.0;
     if (
         typeof percentSpend !== 'number'

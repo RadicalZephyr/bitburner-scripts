@@ -1,5 +1,5 @@
 import type { NS } from 'netscript';
-import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
+import { parseFlags } from 'util/flags';
 
 import { main as serviceBootstrap } from 'services/bootstrap';
 import { main as batchBootstrap } from 'batch/bootstrap';
@@ -9,7 +9,8 @@ import { main as goBootstrap } from 'go/bootstrap';
 import { getSourceFileLevel } from 'services/client/source_file';
 
 export async function main(ns: NS) {
-    ns.flags(MEM_TAG_FLAGS);
+    await parseFlags(ns, []);
+
     await serviceBootstrap(ns);
     await batchBootstrap(ns);
     await goBootstrap(ns);

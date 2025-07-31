@@ -4,10 +4,11 @@ import type {
     NS,
     UserInterfaceTheme,
 } from 'netscript';
-import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
+import { parseFlags } from 'util/flags';
 
 export async function main(ns: NS) {
-    ns.flags(MEM_TAG_FLAGS);
+    await parseFlags(ns, []);
+
     ns.disableLog('ALL');
     ns.ui.openTail();
     ns.ui.moveTail(60, 350);

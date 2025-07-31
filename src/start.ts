@@ -1,10 +1,11 @@
 import type { NS } from 'netscript';
-import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
+import { parseFlags } from 'util/flags';
 
 import { collectDependencies } from 'util/dependencies';
 
 export async function main(ns: NS) {
-    ns.flags(MEM_TAG_FLAGS);
+    await parseFlags(ns, []);
+
     ns.disableLog('sleep');
 
     const script = '/bootstrap.js';
