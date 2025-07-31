@@ -1,5 +1,5 @@
 import type { AutocompleteData, NS, Server } from 'netscript';
-import { parseFlags } from 'util/flags';
+import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { FreeChunk, FreeRam } from 'services/client/memory';
 import {
@@ -17,14 +17,37 @@ export interface BatchThreadAnalysis {
     postGrowWeakenThreads: number;
 }
 
+const FLAGS = [['help', false]] as const satisfies FlagsSchema;
+
 export function autocomplete(data: AutocompleteData): string[] {
+    data.flags(FLAGS);
     return data.servers;
 }
 
 export async function main(ns: NS) {
-    await parseFlags(ns, []);
+    const flags = await parseFlags(ns, FLAGS);
 
-    const target = ns.args[0];
+    const rest = flags._;
+    if (rest.length === 0 || flags.help) {
+        ns.tprint(`
+USAGE: run ${ns.getScriptName()} SERVER_NAME
+
+Display the expected value per RAM-second for hacking batches.
+
+Example:
+  > run ${ns.getScriptName()} n00dles
+
+OPTIONS
+  --help   Show this help message
+
+CONFIGURATION
+  BATCH_maxHackPercent  Default hack percentage when estimating value
+  BATCH_batchInterval   Phase spacing used for batch calculations
+`);
+        return;
+    }
+
+    const target = rest[0];
     if (typeof target !== 'string' || !ns.serverExists(target)) {
         ns.tprintf('target %s does not exist', target);
         return;

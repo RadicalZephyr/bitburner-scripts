@@ -46,6 +46,10 @@ Example:
 
 OPTIONS
 --help           Show this help message
+
+CONFIGURATION
+  BATCH_heartbeatCadence  Interval between heartbeat messages
+  BATCH_batchInterval     Time between batch phases
 `);
         return;
     }

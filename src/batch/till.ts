@@ -37,6 +37,9 @@ Example:
 OPTIONS
   --help           Show this help message
   --max-threads    Cap the number of threads spawned
+
+CONFIGURATION
+  BATCH_heartbeatCadence  Interval between heartbeat messages
 `);
         return;
     }

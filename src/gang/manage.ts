@@ -25,19 +25,24 @@ export async function main(ns: NS) {
     const flags = await parseFlags(ns, FLAGS);
 
     if (flags.help) {
-        ns.tprint(`USAGE: run ${ns.getScriptName()}
+        ns.tprint(`
+USAGE: run ${ns.getScriptName()}
 
 Automate gang recruitment and task assignments.
 
 Example:
   > run ${ns.getScriptName()}
 
-CONFIG VALUES
+OPTIONS
+  --help   Show this help message
+
+CONFIGURATION
   GANG_ascendThreshold   Ascension multiplier required to ascend
   GANG_trainingPercent   Fraction of members training
   GANG_maxWantedPenalty  Maximum wanted penalty before switching members to cooling tasks
   GANG_minWantedLevel    Wanted level where heating resumes
-  GANG_jobCheckInterval  Delay between evaluations`);
+  GANG_jobCheckInterval  Delay between evaluations
+`);
         return;
     }
 

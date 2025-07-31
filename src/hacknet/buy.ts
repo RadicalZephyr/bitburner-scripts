@@ -27,14 +27,20 @@ export async function main(ns: NS) {
         || flags.spend > 1
     ) {
         ns.tprint(`
-Usage: run ${ns.getScriptName()} [--return-time HOURS] [--spend 0-1] [--help]
+USAGE: run ${ns.getScriptName()} [--return-time HOURS] [--spend 0-1]
 
-Buy hacknet nodes/servers and upgrades that can pay for themselves within a time limit.
+Buy hacknet nodes and upgrades that pay for themselves within the given window.
+
+Example:
+  > run ${ns.getScriptName()} --return-time 2 --spend 0.5
 
 OPTIONS
   --return-time  Desired payback time window (default ${DEFAULT_RETURN_TIME} hours)
   --spend        Portion of money to spend (default ${ns.formatPercent(DEFAULT_SPEND)})
-  --help         Display this message
+  --help         Show this help message
+
+CONFIGURATION
+  HACKNET_paybackTimeTolerance  Allowed payback time difference when comparing upgrades
 `);
         return;
     }

@@ -6,6 +6,7 @@ import type {
     UniversityClassType,
     UniversityLocationName,
 } from 'netscript';
+import { FlagsSchema, parseFlags } from 'util/flags';
 
 import {
     Aug,
@@ -17,7 +18,28 @@ import { CONFIG } from 'automation/config';
 
 import { MoneyTracker, primedMoneyTracker } from 'util/money-tracker';
 
+const FLAGS = [['help', false]] as const satisfies FlagsSchema;
+
 export async function main(ns: NS) {
+    const flags = await parseFlags(ns, FLAGS);
+
+    if (flags.help || (flags._ as string[]).length !== 0) {
+        ns.tprint(`
+USAGE: run ${ns.getScriptName()}
+
+Automate late bitnode progression and reinstall augmentations.
+
+OPTIONS
+  --help   Show this help message
+
+CONFIGURATION
+  AUTO_moneyTrackerHistoryLen   Samples to average hack income
+  AUTO_moneyTrackerCadence      Delay between income samples
+  AUTO_maxTimeToEarnNeuroFlux   Max time to afford next NeuroFlux level
+`);
+        return;
+    }
+
     const Volhaven = ns.enums.CityName.Volhaven;
     const zbU = ns.enums.LocationName.VolhavenZBInstituteOfTechnology;
     const algClass = ns.enums.UniversityClassType.algorithms;

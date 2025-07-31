@@ -19,8 +19,23 @@ export async function main(ns: NS) {
     const flags = await parseFlags(ns, FLAGS);
 
     if (flags.help) {
-        ns.tprint(`USAGE: run ${ns.getScriptName()} [--cash CASH]`);
-        ns.tprint('Sweep parameter combinations for backtesting.');
+        ns.tprint(`
+USAGE: run ${ns.getScriptName()} [--cash CASH]
+
+Try multiple parameter combos for the stock backtester.
+
+Example:
+  > run ${ns.getScriptName()} --cash 1000000
+
+OPTIONS
+  --cash  Starting cash for the sweep
+  --help  Show this help message
+
+CONFIGURATION
+  STOCK_dataPath     Directory containing tick data
+  STOCK_maxPosition  Maximum shares per symbol
+  STOCK_cooldownMs   Cooldown between trades
+`);
         return;
     }
 

@@ -1,12 +1,29 @@
 import type { NS } from 'netscript';
-import { parseFlags } from 'util/flags';
+import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { useTheme } from 'util/useTheme';
 
 import { CONFIG } from 'corp/config';
 
+const FLAGS = [['help', false]] as const satisfies FlagsSchema;
+
 export async function main(ns: NS) {
-    await parseFlags(ns, []);
+    const flags = await parseFlags(ns, FLAGS);
+
+    if (flags.help || (flags._ as string[]).length !== 0) {
+        ns.tprint(`
+USAGE: run ${ns.getScriptName()}
+
+Display buttons to automatically eat corporation noodles.
+
+OPTIONS
+  --help   Show this help message
+
+CONFIGURATION
+  CORP_noodleEatingInterval  Time in ms between button presses
+`);
+        return;
+    }
 
     ns.disableLog('ALL');
     ns.clearLog();

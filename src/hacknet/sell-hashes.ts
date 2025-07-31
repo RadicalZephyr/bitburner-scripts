@@ -23,13 +23,19 @@ export async function main(ns: NS) {
         || hashCapacity === 0
     ) {
         ns.tprint(`
-Usage: run ${ns.getScriptName()} [--help]
+USAGE: run ${ns.getScriptName()} [--continue]
 
-Sell all the hashes for cash. Only works with Hacknet Servers not nodes.
+Sell accumulated hashes for money. Only works with Hacknet Servers.
+
+Example:
+  > run ${ns.getScriptName()} --continue
 
 OPTIONS
   --continue  Continue to sell hashes perpetually
-  --help      Display this message
+  --help      Show this help message
+
+CONFIGURATION
+  HACKNET_sellSleepTime  Delay between sales when --continue is used
 `);
         return;
     }

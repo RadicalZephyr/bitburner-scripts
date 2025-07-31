@@ -30,7 +30,17 @@ export async function main(ns: NS) {
         ns.tprint(`
 USAGE: run ${ns.getScriptName()}
 
-Plays IPvGO games using the GtpClient to communicate with an external Go engine.
+Play IPvGO games using a KataGo HTTP proxy.
+
+Example:
+  > run ${ns.getScriptName()}
+
+OPTIONS
+  --help   Show this help message
+
+CONFIGURATION
+  GO_goOpponent  Default opponent to challenge
+  GO_boardSize   Board size for new games
 `);
         return;
     }

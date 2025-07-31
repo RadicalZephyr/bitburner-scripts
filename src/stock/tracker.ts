@@ -1,5 +1,5 @@
 import type { NS, NetscriptPort } from 'netscript';
-import { parseFlags } from 'util/flags';
+import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { CONFIG } from 'stock/config';
 import { computeIndicators, TickData } from 'stock/indicators';
@@ -14,8 +14,32 @@ import {
 
 import { readAllFromPort } from 'util/ports';
 
+const FLAGS = [['help', false]] as const satisfies FlagsSchema;
+
 export async function main(ns: NS) {
-    await parseFlags(ns, []);
+    const flags = await parseFlags(ns, FLAGS);
+
+    if (flags.help) {
+        ns.tprint(`
+USAGE: run ${ns.getScriptName()}
+
+Track live stock data and expose indicators via ports.
+
+OPTIONS
+  --help   Show this help message
+
+CONFIGURATION
+  STOCK_dataPath        Directory for persisting tick data
+  STOCK_windowSize      Number of ticks kept in memory
+  STOCK_smaPeriod       Simple moving average period
+  STOCK_emaPeriod       Exponential moving average period
+  STOCK_rocPeriod       Rate-of-change period
+  STOCK_bollingerK      Bollinger band K value
+  STOCK_buyPercentile   Buy percentile
+  STOCK_sellPercentile  Sell percentile
+`);
+        return;
+    }
 
     ns.disableLog('ALL');
     ns.ui.openTail();

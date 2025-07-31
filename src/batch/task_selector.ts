@@ -1,5 +1,5 @@
 import type { NetscriptPort, NS } from 'netscript';
-import { parseFlags } from 'util/flags';
+import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { HarvestClient } from 'batch/client/harvest';
 import {
@@ -36,6 +36,8 @@ import { readAllFromPort, readLoop } from 'util/ports';
 import { sleep } from 'util/time';
 import { HUD_HEIGHT, KARMA_HEIGHT } from 'util/ui';
 
+const FLAGS = [['help', false]] as const satisfies FlagsSchema;
+
 interface InProgressTask {
     pid: number;
     host: string;
@@ -69,7 +71,32 @@ function makeCompareLevel(ns: NS): (ta: string, tb: string) => number {
 }
 
 export async function main(ns: NS) {
-    await parseFlags(ns, []);
+    const flags = await parseFlags(ns, FLAGS);
+
+    if (flags.help) {
+        ns.tprint(`
+USAGE: run ${ns.getScriptName()}
+
+Daemon that selects targets and launches batch tasks.
+
+OPTIONS
+  --help   Show this help message
+
+CONFIGURATION
+  BATCH_taskSelectorTickMs       Delay between task selection cycles
+  BATCH_minSecTolerance          Security tolerance before retilling
+  BATCH_maxMoneyTolerance        Money threshold before resowing
+  BATCH_launchFailLimit          Failed launch attempts before giving up
+  BATCH_launchFailBackoffMs      Backoff after a failed launch
+  BATCH_heartbeatTimeoutMs       Timeout before assuming tasks are dead
+  BATCH_expectedValueThreshold   Minimum value for harvesting targets
+  BATCH_harvestGainThreshold     Profit threshold when picking harvests
+  BATCH_maxSowTargets            Maximum concurrent sow targets
+  BATCH_maxTillTargets           Maximum concurrent till targets
+  BATCH_hackLevelVelocityThreshold  Hack level change threshold for target churn
+`);
+        return;
+    }
 
     ns.disableLog('ALL');
     ns.ui.openTail();

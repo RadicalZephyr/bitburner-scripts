@@ -1,9 +1,11 @@
 import type { NS } from 'netscript';
-import { parseFlags } from 'util/flags';
+import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { MemoryClient } from 'services/client/memory';
 
 import { CONFIG } from 'services/config';
+
+const FLAGS = [['help', false]] as const satisfies FlagsSchema;
 
 interface Version {
     date: string;
@@ -18,7 +20,22 @@ const BOOTSTRAP_URL =
     'https://github.com/RadicalZephyr/bitburner-scripts/raw/refs/heads/latest-files/bootstrap.js';
 
 export async function main(ns: NS) {
-    await parseFlags(ns, []);
+    const flags = await parseFlags(ns, FLAGS);
+
+    if (flags.help) {
+        ns.tprint(`
+USAGE: run ${ns.getScriptName()}
+
+Automatically downloads new versions of the scripts when published.
+
+OPTIONS
+  --help   Show this help message
+
+CONFIGURATION
+  DISCOVERY_updateCheckIntervalMs  Delay between version checks
+`);
+        return;
+    }
 
     ns.disableLog('sleep');
 

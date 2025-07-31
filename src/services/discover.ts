@@ -1,5 +1,5 @@
 import type { NS, NetscriptPort } from 'netscript';
-import { parseFlags } from 'util/flags';
+import { FlagsSchema, parseFlags } from 'util/flags';
 
 import {
     DISCOVERY_PORT,
@@ -12,13 +12,31 @@ import { MemoryClient } from 'services/client/memory';
 
 import { CONFIG } from 'services/config';
 
+const FLAGS = [['help', false]] as const satisfies FlagsSchema;
+
 import { trySendMessage } from 'util/client';
 import { extend } from 'util/extend';
 import { readAllFromPort, readLoop } from 'util/ports';
 import { walkNetworkBFS } from 'util/walk';
 
 export async function main(ns: NS) {
-    await parseFlags(ns, []);
+    const flags = await parseFlags(ns, FLAGS);
+
+    if (flags.help) {
+        ns.tprint(`
+USAGE: run ${ns.getScriptName()}
+
+Daemon that discovers hosts and notifies subscribers.
+
+OPTIONS
+  --help   Show this help message
+
+CONFIGURATION
+  DISCOVERY_discoverWalkIntervalMs  Delay between network scans
+  DISCOVERY_subscriptionMaxRetries   Failed notifications tolerated
+`);
+        return;
+    }
 
     ns.disableLog('sleep');
 

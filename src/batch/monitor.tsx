@@ -52,14 +52,17 @@ export async function main(ns: NS) {
         ns.tprint(`
 USAGE: run ${ns.getScriptName()}
 
-This script helps visualize the money and security of all servers.
-
-OPTIONS
---refreshrate   Time to sleep between refreshing server data
+Visualize server status and hacking profits.
 
 Example:
+  > run ${ns.getScriptName()}
 
-> run ${ns.getScriptName()}
+OPTIONS
+  --refreshrate  Time to sleep between refreshes
+  --help         Show this help message
+
+CONFIGURATION
+  BATCH_maxHackPercent  Max percent hacked when estimating profit
 `);
         return;
     }

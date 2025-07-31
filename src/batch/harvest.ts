@@ -99,6 +99,11 @@ OPTIONS
   --help           Show this help message
   --max-ram        Limit RAM usage per batch run
   --port-id        Control port for shutdown messages
+
+CONFIGURATION
+  BATCH_heartbeatCadence   Interval between heartbeat messages
+  BATCH_minSecTolerance    Security tolerance before re-tilling
+  BATCH_maxMoneyTolerance  Money percentage threshold before re-sowing
 `);
         return null;
     }

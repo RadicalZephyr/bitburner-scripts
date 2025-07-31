@@ -1,13 +1,33 @@
 import type { NS } from 'netscript';
-import { parseFlags } from 'util/flags';
+import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { Indicators, TrackerClient } from 'stock/client/tracker';
 
 import { CONFIG } from 'stock/config';
 
+const FLAGS = [['help', false]] as const satisfies FlagsSchema;
+
 /** Simple Z-Score based trading daemon. */
 export async function main(ns: NS) {
-    await parseFlags(ns, []);
+    const flags = await parseFlags(ns, FLAGS);
+
+    if (flags.help) {
+        ns.tprint(`
+USAGE: run ${ns.getScriptName()}
+
+Trade stocks automatically using indicator data.
+
+OPTIONS
+  --help   Show this help message
+
+CONFIGURATION
+  STOCK_maxPosition     Maximum shares per symbol
+  STOCK_buyPercentile   Percentile used to trigger buys
+  STOCK_sellPercentile  Percentile used to trigger sells
+  STOCK_cooldownMs      Cooldown between trades on a symbol
+`);
+        return;
+    }
 
     const client = new TrackerClient(ns);
     const symbols = ns.stock.getSymbols();
