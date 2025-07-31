@@ -5,7 +5,7 @@ prime factor of 129983129?
  */
 
 import type { NS } from 'netscript';
-import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
+import { parseFlags } from 'util/flags';
 
 /**
  * Generate all prime numbers less than or equal to the provided limit using a
@@ -34,7 +34,8 @@ function primesUpTo(limit: number): number[] {
     return primes;
 }
 export async function main(ns: NS) {
-    ns.flags(MEM_TAG_FLAGS);
+    await parseFlags(ns, []);
+
     const scriptName = ns.getScriptName();
     const contractPortNum = ns.args[0];
     if (typeof contractPortNum !== 'number') {
