@@ -107,10 +107,9 @@ Use this general structure:
 
 ```typescript
 import type { NS, AutocompleteData, ScriptArg } from 'netscript';
-import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
-import { FlagsSchema } from 'util/flags';
+import { FlagsSchema, parseFlags } from 'util/flags';
 
-const FLAGS = [['help', false]] satisfies FlagsSchema;
+const FLAGS = [['help', false]] as const satisfies FlagsSchema;
 
 export function autocomplete(data: AutocompleteData): string[] {
     data.flags(FLAGS);
@@ -118,7 +117,7 @@ export function autocomplete(data: AutocompleteData): string[] {
 }
 
 export async function main(ns: NS) {
-    const flags = ns.flags([...FLAGS, ...MEM_TAG_FLAGS]);
+    const flags = await parseFlags(ns, FLAGS);
 
     if (flags.help) {
         ns.tprint(`
