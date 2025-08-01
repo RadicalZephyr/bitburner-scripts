@@ -57,7 +57,6 @@ class Faction {
     favor: number;
     favorToGain: number;
     augs: string[];
-    neededAugs: string[];
     targetRep: number;
 
     constructor(ns: NS, name: string, ownedAugs: Set<string>) {
@@ -76,20 +75,22 @@ class Faction {
             return;
         }
 
-        this.neededAugs = augs
+        const highestRepUniqueAug = this.neededAugs(ownedAugs)[0];
+        if (highestRepUniqueAug) {
+            this.targetRep = sing.getAugmentationRepReq(highestRepUniqueAug);
+        } else {
+            this.targetRep = 0;
+        }
+    }
+
+    neededAugs(ownedAugs: Set<string>) {
+        return this.augs
             .filter((aug) => !ownedAugs.has(aug) && uniqueAug(ns, name, aug))
             .sort(
                 (a, b) =>
                     sing.getAugmentationRepReq(b)
                     - sing.getAugmentationRepReq(a),
             );
-
-        const highestRepUniqueAug = this.neededAugs[0];
-        if (highestRepUniqueAug) {
-            this.targetRep = sing.getAugmentationRepReq(highestRepUniqueAug);
-        } else {
-            this.targetRep = 0;
-        }
     }
 }
 
