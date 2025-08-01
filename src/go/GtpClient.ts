@@ -10,6 +10,7 @@ type Command =
     | 'clear_board'
     | 'komi'
     | 'set_free_handicap'
+    | 'set_walls'
     | 'set_position'
     | 'play'
     | 'genmove'
@@ -51,6 +52,15 @@ export class GtpClient {
      */
     async komi(value: number) {
         await this.send('komi', value.toFixed(3));
+    }
+
+    /**
+     * Set interior walls at vertex locations.
+     *
+     * @param locations - vertices to place walls on
+     */
+    async setWalls(locations: Vertex[]) {
+        await this.send('set_walls', encodeURIComponent(locations.join(' ')));
     }
 
     /**
