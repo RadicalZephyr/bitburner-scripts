@@ -52,6 +52,7 @@ OPTIONS
 }
 
 class Faction {
+    ns: NS;
     name: string;
     rep: number;
     favor: number;
@@ -60,6 +61,7 @@ class Faction {
     targetRep: number;
 
     constructor(ns: NS, name: string, ownedAugs: Set<string>) {
+        this.ns = ns;
         this.name = name;
 
         const sing = ns.singularity;
@@ -85,11 +87,14 @@ class Faction {
 
     neededAugs(ownedAugs: Set<string>) {
         return this.augs
-            .filter((aug) => !ownedAugs.has(aug) && uniqueAug(ns, name, aug))
+            .filter(
+                (aug) =>
+                    !ownedAugs.has(aug) && uniqueAug(this.ns, this.name, aug),
+            )
             .sort(
                 (a, b) =>
-                    sing.getAugmentationRepReq(b)
-                    - sing.getAugmentationRepReq(a),
+                    this.ns.singularity.getAugmentationRepReq(b)
+                    - this.ns.singularity.getAugmentationRepReq(a),
             );
     }
 }
