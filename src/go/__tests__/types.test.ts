@@ -9,6 +9,7 @@ import {
     filterMapBoard,
     toIndices,
     toVertex,
+    typedBoard,
 } from 'go/types';
 
 describe('filterMapBoard', () => {
@@ -104,5 +105,43 @@ describe('type predicates', () => {
 
     test('tricky invalid vertices', () => {
         expect(isVertex('ab1')).toBeFalsy();
+    });
+});
+
+describe('typedBoard conversion', () => {
+    test('empty board', () => {
+        expect(typedBoard(['..', '..'])).toStrictEqual([
+            ['.', '.'],
+            ['.', '.'],
+        ]);
+    });
+
+    test('mixed board', () => {
+        expect(typedBoard(['.X', 'X.'])).toStrictEqual([
+            ['.', 'X'],
+            ['X', '.'],
+        ]);
+        expect(typedBoard(['.#X', 'X.#', '#O#'])).toStrictEqual([
+            ['.', '#', 'X'],
+            ['X', '.', '#'],
+            ['#', 'O', '#'],
+        ]);
+    });
+
+    test('invalid node strings throw and report bad values and positions', () => {
+        expect(() => typedBoard(['...', '...', '.h.'])).toThrow(
+            `Unknown node types found at ${JSON.stringify([['h', 'c2']], null, 2)}`,
+        );
+        expect(() => typedBoard(['x..', '.o.', '.h.'])).toThrow(
+            `Unknown node types found at ${JSON.stringify(
+                [
+                    ['x', 'a1'],
+                    ['o', 'b2'],
+                    ['h', 'c2'],
+                ],
+                null,
+                2,
+            )}`,
+        );
     });
 });

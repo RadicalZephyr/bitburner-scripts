@@ -48,6 +48,8 @@ export type Row = (typeof ROW_NAMES)[number];
 
 export type Vertex = `${Col}${Row}`;
 
+export type IdxVertex = [number, number];
+
 export type MoveResponse = 'pass' | 'resign' | Vertex;
 
 export type Color = 'white' | 'w' | 'W' | 'black' | 'b' | 'B';
@@ -73,11 +75,30 @@ export const Node = {
  */
 export type Node = (typeof NODES)[number];
 
+export type Board = Node[][];
+
 export type BoardCallbackFn<T> = (
     node: Node,
     vertex: Vertex,
     board: string[],
 ) => T;
+
+export function typedBoard(board: string[]): Board {
+    const splitBoard = board.map((col) => col.split(''));
+
+    const validTypedBoard = splitBoard.every((col) =>
+        col.every((n) => (NODES as string[]).includes(n)),
+    );
+    if (!validTypedBoard) {
+        const badPositions = filterMapBoard(board, (n, v) =>
+            !NODES.includes(n) ? [n, v] : null,
+        );
+        throw new Error(
+            `Unknown node types found at ${JSON.stringify(badPositions, null, 2)}`,
+        );
+    }
+    return splitBoard as Board;
+}
 
 /**
  * Combined filter and map operation.
@@ -115,7 +136,7 @@ export function filterMapBoard<T>(
  * Type predicate for validating a string is a Vertex.
  *
  * @param s - candidate Vertex string
- * @returns Whether the candidate is a valid Vertex
+ * @returns whether the candidate is a valid Vertex
  */
 export function isVertex(s: string): s is Vertex {
     const x = columnIndex(s);
@@ -127,11 +148,21 @@ export function isVertex(s: string): s is Vertex {
  * Type predicate for ResponseMoves.
  *
  * @param s - candidate ResponseMove string
- * @returns Whether  the candidate is a valid ResponseMove
+ * @returns whether the candidate is a valid ResponseMove
  */
 export function isMoveResponse(s: string): s is MoveResponse {
     if (s === 'pass' || s === 'resign') return true;
     return isVertex(s);
+}
+
+/**
+ * Type predicate for Nodes.
+ *
+ * @param s - candidate Node string
+ * @returns whether the candidate is a valid Node
+ */
+export function isNode(s: string): s is Node {
+    return NODES.includes(s as Node);
 }
 
 /**
@@ -140,7 +171,7 @@ export function isMoveResponse(s: string): s is MoveResponse {
  * @param vertex - Vertex to convert
  * @returns x and y indices
  */
-export function toIndices(vertex: Vertex): [number, number] {
+export function toIndices(vertex: Vertex): IdxVertex {
     const x = columnIndex(vertex);
     if (x === -1)
         throw new Error(`tried to transform invalid vertex ${vertex}`);
