@@ -56,6 +56,8 @@ class Faction {
     rep: number;
     favor: number;
     favorToGain: number;
+    augs: string[];
+    neededAugs: string[];
     targetRep: number;
 
     constructor(ns: NS, name: string, ownedAugs: Set<string>) {
@@ -66,22 +68,40 @@ class Faction {
         this.favor = sing.getFactionFavor(name);
         this.favorToGain = sing.getFactionFavorGain(name);
 
-        const augs = sing
-            .getAugmentationsFromFaction(name)
-            .filter((aug) => !ownedAugs.has(aug));
+        const augs = sing.getAugmentationsFromFaction(name);
+        this.augs = augs;
 
         if (augs.length < 1) {
             this.targetRep = 0;
             return;
         }
 
-        augs.sort(
-            (a, b) =>
-                sing.getAugmentationRepReq(b) - sing.getAugmentationRepReq(a),
-        );
+        this.neededAugs = augs
+            .filter((aug) => !ownedAugs.has(aug) && uniqueAug(ns, name, aug))
+            .sort(
+                (a, b) =>
+                    sing.getAugmentationRepReq(b)
+                    - sing.getAugmentationRepReq(a),
+            );
 
-        this.targetRep = sing.getAugmentationRepReq(augs[0]);
+        const highestRepUniqueAug = this.neededAugs[0];
+        if (highestRepUniqueAug) {
+            this.targetRep = sing.getAugmentationRepReq(highestRepUniqueAug);
+        } else {
+            this.targetRep = 0;
+        }
     }
+}
+
+function uniqueAug(ns: NS, factionName: string, aug: string): boolean {
+    const myFactions = new Set(getFactions(ns));
+
+    const thisFaction = new Set([factionName]);
+    const allFactions = new Set(ns.singularity.getAugmentationFactions(aug));
+    const otherFactions = allFactions
+        .difference(thisFaction)
+        .intersection(myFactions);
+    return otherFactions.size === 0;
 }
 
 async function workForFactions(ns: NS, focus: Toggle) {
@@ -132,10 +152,14 @@ function getOwnedAugs(ns: NS): Set<string> {
     return new Set(ns.singularity.getOwnedAugmentations(true));
 }
 
+function getFactions(ns: NS) {
+    return ns.getPlayer().factions;
+}
+
 function getUnfinishedFactions(ns: NS, ownedAugs: Set<string>) {
-    const factions = ns
-        .getPlayer()
-        .factions.map((name) => new Faction(ns, name, ownedAugs));
+    const factions = getFactions(ns).map(
+        (name) => new Faction(ns, name, ownedAugs),
+    );
     return factions.filter((f) => !haveNeededRepForFaction(ns, f));
 }
 
