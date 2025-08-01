@@ -74,8 +74,16 @@ async function setupExistingGame(ns: NS, client: GtpClient) {
     const gameState = ns.go.getGameState();
     await client.komi(gameState.komi);
 
+    const walls = filterMapBoard(board, isWall);
+    await client.setWalls(walls);
+
     const positions = filterMapBoard(board, vertexToMove);
     await client.setPosition(positions);
+}
+
+function isWall(node: Node, vertex: Vertex): Vertex | null {
+    if (node === Node.DISABLED) return vertex;
+    return null;
 }
 
 function vertexToMove(node: Node, vertex: Vertex): Move | null {
@@ -83,10 +91,10 @@ function vertexToMove(node: Node, vertex: Vertex): Move | null {
         case Node.BLACK: {
             return ['black', vertex];
         }
-        case Node.DISABLED:
         case Node.WHITE: {
             return ['white', vertex];
         }
+        case Node.DISABLED:
         case Node.EMPTY: {
             return null;
         }
