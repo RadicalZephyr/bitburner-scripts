@@ -129,8 +129,7 @@ function getBestWorkTypeForFaction(ns: NS, faction: string): FactionWorkType {
 }
 
 function getOwnedAugs(ns: NS): Set<string> {
-    const reset = ns.getResetInfo();
-    return new Set(reset.ownedAugs.keys());
+    return new Set(ns.singularity.getOwnedAugmentations(true));
 }
 
 function getUnfinishedFactions(ns: NS, ownedAugs: Set<string>) {
