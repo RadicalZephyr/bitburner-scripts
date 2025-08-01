@@ -57,7 +57,7 @@ app.use(cors(), morgan('dev'));
 app.get('/boardsize/:n', async (req, res) => {
     try {
         const reply = await sendCommand(`boardsize ${req.params.n}`);
-        res.json(reply);
+        res.status(200).json(reply);
     } catch (err) {
         res.json(error(String(err)));
     }
@@ -66,7 +66,7 @@ app.get('/boardsize/:n', async (req, res) => {
 app.get('/clear_board', async (_req, res) => {
     try {
         const reply = await sendCommand('clear_board');
-        res.json(reply);
+        res.status(200).json(reply);
     } catch (err) {
         res.json(error(String(err)));
     }
@@ -75,7 +75,7 @@ app.get('/clear_board', async (_req, res) => {
 app.get('/komi/:value', async (req, res) => {
     try {
         const reply = await sendCommand(`komi ${req.params.value}`);
-        res.json(reply);
+        res.status(200).json(reply);
     } catch (err) {
         res.json(error(String(err)));
     }
@@ -85,7 +85,7 @@ app.get('/set_walls/:encoded', async (req, res) => {
     try {
         const data = querystring.unescape(req.params.encoded);
         const reply = await sendCommand(`set_walls ${data}`);
-        res.json(reply);
+        res.status(200).json(reply);
     } catch (err) {
         res.json(error(String(err)));
     }
@@ -97,7 +97,7 @@ app.get('/set_position/:encoded', async (req, res) => {
         const vertices = JSON.parse(data);
         const joined = vertices.join(' ');
         const reply = await sendCommand(`set_position ${joined}`);
-        res.json(reply);
+        res.status(200).json(reply);
     } catch (err) {
         res.json(error(String(err)));
     }
@@ -109,7 +109,7 @@ app.get('/set_free_handicap/:encoded', async (req, res) => {
         const vertices = JSON.parse(data);
         const joined = vertices.join(' ');
         const reply = await sendCommand(`set_free_handicap ${joined}`);
-        res.json(reply);
+        res.status(200).json(reply);
     } catch (err) {
         res.json(error(String(err)));
     }
@@ -120,7 +120,7 @@ app.get('/play/:color/:vertex', async (req, res) => {
         const color = req.params.color;
         const vertex = req.params.vertex;
         const reply = await sendCommand(`play ${color} ${vertex}`);
-        res.json(reply);
+        res.status(200).json(reply);
     } catch (err) {
         res.json(error(String(err)));
     }
@@ -130,7 +130,7 @@ app.get('/genmove/:color', async (req, res) => {
     try {
         const color = req.params.color;
         const reply = await sendCommand(`genmove ${color}`);
-        res.json(reply);
+        res.status(200).json(reply);
     } catch (err) {
         res.json(error(String(err)));
     }
@@ -140,7 +140,7 @@ app.get('/kata-search/:color', async (req, res) => {
     try {
         const color = req.params.color;
         const reply = await sendCommand(`kata-search ${color}`);
-        res.json(reply);
+        res.status(200).json(reply);
     } catch (err) {
         res.json(error(String(err)));
     }
