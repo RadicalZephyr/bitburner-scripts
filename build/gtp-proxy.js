@@ -81,6 +81,16 @@ app.get('/komi/:value', async (req, res) => {
     }
 });
 
+app.get('/set_walls/:encoded', async (req, res) => {
+    try {
+        const data = querystring.unescape(req.params.encoded);
+        const reply = await sendCommand(`set_walls ${data}`);
+        res.json(reply);
+    } catch (err) {
+        res.json(error(String(err)));
+    }
+});
+
 app.get('/set_position/:encoded', async (req, res) => {
     try {
         const data = querystring.unescape(req.params.encoded);
