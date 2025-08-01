@@ -3,3 +3,4 @@ dist
 archive
 *.gz
 *.cfg
+NetScriptDefinitions.d.ts
