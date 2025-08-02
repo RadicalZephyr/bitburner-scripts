@@ -75,7 +75,7 @@ export class GtpClient {
         const flatPositions = positions.reduce((acc, n) => extend(acc, n), []);
         await this.send(
             'set_position',
-            encodeURIComponent(JSON.stringify(flatPositions)),
+            encodeURIComponent(flatPositions.join(' ')),
         );
     }
 
@@ -87,7 +87,7 @@ export class GtpClient {
     async setFreeHandicap(vertices: Vertex[]) {
         await this.send(
             'set_free_handicap',
-            encodeURIComponent(JSON.stringify(vertices)),
+            encodeURIComponent(vertices.join(' ')),
         );
     }
 
