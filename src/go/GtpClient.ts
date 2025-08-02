@@ -46,6 +46,13 @@ export class GtpClient {
     }
 
     /**
+     * Clear the search tree and the neural net cache from the engine.
+     */
+    async clearCache() {
+        await this.send('clear_cache');
+    }
+
+    /**
      * Set komi value for the game.
      *
      * @param value - floating point komi value

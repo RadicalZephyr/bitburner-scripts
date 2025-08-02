@@ -72,6 +72,15 @@ app.get('/clear_board', async (_req, res) => {
     }
 });
 
+app.get('/clear_cache', async (_req, res) => {
+    try {
+        const reply = await sendCommand('clear_cache');
+        res.status(200).json(reply);
+    } catch (err) {
+        res.json(error(String(err)));
+    }
+});
+
 app.get('/komi/:value', async (req, res) => {
     try {
         const reply = await sendCommand(`komi ${req.params.value}`);
