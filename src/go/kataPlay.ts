@@ -110,20 +110,10 @@ async function playGame(ns: NS, client: GtpClient) {
         } else if (myMove === 'resign') {
             throw new Error(`ERROR: engine returned 'resign' unexpectedly!`);
         } else {
-            let [x, y] = toIndices(myMove);
-            const isPassMove = x === -1 && y === -1;
+            const [x, y] = toIndices(myMove);
 
-            if (!(isPassMove || validMoves[x][y])) {
-                const board = ns.go.getBoardState();
-                const validMoves = ns.go.analysis.getValidMoves();
-
-                const [newX, newY] = randomNearInvalidMove(validMoves, [x, y]);
-                if (newX !== -1 && newY !== -1) {
-                    x = newX;
-                    y = newY;
-                } else {
-                    [x, y] = getRandomMove(board, validMoves);
-                }
+            if (!validMoves[x][y]) {
+                throw new Error(`KataGo returned an invalid move: ${myMove}`);
             }
             opponentMove = await ns.go.makeMove(x, y);
         }
