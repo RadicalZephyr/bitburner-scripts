@@ -75,10 +75,10 @@ async function setupExistingGame(ns: NS, client: GtpClient) {
     await client.komi(gameState.komi);
 
     const walls = filterMapBoard(board, isWall);
-    await client.setWalls(walls);
+    if (walls.length > 0) await client.setWalls(walls);
 
     const positions = filterMapBoard(board, vertexToMove);
-    await client.setPosition(positions);
+    if (positions.length > 0) await client.setPosition(positions);
 }
 
 function isWall(node: Node, vertex: Vertex): Vertex | null {
