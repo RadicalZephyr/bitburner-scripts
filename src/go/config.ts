@@ -5,6 +5,7 @@ const entries = [
     ['goOpponent', 'Daedalus' as GoOpponent],
     ['boardSize', 9 as 5 | 7 | 9 | 13],
     ['maxOpponentPasses', 5],
+    ['maxEngineInvalidMoves', 5],
     ['gtpProxyHost', 'localhost'],
     ['gtpProxyPort', '18924'],
 ] as const;
