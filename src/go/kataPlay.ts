@@ -97,11 +97,17 @@ function vertexToMove(node: Node, vertex: Vertex): Move | null {
 }
 
 async function playGame(ns: NS, client: GtpClient) {
+    let opponentPasses = 0;
     while (true) {
         const validMoves = ns.go.analysis.getValidMoves();
 
-        // Have the engine generate the next move
-        const myMove = await client.genmove('black');
+        let myMove;
+        if (opponentPasses < CONFIG.maxOpponentPasses) {
+            // Have the engine generate the next move
+            myMove = await client.genmove('black');
+        } else {
+            myMove = 'pass';
+        }
 
         let opponentMove;
         if (myMove === 'pass') {
@@ -119,6 +125,7 @@ async function playGame(ns: NS, client: GtpClient) {
 
         switch (opponentMove.type) {
             case 'move': {
+                opponentPasses = 0;
                 await client.play(
                     'white',
                     toVertex(opponentMove.x, opponentMove.y),
@@ -126,6 +133,7 @@ async function playGame(ns: NS, client: GtpClient) {
                 break;
             }
             case 'pass': {
+                opponentPasses += 1;
                 await ns.sleep(10);
                 break;
             }
