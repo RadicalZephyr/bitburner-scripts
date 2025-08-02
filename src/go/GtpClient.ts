@@ -61,6 +61,11 @@ export class GtpClient {
         await this.send('komi', value.toFixed(3));
     }
 
+    /**
+     * Set interior walls at vertex locations.
+     *
+     * @param locations - vertices to place walls on
+     */
     async setWalls(locations: Vertex[]) {
         await this.send('set_walls', encodeURIComponent(locations.join(' ')));
     }
