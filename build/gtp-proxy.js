@@ -94,9 +94,7 @@ app.get('/set_walls/:encoded', async (req, res) => {
 app.get('/set_position/:encoded', async (req, res) => {
     try {
         const data = querystring.unescape(req.params.encoded);
-        const vertices = JSON.parse(data);
-        const joined = vertices.join(' ');
-        const reply = await sendCommand(`set_position ${joined}`);
+        const reply = await sendCommand(`set_position ${data}`);
         res.status(200).json(reply);
     } catch (err) {
         res.json(error(String(err)));
@@ -106,9 +104,7 @@ app.get('/set_position/:encoded', async (req, res) => {
 app.get('/set_free_handicap/:encoded', async (req, res) => {
     try {
         const data = querystring.unescape(req.params.encoded);
-        const vertices = JSON.parse(data);
-        const joined = vertices.join(' ');
-        const reply = await sendCommand(`set_free_handicap ${joined}`);
+        const reply = await sendCommand(`set_free_handicap ${data}`);
         res.status(200).json(reply);
     } catch (err) {
         res.json(error(String(err)));
