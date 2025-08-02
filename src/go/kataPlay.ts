@@ -97,6 +97,9 @@ function vertexToMove(node: Node, vertex: Vertex): Move | null {
 }
 
 async function playGame(ns: NS, client: GtpClient) {
+    let repeatedErrors = 0;
+    const errorMoves = [];
+
     let opponentPasses = 0;
     while (true) {
         const validMoves = ns.go.analysis.getValidMoves();
@@ -118,10 +121,24 @@ async function playGame(ns: NS, client: GtpClient) {
             const [x, y] = toIndices(myMove);
 
             if (!validMoves[x][y]) {
-                throw new Error(`KataGo returned an invalid move: ${myMove}`);
+                repeatedErrors += 1;
+                errorMoves.push(myMove);
+
+                if (repeatedErrors >= CONFIG.maxEngineInvalidMoves) {
+                    throw new Error(
+                        `KataGo returned an invalid move: ${myMove}`,
+                    );
+                }
+
+                await client.clearCache();
+                continue;
             }
+
             opponentMove = await ns.go.makeMove(x, y);
         }
+
+        repeatedErrors = 0;
+        errorMoves.length = 0;
 
         switch (opponentMove.type) {
             case 'move': {
