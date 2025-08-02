@@ -125,9 +125,12 @@ async function playGame(ns: NS, client: GtpClient) {
                 errorMoves.push(myMove);
 
                 if (repeatedErrors >= CONFIG.maxEngineInvalidMoves) {
-                    throw new Error(
-                        `KataGo returned an invalid move: ${myMove}`,
+                    ns.print(`KataGo returned an invalid move: ${myMove}`);
+                    ns.go.resetBoardState(
+                        CONFIG.goOpponent as GoOpponent,
+                        CONFIG.boardSize as 5 | 7 | 9 | 13,
                     );
+                    return;
                 }
 
                 await client.clearCache();
