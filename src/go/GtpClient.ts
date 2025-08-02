@@ -156,12 +156,23 @@ export class GtpClient {
         const argument = payload !== undefined ? `/${payload}` : '';
         this.ns.print(`INFO: sending ${cmd}${argument}`);
 
-        const responseFile = this.responseFile();
-        const responseStatus = await this.ns.wget(
+        const response = await this.makeRequest(
             `http://${url}:${port}/${cmd}${argument}`,
-            responseFile,
         );
 
+        if (response.status !== 'OK')
+            throw new Error(`request ${cmd} failed: ${response.response}`);
+
+        this.ns.print(
+            `SUCCESS: received successful response '${response.response}'`,
+        );
+
+        return response.response;
+    }
+
+    private async makeRequest(url: string): Promise<Response> {
+        const responseFile = this.responseFile();
+        const responseStatus = await this.ns.wget(url, responseFile);
         if (!responseStatus) {
             throw new Error('wget failed to retrieve file');
         }
@@ -172,15 +183,7 @@ export class GtpClient {
         const responseContent = this.ns.read(responseFile);
         this.ns.rm(responseFile);
 
-        const response = parseResponse(JSON.parse(responseContent));
-        if (response.status !== 'OK')
-            throw new Error(`request ${cmd} failed: ${response.response}`);
-
-        this.ns.print(
-            `SUCCESS: received successful response '${response.response}'`,
-        );
-
-        return response.response;
+        return parseResponse(JSON.parse(responseContent));
     }
 }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
