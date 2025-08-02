@@ -57,11 +57,7 @@ CONFIGURATION
             );
         }
         await setupExistingGame(ns, client);
-        try {
-            await playGame(ns, client);
-        } catch (err) {
-            ns.print(`error ${String(err)}`);
-        }
+        await playGame(ns, client);
     }
 }
 
