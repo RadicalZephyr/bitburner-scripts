@@ -8,6 +8,7 @@ import { extend } from 'util/extend';
 type Command =
     | 'boardsize'
     | 'clear_board'
+    | 'clear_cache'
     | 'komi'
     | 'set_free_handicap'
     | 'set_walls'
@@ -43,6 +44,13 @@ export class GtpClient {
      */
     async clearBoard() {
         await this.send('clear_board');
+    }
+
+    /**
+     * Clear the search tree and the neural net cache from the engine.
+     */
+    async clearCache() {
+        await this.send('clear_cache');
     }
 
     /**
