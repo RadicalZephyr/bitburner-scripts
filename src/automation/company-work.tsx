@@ -91,11 +91,13 @@ async function workForCompanies(ns: NS, focus: Toggle) {
     const sing = ns.singularity;
 
     while (true) {
+        const player = ns.getPlayer();
+        const factions = new Set(player.factions);
         const myJobs = ns.getPlayer().jobs;
 
         const unfinished = companies
             .map((c) => new Company(ns, c))
-            .filter((c) => c.rep < CONFIG.companyRepForFaction);
+            .filter((c) => unfinishedCompany(c, factions));
 
         if (unfinished.length === 0) return;
 
@@ -116,6 +118,10 @@ async function workForCompanies(ns: NS, focus: Toggle) {
 
         await ns.asleep(60_000);
     }
+}
+
+function unfinishedCompany(c: Company, factions: Set<string>): boolean {
+    return !factions.has(c.name) && c.rep < CONFIG.companyRepForFaction;
 }
 
 function bestJob(ns: NS, c: CompanyName) {
