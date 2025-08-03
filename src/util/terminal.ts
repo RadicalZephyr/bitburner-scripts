@@ -52,3 +52,17 @@ export function hasTimerBar(haystack: string): boolean {
     const timer_re = /\[\|*-*]/;
     return timer_re.test(haystack);
 }
+
+/**
+ * Send a manual grow command in the terminal.
+ */
+export async function manualGrow() {
+    await sendTerminalCommand('grow');
+}
+
+/**
+ * Send a manual weaken command in the terminal.
+ */
+export async function manualWeaken() {
+    await sendTerminalCommand('weaken');
+}

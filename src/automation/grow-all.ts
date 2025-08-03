@@ -1,7 +1,7 @@
 import type { NS } from 'netscript';
 
 import { shortestPath } from 'util/shortest-path';
-import { sendTerminalCommand } from 'util/terminal';
+import { manualGrow } from 'util/terminal';
 import { walkNetworkBFS } from 'util/walk';
 
 export async function main(ns: NS) {
@@ -31,8 +31,4 @@ async function traverseNetworkPath(ns: NS, path: string[]) {
             throw new Error(`failed to connect to ${host} from ${currentHost}`);
     }
     await ns.sleep(0);
-}
-
-async function manualGrow() {
-    await sendTerminalCommand('grow');
 }
