@@ -21,7 +21,7 @@ async function manualGrowHost(ns: NS, host: string) {
     const currentHost = ns.singularity.getCurrentServer();
     const path = await shortestPath(ns, currentHost, host);
     await traverseNetworkPath(ns, path);
-    await manualGrow(ns);
+    await manualGrow();
 }
 
 async function traverseNetworkPath(ns: NS, path: string[]) {
@@ -33,6 +33,6 @@ async function traverseNetworkPath(ns: NS, path: string[]) {
     await ns.sleep(0);
 }
 
-async function manualGrow(ns: NS) {
+async function manualGrow() {
     await sendTerminalCommand('grow');
 }
