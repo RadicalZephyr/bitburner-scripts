@@ -38,8 +38,12 @@ OPTIONS
   --help   Show this help message
 
 CONFIGURATION
-  GO_goOpponent  Default opponent to challenge
-  GO_boardSize   Board size for new games
+  GO_goOpponent             Default opponent to challenge
+  GO_boardSize              Board size for new games
+  GO_maxOpponentPasses      Max passes opponent can make before we yield
+  GO_maxEngineInvalidMoves  Max repeated invalid moves the engine can suggest before we reset the game
+  GO_gtpProxyHost           Hostname where the GTP proxy is listening
+  GO_gtpProxyPort           Port number where the GTP proxy is listening
 `);
         return;
     }
