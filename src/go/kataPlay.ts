@@ -137,6 +137,7 @@ async function playGame(ns: NS, client: GtpClient) {
 
                 ns.print(`WARN: KataGo returned an invalid move: ${myMove}`);
                 await client.clearCache();
+                await ns.sleep(10);
                 continue;
             }
 
