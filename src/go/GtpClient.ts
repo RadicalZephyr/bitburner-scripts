@@ -191,17 +191,16 @@ function makeRequest(method: Method, url: string): Promise<string> {
             if (xhr.status >= 200 && xhr.status < 400) {
                 resolve(xhr.response);
             } else {
-                reject({
-                    status: xhr.status,
-                    statusText: xhr.statusText,
-                });
+                reject(
+                    new Error(
+                        `${method} ${url}: ${xhr.status} ${xhr.statusText}`,
+                    ),
+                );
             }
         };
         xhr.onerror = function () {
-            reject({
-                status: xhr.status,
-                statusText: xhr.statusText,
-            });
+            // {status: xhr.status, statusText: xhr.statusText,}
+            reject(new Error(`error attempting to send '${method} ${url}'`));
         };
         xhr.send();
     });
