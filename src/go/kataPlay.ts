@@ -125,7 +125,9 @@ async function playGame(ns: NS, client: GtpClient) {
                 errorMoves.push(myMove);
 
                 if (repeatedErrors >= CONFIG.maxEngineInvalidMoves) {
-                    ns.print(`KataGo returned an invalid move: ${myMove}`);
+                    ns.print(
+                        `ERROR: resetting game. KataGo returned ${errorMoves.length} invalid moves: ${errorMoves.join(', ')}`,
+                    );
                     ns.go.resetBoardState(
                         CONFIG.goOpponent as GoOpponent,
                         CONFIG.boardSize as 5 | 7 | 9 | 13,
@@ -133,6 +135,7 @@ async function playGame(ns: NS, client: GtpClient) {
                     return;
                 }
 
+                ns.print(`WARN: KataGo returned an invalid move: ${myMove}`);
                 await client.clearCache();
                 continue;
             }
