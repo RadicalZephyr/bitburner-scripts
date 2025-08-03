@@ -44,10 +44,14 @@ export async function main(ns: NS) {
 
     startService(ns, '/services/updater.js', 'n00dles');
 
-    await client.launch('/services/backdoor-notify.js', {
-        threads: 1,
-        alloc: { longRunning: true },
-    });
+    const sf4 = await getSourceFileLevel(ns, 4);
+
+    if (sf4 === 0) {
+        await client.launch('/services/backdoor-notify.js', {
+            threads: 1,
+            alloc: { longRunning: true },
+        });
+    }
 }
 
 function startService(ns: NS, script: string, host: string) {
