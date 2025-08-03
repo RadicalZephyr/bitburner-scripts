@@ -124,7 +124,7 @@ function unfinishedCompany(c: Company, factions: Set<string>): boolean {
     return !factions.has(c.name) && c.rep < CONFIG.companyRepForFaction;
 }
 
-function bestJob(ns: NS, c: CompanyName) {
+export function bestJob(ns: NS, c: CompanyName) {
     const sing = ns.singularity;
 
     const favor = sing.getCompanyFavor(c);
