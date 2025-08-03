@@ -9,6 +9,7 @@
         "format": "prettier --write .",
         "clean": "find dist -depth ! -name 'dist' ! -name .gitkeep -delete",
         "watch:init": "node build/init.js",
+        "watch:test": "jest --watch --notify",
         "watch:transpile": "tsc -w --preserveWatchOutput",
         "watch:local": "node build/watch.js",
         "watch:remote": "bitburner-filesync",
