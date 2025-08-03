@@ -1,17 +1,41 @@
-import type { NS } from 'netscript';
-import { parseFlags } from 'util/flags';
+import type { AutocompleteData, NS } from 'netscript';
+import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { collectDependencies } from 'util/dependencies';
 
+const BOOTSTRAP_HOST = 'foodnstuff';
+
+const FLAGS = [['help', false]] as const satisfies FlagsSchema;
+
+export function autocomplete(data: AutocompleteData): string[] {
+    data.flags(FLAGS);
+    return [];
+}
+
 export async function main(ns: NS) {
-    await parseFlags(ns, []);
+    const flags = await parseFlags(ns, FLAGS);
+
+    if (flags.help) {
+        ns.tprint(`
+USAGE: run ${ns.getScriptName()}
+
+Start bootstrapping process on ${BOOTSTRAP_HOST}.
+
+Example:
+  > run ${ns.getScriptName()}
+
+OPTIONS
+  --help   Show this help message
+`);
+        return;
+    }
 
     ns.disableLog('sleep');
 
     const script = '/bootstrap.js';
     const dependencies = collectDependencies(ns, script);
     const files = [script, ...dependencies];
-    const hostname = 'foodnstuff';
+    const hostname = BOOTSTRAP_HOST;
 
     if (!ns.scp(files, hostname, 'home')) {
         reportError(ns, `failed to send files to ${hostname}`);
