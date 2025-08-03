@@ -5,7 +5,10 @@ import { collectDependencies } from 'util/dependencies';
 
 const BOOTSTRAP_HOST = 'foodnstuff';
 
-const FLAGS = [['help', false]] as const satisfies FlagsSchema;
+const FLAGS = [
+    ['minimal', false],
+    ['help', false],
+] as const satisfies FlagsSchema;
 
 export function autocomplete(data: AutocompleteData): string[] {
     data.flags(FLAGS);
@@ -25,7 +28,8 @@ Example:
   > run ${ns.getScriptName()}
 
 OPTIONS
-  --help   Show this help message
+  --minimal  Start minimal services appropriate to early bitnode conditions
+  --help     Show this help message
 `);
         return;
     }
@@ -47,7 +51,8 @@ OPTIONS
         return;
     }
 
-    const pid = ns.exec(script, hostname);
+    const args = flags.minimal ? ['--minimal'] : [];
+    const pid = ns.exec(script, hostname, 1, ...args);
     if (pid === 0) {
         reportError(ns, `failed to launch ${script} on ${hostname}`);
         return;

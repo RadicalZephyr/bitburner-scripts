@@ -1,5 +1,5 @@
-import type { NS } from 'netscript';
-import { parseFlags } from 'util/flags';
+import type { AutocompleteData, NS } from 'netscript';
+import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { main as serviceBootstrap } from 'services/bootstrap';
 import { main as batchBootstrap } from 'batch/bootstrap';
@@ -8,12 +8,41 @@ import { main as goBootstrap } from 'go/bootstrap';
 
 import { getSourceFileLevel } from 'services/client/source_file';
 
+const FLAGS = [
+    ['minimal', false],
+    ['help', false],
+] as const satisfies FlagsSchema;
+
+export function autocomplete(data: AutocompleteData): string[] {
+    data.flags(FLAGS);
+    return [];
+}
+
 export async function main(ns: NS) {
-    await parseFlags(ns, []);
+    const flags = await parseFlags(ns, FLAGS);
+
+    if (flags.help) {
+        ns.tprint(`
+USAGE: run ${ns.getScriptName()}
+
+Run bootstrap scripts to start various systems.
+
+Example:
+  > run ${ns.getScriptName()}
+
+OPTIONS
+  --minimal  Start minimal services appropriate to early bitnode conditions
+  --help   Show this help message
+`);
+        return;
+    }
 
     await serviceBootstrap(ns);
-    await batchBootstrap(ns);
     await goBootstrap(ns);
+
+    if (flags.minimal) return;
+
+    await batchBootstrap(ns);
 
     const sf4 = await getSourceFileLevel(ns, 4);
     if (sf4 > 0) {

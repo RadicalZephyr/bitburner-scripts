@@ -1,12 +1,22 @@
-import type { NS } from 'netscript';
-import { parseFlags } from 'util/flags';
+import type { AutocompleteData, NS } from 'netscript';
+import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { LaunchClient } from 'services/client/launch';
 
 import { collectDependencies } from 'util/dependencies';
 
+const FLAGS = [
+    ['minimal', false],
+    ['help', false],
+] as const satisfies FlagsSchema;
+
+export function autocomplete(data: AutocompleteData): string[] {
+    data.flags(FLAGS);
+    return [];
+}
+
 export async function main(ns: NS) {
-    await parseFlags(ns, []);
+    const flags = await parseFlags(ns, FLAGS);
 
     const host = ns.self().server;
 
@@ -18,13 +28,19 @@ export async function main(ns: NS) {
     startService(ns, '/services/memory.js', host);
     startService(ns, '/services/launcher.js', host);
 
-    startService(ns, '/services/updater.js', 'n00dles');
-
     const client = new LaunchClient(ns);
+
+    await client.launch('/services/port.js', {
+        threads: 1,
+        alloc: { longRunning: true },
+    });
+
+    if (flags.minimal) return;
+
+    startService(ns, '/services/updater.js', 'n00dles');
 
     const services = [
         '/services/source_file.js',
-        '/services/port.js',
         '/services/backdoor-notify.js',
     ];
 
