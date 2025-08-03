@@ -2,6 +2,7 @@ import type { NS, UserInterfaceTheme } from 'netscript';
 import { parseFlags } from 'util/flags';
 
 import { canInstallBackdoor, needsBackdoor } from 'util/backdoor';
+import { sendTerminalCommand } from 'util/terminal';
 import { useTheme } from 'util/useTheme';
 import { walkNetworkBFS } from 'util/walk';
 
@@ -91,9 +92,11 @@ function ServerDisplay({ title, servers, theme }: ServerDisplayProps) {
                         <a
                             href="#"
                             onClick={() => {
-                                sendCommand(`home ; whereis --goto  ${host}`);
+                                sendTerminalCommand(
+                                    `home ; whereis --goto  ${host}`,
+                                );
                                 globalThis.setTimeout(
-                                    () => sendCommand('backdoor'),
+                                    () => sendTerminalCommand('backdoor'),
                                     500,
                                 );
                             }}
@@ -131,21 +134,4 @@ function backdoorableServers(ns: NS) {
     }
 
     return { factionMissing, missing };
-}
-
-/** Send a command to the terminal by simulating user input. */
-export function sendCommand(command: string): void {
-    const terminalInput = globalThis['terminal-input'];
-    if (!(terminalInput instanceof HTMLInputElement)) return;
-
-    terminalInput.value = command;
-    const handler = Object.keys(terminalInput)[1];
-    terminalInput[handler].onChange({ target: terminalInput });
-    function enterKey() {
-        terminalInput[handler].onKeyDown({
-            key: 'Enter',
-            preventDefault: (): void => null,
-        });
-    }
-    globalThis.setTimeout(enterKey, 10);
 }

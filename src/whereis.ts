@@ -2,6 +2,7 @@ import type { NS, AutocompleteData } from 'netscript';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { shortestPath } from 'util/shortest-path';
+import { sendTerminalCommand } from 'util/terminal';
 
 const FLAGS = [
     ['goto', false],
@@ -52,23 +53,7 @@ OPTIONS
     const goCommand = `go ${path.join(' ; go ')}`;
 
     if (flags.goto) {
-        // Acquire a reference to the terminal text field
-        const terminalInput = globalThis['terminal-input'];
-        if (!(terminalInput instanceof HTMLInputElement)) return;
-
-        terminalInput.value = goCommand;
-
-        // Get a reference to the React event handler.
-        const handler = Object.keys(terminalInput)[1];
-
-        // Perform an onChange event to set some internal values.
-        terminalInput[handler].onChange({ target: terminalInput });
-
-        // Simulate an enter press
-        terminalInput[handler].onKeyDown({
-            key: 'Enter',
-            preventDefault: (): void => null,
-        });
+        sendTerminalCommand(goCommand);
     } else {
         ns.tprintf(`path to ${goalHost}:\n ${goCommand}`);
     }
