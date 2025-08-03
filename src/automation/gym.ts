@@ -45,6 +45,7 @@ export async function main(ns: NS) {
     if (
         flags.help
         || typeof targetLevel !== 'number'
+        || targetLevel <= 0
         || !isGymLocation(ns, gym)
     ) {
         ns.tprint(`
