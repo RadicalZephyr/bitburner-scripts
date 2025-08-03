@@ -14,6 +14,7 @@ import {
     buyReputation,
     getBestFaction,
 } from 'automation/buy-augments';
+import { buyPortOpeners } from 'automation/port-openers';
 import { CONFIG } from 'automation/config';
 
 import { MoneyTracker, primedMoneyTracker } from 'util/money-tracker';
@@ -148,34 +149,6 @@ function gymWorkout(
 ) {
     if (!ns.singularity.gymWorkout(location, stat, false))
         throw new Error(`failed to workout ${stat} at ${location}`);
-}
-
-const PROGRAMS = [
-    'BruteSSH.exe',
-    'FTPCrack.exe',
-    'relaySMTP.exe',
-    'HTTPWorm.exe',
-    'SQLInject.exe',
-];
-
-async function buyPortOpeners(ns: NS) {
-    for (const prog of PROGRAMS) {
-        if (ns.fileExists(prog, 'home')) continue;
-        const cost = ns.singularity.getDarkwebProgramCost(prog);
-        await moneyAtLeast(ns, cost);
-        if (!ns.singularity.purchaseProgram(prog))
-            throw new Error(`failed to purchase ${prog} from the darkweb`);
-    }
-}
-
-async function moneyAtLeast(ns: NS, targetMoney: number) {
-    while (getPlayerMoney(ns) < targetMoney) {
-        await ns.asleep(10_000);
-    }
-}
-
-function getPlayerMoney(ns: NS): number {
-    return ns.getServerMoneyAvailable('home');
 }
 
 async function buyNeuroFlux(ns: NS) {
