@@ -1,6 +1,8 @@
 import { Config, ConfigInstance } from 'util/config';
 
 const entries = [
+    ['bruteSshHackRequirement', 1],
+    ['ftpCrackHackRequirement', 30],
     ['combatTrainTimeMs', 10_000],
     ['companyRepForFaction', 400_000],
     ['moneyTrackerCadence', 10_000],
