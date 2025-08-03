@@ -34,6 +34,10 @@ export async function sendTerminalCommand(command: string) {
 }
 
 function hasTimerBar(el: Element): boolean {
+    // Should match against the ASCII progress bar timed terminal commands display:
+    // `[-----------]`
+    // `[||||||-----]`
+    // `[|||||||||||]`
     const timer_re = /\[\|*-*]/;
     return timer_re.test(el.innerHTML);
 }
