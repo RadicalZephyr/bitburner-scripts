@@ -1,7 +1,7 @@
 import type { NS } from 'netscript';
 
 import { shortestPath } from 'util/shortest-path';
-import { manualGrow } from 'util/terminal';
+import { manualGrow, manualWeaken } from 'util/terminal';
 import { walkNetworkBFS } from 'util/walk';
 
 export async function main(ns: NS) {
@@ -22,6 +22,13 @@ async function manualGrowHost(ns: NS, host: string) {
     const path = await shortestPath(ns, currentHost, host);
     await traverseNetworkPath(ns, path);
     await manualGrow();
+
+    const minSecurity = ns.getServerBaseSecurityLevel(host);
+    let serverSecurity = ns.getServerSecurityLevel(host);
+    while (serverSecurity > minSecurity) {
+        await manualWeaken();
+        serverSecurity = ns.getServerSecurityLevel(host);
+    }
 }
 
 async function traverseNetworkPath(ns: NS, path: string[]) {
