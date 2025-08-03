@@ -35,5 +35,4 @@ async function traverseNetworkPath(ns: NS, path: string[]) {
 
 async function manualGrow(ns: NS) {
     await sendTerminalCommand('grow');
-    await ns.sleep(2000);
 }
