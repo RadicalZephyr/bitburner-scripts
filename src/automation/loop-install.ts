@@ -1,5 +1,4 @@
 import type {
-    CityName,
     GymLocationName,
     GymType,
     NS,
@@ -15,6 +14,7 @@ import {
     getBestFaction,
 } from 'automation/buy-augments';
 import { buyPortOpeners } from 'automation/port-openers';
+import { travelTo } from 'automation/travel';
 import { CONFIG } from 'automation/config';
 
 import { MoneyTracker, primedMoneyTracker } from 'util/money-tracker';
@@ -84,13 +84,6 @@ function purchaseTor(ns: NS) {
         throw new Error('not enough money to purchase TOR');
     if (!ns.hasTorRouter() && !ns.singularity.purchaseTor())
         throw new Error('could not purchase TOR');
-}
-
-function travelTo(ns: NS, city: CityName) {
-    if (ns.getServerMoneyAvailable('home') < 200_000)
-        throw new Error(`not enough money to travel to ${city}`);
-    if (!ns.singularity.travelToCity(city))
-        throw new Error(`failed to travel to ${city}`);
 }
 
 function study(
