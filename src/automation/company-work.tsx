@@ -93,7 +93,7 @@ async function workForCompanies(ns: NS, focus: Toggle) {
     while (true) {
         const player = ns.getPlayer();
         const factions = new Set(player.factions);
-        const myJobs = ns.getPlayer().jobs;
+        const myJobs = player.jobs;
 
         const unfinished = companies
             .map((c) => new Company(ns, c))
