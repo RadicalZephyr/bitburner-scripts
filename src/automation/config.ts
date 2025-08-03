@@ -1,6 +1,7 @@
 import { Config, ConfigInstance } from 'util/config';
 
 const entries = [
+    ['combatTrainTimeMs', 10_000],
     ['companyRepForFaction', 400_000],
     ['moneyTrackerCadence', 10_000],
     ['moneyTrackerHistoryLen', 3],

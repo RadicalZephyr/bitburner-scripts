@@ -1,6 +1,4 @@
 import type {
-    GymLocationName,
-    GymType,
     NS,
     UniversityClassType,
     UniversityLocationName,
@@ -13,6 +11,7 @@ import {
     buyReputation,
     getBestFaction,
 } from 'automation/buy-augments';
+import { trainCombat } from 'automation/gym';
 import { buyPortOpeners } from 'automation/port-openers';
 import { travelTo } from 'automation/travel';
 import { CONFIG } from 'automation/config';
@@ -101,47 +100,6 @@ async function untilHackLevel(ns: NS, targetLevel: number) {
         if (hackLevel >= targetLevel) return;
         await ns.sleep(1000);
     }
-}
-
-async function trainCombat(ns: NS, targetLevel: number) {
-    const powerhouseGym = ns.enums.LocationName.Sector12PowerhouseGym;
-    const GymType = ns.enums.GymType;
-
-    travelTo(ns, ns.enums.CityName.Sector12);
-
-    const combatSkills = new Set([
-        'strength',
-        'defense',
-        'dexterity',
-        'agility',
-    ]);
-    while (true) {
-        const playerSkills = ns.getPlayer().skills;
-        const skillsToTrain = Object.keys(playerSkills)
-            .filter((s) => combatSkills.has(s))
-            .map((s) => {
-                return { name: s, level: playerSkills[s] };
-            })
-            .filter((s) => s.level < targetLevel);
-
-        if (skillsToTrain.length === 0) return;
-
-        skillsToTrain.sort((a, b) => a.level - b.level);
-
-        const skill = skillsToTrain[0];
-        gymWorkout(ns, powerhouseGym, GymType[skill.name]);
-
-        await ns.sleep(10_000);
-    }
-}
-
-function gymWorkout(
-    ns: NS,
-    location: GymLocationName | `${GymLocationName}`,
-    stat: GymType,
-) {
-    if (!ns.singularity.gymWorkout(location, stat, false))
-        throw new Error(`failed to workout ${stat} at ${location}`);
 }
 
 async function buyNeuroFlux(ns: NS) {
