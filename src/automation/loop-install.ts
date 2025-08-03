@@ -49,8 +49,6 @@ CONFIGURATION
 
     ns.run('automation/join-factions.js');
 
-    purchaseTor(ns);
-
     travelTo(ns, Volhaven);
     study(ns, zbU, algClass);
 
@@ -77,13 +75,6 @@ CONFIGURATION
     // The final step, this eventually restarts this script after a
     // fresh install.
     ns.singularity.installAugmentations('automation/loop-install.js');
-}
-
-function purchaseTor(ns: NS) {
-    if (ns.getServerMoneyAvailable('home') < 200_000)
-        throw new Error('not enough money to purchase TOR');
-    if (!ns.hasTorRouter() && !ns.singularity.purchaseTor())
-        throw new Error('could not purchase TOR');
 }
 
 function study(
