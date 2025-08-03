@@ -2,6 +2,7 @@ import type { AutocompleteData, NS } from 'netscript';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { LaunchClient } from 'services/client/launch';
+import { getSourceFileLevel } from 'services/client/source_file';
 
 import { collectDependencies } from 'util/dependencies';
 
@@ -30,26 +31,23 @@ export async function main(ns: NS) {
 
     const client = new LaunchClient(ns);
 
-    await client.launch('/services/port.js', {
-        threads: 1,
-        alloc: { longRunning: true },
-    });
+    const essentialServices = ['/services/port.js', '/services/source_file.js'];
 
-    if (flags.minimal) return;
-
-    startService(ns, '/services/updater.js', 'n00dles');
-
-    const services = [
-        '/services/source_file.js',
-        '/services/backdoor-notify.js',
-    ];
-
-    for (const script of services) {
+    for (const script of essentialServices) {
         await client.launch(script, {
             threads: 1,
             alloc: { longRunning: true },
         });
     }
+
+    if (flags.minimal) return;
+
+    startService(ns, '/services/updater.js', 'n00dles');
+
+    await client.launch('/services/backdoor-notify.js', {
+        threads: 1,
+        alloc: { longRunning: true },
+    });
 }
 
 function startService(ns: NS, script: string, host: string) {
