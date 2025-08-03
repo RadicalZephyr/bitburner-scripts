@@ -42,6 +42,7 @@ CONFIGURATION
 
     const Volhaven = ns.enums.CityName.Volhaven;
     const zbU = ns.enums.LocationName.VolhavenZBInstituteOfTechnology;
+    const powerhouseGym = ns.enums.LocationName.Sector12PowerhouseGym;
     const algClass = ns.enums.UniversityClassType.algorithms;
 
     ns.ui.openTail();
@@ -62,7 +63,7 @@ CONFIGURATION
     await ns.sleep(10_000);
     ns.run('automation/hack.js');
 
-    await trainCombat(ns, 1200);
+    await trainCombat(ns, powerhouseGym, 1200);
 
     await buyPortOpeners(ns);
 
