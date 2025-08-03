@@ -26,6 +26,10 @@ export function travelToCityForLocation(
     location: LocationName | `${LocationName}`,
 ) {
     const city = cityForLocation(ns, location);
+    if (!city) {
+        ns.print(`ERROR: ${location} not found, no city mapping exists.`);
+        return;
+    }
     travelTo(ns, city);
 }
 
