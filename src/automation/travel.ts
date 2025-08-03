@@ -21,18 +21,25 @@ export function travelTo(ns: NS, city: CityName) {
  * @param ns       - Netscript API instance
  * @param location - Location name
  */
-export function travelToCityForLocation(ns: NS, location: LocationName) {
+export function travelToCityForLocation(
+    ns: NS,
+    location: LocationName | `${LocationName}`,
+) {
     const city = cityForLocation(ns, location);
     travelTo(ns, city);
 }
 
-function cityForLocation(ns: NS, location: LocationName): CityName | null {
-    if (anyCityLocation(ns).has(location)) return ns.getPlayer().city;
+function cityForLocation(
+    ns: NS,
+    location: LocationName | `${LocationName}`,
+): CityName | null {
+    if (anyCityLocation(ns).has(location as LocationName))
+        return ns.getPlayer().city;
 
     const ctl = cityToLocation(ns);
 
     for (const [city, locations] of ctl) {
-        if (locations.has(location)) return city;
+        if (locations.has(location as LocationName)) return city;
     }
     return null;
 }
