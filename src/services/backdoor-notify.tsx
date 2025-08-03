@@ -91,8 +91,8 @@ function ServerDisplay({ title, servers, theme }: ServerDisplayProps) {
                     <li key={host}>
                         <a
                             href="#"
-                            onClick={() => {
-                                sendTerminalCommand(
+                            onClick={async () => {
+                                await sendTerminalCommand(
                                     `home ; whereis --goto  ${host}`,
                                 );
                                 globalThis.setTimeout(

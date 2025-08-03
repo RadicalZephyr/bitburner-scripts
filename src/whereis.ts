@@ -53,7 +53,7 @@ OPTIONS
     const goCommand = `go ${path.join(' ; go ')}`;
 
     if (flags.goto) {
-        sendTerminalCommand(goCommand);
+        await sendTerminalCommand(goCommand);
     } else {
         ns.tprintf(`path to ${goalHost}:\n ${goCommand}`);
     }

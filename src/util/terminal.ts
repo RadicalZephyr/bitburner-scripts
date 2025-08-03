@@ -1,7 +1,9 @@
+import { sleep } from 'util/time';
+
 /**
  * Send a command to the game terminal, simulating user input.
  */
-export function sendTerminalCommand(command: string) {
+export async function sendTerminalCommand(command: string) {
     // Acquire a reference to the terminal text field
     const terminalInput = globalThis['terminal-input'];
     if (!(terminalInput instanceof HTMLInputElement)) return;
@@ -19,4 +21,19 @@ export function sendTerminalCommand(command: string) {
         key: 'Enter',
         preventDefault: (): void => null,
     });
+
+    await sleep(0);
+    const terminalOutput = globalThis['terminal'];
+    if (!(terminalOutput instanceof Element)) return;
+
+    let lastTermOut = terminalOutput.lastElementChild;
+    while (lastTermOut && hasTimerBar(lastTermOut)) {
+        await sleep(100);
+        lastTermOut = terminalOutput.lastElementChild;
+    }
+}
+
+function hasTimerBar(el: Element): boolean {
+    const timer_re = /\[\|*-*]/;
+    return timer_re.test(el.innerHTML);
 }
