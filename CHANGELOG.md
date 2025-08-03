@@ -40,6 +40,9 @@
 - Add a script to install backdoors on faction servers as soon as it becomes possible [#193][pr-193].
 - Automation bootstrap launches faction, backdoor, and RAM upgrade tasks when Source File\u202f4 is owned [#195][pr-195].
 - Company work automation works for all faction-giving companies evenly and added focus toggle [#198][pr-198].
+- Gym training script and travel helpers automate combat stat leveling with configurable cadence (`combatTrainTimeMs`) [#226][pr-226].
+- Port opener buying, network-wide manual growth, and Silhouette faction setup scripts streamline early game automation [#226][pr-226].
+- Company work automation skips companies for factions the player already belongs to [#226][pr-226].
 
 ### Utilities
 
@@ -49,6 +52,7 @@
 - `killEverywhere` command kills scripts across the network; `clear-port.js` clears all ports when none specified [#192][pr-192], [#191][pr-191].
 - Backdoor helpers (`needsBackdoor`, `canInstallBackdoor`) and `shortestPath` utility added for automation scripts [#193][pr-193].
 - `makeFuid` generates unique IDs for client requests and allocation tracking [#192][pr-192].
+- `sendTerminalCommand`, `manualGrow`, and `manualWeaken` automate terminal interactions and wait for progress bars [#226][pr-226].
 
 ### User interface
 
@@ -61,6 +65,7 @@
 - Memory management guide expanded with the new `FreeRam` structure and memory-aware calculations [#184][pr-184].
 - Unit tests cover expected value calculations with limited memory [#184][pr-184].
 - AGENTS guidelines clarified for PR reviewers [#189][pr-189].
+- Utility tests relocated under `src/util/__tests__` with coverage for terminal progress bar detection [#226][pr-226].
 
 [pr-160]: https://github.com/RadicalZephyr/bitburner-scripts/pull/160
 [pr-166]: https://github.com/RadicalZephyr/bitburner-scripts/pull/166
@@ -93,6 +98,7 @@
 [pr-218]: https://github.com/RadicalZephyr/bitburner-scripts/pull/218
 [pr-221]: https://github.com/RadicalZephyr/bitburner-scripts/pull/221
 [pr-223]: https://github.com/RadicalZephyr/bitburner-scripts/pull/223
+[pr-226]: https://github.com/RadicalZephyr/bitburner-scripts/pull/226
 
 ## v2.1.0
 
