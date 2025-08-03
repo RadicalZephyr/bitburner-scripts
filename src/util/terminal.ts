@@ -27,17 +27,28 @@ export async function sendTerminalCommand(command: string) {
     if (!(terminalOutput instanceof Element)) return;
 
     let lastTermOut = terminalOutput.lastElementChild;
-    while (lastTermOut && hasTimerBar(lastTermOut)) {
+    while (lastTermOut && hasTimerBar(lastTermOut.innerHTML)) {
         await sleep(100);
         lastTermOut = terminalOutput.lastElementChild;
     }
 }
 
-function hasTimerBar(el: Element): boolean {
-    // Should match against the ASCII progress bar timed terminal commands display:
-    // `[-----------]`
-    // `[||||||-----]`
-    // `[|||||||||||]`
+/**
+ * Search a string for the presence of the ASCII timer progress bar.
+ *
+ * @remarks
+ *
+ * Should match against the ASCII progress bar timed terminal commands
+ * display:
+ *
+ * `[-----------]`
+ * `[||||||-----]`
+ * `[|||||||||||]`
+ *
+ * @param haystack - string to search for timer bar pattern
+ * @returns whether the pattern is present or not.
+ */
+export function hasTimerBar(haystack: string): boolean {
     const timer_re = /\[\|*-*]/;
-    return timer_re.test(el.innerHTML);
+    return timer_re.test(haystack);
 }
