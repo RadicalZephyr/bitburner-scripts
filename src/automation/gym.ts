@@ -4,6 +4,7 @@ import type {
     GymType,
     GymLocationName,
     LocationName,
+    NSEnums,
 } from 'netscript';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
@@ -15,8 +16,22 @@ const FLAGS = [
     ['help', false],
 ] as const satisfies FlagsSchema;
 
-export function autocomplete(data: AutocompleteData): string[] {
+export function autocomplete(data: AutocompleteData, args: string[]): string[] {
     data.flags(FLAGS);
+
+    const secondLast = args.at(-2);
+    const last = args.at(-1);
+
+    const gymFlag = `--gym`;
+    const gymLocs = gymLocations(data.enums).map((g) => `'${g}'`);
+
+    if (last === gymFlag) return gymLocs;
+
+    if (secondLast === gymFlag) {
+        const c = gymLocs.filter((g) => g.startsWith(last));
+        return c;
+    }
+
     return [];
 }
 
@@ -104,12 +119,16 @@ function gymWorkout(
 }
 
 function isGymLocation(ns: NS, location: string): location is GymLocationName {
-    const gymLocations = new Set([
-        ns.enums.LocationName.AevumCrushFitnessGym,
-        ns.enums.LocationName.AevumSnapFitnessGym,
-        ns.enums.LocationName.Sector12IronGym,
-        ns.enums.LocationName.Sector12PowerhouseGym,
-        ns.enums.LocationName.VolhavenMilleniumFitnessGym,
-    ]);
-    return gymLocations.has(location as LocationName);
+    const locs = new Set(gymLocations(ns.enums));
+    return locs.has(location as LocationName);
+}
+
+function gymLocations(enums: NSEnums): LocationName[] {
+    return [
+        enums.LocationName.AevumCrushFitnessGym,
+        enums.LocationName.AevumSnapFitnessGym,
+        enums.LocationName.Sector12IronGym,
+        enums.LocationName.Sector12PowerhouseGym,
+        enums.LocationName.VolhavenMilleniumFitnessGym,
+    ];
 }
