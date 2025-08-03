@@ -24,7 +24,6 @@ interface Response {
 
 export class GtpClient {
     ns: NS;
-    requestId: number = 1;
 
     constructor(ns: NS) {
         this.ns = ns;
@@ -143,12 +142,6 @@ export class GtpClient {
         return lowcaseVertex;
     }
 
-    private responseFile() {
-        const file = `response${this.requestId}.json`;
-        this.requestId += 1;
-        return file;
-    }
-
     private async send(cmd: Command, payload?: string): Promise<string> {
         const url = CONFIG.gtpProxyHost;
         const port = CONFIG.gtpProxyPort;
@@ -171,21 +164,11 @@ export class GtpClient {
     }
 
     private async makeRequest(url: string): Promise<Response> {
-        const responseFile = this.responseFile();
-        const responseStatus = await this.ns.wget(url, responseFile);
-        if (!responseStatus) {
-            throw new Error('wget failed to retrieve file');
-        }
-
-        if (!this.ns.fileExists(responseFile)) {
-            throw new Error('wget failed to write file');
-        }
-        const responseContent = this.ns.read(responseFile);
-        this.ns.rm(responseFile);
-
+        const responseContent = await makeRequest('GET', url);
         return parseResponse(JSON.parse(responseContent));
     }
 }
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function parseResponse(o: any): Response {
     if (typeof o !== 'object')
@@ -196,4 +179,30 @@ function parseResponse(o: any): Response {
         );
 
     return o as Response;
+}
+
+type Method = 'HEAD' | 'GET' | 'POST' | 'PUT' | 'DELETE';
+
+function makeRequest(method: Method, url: string): Promise<string> {
+    return new Promise(function (resolve, reject) {
+        const xhr = new XMLHttpRequest();
+        xhr.open(method, url);
+        xhr.onload = function () {
+            if (xhr.status >= 200 && xhr.status < 400) {
+                resolve(xhr.response);
+            } else {
+                reject({
+                    status: xhr.status,
+                    statusText: xhr.statusText,
+                });
+            }
+        };
+        xhr.onerror = function () {
+            reject({
+                status: xhr.status,
+                statusText: xhr.statusText,
+            });
+        };
+        xhr.send();
+    });
 }
