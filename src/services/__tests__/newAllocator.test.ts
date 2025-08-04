@@ -37,3 +37,18 @@ describe('can create an allocator', () => {
         expect(alloc.getFreeRamTotal()).toBeCloseTo(15);
     });
 });
+
+describe('basic Worker CRUD', () => {
+    test('create workers', () => {
+        const w1 = new Worker('home', 8, 2);
+        expect(w1.hostname).toBe('home');
+        expect(w1.freeRam).toBe(6);
+
+        const w2 = new Worker('n00dles', 4);
+        expect(w2.hostname).toBe('n00dles');
+        expect(w2.freeRam).toBe(4);
+
+        w2.updateSetAsideRam(0.05);
+        expect(w2.freeRam).toBeCloseTo(3.95);
+    });
+});
