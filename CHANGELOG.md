@@ -48,6 +48,7 @@
 - Port opener buying, network-wide manual growth, and Silhouette faction setup scripts streamline early game automation [#226][pr-226].
 - Company work automation skips companies for factions the player already belongs to [#226][pr-226].
 - Add a script for automating early bitnode bootstrapping [#227][pr-227].
+- Faction work automation skips factions with no available work tasks to avoid unreachable reputation goals [#229][pr-229].
 
 ### Utilities
 
@@ -58,12 +59,14 @@
 - Backdoor helpers (`needsBackdoor`, `canInstallBackdoor`) and `shortestPath` utility added for automation scripts [#193][pr-193].
 - `makeFuid` generates unique IDs for client requests and allocation tracking [#192][pr-192].
 - `sendTerminalCommand`, `manualGrow`, and `manualWeaken` automate terminal interactions and wait for progress bars [#226][pr-226].
+- Consolidated custom React hooks into `util/hooks.ts`, adding polling helpers for single-render components [#229][pr-229].
 
 ### User interface
 
 - Backdoor notifier rewritten as a React component with automatic tail management [#178][pr-178].
 - Monitor HUD displays expected profit per second alongside expected value [#185][pr-185].
 - Monitor HUD displays total hacking profit-per-second [#214][pr-214].
+- Tail UIs like monitor, infiltration list, and backdoor notifier render once and poll for updates using hook utilities [#229][pr-229].
 
 ### Documentation and tests
 
@@ -105,6 +108,7 @@
 [pr-223]: https://github.com/RadicalZephyr/bitburner-scripts/pull/223
 [pr-226]: https://github.com/RadicalZephyr/bitburner-scripts/pull/226
 [pr-227]: https://github.com/RadicalZephyr/bitburner-scripts/pull/227
+[pr-229]: https://github.com/RadicalZephyr/bitburner-scripts/pull/229
 
 ## v2.1.0
 
