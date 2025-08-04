@@ -4,6 +4,7 @@ import { parseFlags } from 'util/flags';
 import { canInstallBackdoor, needsBackdoor } from 'util/backdoor';
 import { sendTerminalCommand } from 'util/terminal';
 import { useTheme } from 'util/useTheme';
+import { useNsUpdate } from 'util/useNsUpdate';
 import { walkNetworkBFS } from 'util/walk';
 
 const FACTION_SERVERS = [
@@ -23,9 +24,20 @@ export async function main(ns: NS) {
     ns.printRaw(<BackdoorNotifier ns={ns} />);
     ns.ui.renderTail();
 
+    const tailOpen = { current: false };
+
     // keep the script alive so React effects continue to run
     while (true) {
-        await ns.asleep(60_000);
+        const { factionMissing } = backdoorableServers(ns);
+        if (factionMissing.length > 0 && !tailOpen.current) {
+            tailOpen.current = true;
+            ns.ui.openTail();
+        } else if (factionMissing.length === 0 && tailOpen.current) {
+            tailOpen.current = false;
+            ns.ui.closeTail();
+        }
+
+        await ns.asleep(1_000);
     }
 }
 
@@ -34,33 +46,13 @@ interface BackdoorNotifierProps {
 }
 
 function BackdoorNotifier({ ns }: BackdoorNotifierProps) {
-    const [factionServers, setFactionServers] = React.useState([] as string[]);
-    const [servers, setServers] = React.useState([] as string[]);
     const theme = useTheme(ns);
 
-    const tailOpen = React.useRef(false);
-
-    React.useEffect(() => {
-        const id = globalThis.setInterval(() => {
-            const { factionMissing, missing } = backdoorableServers(ns);
-
-            if (factionMissing.length > 0 && !tailOpen.current) {
-                tailOpen.current = true;
-                ns.ui.openTail();
-            } else if (factionMissing.length === 0 && tailOpen.current) {
-                tailOpen.current = false;
-                ns.ui.closeTail();
-            }
-
-            setFactionServers(factionMissing);
-            setServers(missing);
-            ns.ui.renderTail();
-        }, 200);
-
-        return () => {
-            globalThis.clearInterval(id);
-        };
-    }, [ns]);
+    const { missing: servers, factionMissing: factionServers } = useNsUpdate(
+        ns,
+        1000,
+        backdoorableServers,
+    );
 
     return (
         <>
