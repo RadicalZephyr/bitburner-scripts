@@ -163,9 +163,9 @@ function getFactions(ns: NS) {
 }
 
 function getUnfinishedFactions(ns: NS, ownedAugs: Set<string>) {
-    const factions = getFactions(ns).map(
-        (name) => new Faction(ns, name, ownedAugs),
-    );
+    const factions = getFactions(ns)
+        .map((name) => new Faction(ns, name, ownedAugs))
+        .filter((f) => ns.singularity.getFactionWorkTypes(f.name).length > 0);
     return factions.filter((f) => !haveNeededRepForFaction(ns, f));
 }
 
