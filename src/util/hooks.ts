@@ -3,6 +3,34 @@ import type { NS, UserInterfaceTheme } from 'netscript';
 import { makeFuid } from 'util/fuid';
 
 /**
+ * Get an updating state value derived from polling the given function.
+ *
+ * @param interval - Milliseconds between polling `pollFn`
+ * @param pollFn   - Function to poll state changes
+ * @returns Reactive state produced by `pollFn`
+ */
+export function usePoll<T>(ns: NS, interval: number, pollFn: () => T): T {
+    const [data, setData] = React.useState(pollFn());
+
+    React.useEffect(() => {
+        const id = globalThis.setInterval(() => {
+            setData(pollFn());
+        }, interval);
+
+        const exitHandlerName = 'usePoll-' + makeFuid(ns);
+
+        ns.atExit(() => globalThis.clearInterval(id), exitHandlerName);
+
+        return () => {
+            ns.atExit(() => null, exitHandlerName);
+            globalThis.clearInterval(id);
+        };
+    }, [ns, interval, pollFn]);
+
+    return data;
+}
+
+/**
  * Get an updating state value derived from polling the Netscript API
  * with an update function.
  *
