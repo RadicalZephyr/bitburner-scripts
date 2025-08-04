@@ -1,6 +1,8 @@
 import type { NS } from 'netscript';
 import { parseFlags } from 'util/flags';
 
+import { useNsUpdate } from 'util/useNsUpdate';
+
 import {
     STATUS_WINDOW_WIDTH,
     STATUS_WINDOW_HEIGHT,
@@ -39,20 +41,7 @@ interface KarmaProps {
 }
 
 function Karma({ ns, cellStyle }: KarmaProps) {
-    const [karma, setKarma] = React.useState(0);
-    const [numKilled, setNumKilled] = React.useState(0);
-
-    React.useEffect(() => {
-        const id = globalThis.setInterval(() => {
-            const player = ns.getPlayer();
-            setKarma(player.karma);
-            setNumKilled(player.numPeopleKilled);
-        });
-
-        return () => {
-            globalThis.clearInterval(id);
-        };
-    });
+    const karmaStats = useNsUpdate(ns, 100, getKarma);
 
     return (
         <>
@@ -60,14 +49,28 @@ function Karma({ ns, cellStyle }: KarmaProps) {
                 <tbody>
                     <tr>
                         <td style={cellStyle}>Karma: </td>
-                        <td style={cellStyle}>{ns.formatNumber(karma)}</td>
+                        <td style={cellStyle}>
+                            {ns.formatNumber(karmaStats.karma)}
+                        </td>
                     </tr>
                     <tr>
                         <td style={cellStyle}>Victims: </td>
-                        <td style={cellStyle}>{numKilled}</td>
+                        <td style={cellStyle}>{karmaStats.numKilled}</td>
                     </tr>
                 </tbody>
             </table>
         </>
     );
+}
+
+interface KarmaStats {
+    karma: number;
+    numKilled: number;
+}
+
+function getKarma(ns: NS): KarmaStats {
+    const player = ns.getPlayer();
+    const karma = player.karma;
+    const numKilled = player.numPeopleKilled;
+    return { karma, numKilled };
 }
