@@ -2,7 +2,7 @@ import type { NS, ProcessInfo } from 'netscript';
 
 import { expect, test } from '@jest/globals';
 
-import { MemoryAllocator } from './allocator';
+import { MemoryAllocator } from 'services/allocator';
 
 type ProcMap = Record<number, boolean>;
 
