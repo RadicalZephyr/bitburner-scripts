@@ -74,7 +74,9 @@ async function untilHackLevel(ns: NS, targetLevel: number) {
 
 async function sowAndHackNoodles(ns: NS) {
     // Start minimal services
-    ns.run('/start.js', 1, '--minimal');
+    const pid = ns.run('/start.js', 1, '--minimal');
+
+    if (pid === 0) throw new Error('failed to run start script');
 
     const client = new LaunchClient(ns);
     const noods = 'n00dles';
