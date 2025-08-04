@@ -3,6 +3,7 @@
     "version": "0.1.0",
     "description": "My awesome scripts for automating Bitburner",
     "scripts": {
+        "audit-ram": "ts-node build/audit-ram.ts",
         "build": "tsc",
         "lint": "eslint src/",
         "codex-test": "jest --config codex-jest.config.js",
@@ -29,11 +30,14 @@
     "homepage": "https://github.com/RadicalZephyr/bitburner-scripts#readme",
     "devDependencies": {
         "@eslint/js": "^9.31.0",
+        "@tsconfig/node22": "^22.0.2",
         "@types/jest": "^30.0.0",
+        "@types/node": "^24.2.0",
         "@types/react": "^18.2.18",
         "@types/react-dom": "^18.2.7",
         "bitburner-filesync": "^1.1.5",
         "chokidar": "^4.0.3",
+        "cli-table3": "^0.6.5",
         "concurrently": "^9.2.0",
         "cors": "^2.8.5",
         "eslint": "^9.31.0",
@@ -45,8 +49,11 @@
         "prettier": "3.6.2",
         "sync-directory": "^6.0.5",
         "ts-jest": "^29.4.0",
+        "ts-morph": "^26.0.0",
+        "ts-node": "^10.9.2",
         "typescript": "^5.8.3",
-        "typescript-eslint": "^8.37.0"
+        "typescript-eslint": "^8.37.0",
+        "yargs": "^18.0.0"
     },
     "dependencies": {
         "graphology": "^0.26.0"
