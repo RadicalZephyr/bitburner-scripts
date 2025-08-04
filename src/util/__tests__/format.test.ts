@@ -9,6 +9,12 @@ describe('formatRam', () => {
         expect(formatRam(9)).toBe('9GiB');
     });
 
+    test('formats fractional values in GiB', () => {
+        expect(formatRam(1.004)).toBe('1GiB');
+        expect(formatRam(1.05)).toBe('1.05GiB');
+        expect(formatRam(1.63)).toBe('1.63GiB');
+    });
+
     test('formats values in TiB', () => {
         expect(formatRam(1024)).toBe('1TiB');
         expect(formatRam(2048)).toBe('2TiB');
