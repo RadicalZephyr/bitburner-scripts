@@ -27,7 +27,7 @@ export interface FreeChunk {
 export class MemoryAllocator {
     workers: Worker[] = [];
 
-    constructor() { }
+    constructor() {}
 
     pushWorker(worker: Worker) {
         this.workers.push(worker);
@@ -122,7 +122,7 @@ export class Worker {
         if (this._allocatedRam < totalAllocRam)
             throw new Error(
                 `attempted to free ${numChunks}x${formatRam(chunkSize)}, `
-                + `only ${formatRam(fromFixed(this._allocatedRam))} allocated`,
+                    + `only ${formatRam(fromFixed(this._allocatedRam))} allocated`,
             );
         this._allocatedRam -= totalAllocRam;
     }
