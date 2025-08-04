@@ -8,7 +8,7 @@ export function formatMoney(value: number): string {
     return (value / Math.pow(1000, e)).toFixed(2) + s[e];
 }
 
-export function formatGigaBytes(value: number): string {
+export function formatRam(value: number): string {
     const s = ['GiB', 'TiB', 'PiB'];
     const e = Math.floor(Math.log(value) / Math.log(1024));
     return (value / Math.pow(1024, e)).toFixed(0) + s[e];
