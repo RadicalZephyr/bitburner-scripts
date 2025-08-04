@@ -61,7 +61,7 @@ async function studyAndCode(ns: NS) {
 
     // Create FTPCrack.exe
     if (!ns.singularity.createProgram('FTPCrack.exe', true))
-        throw new Error('failed to start working on BruteSSH.exe');
+        throw new Error('failed to start working on FTPCrack.exe');
 }
 
 async function untilHackLevel(ns: NS, targetLevel: number) {
@@ -87,7 +87,7 @@ async function sowAndHackNoodles(ns: NS) {
         },
         noods,
     );
-    if (!sowResult) throw new Error('failed to launch harvest against n00dles');
+    if (!sowResult) throw new Error('failed to launch sow against n00dles');
 
     await waitForExit(ns, sowResult.pids[0]);
 
