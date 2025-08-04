@@ -6,8 +6,6 @@ import type {
 } from 'netscript';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
-import { useTheme } from 'util/useTheme';
-
 import {
     AllocationClaim,
     AllocationClaimRelease,
@@ -31,6 +29,9 @@ import { readAllFromPort, readLoop } from 'util/ports';
 import { HUD_HEIGHT, HUD_WIDTH, STATUS_WINDOW_WIDTH } from 'util/ui';
 
 import {} from 'lib/react';
+
+import { useNsUpdate } from 'util/useNsUpdate';
+import { useTheme } from 'util/useTheme';
 
 let printLog: (msg: string) => void;
 
@@ -133,10 +134,14 @@ Example:
         readMemRequestsFromPort(ns, memPort, memResponsePort, memoryManager),
     );
 
+    function getWorkers(ns: NS) {
+        return Array.from(memoryManager.workers.values());
+    }
+
     ns.clearLog();
     ns.printRaw(
         <div style={{ display: 'flex', gap: '1em' }}>
-            <MemoryDisplay ns={ns} manager={memoryManager}></MemoryDisplay>
+            <MemoryDisplay ns={ns} getWorkers={getWorkers} />
             <LogDisplay ns={ns} lines={log}></LogDisplay>
         </div>,
     );
@@ -372,7 +377,7 @@ async function growAllocations(ns: NS, memoryManager: MemoryAllocator) {
 
 interface MemoryDisplayProps {
     ns: NS;
-    manager: MemoryAllocator;
+    getWorkers: (ns: NS) => Worker[];
 }
 
 /**
@@ -381,21 +386,9 @@ interface MemoryDisplayProps {
  * @param manager - The allocator to read usage from.
  * @param theme - The UI theme.
  */
-function MemoryDisplay({ ns, manager }: MemoryDisplayProps) {
-    const [workers, setWorkers] = React.useState(
-        Array.from(manager.workers.values()),
-    );
-    const theme = useTheme(ns, 1000);
-
-    React.useEffect(() => {
-        const id = globalThis.setInterval(() => {
-            setWorkers(Array.from(manager.workers.values()));
-        }, 1000);
-
-        return () => {
-            globalThis.clearInterval(id);
-        };
-    }, [ns, manager]);
+function MemoryDisplay({ ns, getWorkers }: MemoryDisplayProps) {
+    const theme = useTheme(ns, 200);
+    const workers = useNsUpdate(ns, 200, getWorkers);
 
     const cellStyle = { padding: '0 0.5em' } as const;
     return (
@@ -408,7 +401,7 @@ function MemoryDisplay({ ns, manager }: MemoryDisplayProps) {
                             theme={theme}
                             rowIndex={idx}
                             cellStyle={cellStyle}
-                        ></MemoryRow>
+                        />
                     ))}
                 </tbody>
             </table>
