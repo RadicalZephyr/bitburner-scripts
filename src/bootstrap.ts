@@ -8,6 +8,10 @@ import { main as goBootstrap } from 'go/bootstrap';
 
 import { getSourceFileLevel } from 'services/client/source_file';
 
+// NOTE: When adding flags to this bootstrap script the same flags
+// must also be specified to all `**/bootstrap` scripts called by this
+// script because they will see the same command line arguments and
+// try to process the same flags.
 const FLAGS = [
     ['minimal', false],
     ['help', false],

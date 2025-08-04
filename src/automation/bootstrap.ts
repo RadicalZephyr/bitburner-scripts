@@ -3,6 +3,9 @@ import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { LaunchClient } from 'services/client/launch';
 
+// NOTE: These flags _must_ be the same as in the root bootstrap script
+// because we import and run this main function it sees the same
+// arguments as the root bootstrap script received.
 const FLAGS = [
     ['minimal', false],
     ['help', false],
