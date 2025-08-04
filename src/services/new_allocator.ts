@@ -102,4 +102,15 @@ export class Worker {
             numChunks,
         };
     }
+
+    /**
+     * Free some memory on this worker.
+     *
+     * @param chunkSize - Size in GB of the chunks to allocate
+     * @param numChunks - Number of chunks to allocate
+     */
+    free(chunkSize: number, numChunks: number): void {
+        const totalAllocRam = toFixed(chunkSize) * BigInt(numChunks);
+        this._allocatedRam -= totalAllocRam;
+    }
 }

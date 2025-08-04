@@ -77,5 +77,9 @@ describe('basic Worker CRUD', () => {
         });
         expect(w1.usedRam).toBe(2);
         expect(w1.freeRam).toBe(6);
+
+        w1.free(2, 1);
+        expect(w1.usedRam).toBe(0);
+        expect(w1.freeRam).toBe(8);
     });
 });
