@@ -1,6 +1,6 @@
 import type { NS, UserInterfaceTheme } from 'netscript';
 
-import { makeFuid } from 'util/fuid';
+import { useNsUpdate } from 'util/useNsUpdate';
 
 /**
  * Keep a UserInterfaceTheme updated by polling `ns.ui.getTheme()`.
@@ -10,23 +10,9 @@ import { makeFuid } from 'util/fuid';
  * @returns The current theme from the UI
  */
 export function useTheme(ns: NS, interval = 200): UserInterfaceTheme {
-    const [theme, setTheme] = React.useState(
-        ns.ui.getTheme() as UserInterfaceTheme,
-    );
+    return useNsUpdate(ns, interval, getTheme);
+}
 
-    React.useEffect(() => {
-        const id = globalThis.setInterval(() => {
-            setTheme(ns.ui.getTheme());
-        }, interval);
-
-        const exitHandlerName = 'useTheme-' + makeFuid(ns);
-        ns.atExit(() => globalThis.clearInterval(id), exitHandlerName);
-
-        return () => {
-            ns.atExit(() => null, exitHandlerName);
-            globalThis.clearInterval(id);
-        };
-    }, [ns, interval]);
-
-    return theme;
+function getTheme(ns: NS): UserInterfaceTheme {
+    return ns.ui.getTheme();
 }
