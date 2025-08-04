@@ -1,3 +1,5 @@
+import { HostAllocation } from 'services/client/memory';
+
 /**
  * Convert a floating point RAM value to a fixed point bigint
  * representation.
@@ -54,6 +56,7 @@ export class Worker {
     private _hostname: string = '';
     private _totalRam: bigint = 0n;
     private _setAsideRam: bigint = 0n;
+    private _allocatedRam: bigint = 0n;
 
     constructor(hostname: string, totalRam: number, setAsideRam?: number) {
         this._hostname = hostname;
@@ -65,8 +68,14 @@ export class Worker {
         return this._hostname;
     }
 
+    get usedRam(): number {
+        return fromFixed(this._allocatedRam);
+    }
+
     get freeRam(): number {
-        return fromFixed(this._totalRam - this._setAsideRam);
+        return fromFixed(
+            this._totalRam - this._allocatedRam - this._setAsideRam,
+        );
     }
 
     updateTotalRam(ram: number) {
@@ -75,5 +84,22 @@ export class Worker {
 
     updateSetAsideRam(ram: number) {
         this._setAsideRam = toFixed(ram);
+    }
+
+    /**
+     * Attempt to allocate some memory on this Worker.
+     *
+     * @param chunkSize - Size in GB of the chunks to allocate
+     * @param numChunks - Number of chunks to allocate
+     * @returns Description of the allocation on this Worker or null if allocation failed
+     */
+    allocate(chunkSize: number, numChunks: number): HostAllocation {
+        const totalAllocRam = toFixed(chunkSize) * BigInt(numChunks);
+        this._allocatedRam += totalAllocRam;
+        return {
+            hostname: this._hostname,
+            chunkSize,
+            numChunks,
+        };
     }
 }

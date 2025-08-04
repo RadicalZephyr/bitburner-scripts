@@ -65,4 +65,17 @@ describe('basic Worker CRUD', () => {
         w2.updateTotalRam(16);
         expect(w2.freeRam).toBeCloseTo(15.97);
     });
+
+    test('workers track RAM allocations', () => {
+        const w1 = new Worker('a', 8);
+        expect(w1.usedRam).toBe(0);
+
+        expect(w1.allocate(2, 1)).toEqual({
+            hostname: 'a',
+            chunkSize: 2,
+            numChunks: 1,
+        });
+        expect(w1.usedRam).toBe(2);
+        expect(w1.freeRam).toBe(6);
+    });
 });
