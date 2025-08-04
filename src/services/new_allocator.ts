@@ -15,6 +15,11 @@ export const toFixed = (val: number): bigint => BigInt(Math.round(val * 100));
  */
 export const fromFixed = (val: bigint): number => Number(val) / 100;
 
+export interface FreeChunk {
+    hostname: string;
+    freeRam: number;
+}
+
 export class MemoryAllocator {
     workers: Worker[] = [];
 
@@ -32,13 +37,30 @@ export class MemoryAllocator {
     getFreeRamTotal(): number {
         return this.workers.reduce((sum, w) => sum + w.freeRam, 0);
     }
+
+    /**
+     * Get a list of available free RAM chunks on each worker.
+     *
+     * @returns Array describing free RAM per worker
+     */
+    getFreeChunks(): FreeChunk[] {
+        return this.workers.map((w) => {
+            return { hostname: w.hostname, freeRam: w.freeRam };
+        });
+    }
 }
 
 export class Worker {
+    private _hostname: string;
     private totalRam: bigint;
 
-    constructor(totalRam: number) {
+    constructor(hostname: string, totalRam: number) {
+        this._hostname = hostname;
         this.totalRam = toFixed(totalRam);
+    }
+
+    get hostname(): string {
+        return this._hostname;
     }
 
     get freeRam(): number {
