@@ -66,18 +66,36 @@ describe('basic Worker CRUD', () => {
         expect(w2.freeRam).toBeCloseTo(15.97);
     });
 
-    test('worker cannot allocate more than total RAM', () => {
-        const w1 = new Worker('a', 4);
-        expect(w1.usedRam).toBe(0);
-        expect(w1.freeRam).toBe(4);
+    describe('worker cannot allocate more than total RAM', () => {
+        test('in one shot', () => {
+            const w1 = new Worker('a', 4);
+            expect(w1.usedRam).toBe(0);
+            expect(w1.freeRam).toBe(4);
 
-        expect(w1.allocate(5, 1)).toBeNull();
-        expect(w1.usedRam).toBe(0);
-        expect(w1.freeRam).toBe(4);
+            expect(w1.allocate(5, 1)).toBeNull();
+            expect(w1.usedRam).toBe(0);
+            expect(w1.freeRam).toBe(4);
 
-        expect(w1.allocate(2, 3)).toBeNull();
-        expect(w1.usedRam).toBe(0);
-        expect(w1.freeRam).toBe(4);
+            expect(w1.allocate(2, 3)).toBeNull();
+            expect(w1.usedRam).toBe(0);
+            expect(w1.freeRam).toBe(4);
+        });
+
+        test('across multiple allocations', () => {
+            const w1 = new Worker('a', 8);
+            expect(w1.usedRam).toBe(0);
+            expect(w1.freeRam).toBe(8);
+
+            expect(w1.allocate(2, 3)).toEqual({
+                hostname: 'a',
+                chunkSize: 2,
+                numChunks: 3,
+            });
+            expect(w1.usedRam).toBe(6);
+            expect(w1.freeRam).toBe(2);
+
+            expect(w1.allocate(2, 3)).toBeNull();
+        });
     });
 
     test('workers track RAM allocations', () => {
