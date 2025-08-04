@@ -6,6 +6,9 @@ import type {
 } from 'netscript';
 import { parseFlags } from 'util/flags';
 
+import { useNsUpdate } from 'util/useNsUpdate';
+import { useTheme } from 'util/useTheme';
+
 export async function main(ns: NS) {
     await parseFlags(ns, []);
 
@@ -14,6 +17,15 @@ export async function main(ns: NS) {
     ns.ui.moveTail(60, 350);
     ns.ui.resizeTail(825, 800);
 
+    ns.clearLog();
+    ns.printRaw(<LocationBlock ns={ns} />);
+
+    while (true) {
+        await ns.asleep(60_000);
+    }
+}
+
+function getInfiltrations(ns: NS) {
     const infiltrations = ns.infiltration
         .getPossibleLocations()
         .map((loc: ILocation) => ns.infiltration.getInfiltration(loc.name));
@@ -22,15 +34,7 @@ export async function main(ns: NS) {
         .map(augmentInfiltration)
         .sort((a, b) => a.expPerAction - b.expPerAction);
 
-    const theme = ns.ui.getTheme();
-
-    ns.clearLog();
-    ns.printRaw(
-        <LocationBlock
-            infiltrations={augInfiltrations}
-            theme={theme}
-        ></LocationBlock>,
-    );
+    return augInfiltrations;
 }
 
 function augmentInfiltration(i: InfiltrationLocation): RatedInfiltrationLoc {
@@ -45,11 +49,13 @@ interface RatedInfiltrationLoc extends InfiltrationLocation {
 }
 
 interface IBlockSettings {
-    infiltrations: RatedInfiltrationLoc[];
-    theme: UserInterfaceTheme;
+    ns: NS;
 }
 
-function LocationBlock({ infiltrations, theme }: IBlockSettings) {
+function LocationBlock({ ns }: IBlockSettings) {
+    const theme = useTheme(ns);
+    const infiltrations = useNsUpdate(ns, 100, getInfiltrations);
+
     const cellStyle = { padding: '0 0.5em' };
     return (
         <>
