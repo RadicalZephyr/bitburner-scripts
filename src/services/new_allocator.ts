@@ -55,9 +55,10 @@ export class Worker {
     private _totalRam: bigint = 0n;
     private _setAsideRam: bigint = 0n;
 
-    constructor(hostname: string, totalRam: number) {
+    constructor(hostname: string, totalRam: number, setAsideRam?: number) {
         this._hostname = hostname;
         this._totalRam = toFixed(totalRam);
+        this._setAsideRam = setAsideRam ? toFixed(setAsideRam) : 0n;
     }
 
     get hostname(): string {

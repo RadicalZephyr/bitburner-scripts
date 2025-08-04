@@ -30,10 +30,9 @@ describe('can create an allocator', () => {
         worker1.setAsideRam(2);
         expect(alloc.getFreeRamTotal()).toEqual(14);
 
-        const worker2 = new Worker('b', 8);
+        const worker2 = new Worker('b', 8, 7.99);
         alloc.pushWorker(worker2);
 
-        worker2.setAsideRam(7.99);
         worker1.setAsideRam(1.01);
         expect(alloc.getFreeRamTotal()).toBeCloseTo(15);
     });
