@@ -199,7 +199,7 @@ CONFIGURATION
                 phaseTargets.sort(sortByFn(phase));
         }
 
-        return tableSortings;
+        return { ...tableSortings };
     }
 
     function getHackMoneyPerSec(): number {
