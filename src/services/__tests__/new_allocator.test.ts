@@ -104,6 +104,20 @@ describe('basic Worker CRUD', () => {
 
             expect(w1.allocate(2, 2)).toBeNull();
         });
+
+        test('not even by a tiny bit', () => {
+            const w1 = new Worker('a', 4);
+            expect(w1.usedRam).toBe(0);
+            expect(w1.freeRam).toBe(4);
+
+            expect(w1.allocate(4.01, 1)).toBeNull();
+
+            w1.updateSetAsideRam(2);
+            expect(w1.allocate(2.01, 1)).toBeNull();
+
+            expect(w1.allocate(1, 1)).not.toBeNull();
+            expect(w1.allocate(1.01, 1)).toBeNull();
+        });
     });
 
     test('workers track RAM allocations', () => {
