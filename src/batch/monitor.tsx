@@ -220,11 +220,9 @@ CONFIGURATION
     ns.ui.renderTail();
 
     while (true) {
-        for (const pid of openTailQueue) {
+        for (const pid of openTailQueue.splice(0)) {
             ns.ui.openTail(pid);
         }
-        // Clear the queue after we process it
-        openTailQueue.length = 0;
         await ns.asleep(flags.refreshrate);
     }
 }
