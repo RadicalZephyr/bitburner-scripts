@@ -117,9 +117,15 @@ CONFIGURATION
     }
 
     const portId = flags['port-id'];
-    if (typeof portId !== 'number' || !Number.isInteger(portId) || portId < 1) {
-        ns.tprint('--port-id must be a valid port number');
-        return null;
+    if (portId !== -1) {
+        if (
+            typeof portId !== 'number'
+            || !Number.isInteger(portId)
+            || portId < 1
+        ) {
+            ns.tprint('--port-id must be a valid port number');
+            return null;
+        }
     }
 
     const target = rest[0];
@@ -148,15 +154,17 @@ async function prepareHarvest(
     });
 
     const shuttingDown = { value: false };
-    const controlPort = ns.getPortHandle(args.portId);
-    readLoop(ns, controlPort, async () => {
-        for (const msg of readAllFromPort(ns, controlPort)) {
-            const m = msg as Message;
-            if (Array.isArray(m) && m[0] === HarvestMessageType.Shutdown) {
-                shuttingDown.value = true;
+    if (args.portId !== -1) {
+        const controlPort = ns.getPortHandle(args.portId);
+        readLoop(ns, controlPort, async () => {
+            for (const msg of readAllFromPort(ns, controlPort)) {
+                const m = msg as Message;
+                if (Array.isArray(m) && m[0] === HarvestMessageType.Shutdown) {
+                    shuttingDown.value = true;
+                }
             }
-        }
-    });
+        });
+    }
 
     const memClient = new GrowableMemoryClient(ns);
     const memInfo = await memClient.getFreeRam();
