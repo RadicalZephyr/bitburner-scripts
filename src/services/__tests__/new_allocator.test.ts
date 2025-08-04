@@ -66,6 +66,20 @@ describe('basic Worker CRUD', () => {
         expect(w2.freeRam).toBeCloseTo(15.97);
     });
 
+    test('worker cannot allocate more than total RAM', () => {
+        const w1 = new Worker('a', 4);
+        expect(w1.usedRam).toBe(0);
+        expect(w1.freeRam).toBe(4);
+
+        expect(w1.allocate(5, 1)).toBeNull();
+        expect(w1.usedRam).toBe(0);
+        expect(w1.freeRam).toBe(4);
+
+        expect(w1.allocate(2, 3)).toBeNull();
+        expect(w1.usedRam).toBe(0);
+        expect(w1.freeRam).toBe(4);
+    });
+
     test('workers track RAM allocations', () => {
         const w1 = new Worker('a', 8);
         expect(w1.usedRam).toBe(0);

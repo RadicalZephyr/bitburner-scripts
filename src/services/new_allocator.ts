@@ -95,6 +95,8 @@ export class Worker {
      */
     allocate(chunkSize: number, numChunks: number): HostAllocation {
         const totalAllocRam = toFixed(chunkSize) * BigInt(numChunks);
+        if (this._totalRam < totalAllocRam) return null;
+
         this._allocatedRam += totalAllocRam;
         return {
             hostname: this._hostname,
