@@ -1,7 +1,7 @@
 import type { NS } from 'netscript';
 import { parseFlags } from 'util/flags';
 
-import { useNsUpdate } from 'util/useNsUpdate';
+import { useNsUpdate } from 'util/hooks';
 
 import {
     STATUS_WINDOW_WIDTH,

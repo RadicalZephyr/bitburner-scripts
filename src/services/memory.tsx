@@ -30,8 +30,7 @@ import { HUD_HEIGHT, HUD_WIDTH, STATUS_WINDOW_WIDTH } from 'util/ui';
 
 import {} from 'lib/react';
 
-import { useNsUpdate } from 'util/useNsUpdate';
-import { useTheme } from 'util/useTheme';
+import { useNsUpdate, useTheme } from 'util/hooks';
 
 let printLog: (msg: string) => void;
 

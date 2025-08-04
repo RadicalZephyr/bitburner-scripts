@@ -6,8 +6,7 @@ import type {
 } from 'netscript';
 import { parseFlags } from 'util/flags';
 
-import { useNsUpdate } from 'util/useNsUpdate';
-import { useTheme } from 'util/useTheme';
+import { useNsUpdate, useTheme } from 'util/hooks';
 
 export async function main(ns: NS) {
     await parseFlags(ns, []);

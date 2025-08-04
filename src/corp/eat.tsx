@@ -1,7 +1,7 @@
 import type { NS } from 'netscript';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
-import { useTheme } from 'util/useTheme';
+import { useTheme } from 'util/hooks';
 
 import { CONFIG } from 'corp/config';
 

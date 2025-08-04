@@ -1,5 +1,6 @@
 import type { NS } from 'netscript';
-import { useTheme } from 'util/useTheme';
+
+import { useTheme } from 'util/hooks';
 
 /** Toggle focus mode for work actions. */
 export class Toggle {

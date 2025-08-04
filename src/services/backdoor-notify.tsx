@@ -2,9 +2,8 @@ import type { NS, UserInterfaceTheme } from 'netscript';
 import { parseFlags } from 'util/flags';
 
 import { canInstallBackdoor, needsBackdoor } from 'util/backdoor';
+import { useNsUpdate, useTheme } from 'util/hooks';
 import { sendTerminalCommand } from 'util/terminal';
-import { useTheme } from 'util/useTheme';
-import { useNsUpdate } from 'util/useNsUpdate';
 import { walkNetworkBFS } from 'util/walk';
 
 const FACTION_SERVERS = [
