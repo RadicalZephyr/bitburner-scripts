@@ -136,4 +136,18 @@ describe('basic Worker CRUD', () => {
             expect(w1.allocate(1.01, 1)).toBeNull();
         });
     });
+
+    describe('worker throws when trying to free more memory than has been allocated', () => {
+        const w1 = new Worker('a', 4);
+        expect(w1.usedRam).toBe(0);
+        expect(w1.freeRam).toBe(4);
+
+        expect(w1.allocate(1, 4)).not.toBeNull();
+        expect(w1.usedRam).toBe(4);
+        expect(w1.freeRam).toBe(0);
+
+        expect(() => w1.free(6, 1)).toThrow(
+            'attempted to free 1x6GiB, only 4GiB allocated',
+        );
+    });
 });

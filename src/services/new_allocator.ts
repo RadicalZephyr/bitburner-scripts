@@ -1,5 +1,7 @@
 import { HostAllocation } from 'services/client/memory';
 
+import { formatRam } from 'util/format';
+
 /**
  * Convert a floating point RAM value to a fixed point bigint
  * representation.
@@ -117,6 +119,11 @@ export class Worker {
      */
     free(chunkSize: number, numChunks: number): void {
         const totalAllocRam = toFixed(chunkSize) * BigInt(numChunks);
+        if (this._allocatedRam < totalAllocRam)
+            throw new Error(
+                `attempted to free ${numChunks}x${formatRam(chunkSize)}, `
+                + `only ${formatRam(fromFixed(this._allocatedRam))} allocated`,
+            );
         this._allocatedRam -= totalAllocRam;
     }
 }
