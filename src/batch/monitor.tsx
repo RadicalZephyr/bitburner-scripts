@@ -26,6 +26,7 @@ import { TaskSelectorClient } from 'batch/client/task_selector';
 import { MoneyTracker, primedMoneyTracker } from 'util/money-tracker';
 
 import { extend } from 'util/extend';
+import { useNsUpdate, usePoll, useTheme } from 'util/hooks';
 import { readAllFromPort, readLoop } from 'util/ports';
 import { HUD_HEIGHT, HUD_WIDTH, STATUS_WINDOW_WIDTH } from 'util/ui';
 import { sleep } from 'util/time';
@@ -202,82 +203,29 @@ CONFIGURATION
         return tableSortings;
     }
 
+    function getHackMoneyPerSec(): number {
+        return moneyTracker.velocity('hacking');
+    }
+
+    ns.clearLog();
+    ns.printRaw(
+        <Monitor
+            ns={ns}
+            getHackMoneyPerSec={getHackMoneyPerSec}
+            getTableSortings={getTableSortings}
+            setTableSorting={setTableSorting}
+            queuePidsForTail={queuePidsForTail}
+        />,
+    );
+    ns.ui.renderTail();
+
     while (true) {
-        const theme = ns.ui.getTheme();
-        const tableSortings = getTableSortings(ns);
-        const hackMoneyPerSec = moneyTracker.velocity('hacking');
-
-        ns.clearLog();
-        ns.printRaw(
-            <>
-                <ServerBlock
-                    ns={ns}
-                    queuePidsForTail={queuePidsForTail}
-                    title={'Harvesting'}
-                    phase={tableSortings.harvesting}
-                    setTableSorting={setTableSorting.bind(null, 'harvesting')}
-                    theme={theme}
-                    moneyPerSec={hackMoneyPerSec}
-                ></ServerBlock>
-                <ServerBlock
-                    ns={ns}
-                    queuePidsForTail={queuePidsForTail}
-                    title={'Pending Harvesting'}
-                    phase={tableSortings.pendingHarvesting}
-                    setTableSorting={setTableSorting.bind(
-                        null,
-                        'pendingHarvesting',
-                    )}
-                    theme={theme}
-                ></ServerBlock>
-                <ServerBlock
-                    ns={ns}
-                    queuePidsForTail={queuePidsForTail}
-                    title={'Sowing'}
-                    phase={tableSortings.sowing}
-                    setTableSorting={setTableSorting.bind(null, 'sowing')}
-                    theme={theme}
-                ></ServerBlock>
-                <ServerBlock
-                    ns={ns}
-                    queuePidsForTail={queuePidsForTail}
-                    title={'Pending Sowing'}
-                    phase={tableSortings.pendingSowing}
-                    setTableSorting={setTableSorting.bind(
-                        null,
-                        'pendingSowing',
-                    )}
-                    theme={theme}
-                ></ServerBlock>
-                <ServerBlock
-                    ns={ns}
-                    queuePidsForTail={queuePidsForTail}
-                    title={'Tilling'}
-                    phase={tableSortings.tilling}
-                    setTableSorting={setTableSorting.bind(null, 'tilling')}
-                    theme={theme}
-                ></ServerBlock>
-                <ServerBlock
-                    ns={ns}
-                    queuePidsForTail={queuePidsForTail}
-                    title={'Pending Tilling'}
-                    phase={tableSortings.pendingTilling}
-                    setTableSorting={setTableSorting.bind(
-                        null,
-                        'pendingTilling',
-                    )}
-                    theme={theme}
-                ></ServerBlock>
-            </>,
-        );
-        ns.ui.renderTail();
-
         for (const pid of openTailQueue) {
             ns.ui.openTail(pid);
         }
         // Clear the queue after we process it
         openTailQueue.length = 0;
-        await sleep(flags.refreshrate);
+        await ns.asleep(flags.refreshrate);
     }
 }
 
@@ -496,6 +444,83 @@ function formatThreads(ns: NS, threads: number): string {
     }
 
     return ns.formatNumber(threads, 2, 1000, true);
+}
+
+interface IMonitorSettings {
+    ns: NS;
+    getHackMoneyPerSec: () => number;
+    getTableSortings: (ns: NS) => Record<string, SortBy>;
+    setTableSorting: (table: string, column: string) => void;
+    queuePidsForTail: (pids: number[]) => void;
+}
+
+function Monitor({
+    ns,
+    getHackMoneyPerSec,
+    getTableSortings,
+    setTableSorting,
+    queuePidsForTail,
+}: IMonitorSettings) {
+    const theme = useTheme(ns);
+    const hackMoneyPerSec = usePoll(ns, 1000, getHackMoneyPerSec);
+    const tableSortings = useNsUpdate(ns, 100, getTableSortings);
+
+    return (
+        <>
+            <ServerBlock
+                ns={ns}
+                queuePidsForTail={queuePidsForTail}
+                title={'Harvesting'}
+                phase={tableSortings.harvesting}
+                setTableSorting={setTableSorting.bind(null, 'harvesting')}
+                theme={theme}
+                moneyPerSec={hackMoneyPerSec}
+            ></ServerBlock>
+            <ServerBlock
+                ns={ns}
+                queuePidsForTail={queuePidsForTail}
+                title={'Pending Harvesting'}
+                phase={tableSortings.pendingHarvesting}
+                setTableSorting={setTableSorting.bind(
+                    null,
+                    'pendingHarvesting',
+                )}
+                theme={theme}
+            ></ServerBlock>
+            <ServerBlock
+                ns={ns}
+                queuePidsForTail={queuePidsForTail}
+                title={'Sowing'}
+                phase={tableSortings.sowing}
+                setTableSorting={setTableSorting.bind(null, 'sowing')}
+                theme={theme}
+            ></ServerBlock>
+            <ServerBlock
+                ns={ns}
+                queuePidsForTail={queuePidsForTail}
+                title={'Pending Sowing'}
+                phase={tableSortings.pendingSowing}
+                setTableSorting={setTableSorting.bind(null, 'pendingSowing')}
+                theme={theme}
+            ></ServerBlock>
+            <ServerBlock
+                ns={ns}
+                queuePidsForTail={queuePidsForTail}
+                title={'Tilling'}
+                phase={tableSortings.tilling}
+                setTableSorting={setTableSorting.bind(null, 'tilling')}
+                theme={theme}
+            ></ServerBlock>
+            <ServerBlock
+                ns={ns}
+                queuePidsForTail={queuePidsForTail}
+                title={'Pending Tilling'}
+                phase={tableSortings.pendingTilling}
+                setTableSorting={setTableSorting.bind(null, 'pendingTilling')}
+                theme={theme}
+            ></ServerBlock>
+        </>
+    );
 }
 
 interface IBlockSettings {
