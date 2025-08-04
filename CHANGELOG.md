@@ -7,6 +7,10 @@
 - Added support for autocompleting flags to all scripts [#213][pr-213].
 - Help messages now list all CONFIG values used by each script. [#218][pr-218].
 
+### Startup
+
+- Added a `--minimal` flag to the start script for starting only necessary services [#227][pr-227].
+
 ### Batch hacking
 
 - Introduce `taskSelectorTickMs` and `discoverWalkIntervalMs` config options for smoother port loops and discovery timing [#160][pr-160].
@@ -43,6 +47,7 @@
 - Gym training script and travel helpers automate combat stat leveling with configurable cadence (`combatTrainTimeMs`) [#226][pr-226].
 - Port opener buying, network-wide manual growth, and Silhouette faction setup scripts streamline early game automation [#226][pr-226].
 - Company work automation skips companies for factions the player already belongs to [#226][pr-226].
+- Add a script for automating early bitnode bootstrapping [#227][pr-227].
 
 ### Utilities
 
@@ -99,6 +104,7 @@
 [pr-221]: https://github.com/RadicalZephyr/bitburner-scripts/pull/221
 [pr-223]: https://github.com/RadicalZephyr/bitburner-scripts/pull/223
 [pr-226]: https://github.com/RadicalZephyr/bitburner-scripts/pull/226
+[pr-227]: https://github.com/RadicalZephyr/bitburner-scripts/pull/227
 
 ## v2.1.0
 
