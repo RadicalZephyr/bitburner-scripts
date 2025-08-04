@@ -29,7 +29,6 @@ import { extend } from 'util/extend';
 import { useNsUpdate, usePoll, useTheme } from 'util/hooks';
 import { readAllFromPort, readLoop } from 'util/ports';
 import { HUD_HEIGHT, HUD_WIDTH, STATUS_WINDOW_WIDTH } from 'util/ui';
-import { sleep } from 'util/time';
 
 const FLAGS = [
     ['refreshrate', 200],
