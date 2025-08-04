@@ -69,6 +69,10 @@ export class Worker {
         return fromFixed(this._totalRam - this._setAsideRam);
     }
 
+    updateTotalRam(ram: number) {
+        this._totalRam = toFixed(ram);
+    }
+
     updateSetAsideRam(ram: number) {
         this._setAsideRam = toFixed(ram);
     }

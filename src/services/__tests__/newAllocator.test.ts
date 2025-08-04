@@ -51,4 +51,18 @@ describe('basic Worker CRUD', () => {
         w2.updateSetAsideRam(0.05);
         expect(w2.freeRam).toBeCloseTo(3.95);
     });
+
+    test('workers can update total RAM', () => {
+        const w1 = new Worker('pserv-1', 16);
+        expect(w1.freeRam).toBe(16);
+
+        w1.updateTotalRam(32);
+        expect(w1.freeRam).toBe(32);
+
+        const w2 = new Worker('pserv-2', 8, 0.03);
+        expect(w2.freeRam).toBeCloseTo(7.97);
+
+        w2.updateTotalRam(16);
+        expect(w2.freeRam).toBeCloseTo(15.97);
+    });
 });
