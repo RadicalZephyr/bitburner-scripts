@@ -133,7 +133,7 @@ Example:
         readMemRequestsFromPort(ns, memPort, memResponsePort, memoryManager),
     );
 
-    function getWorkers(ns: NS) {
+    function getWorkers() {
         return Array.from(memoryManager.workers.values());
     }
 
