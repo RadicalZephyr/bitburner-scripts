@@ -9,7 +9,7 @@ export function formatMoney(value: number): string {
 }
 
 export function formatGigaBytes(value: number): string {
-    const s = ['GB', 'TB', 'PB'];
+    const s = ['GiB', 'TiB', 'PiB'];
     const e = Math.floor(Math.log(value) / Math.log(1024));
     return (value / Math.pow(1024, e)).toFixed(0) + s[e];
 }
