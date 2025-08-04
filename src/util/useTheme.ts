@@ -19,12 +19,11 @@ export function useTheme(ns: NS, interval = 200): UserInterfaceTheme {
             setTheme(ns.ui.getTheme());
         }, interval);
 
-        ns.atExit(
-            () => globalThis.clearInterval(id),
-            'useTheme-' + makeFuid(ns),
-        );
+        const exitHandlerName = 'useTheme-' + makeFuid(ns);
+        ns.atExit(() => globalThis.clearInterval(id), exitHandlerName);
 
         return () => {
+            ns.atExit(() => null, exitHandlerName);
             globalThis.clearInterval(id);
         };
     }, [ns, interval]);
