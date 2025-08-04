@@ -19,4 +19,22 @@ describe('can create an allocator', () => {
             { hostname: 'b', freeRam: 4 },
         ]);
     });
+
+    test('can update worker used RAM', () => {
+        const alloc = new MemoryAllocator();
+
+        const worker1 = new Worker('a', 16);
+        alloc.pushWorker(worker1);
+        expect(alloc.getFreeRamTotal()).toEqual(16);
+
+        worker1.setAsideRam(2);
+        expect(alloc.getFreeRamTotal()).toEqual(14);
+
+        const worker2 = new Worker('b', 8);
+        alloc.pushWorker(worker2);
+
+        worker2.setAsideRam(7.99);
+        worker1.setAsideRam(1.01);
+        expect(alloc.getFreeRamTotal()).toBeCloseTo(15);
+    });
 });

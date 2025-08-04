@@ -51,12 +51,13 @@ export class MemoryAllocator {
 }
 
 export class Worker {
-    private _hostname: string;
-    private totalRam: bigint;
+    private _hostname: string = '';
+    private _totalRam: bigint = 0n;
+    private _setAsideRam: bigint = 0n;
 
     constructor(hostname: string, totalRam: number) {
         this._hostname = hostname;
-        this.totalRam = toFixed(totalRam);
+        this._totalRam = toFixed(totalRam);
     }
 
     get hostname(): string {
@@ -64,6 +65,10 @@ export class Worker {
     }
 
     get freeRam(): number {
-        return fromFixed(this.totalRam);
+        return fromFixed(this._totalRam - this._setAsideRam);
+    }
+
+    setAsideRam(ram: number) {
+        this._setAsideRam = toFixed(ram);
     }
 }
