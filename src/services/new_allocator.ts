@@ -93,7 +93,7 @@ export class Worker {
      * @param numChunks - Number of chunks to allocate
      * @returns Description of the allocation on this Worker or null if allocation failed
      */
-    allocate(chunkSize: number, numChunks: number): HostAllocation {
+    allocate(chunkSize: number, numChunks: number): HostAllocation | null {
         const totalAllocRam = toFixed(chunkSize) * BigInt(numChunks);
         if (
             this._totalRam
