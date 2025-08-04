@@ -144,14 +144,12 @@ CONFIGURATION
 
     const moneyTracker: MoneyTracker = await primedMoneyTracker(ns, 3, 1000);
 
-    while (true) {
+    function getTableSortings(ns: NS) {
         const threadsByTarget = countThreadsByTarget(
             ns,
             workers,
             Array.from(lifecycleByHost.keys()),
         );
-
-        const hackMoneyPerSec = moneyTracker.velocity('hacking');
 
         tableSortings.harvesting.data = [];
         tableSortings.pendingHarvesting.data = [];
@@ -201,7 +199,13 @@ CONFIGURATION
                 phaseTargets.sort(sortByFn(phase));
         }
 
+        return tableSortings;
+    }
+
+    while (true) {
         const theme = ns.ui.getTheme();
+        const tableSortings = getTableSortings(ns);
+        const hackMoneyPerSec = moneyTracker.velocity('hacking');
 
         ns.clearLog();
         ns.printRaw(
