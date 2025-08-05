@@ -52,102 +52,58 @@ const PORT = 18924;
 
 app.use(cors(), morgan('dev'));
 
-app.get('/boardsize/:n', async (req, res) => {
-    try {
-        const reply = await sendCommand(`boardsize ${req.params.n}`);
-        res.status(200).json(reply);
-    } catch (err) {
-        res.json(error(String(err)));
-    }
+/**
+ * Register an HTTP endpoint that forwards a command to the GTP engine.
+ *
+ * @param {string} route - Express route pattern.
+ * @param {(req: import('express').Request) => string} commandBuilder - Builds the command string from the request.
+ */
+function handleCommand(app, route, commandBuilder) {
+    app.get(route, async (req, res) => {
+        try {
+            const reply = await sendCommand(commandBuilder(req));
+            res.status(200).json(reply);
+        } catch (err) {
+            res.json(error(String(err)));
+        }
+    });
+}
+
+handleCommand(app, '/boardsize/:n', (req) => `boardsize ${req.params.n}`);
+
+handleCommand(app, '/clear_board', () => 'clear_board');
+
+handleCommand(app, '/clear_cache', () => 'clear_cache');
+
+handleCommand(app, '/komi/:value', (req) => `komi ${req.params.value}`);
+
+handleCommand(app, '/set_walls/:encoded', (req) => {
+    const data = querystring.unescape(req.params.encoded);
+    return `set_walls ${data}`;
 });
 
-app.get('/clear_board', async (_req, res) => {
-    try {
-        const reply = await sendCommand('clear_board');
-        res.status(200).json(reply);
-    } catch (err) {
-        res.json(error(String(err)));
-    }
+handleCommand(app, '/set_position/:encoded', (req) => {
+    const data = querystring.unescape(req.params.encoded);
+    return `set_position ${data}`;
 });
 
-app.get('/clear_cache', async (_req, res) => {
-    try {
-        const reply = await sendCommand('clear_cache');
-        res.status(200).json(reply);
-    } catch (err) {
-        res.json(error(String(err)));
-    }
+handleCommand(app, '/set_free_handicap/:encoded', (req) => {
+    const data = querystring.unescape(req.params.encoded);
+    return `set_free_handicap ${data}`;
 });
 
-app.get('/komi/:value', async (req, res) => {
-    try {
-        const reply = await sendCommand(`komi ${req.params.value}`);
-        res.status(200).json(reply);
-    } catch (err) {
-        res.json(error(String(err)));
-    }
+handleCommand(app, '/play/:color/:vertex', (req) => {
+    const { color, vertex } = req.params;
+    return `play ${color} ${vertex}`;
 });
 
-app.get('/set_walls/:encoded', async (req, res) => {
-    try {
-        const data = querystring.unescape(req.params.encoded);
-        const reply = await sendCommand(`set_walls ${data}`);
-        res.status(200).json(reply);
-    } catch (err) {
-        res.json(error(String(err)));
-    }
-});
+handleCommand(app, '/genmove/:color', (req) => `genmove ${req.params.color}`);
 
-app.get('/set_position/:encoded', async (req, res) => {
-    try {
-        const data = querystring.unescape(req.params.encoded);
-        const reply = await sendCommand(`set_position ${data}`);
-        res.status(200).json(reply);
-    } catch (err) {
-        res.json(error(String(err)));
-    }
-});
-
-app.get('/set_free_handicap/:encoded', async (req, res) => {
-    try {
-        const data = querystring.unescape(req.params.encoded);
-        const reply = await sendCommand(`set_free_handicap ${data}`);
-        res.status(200).json(reply);
-    } catch (err) {
-        res.json(error(String(err)));
-    }
-});
-
-app.get('/play/:color/:vertex', async (req, res) => {
-    try {
-        const color = req.params.color;
-        const vertex = req.params.vertex;
-        const reply = await sendCommand(`play ${color} ${vertex}`);
-        res.status(200).json(reply);
-    } catch (err) {
-        res.json(error(String(err)));
-    }
-});
-
-app.get('/genmove/:color', async (req, res) => {
-    try {
-        const color = req.params.color;
-        const reply = await sendCommand(`genmove ${color}`);
-        res.status(200).json(reply);
-    } catch (err) {
-        res.json(error(String(err)));
-    }
-});
-
-app.get('/kata-search/:color', async (req, res) => {
-    try {
-        const color = req.params.color;
-        const reply = await sendCommand(`kata-search ${color}`);
-        res.status(200).json(reply);
-    } catch (err) {
-        res.json(error(String(err)));
-    }
-});
+handleCommand(
+    app,
+    '/kata-search/:color',
+    (req) => `kata-search ${req.params.color}`,
+);
 
 const INTERFACE = '0.0.0.0';
 const server = app.listen(PORT, INTERFACE, () => {
