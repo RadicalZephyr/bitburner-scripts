@@ -19,7 +19,6 @@ import {
     SourceFile,
     InterfaceDeclaration,
     Node,
-    SyntaxKind,
     PropertyAccessExpression,
     JSDoc,
 } from 'ts-morph';
