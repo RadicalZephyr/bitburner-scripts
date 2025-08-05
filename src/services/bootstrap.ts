@@ -31,6 +31,7 @@ export async function main(ns: NS) {
 
     startService(ns, '/services/memory.js', host);
     startService(ns, '/services/launcher.js', host);
+    startService(ns, '/services/purchase_servers.js', host);
 
     const client = new LaunchClient(ns);
 
