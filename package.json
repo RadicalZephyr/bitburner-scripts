@@ -3,7 +3,7 @@
     "version": "0.1.0",
     "description": "My awesome scripts for automating Bitburner",
     "scripts": {
-        "audit-ram": "ts-node build/audit-ram.ts",
+        "audit-ram": "ts-node --swc build/audit-ram.ts",
         "build": "tsc",
         "lint": "eslint src/",
         "codex-test": "jest --config codex-jest.config.js",
@@ -30,6 +30,7 @@
     "homepage": "https://github.com/RadicalZephyr/bitburner-scripts#readme",
     "devDependencies": {
         "@eslint/js": "^9.31.0",
+        "@swc/core": "^1.13.3",
         "@tsconfig/node22": "^22.0.2",
         "@types/jest": "^30.0.0",
         "@types/node": "^24.2.0",
