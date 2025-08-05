@@ -1,5 +1,5 @@
-const fs = require('node:fs');
-const { dist } = require('./config');
+import fs from 'node:fs';
+import { dist } from './config.js';
 
 // ensure dist exist
 if (!fs.existsSync(dist)) {

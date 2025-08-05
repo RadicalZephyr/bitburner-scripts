@@ -2,6 +2,7 @@
     "name": "radz-bitburner-scripts",
     "version": "0.1.0",
     "description": "My awesome scripts for automating Bitburner",
+    "type": "module",
     "scripts": {
         "audit-ram": "ts-node --swc build/audit-ram.ts",
         "build": "tsc",

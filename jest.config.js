@@ -1,7 +1,7 @@
-const { createDefaultPreset } = require('ts-jest');
+import { createDefaultPreset } from 'ts-jest';
 
 /** @type {import('jest').Config} */
-module.exports = {
+export default {
     testEnvironment: 'node',
     modulePaths: ['<rootDir>/src/'],
     moduleNameMapper: {

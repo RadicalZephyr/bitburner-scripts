@@ -1,7 +1,7 @@
-const baseConfig = require('./jest.config');
+import baseConfig from './jest.config.js';
 
 /** @type {import('jest').Config} */
-module.exports = {
+export default {
     reporters: [['github-actions', { silent: false }], 'summary'],
     ...baseConfig,
 };

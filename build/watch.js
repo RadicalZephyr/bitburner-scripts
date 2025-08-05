@@ -1,9 +1,9 @@
-const fs = require('node:fs');
-const path = require('node:path');
-const syncDirectory = require('sync-directory');
-const fg = require('fast-glob');
-const chokidar = require('chokidar');
-const { src, dist, allowedFiletypes } = require('./config');
+import fs from 'node:fs';
+import path from 'node:path';
+import syncDirectory from 'sync-directory';
+import fg from 'fast-glob';
+import chokidar from 'chokidar';
+import { src, dist, allowedFiletypes } from './config.js';
 
 // Do not exit the watcher on unexpected errors
 process.on('uncaughtException', (err) => {

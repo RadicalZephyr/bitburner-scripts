@@ -1,10 +1,5 @@
-const fileSyncJson = require('../filesync.json');
-const dist = fileSyncJson['scriptsFolder'];
-const src = 'src';
-const allowedFiletypes = fileSyncJson['allowedFiletypes'];
+import fileSyncJson from '../filesync.json' with { type: 'json' };
 
-module.exports = {
-    dist,
-    src,
-    allowedFiletypes,
-};
+export const dist = fileSyncJson['scriptsFolder'];
+export const src = 'src';
+export const allowedFiletypes = fileSyncJson['allowedFiletypes'];

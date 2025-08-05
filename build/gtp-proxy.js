@@ -1,11 +1,9 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
-
-const { spawn } = require('node:child_process');
-const readline = require('node:readline');
-const express = require('express');
-const querystring = require('querystring');
-const cors = require('cors');
-const morgan = require('morgan');
+import { spawn } from 'node:child_process';
+import readline from 'node:readline';
+import express from 'express';
+import querystring from 'querystring';
+import cors from 'cors';
+import morgan from 'morgan';
 
 const engine = spawn('./katago', ['gtp'], {
     stdio: ['pipe', 'pipe', 'inherit'],
