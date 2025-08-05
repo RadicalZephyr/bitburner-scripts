@@ -21,7 +21,7 @@ import {
     Node,
     SyntaxKind,
     PropertyAccessExpression,
-    PropertyAccessChain,
+    JSDoc,
 } from 'ts-morph';
 import path from 'node:path';
 import fs from 'node:fs';
@@ -40,20 +40,21 @@ interface ApiInfo {
 const argv = yargs(hideBin(process.argv))
     .scriptName('audit-ram')
     .usage('$0 <entry> [options]')
-    .positional('entry', {
-        describe: 'Entry TypeScript file to audit (e.g., src/main.ts)',
-        type: 'string',
-        demandOption: true,
+    .command('$0 <entry>', 'the default command', (yargs) => {
+        yargs.positional('entry', {
+            describe: 'Entry TypeScript file to audit (e.g., src/main.ts)',
+            type: 'string',
+            demandOption: true,
+        });
     })
     .option('defs', {
         type: 'string',
-        describe:
-            'Path to NetScriptDefinitions.d.ts (default: ./NetScriptDefinitions.d.ts)',
+        describe: 'Path to NetScriptDefinitions.d.ts',
         default: 'NetScriptDefinitions.d.ts',
     })
     .option('tsconfig', {
         type: 'string',
-        describe: 'Path to tsconfig.json (default: ./tsconfig.json)',
+        describe: 'Path to tsconfig.json',
         default: 'tsconfig.json',
     })
     .option('json', {
@@ -65,7 +66,7 @@ const argv = yargs(hideBin(process.argv))
 
 const DEFINITIONS_PATH = path.resolve(argv.defs);
 const TSCONFIG_PATH = path.resolve(argv.tsconfig);
-const ENTRY_PATH = path.resolve(argv.entry);
+const ENTRY_PATH = path.resolve(argv.entry as string);
 
 if (!fs.existsSync(DEFINITIONS_PATH)) {
     console.error(
@@ -100,7 +101,8 @@ function harvestInterface(iface: InterfaceDeclaration, prefix = ''): void {
         // Method = terminal Netscript API with RAM cost
         if (Node.isMethodSignature(member)) {
             const name = prefix + member.getName();
-            const ram = extractRam(member);
+            const docs = member.getJsDocs();
+            const ram = extractRam(member, docs);
             if (ram !== null) ramCatalog.set(name, ram);
         }
         // Property that itself is an interface → recurse (e.g., gang, stock)
@@ -118,9 +120,8 @@ function harvestInterface(iface: InterfaceDeclaration, prefix = ''): void {
     });
 }
 
-function extractRam(node: Node): number | null {
-    const tag = node
-        .getJsDocs()
+function extractRam(node: Node, docs: JSDoc[]): number | null {
+    const tag = docs
         .flatMap((d) => d.getTags())
         .find((t) => t.getTagName() === 'remarks');
     if (!tag) return null;
@@ -169,30 +170,20 @@ for (const file of visited) {
             const expr = node.getExpression();
 
             // Handle ns.foo.bar() patterns (PropertyAccessExpression / Chain)
-            if (
-                Node.isPropertyAccessExpression(expr)
-                || expr.getKind() === SyntaxKind.PropertyAccessChain
-            ) {
-                const api = extractNsChain(
-                    expr as PropertyAccessExpression | PropertyAccessChain,
-                );
+            if (Node.isPropertyAccessExpression(expr)) {
+                const api = extractNsChain(expr as PropertyAccessExpression);
                 if (api) usedApis.add(api);
             }
         }
     });
 }
 
-function extractNsChain(
-    node: PropertyAccessExpression | PropertyAccessChain,
-): string | null {
+function extractNsChain(node: PropertyAccessExpression): string | null {
     const parts: string[] = [];
     let current: Node = node;
 
     // Walk backwards through property access chain, collecting names
-    while (
-        Node.isPropertyAccessExpression(current)
-        || current.getKind() === SyntaxKind.PropertyAccessChain
-    ) {
+    while (Node.isPropertyAccessExpression(current)) {
         parts.unshift(current.getName());
         current = current.getExpression();
     }
