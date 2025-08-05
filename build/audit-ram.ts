@@ -21,6 +21,7 @@ import {
     Node,
     PropertyAccessExpression,
     JSDoc,
+    Identifier,
 } from 'ts-morph';
 import path from 'node:path';
 import fs from 'node:fs';
@@ -93,6 +94,7 @@ const project = new Project({
 
 const defsFile = project.addSourceFileAtPath(DEFINITIONS_PATH);
 const nsInterface = defsFile.getInterfaceOrThrow('NS');
+const nsSymbol = nsInterface.getSymbol();
 
 const ramCatalog = new Map<string, number>();
 
@@ -178,6 +180,15 @@ for (const file of visited) {
     });
 }
 
+function isNsIdentifier(id: Identifier): boolean {
+    const type = id.getType();
+    const symbol = type.getSymbol();
+    if (!symbol) return false;
+    if (symbol === nsSymbol) return true;
+    const alias = symbol.getAliasedSymbol?.();
+    return alias === nsSymbol;
+}
+
 function extractNsChain(node: PropertyAccessExpression): string | null {
     const parts: string[] = [];
     let current: Node = node;
@@ -188,7 +199,7 @@ function extractNsChain(node: PropertyAccessExpression): string | null {
         current = current.getExpression();
     }
 
-    if (Node.isIdentifier(current) && current.getText() === 'ns') {
+    if (Node.isIdentifier(current) && isNsIdentifier(current)) {
         return parts.join('.');
     }
     return null;
