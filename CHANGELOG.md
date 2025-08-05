@@ -75,6 +75,10 @@
 - AGENTS guidelines clarified for PR reviewers [#189][pr-189].
 - Utility tests relocated under `src/util/__tests__` with coverage for terminal progress bar detection [#226][pr-226].
 
+### Build Scripts
+
+- Added a script to audit Netscript API RAM footprint (`npm run audit-ram`) [#230][pr-230].
+
 [pr-160]: https://github.com/RadicalZephyr/bitburner-scripts/pull/160
 [pr-166]: https://github.com/RadicalZephyr/bitburner-scripts/pull/166
 [pr-172]: https://github.com/RadicalZephyr/bitburner-scripts/pull/172
@@ -109,6 +113,7 @@
 [pr-226]: https://github.com/RadicalZephyr/bitburner-scripts/pull/226
 [pr-227]: https://github.com/RadicalZephyr/bitburner-scripts/pull/227
 [pr-229]: https://github.com/RadicalZephyr/bitburner-scripts/pull/229
+[pr-230]: https://github.com/RadicalZephyr/bitburner-scripts/pull/230
 
 ## v2.1.0
 
