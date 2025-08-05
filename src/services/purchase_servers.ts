@@ -11,6 +11,7 @@ import {
     SetUrgencyCommand,
 } from 'services/client/server_purchase';
 import { readAllFromPort, readLoop } from 'util/ports';
+import { primedMoneyTracker } from 'util/money-tracker';
 
 const FLAGS = [['help', false]] as const satisfies FlagsSchema;
 
@@ -59,6 +60,8 @@ CONFIGURATION
     const self = ns.self();
     memClient.registerAllocation(self.server, self.ramUsage, 1);
 
+    const moneyTracker = await primedMoneyTracker(ns);
+
     let active = false;
     let urgency = 100;
 
@@ -91,7 +94,7 @@ CONFIGURATION
 
     while (true) {
         if (active) {
-            const [incomePerSec] = ns.getTotalScriptIncome();
+            const incomePerSec = moneyTracker.velocity('hacking');
             if (incomePerSec > 0) {
                 const tier = determineNextTier(
                     ns,

@@ -26,6 +26,7 @@ test('client sends typed messages', () => {
     const ns = makeNS(tryWrite);
     const client = new ServerPurchaseClient(ns);
     client.buy();
+    client.buy(false);
     client.setUrgency(50);
     expect(tryWrite).toHaveBeenNthCalledWith(1, [
         MessageType.BuyOrder,
@@ -33,6 +34,11 @@ test('client sends typed messages', () => {
         { state: true },
     ]);
     expect(tryWrite).toHaveBeenNthCalledWith(2, [
+        MessageType.BuyOrder,
+        null,
+        { state: false },
+    ]);
+    expect(tryWrite).toHaveBeenNthCalledWith(3, [
         MessageType.SetUrgency,
         null,
         { urgency: 50 },
