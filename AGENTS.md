@@ -248,7 +248,6 @@ take a deep breath and provide a comprehensive review, including:
 
 ### 5 Performance & Resource Usage
 
-- **RAM Footprint** — Use `ns.getScriptRam()` when adding libraries; keep each helper cost reasonable.
 - **Async Patterns** — Avoid tight `while(true)` with zero sleeps; insert `await ns.sleep(0)` or batched intervals.
 - **Algorithmic Complexity** — Evaluate worst-case loops over potentially large inputs.
 - **Memory Leaks** — No unbounded arrays or global caches without eviction.

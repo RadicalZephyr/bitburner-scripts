@@ -21,3 +21,39 @@ To keep RAM usage low:
 
 Following these guidelines will prevent unused APIs from counting
 against your script's RAM budget.
+
+## RAM-Footprint Audit Policy
+
+**Why we do this**
+
+Auditing before and after every change makes sure we don’t
+unintentionally pull in high-cost APIs.
+
+---
+
+### 1  When to audit
+
+1. **New script** — run once before opening the PR.
+2. **Modifying an existing script** — run **twice**:
+
+   * **Baseline**: on the current `main` branch.
+   * **Post-edit**: on your working branch.
+
+---
+
+### 2  How to audit
+
+```bash
+npm run audit-ram <path/to/script.ts>         # human-readable table
+npm run audit-ram <path/to/script.ts> --json  # machine-readable dump
+```
+
+---
+
+#### 3  What to do with the results
+
+| Scenario                      | Action                                                                                                                        |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| **RAM unchanged or lower**    | Note it in the PR description (e.g., “No RAM delta”).                                                                         |
+| **RAM increases**             | 1) List the new APIs added and their individual costs.<br>2) Explain why the extra RAM is justified (feature, bug fix, etc.). |
+| **Unknown (‘?’) RAM entries** | Double-check you didn’t reference a dynamic property or typo; submit an issue if the definition file is missing data.         |
