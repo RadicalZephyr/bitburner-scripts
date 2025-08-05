@@ -22,6 +22,7 @@ import {
     PropertyAccessExpression,
     JSDoc,
     Identifier,
+    Symbol as MorphSymbol,
 } from 'ts-morph';
 import path from 'node:path';
 import fs from 'node:fs';
@@ -167,13 +168,17 @@ while (pending.length) {
 const usedApis = new Set<string>();
 
 for (const file of visited) {
+    const aliases = collectNsAliases(file);
     file.forEachDescendant((node) => {
         if (Node.isCallExpression(node)) {
             const expr = node.getExpression();
 
             // Handle ns.foo.bar() patterns (PropertyAccessExpression / Chain)
             if (Node.isPropertyAccessExpression(expr)) {
-                const api = extractNsChain(expr as PropertyAccessExpression);
+                const api = extractNsChain(
+                    expr as PropertyAccessExpression,
+                    aliases,
+                );
                 if (api) usedApis.add(api);
             }
         }
@@ -189,7 +194,44 @@ function isNsIdentifier(id: Identifier): boolean {
     return alias === nsSymbol;
 }
 
-function extractNsChain(node: PropertyAccessExpression): string | null {
+function collectNsAliases(file: SourceFile): Map<MorphSymbol, string> {
+    const aliases = new Map<MorphSymbol, string>();
+    file.forEachDescendant((node) => {
+        if (Node.isVariableDeclaration(node)) {
+            const nameNode = node.getNameNode();
+            const init = node.getInitializer();
+            if (!init) return;
+
+            if (
+                Node.isIdentifier(nameNode)
+                && Node.isPropertyAccessExpression(init)
+            ) {
+                const chain = extractNsChain(init as PropertyAccessExpression);
+                if (chain) {
+                    const sym = nameNode.getSymbol();
+                    if (sym) aliases.set(sym, chain);
+                }
+            } else if (
+                Node.isObjectBindingPattern(nameNode)
+                && Node.isIdentifier(init)
+                && isNsIdentifier(init)
+            ) {
+                for (const elem of nameNode.getElements()) {
+                    const prop =
+                        elem.getPropertyNameNode()?.getText() ?? elem.getName();
+                    const sym = elem.getNameNode().getSymbol();
+                    if (sym) aliases.set(sym, prop);
+                }
+            }
+        }
+    });
+    return aliases;
+}
+
+function extractNsChain(
+    node: PropertyAccessExpression,
+    aliases?: Map<MorphSymbol, string>,
+): string | null {
     const parts: string[] = [];
     let current: Node = node;
 
@@ -199,8 +241,15 @@ function extractNsChain(node: PropertyAccessExpression): string | null {
         current = current.getExpression();
     }
 
-    if (Node.isIdentifier(current) && isNsIdentifier(current)) {
-        return parts.join('.');
+    if (Node.isIdentifier(current)) {
+        if (isNsIdentifier(current)) {
+            return parts.join('.');
+        }
+        const sym = current.getSymbol();
+        const alias = sym && aliases?.get(sym);
+        if (alias) {
+            return [alias, ...parts].join('.');
+        }
     }
     return null;
 }
