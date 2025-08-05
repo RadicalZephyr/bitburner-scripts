@@ -1,5 +1,23 @@
 # Contributing
 
+## Prerequisites
+
+This project requires Node.js 22 or newer. A version manager keeps the correct version isolated from your system installation.
+
+Using nvm:
+
+```
+nvm install 22
+nvm use 22
+```
+
+Using mise:
+
+```
+mise install node@22
+mise use node@22
+```
+
 ### Development Build
 
 1. Install dependencies with `npm install`

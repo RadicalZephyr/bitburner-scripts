@@ -7,6 +7,24 @@ Scripts and utilities for playing [Bitburner](https://bitburner-official.github.
 Most documentation lives in the [docs](./docs) directory. If you want
 to contribute to their development you can check out the [contributing guide](docs/contributing.md).
 
+### Development Requirements
+
+Building these scripts locally requires Node.js 22 or newer. Use a Node version manager to install the correct version:
+
+Using nvm:
+
+```
+nvm install 22
+nvm use 22
+```
+
+Using mise:
+
+```
+mise install node@22
+mise use node@22
+```
+
 ### One Time Set Up
 
 To get the scripts the first time you need to run a couple commands by
