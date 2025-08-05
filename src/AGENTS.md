@@ -31,17 +31,16 @@ unintentionally pull in high-cost APIs.
 
 ---
 
-### 1  When to audit
+### 1 When to audit
 
 1. **New script** — run once before opening the PR.
 2. **Modifying an existing script** — run **twice**:
-
-   * **Baseline**: on the current `main` branch.
-   * **Post-edit**: on your working branch.
+    - **Baseline**: on the current `main` branch.
+    - **Post-edit**: on your working branch.
 
 ---
 
-### 2  How to audit
+### 2 How to audit
 
 ```bash
 npm run audit-ram <path/to/script.ts>         # human-readable table
@@ -50,7 +49,7 @@ npm run audit-ram <path/to/script.ts> --json  # machine-readable dump
 
 ---
 
-#### 3  What to do with the results
+#### 3 What to do with the results
 
 | Scenario                      | Action                                                                                                                        |
 | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
