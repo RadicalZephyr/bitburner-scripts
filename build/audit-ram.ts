@@ -264,7 +264,8 @@ const apiList: ApiInfo[] = Array.from(usedApis)
         // APIs with known RAM first, then by RAM desc, then alphabetically
         if (a.ram === null && b.ram !== null) return 1;
         if (a.ram !== null && b.ram === null) return -1;
-        if (a.ram !== null && b.ram !== null) return b.ram - a.ram;
+        if (a.ram !== null && b.ram !== null && Math.abs(b.ram - a.ram) > 0.001)
+            return b.ram - a.ram;
         return a.name.localeCompare(b.name);
     });
 
