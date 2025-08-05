@@ -89,6 +89,7 @@ if (!fs.existsSync(ENTRY_PATH)) {
 
 const project = new Project({
     tsConfigFilePath: TSCONFIG_PATH,
+    skipAddingFilesFromTsConfig: true,
 });
 
 const defsFile = project.addSourceFileAtPath(DEFINITIONS_PATH);
