@@ -52,7 +52,7 @@ async function studyAndCode(ns: NS) {
 
     let work = ns.singularity.getCurrentWork();
     while (work && work.type === 'CREATE_PROGRAM') {
-        await ns.sleep(10_000);
+        await ns.asleep(10_000);
         work = ns.singularity.getCurrentWork();
     }
 
@@ -68,7 +68,7 @@ async function untilHackLevel(ns: NS, targetLevel: number) {
     while (true) {
         const hackLevel = ns.getHackingLevel();
         if (hackLevel >= targetLevel) return;
-        await ns.sleep(1000);
+        await ns.asleep(1000);
     }
 }
 
