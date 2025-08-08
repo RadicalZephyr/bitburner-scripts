@@ -4,7 +4,7 @@ import { FlagsSchema, parseFlags } from 'util/flags';
 import { GtpClient } from 'go/GtpClient';
 import {
     filterMapBoard,
-    Turn,
+    PlaceTurn,
     Node,
     Vertex,
     toIndices,
@@ -95,7 +95,7 @@ function isWall(node: Node, vertex: Vertex): Vertex | null {
     return null;
 }
 
-function vertexToMove(node: Node, vertex: Vertex): Turn | null {
+function vertexToMove(node: Node, vertex: Vertex): PlaceTurn | null {
     switch (node) {
         case Node.BLACK: {
             return ['black', vertex];

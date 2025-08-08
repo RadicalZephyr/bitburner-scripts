@@ -52,7 +52,9 @@ export type Move = 'pass' | 'resign' | Vertex;
 
 export type Color = 'white' | 'w' | 'W' | 'black' | 'b' | 'B';
 
-export type Turn = [Color, Vertex];
+export type PlaceTurn = [Color, Vertex];
+
+export type Turn = [Color, Move];
 
 export const NODES = ['.' as const, 'O' as const, 'X' as const, '#' as const];
 

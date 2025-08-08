@@ -1,6 +1,6 @@
 import type { NS } from 'netscript';
 
-import { Color, Turn, Move, Vertex, isMove } from 'go/types';
+import { Color, PlaceTurn, Move, Vertex, isMove } from 'go/types';
 
 import { CONFIG } from 'go/config';
 import { extend } from 'util/extend';
@@ -78,7 +78,7 @@ export class GtpClient {
      *
      * @param positions - list of alternating color and vertex pairs
      */
-    async setPosition(positions: Turn[]) {
+    async setPosition(positions: PlaceTurn[]) {
         const flatPositions = positions.reduce((acc, n) => extend(acc, n), []);
         await this.send(
             'set_position',
