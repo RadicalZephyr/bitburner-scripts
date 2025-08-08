@@ -10,6 +10,17 @@ import { CONFIG as CorpConfig } from 'corp/config';
 import { CONFIG as AutomationConfig } from 'automation/config';
 import { CONFIG as GoConfig } from 'go/config';
 
+const ALL_CONFIGS = [
+    BatchConfig,
+    GangConfig,
+    ServiceConfig,
+    StockConfig,
+    HacknetConfig,
+    CorpConfig,
+    AutomationConfig,
+    GoConfig,
+];
+
 const FLAGS = [
     ['show', false],
     ['help', false],
@@ -61,16 +72,7 @@ OPTIONS
     }
     const value = rest[1];
 
-    for (const config of [
-        BatchConfig,
-        GangConfig,
-        ServiceConfig,
-        StockConfig,
-        HacknetConfig,
-        CorpConfig,
-        AutomationConfig,
-        GoConfig,
-    ]) {
+    for (const config of ALL_CONFIGS) {
         if (Object.hasOwn(config, key)) {
             const prev = config[key];
             if (value) {
@@ -93,15 +95,6 @@ const commonKeys: Set<string> = new Set([
 ]);
 
 function allConfigValues(): string[] {
-    const allKeys = [
-        ...Object.keys(BatchConfig),
-        ...Object.keys(GangConfig),
-        ...Object.keys(ServiceConfig),
-        ...Object.keys(StockConfig),
-        ...Object.keys(HacknetConfig),
-        ...Object.keys(CorpConfig),
-        ...Object.keys(AutomationConfig),
-        ...Object.keys(GoConfig),
-    ];
+    const allKeys = ALL_CONFIGS.flatMap((c) => Object.keys(c));
     return allKeys.filter((k: string) => !commonKeys.has(k));
 }
