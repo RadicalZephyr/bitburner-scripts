@@ -184,10 +184,10 @@ function parseResponse(o: any): Response {
 type Method = 'HEAD' | 'GET' | 'POST' | 'PUT' | 'DELETE';
 
 function makeRequest(method: Method, url: string): Promise<string> {
-    return new Promise(function (resolve, reject) {
+    return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         xhr.open(method, url);
-        xhr.onload = function () {
+        xhr.onload = () => {
             if (xhr.status >= 200 && xhr.status < 400) {
                 resolve(xhr.response);
             } else {
@@ -198,7 +198,7 @@ function makeRequest(method: Method, url: string): Promise<string> {
                 );
             }
         };
-        xhr.onerror = function () {
+        xhr.onerror = () => {
             // {status: xhr.status, statusText: xhr.statusText,}
             reject(new Error(`error attempting to send '${method} ${url}'`));
         };
