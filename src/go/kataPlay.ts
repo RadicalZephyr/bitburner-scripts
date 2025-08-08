@@ -77,13 +77,13 @@ CONFIGURATION
         try {
             await playGame(ns, client, turns);
         } catch {
-            const gameFile = `go-games/game${gameIndex}.json`;
+            const gameFile = `/go-games/game${gameIndex}.json`;
             const gameInfo = {
                 history: formatGame(turns),
                 board: ns.go.getBoardState(),
                 state: ns.go.getGameState(),
             };
-            ns.write(gameFile, JSON.stringify(gameInfo, null, 2));
+            ns.write(gameFile, JSON.stringify(gameInfo, null, 2), 'w');
             if (!ns.scp(gameFile, 'home'))
                 throw new Error(`failed to scp ${gameFile}`);
             ns.print(
