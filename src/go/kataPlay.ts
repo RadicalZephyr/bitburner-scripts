@@ -76,6 +76,7 @@ CONFIGURATION
         const turns: Turn[] = [];
         try {
             await playGame(ns, client, turns);
+            await ns.asleep(100);
         } catch (err) {
             const gameFile = `/go-games/game${gameIndex}.json`;
             const gameInfo = {
