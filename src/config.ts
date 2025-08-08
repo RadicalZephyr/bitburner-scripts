@@ -33,10 +33,18 @@ export async function main(ns: NS) {
         ns.tprint(`
 USAGE: run ${ns.getScriptName()} KEY [VALUE]
 
-This script associates the given KEY with the given VALUE in the global localStorage object.
+Read and write the configuration values in Local Storage.
+
+With one argument display the current value of that config key.
+
+With two arguments change the config key to a new value.
+
+Please note, values containing spaces must be quoted.
 
 Example:
-> run ${ns.getScriptName()} config-name config-value
+  > run ${ns.getScriptName()} hackLevelVelocityThreshold
+  > run ${ns.getScriptName()} goOpponent Tetrads
+  > run ${ns.getScriptName()} goOpponent 'The Black Hand'
 `);
         return;
     }
