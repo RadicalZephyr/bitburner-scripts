@@ -35,7 +35,7 @@ export async function main(ns: NS) {
     const flags = await parseFlags(ns, FLAGS);
 
     if (flags.show) {
-        ns.tprint(`All config values: ${allConfigValues().join(', ')}`);
+        ns.tprint(`All config values:\n\n${formatAllConfigValues()}`);
         return;
     }
 
@@ -100,4 +100,15 @@ function allConfigValues(): string[] {
 
 function uniqueKeys(config: (typeof ALL_CONFIGS)[number]): string[] {
     return Object.keys(config).filter((k: string) => !commonKeys.has(k));
+}
+
+function formatAllConfigValues() {
+    const output = [];
+    for (const c of ALL_CONFIGS) {
+        output.push(`${c.prefix}:\n  `);
+        const keys = uniqueKeys(c).join('\n  ');
+        output.push(keys);
+        output.push('\n\n');
+    }
+    return output.join('');
 }
