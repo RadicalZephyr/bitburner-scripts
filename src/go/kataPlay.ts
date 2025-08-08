@@ -13,6 +13,8 @@ import {
 
 import { CONFIG } from 'go/config';
 
+import { HUD_HEIGHT, KARMA_HEIGHT } from 'util/ui';
+
 const FLAGS = [['help', false]] as const satisfies FlagsSchema;
 
 export function autocomplete(data: AutocompleteData): string[] {
@@ -22,8 +24,6 @@ export function autocomplete(data: AutocompleteData): string[] {
 
 export async function main(ns: NS) {
     const flags = await parseFlags(ns, FLAGS);
-
-    ns.disableLog('ALL');
 
     if (flags.help) {
         ns.tprint(`
@@ -47,6 +47,16 @@ CONFIGURATION
 `);
         return;
     }
+
+    ns.disableLog('ALL');
+    ns.ui.openTail();
+    ns.ui.setTailTitle(`KataGo - ${ns.self().server}`);
+
+    const WIDTH = 500;
+    ns.ui.resizeTail(WIDTH, 500);
+
+    const [ww] = ns.ui.windowSize();
+    ns.ui.moveTail(ww - WIDTH - 40, HUD_HEIGHT + KARMA_HEIGHT + 40);
 
     const client = new GtpClient(ns);
 
