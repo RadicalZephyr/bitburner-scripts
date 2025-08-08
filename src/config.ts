@@ -1,24 +1,24 @@
 import type { AutocompleteData, NS } from 'netscript';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
-import { CONFIG as BatchConfig } from 'batch/config';
-import { CONFIG as GangConfig } from 'gang/config';
 import { CONFIG as ServiceConfig } from 'services/config';
-import { CONFIG as StockConfig } from 'stock/config';
-import { CONFIG as HacknetConfig } from 'hacknet/config';
-import { CONFIG as CorpConfig } from 'corp/config';
-import { CONFIG as AutomationConfig } from 'automation/config';
+import { CONFIG as BatchConfig } from 'batch/config';
 import { CONFIG as GoConfig } from 'go/config';
+import { CONFIG as StockConfig } from 'stock/config';
+import { CONFIG as GangConfig } from 'gang/config';
+import { CONFIG as AutomationConfig } from 'automation/config';
+import { CONFIG as CorpConfig } from 'corp/config';
+import { CONFIG as HacknetConfig } from 'hacknet/config';
 
 const ALL_CONFIGS = [
-    BatchConfig,
-    GangConfig,
     ServiceConfig,
+    BatchConfig,
+    GoConfig,
     StockConfig,
+    GangConfig,
+    AutomationConfig,
     HacknetConfig,
     CorpConfig,
-    AutomationConfig,
-    GoConfig,
 ];
 
 const FLAGS = [
