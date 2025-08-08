@@ -71,10 +71,10 @@ Example:
             if (value) {
                 config[key] = value;
                 ns.tprint(
-                    `Config ${config.prefix}_${key} changed from ${prev} to ${config[key]}`,
+                    `${config.prefix}_${key} changed: '${prev}' ⇒ '${config[key]}'`,
                 );
             } else {
-                ns.tprint(`${config.prefix}_${key}='${config[key]}'`);
+                ns.tprint(`${config.prefix}_${key} = '${config[key]}'`);
             }
         }
     }
