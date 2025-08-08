@@ -45,6 +45,11 @@ Example:
   > run ${ns.getScriptName()} hackLevelVelocityThreshold
   > run ${ns.getScriptName()} goOpponent Tetrads
   > run ${ns.getScriptName()} goOpponent 'The Black Hand'
+  > run ${ns.getScriptName()} --show
+
+OPTIONS
+  --help   Show this help message
+  --show   Print all configuration values
 `);
         return;
     }
