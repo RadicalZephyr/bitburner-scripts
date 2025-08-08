@@ -79,7 +79,7 @@ CONFIGURATION
         } catch (err) {
             const gameFile = `/go-games/game${gameIndex}.json`;
             const gameInfo = {
-                history: formatGame(turns),
+                history: turns,
                 board: ns.go.getBoardState(),
                 state: ns.go.getGameState(),
             };
@@ -206,8 +206,4 @@ async function playGame(ns: NS, client: GtpClient, turns: Turn[]) {
         }
         await ns.sleep(0);
     }
-}
-
-function formatGame(turns: Turn[]): string {
-    return turns.map((t) => t.join(' ')).join('\n');
 }
