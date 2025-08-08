@@ -90,6 +90,7 @@ CONFIGURATION
                 `ERROR: errored while playing game. Game history written to ${gameFile}`,
             );
             gameIndex += 1;
+            await ns.asleep(1000);
         }
     }
 }
