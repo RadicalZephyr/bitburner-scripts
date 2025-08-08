@@ -5,10 +5,12 @@ import { GtpClient } from 'go/GtpClient';
 import {
     filterMapBoard,
     PlaceTurn,
+    Move,
     Node,
     Vertex,
     toIndices,
     toVertex,
+    Turn,
 } from 'go/types';
 
 import { CONFIG } from 'go/config';
@@ -60,6 +62,7 @@ CONFIGURATION
 
     const client = new GtpClient(ns);
 
+    let gameIndex = 0;
     while (true) {
         const gameState = ns.go.getGameState();
 
@@ -70,7 +73,24 @@ CONFIGURATION
             );
         }
         await setupExistingGame(ns, client);
-        await playGame(ns, client);
+        const turns = [];
+        try {
+            await playGame(ns, client, turns);
+        } catch {
+            const gameFile = `go-games/game${gameIndex}.json`;
+            const gameInfo = {
+                history: formatGame(turns),
+                board: ns.go.getBoardState(),
+                state: ns.go.getGameState(),
+            };
+            ns.write(gameFile, JSON.stringify(gameInfo, null, 2));
+            if (!ns.scp(gameFile, 'home'))
+                throw new Error(`failed to scp ${gameFile}`);
+            ns.print(
+                `ERROR: errored while playing game. Game history written to ${gameFile}`,
+            );
+            gameIndex += 1;
+        }
     }
 }
 
@@ -110,7 +130,7 @@ function vertexToMove(node: Node, vertex: Vertex): PlaceTurn | null {
     }
 }
 
-async function playGame(ns: NS, client: GtpClient) {
+async function playGame(ns: NS, client: GtpClient, turns: Turn[]) {
     let repeatedErrors = 0;
     const errorMoves = [];
 
@@ -118,7 +138,7 @@ async function playGame(ns: NS, client: GtpClient) {
     while (true) {
         const validMoves = ns.go.analysis.getValidMoves();
 
-        let myMove;
+        let myMove: Move;
         if (opponentPasses < CONFIG.maxOpponentPasses) {
             // Have the engine generate the next move
             myMove = await client.genmove('black');
@@ -128,6 +148,7 @@ async function playGame(ns: NS, client: GtpClient) {
 
         let opponentMove;
         if (myMove === 'pass') {
+            turns.push(['black', 'pass']);
             opponentMove = await ns.go.passTurn();
         } else if (myMove === 'resign') {
             throw new Error(`ERROR: engine returned 'resign' unexpectedly!`);
@@ -154,7 +175,7 @@ async function playGame(ns: NS, client: GtpClient) {
                 await ns.sleep(10);
                 continue;
             }
-
+            turns.push(['black', myMove]);
             opponentMove = await ns.go.makeMove(x, y);
         }
 
@@ -163,6 +184,7 @@ async function playGame(ns: NS, client: GtpClient) {
 
         switch (opponentMove.type) {
             case 'move': {
+                turns.push(['white', toVertex(opponentMove.x, opponentMove.y)]);
                 opponentPasses = 0;
                 await client.play(
                     'white',
@@ -171,6 +193,7 @@ async function playGame(ns: NS, client: GtpClient) {
                 break;
             }
             case 'pass': {
+                turns.push(['white', 'pass']);
                 opponentPasses += 1;
                 await ns.sleep(10);
                 break;
@@ -181,4 +204,8 @@ async function playGame(ns: NS, client: GtpClient) {
         }
         await ns.sleep(0);
     }
+}
+
+function formatGame(turns: Turn[]): string {
+    return turns.map((t) => t.join(' ')).join('\n');
 }
