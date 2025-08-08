@@ -95,6 +95,9 @@ const commonKeys: Set<string> = new Set([
 ]);
 
 function allConfigValues(): string[] {
-    const allKeys = ALL_CONFIGS.flatMap((c) => Object.keys(c));
-    return allKeys.filter((k: string) => !commonKeys.has(k));
+    return ALL_CONFIGS.flatMap((c) => uniqueKeys(c));
+}
+
+function uniqueKeys(config: (typeof ALL_CONFIGS)[number]): string[] {
+    return Object.keys(config).filter((k: string) => !commonKeys.has(k));
 }
