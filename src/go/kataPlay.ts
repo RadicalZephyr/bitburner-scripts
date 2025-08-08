@@ -76,7 +76,7 @@ CONFIGURATION
         const turns = [];
         try {
             await playGame(ns, client, turns);
-        } catch {
+        } catch (err) {
             const gameFile = `/go-games/game${gameIndex}.json`;
             const gameInfo = {
                 history: formatGame(turns),
@@ -89,6 +89,7 @@ CONFIGURATION
             ns.print(
                 `ERROR: errored while playing game. Game history written to ${gameFile}`,
             );
+            ns.print(`ERROR: ${String(err)}`);
             gameIndex += 1;
             await ns.asleep(1000);
         }
