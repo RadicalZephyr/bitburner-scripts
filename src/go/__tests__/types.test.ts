@@ -4,7 +4,7 @@ import {
     COL_NAMES,
     ROW_NAMES,
     Node,
-    isMoveResponse,
+    isMove,
     isVertex,
     filterMapBoard,
     toIndices,
@@ -59,16 +59,16 @@ describe('vertex/index conversions', () => {
 });
 
 describe('type predicates', () => {
-    test('isMoveResponse handles pass, resign and vertex responses', () => {
-        expect(isMoveResponse('pass')).toBeTruthy();
-        expect(isMoveResponse('resign')).toBeTruthy();
-        expect(isMoveResponse('a1')).toBeTruthy();
-        expect(isMoveResponse('t19')).toBeTruthy();
+    test('isMove handles pass, resign and vertex responses', () => {
+        expect(isMove('pass')).toBeTruthy();
+        expect(isMove('resign')).toBeTruthy();
+        expect(isMove('a1')).toBeTruthy();
+        expect(isMove('t19')).toBeTruthy();
     });
 
-    test('isMoveResponse rejects arbitrary strings', () => {
-        expect(isMoveResponse('aoeu')).toBeFalsy();
-        expect(isMoveResponse('32hxoe')).toBeFalsy();
+    test('isMove rejects arbitrary strings', () => {
+        expect(isMove('aoeu')).toBeFalsy();
+        expect(isMove('32hxoe')).toBeFalsy();
     });
 
     const vertices = [];

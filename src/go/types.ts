@@ -48,11 +48,11 @@ export type Row = (typeof ROW_NAMES)[number];
 
 export type Vertex = `${Col}${Row}`;
 
-export type MoveResponse = 'pass' | 'resign' | Vertex;
+export type Move = 'pass' | 'resign' | Vertex;
 
 export type Color = 'white' | 'w' | 'W' | 'black' | 'b' | 'B';
 
-export type Move = [Color, Vertex];
+export type Turn = [Color, Vertex];
 
 export const NODES = ['.' as const, 'O' as const, 'X' as const, '#' as const];
 
@@ -129,7 +129,7 @@ export function isVertex(s: string): s is Vertex {
  * @param s - candidate ResponseMove string
  * @returns Whether  the candidate is a valid ResponseMove
  */
-export function isMoveResponse(s: string): s is MoveResponse {
+export function isMove(s: string): s is Move {
     if (s === 'pass' || s === 'resign') return true;
     return isVertex(s);
 }
