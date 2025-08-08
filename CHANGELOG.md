@@ -61,6 +61,7 @@
 - `makeFuid` generates unique IDs for client requests and allocation tracking [#192][pr-192].
 - `sendTerminalCommand`, `manualGrow`, and `manualWeaken` automate terminal interactions and wait for progress bars [#226][pr-226].
 - Consolidated custom React hooks into `util/hooks.ts`, adding polling helpers for single-render components [#229][pr-229].
+- Improved `config.ts` helper program: read and write configs with autocomplete and better output formatting [#241][pr-241];
 
 ### User interface
 
@@ -116,6 +117,7 @@
 [pr-229]: https://github.com/RadicalZephyr/bitburner-scripts/pull/229
 [pr-230]: https://github.com/RadicalZephyr/bitburner-scripts/pull/230
 [pr-240]: https://github.com/RadicalZephyr/bitburner-scripts/pull/240
+[pr-241]: https://github.com/RadicalZephyr/bitburner-scripts/pull/241
 
 ## v2.1.0
 
