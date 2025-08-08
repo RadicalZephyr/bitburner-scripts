@@ -73,7 +73,7 @@ CONFIGURATION
             );
         }
         await setupExistingGame(ns, client);
-        const turns = [];
+        const turns: Turn[] = [];
         try {
             await playGame(ns, client, turns);
         } catch (err) {
