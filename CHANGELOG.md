@@ -34,6 +34,7 @@
 
 - Introduce `kataPlay.ts` which plays IPvGO using a KataGo HTTP proxy; setup instructions cover running the proxy and script [#206][pr-206].
 - KataGo proxy and NetScript client gain wall placement and cache-clearing support, with new limits on consecutive passes and invalid moves [#223][pr-223].
+- Make `kataPlay.ts` more robust against errors and capture game details when errors occur for later debugging [#240][pr-240].
 
 ### Automation
 
@@ -114,6 +115,7 @@
 [pr-227]: https://github.com/RadicalZephyr/bitburner-scripts/pull/227
 [pr-229]: https://github.com/RadicalZephyr/bitburner-scripts/pull/229
 [pr-230]: https://github.com/RadicalZephyr/bitburner-scripts/pull/230
+[pr-240]: https://github.com/RadicalZephyr/bitburner-scripts/pull/240
 
 ## v2.1.0
 
