@@ -106,7 +106,7 @@ handler will have a unique name.
 Use this general structure:
 
 ```typescript
-import type { NS, AutocompleteData, ScriptArg } from 'netscript';
+import type { NS, AutocompleteData } from 'netscript';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
 const FLAGS = [['help', false]] as const satisfies FlagsSchema;
