@@ -29,9 +29,9 @@ export async function main(ns: NS) {
     }
 
     const rest = flags._ as string[];
-    if (rest.length !== 2 || flags.help) {
+    if (flags.help || !(rest.length === 1 || rest.length === 2)) {
         ns.tprint(`
-USAGE: run ${ns.getScriptName()} KEY VALUE
+USAGE: run ${ns.getScriptName()} KEY [VALUE]
 
 This script associates the given KEY with the given VALUE in the global localStorage object.
 
@@ -60,10 +60,14 @@ Example:
     ]) {
         if (Object.hasOwn(config, key)) {
             const prev = config[key];
-            config[key] = value;
-            ns.tprint(
-                `Config ${config.prefix}_${key} changed from ${prev} to ${config[key]}`,
-            );
+            if (value) {
+                config[key] = value;
+                ns.tprint(
+                    `Config ${config.prefix}_${key} changed from ${prev} to ${config[key]}`,
+                );
+            } else {
+                ns.tprint(`${config.prefix}_${key}='${config[key]}'`);
+            }
         }
     }
 }
