@@ -57,7 +57,10 @@ function startEating(interval: React.MutableRefObject<MaybeInterval>) {
 }
 
 function findEatNoodlesButton() {
-    const buttons = globalThis.document.getElementsByTagName('button');
+    const root = globalThis['root'];
+    if (!(root instanceof Element)) return null;
+
+    const buttons = root.getElementsByTagName('button');
 
     for (let i = 0; i < buttons.length; i++) {
         const b = buttons.item(i);
