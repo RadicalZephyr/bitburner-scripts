@@ -1,6 +1,8 @@
 import type { NS } from 'netscript';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
+import { getSourceFileLevel } from 'services/client/source_file';
+
 import { useTheme } from 'util/hooks';
 
 import { CONFIG } from 'corp/config';
@@ -28,13 +30,17 @@ CONFIGURATION
     ns.disableLog('ALL');
     ns.clearLog();
     ns.ui.openTail();
+
+    const eatFn = await searchForNoodles(ns);
+
+    ns.clearLog();
     const WIDTH = 165;
     const HEIGHT = 235;
     ns.ui.resizeTail(WIDTH, HEIGHT);
     const [ww, wh] = ns.ui.windowSize();
     ns.ui.moveTail(ww - WIDTH, wh - HEIGHT);
 
-    ns.printRaw(<EatIt ns={ns} />);
+    ns.printRaw(<EatIt ns={ns} eatFn={eatFn} />);
     ns.ui.renderTail();
 
     while (true) {
@@ -42,10 +48,19 @@ CONFIGURATION
     }
 }
 
-type MaybeInterval = number | null;
+type EatFn = () => undefined;
 
-function startEating(interval: React.MutableRefObject<MaybeInterval>) {
-    if (typeof interval.current === 'number') return;
+async function searchForNoodles(ns: NS): Promise<EatFn> {
+    const sf4 = await getSourceFileLevel(ns, 4);
+    if (sf4 > 0) {
+        ns.singularity.travelToCity(ns.enums.CityName.NewTokyo);
+        ns.singularity.goToLocation(ns.enums.LocationName.NewTokyoNoodleBar);
+    } else {
+        const message = 'Please travel to New Tokyo and enter the Noodle Bar!';
+        ns.print(`WARN: ${message}`);
+        ns.alert(message);
+        while (!findEatNoodlesButton()) await ns.asleep(200);
+    }
 
     const eatButton = findEatNoodlesButton();
     if (!eatButton) throw new Error('no eat button found');
@@ -57,10 +72,7 @@ function startEating(interval: React.MutableRefObject<MaybeInterval>) {
     if (!eatNoodles || typeof eatNoodles !== 'function')
         throw new Error('no EatNoodles click handler found');
 
-    interval.current = globalThis.setInterval(
-        eatNoodles,
-        CONFIG.noodleEatingInterval,
-    );
+    return eatNoodles satisfies EatFn;
 }
 
 function findEatNoodlesButton() {
@@ -85,6 +97,20 @@ function findEatNoodlesButton() {
     return null;
 }
 
+type MaybeInterval = number | null;
+
+function startEating(
+    eatNoodles: EatFn,
+    interval: React.MutableRefObject<MaybeInterval>,
+) {
+    if (typeof interval.current === 'number') return;
+
+    interval.current = globalThis.setInterval(
+        eatNoodles,
+        CONFIG.noodleEatingInterval,
+    );
+}
+
 function stopEating(interval: React.MutableRefObject<MaybeInterval>) {
     if (typeof interval.current !== 'number') return;
 
@@ -94,9 +120,10 @@ function stopEating(interval: React.MutableRefObject<MaybeInterval>) {
 
 interface IEatItProps {
     ns: NS;
+    eatFn: EatFn;
 }
 
-function EatIt({ ns }: IEatItProps) {
+function EatIt({ ns, eatFn }: IEatItProps) {
     const theme = useTheme(ns);
     const interval: React.MutableRefObject<MaybeInterval> = React.useRef(null);
 
@@ -108,7 +135,7 @@ function EatIt({ ns }: IEatItProps) {
             <button
                 className={buttonClass}
                 style={{ color: theme.successlight }}
-                onClick={() => startEating(interval)}
+                onClick={() => startEating(eatFn, interval)}
             >
                 Eat it!<span className="MuiTouchRipple-root css-w0pj6f"></span>
             </button>
