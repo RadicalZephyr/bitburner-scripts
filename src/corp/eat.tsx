@@ -121,6 +121,8 @@ function startEating(
         CONFIG.noodleEatingInterval,
     );
 
+    ns.alert('We started eating noodles!');
+
     ns.atExit(
         () => {
             if (typeof interval.current === 'number')
@@ -130,11 +132,15 @@ function startEating(
     );
 }
 
-function stopEating(interval: React.MutableRefObject<MaybeInterval>) {
+function stopEating(ns: NS, interval: React.MutableRefObject<MaybeInterval>) {
     if (typeof interval.current !== 'number') return;
 
     globalThis.clearInterval(interval.current);
     interval.current = null;
+
+    ns.alert(
+        'Okay, we stopped eating noodles! It might take a while for all the toast popups to go away though. We ate a lot of noodles!',
+    );
 }
 
 interface IEatItProps {
@@ -160,7 +166,7 @@ function EatIt({ ns, className, eatFn }: IEatItProps) {
             <button
                 className={className}
                 style={{ color: theme.errorlight }}
-                onClick={() => stopEating(interval)}
+                onClick={() => stopEating(ns, interval)}
             >
                 STOP!<span className="MuiTouchRipple-root css-w0pj6f"></span>
             </button>
