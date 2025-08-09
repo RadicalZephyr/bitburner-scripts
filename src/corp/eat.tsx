@@ -38,22 +38,20 @@ CONFIGURATION
     }
 }
 
-let eating = false;
-let intervalId: number;
+type MaybeInterval = number | null;
 
-function startEating() {
-    if (eating) return;
-
-    eating = true;
+function startEating(interval: React.MutableRefObject<MaybeInterval>) {
+    if (typeof interval.current === 'number') return;
 
     const eatButton = findEatNoodlesButton();
+    if (!eatButton) return;
 
-    intervalId = globalThis.setInterval(() => {
+    interval.current = globalThis.setInterval(() => {
         if (eatButton) {
             eatButton.click();
-        } else {
-            globalThis.clearInterval(intervalId);
-            eating = false;
+        } else if (typeof interval.current === 'number') {
+            globalThis.clearInterval(interval.current);
+            interval.current = null;
         }
     }, CONFIG.noodleEatingInterval);
 }
@@ -68,11 +66,11 @@ function findEatNoodlesButton() {
     return null;
 }
 
-function stopEating() {
-    if (typeof intervalId !== 'number') return;
+function stopEating(interval: React.MutableRefObject<MaybeInterval>) {
+    if (typeof interval.current !== 'number') return;
 
-    globalThis.clearInterval(intervalId);
-    intervalId = null;
+    globalThis.clearInterval(interval.current);
+    interval.current = null;
 }
 
 interface IEatItProps {
@@ -81,6 +79,7 @@ interface IEatItProps {
 
 function EatIt({ ns }: IEatItProps) {
     const theme = useTheme(ns);
+    const interval: React.MutableRefObject<MaybeInterval> = React.useRef(null);
 
     const buttonClass =
         'MuiButtonBase-root MuiButton-root MuiButton-text MuiButton-textPrimary MuiButton-sizeMedium MuiButton-textSizeMedium MuiButton-root MuiButton-text MuiButton-textPrimary MuiButton-sizeMedium MuiButton-textSizeMedium css-u8jh2y css-13ak5eo';
@@ -90,14 +89,14 @@ function EatIt({ ns }: IEatItProps) {
             <button
                 className={buttonClass}
                 style={{ color: theme.successlight }}
-                onClick={() => startEating()}
+                onClick={() => startEating(interval)}
             >
                 Eat it!<span className="MuiTouchRipple-root css-w0pj6f"></span>
             </button>
             <button
                 className={buttonClass}
                 style={{ color: theme.errorlight }}
-                onClick={() => stopEating()}
+                onClick={() => stopEating(interval)}
             >
                 STOP!<span className="MuiTouchRipple-root css-w0pj6f"></span>
             </button>
