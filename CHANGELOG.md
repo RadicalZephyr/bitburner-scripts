@@ -29,6 +29,7 @@
 - New Launch service replaces `launch.ts` for remote script execution [#173][pr-173];
     - Expanded options with `ramOverride` support [#175][pr-175].
 - Source File service exposes owned Source File levels for other scripts [#195][pr-195].
+- Introduce server purchase daemon with urgency-based upgrades and configurable payback limits.
 
 ### IPvGO
 
