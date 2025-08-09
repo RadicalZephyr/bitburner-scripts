@@ -3,6 +3,7 @@ import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { getSourceFileLevel } from 'services/client/source_file';
 
+import { makeFuid } from 'util/fuid';
 import { useTheme } from 'util/hooks';
 
 import { CONFIG } from 'corp/config';
@@ -109,6 +110,7 @@ function findEatNoodlesButton() {
 type MaybeInterval = number | null;
 
 function startEating(
+    ns: NS,
     eatNoodles: EatFn,
     interval: React.MutableRefObject<MaybeInterval>,
 ) {
@@ -117,6 +119,14 @@ function startEating(
     interval.current = globalThis.setInterval(
         eatNoodles,
         CONFIG.noodleEatingInterval,
+    );
+
+    ns.atExit(
+        () => {
+            if (typeof interval.current === 'number')
+                globalThis.clearInterval(interval.current);
+        },
+        'eatNoodlesCleanup-' + makeFuid(ns),
     );
 }
 
@@ -143,7 +153,7 @@ function EatIt({ ns, className, eatFn }: IEatItProps) {
             <button
                 className={className}
                 style={{ color: theme.successlight }}
-                onClick={() => startEating(eatFn, interval)}
+                onClick={() => startEating(ns, eatFn, interval)}
             >
                 Eat it!<span className="MuiTouchRipple-root css-w0pj6f"></span>
             </button>
