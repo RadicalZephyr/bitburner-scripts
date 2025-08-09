@@ -44,13 +44,14 @@ function startEating(interval: React.MutableRefObject<MaybeInterval>) {
     if (typeof interval.current === 'number') return;
 
     const eatButton = findEatNoodlesButton();
-    if (!eatButton) return;
+    if (!eatButton) throw new Error('no eat button found');
 
     // Get the key for the React props object, which includes `on*`
     // event handler functions.
     const propsKey = Object.keys(eatButton)[1];
     const eatNoodles = eatButton[propsKey].onClick;
-    if (!eatNoodles) return;
+    if (!eatNoodles || typeof eatNoodles !== 'function')
+        throw new Error('no EatNoodles click handler found');
 
     interval.current = globalThis.setInterval(
         eatNoodles,
