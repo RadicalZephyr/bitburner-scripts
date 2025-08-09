@@ -105,8 +105,10 @@ function uniqueKeys(config: (typeof ALL_CONFIGS)[number]): string[] {
 function formatAllConfigValues() {
     const output = [];
     for (const c of ALL_CONFIGS) {
-        output.push(`${c.prefix}:\n  `);
-        const keys = uniqueKeys(c).join('\n  ');
+        output.push(`${c.prefix}:\n`);
+        const keys = uniqueKeys(c)
+            .map((k) => `  ${k} = '${c[k]}'`)
+            .join('\n');
         output.push(keys);
         output.push('\n\n');
     }
