@@ -83,8 +83,11 @@ OPTIONS
             } else {
                 ns.tprint(`${config.prefix}_${key} = '${config[key]}'`);
             }
+            return;
         }
     }
+
+    ns.tprint(`No matching config value found for ${key}`);
 }
 
 const commonKeys: Set<string> = new Set([
