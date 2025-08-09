@@ -60,8 +60,17 @@ function startEating(interval: React.MutableRefObject<MaybeInterval>) {
 }
 
 function findEatNoodlesButton() {
-    const root = globalThis['root'];
-    if (!(root instanceof Element)) return null;
+    const unclickable = globalThis['unclickable'];
+    if (!(unclickable instanceof Element)) {
+        globalThis.console.log('no unclickable element found');
+        return null;
+    }
+
+    const root = unclickable.parentElement;
+    if (!(root instanceof Element)) {
+        globalThis.console.log('no root element found');
+        return null;
+    }
 
     const buttons = root.getElementsByTagName('button');
 
