@@ -87,7 +87,7 @@ function EatIt({ ns }: IEatItProps) {
     const interval: React.MutableRefObject<MaybeInterval> = React.useRef(null);
 
     const buttonClass =
-        'MuiButtonBase-root MuiButton-root MuiButton-text MuiButton-textPrimary MuiButton-sizeMedium MuiButton-textSizeMedium MuiButton-root MuiButton-text MuiButton-textPrimary MuiButton-sizeMedium MuiButton-textSizeMedium css-u8jh2y css-13ak5eo';
+        'MuiButtonBase-root MuiButton-root MuiButton-text MuiButton-textPrimary MuiButton-sizeMedium MuiButton-textSizeMedium MuiButton-root MuiButton-text MuiButton-textPrimary MuiButton-sizeMedium MuiButton-textSizeMedium css-u8jh2y css-13ak5e0';
     return (
         <>
             <h1>Eat All The Noodles!</h1>
