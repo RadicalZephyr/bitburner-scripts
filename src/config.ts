@@ -78,10 +78,12 @@ OPTIONS
             if (value) {
                 config.setRaw(key, value);
                 ns.tprint(
-                    `${config.prefix}_${key} changed: '${prev}' ⇒ '${config[key]}'`,
+                    `${config.prefix}_${key} changed: ${JSON.stringify(prev)} ⇒ ${JSON.stringify(config[key])}`,
                 );
             } else {
-                ns.tprint(`${config.prefix}_${key} = '${config[key]}'`);
+                ns.tprint(
+                    `${config.prefix}_${key} = ${JSON.stringify(config[key])}`,
+                );
             }
             return;
         }
@@ -111,7 +113,7 @@ function formatAllConfigValues() {
     for (const c of ALL_CONFIGS) {
         output.push(`${c.prefix}:\n`);
         const keys = uniqueKeys(c)
-            .map((k) => `  ${k} = '${c[k]}'`)
+            .map((k) => `  ${k} = ${JSON.stringify(c[k])}`)
             .join('\n');
         output.push(keys);
         output.push('\n\n');
