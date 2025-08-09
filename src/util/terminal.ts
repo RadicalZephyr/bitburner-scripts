@@ -10,6 +10,11 @@ export async function sendTerminalCommand(command: string) {
 
     terminalInput.value = command;
 
+    // NOTE (ZEFS 2025-08-09): This is potentially brittle because it
+    // relies on the keys order of the terminal input object. We have
+    // a utility for fetching these react props without relying on key
+    // order but using it here breaks the terminal command input.
+
     // Get a reference to the React event handler.
     const handler = Object.keys(terminalInput)[1];
 

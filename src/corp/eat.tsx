@@ -7,6 +7,7 @@ import { travelToCityForLocation } from 'automation/travel';
 
 import { makeFuid } from 'util/fuid';
 import { useTheme } from 'util/hooks';
+import { getReactProps } from 'util/props';
 
 import { CONFIG } from 'corp/config';
 
@@ -77,8 +78,9 @@ async function searchForNoodles(ns: NS): Promise<EatButton> {
 
     // Get the key for the React props object, which includes `on*`
     // event handler functions.
-    const propsKey = Object.keys(eatButton)[1];
-    const eatButtonProps = eatButton[propsKey];
+    const eatButtonProps = getReactProps(eatButton);
+    if (!eatButtonProps) throw new Error('no props found on eat button');
+
     const eatNoodles = eatButtonProps.onClick;
     if (!eatNoodles || typeof eatNoodles !== 'function')
         throw new Error('no EatNoodles click handler found');
