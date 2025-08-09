@@ -81,13 +81,18 @@ async function searchForNoodles(ns: NS): Promise<EatButton> {
     const eatButtonProps = getReactProps(eatButton);
     if (!eatButtonProps) throw new Error('no props found on eat button');
 
+    const className =
+        typeof eatButtonProps.className === 'string'
+            ? eatButtonProps.className
+            : '';
+
     const eatNoodles = eatButtonProps.onClick;
     if (!eatNoodles || typeof eatNoodles !== 'function')
         throw new Error('no EatNoodles click handler found');
 
     return {
-        className: eatButtonProps.className,
-        eatFn: eatNoodles satisfies EatFn,
+        className,
+        eatFn: eatNoodles as EatFn,
     };
 }
 
