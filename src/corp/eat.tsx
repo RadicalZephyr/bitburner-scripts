@@ -54,7 +54,7 @@ interface EatButton {
     eatFn: EatFn;
 }
 
-type EatFn = () => undefined;
+type EatFn = () => void;
 
 async function searchForNoodles(ns: NS): Promise<EatButton> {
     const sf4 = await getSourceFileLevel(ns, 4);
@@ -152,14 +152,19 @@ interface IEatItProps {
 function EatIt({ ns, className, eatFn }: IEatItProps) {
     const theme = useTheme(ns);
     const interval: React.MutableRefObject<MaybeInterval> = React.useRef(null);
-
+    const [bowlsEaten, eatBowl] = React.useState(0);
+    const eatAndCount = () => {
+        eatBowl((n) => n + 1);
+        eatFn();
+    };
     return (
-        <>
+        <div>
             <h1>Eat All The Noodles!</h1>
+            <h3>Bowls eaten: {bowlsEaten}</h3>
             <button
                 className={className}
                 style={{ color: theme.successlight }}
-                onClick={() => startEating(ns, eatFn, interval)}
+                onClick={() => startEating(ns, eatAndCount, interval)}
             >
                 Eat it!<span className="MuiTouchRipple-root css-w0pj6f"></span>
             </button>
@@ -170,6 +175,6 @@ function EatIt({ ns, className, eatFn }: IEatItProps) {
             >
                 STOP!<span className="MuiTouchRipple-root css-w0pj6f"></span>
             </button>
-        </>
+        </div>
     );
 }
