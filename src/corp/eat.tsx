@@ -3,6 +3,8 @@ import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { getSourceFileLevel } from 'services/client/source_file';
 
+import { travelToCityForLocation } from 'automation/travel';
+
 import { makeFuid } from 'util/fuid';
 import { useTheme } from 'util/hooks';
 
@@ -59,8 +61,10 @@ type EatFn = () => void;
 async function searchForNoodles(ns: NS): Promise<EatButton> {
     const sf4 = await getSourceFileLevel(ns, 4);
     if (sf4 > 0) {
-        ns.singularity.travelToCity(ns.enums.CityName.NewTokyo);
-        ns.singularity.goToLocation(ns.enums.LocationName.NewTokyoNoodleBar);
+        const noodleBar = ns.enums.LocationName.NewTokyoNoodleBar;
+        travelToCityForLocation(ns, noodleBar);
+        if (!ns.singularity.goToLocation(noodleBar))
+            throw new Error('failed to go to Noodle Bar');
     } else {
         const message = 'Please travel to New Tokyo and enter the Noodle Bar!';
         ns.print(`WARN: ${message}`);
