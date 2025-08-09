@@ -76,7 +76,7 @@ OPTIONS
         if (Object.hasOwn(config, key)) {
             const prev = config[key];
             if (value) {
-                config[key] = value;
+                config.setRaw(key, value);
                 ns.tprint(
                     `${config.prefix}_${key} changed: '${prev}' ⇒ '${config[key]}'`,
                 );
@@ -95,6 +95,7 @@ const commonKeys: Set<string> = new Set([
     'prefix',
     'entries',
     'defaultSetters',
+    'setRaw',
 ]);
 
 function allConfigValues(): string[] {

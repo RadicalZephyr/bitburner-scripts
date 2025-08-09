@@ -107,6 +107,39 @@ export class Config<
         return this._prefix;
     }
 
+    /**
+     * Set the raw string value of the given config key.
+     *
+     * @remarks
+     * All values in LocalStorage are stored as strings, so each
+     * config key has a getter and setter pair that contains
+     * serialization and deserialization logic. This is great if you
+     * are using the setter and have a Javascript value of the
+     * appropriate type because it gets serialized correctly according
+     * to the configuration value type.
+     *
+     * However, the command-line config script deals with most values
+     * passed as strings, especially complex objects or arrays. Rather
+     * than force that script to duplicate the type checking and
+     * finding the correct serialization for the given config key,
+     * this method is an escape hatch that allows that script to
+     * directly set the LocalStorage key to the string it received on
+     * the command line.
+     *
+     * This is kind of a hack, but it gets us 90% of the way to a
+     * robust solution with like 10% of the work of fully implementing
+     * correct serialization. The main downside of this approach is
+     * that it's up to the user to write values correctly. Usually
+     * this is easy since most config values are numbers.
+     *
+     * @param key   - config key
+     * @param value - raw string value
+     */
+    setRaw(key: string, value: string) {
+        const localStorageKey = this._prefix + '_' + key;
+        LocalStorage.setItem(localStorageKey, value);
+    }
+
     private defineProperties() {
         for (const spec of this.entries) {
             this.registerConfig(spec);
