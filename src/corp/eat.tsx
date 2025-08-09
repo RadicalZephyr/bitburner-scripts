@@ -31,7 +31,7 @@ CONFIGURATION
     ns.clearLog();
     ns.ui.openTail();
 
-    const eatFn = await searchForNoodles(ns);
+    const { className, eatFn } = await searchForNoodles(ns);
 
     ns.clearLog();
     const WIDTH = 165;
@@ -40,7 +40,7 @@ CONFIGURATION
     const [ww, wh] = ns.ui.windowSize();
     ns.ui.moveTail(ww - WIDTH, wh - HEIGHT);
 
-    ns.printRaw(<EatIt ns={ns} eatFn={eatFn} />);
+    ns.printRaw(<EatIt ns={ns} className={className} eatFn={eatFn} />);
     ns.ui.renderTail();
 
     while (true) {
@@ -48,9 +48,14 @@ CONFIGURATION
     }
 }
 
+interface EatButton {
+    className: string;
+    eatFn: EatFn;
+}
+
 type EatFn = () => undefined;
 
-async function searchForNoodles(ns: NS): Promise<EatFn> {
+async function searchForNoodles(ns: NS): Promise<EatButton> {
     const sf4 = await getSourceFileLevel(ns, 4);
     if (sf4 > 0) {
         ns.singularity.travelToCity(ns.enums.CityName.NewTokyo);
@@ -68,11 +73,15 @@ async function searchForNoodles(ns: NS): Promise<EatFn> {
     // Get the key for the React props object, which includes `on*`
     // event handler functions.
     const propsKey = Object.keys(eatButton)[1];
-    const eatNoodles = eatButton[propsKey].onClick;
+    const eatButtonProps = eatButton[propsKey];
+    const eatNoodles = eatButtonProps.onClick;
     if (!eatNoodles || typeof eatNoodles !== 'function')
         throw new Error('no EatNoodles click handler found');
 
-    return eatNoodles satisfies EatFn;
+    return {
+        className: eatButtonProps.className,
+        eatFn: eatNoodles satisfies EatFn,
+    };
 }
 
 function findEatNoodlesButton() {
@@ -120,27 +129,26 @@ function stopEating(interval: React.MutableRefObject<MaybeInterval>) {
 
 interface IEatItProps {
     ns: NS;
+    className: string;
     eatFn: EatFn;
 }
 
-function EatIt({ ns, eatFn }: IEatItProps) {
+function EatIt({ ns, className, eatFn }: IEatItProps) {
     const theme = useTheme(ns);
     const interval: React.MutableRefObject<MaybeInterval> = React.useRef(null);
 
-    const buttonClass =
-        'MuiButtonBase-root MuiButton-root MuiButton-text MuiButton-textPrimary MuiButton-sizeMedium MuiButton-textSizeMedium MuiButton-root MuiButton-text MuiButton-textPrimary MuiButton-sizeMedium MuiButton-textSizeMedium css-u8jh2y css-13ak5e0';
     return (
         <>
             <h1>Eat All The Noodles!</h1>
             <button
-                className={buttonClass}
+                className={className}
                 style={{ color: theme.successlight }}
                 onClick={() => startEating(eatFn, interval)}
             >
                 Eat it!<span className="MuiTouchRipple-root css-w0pj6f"></span>
             </button>
             <button
-                className={buttonClass}
+                className={className}
                 style={{ color: theme.errorlight }}
                 onClick={() => stopEating(interval)}
             >
