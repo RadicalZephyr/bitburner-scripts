@@ -28,8 +28,12 @@ CONFIGURATION
     ns.disableLog('ALL');
     ns.clearLog();
     ns.ui.openTail();
+    const WIDTH = 165;
+    const HEIGHT = 235;
+    ns.ui.resizeTail(WIDTH, HEIGHT);
+    const [ww, wh] = ns.ui.windowSize();
+    ns.ui.moveTail(ww - WIDTH, wh - HEIGHT);
 
-    ns.clearLog();
     ns.printRaw(<EatIt ns={ns} />);
     ns.ui.renderTail();
 
