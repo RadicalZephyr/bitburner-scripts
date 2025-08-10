@@ -58,7 +58,7 @@ async function directMissions(ns: NS) {
         if (await tryBlackOp(ns)) continue;
 
         // 5) EV selection across cities (rank/sec) ----------------------------
-        const pick = bestAction();
+        const pick = bestAction(ns);
 
         // If best pick is in another city and sufficiently better,
         // we'll travel inside enactPick
@@ -202,8 +202,48 @@ async function tryBlackOp(ns: NS): Promise<boolean> {
     return false;
 }
 
-function bestAction(): Action {
-    return { type: 'General', name: 'Field Analysis' };
+function bestAction(ns: NS): Action {
+    const staminaStatus = getStaminaStatus(ns);
+    if (staminaStatus === Stamina.Low)
+        return { type: 'General', name: 'Field Analysis' };
+
+    const allActionCandidates = allContractsAndOperations(ns)
+        .map((a) => candidate(ns, a))
+        .filter((c) => c.count < 1);
+    allActionCandidates.sort(
+        (a, b) => b.expectedRankPerSecond - a.expectedRankPerSecond,
+    );
+
+    if (allActionCandidates.length === 0) return increaseChaos;
+
+    return allActionCandidates[0];
+}
+
+interface ActionCandidate extends Action {
+    count: number;
+    rankGain: number;
+    duration: number;
+    successChance: number;
+    expectedRankPerSecond: number;
+}
+
+function candidate(ns: NS, action: Action): ActionCandidate {
+    const count = ns.bladeburner.getActionCountRemaining(
+        action.type,
+        action.name,
+    );
+    const rankGain = ns.bladeburner.getActionRepGain(action.type, action.name);
+    const duration = ns.bladeburner.getActionTime(action.type, action.name);
+    const successChance = actionChance(ns, action);
+    const expectedRankPerSecond = (rankGain * successChance) / duration;
+    return {
+        count,
+        rankGain,
+        duration,
+        successChance,
+        expectedRankPerSecond,
+        ...action,
+    };
 }
 
 async function enactPick(ns: NS, pick: Action) {
