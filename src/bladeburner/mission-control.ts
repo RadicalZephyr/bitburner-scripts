@@ -31,9 +31,14 @@ OPTIONS
   --help   Show this help message
 
 CONFIGURATION
-  BLADE_lowStaminaPercent   Percent of max stamina that is considered "low"
-  BLADE_highStaminaPercent  Percent of max stamina that is considered "high"
-  BLADE_minBlackOpSuccess   Minimum success chance to attempt next Black Op
+  BLADE_highStaminaPercent      Percent of max stamina that is considered "high"
+  BLADE_lowStaminaPercent       Percent of max stamina that is considered "low"
+  BLADE_maxChaos                Maximum allowed city chaos before we try to lower it
+  BLADE_maxSuccessChanceSpread  Maxmimum allowed success chance spread before we need to survery population
+  BLADE_minBlackOpSuccess       Minimum success chance to attempt next Black Op
+  BLADE_minHealthPercent        Minimum percentage of health before we try to heal
+  BLADE_minSROSuccess           Minimum success chance to attempt stealth retirement operations
+  BLADE_minSurveySuccess        Minimum success chance to attempt surveying actions
 `);
         return;
     }
