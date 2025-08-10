@@ -64,7 +64,7 @@ async function directMissions(ns: NS) {
         // we'll travel inside enactPick
         await enactPick(ns, pick);
 
-        await ns.asleep(10_000);
+        await ns.asleep(100);
     }
 }
 
