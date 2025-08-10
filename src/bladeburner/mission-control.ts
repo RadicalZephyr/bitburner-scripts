@@ -146,9 +146,8 @@ async function handleSurveying(ns: NS): Promise<boolean> {
                     return await startAction(ns, surveyAction);
                 }
             }
-        } else {
-            return await startAction(ns, fieldAnalysis);
         }
+        return await startAction(ns, fieldAnalysis);
     }
     return false;
 }
