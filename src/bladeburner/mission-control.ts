@@ -271,7 +271,6 @@ function actionChance(ns: NS, action: Action): number {
     return (lo + hi) / 2;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const increaseChaos: Action = { type: 'General', name: 'Incite Violence' };
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
