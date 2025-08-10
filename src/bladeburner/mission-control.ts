@@ -214,7 +214,7 @@ function bestAction(ns: NS): Action {
 
     const allActionCandidates = allContractsAndOperations(ns)
         .map((a) => candidate(ns, a))
-        .filter((c) => c.count < 1);
+        .filter((c) => c.count > 1);
     allActionCandidates.sort(
         (a, b) => b.expectedRankPerSecond - a.expectedRankPerSecond,
     );
