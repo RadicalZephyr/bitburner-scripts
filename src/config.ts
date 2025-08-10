@@ -9,6 +9,7 @@ import { CONFIG as GangConfig } from 'gang/config';
 import { CONFIG as AutomationConfig } from 'automation/config';
 import { CONFIG as CorpConfig } from 'corp/config';
 import { CONFIG as HacknetConfig } from 'hacknet/config';
+import { CONFIG as BladeburnerConfig } from 'bladeburner/config';
 
 const ALL_CONFIGS = [
     ServiceConfig,
@@ -17,6 +18,7 @@ const ALL_CONFIGS = [
     StockConfig,
     GangConfig,
     AutomationConfig,
+    BladeburnerConfig,
     HacknetConfig,
     CorpConfig,
 ];
