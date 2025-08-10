@@ -50,6 +50,7 @@
 - Company work automation skips companies for factions the player already belongs to [#226][pr-226].
 - Add a script for automating early bitnode bootstrapping [#227][pr-227].
 - Faction work automation skips factions with no available work tasks to avoid unreachable reputation goals [#229][pr-229].
+- Noodle eater counts bowls eaten and travels to the Noodle Bar automatically when Source File\u202f4 is owned [#245][pr-245].
 
 ### Utilities
 
@@ -118,6 +119,7 @@
 [pr-230]: https://github.com/RadicalZephyr/bitburner-scripts/pull/230
 [pr-240]: https://github.com/RadicalZephyr/bitburner-scripts/pull/240
 [pr-241]: https://github.com/RadicalZephyr/bitburner-scripts/pull/241
+[pr-245]: https://github.com/RadicalZephyr/bitburner-scripts/pull/245
 
 ## v2.1.0
 
