@@ -196,6 +196,7 @@ export interface ExpectedValue {
     hackPercent: number;
     profit: number;
     expectedValue: number;
+    requiredRam: number;
 }
 
 /**
@@ -204,7 +205,7 @@ export interface ExpectedValue {
  * @param ns      - Netscript API instance
  * @param host    - Hostname of the target server
  * @param memInfo - Current free memory snapshot
- * @returns Expected value per RAM-second
+ * @returns Expected value per RAM-second and required RAM
  */
 export function expectedValueForMemory(
     ns: NS,
@@ -213,14 +214,16 @@ export function expectedValueForMemory(
     hackPercent?: number,
 ): ExpectedValue {
     hackPercent = hackPercent ?? maxHackPercentForMemory(ns, host, memInfo);
-    if (hackPercent === 0) return { hackPercent, profit: 0, expectedValue: 0 };
+    if (hackPercent === 0)
+        return { hackPercent, profit: 0, expectedValue: 0, requiredRam: 0 };
 
     const logistics = calculateBatchLogistics(ns, host, hackPercent);
     const batchCount = Math.min(
         logistics.overlap,
         availableBatchCount(memInfo.chunks, logistics.batchRam),
     );
-    if (batchCount === 0) return { hackPercent, profit: 0, expectedValue: 0 };
+    if (batchCount === 0)
+        return { hackPercent, profit: 0, expectedValue: 0, requiredRam: 0 };
 
     const profitPerSecond = harvestProfit(
         ns,
@@ -234,7 +237,12 @@ export function expectedValueForMemory(
     const requiredRam = logistics.batchRam * batchCount;
     const expectedValue = scaledProfitPerSecond / requiredRam;
 
-    return { hackPercent, profit: scaledProfitPerSecond, expectedValue };
+    return {
+        hackPercent,
+        profit: scaledProfitPerSecond,
+        expectedValue,
+        requiredRam,
+    };
 }
 
 /**
