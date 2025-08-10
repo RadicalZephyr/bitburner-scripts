@@ -133,7 +133,7 @@ const sro: Action = {
 
 async function handleSurveying(ns: NS): Promise<boolean> {
     const avgSuccessSpread = getAvgSuccessSpread(ns);
-    if (avgSuccessSpread > CONFIG.minSuccessChanceSpread) {
+    if (avgSuccessSpread > CONFIG.maxSuccessChanceSpread) {
         const staminaStatus = getStaminaStatus(ns);
         if (staminaStatus !== Stamina.Low) {
             for (const surveyAction of surveyingActions) {
