@@ -240,7 +240,7 @@ function candidate(ns: NS, action: Action): ActionCandidate {
     const rankGain = ns.bladeburner.getActionRepGain(action.type, action.name);
     const duration = ns.bladeburner.getActionTime(action.type, action.name);
     const successChance = actionChance(ns, action);
-    const expectedRankPerSecond = (rankGain * successChance) / duration;
+    const expectedRankPerSecond = (rankGain * successChance) / duration / 1000;
     return {
         count,
         rankGain,
