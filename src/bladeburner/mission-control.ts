@@ -46,23 +46,23 @@ async function directMissions(ns: NS) {
         await ns.bladeburner.nextUpdate();
 
         // 1) Heal if low HP ---------------------------------------------------
-        if (handleHealing(ns)) continue;
+        if (await handleHealing(ns)) continue;
 
         // 2) Surveying (intel) ------------------------------------------------
-        if (handleSurveying(ns)) continue;
+        if (await handleSurveying(ns)) continue;
 
         // 3) Chaos control (SRO preferred) ------------------------------------
-        if (handleChaos(ns)) continue;
+        if (await handleChaos(ns)) continue;
 
         // 4) BlackOps (gate) --------------------------------------------------
-        if (tryBlackOp(ns)) continue;
+        if (await tryBlackOp(ns)) continue;
 
         // 5) EV selection across cities (rank/sec) ----------------------------
         const pick = bestAction();
 
         // If best pick is in another city and sufficiently better,
         // we'll travel inside enactPick
-        enactPick(ns, pick);
+        await enactPick(ns, pick);
 
         await ns.asleep(10_000);
     }
@@ -94,11 +94,11 @@ interface Action {
     name: BladeburnerActionName | `${BladeburnerActionName}`;
 }
 
-function handleHealing(ns: NS): boolean {
+async function handleHealing(ns: NS): Promise<boolean> {
     const player = ns.getPlayer();
     const health = player.hp;
     if (health.current < health.max * CONFIG.minHealthPercent) {
-        return startAction(ns, heal);
+        return await startAction(ns, heal);
     }
     return false;
 }
@@ -108,7 +108,7 @@ const heal: Action = {
     name: 'Hyperbolic Regeneration Chamber',
 };
 
-function handleChaos(ns: NS): boolean {
+async function handleChaos(ns: NS): Promise<boolean> {
     const currentCity = ns.bladeburner.getCity();
     const currentChaos = ns.bladeburner.getCityChaos(currentCity);
 
@@ -118,9 +118,9 @@ function handleChaos(ns: NS): boolean {
             staminaStatus !== Stamina.Low
             && actionChance(ns, sro) > CONFIG.minSROSuccess
         ) {
-            return startAction(ns, sro);
+            return await startAction(ns, sro);
         }
-        return startAction(ns, diplomacy);
+        return await startAction(ns, diplomacy);
     }
     return false;
 }
@@ -131,18 +131,18 @@ const sro: Action = {
     name: 'Stealth Retirement Operation',
 };
 
-function handleSurveying(ns: NS): boolean {
+async function handleSurveying(ns: NS): Promise<boolean> {
     const avgSuccessSpread = getAvgSuccessSpread(ns);
     if (avgSuccessSpread > CONFIG.minSuccessChanceSpread) {
         const staminaStatus = getStaminaStatus(ns);
         if (staminaStatus !== Stamina.Low) {
             for (const surveyAction of surveyingActions) {
                 if (actionChance(ns, surveyAction) > CONFIG.minSurveySuccess) {
-                    return startAction(ns, surveyAction);
+                    return await startAction(ns, surveyAction);
                 }
             }
         } else {
-            return startAction(ns, fieldAnalysis);
+            return await startAction(ns, fieldAnalysis);
         }
     }
     return false;
@@ -190,7 +190,7 @@ function action(
     return { type, name };
 }
 
-function tryBlackOp(ns: NS): boolean {
+async function tryBlackOp(ns: NS): Promise<boolean> {
     const currentRank = ns.bladeburner.getRank();
     const nextBlackOp = {
         type: 'Black Operations',
@@ -200,7 +200,7 @@ function tryBlackOp(ns: NS): boolean {
         currentRank >= nextBlackOp.rank
         && actionChance(ns, nextBlackOp) > CONFIG.minBlackOpSuccess
     ) {
-        return startAction(ns, nextBlackOp);
+        return await startAction(ns, nextBlackOp);
     }
     return false;
 }
@@ -209,12 +209,16 @@ function bestAction(): Action {
     return { type: 'General', name: 'Field Analysis' };
 }
 
-function enactPick(ns: NS, pick: Action) {
-    startAction(ns, pick);
+async function enactPick(ns: NS, pick: Action) {
+    await startAction(ns, pick);
 }
 
-function startAction(ns: NS, action: Action): boolean {
-    return ns.bladeburner.startAction(action.type, action.name);
+async function startAction(ns: NS, action: Action): Promise<boolean> {
+    const actionTime = ns.bladeburner.getActionTime(action.type, action.name);
+    if (!ns.bladeburner.startAction(action.type, action.name)) return false;
+
+    await ns.asleep(actionTime + 1000);
+    return true;
 }
 
 function actionChance(ns: NS, action: Action): number {
