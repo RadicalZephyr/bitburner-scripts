@@ -52,6 +52,10 @@
 - Faction work automation skips factions with no available work tasks to avoid unreachable reputation goals [#229][pr-229].
 - Noodle eater counts bowls eaten and travels to the Noodle Bar automatically when Source File\u202f4 is owned [#245][pr-245].
 
+### Bladeburner
+
+- Add a basic Bladeburner skill buying utility and a mission control script to select the best mission every cycle [#246][pr-246].
+
 ### Utilities
 
 - Added `readLoop` helper and `sleep` wrappers to simplify async port polling [#160][pr-160].
@@ -120,6 +124,7 @@
 [pr-240]: https://github.com/RadicalZephyr/bitburner-scripts/pull/240
 [pr-241]: https://github.com/RadicalZephyr/bitburner-scripts/pull/241
 [pr-245]: https://github.com/RadicalZephyr/bitburner-scripts/pull/245
+[pr-246]: https://github.com/RadicalZephyr/bitburner-scripts/pull/246
 
 ## v2.1.0
 
