@@ -34,7 +34,7 @@ export async function sendTerminalCommand(command: string) {
     if (!(terminalOutput instanceof Element)) return;
 
     let lastTermOut = terminalOutput.lastElementChild;
-    while (lastTermOut && hasTimerBar(lastTermOut.innerHTML)) {
+    while (lastTermOut && hasTimerBar(lastTermOut.textContent ?? '')) {
         await sleep(100);
         lastTermOut = terminalOutput.lastElementChild;
     }
