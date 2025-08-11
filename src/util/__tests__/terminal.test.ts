@@ -1,32 +1,32 @@
-import { hasTimerBar } from 'util/terminal';
+import { hasUnfinishedTimerBar } from 'util/terminal';
 
 describe('match timer bar patterns', () => {
     test('unstarted progress bar', () => {
-        expect(hasTimerBar('[-]')).toBeTruthy();
-        expect(hasTimerBar('[--]')).toBeTruthy();
-        expect(hasTimerBar('[-------------------]')).toBeTruthy();
+        expect(hasUnfinishedTimerBar('[-]')).toBeTruthy();
+        expect(hasUnfinishedTimerBar('[--]')).toBeTruthy();
+        expect(hasUnfinishedTimerBar('[-------------------]')).toBeTruthy();
     });
 
     test('in-progress bar', () => {
-        expect(hasTimerBar('[|-]')).toBeTruthy();
-        expect(hasTimerBar('[|----------------------]')).toBeTruthy();
-        expect(hasTimerBar('[|||||||||||------------]')).toBeTruthy();
-        expect(hasTimerBar('[||||||||||||||||||||||-]')).toBeTruthy();
+        expect(hasUnfinishedTimerBar('[|-]')).toBeTruthy();
+        expect(hasUnfinishedTimerBar('[|----------------------]')).toBeTruthy();
+        expect(hasUnfinishedTimerBar('[|||||||||||------------]')).toBeTruthy();
+        expect(hasUnfinishedTimerBar('[||||||||||||||||||||||-]')).toBeTruthy();
     });
 
     test('finished progress bar', () => {
-        expect(hasTimerBar('[|]')).toBeTruthy();
-        expect(hasTimerBar('[||||]')).toBeTruthy();
-        expect(hasTimerBar('[||||||||||||||||||]')).toBeTruthy();
+        expect(hasUnfinishedTimerBar('[|]')).toBeFalsy();
+        expect(hasUnfinishedTimerBar('[||||]')).toBeFalsy();
+        expect(hasUnfinishedTimerBar('[||||||||||||||||||]')).toBeFalsy();
     });
 
     test("doesn't match other similar patterns", () => {
-        expect(hasTimerBar('[]')).toBeFalsy();
-        expect(hasTimerBar('[abc]')).toBeFalsy();
-        expect(hasTimerBar('[123]')).toBeFalsy();
-        expect(hasTimerBar('[-|]')).toBeFalsy();
-        expect(hasTimerBar('[--||]')).toBeFalsy();
-        expect(hasTimerBar('[-----|]')).toBeFalsy();
-        expect(hasTimerBar('[-|||||]')).toBeFalsy();
+        expect(hasUnfinishedTimerBar('[]')).toBeFalsy();
+        expect(hasUnfinishedTimerBar('[abc]')).toBeFalsy();
+        expect(hasUnfinishedTimerBar('[123]')).toBeFalsy();
+        expect(hasUnfinishedTimerBar('[-|]')).toBeFalsy();
+        expect(hasUnfinishedTimerBar('[--||]')).toBeFalsy();
+        expect(hasUnfinishedTimerBar('[-----|]')).toBeFalsy();
+        expect(hasUnfinishedTimerBar('[-|||||]')).toBeFalsy();
     });
 });

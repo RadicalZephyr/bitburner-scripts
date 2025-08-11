@@ -166,7 +166,10 @@ async function waitForTimerBarToFinish(
     pollIntervalMs: number,
 ) {
     let lastTermOut = container.lastElementChild;
-    while (lastTermOut && hasTimerBar(lastTermOut.textContent ?? '')) {
+    while (
+        lastTermOut
+        && hasUnfinishedTimerBar(lastTermOut.textContent ?? '')
+    ) {
         await sleep(pollIntervalMs);
         lastTermOut = container.lastElementChild;
     }
@@ -187,8 +190,8 @@ async function waitForTimerBarToFinish(
  * @param haystack - string to search for timer bar pattern
  * @returns whether the pattern is present or not.
  */
-export function hasTimerBar(haystack: string): boolean {
-    const timer_re = /\[(-+|\|+-*)]/;
+export function hasUnfinishedTimerBar(haystack: string): boolean {
+    const timer_re = /\[(-+|\|+-+)]/;
     return timer_re.test(haystack);
 }
 
