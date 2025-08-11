@@ -21,7 +21,12 @@ describe('match timer bar patterns', () => {
     });
 
     test("doesn't match other similar patterns", () => {
+        expect(hasTimerBar('[]')).toBeFalsy();
         expect(hasTimerBar('[abc]')).toBeFalsy();
         expect(hasTimerBar('[123]')).toBeFalsy();
+        expect(hasTimerBar('[-|]')).toBeFalsy();
+        expect(hasTimerBar('[--||]')).toBeFalsy();
+        expect(hasTimerBar('[-----|]')).toBeFalsy();
+        expect(hasTimerBar('[-|||||]')).toBeFalsy();
     });
 });

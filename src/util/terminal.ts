@@ -56,7 +56,7 @@ export async function sendTerminalCommand(command: string) {
  * @returns whether the pattern is present or not.
  */
 export function hasTimerBar(haystack: string): boolean {
-    const timer_re = /\[\|*-*]/;
+    const timer_re = /\[(-+|\|+-*)]/;
     return timer_re.test(haystack);
 }
 
