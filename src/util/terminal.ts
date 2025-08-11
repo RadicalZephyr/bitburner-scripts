@@ -7,8 +7,10 @@ import { sleep } from 'util/time';
  */
 export async function sendTerminalCommand(command: string) {
     // Acquire a reference to the terminal text field
-    const terminalInput = globalThis['terminal-input'];
-    if (!(terminalInput instanceof HTMLInputElement)) return;
+    const terminalInput = assertEl(
+        globalThis['terminal-input'],
+        'could not find terminal input element!',
+    );
 
     terminalInput.value = command;
 
@@ -30,14 +32,21 @@ export async function sendTerminalCommand(command: string) {
     });
 
     await sleep(0);
-    const terminalOutput = globalThis['terminal'];
-    if (!(terminalOutput instanceof Element)) return;
+    const terminalOutput = assertEl(
+        globalThis['terminal'],
+        'could not find terminal output element!',
+    );
 
     let lastTermOut = terminalOutput.lastElementChild;
     while (lastTermOut && hasTimerBar(lastTermOut.textContent ?? '')) {
         await sleep(100);
         lastTermOut = terminalOutput.lastElementChild;
     }
+}
+
+function assertEl<T extends Element>(el: T | null | undefined, msg: string): T {
+    if (!el) throw new Error(msg);
+    return el;
 }
 
 /**
