@@ -82,6 +82,9 @@ export function sendTerminalCommand(
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let terminalLock: Promise<any> = Promise.resolve();
 
+/**
+ * Chains promises so only one terminal command runs at a time.
+ */
 function withTerminalLock<T>(fn: () => Promise<T>): Promise<T> {
     const run = terminalLock.then(fn, fn);
     // keep chain alive
@@ -91,6 +94,9 @@ function withTerminalLock<T>(fn: () => Promise<T>): Promise<T> {
     return run;
 }
 
+/**
+ * Throws an error if the element is null.
+ */
 function assertEl<T extends Element>(el: T | null | undefined, msg: string): T {
     if (!el) throw new Error(msg);
     return el;
@@ -119,6 +125,9 @@ function dispatchReactInputAndEnter(
     });
 }
 
+/**
+ * Watches the terminal output for our command to appear.
+ */
 function waitForNextTerminalLine(
     container: Element,
     command: string,
@@ -148,6 +157,10 @@ function waitForNextTerminalLine(
     });
 }
 
+/**
+ * Examines terminal output for a timer bar and waits for it to
+ * complete.
+ */
 async function waitForTimerBarToFinish(
     container: Element,
     pollIntervalMs: number,
