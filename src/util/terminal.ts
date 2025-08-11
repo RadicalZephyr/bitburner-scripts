@@ -2,11 +2,48 @@ import { getReactPropKey } from 'util/props';
 import { sleep } from 'util/time';
 
 /**
+ * Options for customizing how your terminal command runs.
+ */
+interface TerminalOptions {
+    /**
+     * Whether to wait until completion of the command.
+     *
+     * Default: true
+     */
+    waitForCompletion?: boolean;
+
+    /**
+     * How long to wait for the command to be sent.
+     *
+     * Default: 100 milliseconds
+     */
+    commandEnteredTimeoutMs?: number;
+
+    /**
+     * Interval to check the last terminal output at for a timer bar
+     * to determine when command has finished. This option has no
+     * effect if `waitForCompletion` is false.
+     *
+     * Default: 100 milliseconds
+     */
+    pollIntervalMs?: number;
+}
+
+const defaultOptions: TerminalOptions = {
+    waitForCompletion: true,
+    commandEnteredTimeoutMs: 100,
+    pollIntervalMs: 100,
+};
+
+/**
  * Send a command to the game terminal, simulating user input.
  *
  * @param command - text command to run
  */
-export async function sendTerminalCommand(command: string) {
+export async function sendTerminalCommand(
+    command: string,
+    options: TerminalOptions = defaultOptions,
+) {
     return withTerminalLock(async () => {
         // Acquire a reference to the terminal text field
         const terminalInput = assertEl(
@@ -32,7 +69,7 @@ export async function sendTerminalCommand(command: string) {
         const commandEntered = waitForNextTerminalLine(
             terminalOutput,
             command,
-            1000,
+            options.commandEnteredTimeoutMs,
         );
 
         // Simulate an enter press
@@ -44,7 +81,11 @@ export async function sendTerminalCommand(command: string) {
         // Wait for our command to appear in the output
         await commandEntered;
 
-        await waitForTimerBarToFinish(terminalOutput);
+        if (options.waitForCompletion)
+            await waitForTimerBarToFinish(
+                terminalOutput,
+                options.pollIntervalMs,
+            );
     });
 }
 
@@ -94,10 +135,13 @@ function waitForNextTerminalLine(
     });
 }
 
-async function waitForTimerBarToFinish(container: Element) {
+async function waitForTimerBarToFinish(
+    container: Element,
+    pollIntervalMs: number,
+) {
     let lastTermOut = container.lastElementChild;
     while (lastTermOut && hasTimerBar(lastTermOut.textContent ?? '')) {
-        await sleep(100);
+        await sleep(pollIntervalMs);
         lastTermOut = container.lastElementChild;
     }
 }
