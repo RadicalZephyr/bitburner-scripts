@@ -51,14 +51,6 @@ export async function sendTerminalCommand(
             'could not find terminal input element!',
         );
 
-        terminalInput.value = command;
-
-        // Get a reference to the React event handler.
-        const propKey = getReactPropKey(terminalInput);
-
-        // Perform an onChange event to set some internal values.
-        terminalInput[propKey].onChange({ target: terminalInput });
-
         // Acquire a reference to the terminal output list
         const terminalOutput = assertEl(
             globalThis['terminal'],
@@ -72,11 +64,9 @@ export async function sendTerminalCommand(
             options.commandEnteredTimeoutMs,
         );
 
-        // Simulate an enter press
-        terminalInput[propKey].onKeyDown({
-            key: 'Enter',
-            preventDefault: (): void => null,
-        });
+        // Trigger event handlers to set component state for new
+        // command and simulate hitting 'Enter'
+        dispatchReactInputAndEnter(terminalInput, command);
 
         // Wait for our command to appear in the output
         await commandEntered;
@@ -104,6 +94,29 @@ function withTerminalLock<T>(fn: () => Promise<T>): Promise<T> {
 function assertEl<T extends Element>(el: T | null | undefined, msg: string): T {
     if (!el) throw new Error(msg);
     return el;
+}
+
+/**
+ * Trigger React event handlers so terminal sees the new command and runs it.
+ */
+function dispatchReactInputAndEnter(
+    terminalInput: HTMLInputElement,
+    command: string,
+) {
+    // Set the input text to our command.
+    terminalInput.value = command;
+
+    // Get a reference to the React event handler.
+    const propKey = getReactPropKey(terminalInput);
+
+    // Perform an onChange event to set some internal values.
+    terminalInput[propKey].onChange({ target: terminalInput });
+
+    // Simulate an enter press
+    terminalInput[propKey].onKeyDown({
+        key: 'Enter',
+        preventDefault: (): void => null,
+    });
 }
 
 function waitForNextTerminalLine(
