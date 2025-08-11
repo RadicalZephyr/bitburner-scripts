@@ -43,11 +43,7 @@ export async function sendTerminalCommand(command: string) {
     // Wait for our command to appear in the output
     await commandEntered;
 
-    let lastTermOut = terminalOutput.lastElementChild;
-    while (lastTermOut && hasTimerBar(lastTermOut.textContent ?? '')) {
-        await sleep(100);
-        lastTermOut = terminalOutput.lastElementChild;
-    }
+    await waitForTimerBarToFinish(terminalOutput);
 }
 
 function assertEl<T extends Element>(el: T | null | undefined, msg: string): T {
@@ -82,6 +78,14 @@ function waitForNextTerminalLine(
 
         observer.observe(container, { childList: true });
     });
+}
+
+async function waitForTimerBarToFinish(container: Element) {
+    let lastTermOut = container.lastElementChild;
+    while (lastTermOut && hasTimerBar(lastTermOut.textContent ?? '')) {
+        await sleep(100);
+        lastTermOut = container.lastElementChild;
+    }
 }
 
 /**
