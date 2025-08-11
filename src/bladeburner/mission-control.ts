@@ -161,11 +161,13 @@ const undercover: Action = { type: 'Operations', name: 'Undercover Operation' };
 const surveyingActions: readonly Action[] = [undercover, investigation, track];
 
 function getAvgSuccessSpread(ns: NS): number {
-    const all = allContractsAndOperations(ns);
-    const spreadSum = all
+    const allOpsWithSpread = allContractsAndOperations(ns)
         .map((a) => actionChanceSpread(ns, a))
-        .reduce((sum, spread) => sum + spread, 0);
-    return spreadSum / all.length;
+        .filter((s) => s > 0.001);
+    if (allOpsWithSpread.length === 0) return 0;
+
+    const spreadSum = allOpsWithSpread.reduce((sum, spread) => sum + spread, 0);
+    return spreadSum / allOpsWithSpread.length;
 }
 
 function actionChanceSpread(ns: NS, action: Action): number {
