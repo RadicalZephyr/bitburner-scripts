@@ -40,10 +40,10 @@ const defaultOptions: TerminalOptions = {
  *
  * @param command - text command to run
  */
-export async function sendTerminalCommand(
+export function sendTerminalCommand(
     command: string,
     options: TerminalOptions = defaultOptions,
-) {
+): Promise<void> {
     return withTerminalLock(async () => {
         // Acquire a reference to the terminal text field
         const terminalInput = assertEl(
