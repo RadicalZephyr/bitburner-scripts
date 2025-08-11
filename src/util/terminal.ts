@@ -2,6 +2,8 @@ import { sleep } from 'util/time';
 
 /**
  * Send a command to the game terminal, simulating user input.
+ *
+ * @param command - text command to run
  */
 export async function sendTerminalCommand(command: string) {
     // Acquire a reference to the terminal text field
