@@ -31,6 +31,7 @@ OPTIONS
   --help   Show this help message
 
 CONFIGURATION
+  BLADE_chaosSwitchToDiplomacy  Chaos level over which Diplomacy is more effective than SRO
   BLADE_highStaminaPercent      Percent of max stamina that is considered "high"
   BLADE_lowStaminaPercent       Percent of max stamina that is considered "low"
   BLADE_maxChaos                Maximum allowed city chaos before we try to lower it
@@ -120,7 +121,8 @@ async function handleChaos(ns: NS): Promise<boolean> {
     if (currentChaos > CONFIG.maxChaos) {
         const staminaStatus = getStaminaStatus(ns);
         if (
-            staminaStatus !== Stamina.Low
+            currentChaos < CONFIG.chaosSwitchToDiplomacy
+            && staminaStatus !== Stamina.Low
             && actionChance(ns, sro) > CONFIG.minSROSuccess
         ) {
             return await startAction(ns, sro);

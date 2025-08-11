@@ -1,6 +1,7 @@
 import { Config, ConfigInstance } from 'util/config';
 
 const entries = [
+    ['chaosSwitchToDiplomacy', 50],
     ['highStaminaPercent', 0.95],
     ['lowStaminaPercent', 0.56],
     ['maxChaos', 1.0],
