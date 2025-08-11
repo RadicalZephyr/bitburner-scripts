@@ -7,43 +7,57 @@ import { sleep } from 'util/time';
  * @param command - text command to run
  */
 export async function sendTerminalCommand(command: string) {
-    // Acquire a reference to the terminal text field
-    const terminalInput = assertEl(
-        globalThis['terminal-input'],
-        'could not find terminal input element!',
-    );
+    return withTerminalLock(async () => {
+        // Acquire a reference to the terminal text field
+        const terminalInput = assertEl(
+            globalThis['terminal-input'],
+            'could not find terminal input element!',
+        );
 
-    terminalInput.value = command;
+        terminalInput.value = command;
 
-    // Get a reference to the React event handler.
-    const propKey = getReactPropKey(terminalInput);
+        // Get a reference to the React event handler.
+        const propKey = getReactPropKey(terminalInput);
 
-    // Perform an onChange event to set some internal values.
-    terminalInput[propKey].onChange({ target: terminalInput });
+        // Perform an onChange event to set some internal values.
+        terminalInput[propKey].onChange({ target: terminalInput });
 
-    // Acquire a reference to the terminal output list
-    const terminalOutput = assertEl(
-        globalThis['terminal'],
-        'could not find terminal output element!',
-    );
+        // Acquire a reference to the terminal output list
+        const terminalOutput = assertEl(
+            globalThis['terminal'],
+            'could not find terminal output element!',
+        );
 
-    // Create the observer before we send the 'Enter' event
-    const commandEntered = waitForNextTerminalLine(
-        terminalOutput,
-        command,
-        1000,
-    );
+        // Create the observer before we send the 'Enter' event
+        const commandEntered = waitForNextTerminalLine(
+            terminalOutput,
+            command,
+            1000,
+        );
 
-    // Simulate an enter press
-    terminalInput[propKey].onKeyDown({
-        key: 'Enter',
-        preventDefault: (): void => null,
+        // Simulate an enter press
+        terminalInput[propKey].onKeyDown({
+            key: 'Enter',
+            preventDefault: (): void => null,
+        });
+
+        // Wait for our command to appear in the output
+        await commandEntered;
+
+        await waitForTimerBarToFinish(terminalOutput);
     });
+}
 
-    // Wait for our command to appear in the output
-    await commandEntered;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let terminalLock: Promise<any> = Promise.resolve();
 
-    await waitForTimerBarToFinish(terminalOutput);
+function withTerminalLock<T>(fn: () => Promise<T>): Promise<T> {
+    const run = terminalLock.then(fn, fn);
+    // keep chain alive
+    terminalLock = run.catch((reason) => {
+        console.log(reason);
+    });
+    return run;
 }
 
 function assertEl<T extends Element>(el: T | null | undefined, msg: string): T {
