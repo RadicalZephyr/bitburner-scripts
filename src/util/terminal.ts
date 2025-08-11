@@ -21,17 +21,27 @@ export async function sendTerminalCommand(command: string) {
     // Perform an onChange event to set some internal values.
     terminalInput[propKey].onChange({ target: terminalInput });
 
+    // Acquire a reference to the terminal output list
+    const terminalOutput = assertEl(
+        globalThis['terminal'],
+        'could not find terminal output element!',
+    );
+
+    // Create the observer before we send the 'Enter' event
+    const commandEntered = waitForNextTerminalLine(
+        terminalOutput,
+        command,
+        1000,
+    );
+
     // Simulate an enter press
     terminalInput[propKey].onKeyDown({
         key: 'Enter',
         preventDefault: (): void => null,
     });
 
-    await sleep(0);
-    const terminalOutput = assertEl(
-        globalThis['terminal'],
-        'could not find terminal output element!',
-    );
+    // Wait for our command to appear in the output
+    await commandEntered;
 
     let lastTermOut = terminalOutput.lastElementChild;
     while (lastTermOut && hasTimerBar(lastTermOut.textContent ?? '')) {
@@ -43,6 +53,35 @@ export async function sendTerminalCommand(command: string) {
 function assertEl<T extends Element>(el: T | null | undefined, msg: string): T {
     if (!el) throw new Error(msg);
     return el;
+}
+
+function waitForNextTerminalLine(
+    container: Element,
+    command: string,
+    timeoutMs: number,
+): Promise<void> {
+    return new Promise((resolve, reject) => {
+        const deadline = setTimeout(() => {
+            observer.disconnect();
+            reject(new Error('Timed out waiting for terminal output'));
+        }, timeoutMs);
+
+        const observer = new MutationObserver(
+            (mutations: MutationRecord[], observer: MutationObserver) => {
+                for (const record of mutations) {
+                    record.addedNodes.forEach((node: Node) => {
+                        if (node.textContent?.endsWith(command)) {
+                            clearTimeout(deadline);
+                            observer.disconnect();
+                            resolve();
+                        }
+                    });
+                }
+            },
+        );
+
+        observer.observe(container, { childList: true });
+    });
 }
 
 /**
