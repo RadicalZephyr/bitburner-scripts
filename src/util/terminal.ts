@@ -136,7 +136,10 @@ export function sendTerminalCommand(
     return p;
 }
 
-const TIMED_COMMANDS: RegExp = /^(analyze|backdoor|grow|hack|weaken)\b/i;
+function isTimedCommand(command: string): boolean {
+    const TIMED_COMMANDS: RegExp = /^(analyze|backdoor|grow|hack|weaken)\b/i;
+    return TIMED_COMMANDS.test(command);
+}
 
 export function tokenize(commands: string): string[] {
     return commands
@@ -195,7 +198,7 @@ async function sendOneTimedTerminalCommand(
     await commandEchoed;
     console.log(`[${id}] @${now()} echo-wait end`);
 
-    if (waitForCompletion) {
+    if (isTimedCommand(command) && waitForCompletion) {
         console.log(
             `[${id}] @${now()} timer-start begin (window=${startTimeoutMs})`,
         );
