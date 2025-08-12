@@ -41,7 +41,7 @@ export interface TerminalOptions {
 const DEFAULT_OPTIONS: TerminalOptions = {
     waitForCompletion: true,
     commandEchoTimeoutMs: 1000,
-    startTimeoutMs: 100,
+    startTimeoutMs: 1000,
     pollIntervalMs: 100,
 };
 
