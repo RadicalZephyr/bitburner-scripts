@@ -56,22 +56,29 @@ function BackdoorNotifier({ ns }: BackdoorNotifierProps) {
     return (
         <>
             <ServerDisplay
+                ns={ns}
                 title={'Faction Servers'}
                 servers={factionServers}
                 theme={theme}
             />
-            <ServerDisplay title={'Servers'} servers={servers} theme={theme} />
+            <ServerDisplay
+                ns={ns}
+                title={'Servers'}
+                servers={servers}
+                theme={theme}
+            />
         </>
     );
 }
 
 interface ServerDisplayProps {
+    ns: NS;
     title: string;
     servers: string[];
     theme: UserInterfaceTheme;
 }
 
-function ServerDisplay({ title, servers, theme }: ServerDisplayProps) {
+function ServerDisplay({ ns, title, servers, theme }: ServerDisplayProps) {
     return (
         <div>
             <h2>
@@ -84,12 +91,10 @@ function ServerDisplay({ title, servers, theme }: ServerDisplayProps) {
                             href="#"
                             onClick={async () => {
                                 await sendTerminalCommand(
+                                    ns,
                                     `home ; whereis --goto  ${host}`,
                                 );
-                                globalThis.setTimeout(
-                                    () => sendTerminalCommand('backdoor'),
-                                    500,
-                                );
+                                await sendTerminalCommand(ns, 'backdoor');
                             }}
                             style={{ color: theme.success }}
                         >

@@ -1,3 +1,5 @@
+import type { NS } from 'netscript';
+
 import { getReactPropKey } from 'util/props';
 import { sleep } from 'util/time';
 
@@ -96,26 +98,27 @@ const DEFAULT_OPTIONS: TerminalOptions = {
  *
  * @example
  * // Basic usage: run a chained command and wait until any timed part completes
- * await sendTerminalCommand("home ; connect foodnstuff ; run NUKE.exe ; hack");
+ * await sendTerminalCommand(ns, "home ; connect foodnstuff ; run NUKE.exe ; hack");
  *
  * @example
  * // Fire-and-queue: enqueue several commands WITHOUT awaiting, then await a final call.
  * // The internal lock guarantees these execute in order with no interleaving from other scripts.
- * sendTerminalCommand("home");
- * sendTerminalCommand("connect foodnstuff");
- * sendTerminalCommand("run NUKE.exe");
- * sendTerminalCommand("hack");
- * await sendTerminalCommand("home"); // awaits completion of all prior queued commands
+ * sendTerminalCommand(ns, "home");
+ * sendTerminalCommand(ns, "connect foodnstuff");
+ * sendTerminalCommand(ns, "run NUKE.exe");
+ * sendTerminalCommand(ns, "hack");
+ * await sendTerminalCommand(ns, "home"); // awaits completion of all prior queued commands
  *
  * @example
  * // Skip waiting for long actions (just ensure the command was entered)
- * await sendTerminalCommand("grow", { waitForCompletion: false });
+ * await sendTerminalCommand(ns, "grow", { waitForCompletion: false });
  *
  * @example
  * // Tighter timeout if you expect an immediate echo or want fast failure
- * await sendTerminalCommand("home", { commandEchoTimeoutMs: 200 });
+ * await sendTerminalCommand(ns, "home", { commandEchoTimeoutMs: 200 });
  */
 export function sendTerminalCommand(
+    ns: NS,
     command: string,
     options: TerminalOptions = {},
 ): Promise<void> {
@@ -130,7 +133,7 @@ export function sendTerminalCommand(
     let p: Promise<void> = Promise.resolve();
     for (const c of sequenceOfCommands) {
         p = withTerminalLock(
-            async () => await sendOneTimedTerminalCommand(c, o),
+            async () => await sendOneTimedTerminalCommand(ns, c, o),
         );
     }
     return p;
@@ -154,6 +157,7 @@ function now() {
 }
 
 async function sendOneTimedTerminalCommand(
+    ns: NS,
     command: string,
     opts: TerminalOptions,
 ) {
@@ -200,11 +204,31 @@ async function sendOneTimedTerminalCommand(
 
     // after echo
     if (isTimedCommand(command) && waitForCompletion) {
-        await waitForCommandSettle(
+        const commandSettled = waitForCommandSettle(
             terminalOutput,
             /*appearTimeoutMs=*/ startTimeoutMs ?? 500,
             pollIntervalMs!,
         );
+        const deadline = sleep(expectedMillisFor(ns, command));
+        await Promise.race([commandSettled, deadline]);
+    }
+}
+
+function expectedMillisFor(ns: NS, cmd: string): number | null {
+    const m = cmd.trim().split(/\s+/);
+    const verb = m[0].toLowerCase();
+    // TODO: this doesn't work if we don't have singularity!!!
+    const target = ns.singularity.getCurrentServer(); // terminal default
+    switch (verb) {
+        case 'hack':
+            return ns.getHackTime(target);
+        case 'grow':
+            return ns.getGrowTime(target);
+        case 'weaken':
+            return ns.getWeakenTime(target);
+        // analyze/backdoor aren’t exposed; return an overestimate based on weaken time (longest exposed timed command)
+        default:
+            return ns.getWeakenTime(target) * 4;
     }
 }
 
@@ -442,13 +466,13 @@ export function hasUnfinishedTimerBar(haystack: string): boolean {
 /**
  * Send a manual grow command in the terminal.
  */
-export async function manualGrow() {
-    await sendTerminalCommand('grow');
+export async function manualGrow(ns: NS) {
+    await sendTerminalCommand(ns, 'grow');
 }
 
 /**
  * Send a manual weaken command in the terminal.
  */
-export async function manualWeaken() {
-    await sendTerminalCommand('weaken');
+export async function manualWeaken(ns: NS) {
+    await sendTerminalCommand(ns, 'weaken');
 }

@@ -21,12 +21,12 @@ async function manualGrowHost(ns: NS, host: string) {
     const currentHost = ns.singularity.getCurrentServer();
     const path = await shortestPath(ns, currentHost, host);
     await traverseNetworkPath(ns, path);
-    await manualGrow();
+    await manualGrow(ns);
 
     const minSecurity = ns.getServerBaseSecurityLevel(host);
     let serverSecurity = ns.getServerSecurityLevel(host);
     while (serverSecurity > minSecurity) {
-        await manualWeaken();
+        await manualWeaken(ns);
         serverSecurity = ns.getServerSecurityLevel(host);
     }
 }
