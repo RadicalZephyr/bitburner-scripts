@@ -1,7 +1,10 @@
 import type { NS, AutocompleteData, BladeburnerSkillName } from 'netscript';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
-const FLAGS = [['help', false]] as const satisfies FlagsSchema;
+const FLAGS = [
+    ['black-ops', false],
+    ['help', false],
+] as const satisfies FlagsSchema;
 
 export function autocomplete(data: AutocompleteData): string[] {
     data.flags(FLAGS);
@@ -21,7 +24,8 @@ Example:
   > run ${ns.getScriptName()}
 
 OPTIONS
-  --help   Show this help message
+  --black-ops  Prioritize skills for Black Ops success
+  --help       Show this help message
 `);
         return;
     }
@@ -29,13 +33,16 @@ OPTIONS
     ns.disableLog('asleep');
     ns.disableLog('sleep');
 
-    await buySkills(ns);
+    await buySkills(ns, flags['black-ops']);
 }
 
-async function buySkills(ns: NS) {
+async function buySkills(ns: NS, blackOps: boolean) {
     while (true) {
-        const skills = ns.bladeburner
-            .getSkillNames()
+        const skillNames = blackOps
+            ? blackOpsSkills()
+            : ns.bladeburner.getSkillNames();
+
+        const skills = skillNames
             .map((s) => new Skill(ns, s))
             .sort((a, b) => a.cost - b.cost);
 
@@ -74,4 +81,15 @@ async function untilPoints(ns: NS, points: number) {
     while (ns.bladeburner.getSkillPoints() < points) {
         await ns.asleep(10_000);
     }
+}
+
+function blackOpsSkills(): SkillName[] {
+    return [
+        "Blade's Intuition",
+        'Digital Observer',
+        'Overclock',
+        'Reaper',
+        'Evasive System',
+        'Hyperdrive',
+    ];
 }
