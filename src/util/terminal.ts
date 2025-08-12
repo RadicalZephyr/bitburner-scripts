@@ -57,6 +57,11 @@ export interface TerminalOptions {
  * foodnstuff ; run NUKE.exe ; hack"`). Chained commands are sent as a
  * single terminal entry and will be executed by the game in sequence.
  *
+ * NOTE: Chaining commands with `;` after a timed command (analyze,
+ * backdoor, grow, hack, or weaken) will not wait until the timed
+ * command finishes. Timed commands must always be the final command
+ * in a chain.
+ *
  * @param options - Optional behavior controls.
  *
  *   - `waitForCompletion` (default: `true`): if `true`, waits for a visible timer bar to disappear.
