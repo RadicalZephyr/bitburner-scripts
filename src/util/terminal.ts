@@ -77,8 +77,7 @@ export function sendTerminalCommand(
     });
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let terminalLock: Promise<any> = Promise.resolve();
+let terminalLock: Promise<unknown> = Promise.resolve();
 
 /**
  * Chains promises so only one terminal command runs at a time.
