@@ -141,7 +141,8 @@ function waitForNextTerminalLine(
             (mutations: MutationRecord[], observer: MutationObserver) => {
                 for (const record of mutations) {
                     record.addedNodes.forEach((node: Node) => {
-                        if (node.textContent?.endsWith(command)) {
+                        const contents = node.textContent ?? '';
+                        if (contents.trim().endsWith(command)) {
                             clearTimeout(deadline);
                             observer.disconnect();
                             resolve();
