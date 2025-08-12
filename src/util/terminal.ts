@@ -56,7 +56,7 @@ export function sendTerminalCommand(
         );
 
         // Create the observer before we send the 'Enter' event
-        const commandEntered = waitForNextTerminalLine(
+        const commandEntered = waitForCommandEcho(
             terminalOutput,
             command,
             options.commandEnteredTimeoutMs,
@@ -126,7 +126,7 @@ function dispatchReactInputAndEnter(
 /**
  * Watches the terminal output for our command to appear.
  */
-function waitForNextTerminalLine(
+function waitForCommandEcho(
     container: Element,
     command: string,
     timeoutMs: number,
