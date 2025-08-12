@@ -17,7 +17,7 @@ export interface TerminalOptions {
      *
      * Default: 1 second
      */
-    commandEnteredTimeoutMs?: number;
+    commandEchoTimeoutMs?: number;
 
     /**
      * Interval to check the last terminal output at for a timer bar
@@ -38,7 +38,7 @@ export function sendTerminalCommand(
     command: string,
     options: TerminalOptions = {
         waitForCompletion: true,
-        commandEnteredTimeoutMs: 1000,
+        commandEchoTimeoutMs: 1000,
         pollIntervalMs: 100,
     },
 ): Promise<void> {
@@ -56,10 +56,10 @@ export function sendTerminalCommand(
         );
 
         // Create the observer before we send the 'Enter' event
-        const commandEntered = waitForCommandEcho(
+        const commandEchoed = waitForCommandEcho(
             terminalOutput,
             command,
-            options.commandEnteredTimeoutMs,
+            options.commandEchoTimeoutMs,
         );
 
         // Trigger event handlers to set component state for new
@@ -67,7 +67,7 @@ export function sendTerminalCommand(
         dispatchReactInputAndEnter(terminalInput, command);
 
         // Wait for our command to appear in the output
-        await commandEntered;
+        await commandEchoed;
 
         if (options.waitForCompletion)
             await waitForTimerBarToFinish(
