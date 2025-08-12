@@ -25,6 +25,7 @@ export interface TerminalOptions {
      * effect if `waitForCompletion` is false.
      *
      * Default: 100 milliseconds
+     * Minimum: 10 milliseconds
      */
     pollIntervalMs?: number;
 }
@@ -113,6 +114,9 @@ export function sendTerminalCommand(
         ...DEFAULT_OPTIONS,
         ...options,
     };
+    // Enforce minimum poll interval
+    o.pollIntervalMs = Math.max(o.pollIntervalMs, 10);
+
     const sequenceOfCommands = splitAtTimedCommands(command);
     let p: Promise<void> = Promise.resolve();
     for (const c of sequenceOfCommands) {
