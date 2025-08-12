@@ -173,15 +173,25 @@ function tokenize(commands: string): string[] {
         .filter((s) => s.length !== 0);
 }
 
+let SEQ = 0;
+function now() {
+    return performance.now().toFixed(1);
+}
+
 async function sendOneTimedTerminalCommand(
     command: string,
-    {
+    opts: TerminalOptions,
+) {
+    const {
         waitForCompletion,
         commandEchoTimeoutMs,
         startTimeoutMs,
         pollIntervalMs,
-    }: TerminalOptions,
-) {
+    } = opts;
+
+    const id = SEQ++;
+    console.log(`[${id}] start ${JSON.stringify({ command, opts })} @${now()}`);
+
     // Acquire a reference to the terminal text field
     const terminalInput = assertEl(
         globalThis['terminal-input'],
@@ -206,17 +216,23 @@ async function sendOneTimedTerminalCommand(
     // command and simulate hitting 'Enter'
     dispatchReactInputAndEnter(terminalInput, command);
 
+    console.log(`[${id}] echo-wait begin @${now()}`);
     // Wait for our command to appear in the output
     await commandEchoed;
+    console.log(`[${id}] echo-wait end @${now()}`);
 
     if (waitForCompletion) {
+        console.log(`[${id}] timer-start begin @${now()}`);
         const sawTimer = await waitForTimerBarToStart(
             terminalOutput,
             startTimeoutMs,
         );
+        console.log(`[${id}] timer-start end @${now()}`);
 
         if (sawTimer) {
+            console.log(`[${id}] timer-finish begin @${now()}`);
             await waitForTimerBarToFinish(terminalOutput, pollIntervalMs);
+            console.log(`[${id}] timer-finish end @${now()}`);
         }
     }
 }
