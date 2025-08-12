@@ -127,8 +127,7 @@ export function sendTerminalCommand(
     return p;
 }
 
-const TIMED_COMMANDS: RegExp =
-    /;? *\b(analyze|backdoor|grow|hack|weaken)\b *;?/i;
+const TIMED_COMMANDS: RegExp = /^(analyze|backdoor|grow|hack|weaken)\b/i;
 
 /**
  * Split a command string at known timed commands.
@@ -137,8 +136,30 @@ const TIMED_COMMANDS: RegExp =
  * @returns A list of strings of commands where timed commands have been separated from other commands.
  */
 export function splitAtTimedCommands(commands: string): string[] {
+    const finalCommands = [];
+    const commandTokens = tokenize(commands);
+
+    let currentCommand = '';
+    let sep = '';
+    for (const t of commandTokens) {
+        currentCommand += sep + t;
+        if (TIMED_COMMANDS.test(t)) {
+            finalCommands.push(currentCommand);
+            currentCommand = '';
+            sep = '';
+        } else {
+            sep = ' ; ';
+        }
+    }
+
+    if (currentCommand !== '') finalCommands.push(currentCommand);
+
+    return finalCommands;
+}
+
+function tokenize(commands: string): string[] {
     return commands
-        .split(TIMED_COMMANDS)
+        .split(';')
         .map((c) => c.trim())
         .filter((s) => s.length !== 0);
 }

@@ -16,6 +16,9 @@ describe('splits commands list at timed commands', () => {
         expect(splitAtTimedCommands('foohackbar')).toStrictEqual([
             'foohackbar',
         ]);
+        expect(
+            splitAtTimedCommands('thing ; scp hack.txt ; foo'),
+        ).toStrictEqual(['thing ; scp hack.txt ; foo']);
     });
 
     test.each(['analyze', 'backdoor', 'grow', 'hack', 'weaken'])(
@@ -31,24 +34,23 @@ describe('splits commands list at timed commands', () => {
 
     test('timed commands are separated from untimed commands', () => {
         expect(splitAtTimedCommands('connect foo ; hack')).toStrictEqual([
-            'connect foo',
-            'hack',
+            'connect foo ; hack',
         ]);
         expect(splitAtTimedCommands('grow ; home')).toStrictEqual([
             'grow',
             'home',
         ]);
         expect(splitAtTimedCommands('connect foo; weaken ;home')).toStrictEqual(
-            ['connect foo', 'weaken', 'home'],
+            ['connect foo ; weaken', 'home'],
         );
         expect(
             splitAtTimedCommands('connect foo ;analyze; home'),
-        ).toStrictEqual(['connect foo', 'analyze', 'home']);
+        ).toStrictEqual(['connect foo ; analyze', 'home']);
     });
 
     test('timed commands are recognized regardless of case', () => {
         expect(splitAtTimedCommands('connect foo ; HACK ; home')).toStrictEqual(
-            ['connect foo', 'HACK', 'home'],
+            ['connect foo ; HACK', 'home'],
         );
     });
 });
