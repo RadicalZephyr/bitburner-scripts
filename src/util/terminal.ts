@@ -253,7 +253,8 @@ async function waitForTimerBarToFinish(
 }
 
 /**
- * Search a string for the presence of the ASCII timer progress bar.
+ * Search a string for the presence of an unfinished ASCII timer
+ * progress bar.
  *
  * @remarks
  *
@@ -262,6 +263,9 @@ async function waitForTimerBarToFinish(
  *
  * `[-----------]`
  * `[||||||-----]`
+ *
+ * Finished ASCII progress bars will return false
+ *
  * `[|||||||||||]`
  *
  * @param haystack - string to search for timer bar pattern
