@@ -185,7 +185,14 @@ function allContractsAndOperations(ns: NS): readonly Action[] {
     const operationActions = ns.bladeburner
         .getOperationNames()
         .map((n) => action('Operations', n));
-    return [...contractActions, ...operationActions];
+
+    const all = [...contractActions, ...operationActions];
+
+    const nextBlackOp = ns.bladeburner.getNextBlackOp();
+    if (nextBlackOp != null)
+        all.push(action('Black Operations', nextBlackOp.name));
+
+    return all;
 }
 
 function action(
