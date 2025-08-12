@@ -60,13 +60,10 @@ const DEFAULT_OPTIONS: TerminalOptions = {
  * @param command - The exact terminal command to run.
  *
  * You may chain multiple commands with `;` (e.g. `"home ; connect
- * foodnstuff ; run NUKE.exe ; hack"`). Chained commands are sent as a
- * single terminal entry and will be executed by the game in sequence.
+ * foodnstuff ; run NUKE.exe ; hack"`).
  *
- * NOTE: Chaining commands with `;` after a timed command (analyze,
- * backdoor, grow, hack, or weaken) will not wait until the timed
- * command finishes. Timed commands must always be the final command
- * in a chain.
+ * Timed commands (analyze, backdoor, grow, hack, or weaken) will be
+ * split into separate commands so the timer can be properly awaited.
  *
  * @param options - Optional behavior controls.
  *
@@ -116,9 +113,27 @@ export function sendTerminalCommand(
         ...DEFAULT_OPTIONS,
         ...options,
     };
-    return withTerminalLock(
-        async () => await sendOneTimedTerminalCommand(command, o),
-    );
+    const sequenceOfCommands = splitAtTimedCommands(command);
+    let p: Promise<void>;
+    for (const c of sequenceOfCommands) {
+        p = withTerminalLock(
+            async () => await sendOneTimedTerminalCommand(c, o),
+        );
+    }
+    return p;
+}
+
+const TIMED_COMMANDS: RegExp =
+    / *;? *(analyze|backdoor|grow|hack|weaken) *;? */;
+
+/**
+ * Split a command string at known timed commands.
+ *
+ * @param commands - String containing terminal commands, possibly chained with `;`
+ * @returns A list of strings of commands where timed commands have been separated from other commands.
+ */
+export function splitAtTimedCommands(commands: string): string[] {
+    return commands.split(TIMED_COMMANDS).filter((s) => s.length !== 0);
 }
 
 async function sendOneTimedTerminalCommand(
