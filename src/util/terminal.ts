@@ -87,7 +87,7 @@ function withTerminalLock<T>(fn: () => Promise<T>): Promise<T> {
     const run = terminalLock.then(fn, fn);
     // keep chain alive
     terminalLock = run.catch((reason) => {
-        console.log(reason);
+        console.error(reason);
     });
     return run;
 }
