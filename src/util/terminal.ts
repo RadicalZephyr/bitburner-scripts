@@ -230,6 +230,7 @@ async function sendOneTimedTerminalCommand(
         const sawTimer = await waitForTimerBarToStart(
             terminalOutput,
             startTimeoutMs,
+            pollIntervalMs,
         );
         console.log(
             `[${id}] @${now()} timer-start end ${sawTimer ? 'SEEN' : 'NOT SEEN'}`,
@@ -362,48 +363,26 @@ function waitForCommandEcho(
 async function waitForTimerBarToStart(
     container: Element,
     startTimeoutMs: number,
+    pollIntervalMs: number,
 ): Promise<boolean> {
-    return new Promise((resolve) => {
-        const seen = () => {
-            const last = container.lastElementChild;
-            if (!last) return false;
-            const tail = [last];
-            return tail.some((el) =>
-                hasUnfinishedTimerBar(el?.textContent ?? ''),
-            );
-        };
+    let done = false;
+    const deadline = setTimeout(() => {
+        if (done) return;
+        done = true;
+    }, startTimeoutMs);
 
-        // Fast path if already there
-        if (seen()) return resolve(true);
-
-        let done = false;
-        let deadline: number | null = null;
-        const observer = new MutationObserver(() => {
-            if (done) return;
-            if (seen()) {
-                if (deadline != null) {
-                    clearTimeout(deadline);
-                    deadline = null;
-                }
-                done = true;
-                observer.disconnect();
-                resolve(true);
-            }
-        });
-
-        observer.observe(container, {
-            childList: true,
-            subtree: true,
-            characterData: true,
-        });
-
-        deadline = setTimeout(() => {
-            if (done) return;
+    let lastTermOut = container.lastElementChild;
+    while (!done && lastTermOut) {
+        if (hasUnfinishedTimerBar(lastTermOut.textContent ?? '')) {
             done = true;
-            observer.disconnect();
-            resolve(seen()); // last chance check if timer is visible now
-        }, startTimeoutMs);
-    });
+            clearTimeout(deadline);
+            return true;
+        }
+        await sleep(pollIntervalMs);
+        lastTermOut = container.lastElementChild;
+    }
+
+    return false;
 }
 
 /**
