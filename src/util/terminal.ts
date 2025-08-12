@@ -29,12 +29,6 @@ interface TerminalOptions {
     pollIntervalMs?: number;
 }
 
-const defaultOptions: TerminalOptions = {
-    waitForCompletion: true,
-    commandEnteredTimeoutMs: 100,
-    pollIntervalMs: 100,
-};
-
 /**
  * Send a command to the game terminal, simulating user input.
  *
@@ -42,7 +36,11 @@ const defaultOptions: TerminalOptions = {
  */
 export function sendTerminalCommand(
     command: string,
-    options: TerminalOptions = defaultOptions,
+    options: TerminalOptions = {
+        waitForCompletion: true,
+        commandEnteredTimeoutMs: 1000,
+        pollIntervalMs: 100,
+    },
 ): Promise<void> {
     return withTerminalLock(async () => {
         // Acquire a reference to the terminal text field
