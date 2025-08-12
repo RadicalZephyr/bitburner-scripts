@@ -12,6 +12,12 @@ describe('splits commands list at timed commands', () => {
         ).toStrictEqual(['connect foo ; home ; scp thing']);
     });
 
+    test('strings containing timed commands are not split', () => {
+        expect(splitAtTimedCommands('foohackbar')).toStrictEqual([
+            'foohackbar',
+        ]);
+    });
+
     test.each(['analyze', 'backdoor', 'grow', 'hack', 'weaken'])(
         'single timed commands are not split',
         (timedFn) => {

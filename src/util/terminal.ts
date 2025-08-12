@@ -124,7 +124,7 @@ export function sendTerminalCommand(
 }
 
 const TIMED_COMMANDS: RegExp =
-    / *;? *(analyze|backdoor|grow|hack|weaken) *;? */;
+    / *;? *\b(analyze|backdoor|grow|hack|weaken)\b *;? */;
 
 /**
  * Split a command string at known timed commands.
