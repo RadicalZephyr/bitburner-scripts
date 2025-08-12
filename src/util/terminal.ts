@@ -190,7 +190,7 @@ async function sendOneTimedTerminalCommand(
     } = opts;
 
     const id = SEQ++;
-    console.log(`[${id}] start ${JSON.stringify({ command, opts })} @${now()}`);
+    console.log(`[${id}] @${now()} start ${JSON.stringify({ command, opts })}`);
 
     // Acquire a reference to the terminal text field
     const terminalInput = assertEl(
@@ -216,23 +216,23 @@ async function sendOneTimedTerminalCommand(
     // command and simulate hitting 'Enter'
     dispatchReactInputAndEnter(terminalInput, command);
 
-    console.log(`[${id}] echo-wait begin @${now()}`);
+    console.log(`[${id}] @${now()} echo-wait begin`);
     // Wait for our command to appear in the output
     await commandEchoed;
-    console.log(`[${id}] echo-wait end @${now()}`);
+    console.log(`[${id}] @${now()} echo-wait end`);
 
     if (waitForCompletion) {
-        console.log(`[${id}] timer-start begin @${now()}`);
+        console.log(`[${id}] @${now()} timer-start begin`);
         const sawTimer = await waitForTimerBarToStart(
             terminalOutput,
             startTimeoutMs,
         );
-        console.log(`[${id}] timer-start end @${now()}`);
+        console.log(`[${id}] @${now()} timer-start end`);
 
         if (sawTimer) {
-            console.log(`[${id}] timer-finish begin @${now()}`);
+            console.log(`[${id}] @${now()} timer-finish begin`);
             await waitForTimerBarToFinish(terminalOutput, pollIntervalMs);
-            console.log(`[${id}] timer-finish end @${now()}`);
+            console.log(`[${id}] @${now()} timer-finish end`);
         }
     }
 }
