@@ -115,6 +115,7 @@ export function sendTerminalCommand(
         const terminalInput = assertEl(
             globalThis['terminal-input'],
             'Could not find terminal input element!',
+            (el) => el instanceof HTMLInputElement,
         );
 
         // Acquire a reference to the terminal output list
@@ -157,11 +158,28 @@ function withTerminalLock<T>(fn: () => Promise<T>): Promise<T> {
     return run;
 }
 
+type GuardFn<T> = (el: unknown) => el is T;
+
+const isElement: GuardFn<Element> = (el: unknown) => {
+    return el instanceof Element;
+};
+
 /**
  * Throws an error if the element is null.
  */
-function assertEl<T extends Element>(el: T | null | undefined, msg: string): T {
-    if (!el) throw new Error(msg);
+function assertEl(el: unknown, msg: string): Element;
+function assertEl<T extends Element>(
+    el: unknown,
+    msg: string,
+    guard: GuardFn<T>,
+): T;
+function assertEl<T extends Element>(
+    el: unknown,
+    msg: string,
+    guard?: GuardFn<T>,
+): T {
+    const g = guard ?? (isElement as GuardFn<T>);
+    if (!(el != null && g(el))) throw new Error(msg);
     return el;
 }
 
