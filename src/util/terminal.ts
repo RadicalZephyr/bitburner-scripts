@@ -302,11 +302,7 @@ function waitForCommandEcho(
             const last = container.lastElementChild;
             if (!last) return;
 
-            const tail = [
-                last.previousElementSibling?.previousElementSibling ?? null,
-                last.previousElementSibling ?? null,
-                last,
-            ];
+            const tail = [last];
             for (const el of tail) {
                 const contents = el?.textContent ?? '';
                 if (contents.trim().endsWith(command.trim())) {
@@ -339,11 +335,7 @@ async function waitForTimerBarToStart(
         const seen = () => {
             const last = container.lastElementChild;
             if (!last) return false;
-            const tail = [
-                last.previousElementSibling?.previousElementSibling ?? null,
-                last.previousElementSibling ?? null,
-                last,
-            ];
+            const tail = [last];
             return tail.some((el) =>
                 hasUnfinishedTimerBar(el?.textContent ?? ''),
             );
