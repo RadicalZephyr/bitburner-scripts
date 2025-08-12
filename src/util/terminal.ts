@@ -246,10 +246,14 @@ function waitForCommandEcho(
     command: string,
     timeoutMs: number,
 ): Promise<void> {
+    const initialLastContent = container.lastElementChild.textContent;
     return new Promise((resolve, reject) => {
         const deadline = setTimeout(() => {
             observer.disconnect();
-            reject(new Error('Timed out waiting for terminal output'));
+            // If last terminal output is the same, fail
+            if (initialLastContent == container.lastElementChild.textContent)
+                reject(new Error(`Timed out waiting for echo of ${command}`));
+            else resolve();
         }, timeoutMs);
 
         const observer = new MutationObserver(() => {
