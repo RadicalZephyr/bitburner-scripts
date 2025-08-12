@@ -104,11 +104,11 @@ export interface TerminalOptions {
  */
 export function sendTerminalCommand(
     command: string,
-    options: TerminalOptions = {
-        waitForCompletion: true,
-        commandEchoTimeoutMs: 1000,
-        pollIntervalMs: 100,
-    },
+    {
+        waitForCompletion = true,
+        commandEchoTimeoutMs = 1000,
+        pollIntervalMs = 100,
+    }: TerminalOptions = {},
 ): Promise<void> {
     return withTerminalLock(async () => {
         // Acquire a reference to the terminal text field
@@ -127,7 +127,7 @@ export function sendTerminalCommand(
         const commandEchoed = waitForCommandEcho(
             terminalOutput,
             command,
-            options.commandEchoTimeoutMs,
+            commandEchoTimeoutMs,
         );
 
         // Trigger event handlers to set component state for new
@@ -137,11 +137,8 @@ export function sendTerminalCommand(
         // Wait for our command to appear in the output
         await commandEchoed;
 
-        if (options.waitForCompletion)
-            await waitForTimerBarToFinish(
-                terminalOutput,
-                options.pollIntervalMs,
-            );
+        if (waitForCompletion)
+            await waitForTimerBarToFinish(terminalOutput, pollIntervalMs);
     });
 }
 
