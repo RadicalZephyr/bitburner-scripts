@@ -22,6 +22,10 @@ describe('splits commands list at timed commands', () => {
         'single timed commands are not split',
         (timedFn) => {
             expect(splitAtTimedCommands(timedFn)).toStrictEqual([timedFn]);
+            const upcaseTimedFn = timedFn.toLocaleUpperCase();
+            expect(splitAtTimedCommands(upcaseTimedFn)).toStrictEqual([
+                upcaseTimedFn,
+            ]);
         },
     );
 
@@ -40,6 +44,12 @@ describe('splits commands list at timed commands', () => {
         expect(
             splitAtTimedCommands('connect foo ;analyze; home'),
         ).toStrictEqual(['connect foo', 'analyze', 'home']);
+    });
+
+    test('timed commands are recognized regardless of case', () => {
+        expect(splitAtTimedCommands('connect foo ; HACK ; home')).toStrictEqual(
+            ['connect foo', 'HACK', 'home'],
+        );
     });
 });
 
