@@ -199,19 +199,15 @@ async function sendOneTimedTerminalCommand(
     console.log(`[${id}] @${now()} echo-wait end`);
 
     if (isTimedCommand(command) && waitForCompletion) {
-        console.log(
-            `[${id}] @${now()} timer-start begin (window=${startTimeoutMs})`,
-        );
+        console.log(`[${id}] @${now()} timer-start begin`);
         const sawTimer = await waitForTimerBarToStart(terminalOutput);
         console.log(
             `[${id}] @${now()} timer-start end ${sawTimer ? 'SEEN' : 'NOT SEEN'}`,
         );
 
         if (sawTimer) {
-            console.log(
-                `[${id}] @${now()} timer-finish begin (pollInterval=${pollIntervalMs})`,
-            );
-            await waitForTimerBarToFinish(terminalOutput, pollIntervalMs);
+            console.log(`[${id}] @${now()} timer-finish begin`);
+            await waitForTimerBarToFinish(terminalOutput);
             console.log(`[${id}] @${now()} timer-finish end`);
         } else {
             console.log(`[${id}] @${now()} no timer detected; continuing`);
