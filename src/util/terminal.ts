@@ -345,9 +345,14 @@ async function waitForTimerBarToStart(
         if (seen()) return resolve(true);
 
         let done = false;
+        let deadline: number | null = null;
         const observer = new MutationObserver(() => {
             if (done) return;
             if (seen()) {
+                if (deadline != null) {
+                    clearTimeout(deadline);
+                    deadline = null;
+                }
                 done = true;
                 observer.disconnect();
                 resolve(true);
@@ -360,7 +365,7 @@ async function waitForTimerBarToStart(
             characterData: true,
         });
 
-        const deadline = setTimeout(() => {
+        deadline = setTimeout(() => {
             if (done) return;
             done = true;
             observer.disconnect();
