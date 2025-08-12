@@ -15,7 +15,7 @@ interface TerminalOptions {
     /**
      * How long to wait for the command to be sent.
      *
-     * Default: 100 milliseconds
+     * Default: 1 second
      */
     commandEnteredTimeoutMs?: number;
 
