@@ -149,7 +149,8 @@ let terminalLock: Promise<unknown> = Promise.resolve();
  */
 function withTerminalLock<T>(fn: () => Promise<T>): Promise<T> {
     const run = terminalLock.then(fn, fn);
-    // keep chain alive
+    // We only log errors here because we need to avoid throwing so
+    // queued calls still get executed even if one fails.
     terminalLock = run.catch((reason) => {
         console.error(reason);
     });
