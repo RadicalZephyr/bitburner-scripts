@@ -364,7 +364,7 @@ async function waitForTimerBarToStart(
             if (done) return;
             done = true;
             observer.disconnect();
-            resolve(false); // no timer seen within window
+            resolve(seen()); // last chance check if timer is visible now
         }, startTimeoutMs);
     });
 }
