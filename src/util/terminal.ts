@@ -20,6 +20,14 @@ export interface TerminalOptions {
     commandEchoTimeoutMs?: number;
 
     /**
+     * How long to wait for the timer bar to start. This option has no
+     * effect if `waitForCompletion` is false.
+     *
+     * Default: 100 milliseconds
+     */
+    startTimeoutMs?: number;
+
+    /**
      * Interval to check the last terminal output at for a timer bar
      * to determine when command has finished. This option has no
      * effect if `waitForCompletion` is false.
@@ -33,6 +41,7 @@ export interface TerminalOptions {
 const DEFAULT_OPTIONS: TerminalOptions = {
     waitForCompletion: true,
     commandEchoTimeoutMs: 1000,
+    startTimeoutMs: 100,
     pollIntervalMs: 100,
 };
 
@@ -169,6 +178,7 @@ async function sendOneTimedTerminalCommand(
     {
         waitForCompletion,
         commandEchoTimeoutMs,
+        startTimeoutMs,
         pollIntervalMs,
     }: TerminalOptions,
 ) {
@@ -199,8 +209,10 @@ async function sendOneTimedTerminalCommand(
     // Wait for our command to appear in the output
     await commandEchoed;
 
-    if (waitForCompletion)
+    if (waitForCompletion) {
+        await waitForTimerBarToStart(terminalOutput, startTimeoutMs);
         await waitForTimerBarToFinish(terminalOutput, pollIntervalMs);
+    }
 }
 
 let terminalLock: Promise<unknown> = Promise.resolve();
@@ -313,6 +325,55 @@ function waitForCommandEcho(
             subtree: true,
             characterData: true,
         });
+    });
+}
+
+/**
+ * Examines terminal output for timer bar and waits for one to appear.
+ */
+async function waitForTimerBarToStart(
+    container: Element,
+    startTimeoutMs: number,
+): Promise<boolean> {
+    return new Promise((resolve) => {
+        const seen = () => {
+            const last = container.lastElementChild;
+            if (!last) return false;
+            const tail = [
+                last.previousElementSibling?.previousElementSibling ?? null,
+                last.previousElementSibling ?? null,
+                last,
+            ];
+            return tail.some((el) =>
+                hasUnfinishedTimerBar(el?.textContent ?? ''),
+            );
+        };
+
+        // Fast path if already there
+        if (seen()) return resolve(true);
+
+        let done = false;
+        const observer = new MutationObserver(() => {
+            if (done) return;
+            if (seen()) {
+                done = true;
+                observer.disconnect();
+                resolve(true);
+            }
+        });
+
+        observer.observe(container, {
+            childList: true,
+            subtree: true,
+            characterData: true,
+        });
+
+        const deadline = setTimeout(() => {
+            if (done) return;
+            done = true;
+            observer.disconnect();
+            resolve(false); // no timer seen within window
+        }, startTimeoutMs);
     });
 }
 
