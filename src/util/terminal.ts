@@ -29,6 +29,12 @@ export interface TerminalOptions {
     pollIntervalMs?: number;
 }
 
+const DEFAULT_OPTIONS: TerminalOptions = {
+    waitForCompletion: true,
+    commandEchoTimeoutMs: 1000,
+    pollIntervalMs: 100,
+};
+
 /**
  * Send a command to the Bitburner terminal by simulating user input.
  *
@@ -104,43 +110,54 @@ export interface TerminalOptions {
  */
 export function sendTerminalCommand(
     command: string,
-    {
-        waitForCompletion = true,
-        commandEchoTimeoutMs = 1000,
-        pollIntervalMs = 100,
-    }: TerminalOptions = {},
+    options: TerminalOptions = {},
 ): Promise<void> {
-    return withTerminalLock(async () => {
-        // Acquire a reference to the terminal text field
-        const terminalInput = assertEl(
-            globalThis['terminal-input'],
-            'Could not find terminal input element!',
-            (el) => el instanceof HTMLInputElement,
-        );
+    const o = {
+        ...DEFAULT_OPTIONS,
+        ...options,
+    };
+    return withTerminalLock(
+        async () => await sendOneTimedTerminalCommand(command, o),
+    );
+}
 
-        // Acquire a reference to the terminal output list
-        const terminalOutput = assertEl(
-            globalThis['terminal'],
-            'Could not find terminal output element!',
-        );
+async function sendOneTimedTerminalCommand(
+    command: string,
+    {
+        waitForCompletion,
+        commandEchoTimeoutMs,
+        pollIntervalMs,
+    }: TerminalOptions,
+) {
+    // Acquire a reference to the terminal text field
+    const terminalInput = assertEl(
+        globalThis['terminal-input'],
+        'Could not find terminal input element!',
+        (el) => el instanceof HTMLInputElement,
+    );
 
-        // Create the observer before we send the 'Enter' event
-        const commandEchoed = waitForCommandEcho(
-            terminalOutput,
-            command,
-            commandEchoTimeoutMs,
-        );
+    // Acquire a reference to the terminal output list
+    const terminalOutput = assertEl(
+        globalThis['terminal'],
+        'Could not find terminal output element!',
+    );
 
-        // Trigger event handlers to set component state for new
-        // command and simulate hitting 'Enter'
-        dispatchReactInputAndEnter(terminalInput, command);
+    // Create the observer before we send the 'Enter' event
+    const commandEchoed = waitForCommandEcho(
+        terminalOutput,
+        command,
+        commandEchoTimeoutMs,
+    );
 
-        // Wait for our command to appear in the output
-        await commandEchoed;
+    // Trigger event handlers to set component state for new
+    // command and simulate hitting 'Enter'
+    dispatchReactInputAndEnter(terminalInput, command);
 
-        if (waitForCompletion)
-            await waitForTimerBarToFinish(terminalOutput, pollIntervalMs);
-    });
+    // Wait for our command to appear in the output
+    await commandEchoed;
+
+    if (waitForCompletion)
+        await waitForTimerBarToFinish(terminalOutput, pollIntervalMs);
 }
 
 let terminalLock: Promise<unknown> = Promise.resolve();
