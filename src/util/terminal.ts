@@ -210,8 +210,14 @@ async function sendOneTimedTerminalCommand(
     await commandEchoed;
 
     if (waitForCompletion) {
-        await waitForTimerBarToStart(terminalOutput, startTimeoutMs);
-        await waitForTimerBarToFinish(terminalOutput, pollIntervalMs);
+        const sawTimer = await waitForTimerBarToStart(
+            terminalOutput,
+            startTimeoutMs,
+        );
+
+        if (sawTimer) {
+            await waitForTimerBarToFinish(terminalOutput, pollIntervalMs);
+        }
     }
 }
 
