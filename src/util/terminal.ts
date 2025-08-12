@@ -202,11 +202,7 @@ async function sendOneTimedTerminalCommand(
         console.log(
             `[${id}] @${now()} timer-start begin (window=${startTimeoutMs})`,
         );
-        const sawTimer = await waitForTimerBarToStart(
-            terminalOutput,
-            startTimeoutMs,
-            pollIntervalMs,
-        );
+        const sawTimer = await waitForTimerBarToStart(terminalOutput);
         console.log(
             `[${id}] @${now()} timer-start end ${sawTimer ? 'SEEN' : 'NOT SEEN'}`,
         );
@@ -335,25 +331,13 @@ function waitForCommandEcho(
 /**
  * Examines terminal output for timer bar and waits for one to appear.
  */
-async function waitForTimerBarToStart(
-    container: Element,
-    startTimeoutMs: number,
-    pollIntervalMs: number,
-): Promise<boolean> {
-    let done = false;
-    const deadline = setTimeout(() => {
-        if (done) return;
-        done = true;
-    }, startTimeoutMs);
-
+async function waitForTimerBarToStart(container: Element): Promise<boolean> {
     let lastTermOut = container.lastElementChild;
-    while (!done && lastTermOut) {
+    while (lastTermOut != null) {
         if (hasUnfinishedTimerBar(lastTermOut.textContent ?? '')) {
-            done = true;
-            clearTimeout(deadline);
             return true;
         }
-        await sleep(pollIntervalMs);
+        await nextRender();
         lastTermOut = container.lastElementChild;
     }
 
@@ -364,18 +348,21 @@ async function waitForTimerBarToStart(
  * Examines terminal output for a timer bar and waits for it to
  * complete.
  */
-async function waitForTimerBarToFinish(
-    container: Element,
-    pollIntervalMs: number,
-) {
+async function waitForTimerBarToFinish(container: Element) {
     let lastTermOut = container.lastElementChild;
     while (
-        lastTermOut
+        lastTermOut != null
         && hasUnfinishedTimerBar(lastTermOut.textContent ?? '')
     ) {
-        await sleep(pollIntervalMs);
+        await nextRender();
         lastTermOut = container.lastElementChild;
     }
+}
+
+function nextRender(): Promise<void> {
+    return new Promise((res) =>
+        globalThis.requestAnimationFrame(() => res.call(null)),
+    );
 }
 
 /**
