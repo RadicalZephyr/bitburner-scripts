@@ -157,6 +157,8 @@ function waitForCommandEcho(
             }
         });
 
+        // We observe the whole container because the terminal may add
+        // new children, update text or replace the last line element.
         observer.observe(container, {
             childList: true,
             subtree: true,
