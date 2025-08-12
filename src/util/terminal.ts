@@ -114,7 +114,7 @@ export function sendTerminalCommand(
         ...options,
     };
     const sequenceOfCommands = splitAtTimedCommands(command);
-    let p: Promise<void>;
+    let p: Promise<void> = Promise.resolve();
     for (const c of sequenceOfCommands) {
         p = withTerminalLock(
             async () => await sendOneTimedTerminalCommand(c, o),
