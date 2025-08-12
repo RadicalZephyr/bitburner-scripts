@@ -4,7 +4,7 @@ import { sleep } from 'util/time';
 /**
  * Options for customizing how your terminal command runs.
  */
-interface TerminalOptions {
+export interface TerminalOptions {
     /**
      * Whether to wait until completion of the command.
      *
