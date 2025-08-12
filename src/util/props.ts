@@ -24,7 +24,7 @@ export function getReactPropKey(el: Element): string {
  *
  * @param el - HTML Element to extract React props object from
  */
-export function getReactProps(el: Element): Record<string, unknown> | null {
+export function getReactProps(el: Element): Record<string, unknown> {
     const propKey = getReactPropKey(el);
     return el[propKey];
 }
