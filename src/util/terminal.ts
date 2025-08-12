@@ -137,22 +137,31 @@ function waitForNextTerminalLine(
             reject(new Error('Timed out waiting for terminal output'));
         }, timeoutMs);
 
-        const observer = new MutationObserver(
-            (mutations: MutationRecord[], observer: MutationObserver) => {
-                for (const record of mutations) {
-                    record.addedNodes.forEach((node: Node) => {
-                        const contents = node.textContent ?? '';
-                        if (contents.trim().endsWith(command)) {
-                            clearTimeout(deadline);
-                            observer.disconnect();
-                            resolve();
-                        }
-                    });
-                }
-            },
-        );
+        const observer = new MutationObserver(() => {
+            const last = container.lastElementChild;
+            if (!last) return;
 
-        observer.observe(container, { childList: true });
+            const tail = [
+                last.previousElementSibling?.previousElementSibling ?? null,
+                last.previousElementSibling ?? null,
+                last,
+            ];
+            for (const el of tail) {
+                const contents = el?.textContent ?? '';
+                if (contents.trim().endsWith(command.trim())) {
+                    clearTimeout(deadline);
+                    observer.disconnect();
+                    resolve();
+                    return;
+                }
+            }
+        });
+
+        observer.observe(container, {
+            childList: true,
+            subtree: true,
+            characterData: true,
+        });
     });
 }
 
