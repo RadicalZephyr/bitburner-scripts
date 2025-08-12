@@ -216,23 +216,33 @@ async function sendOneTimedTerminalCommand(
     // command and simulate hitting 'Enter'
     dispatchReactInputAndEnter(terminalInput, command);
 
-    console.log(`[${id}] @${now()} echo-wait begin`);
+    console.log(
+        `[${id}] @${now()} echo-wait begin (window=${commandEchoTimeoutMs})`,
+    );
     // Wait for our command to appear in the output
     await commandEchoed;
     console.log(`[${id}] @${now()} echo-wait end`);
 
     if (waitForCompletion) {
-        console.log(`[${id}] @${now()} timer-start begin`);
+        console.log(
+            `[${id}] @${now()} timer-start begin (window=${startTimeoutMs})`,
+        );
         const sawTimer = await waitForTimerBarToStart(
             terminalOutput,
             startTimeoutMs,
         );
-        console.log(`[${id}] @${now()} timer-start end`);
+        console.log(
+            `[${id}] @${now()} timer-start end ${sawTimer ? 'SEEN' : 'NOT SEEN'}`,
+        );
 
         if (sawTimer) {
-            console.log(`[${id}] @${now()} timer-finish begin`);
+            console.log(
+                `[${id}] @${now()} timer-finish begin (pollInterval=${pollIntervalMs})`,
+            );
             await waitForTimerBarToFinish(terminalOutput, pollIntervalMs);
             console.log(`[${id}] @${now()} timer-finish end`);
+        } else {
+            console.log(`[${id}] @${now()} no timer detected; continuing`);
         }
     }
 }
