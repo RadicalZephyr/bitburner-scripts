@@ -30,9 +30,72 @@ export interface TerminalOptions {
 }
 
 /**
- * Send a command to the game terminal, simulating user input.
+ * Send a command to the Bitburner terminal by simulating user input.
  *
- * @param command - text command to run
+ * This helper is designed to be **safe** and **deterministic** when multiple scripts
+ * try to talk to the terminal:
+ *
+ * - **Waits for the command to appear in terminal output** (with a timeout).
+ * - **Optionally waits for timed commands to complete** by watching the ASCII timer bar.
+ * - **Serializes access** to the terminal via an internal lock so commands from different
+ *   callers do not interleave. Calls are queued in the order invoked.
+ *
+ * @remarks
+ * - The function uses DOM observation to detect when the command has been echoed
+ *   and (optionally) when a timed operation completes.
+ * - “Timed” detection relies on the terminal’s ASCII progress bar (e.g. `[||||---]`).
+ *   Commands that do not produce a timer bar will resolve immediately after echo.
+ * - Calls are **serialized process-wide** (tab-wide) by an internal promise queue.
+ *   You can “enqueue” several commands by calling this function without awaiting them,
+ *   then `await` a final call to flush the queue (see examples).
+ * - This implementation reaches into Bitburner’s UI/React internals. If the game’s
+ *   UI changes, you may need to update the DOM lookup or React-prop access.
+ *
+ * @param command - The exact terminal command to run.
+ *
+ * You may chain multiple commands with `;` (e.g. `"home ; connect
+ * foodnstuff ; run NUKE.exe ; hack"`). Chained commands are sent as a
+ * single terminal entry and will be executed by the game in sequence.
+ *
+ * @param options - Optional behavior controls.
+ *
+ *   - `waitForCompletion` (default: `true`): if `true`, waits for a visible timer bar to disappear.
+ *   - `commandEchoTimeoutMs` (default: `1000`): how long to wait for the command echo to appear
+ *      in the terminal before rejecting.
+ *   - `pollIntervalMs` (default: `100`): interval used when watching the timer bar (only when
+ *      `waitForCompletion` is `true`).
+ *
+ * @returns A promise that resolves when:
+ *   1) the command echo appears (always), and
+ *   2) if `waitForCompletion === true`, any visible timer bar finishes.
+ *   The promise rejects on timeout or if the terminal DOM cannot be found.
+ *
+ * @throws
+ * - `Error("Could not find terminal input element!")` or
+ *   `Error("Could not find terminal output element!")` if the UI elements are missing.
+ * - `Error("Timed out waiting for terminal output")` if the command echo does not appear
+ *   within `commandEchoTimeoutMs`.
+ *
+ * @example
+ * // Basic usage: run a chained command and wait until any timed part completes
+ * await sendTerminalCommand("home ; connect foodnstuff ; run NUKE.exe ; hack");
+ *
+ * @example
+ * // Fire-and-queue: enqueue several commands WITHOUT awaiting, then await a final call.
+ * // The internal lock guarantees these execute in order with no interleaving from other scripts.
+ * sendTerminalCommand("home");
+ * sendTerminalCommand("connect foodnstuff");
+ * sendTerminalCommand("run NUKE.exe");
+ * sendTerminalCommand("hack");
+ * await sendTerminalCommand("home"); // awaits completion of all prior queued commands
+ *
+ * @example
+ * // Skip waiting for long actions (just ensure the command was entered)
+ * await sendTerminalCommand("grow", { waitForCompletion: false });
+ *
+ * @example
+ * // Tighter timeout if you expect an immediate echo or want fast failure
+ * await sendTerminalCommand("home", { commandEchoTimeoutMs: 200 });
  */
 export function sendTerminalCommand(
     command: string,
@@ -46,13 +109,13 @@ export function sendTerminalCommand(
         // Acquire a reference to the terminal text field
         const terminalInput = assertEl(
             globalThis['terminal-input'],
-            'could not find terminal input element!',
+            'Could not find terminal input element!',
         );
 
         // Acquire a reference to the terminal output list
         const terminalOutput = assertEl(
             globalThis['terminal'],
-            'could not find terminal output element!',
+            'Could not find terminal output element!',
         );
 
         // Create the observer before we send the 'Enter' event
