@@ -198,20 +198,13 @@ async function sendOneTimedTerminalCommand(
     await commandEchoed;
     console.log(`[${id}] @${now()} echo-wait end`);
 
+    // after echo
     if (isTimedCommand(command) && waitForCompletion) {
-        console.log(`[${id}] @${now()} timer-start begin`);
-        const sawTimer = await waitForTimerBarToStart(terminalOutput);
-        console.log(
-            `[${id}] @${now()} timer-start end ${sawTimer ? 'SEEN' : 'NOT SEEN'}`,
+        await waitForCommandSettle(
+            terminalOutput,
+            /*appearTimeoutMs=*/ startTimeoutMs ?? 500,
+            pollIntervalMs!,
         );
-
-        if (sawTimer) {
-            console.log(`[${id}] @${now()} timer-finish begin`);
-            await waitForTimerBarToFinish(terminalOutput);
-            console.log(`[${id}] @${now()} timer-finish end`);
-        } else {
-            console.log(`[${id}] @${now()} no timer detected; continuing`);
-        }
     }
 }
 
@@ -324,40 +317,101 @@ function waitForCommandEcho(
     });
 }
 
-/**
- * Examines terminal output for timer bar and waits for one to appear.
- */
-async function waitForTimerBarToStart(container: Element): Promise<boolean> {
-    let lastTermOut = container.lastElementChild;
-    while (lastTermOut != null) {
-        if (hasUnfinishedTimerBar(lastTermOut.textContent ?? '')) {
-            return true;
+async function waitForCommandSettle(
+    container: Element,
+    appearTimeoutMs: number,
+    pollIntervalMs: number,
+) {
+    const tailElems = () => {
+        const last = container.lastElementChild;
+        return [
+            last?.previousElementSibling?.previousElementSibling ?? null,
+            last?.previousElementSibling ?? null,
+            last,
+        ] as const;
+    };
+
+    // Phase A: try to see an unfinished bar appear
+    const sawUnfinished = await new Promise<boolean>((resolve) => {
+        const seen = () =>
+            tailElems().some((el) => isUnfinishedBar(el?.textContent ?? ''));
+        if (seen()) return resolve(true);
+        let done = false;
+        const obs = new MutationObserver(() => {
+            if (done) return;
+            if (seen()) {
+                done = true;
+                obs.disconnect();
+                resolve(true);
+            }
+        });
+        obs.observe(container, {
+            childList: true,
+            subtree: true,
+            characterData: true,
+        });
+        const to = setTimeout(() => {
+            if (!done) {
+                done = true;
+                obs.disconnect();
+                resolve(false);
+            }
+        }, appearTimeoutMs);
+    });
+
+    if (sawUnfinished) {
+        // Phase B: wait until no unfinished bar is visible in the tail
+        for (; ;) {
+            const anyUnfinished = tailElems().some((el) =>
+                isUnfinishedBar(el?.textContent ?? ''),
+            );
+            if (!anyUnfinished) break;
+            await sleep(pollIntervalMs);
         }
-        await nextRender();
-        lastTermOut = container.lastElementChild;
+        return;
     }
 
-    return false;
+    // If we didn’t see an unfinished bar, accept either a finished bar or a post-action line.
+    // Wait until the *next* new line shows up and check it.
+    await new Promise<void>((resolve) => {
+        const initialLast = container.lastElementChild;
+        const obs = new MutationObserver(() => {
+            const last = container.lastElementChild;
+            if (!last || last === initialLast) return;
+            const text = last.textContent ?? '';
+            if (
+                isFinishedBar(text)
+                || isPostActionLine(text)
+                || !isUnfinishedBar(text)
+            ) {
+                obs.disconnect();
+                resolve();
+            }
+        });
+        obs.observe(container, {
+            childList: true,
+            subtree: true,
+            characterData: true,
+        });
+    });
 }
 
-/**
- * Examines terminal output for a timer bar and waits for it to
- * complete.
- */
-async function waitForTimerBarToFinish(container: Element) {
-    let lastTermOut = container.lastElementChild;
-    while (
-        lastTermOut != null
-        && hasUnfinishedTimerBar(lastTermOut.textContent ?? '')
-    ) {
-        await nextRender();
-        lastTermOut = container.lastElementChild;
-    }
+function isFinishedBar(text: string) {
+    return /^\[\|+\]$/.test(text.trim());
 }
 
-function nextRender(): Promise<void> {
-    return new Promise((res) =>
-        globalThis.requestAnimationFrame(() => res.call(null)),
+function isUnfinishedBar(text: string) {
+    return /^\[(?:-+|\|+-+)\]$/.test(text.trim());
+}
+
+function isPostActionLine(text: string) {
+    const t = text.trim().toLowerCase();
+    return (
+        t.includes('hacking skill is not high enough') // failed hack or backdoor
+        || t.includes('Security increased') // hack and grow
+        || t.includes('Security decreased') // weaken
+        || /backdoor/i.test(t) // backdoor
+        || t.includes('SQL port') // analyze
     );
 }
 
