@@ -64,6 +64,10 @@ export async function dispatch(ns: NS, req: DaemonRequest): Promise<unknown> {
     const method = req.method.trim();
     if (!method) throw new Error('Empty method name');
 
+    const ramCost = ns.getFunctionRamCost(method);
+    const currentRam = ns.self().dynamicRamUsage;
+    ns.ramOverride(currentRam + ramCost);
+
     const parts = method.split('.');
     if (parts.length === 0) throw new Error('Malformed method path');
 
