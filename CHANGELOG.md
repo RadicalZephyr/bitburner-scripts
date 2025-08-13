@@ -67,6 +67,7 @@
 - `sendTerminalCommand`, `manualGrow`, and `manualWeaken` automate terminal interactions and wait for progress bars [#226][pr-226].
 - Consolidated custom React hooks into `util/hooks.ts`, adding polling helpers for single-render components [#229][pr-229].
 - Improved `config.ts` helper program: read and write configs with autocomplete and better output formatting [#241][pr-241];
+- `sendTerminalCommand` now queues commands, verifies echoed output, and recognizes timed commands for more reliable terminal automation [#250][pr-250].
 
 ### User interface
 
@@ -125,6 +126,7 @@
 [pr-241]: https://github.com/RadicalZephyr/bitburner-scripts/pull/241
 [pr-245]: https://github.com/RadicalZephyr/bitburner-scripts/pull/245
 [pr-246]: https://github.com/RadicalZephyr/bitburner-scripts/pull/246
+[pr-250]: https://github.com/RadicalZephyr/bitburner-scripts/pull/250
 
 ## v2.1.0
 
