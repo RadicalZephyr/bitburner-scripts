@@ -13,18 +13,10 @@ export interface TerminalOptions {
      * Default: 500 milleseconds
      */
     commandEchoTimeoutMs?: number;
-
-    /**
-     * Whether to wait until completion of the command.
-     *
-     * Default: true
-     */
-    waitForCompletion?: boolean;
 }
 
 const DEFAULT_OPTIONS: TerminalOptions = {
     commandEchoTimeoutMs: 500,
-    waitForCompletion: true,
 };
 
 /**
@@ -34,7 +26,7 @@ const DEFAULT_OPTIONS: TerminalOptions = {
  * try to talk to the terminal:
  *
  * - **Waits for the command to appear in terminal output** (with a timeout).
- * - **Optionally waits for timed commands to complete** by sleeping for the appropriate amount of time.
+ * - **Waits for timed commands to complete** by sleeping for the appropriate amount of time.
  * - **Serializes access** to the terminal via an internal lock so commands from different
  *   callers do not interleave. Calls are queued in the order invoked.
  *
@@ -59,11 +51,10 @@ const DEFAULT_OPTIONS: TerminalOptions = {
  * @param options - Optional behavior controls.
  *
  *   - `commandEchoTimeoutMs` (default: `500`): how long to wait for the command echo to appear in the terminal before rejecting.
- *   - `waitForCompletion` (default: `true`): if `true`, waits for a visible timer bar to disappear.
  *
  * @returns A promise that resolves when:
  *   1) the command echo appears (always), and
- *   2) if `waitForCompletion === true`, any visible timer bar finishes.
+ *   2) if the command is timed, waits until the timed command finishes.
  *   The promise rejects on timeout or if the terminal DOM cannot be found.
  *
  * @throws
@@ -84,10 +75,6 @@ const DEFAULT_OPTIONS: TerminalOptions = {
  * sendTerminalCommand(ns, "run NUKE.exe");
  * sendTerminalCommand(ns, "hack");
  * await sendTerminalCommand(ns, "home"); // awaits completion of all prior queued commands
- *
- * @example
- * // Skip waiting for long actions (just ensure the command was entered)
- * await sendTerminalCommand(ns, "grow", { waitForCompletion: false });
  *
  * @example
  * // Tighter timeout if you expect an immediate echo or want fast failure
@@ -176,7 +163,7 @@ async function sendOneTimedTerminalCommand(
     command: string,
     opts: TerminalOptions,
 ) {
-    const { commandEchoTimeoutMs, waitForCompletion } = opts;
+    const { commandEchoTimeoutMs } = opts;
 
     // Acquire a reference to the terminal text field
     const terminalInput = assertEl(
@@ -206,7 +193,7 @@ async function sendOneTimedTerminalCommand(
     await commandEchoed;
 
     // after echo
-    if (isTimedCommand(command) && waitForCompletion) {
+    if (isTimedCommand(command)) {
         await sleep(
             expectedMillisFor(ns, getCurrentServer(terminalInput), command),
         );
