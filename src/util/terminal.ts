@@ -50,10 +50,10 @@ const DEFAULT_OPTIONS: TerminalOptions = {
  * - This implementation reaches into Bitburner’s UI/React internals. If the game’s
  *   UI changes, you may need to update the DOM lookup or React-prop access.
  *
- * @param command - The exact terminal command to run.
+ * @param command - The exact terminal command to send.
  *
  * You may chain multiple commands with `;` (e.g. `"home ; connect
- * foodnstuff ; run NUKE.exe ; hack"`).
+ * foodnstuff ; ./NUKE.exe ; hack"`).
  *
  * Timed commands (analyze, backdoor, grow, hack, or weaken) will be
  * split into separate commands so the timer can be properly awaited.
@@ -63,7 +63,7 @@ const DEFAULT_OPTIONS: TerminalOptions = {
  *   - `actionBufferMs` (default: `100`, minimum: `10`): additional time to wait to ensure timed commands are complete.
  *   - `commandEchoTimeoutMs` (default: `500`): how long to wait for the command echo to appear in the terminal before rejecting.
  *
- * @returns A promise that resolves with a list of commands that were run when:
+ * @returns A promise that resolves with a list of commands that were sent when:
  *   1) the command echo appears (always), and
  *   2) if the command is timed, waits until the timed command finishes.
  *   The promise rejects on timeout or if the terminal DOM cannot be found. If
@@ -76,15 +76,15 @@ const DEFAULT_OPTIONS: TerminalOptions = {
  *   within `commandEchoTimeoutMs`.
  *
  * @example
- * // Basic usage: run a chained command and wait until any timed part completes
- * await sendTerminalCommand(ns, "home ; connect foodnstuff ; run NUKE.exe ; hack");
+ * // Basic usage: send a chained command and wait until any timed part completes
+ * await sendTerminalCommand(ns, "home ; connect foodnstuff ; ./NUKE.exe ; hack");
  *
  * @example
  * // Fire-and-queue: enqueue several commands WITHOUT awaiting, then await a final call.
  * // The internal lock guarantees these execute in order with no interleaving from other scripts.
  * sendTerminalCommand(ns, "home");
  * sendTerminalCommand(ns, "connect foodnstuff");
- * sendTerminalCommand(ns, "run NUKE.exe");
+ * sendTerminalCommand(ns, "./NUKE.exe");
  * sendTerminalCommand(ns, "hack");
  * await sendTerminalCommand(ns, "home"); // awaits completion of all prior queued commands
  *
@@ -168,13 +168,13 @@ let terminalLock: Promise<unknown> = Promise.resolve();
  * Chains promises so only one terminal command runs at a time.
  */
 function withTerminalLock<T>(fn: () => Promise<T>): Promise<T> {
-    const run = terminalLock.then(fn, fn);
+    const next = terminalLock.then(fn, fn);
     // We only log errors here because we need to avoid throwing so
     // queued calls still get executed even if one fails.
-    terminalLock = run.catch((reason) => {
+    terminalLock = next.catch((reason) => {
         console.error(reason);
     });
-    return run;
+    return next;
 }
 
 type GuardFn<T> = (el: unknown) => el is T;
