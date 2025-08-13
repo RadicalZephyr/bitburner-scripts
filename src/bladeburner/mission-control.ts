@@ -161,7 +161,7 @@ const undercover: Action = { type: 'Operations', name: 'Undercover Operation' };
 const surveyingActions: readonly Action[] = [undercover, investigation, track];
 
 function getAvgSuccessSpread(ns: NS): number {
-    const allOpsWithSpread = allContractsAndOperations(ns)
+    const allOpsWithSpread = allFallibleActions(ns)
         .map((a) => actionChanceSpread(ns, a))
         .filter((s) => s > 0.001);
     if (allOpsWithSpread.length === 0) return 0;
@@ -178,6 +178,16 @@ function actionChanceSpread(ns: NS, action: Action): number {
     return hi - lo;
 }
 
+function allFallibleActions(ns: NS): readonly Action[] {
+    const cAndOActions = allContractsAndOperations(ns);
+
+    const nextBlackOp = ns.bladeburner.getNextBlackOp();
+    if (nextBlackOp != null)
+        return [...cAndOActions, action('Black Operations', nextBlackOp.name)];
+
+    return cAndOActions;
+}
+
 function allContractsAndOperations(ns: NS): readonly Action[] {
     const contractActions = ns.bladeburner
         .getContractNames()
@@ -186,13 +196,7 @@ function allContractsAndOperations(ns: NS): readonly Action[] {
         .getOperationNames()
         .map((n) => action('Operations', n));
 
-    const all = [...contractActions, ...operationActions];
-
-    const nextBlackOp = ns.bladeburner.getNextBlackOp();
-    if (nextBlackOp != null)
-        all.push(action('Black Operations', nextBlackOp.name));
-
-    return all;
+    return [...contractActions, ...operationActions];
 }
 
 function action(
