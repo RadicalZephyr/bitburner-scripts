@@ -90,11 +90,19 @@ function ServerDisplay({ ns, title, servers, theme }: ServerDisplayProps) {
                         <a
                             href="#"
                             onClick={async () => {
-                                await sendTerminalCommand(
-                                    ns,
-                                    `home ; whereis --goto  ${host}`,
-                                );
-                                await sendTerminalCommand(ns, 'backdoor');
+                                try {
+                                    await sendTerminalCommand(
+                                        ns,
+                                        `home ; whereis --goto  ${host}`,
+                                    );
+                                    await sendTerminalCommand(ns, 'backdoor');
+                                } catch (err) {
+                                    ns.tprintf(
+                                        'failed to backdoor %s: %s',
+                                        host,
+                                        String(err),
+                                    );
+                                }
                             }}
                             style={{ color: theme.success }}
                         >
