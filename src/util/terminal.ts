@@ -274,6 +274,9 @@ function expectedMillisFor(ns: NS, currentServer: string, cmd: string): number {
     const verb = m[0].toLowerCase();
 
     // Terminal command times are related to script times, just faster
+    // Factors mirror Terminal action speeds found in Bitburner source
+    // under `src/Terminal/Terminal.ts`, look for usages of
+    // `this.startAction()`.
     switch (verb) {
         case 'hack':
             return ns.getHackTime(currentServer) / 4;
