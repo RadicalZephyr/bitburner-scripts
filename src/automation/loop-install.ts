@@ -11,7 +11,7 @@ import {
     buyReputation,
     getBestFaction,
 } from 'automation/buy-augments';
-import { trainCombat } from 'automation/gym';
+import { trainCombat } from 'automation/workout';
 import { buyPortOpeners } from 'automation/port-openers';
 import { travelTo } from 'automation/travel';
 import { CONFIG } from 'automation/config';
