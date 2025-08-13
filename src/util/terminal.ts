@@ -424,16 +424,20 @@ function expectedMillisFor(ns: NS, currentServer: string, cmd: string): number {
     const m = cmd.trim().split(/\s+/);
     const verb = m[0].toLowerCase();
 
+    // Terminal command times are related to script times, just faster
     switch (verb) {
         case 'hack':
-            return ns.getHackTime(currentServer);
+            return ns.getHackTime(currentServer) / 4;
         case 'grow':
-            return ns.getGrowTime(currentServer);
+            return ns.getGrowTime(currentServer) / 16;
         case 'weaken':
-            return ns.getWeakenTime(currentServer);
-        // analyze/backdoor aren’t exposed; return an overestimate based on weaken time (longest exposed timed command)
+            return ns.getWeakenTime(currentServer) / 16;
+        case 'backdoor':
+            return ns.getHackTime(currentServer) / 4; // backdoor and hack take the same time
+        case 'analyze':
+            return 1000; // analyze is the same for all servers, 1 second
         default:
-            return ns.getWeakenTime(currentServer) * 4;
+            return 0;
     }
 }
 
