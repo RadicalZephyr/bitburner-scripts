@@ -150,6 +150,23 @@ export function tokenize(commands: string): string[] {
         .filter((s) => s.length !== 0);
 }
 
+let terminalLock: Promise<unknown> = Promise.resolve();
+
+/**
+ * Chains promises so only one terminal command runs at a time.
+ */
+function withTerminalLock<T>(fn: () => Promise<T>): Promise<T> {
+    const run = terminalLock.then(fn, fn);
+    // We only log errors here because we need to avoid throwing so
+    // queued calls still get executed even if one fails.
+    terminalLock = run.catch((reason) => {
+        console.error(reason);
+    });
+    return run;
+}
+
+type GuardFn<T> = (el: unknown) => el is T;
+
 async function sendOneTimedTerminalCommand(
     ns: NS,
     command: string,
@@ -201,75 +218,6 @@ async function sendOneTimedTerminalCommand(
         );
         await Promise.race([commandSettled, deadline]);
     }
-}
-
-function expectedMillisFor(ns: NS, currentServer: string, cmd: string): number {
-    const m = cmd.trim().split(/\s+/);
-    const verb = m[0].toLowerCase();
-
-    switch (verb) {
-        case 'hack':
-            return ns.getHackTime(currentServer);
-        case 'grow':
-            return ns.getGrowTime(currentServer);
-        case 'weaken':
-            return ns.getWeakenTime(currentServer);
-        // analyze/backdoor aren’t exposed; return an overestimate based on weaken time (longest exposed timed command)
-        default:
-            return ns.getWeakenTime(currentServer) * 4;
-    }
-}
-
-function getCurrentServer(terminalInput: Element): string {
-    const promptEl = assertEl(
-        terminalInput.previousElementSibling,
-        'Could not find terminal prompt element.',
-    );
-
-    const promptText = promptEl.textContent ?? '';
-
-    const nonHostRE = /[^\w.-]+/g;
-    return promptText.replaceAll(nonHostRE, '');
-}
-
-let terminalLock: Promise<unknown> = Promise.resolve();
-
-/**
- * Chains promises so only one terminal command runs at a time.
- */
-function withTerminalLock<T>(fn: () => Promise<T>): Promise<T> {
-    const run = terminalLock.then(fn, fn);
-    // We only log errors here because we need to avoid throwing so
-    // queued calls still get executed even if one fails.
-    terminalLock = run.catch((reason) => {
-        console.error(reason);
-    });
-    return run;
-}
-
-type GuardFn<T> = (el: unknown) => el is T;
-
-const isElement: GuardFn<Element> = (el: unknown) => {
-    return el instanceof Element;
-};
-
-/**
- * Throws an error if the element is null.
- */
-function assertEl(el: unknown, msg: string): Element;
-function assertEl<T extends Element>(
-    el: unknown,
-    msg: string,
-    guard: GuardFn<T>,
-): T;
-function assertEl<T extends Element>(
-    el: unknown,
-    msg: string,
-    guard?: GuardFn<T>,
-): T {
-    const g = guard ?? (isElement as GuardFn<T>);
-    if (!(el != null && g(el))) throw new Error(msg);
-    return el;
 }
 
 /**
@@ -469,6 +417,58 @@ export function hasUnfinishedTimerBar(haystack: string): boolean {
     const timer_re = /\[(-+|\|+-+)]/;
     return timer_re.test(haystack);
 }
+
+function expectedMillisFor(ns: NS, currentServer: string, cmd: string): number {
+    const m = cmd.trim().split(/\s+/);
+    const verb = m[0].toLowerCase();
+
+    switch (verb) {
+        case 'hack':
+            return ns.getHackTime(currentServer);
+        case 'grow':
+            return ns.getGrowTime(currentServer);
+        case 'weaken':
+            return ns.getWeakenTime(currentServer);
+        // analyze/backdoor aren’t exposed; return an overestimate based on weaken time (longest exposed timed command)
+        default:
+            return ns.getWeakenTime(currentServer) * 4;
+    }
+}
+
+function getCurrentServer(terminalInput: Element): string {
+    const promptEl = assertEl(
+        terminalInput.previousElementSibling,
+        'Could not find terminal prompt element.',
+    );
+
+    const promptText = promptEl.textContent ?? '';
+
+    const nonHostRE = /[^\w.-]+/g;
+    return promptText.replaceAll(nonHostRE, '');
+}
+
+/**
+ * Throws an error if the element is null.
+ */
+function assertEl(el: unknown, msg: string): Element;
+function assertEl<T extends Element>(
+    el: unknown,
+    msg: string,
+    guard: GuardFn<T>,
+): T;
+function assertEl<T extends Element>(
+    el: unknown,
+    msg: string,
+    guard?: GuardFn<T>,
+): T {
+    const g = guard ?? (isElement as GuardFn<T>);
+    if (!(el != null && g(el))) throw new Error(msg);
+    return el;
+}
+
+const isElement: GuardFn<Element> = (el: unknown) => {
+    return el instanceof Element;
+};
 
 /**
  * Send a manual grow command in the terminal.
