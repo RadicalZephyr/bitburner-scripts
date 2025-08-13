@@ -46,6 +46,8 @@ async function workFor(ns: NS, companyName: CompanyName) {
         if (chiefRe.test(myJobs[companyName])) return;
 
         const job = bestJob(ns, companyName);
+        if (!job) throw new Error(`No jobs to work at ${companyName}`);
+
         if (myJobs[companyName] !== job.name) {
             if (!sing.applyToCompany(companyName, job.field)) {
                 ns.print(`WARN: failed to apply to ${companyName}`);

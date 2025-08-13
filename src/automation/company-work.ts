@@ -80,6 +80,17 @@ async function workForCompanies(ns: NS) {
         const target = unfinished[0];
 
         const job = bestJob(ns, target.name);
+
+        // If no job exists, remove this company from our list of
+        // companies to work for.
+        if (!job) {
+            const targetIndex = companies.findIndex(
+                (name) => name === target.name,
+            );
+            companies.splice(targetIndex, 1);
+            continue;
+        }
+
         if (myJobs[target.name] !== job.name) {
             if (!sing.applyToCompany(target.name, job.field)) {
                 ns.print(`WARN: failed to apply to ${target.name}`);
@@ -99,7 +110,7 @@ function unfinishedCompany(c: Company, factions: Set<string>): boolean {
     return !factions.has(c.name) && c.rep < CONFIG.companyRepForFaction;
 }
 
-export function bestJob(ns: NS, c: CompanyName) {
+export function bestJob(ns: NS, c: CompanyName): CompanyPositionInfo | null {
     const sing = ns.singularity;
 
     const favor = sing.getCompanyFavor(c);
@@ -123,7 +134,9 @@ export function bestJob(ns: NS, c: CompanyName) {
         })
         .sort((a, b) => b.reputation - a.reputation);
 
-    return jobs[0];
+    if (jobs.length > 0) return jobs[0];
+
+    return null;
 }
 
 function isHireable(
