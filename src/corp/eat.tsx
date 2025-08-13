@@ -79,7 +79,6 @@ async function searchForNoodles(ns: NS): Promise<EatButton> {
     // Get the key for the React props object, which includes `on*`
     // event handler functions.
     const eatButtonProps = getReactProps(eatButton);
-    if (!eatButtonProps) throw new Error('no props found on eat button');
 
     const className =
         typeof eatButtonProps.className === 'string'
