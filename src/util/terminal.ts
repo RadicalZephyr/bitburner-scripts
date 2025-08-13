@@ -375,15 +375,36 @@ async function waitForCommandSettle(
     });
 }
 
-function isFinishedBar(text: string) {
+/**
+ * Search a string for the presence of a finished ASCII timer progress
+ * bar.
+ *
+ * @param text - text to search
+ * @returns whether the pattern is present or not
+ */
+export function isFinishedBar(text: string) {
     return /^\[\|+\]$/.test(text.trim());
 }
 
-function isUnfinishedBar(text: string) {
+/**
+ * Search a string for the presence of an unfinished ASCII timer
+ * progress bar.
+ *
+ * @param text - text to search
+ * @returns whether the pattern is present or not
+ */
+export function isUnfinishedBar(text: string) {
     return /^\[(?:-+|\|+-+)\]$/.test(text.trim());
 }
 
-function isPostActionLine(text: string) {
+/**
+ * Search a string for the presence of phrases associated with command
+ * completion output.
+ *
+ * @param text - text to search
+ * @returns whether the pattern is present or not
+ */
+export function isPostActionLine(text: string) {
     const t = text.trim().toLowerCase();
     return (
         t.includes('hacking skill is not high enough') // failed hack or backdoor
