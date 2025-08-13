@@ -60,20 +60,39 @@ function isValidRequest(req: DaemonRequest): boolean {
     return req && typeof req.method === 'string' && Array.isArray(req.args);
 }
 
-async function dispatch(ns: NS, req: DaemonRequest): Promise<unknown> {
-    const parts = req.method.split('.');
+export async function dispatch(ns: NS, req: DaemonRequest): Promise<unknown> {
+    const method = req.method.trim();
+    if (!method) throw new Error('Empty method name');
+
+    const parts = method.split('.');
+    if (parts.length === 0) throw new Error('Malformed method path');
+
     let ctx: unknown = ns;
     for (let i = 0; i < parts.length - 1; i++) {
-        if (ctx === undefined || ctx === null)
+        const seg = parts[i];
+        if (ctx == null || !(seg in (ctx as object))) {
             throw new Error(
                 `Unknown namespace: ${parts.slice(0, i + 1).join('.')}`,
             );
-        ctx = (ctx as Record<string, unknown>)[parts[i]];
+        }
+        ctx = (ctx as Record<string, unknown>)[seg];
     }
-    const fnName = parts[parts.length - 1];
-    const fn = (ctx as Record<string, unknown>)[fnName];
-    if (typeof fn !== 'function') {
-        throw new Error(`NS method ${req.method} not found`);
+
+    const fnName = parts[parts.length - 1]!;
+    const candidate = (ctx as Record<string, unknown>)?.[fnName];
+
+    if (typeof candidate !== 'function') {
+        throw new Error(`NS method not found or not callable: ${method}`);
     }
-    return await (fn as (...args: unknown[]) => unknown).apply(ctx, req.args);
+
+    try {
+        return await (candidate as (...a: unknown[]) => unknown).apply(
+            ctx,
+            req.args,
+        );
+    } catch (e) {
+        const msg = e?.message ?? String(e);
+        const args = req.args.map((a) => JSON.stringify(a)).join(', ');
+        throw new Error(`${method}(${args}) failed: ${msg}`);
+    }
 }
