@@ -80,7 +80,7 @@ export class DispatchClient extends Client<
     ): Promise<NSReturn<K>> {
         const req: DaemonRequest<K> = { method: methodName, args };
         const res = (await this.sendMessageReceiveResponse(
-            null,
+            MessageType.Dispatch,
             req,
         )) as DaemonResponse<NSReturn<K>>;
 
