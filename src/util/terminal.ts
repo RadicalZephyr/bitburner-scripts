@@ -390,6 +390,9 @@ export function isFinishedBar(text: string) {
  * Search a string for the presence of an unfinished ASCII timer
  * progress bar.
  *
+ * `[-----------]`
+ * `[||||||-----]`
+ *
  * @param text - text to search
  * @returns whether the pattern is present or not
  */
@@ -400,6 +403,8 @@ export function isUnfinishedBar(text: string) {
 /**
  * Search a string for the presence of phrases associated with command
  * completion output.
+ *
+ * `[|||||||||||]`
  *
  * @param text - text to search
  * @returns whether the pattern is present or not
@@ -413,30 +418,6 @@ export function isPostActionLine(text: string) {
         || /backdoor/i.test(t) // backdoor
         || t.includes('SQL port') // analyze
     );
-}
-
-/**
- * Search a string for the presence of an unfinished ASCII timer
- * progress bar.
- *
- * @remarks
- *
- * Should match against the ASCII progress bar timed terminal commands
- * display:
- *
- * `[-----------]`
- * `[||||||-----]`
- *
- * Finished ASCII progress bars will return false
- *
- * `[|||||||||||]`
- *
- * @param haystack - string to search for timer bar pattern
- * @returns whether the pattern is present or not.
- */
-export function hasUnfinishedTimerBar(haystack: string): boolean {
-    const timer_re = /\[(-+|\|+-+)]/;
-    return timer_re.test(haystack);
 }
 
 function expectedMillisFor(ns: NS, currentServer: string, cmd: string): number {

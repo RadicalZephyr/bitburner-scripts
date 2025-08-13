@@ -1,6 +1,6 @@
 import { describe, expect, test } from '@jest/globals';
 
-import { hasUnfinishedTimerBar, tokenize as tokenize } from 'util/terminal';
+import { isFinishedBar, isUnfinishedBar, tokenize } from 'util/terminal';
 
 describe('splits commands list at semicolons', () => {
     test('untimed commands are split', () => {
@@ -60,21 +60,24 @@ describe('match timer bar patterns', () => {
     test.each(['[-]', '[--]', '[-------------------]'])(
         'unstarted progress bar',
         (pattern) => {
-            expect(hasUnfinishedTimerBar(pattern)).toBeTruthy();
+            expect(isUnfinishedBar(pattern)).toBeTruthy();
+            expect(isFinishedBar(pattern)).toBeFalsy();
         },
     );
 
     test.each(['[|-]', '[|-----]', '[|||---]', '[|||||-]'])(
         'in-progress bar',
         (pattern) => {
-            expect(hasUnfinishedTimerBar(pattern)).toBeTruthy();
+            expect(isUnfinishedBar(pattern)).toBeTruthy();
+            expect(isFinishedBar(pattern)).toBeFalsy();
         },
     );
 
     test.each(['[|]', '[||||]', '[||||||||||||||||||]'])(
         'finished progress bar',
         (pattern) => {
-            expect(hasUnfinishedTimerBar(pattern)).toBeTruthy();
+            expect(isUnfinishedBar(pattern)).toBeFalsy();
+            expect(isFinishedBar(pattern)).toBeTruthy();
         },
     );
 
@@ -87,6 +90,7 @@ describe('match timer bar patterns', () => {
         '[-----|]',
         '[-|||||]',
     ])("doesn't match other similar patterns", (pattern) => {
-        expect(hasUnfinishedTimerBar(pattern)).toBeFalsy();
+        expect(isUnfinishedBar(pattern)).toBeFalsy();
+        expect(isFinishedBar(pattern)).toBeFalsy();
     });
 });
