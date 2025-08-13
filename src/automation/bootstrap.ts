@@ -23,6 +23,7 @@ export async function main(ns: NS) {
     const services = [
         '/automation/join-factions.js',
         '/automation/backdoor-servers.js',
+        '/automation/purchase-crackers.js',
         '/automation/upgrade-ram.js',
     ];
 
