@@ -57,32 +57,36 @@ describe('splits commands list at semicolons', () => {
 });
 
 describe('match timer bar patterns', () => {
-    test('unstarted progress bar', () => {
-        expect(hasUnfinishedTimerBar('[-]')).toBeTruthy();
-        expect(hasUnfinishedTimerBar('[--]')).toBeTruthy();
-        expect(hasUnfinishedTimerBar('[-------------------]')).toBeTruthy();
-    });
+    test.each(['[-]', '[--]', '[-------------------]'])(
+        'unstarted progress bar',
+        (pattern) => {
+            expect(hasUnfinishedTimerBar(pattern)).toBeTruthy();
+        },
+    );
 
-    test('in-progress bar', () => {
-        expect(hasUnfinishedTimerBar('[|-]')).toBeTruthy();
-        expect(hasUnfinishedTimerBar('[|----------------------]')).toBeTruthy();
-        expect(hasUnfinishedTimerBar('[|||||||||||------------]')).toBeTruthy();
-        expect(hasUnfinishedTimerBar('[||||||||||||||||||||||-]')).toBeTruthy();
-    });
+    test.each(['[|-]', '[|-----]', '[|||---]', '[|||||-]'])(
+        'in-progress bar',
+        (pattern) => {
+            expect(hasUnfinishedTimerBar(pattern)).toBeTruthy();
+        },
+    );
 
-    test('finished progress bar', () => {
-        expect(hasUnfinishedTimerBar('[|]')).toBeFalsy();
-        expect(hasUnfinishedTimerBar('[||||]')).toBeFalsy();
-        expect(hasUnfinishedTimerBar('[||||||||||||||||||]')).toBeFalsy();
-    });
+    test.each(['[|]', '[||||]', '[||||||||||||||||||]'])(
+        'finished progress bar',
+        (pattern) => {
+            expect(hasUnfinishedTimerBar(pattern)).toBeTruthy();
+        },
+    );
 
-    test("doesn't match other similar patterns", () => {
-        expect(hasUnfinishedTimerBar('[]')).toBeFalsy();
-        expect(hasUnfinishedTimerBar('[abc]')).toBeFalsy();
-        expect(hasUnfinishedTimerBar('[123]')).toBeFalsy();
-        expect(hasUnfinishedTimerBar('[-|]')).toBeFalsy();
-        expect(hasUnfinishedTimerBar('[--||]')).toBeFalsy();
-        expect(hasUnfinishedTimerBar('[-----|]')).toBeFalsy();
-        expect(hasUnfinishedTimerBar('[-|||||]')).toBeFalsy();
+    test.each([
+        '[]',
+        '[abc]',
+        '[123]',
+        '[-|]',
+        '[--||]',
+        '[-----|]',
+        '[-|||||]',
+    ])("doesn't match other similar patterns", (pattern) => {
+        expect(hasUnfinishedTimerBar(pattern)).toBeFalsy();
     });
 });
