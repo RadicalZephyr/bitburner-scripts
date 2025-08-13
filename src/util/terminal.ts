@@ -17,7 +17,7 @@ export interface TerminalOptions {
     /**
      * How long to wait for the command to be sent.
      *
-     * Default: 1 second
+     * Default: 500 milleseconds
      */
     commandEchoTimeoutMs?: number;
 
@@ -25,7 +25,7 @@ export interface TerminalOptions {
      * How long to wait for the timer bar to start. This option has no
      * effect if `waitForCompletion` is false.
      *
-     * Default: 100 milliseconds
+     * Default: 500 milliseconds
      */
     startTimeoutMs?: number;
 
@@ -42,8 +42,8 @@ export interface TerminalOptions {
 
 const DEFAULT_OPTIONS: TerminalOptions = {
     waitForCompletion: true,
-    commandEchoTimeoutMs: 1000,
-    startTimeoutMs: 1000,
+    commandEchoTimeoutMs: 500,
+    startTimeoutMs: 500,
     pollIntervalMs: 100,
 };
 
@@ -80,10 +80,9 @@ const DEFAULT_OPTIONS: TerminalOptions = {
  * @param options - Optional behavior controls.
  *
  *   - `waitForCompletion` (default: `true`): if `true`, waits for a visible timer bar to disappear.
- *   - `commandEchoTimeoutMs` (default: `1000`): how long to wait for the command echo to appear
- *      in the terminal before rejecting.
- *   - `pollIntervalMs` (default: `100`): interval used when watching the timer bar (only when
- *      `waitForCompletion` is `true`).
+ *   - `commandEchoTimeoutMs` (default: `500`): how long to wait for the command echo to appear in the terminal before rejecting.
+ *   - `startTimeoutMs` (default: `500`): how long to wait for the timer bar to appear (only when `waitForCompletion` is `true`).
+ *   - `pollIntervalMs` (default: `100`): interval used when watching the timer bar (only when `waitForCompletion` is `true`).
  *
  * @returns A promise that resolves when:
  *   1) the command echo appears (always), and
@@ -206,7 +205,7 @@ async function sendOneTimedTerminalCommand(
     if (isTimedCommand(command) && waitForCompletion) {
         const commandSettled = waitForCommandSettle(
             terminalOutput,
-            /*appearTimeoutMs=*/ startTimeoutMs ?? 500,
+            startTimeoutMs,
             pollIntervalMs!,
         );
         const deadline = sleep(
