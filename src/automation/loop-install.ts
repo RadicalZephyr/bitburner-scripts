@@ -12,7 +12,7 @@ import {
     getBestFaction,
 } from 'automation/buy-augments';
 import { trainCombat } from 'automation/workout';
-import { buyPortOpeners } from 'automation/port-openers';
+import { buyPortOpeners } from 'automation/purchase-crackers';
 import { travelTo } from 'automation/travel';
 import { CONFIG } from 'automation/config';
 
