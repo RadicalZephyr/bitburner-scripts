@@ -21,7 +21,13 @@ function watch(src, dist) {
                     await unlink(f);
                     console.log(`Removed "${f}"`);
                 } catch (err) {
-                    console.log(`Removed file "${f}" does not exist in dist`);
+                    if (err?.code === 'ENOENT') {
+                        console.log(
+                            `Removed file "${f}" does not exist in dist`,
+                        );
+                    } else {
+                        console.error(`Error removing "${f}":`, err);
+                    }
                 }
             }
         });
