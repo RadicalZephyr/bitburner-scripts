@@ -14,20 +14,20 @@ type Join<L extends string, R extends string> = `${L}.${R}`;
 // All dotted paths where the leaf is a function
 type FnPaths<T> = {
     [K in keyof T & string]: T[K] extends Fn
-    ? K
-    : T[K] extends object
-    ? Join<K, FnPaths<T[K]>>
-    : never;
+        ? K
+        : T[K] extends object
+          ? Join<K, FnPaths<T[K]>>
+          : never;
 }[keyof T & string];
 
 // Get the type at a dotted path
 type PathValue<T, P extends string> = P extends `${infer K}.${infer Rest}`
     ? K extends keyof T
-    ? PathValue<T[K], Rest>
-    : never
+        ? PathValue<T[K], Rest>
+        : never
     : P extends keyof T
-    ? T[P]
-    : never;
+      ? T[P]
+      : never;
 
 type ExtractFn<T> = T extends Fn ? T : never;
 
