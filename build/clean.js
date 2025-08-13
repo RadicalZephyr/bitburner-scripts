@@ -23,7 +23,7 @@ function watch(src, dist) {
                 } catch (err) {
                     if (err?.code === 'ENOENT') {
                         console.log(
-                            `Removed file "${f}" does not exist in dist`,
+                            `File "${f}" not found in dist; nothing to remove.`,
                         );
                     } else {
                         console.error(`Error removing "${f}":`, err);
