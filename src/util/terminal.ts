@@ -360,11 +360,17 @@ async function waitForCommandSettle(
         const seen = () =>
             tailElems().some((el) => isUnfinishedBar(el?.textContent ?? ''));
         if (seen()) return resolve(true);
+
+        let deadline: number | null = null;
         let done = false;
         const obs = new MutationObserver(() => {
             if (done) return;
             if (seen()) {
                 done = true;
+                if (deadline != null) {
+                    clearTimeout(deadline);
+                    deadline = null;
+                }
                 obs.disconnect();
                 resolve(true);
             }
@@ -374,7 +380,7 @@ async function waitForCommandSettle(
             subtree: true,
             characterData: true,
         });
-        const to = setTimeout(() => {
+        deadline = setTimeout(() => {
             if (!done) {
                 done = true;
                 obs.disconnect();
@@ -385,7 +391,7 @@ async function waitForCommandSettle(
 
     if (sawUnfinished) {
         // Phase B: wait until no unfinished bar is visible in the tail
-        for (; ;) {
+        while (true) {
             const anyUnfinished = tailElems().some((el) =>
                 isUnfinishedBar(el?.textContent ?? ''),
             );
