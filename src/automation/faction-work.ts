@@ -1,17 +1,7 @@
 import type { AutocompleteData, FactionWorkType, NS } from 'netscript';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
-import { Toggle, FocusToggle } from 'util/focus';
-import {
-    KARMA_HEIGHT,
-    STATUS_WINDOW_HEIGHT,
-    STATUS_WINDOW_WIDTH,
-} from 'util/ui';
-
-const FLAGS = [
-    ['focus', false],
-    ['help', false],
-] as const satisfies FlagsSchema;
+const FLAGS = [['help', false]] as const satisfies FlagsSchema;
 
 export function autocomplete(data: AutocompleteData): string[] {
     data.flags(FLAGS);
@@ -20,7 +10,7 @@ export function autocomplete(data: AutocompleteData): string[] {
 export async function main(ns: NS) {
     const flags = await parseFlags(ns, FLAGS);
 
-    if (flags.help || typeof flags.focus !== 'boolean') {
+    if (flags.help) {
         ns.print(`
 USAGE: run ${ns.getScriptName()}
 
@@ -32,22 +22,7 @@ OPTIONS
         return;
     }
 
-    ns.disableLog('ALL');
-    ns.clearLog();
-
-    ns.ui.openTail();
-    ns.ui.resizeTail(STATUS_WINDOW_WIDTH, KARMA_HEIGHT);
-    const [ww] = ns.ui.windowSize();
-    ns.ui.moveTail(
-        ww - STATUS_WINDOW_WIDTH,
-        STATUS_WINDOW_HEIGHT + KARMA_HEIGHT,
-    );
-
-    const focus = new Toggle(ns, flags.focus as boolean);
-    ns.printRaw(<FocusToggle ns={ns} focus={focus} />);
-    ns.ui.renderTail();
-
-    await workForFactions(ns, focus);
+    await workForFactions(ns);
     ns.tprint('finished faction work');
 }
 
@@ -110,7 +85,7 @@ function uniqueAug(ns: NS, factionName: string, aug: string): boolean {
     return otherFactions.size === 0;
 }
 
-async function workForFactions(ns: NS, focus: Toggle) {
+async function workForFactions(ns: NS) {
     const sing = ns.singularity;
 
     while (true) {
@@ -126,7 +101,11 @@ async function workForFactions(ns: NS, focus: Toggle) {
         const workType = getBestWorkTypeForFaction(ns, lowestRepFaction.name);
 
         if (
-            !sing.workForFaction(lowestRepFaction.name, workType, focus.value)
+            !sing.workForFaction(
+                lowestRepFaction.name,
+                workType,
+                ns.singularity.isFocused(),
+            )
         ) {
             ns.print(
                 `WARN: could not start working ${workType} for ${lowestRepFaction.name}`,
