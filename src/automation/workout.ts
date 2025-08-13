@@ -11,16 +11,8 @@ import { FlagsSchema, parseFlags } from 'util/flags';
 import { CONFIG } from 'automation/config';
 import { travelToCityForLocation } from 'automation/travel';
 
-import { Toggle, FocusToggle } from 'util/focus';
-import {
-    KARMA_HEIGHT,
-    STATUS_WINDOW_HEIGHT,
-    STATUS_WINDOW_WIDTH,
-} from 'util/ui';
-
 const FLAGS = [
     ['gym', ''],
-    ['focus', false],
     ['help', false],
 ] as const satisfies FlagsSchema;
 
@@ -74,22 +66,7 @@ CONFIGURATION
         return;
     }
 
-    ns.disableLog('ALL');
-    ns.clearLog();
-
-    ns.ui.openTail();
-    ns.ui.resizeTail(STATUS_WINDOW_WIDTH, KARMA_HEIGHT);
-    const [ww] = ns.ui.windowSize();
-    ns.ui.moveTail(
-        ww - STATUS_WINDOW_WIDTH,
-        STATUS_WINDOW_HEIGHT + KARMA_HEIGHT,
-    );
-
-    const focus = new Toggle(ns, flags.focus);
-    ns.printRaw(<FocusToggle ns={ns} focus={focus} />);
-    ns.ui.renderTail();
-
-    await trainCombat(ns, gym, targetLevel, focus);
+    await trainCombat(ns, gym, targetLevel);
 }
 
 /**
@@ -102,9 +79,7 @@ export async function trainCombat(
     ns: NS,
     gymLocation: `${GymLocationName}`,
     targetLevel: number,
-    focus?: Toggle,
 ) {
-    focus ??= new Toggle(ns, false);
     const GymType = ns.enums.GymType;
 
     travelToCityForLocation(ns, gymLocation as LocationName);
@@ -129,7 +104,12 @@ export async function trainCombat(
         skillsToTrain.sort((a, b) => a.level - b.level);
 
         const skill = skillsToTrain[0];
-        gymWorkout(ns, gymLocation, GymType[skill.name], focus.value);
+        gymWorkout(
+            ns,
+            gymLocation,
+            GymType[skill.name],
+            ns.singularity.isFocused(),
+        );
 
         await ns.asleep(CONFIG.combatTrainTimeMs);
     }
