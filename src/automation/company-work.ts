@@ -133,7 +133,7 @@ function isHireable(
 ) {
     if (companyRep < info.requiredReputation) return false;
     for (const skill in player.skills) {
-        if (player[skill] < info.requiredSkills[skill]) return false;
+        if (player.skills[skill] < info.requiredSkills[skill]) return false;
     }
     return true;
 }
