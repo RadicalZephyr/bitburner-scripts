@@ -208,9 +208,12 @@ function action(
 
 async function tryBlackOp(ns: NS): Promise<boolean> {
     const currentRank = ns.bladeburner.getRank();
+    const blackOp = ns.bladeburner.getNextBlackOp();
+    if (!blackOp) return false;
+
     const nextBlackOp = {
         type: 'Black Operations',
-        ...ns.bladeburner.getNextBlackOp(),
+        ...blackOp,
     } satisfies Action;
     if (
         currentRank >= nextBlackOp.rank
