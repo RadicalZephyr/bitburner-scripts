@@ -128,7 +128,7 @@ export function sendTerminalCommand(
     // Enforce minimum poll interval
     o.pollIntervalMs = Math.max(o.pollIntervalMs, 10);
 
-    const sequenceOfCommands = tokenize(command);
+    const sequenceOfCommands = splitAtTimedCommands(command);
     let p: Promise<void> = Promise.resolve();
     for (const c of sequenceOfCommands) {
         p = withTerminalLock(
@@ -136,6 +136,35 @@ export function sendTerminalCommand(
         );
     }
     return p;
+}
+
+/**
+ * Split a command string at known timed commands.
+ *
+ * @param commands - String containing terminal commands, possibly chained with `;`
+ * @returns A list of strings of commands where timed commands have been separated from other commands.
+ */
+export function splitAtTimedCommands(commands: string): string[] {
+    const finalCommands = [];
+    const commandTokens = tokenize(commands);
+
+    let currentCommand = '';
+    let sep = '';
+    for (const t of commandTokens) {
+        if (isTimedCommand(t)) {
+            if (currentCommand !== '') finalCommands.push(currentCommand);
+            finalCommands.push(t);
+            currentCommand = '';
+            sep = '';
+        } else {
+            currentCommand += sep + t;
+            sep = ' ; ';
+        }
+    }
+
+    if (currentCommand !== '') finalCommands.push(currentCommand);
+
+    return finalCommands;
 }
 
 function isTimedCommand(command: string): boolean {
