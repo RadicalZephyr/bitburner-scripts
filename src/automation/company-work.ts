@@ -9,17 +9,7 @@ import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { CONFIG } from 'automation/config';
 
-import { Toggle, FocusToggle } from 'util/focus';
-import {
-    KARMA_HEIGHT,
-    STATUS_WINDOW_HEIGHT,
-    STATUS_WINDOW_WIDTH,
-} from 'util/ui';
-
-const FLAGS = [
-    ['focus', false],
-    ['help', false],
-] as const satisfies FlagsSchema;
+const FLAGS = [['help', false]] as const satisfies FlagsSchema;
 
 export function autocomplete(data: AutocompleteData): string[] {
     data.flags(FLAGS);
@@ -44,22 +34,7 @@ CONFIGURATION
         return;
     }
 
-    ns.disableLog('ALL');
-    ns.clearLog();
-
-    ns.ui.openTail();
-    ns.ui.resizeTail(STATUS_WINDOW_WIDTH, KARMA_HEIGHT);
-    const [ww] = ns.ui.windowSize();
-    ns.ui.moveTail(
-        ww - STATUS_WINDOW_WIDTH,
-        STATUS_WINDOW_HEIGHT + KARMA_HEIGHT,
-    );
-
-    const focus = new Toggle(ns, flags.focus as boolean);
-    ns.printRaw(<FocusToggle ns={ns} focus={focus} />);
-    ns.ui.renderTail();
-
-    await workForCompanies(ns, focus);
+    await workForCompanies(ns);
     ns.tprint('finished company work');
 }
 
@@ -73,7 +48,7 @@ class Company {
     }
 }
 
-async function workForCompanies(ns: NS, focus: Toggle) {
+async function workForCompanies(ns: NS) {
     const cmpEnum = ns.enums.CompanyName;
     const companies: CompanyName[] = [
         cmpEnum.BachmanAndAssociates,
@@ -111,7 +86,7 @@ async function workForCompanies(ns: NS, focus: Toggle) {
             }
         }
 
-        if (!sing.workForCompany(target.name, focus.value)) {
+        if (!sing.workForCompany(target.name, ns.singularity.isFocused())) {
             ns.print(`WARN: failed to start work for ${target.name}`);
             return;
         }
