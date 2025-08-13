@@ -37,6 +37,7 @@ CONFIGURATION
   BLADE_maxChaos                Maximum allowed city chaos before we try to lower it
   BLADE_maxSuccessChanceSpread  Maxmimum allowed success chance spread before we need to survery population
   BLADE_minBlackOpSuccess       Minimum success chance to attempt next Black Op
+  BLADE_minSuccessSpread        Minimum success chance used to estimate population accuracy
   BLADE_minHealthPercent        Minimum percentage of health before we try to heal
   BLADE_minSROSuccess           Minimum success chance to attempt stealth retirement operations
   BLADE_minSurveySuccess        Minimum success chance to attempt surveying actions
@@ -163,7 +164,7 @@ const surveyingActions: readonly Action[] = [undercover, investigation, track];
 function getAvgSuccessSpread(ns: NS): number {
     const allOpsWithSpread = allFallibleActions(ns)
         .map((a) => actionChanceSpread(ns, a))
-        .filter((s) => s > 0.001);
+        .filter((s) => s > CONFIG.minSuccessSpread);
     if (allOpsWithSpread.length === 0) return 0;
 
     const spreadSum = allOpsWithSpread.reduce((sum, spread) => sum + spread, 0);

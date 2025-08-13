@@ -7,6 +7,7 @@ const entries = [
     ['maxChaos', 1.0],
     ['maxSuccessChanceSpread', 0.1],
     ['minBlackOpSuccess', 0.9],
+    ['minSuccessSpread', 0.001],
     ['minHealthPercent', 0.8],
     ['minSROSuccess', 0.8],
     ['minSurveySuccess', 0.75],
