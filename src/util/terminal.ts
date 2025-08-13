@@ -8,6 +8,15 @@ import { sleep } from 'util/time';
  */
 export interface TerminalOptions {
     /**
+     * Additional time to sleep for timed commands to ensure that the
+     * command has finished.
+     *
+     * Default: 100 milliseconds
+     * Minimum value: 10 milliseconds
+     */
+    actionBufferMs?: number;
+
+    /**
      * How long to wait for the command to be sent.
      *
      * Default: 500 milliseconds
@@ -16,6 +25,7 @@ export interface TerminalOptions {
 }
 
 const DEFAULT_OPTIONS: TerminalOptions = {
+    actionBufferMs: 100,
     commandEchoTimeoutMs: 500,
 };
 
@@ -50,6 +60,7 @@ const DEFAULT_OPTIONS: TerminalOptions = {
  *
  * @param options - Optional behavior controls.
  *
+ *   - `actionBufferMs` (default: `100`, minimum: `10`): additional time to wait to ensure timed commands are complete.
  *   - `commandEchoTimeoutMs` (default: `500`): how long to wait for the command echo to appear in the terminal before rejecting.
  *
  * @returns A promise that resolves when:
@@ -79,6 +90,13 @@ const DEFAULT_OPTIONS: TerminalOptions = {
  * @example
  * // Tighter timeout if you expect an immediate echo or want fast failure
  * await sendTerminalCommand(ns, "home", { commandEchoTimeoutMs: 200 });
+ *
+ * @example
+ * // Tighter action buffer if you want faster command throughput
+ * sendTerminalCommand(ns, 'hack', { actionBufferMs: 10 })
+ * sendTerminalCommand(ns, 'grow', { actionBufferMs: 10 })
+ * sendTerminalCommand(ns, 'weaken', { actionBufferMs: 10 })
+ * await sendTerminalCommand(ns, 'weaken', { actionBufferMs: 10 })
  */
 export function sendTerminalCommand(
     ns: NS,
@@ -89,6 +107,8 @@ export function sendTerminalCommand(
         ...DEFAULT_OPTIONS,
         ...options,
     };
+    // Enforce minimum action buffer time
+    o.actionBufferMs = Math.max(10, o.actionBufferMs);
 
     const sequenceOfCommands = splitAtTimedCommands(command);
     let p: Promise<void> = Promise.resolve();
@@ -163,7 +183,7 @@ async function sendOneTimedTerminalCommand(
     command: string,
     opts: TerminalOptions,
 ) {
-    const { commandEchoTimeoutMs } = opts;
+    const { actionBufferMs, commandEchoTimeoutMs } = opts;
 
     // Acquire a reference to the terminal text field
     const terminalInput = assertEl(
@@ -194,9 +214,9 @@ async function sendOneTimedTerminalCommand(
 
     // after echo
     if (isTimedCommand(command)) {
-        await sleep(
-            expectedMillisFor(ns, getCurrentServer(terminalInput), command),
-        );
+        const server = getCurrentServer(terminalInput);
+        const ms = expectedMillisFor(ns, server, command);
+        await sleep(ms + actionBufferMs);
     }
 }
 
