@@ -1,11 +1,6 @@
 import { describe, expect, test } from '@jest/globals';
 
-import {
-    isFinishedBar,
-    isUnfinishedBar,
-    splitAtTimedCommands,
-    tokenize,
-} from 'util/terminal';
+import { splitAtTimedCommands, tokenize } from 'util/terminal';
 
 describe('tokenize splits commands list at semicolons', () => {
     test('untimed commands are split', () => {
@@ -109,44 +104,5 @@ describe('splitAtTimedCommands', () => {
         expect(splitAtTimedCommands('connect foo ; HACK ; home')).toStrictEqual(
             ['connect foo', 'HACK', 'home'],
         );
-    });
-});
-
-describe('match timer bar patterns', () => {
-    test.each(['[-]', '[--]', '[-------------------]'])(
-        'unstarted progress bar',
-        (pattern) => {
-            expect(isUnfinishedBar(pattern)).toBeTruthy();
-            expect(isFinishedBar(pattern)).toBeFalsy();
-        },
-    );
-
-    test.each(['[|-]', '[|-----]', '[|||---]', '[|||||-]'])(
-        'in-progress bar',
-        (pattern) => {
-            expect(isUnfinishedBar(pattern)).toBeTruthy();
-            expect(isFinishedBar(pattern)).toBeFalsy();
-        },
-    );
-
-    test.each(['[|]', '[||||]', '[||||||||||||||||||]'])(
-        'finished progress bar',
-        (pattern) => {
-            expect(isUnfinishedBar(pattern)).toBeFalsy();
-            expect(isFinishedBar(pattern)).toBeTruthy();
-        },
-    );
-
-    test.each([
-        '[]',
-        '[abc]',
-        '[123]',
-        '[-|]',
-        '[--||]',
-        '[-----|]',
-        '[-|||||]',
-    ])("doesn't match other similar patterns", (pattern) => {
-        expect(isUnfinishedBar(pattern)).toBeFalsy();
-        expect(isFinishedBar(pattern)).toBeFalsy();
     });
 });

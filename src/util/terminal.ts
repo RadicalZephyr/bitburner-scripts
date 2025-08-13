@@ -20,31 +20,11 @@ export interface TerminalOptions {
      * Default: 500 milleseconds
      */
     commandEchoTimeoutMs?: number;
-
-    /**
-     * How long to wait for the timer bar to start. This option has no
-     * effect if `waitForCompletion` is false.
-     *
-     * Default: 500 milliseconds
-     */
-    startTimeoutMs?: number;
-
-    /**
-     * Interval to check the last terminal output at for a timer bar
-     * to determine when command has finished. This option has no
-     * effect if `waitForCompletion` is false.
-     *
-     * Default: 100 milliseconds
-     * Minimum: 10 milliseconds
-     */
-    pollIntervalMs?: number;
 }
 
 const DEFAULT_OPTIONS: TerminalOptions = {
-    waitForCompletion: true,
     commandEchoTimeoutMs: 500,
-    startTimeoutMs: 500,
-    pollIntervalMs: 100,
+    waitForCompletion: true,
 };
 
 /**
@@ -54,14 +34,13 @@ const DEFAULT_OPTIONS: TerminalOptions = {
  * try to talk to the terminal:
  *
  * - **Waits for the command to appear in terminal output** (with a timeout).
- * - **Optionally waits for timed commands to complete** by watching the ASCII timer bar.
+ * - **Optionally waits for timed commands to complete** by sleeping for the appropriate amount of time.
  * - **Serializes access** to the terminal via an internal lock so commands from different
  *   callers do not interleave. Calls are queued in the order invoked.
  *
  * @remarks
- * - The function uses DOM observation to detect when the command has been echoed
- *   and (optionally) when a timed operation completes.
- * - “Timed” detection relies on the terminal’s ASCII progress bar (e.g. `[||||---]`).
+ * - The function uses DOM observation to detect when the command has been echoed.
+ * - “Timed” commands end detection is calculated according to game internals based on targeted server.
  *   Commands that do not produce a timer bar will resolve immediately after echo.
  * - Calls are **serialized process-wide** (tab-wide) by an internal promise queue.
  *   You can “enqueue” several commands by calling this function without awaiting them,
@@ -79,10 +58,8 @@ const DEFAULT_OPTIONS: TerminalOptions = {
  *
  * @param options - Optional behavior controls.
  *
- *   - `waitForCompletion` (default: `true`): if `true`, waits for a visible timer bar to disappear.
  *   - `commandEchoTimeoutMs` (default: `500`): how long to wait for the command echo to appear in the terminal before rejecting.
- *   - `startTimeoutMs` (default: `500`): how long to wait for the timer bar to appear (only when `waitForCompletion` is `true`).
- *   - `pollIntervalMs` (default: `100`): interval used when watching the timer bar (only when `waitForCompletion` is `true`).
+ *   - `waitForCompletion` (default: `true`): if `true`, waits for a visible timer bar to disappear.
  *
  * @returns A promise that resolves when:
  *   1) the command echo appears (always), and
@@ -125,8 +102,6 @@ export function sendTerminalCommand(
         ...DEFAULT_OPTIONS,
         ...options,
     };
-    // Enforce minimum poll interval
-    o.pollIntervalMs = Math.max(o.pollIntervalMs, 10);
 
     const sequenceOfCommands = splitAtTimedCommands(command);
     let p: Promise<void> = Promise.resolve();
@@ -201,12 +176,7 @@ async function sendOneTimedTerminalCommand(
     command: string,
     opts: TerminalOptions,
 ) {
-    const {
-        waitForCompletion,
-        commandEchoTimeoutMs,
-        startTimeoutMs,
-        pollIntervalMs,
-    } = opts;
+    const { commandEchoTimeoutMs, waitForCompletion } = opts;
 
     // Acquire a reference to the terminal text field
     const terminalInput = assertEl(
@@ -237,15 +207,9 @@ async function sendOneTimedTerminalCommand(
 
     // after echo
     if (isTimedCommand(command) && waitForCompletion) {
-        const commandSettled = waitForCommandSettle(
-            terminalOutput,
-            startTimeoutMs,
-            pollIntervalMs!,
-        );
-        const deadline = sleep(
+        await sleep(
             expectedMillisFor(ns, getCurrentServer(terminalInput), command),
         );
-        await Promise.race([commandSettled, deadline]);
     }
 }
 
@@ -316,137 +280,6 @@ function waitForCommandEcho(
             characterData: true,
         });
     });
-}
-
-async function waitForCommandSettle(
-    container: Element,
-    appearTimeoutMs: number,
-    pollIntervalMs: number,
-) {
-    const tailElems = () => {
-        const last = container.lastElementChild;
-        return [
-            last?.previousElementSibling?.previousElementSibling ?? null,
-            last?.previousElementSibling ?? null,
-            last,
-        ] as const;
-    };
-
-    // Phase A: try to see an unfinished bar appear
-    const sawUnfinished = await new Promise<boolean>((resolve) => {
-        const seen = () =>
-            tailElems().some((el) => isUnfinishedBar(el?.textContent ?? ''));
-        if (seen()) return resolve(true);
-
-        let deadline: number | null = null;
-        let done = false;
-        const obs = new MutationObserver(() => {
-            if (done) return;
-            if (seen()) {
-                done = true;
-                if (deadline != null) {
-                    clearTimeout(deadline);
-                    deadline = null;
-                }
-                obs.disconnect();
-                resolve(true);
-            }
-        });
-        obs.observe(container, {
-            childList: true,
-            subtree: true,
-            characterData: true,
-        });
-        deadline = setTimeout(() => {
-            if (!done) {
-                done = true;
-                obs.disconnect();
-                // Check one last time as deadline expires
-                resolve(seen());
-            }
-        }, appearTimeoutMs);
-    });
-
-    if (sawUnfinished) {
-        // Phase B: wait until no unfinished bar is visible in the tail
-        while (true) {
-            const anyUnfinished = tailElems().some((el) =>
-                isUnfinishedBar(el?.textContent ?? ''),
-            );
-            if (!anyUnfinished) break;
-            await sleep(pollIntervalMs);
-        }
-        return;
-    }
-
-    // If we didn’t see an unfinished bar, accept either a finished bar or a post-action line.
-    // Wait until the *next* new line shows up and check it.
-    await new Promise<void>((resolve) => {
-        const initialLast = container.lastElementChild;
-        const obs = new MutationObserver(() => {
-            const last = container.lastElementChild;
-            if (!last || last === initialLast) return;
-            const text = last.textContent ?? '';
-            if (
-                isFinishedBar(text)
-                || isPostActionLine(text)
-                || !isUnfinishedBar(text)
-            ) {
-                obs.disconnect();
-                resolve();
-            }
-        });
-        obs.observe(container, {
-            childList: true,
-            subtree: true,
-            characterData: true,
-        });
-    });
-}
-
-/**
- * Search a string for the presence of a finished ASCII timer progress
- * bar.
- *
- * @param text - text to search
- * @returns whether the pattern is present or not
- */
-export function isFinishedBar(text: string) {
-    return /^\[\|+\]$/.test(text.trim());
-}
-
-/**
- * Search a string for the presence of an unfinished ASCII timer
- * progress bar.
- *
- * `[-----------]`
- * `[||||||-----]`
- *
- * @param text - text to search
- * @returns whether the pattern is present or not
- */
-export function isUnfinishedBar(text: string) {
-    return /^\[(?:-+|\|+-+)\]$/.test(text.trim());
-}
-
-/**
- * Search a string for the presence of phrases associated with command
- * completion output.
- *
- * `[|||||||||||]`
- *
- * @param text - text to search
- * @returns whether the pattern is present or not
- */
-export function isPostActionLine(text: string) {
-    const t = text.trim().toLowerCase();
-    return (
-        t.includes('hacking skill is not high enough') // failed hack or backdoor
-        || t.includes('Security increased') // hack and grow
-        || t.includes('Security decreased') // weaken
-        || /backdoor/i.test(t) // backdoor
-        || t.includes('SQL port') // analyze
-    );
 }
 
 function expectedMillisFor(ns: NS, currentServer: string, cmd: string): number {
