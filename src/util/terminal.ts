@@ -384,7 +384,8 @@ async function waitForCommandSettle(
             if (!done) {
                 done = true;
                 obs.disconnect();
-                resolve(false);
+                // Check one last time as deadline expires
+                resolve(seen());
             }
         }, appearTimeoutMs);
     });
