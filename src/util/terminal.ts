@@ -267,7 +267,7 @@ function waitForCommandEcho(
             const last = container.lastElementChild;
             if (!last) return;
 
-            const tail = [last];
+            const tail = [last.previousElementSibling, last];
             for (const el of tail) {
                 const contents = el?.textContent ?? '';
                 if (contents.trim().endsWith(command.trim())) {
