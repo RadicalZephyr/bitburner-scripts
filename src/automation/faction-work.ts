@@ -14,7 +14,8 @@ export async function main(ns: NS) {
         ns.print(`
 USAGE: run ${ns.getScriptName()}
 
-Continuously monitor for faction invitations and accept them as long as that faction has no enemies.
+Cycle between working for every factions we are members of until we reach the
+required rep to buy all augmentations only available from this faction.
 
 OPTIONS
   --help           Show this help message
