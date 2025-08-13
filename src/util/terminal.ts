@@ -215,7 +215,7 @@ async function sendOneTimedTerminalCommand(
 
     // after echo
     if (isTimedCommand(command)) {
-        const server = getCurrentServer(terminalInput);
+        const server = getHostFromPrompt(terminalInput);
         const ms = expectedMillisFor(ns, server, command);
         await sleep(ms + actionBufferMs);
     }
@@ -316,7 +316,7 @@ function expectedMillisFor(ns: NS, currentServer: string, cmd: string): number {
     }
 }
 
-function getCurrentServer(terminalInput: Element): string {
+function getHostFromPrompt(terminalInput: Element): string {
     const promptEl = assertEl(
         terminalInput.previousElementSibling,
         'Could not find terminal prompt element.',
