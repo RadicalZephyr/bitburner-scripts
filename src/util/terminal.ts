@@ -209,27 +209,40 @@ async function sendOneTimedTerminalCommand(
             /*appearTimeoutMs=*/ startTimeoutMs ?? 500,
             pollIntervalMs!,
         );
-        const deadline = sleep(expectedMillisFor(ns, command));
+        const deadline = sleep(
+            expectedMillisFor(ns, getCurrentServer(terminalInput), command),
+        );
         await Promise.race([commandSettled, deadline]);
     }
 }
 
-function expectedMillisFor(ns: NS, cmd: string): number | null {
+function expectedMillisFor(ns: NS, currentServer: string, cmd: string): number {
     const m = cmd.trim().split(/\s+/);
     const verb = m[0].toLowerCase();
-    // TODO: this doesn't work if we don't have singularity!!!
-    const target = ns.singularity.getCurrentServer(); // terminal default
+
     switch (verb) {
         case 'hack':
-            return ns.getHackTime(target);
+            return ns.getHackTime(currentServer);
         case 'grow':
-            return ns.getGrowTime(target);
+            return ns.getGrowTime(currentServer);
         case 'weaken':
-            return ns.getWeakenTime(target);
+            return ns.getWeakenTime(currentServer);
         // analyze/backdoor aren’t exposed; return an overestimate based on weaken time (longest exposed timed command)
         default:
-            return ns.getWeakenTime(target) * 4;
+            return ns.getWeakenTime(currentServer) * 4;
     }
+}
+
+function getCurrentServer(terminalInput: Element): string {
+    const promptEl = assertEl(
+        terminalInput.previousElementSibling,
+        'Could not find terminal prompt element.',
+    );
+
+    const promptText = promptEl.textContent ?? '';
+
+    const nonHostRE = /[^\w.-]+/g;
+    return promptText.replaceAll(nonHostRE, '');
 }
 
 let terminalLock: Promise<unknown> = Promise.resolve();
