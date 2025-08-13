@@ -63,10 +63,11 @@ const DEFAULT_OPTIONS: TerminalOptions = {
  *   - `actionBufferMs` (default: `100`, minimum: `10`): additional time to wait to ensure timed commands are complete.
  *   - `commandEchoTimeoutMs` (default: `500`): how long to wait for the command echo to appear in the terminal before rejecting.
  *
- * @returns A promise that resolves when:
+ * @returns A promise that resolves with a list of commands that were run when:
  *   1) the command echo appears (always), and
  *   2) if the command is timed, waits until the timed command finishes.
- *   The promise rejects on timeout or if the terminal DOM cannot be found.
+ *   The promise rejects on timeout or if the terminal DOM cannot be found. If
+ *   multiple commands are supplied and any of them fail, the promise rejects.
  *
  * @throws
  * - `Error("Could not find terminal input element!")` or
@@ -102,7 +103,7 @@ export function sendTerminalCommand(
     ns: NS,
     command: string,
     options: TerminalOptions = {},
-): Promise<void> {
+): Promise<string[]> {
     const o = {
         ...DEFAULT_OPTIONS,
         ...options,
@@ -111,13 +112,13 @@ export function sendTerminalCommand(
     o.actionBufferMs = Math.max(10, o.actionBufferMs);
 
     const sequenceOfCommands = splitAtTimedCommands(command);
-    let p: Promise<void> = Promise.resolve();
+    const promises: Promise<string>[] = [];
     for (const c of sequenceOfCommands) {
-        p = withTerminalLock(
-            async () => await sendOneTimedTerminalCommand(ns, c, o),
+        promises.push(
+            withTerminalLock(() => sendOneTimedTerminalCommand(ns, c, o)),
         );
     }
-    return p;
+    return Promise.all(promises);
 }
 
 /**
@@ -182,7 +183,7 @@ async function sendOneTimedTerminalCommand(
     ns: NS,
     command: string,
     opts: TerminalOptions,
-) {
+): Promise<string> {
     const { actionBufferMs, commandEchoTimeoutMs } = opts;
 
     // Acquire a reference to the terminal text field
@@ -218,6 +219,8 @@ async function sendOneTimedTerminalCommand(
         const ms = expectedMillisFor(ns, server, command);
         await sleep(ms + actionBufferMs);
     }
+
+    return command;
 }
 
 /**
