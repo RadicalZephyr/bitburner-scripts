@@ -8,18 +8,18 @@ import { sleep } from 'util/time';
  */
 export interface TerminalOptions {
     /**
-     * Whether to wait until completion of the command.
-     *
-     * Default: true
-     */
-    waitForCompletion?: boolean;
-
-    /**
      * How long to wait for the command to be sent.
      *
      * Default: 500 milleseconds
      */
     commandEchoTimeoutMs?: number;
+
+    /**
+     * Whether to wait until completion of the command.
+     *
+     * Default: true
+     */
+    waitForCompletion?: boolean;
 }
 
 const DEFAULT_OPTIONS: TerminalOptions = {
