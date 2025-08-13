@@ -150,11 +150,6 @@ export function tokenize(commands: string): string[] {
         .filter((s) => s.length !== 0);
 }
 
-let SEQ = 0;
-function now() {
-    return performance.now().toFixed(1);
-}
-
 async function sendOneTimedTerminalCommand(
     ns: NS,
     command: string,
@@ -166,9 +161,6 @@ async function sendOneTimedTerminalCommand(
         startTimeoutMs,
         pollIntervalMs,
     } = opts;
-
-    const id = SEQ++;
-    console.log(`[${id}] @${now()} start ${JSON.stringify({ command, opts })}`);
 
     // Acquire a reference to the terminal text field
     const terminalInput = assertEl(
@@ -194,12 +186,8 @@ async function sendOneTimedTerminalCommand(
     // command and simulate hitting 'Enter'
     dispatchReactInputAndEnter(terminalInput, command);
 
-    console.log(
-        `[${id}] @${now()} echo-wait begin (window=${commandEchoTimeoutMs})`,
-    );
     // Wait for our command to appear in the output
     await commandEchoed;
-    console.log(`[${id}] @${now()} echo-wait end`);
 
     // after echo
     if (isTimedCommand(command) && waitForCompletion) {
