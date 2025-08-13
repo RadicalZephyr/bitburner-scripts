@@ -6,7 +6,7 @@ import chokidar from 'chokidar';
 const MATCH_TS_PATTERN = /^(.*)\.tsx?$/;
 
 function watch(src, dist) {
-    chokidar
+    const watcher = chokidar
         .watch(src, {
             persistent: true,
             cwd: src,
@@ -26,10 +26,16 @@ function watch(src, dist) {
             }
         });
     console.log(`Watching in "${src}"`);
+    return watcher;
 }
 
 const root = process.cwd();
 const src = resolve(root, 'src/');
 const dist = resolve(root, 'dist/');
 
-watch(src, dist);
+const watcher = watch(src, dist);
+
+// Close the watcher on Ctrl+C to avoid dangling file descriptors.
+process.on('SIGINT', () => {
+    watcher.close().finally(() => process.exit(0));
+});
