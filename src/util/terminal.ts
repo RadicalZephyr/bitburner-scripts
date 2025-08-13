@@ -10,7 +10,7 @@ export interface TerminalOptions {
     /**
      * How long to wait for the command to be sent.
      *
-     * Default: 500 milleseconds
+     * Default: 500 milliseconds
      */
     commandEchoTimeoutMs?: number;
 }
