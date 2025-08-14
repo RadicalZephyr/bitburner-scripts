@@ -32,9 +32,6 @@ OPTIONS
         return;
     }
 
-    ns.disableLog('ALL');
-    ns.clearLog();
-
     await graftAugments(ns, flags['dry-run']);
 
     ns.ui.openTail();
@@ -55,6 +52,9 @@ async function graftAugments(ns: NS, dryRun: boolean) {
     });
 
     if (dryRun || ns.singularity.isBusy()) {
+        ns.disableLog('ALL');
+        ns.clearLog();
+
         ns.print(JSON.stringify(graftableAugs, null, 2));
 
         if (ns.singularity.isBusy()) {
@@ -67,7 +67,7 @@ async function graftAugments(ns: NS, dryRun: boolean) {
 
     for (const aug of graftableAugs) {
         if (!canAfford(ns, aug.price)) {
-            ns.tprint(
+            ns.print(
                 `could not afford to buy ${aug.name} for $${ns.formatNumber(aug.price)}`,
             );
             break;
@@ -75,7 +75,9 @@ async function graftAugments(ns: NS, dryRun: boolean) {
 
         ns.grafting.graftAugmentation(aug.name, true);
         await ns.grafting.waitForOngoingGrafting();
-        ns.tprint(`finished grafting ${aug.name}`);
+
+        ns.print(`finished grafting ${aug.name}`);
+        await ns.sleep(1000);
     }
 }
 
