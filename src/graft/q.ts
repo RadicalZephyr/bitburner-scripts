@@ -1,6 +1,7 @@
 import type { NS, AutocompleteData, Multipliers } from 'netscript';
 import { FlagsSchema, parseFlags } from 'util/flags';
-import { canAfford } from '/util/money';
+
+import { canAfford } from 'util/money';
 
 const FLAGS = [
     ['dry-run', false],
