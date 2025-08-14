@@ -42,7 +42,10 @@ const FLAGS = [
     ['help', false],
 ] as const satisfies FlagsSchema;
 
-export function autocomplete(data: AutocompleteData, args: string[]): string[] {
+export function autocomplete(
+    data: AutocompleteData,
+    args: string[],
+): readonly string[] {
     data.flags(FLAGS);
 
     const multFlag = '--mult';
