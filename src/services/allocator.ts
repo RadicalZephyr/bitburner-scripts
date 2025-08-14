@@ -392,15 +392,45 @@ export class MemoryAllocator {
         const allocation = this.allocations.get(id);
         if (!allocation) return false;
 
-        // Released by single requesting process, release all chunks
+        // Released by single requesting process
         if (allocation.pid === pid) {
+            if (allocation.claims.length === 0) {
+                // No outstanding claims, free the entire allocation
+                for (const c of allocation.chunks) {
+                    const worker = this.workers.get(c.hostname);
+                    if (worker) {
+                        worker.free(c.chunkSize * c.numChunks);
+                    }
+                }
+                this.allocations.delete(id);
+                return true;
+            }
+
+            // Active claims exist, release only unclaimed chunks
             for (const c of allocation.chunks) {
-                const worker = this.workers.get(c.hostname);
-                if (worker) {
-                    worker.free(c.chunkSize * c.numChunks);
+                const claimed = allocation.claims
+                    .filter(
+                        (cl) =>
+                            cl.hostname === c.hostname
+                            && cl.chunkSize === c.chunkSize,
+                    )
+                    .reduce((sum, cl) => sum + cl.numChunks, 0);
+                const unclaimed = c.numChunks - claimed;
+                if (unclaimed > 0) {
+                    const worker = this.workers.get(c.hostname);
+                    if (worker) {
+                        worker.free(c.chunkSize * unclaimed);
+                    }
+                    c.numChunks = claimed;
                 }
             }
-            this.allocations.delete(id);
+            allocation.chunks = allocation.chunks.filter(
+                (c) => c.numChunks > 0,
+            );
+            allocation.requestedChunks = allocation.chunks.reduce(
+                (sum, c) => sum + c.numChunks,
+                0,
+            );
             return true;
         }
 
