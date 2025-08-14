@@ -49,7 +49,7 @@ async function graftAugments(ns: NS, dryRun: boolean) {
         .filter((a) => 'hacking_speed' in a || 'hacking_chance' in a); // TODO: make which multipliers to filter buy configurable
 
     graftableAugs.sort((a, b) => {
-        if (Math.abs(a.price - b.prices) < 1) {
+        if (Math.abs(a.price - b.price) < 1) {
             return a.installTime - b.installTime;
         } else {
             return a.price - b.price;
@@ -77,9 +77,9 @@ async function graftAugments(ns: NS, dryRun: boolean) {
 
         ns.grafting.graftAugmentation(aug.name, true);
         await ns.grafting.waitForOngoingGrafting();
+        ns.tprint(`finished grafting ${aug.name}`);
         break;
     }
-    ns.tprint(`finished grafting ${aug.name}`);
 }
 
 interface Augment extends Partial<Multipliers> {
