@@ -69,7 +69,7 @@ async function graftAugments(ns: NS, dryRun: boolean) {
     }
 
     for (const aug of graftableAugs) {
-        if (!canAfford) {
+        if (!canAfford(ns, aug.price)) {
             ns.tprint(
                 `could not afford to buy ${aug.name} for $${ns.formatNumber(aug.price)}`,
             );
