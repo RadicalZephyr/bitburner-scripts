@@ -16,6 +16,7 @@ import { buyPortOpeners } from 'automation/purchase-crackers';
 import { travelTo } from 'automation/travel';
 import { CONFIG } from 'automation/config';
 
+import { canAfford } from 'util/money';
 import { MoneyTracker, primedMoneyTracker } from 'util/money-tracker';
 
 const FLAGS = [['help', false]] as const satisfies FlagsSchema;
@@ -134,10 +135,6 @@ async function buyNeuroFlux(ns: NS) {
 
         await ns.asleep(10_000);
     }
-}
-
-function canAfford(ns: NS, cost: number): boolean {
-    return ns.getServerMoneyAvailable('home') >= cost;
 }
 
 function canBuyWithinMaxTime(
