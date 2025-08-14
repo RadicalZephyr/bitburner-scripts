@@ -44,7 +44,7 @@ async function graftAugments(ns: NS, dryRun: boolean) {
     const graftableAugs = ns.grafting
         .getGraftableAugmentations()
         .map((a) => augment(ns, a))
-        .filter((a) => 'hacking_speed' in a || 'hacking_chance' in a); // TODO: make which multipliers to filter buy configurable
+        .filter((a) => 'hacking_speed' in a || 'hacking_chance' in a); // TODO: make which multipliers to filter by configurable
 
     graftableAugs.sort((a, b) => {
         if (Math.abs(a.price - b.price) < 1) {
