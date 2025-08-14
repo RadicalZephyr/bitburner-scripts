@@ -18,19 +18,16 @@ export async function main(ns: NS) {
 
     if (flags.help) {
         ns.tprint(`
-        USAGE: run ${ns.getScriptName()}
+USAGE: run ${ns.getScriptName()}
 
-        Graft augments in order of least time and selecting for specific skill increases.
+Graft augments in order of least time and selecting for specific skill increases.
 
-        Example:
-        > run ${ns.getScriptName()}
+Example:
+> run ${ns.getScriptName()}
 
-        OPTIONS
-        --help   Show this help message
-        {{ other FLAGS options }}
-
-        CONFIGURATION
-        {{ CONFIG values used }}
+OPTIONS
+  --dry-run  Don't buy anything, just display the augments that would be chosen
+  --help     Show this help message
 `);
         return;
     }
