@@ -123,7 +123,7 @@ Example:
         numChunks: 1,
     });
 
-    const collectionRate = 1000 * 10;
+    const collectionRate = 500;
 
     let lastCollection = Date.now();
     let lastGrowCheck = 0;
@@ -151,7 +151,6 @@ Example:
         memoryManager.checkHomeForRamIncrease();
 
         if (lastCollection + collectionRate < now) {
-            printLog('INFO: running garbage collection');
             memoryManager.updateReserved();
             memoryManager.cleanupTerminated();
             lastCollection = now;
