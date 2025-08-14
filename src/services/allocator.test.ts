@@ -69,7 +69,37 @@ test('claim and release chunks', () => {
     expect(alloc.releaseChunks(res!.allocationId, 2)).not.toBeNull();
     expect(alloc.getFreeRamTotal()).toBeCloseTo(32 - 8);
     expect(alloc.deallocate(res!.allocationId, 1, 'h1')).toBe(true);
+    expect(alloc.getFreeRamTotal()).toBeCloseTo(32 - 8);
+    expect(alloc.allocations.has(res!.allocationId)).toBe(true);
+    expect(alloc.releaseClaim(res!.allocationId, 2, 'h1')).toBe(true);
     expect(alloc.getFreeRamTotal()).toBeCloseTo(32);
+    expect(alloc.allocations.has(res!.allocationId)).toBe(false);
+});
+
+test('owner deallocation retains claimed chunks', () => {
+    const hosts = { h1: { max: 32, used: 0 } };
+    const procs: ProcMap = { 1: true, 2: true };
+    const ns = makeNS(hosts, procs);
+    const alloc = new MemoryAllocator(ns);
+    alloc.pushWorker('h1');
+
+    const res = alloc.allocate(1, 'a.js', 4, 4);
+    expect(res).not.toBeNull();
+    const claimOk = alloc.claimAllocation({
+        allocationId: res!.allocationId,
+        pid: 2,
+        hostname: 'h1',
+        filename: 'b.js',
+        chunkSize: 4,
+        numChunks: 2,
+    });
+    expect(claimOk).toBe(true);
+    expect(alloc.deallocate(res!.allocationId, 1, 'h1')).toBe(true);
+    expect(alloc.getFreeRamTotal()).toBeCloseTo(32 - 8);
+    expect(alloc.allocations.has(res!.allocationId)).toBe(true);
+    expect(alloc.releaseClaim(res!.allocationId, 2, 'h1')).toBe(true);
+    expect(alloc.getFreeRamTotal()).toBeCloseTo(32);
+    expect(alloc.allocations.has(res!.allocationId)).toBe(false);
 });
 
 test('garbage collect terminated processes', () => {
@@ -218,7 +248,15 @@ test('releaseChunks across hosts updates state', () => {
     expect(snap.allocations[0].hosts).toEqual([
         { hostname: 'h1', chunkSize: 4, numChunks: 3 },
     ]);
-    expect(snap.allocations[0].claims.length).toBe(0);
+    expect(snap.allocations[0].claims).toEqual([
+        {
+            pid: 2,
+            hostname: 'h1',
+            filename: 'a.js',
+            chunkSize: 4,
+            numChunks: 1,
+        },
+    ]);
     expect(alloc.getFreeRamTotal()).toBeCloseTo(20);
 });
 
@@ -348,7 +386,7 @@ test('releaseChunks trims claims across hosts', () => {
             hostname: 'h1',
             filename: 'a.js',
             chunkSize: 4,
-            numChunks: 1,
+            numChunks: 2,
         },
     ]);
     expect(alloc.getFreeRamTotal()).toBeCloseTo(20);

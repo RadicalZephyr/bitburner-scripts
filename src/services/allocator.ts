@@ -493,10 +493,21 @@ export class MemoryAllocator {
             if (worker) {
                 worker.free(chunk.chunkSize * toFree);
             }
+
+            const claimedOnChunk = allocation.claims
+                .filter(
+                    (c) =>
+                        c.hostname === chunk.hostname
+                        && c.chunkSize === chunk.chunkSize,
+                )
+                .reduce((sum, c) => sum + c.numChunks, 0);
+            const unclaimed = Math.max(0, chunk.numChunks - claimedOnChunk);
+            const fromClaims = Math.max(0, toFree - unclaimed);
+
             chunk.numChunks -= toFree;
             remaining -= toFree;
 
-            let remainingFromClaims = toFree;
+            let remainingFromClaims = fromClaims;
             for (const claim of allocation.claims) {
                 if (remainingFromClaims <= 0) break;
                 if (
