@@ -76,7 +76,6 @@ async function graftAugments(ns: NS, dryRun: boolean) {
         ns.grafting.graftAugmentation(aug.name, true);
         await ns.grafting.waitForOngoingGrafting();
         ns.tprint(`finished grafting ${aug.name}`);
-        break;
     }
 }
 
