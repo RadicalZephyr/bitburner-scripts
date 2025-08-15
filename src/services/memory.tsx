@@ -129,8 +129,16 @@ Example:
     let lastGrowCheck = 0;
     const growCheckRate = 1000;
 
-    readLoop(ns, memPort, async () =>
-        readMemRequestsFromPort(ns, memPort, memResponsePort, memoryManager),
+    readLoop(
+        ns,
+        memPort,
+        async () =>
+            await readMemRequestsFromPort(
+                ns,
+                memPort,
+                memResponsePort,
+                memoryManager,
+            ),
     );
 
     function getWorkers() {
@@ -164,7 +172,7 @@ Example:
     }
 }
 
-function readMemRequestsFromPort(
+async function readMemRequestsFromPort(
     ns: NS,
     memPort: NetscriptPort,
     memResponsePort: NetscriptPort,
@@ -340,8 +348,10 @@ function readMemRequestsFromPort(
                 continue;
             }
         }
-        // TODO: make this more robust when the response port is full
-        memResponsePort.write([requestId, payload]);
+
+        while (!memResponsePort.tryWrite([requestId, payload])) {
+            await ns.asleep(10);
+        }
     }
 }
 
