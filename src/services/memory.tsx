@@ -129,16 +129,8 @@ Example:
     let lastGrowCheck = 0;
     const growCheckRate = 1000;
 
-    readLoop(
-        ns,
-        memPort,
-        async () =>
-            await readMemRequestsFromPort(
-                ns,
-                memPort,
-                memResponsePort,
-                memoryManager,
-            ),
+    readLoop(ns, memPort, () =>
+        readMemRequestsFromPort(ns, memPort, memResponsePort, memoryManager),
     );
 
     function getWorkers() {
