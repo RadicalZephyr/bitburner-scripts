@@ -8,6 +8,6 @@ const entries = [
 ] as const;
 
 export const CONFIG: ConfigInstance<typeof entries> = new Config(
-    'DISCOVERY',
+    'SERVICE',
     entries,
 ) as ConfigInstance<typeof entries>;
