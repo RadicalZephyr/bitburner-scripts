@@ -127,7 +127,6 @@ Example:
 
     let lastCollection = Date.now();
     let lastGrowCheck = 0;
-    const growCheckRate = 1000;
 
     readLoop(ns, memPort, () =>
         readMemRequestsFromPort(ns, memPort, memResponsePort, memoryManager),
@@ -156,7 +155,7 @@ Example:
             lastCollection = now;
         }
 
-        if (lastGrowCheck + growCheckRate < now) {
+        if (lastGrowCheck + CONFIG.memoryGrowCheckRateMs < now) {
             await growAllocations(ns, memoryManager);
             lastGrowCheck = now;
         }
