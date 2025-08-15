@@ -9,6 +9,8 @@ import { FlagsSchema, parseFlags } from 'util/flags';
 import { usePoll, useTheme } from 'util/hooks';
 import { StatTracker } from 'util/stat-tracker';
 
+import { CONFIG } from 'sleeve/config';
+
 const FLAGS = [['help', false]] as const satisfies FlagsSchema;
 
 export function autocomplete(data: AutocompleteData): string[] {
@@ -50,7 +52,10 @@ OPTIONS
             const tracker = sleeveTrackers[i];
             tracker.update(sp);
 
-            const shockVelocity = tracker.velocity('shock');
+            const shockVelocity = tracker.averageVelocity(
+                CONFIG.avgVelocityWindow,
+                'shock',
+            );
             const recoveredMs =
                 shockVelocity < 0 ? -1 * (sp.shock / shockVelocity) * 1000 : 0;
 
@@ -164,7 +169,10 @@ function calculateSyncTime(
     sleeve: SleevePerson,
     tracker: StatTracker<SleevePerson>,
 ): number {
-    const syncVelocity = tracker.velocity('sync');
+    const syncVelocity = tracker.averageVelocity(
+        CONFIG.avgVelocityWindow,
+        'sync',
+    );
     const syncDelta = 100 - sleeve.sync;
 
     if (syncVelocity > 0) {

@@ -10,6 +10,7 @@ import { CONFIG as AutomationConfig } from 'automation/config';
 import { CONFIG as CorpConfig } from 'corp/config';
 import { CONFIG as HacknetConfig } from 'hacknet/config';
 import { CONFIG as BladeburnerConfig } from 'bladeburner/config';
+import { CONFIG as SleeveConfig } from 'sleeve/config';
 
 const ALL_CONFIGS = [
     ServiceConfig,
@@ -21,6 +22,7 @@ const ALL_CONFIGS = [
     BladeburnerConfig,
     HacknetConfig,
     CorpConfig,
+    SleeveConfig,
 ];
 
 const FLAGS = [
