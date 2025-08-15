@@ -2,6 +2,9 @@ import type { NS, AutocompleteData, Multipliers } from 'netscript';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { canAfford } from 'util/money';
+import { extend } from '/util/extend';
+
+type MultKey = keyof Multipliers;
 
 const MULTIPLIERS = [
     'hacking',
@@ -34,13 +37,48 @@ const MULTIPLIERS = [
     'bladeburner_stamina_gain',
     'bladeburner_analysis',
     'bladeburner_success_chance',
-] as const satisfies readonly (keyof Multipliers)[];
+] as const satisfies readonly MultKey[];
 
-const DEFAULT_MULTS: readonly string[] = ['hacking_speed', 'hacking_chance'];
+const PRESETS = {
+    hacking: [
+        'hacking',
+        'hacking_exp',
+        'hacking_chance',
+        'hacking_speed',
+        'hacking_money',
+        'hacking_grow',
+    ],
+    combat: [
+        'strength',
+        'strength_exp',
+        'defense',
+        'defense_exp',
+        'dexterity',
+        'dexterity_exp',
+        'agility',
+        'agility_exp',
+    ],
+    hacknet: [
+        'hacknet_node_money',
+        'hacknet_node_purchase_cost',
+        'hacknet_node_ram_cost',
+        'hacknet_node_core_cost',
+        'hacknet_node_level_cost',
+    ],
+    bladeburner: [
+        'bladeburner_max_stamina',
+        'bladeburner_stamina_gain',
+        'bladeburner_analysis',
+        'bladeburner_success_chance',
+    ],
+} as const satisfies Record<string, MultKey[]>;
+
+const DEFAULT_MULTS: string[] = ['hacking_speed', 'hacking_chance'];
 
 const FLAGS = [
     ['dry-run', false],
     ['mult', DEFAULT_MULTS],
+    ['preset', []],
     ['help', false],
 ] as const satisfies FlagsSchema;
 
@@ -77,6 +115,7 @@ Example:
 
 OPTIONS
   --dry-run  Don't buy anything, just display the augments that would be chosen
+  --preset   Specify a built-in bundle of related multipliers
   --mult     Augmentation multipliers to filter by, may be specified multiple times
              Default: ${DEFAULT_MULTS.join(', ')}
              Available multipliers: ${MULTIPLIERS.join(', ')}
@@ -85,23 +124,44 @@ OPTIONS
         return;
     }
 
-    await graftAugments(ns, flags['dry-run'], flags.mult);
+    const multipliers = buildMultipliers(ns, flags.mult, flags.preset);
+    await graftAugments(ns, flags['dry-run'], multipliers);
 
     ns.ui.openTail();
 }
 
-async function graftAugments(ns: NS, dryRun: boolean, mult: string[]) {
-    const mults = mult
-        .map((m) => m.trim())
-        .filter((m): m is keyof Multipliers => m.length > 0);
+function buildMultipliers(
+    ns: NS,
+    mults: string[],
+    presets: string[],
+): MultKey[] {
+    const graftableAugs = ns.grafting.getGraftableAugmentations();
+    if (graftableAugs.length === 0)
+        throw new Error('No graftable augmentations!');
 
-    for (const m of mults) {
-        if (!MULTIPLIERS.includes(m)) {
-            ns.tprint(`ERROR: Unknown multiplier '${m}'.`);
-            return;
+    const exampleMultName = graftableAugs[0];
+    const exampleMult = ns.singularity.getAugmentationStats(exampleMultName);
+    const isMultKey = (m: string): m is MultKey =>
+        Object.hasOwn(exampleMult, m);
+
+    const multipliers = new Set(mults.map((m) => m.trim()).filter(isMultKey));
+
+    for (const p of presets) {
+        const preset = p.trim();
+        if (!(preset in PRESETS)) {
+            ns.tprint(`unknown preset: '${preset}'`);
+            continue;
+        }
+
+        const presetMults = PRESETS[preset].filter(isMultKey);
+        for (const pm of presetMults) {
+            multipliers.add(pm);
         }
     }
+    return Array.from(multipliers);
+}
 
+async function graftAugments(ns: NS, dryRun: boolean, mults: MultKey[]) {
     const graftableAugs = ns.grafting
         .getGraftableAugmentations()
         .map((a) => augment(ns, a))
