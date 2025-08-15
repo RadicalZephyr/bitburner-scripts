@@ -73,12 +73,10 @@ const PRESETS = {
     ],
 } as const satisfies Record<string, MultKey[]>;
 
-const DEFAULT_MULTS: string[] = ['hacking_speed', 'hacking_chance'];
-
 const FLAGS = [
     ['dry-run', false],
-    ['mult', DEFAULT_MULTS],
-    ['preset', []],
+    ['mult', []],
+    ['preset', [] as string[]],
     ['help', false],
 ] as const satisfies FlagsSchema;
 
@@ -89,13 +87,17 @@ export function autocomplete(
     data.flags(FLAGS);
 
     const multFlag = '--mult';
+    const presetFlag = '--preset';
 
     const last = args.at(-1);
     if (last === multFlag) return MULTIPLIERS;
+    if (last === presetFlag) return Object.keys(PRESETS);
 
     const secondLast = args.at(-2);
     if (secondLast === multFlag)
         return MULTIPLIERS.filter((m) => m.startsWith(last));
+    if (secondLast === presetFlag)
+        return Object.keys(PRESETS).filter((p) => p.startsWith(last));
 
     return [];
 }
@@ -108,6 +110,7 @@ export async function main(ns: NS) {
 USAGE: run ${ns.getScriptName()}
 
 Graft augments in order of least time and selecting for specific multipliers.
+If no multipliers or presets are specified then all augments will be purchased.
 
 Example:
   > run ${ns.getScriptName()} --mult faction_rep
@@ -117,7 +120,6 @@ OPTIONS
   --dry-run  Don't buy anything, just display the augments that would be chosen
   --preset   Specify a built-in bundle of related multipliers
   --mult     Augmentation multipliers to filter by, may be specified multiple times
-             Default: ${DEFAULT_MULTS.join(', ')}
              Available multipliers: ${MULTIPLIERS.join(', ')}
   --help     Show this help message
 `);
@@ -135,6 +137,8 @@ function buildMultipliers(
     mults: string[],
     presets: string[],
 ): MultKey[] {
+    if (mults.length === 0 && presets.length === 0) return [...MULTIPLIERS];
+
     const graftableAugs = ns.grafting.getGraftableAugmentations();
     if (graftableAugs.length === 0)
         throw new Error('No graftable augmentations!');
