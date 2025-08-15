@@ -151,9 +151,9 @@ function FinishTime({ ns, theme, fromNow }: FinishTimeProps) {
     }
 
     const finishDate = new Date(Date.now() + fromNow);
-    const h = finishDate.getHours();
-    const m = finishDate.getMinutes();
-    const s = finishDate.getSeconds();
+    const h = ns.sprintf('%02d', finishDate.getHours());
+    const m = ns.sprintf('%02d', finishDate.getMinutes());
+    const s = ns.sprintf('%02d', finishDate.getSeconds());
     const time = `${h}:${m}:${s}`;
     return (
         <div>
