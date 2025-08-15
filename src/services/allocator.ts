@@ -90,7 +90,10 @@ export class MemoryAllocator {
             setAsideRam = this.ns.getServerMaxRam(hostname);
         }
 
-        this.workers.set(hostname, new Worker(this.ns, hostname, setAsideRam));
+        const worker = new Worker(this.ns, hostname, setAsideRam);
+        worker.updateReservedRam();
+
+        this.workers.set(hostname, worker);
         this.printLog(
             `INFO: registered worker ${hostname} with `
                 + `${this.ns.formatRam(this.ns.getServerMaxRam(hostname))}`,
@@ -707,7 +710,7 @@ export class Worker {
     totalRam: number;
     totalRamStr: string;
     setAsideRam: bigint;
-    reservedRam: bigint;
+    reservedRam: bigint = 0n;
     allocatedRam: bigint = 0n;
 
     constructor(ns: NS, hostname: string, setAsideRam?: number) {
@@ -718,7 +721,6 @@ export class Worker {
             typeof setAsideRam == 'number' && setAsideRam >= 0
                 ? toFixed(setAsideRam)
                 : 0n;
-        this.reservedRam = toFixed(ns.getServerUsedRam(hostname));
     }
 
     get usedRam(): number {
