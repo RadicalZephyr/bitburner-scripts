@@ -109,6 +109,35 @@ export class StatTracker<Type> {
     }
 
     /**
+     * Compute the average velocity every N samples.
+     *
+     * @param n       - History window length to sample velocity at
+     * @param stat    - The field to compute the average velocity for
+     * @param epsilon - Minimum velocity absolute value to include in average
+     * @returns Numeric value of the averaged velocity or zero if not enough history exists
+     */
+    averageVelocity(
+        n: number,
+        stat: keyof PickByType<Type, number>,
+        epsilon: number = 0.000001,
+    ): number {
+        if (this.history.length < 2) return 0;
+
+        let velocitySum = 0;
+        let samples = 0;
+        for (let i = 0; i < this.history.length - n; i++) {
+            const v = computeVelocity(this.history[i], this.history[i + n]);
+            const statSample = v[stat] as number;
+
+            if (Math.abs(statSample) > epsilon) {
+                velocitySum += statSample;
+                samples += 1;
+            }
+        }
+        return velocitySum / samples;
+    }
+
+    /**
      * Watches the value of the given field, resolving when it the
      * comparing the value to the threshold satisfies the
      * condition.
