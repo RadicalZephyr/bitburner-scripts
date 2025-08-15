@@ -36,9 +36,11 @@ const MULTIPLIERS = [
     'bladeburner_success_chance',
 ] as const satisfies readonly (keyof Multipliers)[];
 
+const DEFAULT_MULTS: readonly string[] = ['hacking_speed', 'hacking_chance'];
+
 const FLAGS = [
     ['dry-run', false],
-    ['mult', ['hacking_speed', 'hacking_chance']],
+    ['mult', DEFAULT_MULTS],
     ['help', false],
 ] as const satisfies FlagsSchema;
 
@@ -76,7 +78,7 @@ Example:
 OPTIONS
   --dry-run  Don't buy anything, just display the augments that would be chosen
   --mult     Augmentation multipliers to filter by, may be specified multiple times
-             Default: hacking_speed, hacking_chance
+             Default: ${DEFAULT_MULTS.join(', ')}
              Available multipliers: ${MULTIPLIERS.join(', ')}
   --help     Show this help message
 `);
