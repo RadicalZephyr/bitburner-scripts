@@ -82,7 +82,7 @@ export class StatTracker<Type> {
      * Return the most recent value of the specified field.
      *
      * @param stat - The field to retrieve the most recent value of
-     * @returns Numeric value of the field, or null if no history exists yet
+     * @returns Numeric value of the field, or `1` if no history exists yet
      */
     value(stat: keyof PickByType<Type, number>): number {
         if (this.history.length > 0) {
@@ -95,7 +95,7 @@ export class StatTracker<Type> {
      * Compute the velocity of the specified field.
      *
      * @param stat - The field to compute the velocity for
-     * @returns Numeric value of the velocity or null if not enough history exists
+     * @returns Numeric value of the velocity or zero if not enough history exists
      */
     velocity(stat: keyof PickByType<Type, number>): number {
         if (this.history.length > 2) {
