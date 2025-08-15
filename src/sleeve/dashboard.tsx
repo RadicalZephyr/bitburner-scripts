@@ -1,7 +1,12 @@
-import type { NS, AutocompleteData, SleevePerson } from 'netscript';
+import type {
+    NS,
+    AutocompleteData,
+    SleevePerson,
+    UserInterfaceTheme,
+} from 'netscript';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
-import { usePoll } from 'util/hooks';
+import { usePoll, useTheme } from 'util/hooks';
 import { StatTracker } from 'util/stat-tracker';
 
 const FLAGS = [['help', false]] as const satisfies FlagsSchema;
@@ -45,10 +50,11 @@ OPTIONS
             const tracker = sleeveTrackers[i];
             tracker.update(sp);
 
+            const shockVelocity = tracker.velocity('shock');
             const recoveredMs =
-                -1 * (sp.shock / tracker.velocity('shock')) * 1000;
-            const syncedMs =
-                ((100 - sp.sync) / tracker.velocity('sync')) * 1000;
+                shockVelocity < 0 ? -1 * (sp.shock / shockVelocity) * 1000 : 0;
+
+            const syncedMs = calculateSyncTime(sp, tracker);
 
             sleeveData.push({ recoveredMs, syncedMs, ...sp });
         }
@@ -76,12 +82,13 @@ interface DashboardProps {
 }
 
 function SleeveDashboard({ ns, pollFn }: DashboardProps) {
+    const theme = useTheme(ns);
     const sleevesData = usePoll(ns, 1000, pollFn);
 
     return (
         <div>
             {sleevesData.map((sd, idx) => (
-                <SleeveReady ns={ns} idx={idx} sleeveData={sd} />
+                <SleeveReady ns={ns} theme={theme} idx={idx} sleeveData={sd} />
             ))}
         </div>
     );
@@ -89,26 +96,87 @@ function SleeveDashboard({ ns, pollFn }: DashboardProps) {
 
 interface SleeveReadyProps {
     ns: NS;
+    theme: UserInterfaceTheme;
     idx: number;
     sleeveData: SleeveData;
 }
 
-function SleeveReady({ ns, idx, sleeveData }: SleeveReadyProps) {
+function SleeveReady({ ns, theme, idx, sleeveData }: SleeveReadyProps) {
     return (
         <div>
             <div>Sleeve {idx}:</div>
             <div>
-                Recovered from Shock: {formatTime(ns, sleeveData.recoveredMs)}
+                Recovered from Shock:
+                <FinishTime
+                    ns={ns}
+                    theme={theme}
+                    fromNow={sleeveData.recoveredMs}
+                />
             </div>
-            <div>Fully synced: {formatTime(ns, sleeveData.syncedMs)}</div>
+            <div>
+                Fully synced:
+                <FinishTime
+                    ns={ns}
+                    theme={theme}
+                    fromNow={sleeveData.syncedMs}
+                />
+            </div>
         </div>
     );
 }
 
-function formatTime(ns: NS, fromNow: number): string {
-    if (isNaN(fromNow)) return 'unknown';
-    if (!isFinite(fromNow)) return 'Never (+∞)';
+interface FinishTimeProps {
+    ns: NS;
+    theme: UserInterfaceTheme;
+    fromNow: number;
+}
+
+function FinishTime({ ns, theme, fromNow }: FinishTimeProps) {
+    if (isNaN(fromNow))
+        return <div style={{ color: theme.error }}>Unknown</div>;
+    if (!isFinite(fromNow))
+        return <div style={{ color: theme.warning }}>Never (+∞)</div>;
+
+    if (fromNow === 0) {
+        return (
+            <div>
+                <span style={{ color: theme.success }}>Finished!</span>
+            </div>
+        );
+    }
 
     const finishDate = new Date(Date.now() + fromNow);
-    return `${finishDate} (+${ns.tFormat(fromNow)})`;
+    const h = finishDate.getHours();
+    const m = finishDate.getMinutes();
+    const s = finishDate.getSeconds();
+    const time = `${h}:${m}:${s}`;
+    return (
+        <div>
+            <span style={{ color: theme.cha }}>
+                {finishDate.toDateString()} {time}
+            </span>
+            <span style={{ color: theme.info }}>(+{ns.tFormat(fromNow)})</span>
+        </div>
+    );
+}
+
+function calculateSyncTime(
+    sleeve: SleevePerson,
+    tracker: StatTracker<SleevePerson>,
+): number {
+    const syncVelocity = tracker.velocity('sync');
+    const syncDelta = 100 - sleeve.sync;
+
+    if (syncVelocity > 0) {
+        return (syncDelta / syncVelocity) * 1000;
+    } else if (syncVelocity === 0) {
+        if (Math.abs(syncDelta) > 0.0001) {
+            return Infinity;
+        } else {
+            return 0;
+        }
+    } else {
+        console.error('sleeve synchronization is decreasing!');
+        return NaN;
+    }
 }
