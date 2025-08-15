@@ -2,6 +2,7 @@ import { Config, ConfigInstance } from 'util/config';
 
 const entries = [
     ['discoverWalkIntervalMs', 5000],
+    ['garbageCollectionRateMs', 1000],
     ['launchRetryMax', 5],
     ['subscriptionMaxRetries', 5],
     ['updateCheckIntervalMs', 1000 * 60 * 60],

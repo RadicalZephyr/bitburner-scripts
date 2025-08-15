@@ -32,6 +32,8 @@ import {} from 'lib/react';
 
 import { useNsUpdate, useTheme } from 'util/hooks';
 
+import { CONFIG } from 'services/config';
+
 let printLog: (msg: string) => void;
 
 const FLAGS = [
@@ -123,8 +125,6 @@ Example:
         numChunks: 1,
     });
 
-    const collectionRate = 500;
-
     let lastCollection = Date.now();
     let lastGrowCheck = 0;
     const growCheckRate = 1000;
@@ -150,7 +150,7 @@ Example:
 
         memoryManager.checkHomeForRamIncrease();
 
-        if (lastCollection + collectionRate < now) {
+        if (lastCollection + CONFIG.garbageCollectionRateMs < now) {
             memoryManager.updateReserved();
             memoryManager.cleanupTerminated();
             lastCollection = now;
