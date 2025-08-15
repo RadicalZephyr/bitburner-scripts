@@ -127,20 +127,63 @@ async function graftAugments(ns: NS, dryRun: boolean, mult: string[]) {
         return;
     }
 
+    const ownedAugs: Set<string> = new Set(
+        ns.singularity.getOwnedAugmentations(true),
+    );
+
     for (const aug of graftableAugs) {
-        if (!canAfford(ns, aug.price)) {
+        const result = await graftAugmentation(ns, ownedAugs, aug);
+
+        if (result) {
+            ns.print(`finished grafting ${augment.name}`);
+        } else {
             ns.print(
-                `could not afford to buy ${aug.name} for $${ns.formatNumber(aug.price)}`,
+                `failed to graft ${augment.name} or one of it's pre-requisites`,
             );
-            break;
         }
 
-        ns.grafting.graftAugmentation(aug.name, true);
-        await ns.grafting.waitForOngoingGrafting();
-
-        ns.print(`finished grafting ${aug.name}`);
         await ns.sleep(1000);
     }
+}
+
+async function graftAugmentation(
+    ns: NS,
+    ownedAugs: Set<string>,
+    aug: Augment,
+): Promise<boolean> {
+    const preReqs = ns.singularity.getAugmentationPrereq(aug.name);
+    const graftableAugs = new Set(ns.grafting.getGraftableAugmentations());
+
+    for (const preReqAug of preReqs) {
+        if (ownedAugs.has(preReqAug)) continue;
+
+        // TODO: try to purchase augmentation before grafting it
+        // Cannot graft pre-req, signal failure
+        if (!graftableAugs.has(preReqAug)) return false;
+
+        const result = await graftAugmentation(
+            ns,
+            ownedAugs,
+            augment(ns, preReqAug),
+        );
+
+        if (!result) return false;
+    }
+
+    while (!canAfford(ns, aug.price)) {
+        await ns.asleep(1000);
+    }
+
+    const res = ns.grafting.graftAugmentation(aug.name, true);
+    await ns.grafting.waitForOngoingGrafting();
+
+    // TODO: Check this more robustly, res only indicates we started
+    // grafting successfully.
+    if (res) {
+        ownedAugs.add(aug.name);
+    }
+
+    return true;
 }
 
 interface Augment extends Partial<Multipliers> {
