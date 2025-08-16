@@ -22,6 +22,7 @@
 - Harvests below `harvestGainThreshold` are skipped to keep RAM focused on profitable targets [#185][pr-185].
 - Improved accuracy of harvest batch fitting algorithm [#191][pr-191].
 - Fixed sow task requesting smaller allocations than necessary [#191][pr-191].
+- Removed usage of broken `releaseChunks` API [#260][pr-260].
 
 ### Services
 
@@ -29,6 +30,7 @@
 - New Launch service replaces `launch.ts` for remote script execution [#173][pr-173];
     - Expanded options with `ramOverride` support [#175][pr-175].
 - Source File service exposes owned Source File levels for other scripts [#195][pr-195].
+- Memory allocator retains claimed chunks after owner deallocation and adds configurable garbage collection, grow-check, and response-port timeout settings [#260][pr-260].
 
 ### IPvGO
 
@@ -84,6 +86,7 @@
 - Unit tests cover expected value calculations with limited memory [#184][pr-184].
 - AGENTS guidelines clarified for PR reviewers [#189][pr-189].
 - Utility tests relocated under `src/util/__tests__` with coverage for terminal progress bar detection [#226][pr-226].
+- Updated memory management guide for claim-preserving deallocation and added tests for claim release and response-port timeouts [#260][pr-260].
 
 ### Build Scripts
 
@@ -130,6 +133,7 @@
 [pr-246]: https://github.com/RadicalZephyr/bitburner-scripts/pull/246
 [pr-250]: https://github.com/RadicalZephyr/bitburner-scripts/pull/250
 [pr-255]: https://github.com/RadicalZephyr/bitburner-scripts/pull/255
+[pr-260]: https://github.com/RadicalZephyr/bitburner-scripts/pull/260
 
 ## v2.1.0
 
