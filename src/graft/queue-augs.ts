@@ -240,13 +240,16 @@ async function graftAugmentation(
     }
 
     const res = ns.grafting.graftAugmentation(aug.name, true);
-    await ns.grafting.waitForOngoingGrafting();
+    if (!res) return false;
 
-    // TODO: Check this more robustly, res only indicates we started
-    // grafting successfully.
-    if (res) {
-        ownedAugs.add(aug.name);
+    try {
+        await ns.grafting.waitForOngoingGrafting();
+    } catch (e) {
+        ns.print(`ERROR: Failed to graft augment ${aug.name}: ${String(e)}`);
+        return false;
     }
+
+    ownedAugs.add(aug.name);
 
     return true;
 }
