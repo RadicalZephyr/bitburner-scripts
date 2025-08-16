@@ -82,3 +82,23 @@ interface FreeRam {
 `chunks` lists the free RAM on each individual host. Consumers should
 inspect the chunk list when deciding how many batches can actually fit
 into memory.
+
+### Claim retention and release
+
+If the owner of an allocation deallocates it while other scripts have
+claimed chunks, those claims remain in place and the allocation itself
+is not removed. Scripts register a claim by starting with the
+`--allocId` command-line option.
+
+Example sequence:
+
+1. Script **A** allocates memory and receives allocation ID `42`.
+2. Script **A** starts script **B** with `--allocId 42` to claim a
+   portion of that allocation.
+3. Script **A** deallocates ID `42`; the claimed chunks stay reserved so
+   **B** continues running.
+4. Script **B** exits or releases its claim, allowing the allocator to
+   finally free ID `42` and return the memory to the pool.
+
+Only once all claims have been released does the allocator reclaim the
+memory associated with the allocation.
