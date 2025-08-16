@@ -101,6 +101,52 @@ test('owner deallocation retains claimed chunks', () => {
     expect(alloc.allocations.has(res!.allocationId)).toBe(false);
 });
 
+test('owner deallocation across hosts retains claimed chunks per host', () => {
+    const hosts = {
+        h1: { max: 16, used: 0 },
+        h2: { max: 16, used: 0 },
+        h3: { max: 16, used: 0 },
+    };
+    const procs: ProcMap = { 1: true, 2: true, 3: true };
+    const ns = makeNS(hosts, procs);
+    const alloc = new MemoryAllocator(ns);
+    alloc.pushWorker('h1');
+    alloc.pushWorker('h2');
+    alloc.pushWorker('h3');
+
+    const res = alloc.allocate(1, 'multi.js', 4, 10);
+    expect(res).not.toBeNull();
+    const id = res!.allocationId;
+
+    expect(
+        alloc.claimAllocation({
+            allocationId: id,
+            pid: 2,
+            hostname: 'h1',
+            filename: 'c1.js',
+            chunkSize: 4,
+            numChunks: 2,
+        }),
+    ).toBe(true);
+    expect(
+        alloc.claimAllocation({
+            allocationId: id,
+            pid: 3,
+            hostname: 'h2',
+            filename: 'c2.js',
+            chunkSize: 4,
+            numChunks: 1,
+        }),
+    ).toBe(true);
+
+    expect(alloc.deallocate(id, 1, 'h1')).toBe(true);
+    expect(alloc.workers.get('h1')!.freeRam).toBeCloseTo(8);
+    expect(alloc.workers.get('h2')!.freeRam).toBeCloseTo(12);
+    expect(alloc.workers.get('h3')!.freeRam).toBeCloseTo(16);
+    expect(alloc.getFreeRamTotal()).toBeCloseTo(36);
+    expect(alloc.allocations.has(id)).toBe(true);
+});
+
 test('deallocate removes zero-length claims', () => {
     const hosts = { h1: { max: 16, used: 0 } };
     const procs: ProcMap = { 1: true, 2: true };
