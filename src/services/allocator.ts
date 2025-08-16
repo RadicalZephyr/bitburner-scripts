@@ -632,6 +632,14 @@ export class MemoryAllocator {
         if (chunk) {
             chunk.numChunks -= claim.numChunks;
         }
+        const totalChunks = allocation.chunks.reduce(
+            (sum, c) => sum + c.numChunks,
+            0,
+        );
+        allocation.requestedChunks = Math.max(
+            totalChunks,
+            allocation.requestedChunks - claim.numChunks,
+        );
     }
 
     private isRegistered(pid: number): boolean {

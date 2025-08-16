@@ -473,6 +473,75 @@ test('releaseChunks clamps requestedChunks to zero', () => {
     expect(updated.requestedChunks).toBe(0);
 });
 
+test('releaseClaim updates requestedChunks for growable allocation', () => {
+    const hosts = { h1: { max: 16, used: 0 } };
+    const procs: ProcMap = { 1: true, 2: true, 3: true };
+    const ns = makeNS(hosts, procs);
+    const alloc = new MemoryAllocator(ns);
+    alloc.pushWorker('h1');
+
+    const res = alloc.allocate(1, 'grow.js', 4, 5, false, false, true);
+    expect(res).not.toBeNull();
+    const id = res!.allocationId;
+
+    alloc.claimAllocation({
+        allocationId: id,
+        pid: 2,
+        hostname: 'h1',
+        filename: 'a.js',
+        chunkSize: 4,
+        numChunks: 2,
+    });
+    alloc.claimAllocation({
+        allocationId: id,
+        pid: 3,
+        hostname: 'h1',
+        filename: 'b.js',
+        chunkSize: 4,
+        numChunks: 1,
+    });
+
+    expect(alloc.releaseClaim(id, 2, 'h1')).toBe(true);
+    const updated = alloc.allocations.get(id)!;
+    expect(updated.requestedChunks).toBe(3);
+    expect(updated.chunks.reduce((sum, c) => sum + c.numChunks, 0)).toBe(2);
+});
+
+test('releaseClaim clamps requestedChunks to remaining chunks', () => {
+    const hosts = { h1: { max: 16, used: 0 } };
+    const procs: ProcMap = { 1: true, 2: true, 3: true };
+    const ns = makeNS(hosts, procs);
+    const alloc = new MemoryAllocator(ns);
+    alloc.pushWorker('h1');
+
+    const res = alloc.allocate(1, 'clamp-claim.js', 4, 1);
+    expect(res).not.toBeNull();
+    const id = res!.allocationId;
+    const allocation = alloc.allocations.get(id)!;
+    alloc.growAllocation(allocation, 2);
+
+    alloc.claimAllocation({
+        allocationId: id,
+        pid: 2,
+        hostname: 'h1',
+        filename: 'a.js',
+        chunkSize: 4,
+        numChunks: 1,
+    });
+    alloc.claimAllocation({
+        allocationId: id,
+        pid: 3,
+        hostname: 'h1',
+        filename: 'b.js',
+        chunkSize: 4,
+        numChunks: 1,
+    });
+
+    expect(alloc.releaseClaim(id, 2, 'h1')).toBe(true);
+    const updated = alloc.allocations.get(id)!;
+    expect(updated.requestedChunks).toBe(2);
+});
+
 test('getFreeChunks returns workers with available RAM', () => {
     const hosts = { h1: { max: 16, used: 4 }, h2: { max: 8, used: 8 } };
     const ns = makeNS(hosts, {});
