@@ -70,7 +70,6 @@ interface HarvestSetup {
     overlapLimit: number;
     hackPercent: number;
     allocation: GrowableAllocation;
-    memClient: GrowableMemoryClient;
     taskSelectorClient: TaskSelectorClient;
     donePortId: number;
     portId: number;
@@ -223,7 +222,6 @@ async function prepareHarvest(
         overlapLimit,
         hackPercent,
         allocation,
-        memClient,
         taskSelectorClient,
         donePortId,
         portId: args.portId,
@@ -303,7 +301,7 @@ async function harvestPipeline(ns: NS, target: string, setup: HarvestSetup) {
         ) {
             ns.print(
                 `INFO: allocation grew to ${hosts.length} chunks. `
-                    + `Spawning ${hosts.length - batches.length} additional batches`,
+                + `Spawning ${hosts.length - batches.length} additional batches`,
             );
             for (let i = batches.length; i < hosts.length; i++) {
                 const extraPids = await spawnBatch(
@@ -402,7 +400,7 @@ async function harvestPipeline(ns: NS, target: string, setup: HarvestSetup) {
                 const moneyPct = ns.formatPercent(actualMoney / maxMoney);
                 ns.print(
                     `INFO: rebalancing ${target} sec +${secDelta} money ${moneyPct} `
-                        + `ram ${ns.formatRam(rebalance.batchRam)}`,
+                    + `ram ${ns.formatRam(rebalance.batchRam)}`,
                 );
                 phases = rebalance.phases;
             }
