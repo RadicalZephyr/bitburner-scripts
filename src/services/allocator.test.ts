@@ -66,8 +66,7 @@ test('claim and release chunks', () => {
         numChunks: 2,
     });
     expect(claimOk).toBe(true);
-    expect(alloc.releaseChunks(res!.allocationId, 2)).not.toBeNull();
-    expect(alloc.getFreeRamTotal()).toBeCloseTo(32 - 8);
+    expect(alloc.getFreeRamTotal()).toBeCloseTo(32 - 16);
     expect(alloc.deallocate(res!.allocationId, 1, 'h1')).toBe(true);
     expect(alloc.getFreeRamTotal()).toBeCloseTo(32 - 8);
     expect(alloc.allocations.has(res!.allocationId)).toBe(true);
@@ -241,52 +240,6 @@ test('allocation fails when insufficient RAM', () => {
     expect(alloc.getFreeRamTotal()).toBeCloseTo(12);
 });
 
-test('releaseChunks across hosts updates state', () => {
-    const hosts = { h1: { max: 16, used: 0 }, h2: { max: 16, used: 0 } };
-    const procs: ProcMap = { 1: true, 2: true, 3: true };
-    const ns = makeNS(hosts, procs);
-    const alloc = new MemoryAllocator(ns);
-    alloc.pushWorker('h1');
-    alloc.pushWorker('h2');
-
-    const res = alloc.allocate(1, 'multi.js', 4, 6);
-    expect(res).not.toBeNull();
-    const id = res!.allocationId;
-    alloc.claimAllocation({
-        allocationId: id,
-        pid: 2,
-        hostname: 'h1',
-        filename: 'a.js',
-        chunkSize: 4,
-        numChunks: 1,
-    });
-    alloc.claimAllocation({
-        allocationId: id,
-        pid: 3,
-        hostname: 'h2',
-        filename: 'b.js',
-        chunkSize: 4,
-        numChunks: 1,
-    });
-
-    const after = alloc.releaseChunks(id, 3);
-    expect(after).not.toBeNull();
-    const snap = alloc.getSnapshot();
-    expect(snap.allocations[0].hosts).toEqual([
-        { hostname: 'h1', chunkSize: 4, numChunks: 3 },
-    ]);
-    expect(snap.allocations[0].claims).toEqual([
-        {
-            pid: 2,
-            hostname: 'h1',
-            filename: 'a.js',
-            chunkSize: 4,
-            numChunks: 1,
-        },
-    ]);
-    expect(alloc.getFreeRamTotal()).toBeCloseTo(20);
-});
-
 test('updateReserved reflects manual host usage changes', () => {
     const hosts = { h1: { max: 32, used: 0 } };
     const psMap: ProcList = {
@@ -330,7 +283,6 @@ test('edge cases', () => {
     expect(alloc.deallocate(999, 1, 'h1')).toBe(false);
     const res = alloc.allocate(1, 'g.js', 4, 2);
     expect(res).not.toBeNull();
-    expect(alloc.releaseChunks(res!.allocationId, 5)).toBeNull();
     expect(
         alloc.claimAllocation({
             allocationId: res!.allocationId,
@@ -373,76 +325,6 @@ test('claim deallocation frees claimed memory', () => {
     expect(alloc.getFreeRamTotal()).toBeCloseTo(8);
 });
 
-test('releaseChunks trims claims across hosts', () => {
-    const hosts = { h1: { max: 16, used: 0 }, h2: { max: 16, used: 0 } };
-    const procs: ProcMap = { 1: true, 2: true, 3: true };
-    const ns = makeNS(hosts, procs);
-    const alloc = new MemoryAllocator(ns);
-    alloc.pushWorker('h1');
-    alloc.pushWorker('h2');
-
-    const res = alloc.allocate(1, 'rel.js', 4, 6);
-    expect(res).not.toBeNull();
-    const id = res!.allocationId;
-    alloc.claimAllocation({
-        allocationId: id,
-        pid: 2,
-        hostname: 'h1',
-        filename: 'a.js',
-        chunkSize: 4,
-        numChunks: 2,
-    });
-    alloc.claimAllocation({
-        allocationId: id,
-        pid: 3,
-        hostname: 'h2',
-        filename: 'b.js',
-        chunkSize: 4,
-        numChunks: 2,
-    });
-
-    const after = alloc.releaseChunks(id, 3);
-    expect(after).not.toBeNull();
-    const snap = alloc.getSnapshot();
-    expect(snap.allocations[0].hosts).toEqual([
-        { hostname: 'h1', chunkSize: 4, numChunks: 3 },
-    ]);
-    expect(snap.allocations[0].claims).toEqual([
-        {
-            pid: 2,
-            hostname: 'h1',
-            filename: 'a.js',
-            chunkSize: 4,
-            numChunks: 2,
-        },
-    ]);
-    expect(alloc.getFreeRamTotal()).toBeCloseTo(20);
-});
-
-test('releaseChunks freeing all memory removes allocation', () => {
-    const hosts = { h1: { max: 16, used: 0 } };
-    const procs: ProcMap = { 1: true, 2: true };
-    const ns = makeNS(hosts, procs);
-    const alloc = new MemoryAllocator(ns);
-    alloc.pushWorker('h1');
-
-    const res = alloc.allocate(1, 'full.js', 4, 2);
-    expect(res).not.toBeNull();
-    const id = res!.allocationId;
-    alloc.claimAllocation({
-        allocationId: id,
-        pid: 2,
-        hostname: 'h1',
-        filename: 'c.js',
-        chunkSize: 4,
-        numChunks: 1,
-    });
-
-    expect(alloc.releaseChunks(id, 2)).toBeNull();
-    expect(alloc.getSnapshot().allocations.length).toBe(0);
-    expect(alloc.getFreeRamTotal()).toBeCloseTo(16);
-});
-
 test('claim fails on unknown host chunk', () => {
     const hosts = { h1: { max: 16, used: 0 } };
     const ns = makeNS(hosts, {});
@@ -479,25 +361,6 @@ test('registerAllocation converts reserved to allocated', () => {
     const worker = Array.from(alloc.workers.values())[0];
     expect(worker.allocatedRam).toBe(BigInt(400));
     expect(worker.reservedRam).toBe(0n);
-});
-
-test('releaseChunks clamps requestedChunks to zero', () => {
-    const hosts = { h1: { max: 32, used: 0 } };
-    const ns = makeNS(hosts, {});
-    const alloc = new MemoryAllocator(ns);
-    alloc.pushWorker('h1');
-
-    const res = alloc.allocate(1, 'clamp.js', 4, 2);
-    expect(res).not.toBeNull();
-    const id = res!.allocationId;
-    const allocation = alloc.allocations.get(id)!;
-    // Grow the allocation without updating requestedChunks
-    alloc.growAllocation(allocation, 2);
-
-    const after = alloc.releaseChunks(id, 3);
-    expect(after).not.toBeNull();
-    const updated = alloc.allocations.get(id)!;
-    expect(updated.requestedChunks).toBe(0);
 });
 
 test('releaseClaim updates requestedChunks for growable allocation', () => {

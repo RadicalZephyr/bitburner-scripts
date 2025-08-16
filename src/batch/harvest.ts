@@ -13,7 +13,6 @@ import {
     GrowableMemoryClient,
     GrowableAllocation,
 } from 'services/client/growable_memory';
-import { AllocationChunk } from 'services/client/memory';
 
 import { PortClient } from 'services/client/port';
 import {
@@ -236,10 +235,8 @@ async function prepareHarvest(
 async function harvestPipeline(ns: NS, target: string, setup: HarvestSetup) {
     const {
         logistics,
-        overlapLimit,
         hackPercent,
         allocation,
-        memClient,
         taskSelectorClient,
         donePortId,
         shuttingDown,
@@ -416,41 +413,6 @@ async function harvestPipeline(ns: NS, target: string, setup: HarvestSetup) {
                 hackPercent,
             );
             phases = newLogistics.phases;
-
-            const desiredOverlap = Math.min(overlapLimit, newLogistics.overlap);
-
-            if (desiredOverlap < allocation.numChunks) {
-                const toRelease = allocation.numChunks - desiredOverlap;
-                const beforeHosts = hosts;
-                const result = await memClient.releaseChunks(
-                    allocation.allocationId,
-                    toRelease,
-                );
-                if (result) {
-                    allocation.allocatedChunks = result.hosts.map(
-                        (h) => new AllocationChunk(h),
-                    );
-                    const shrinkHosts = hostListFromChunks(
-                        allocation.allocatedChunks,
-                    );
-                    batches = cancelRemovedBatches(
-                        ns,
-                        beforeHosts,
-                        shrinkHosts,
-                        batches,
-                    );
-                    hosts = shrinkHosts;
-                    if (currentBatches >= hosts.length) {
-                        currentBatches %= hosts.length;
-                    }
-                    maxOverlap = hosts.length;
-                    ns.print(
-                        `INFO: released ${toRelease} chunks from allocation`,
-                    );
-                } else {
-                    ns.print(`WARN: failed to release ${toRelease} chunks`);
-                }
-            }
         }
 
         let batchPids: number[] = [];

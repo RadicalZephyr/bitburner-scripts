@@ -15,7 +15,6 @@ import {
     MEMORY_PORT,
     Message,
     MessageType,
-    AllocationChunksRelease,
     AllocationRegister,
     MEMORY_RESPONSE_PORT,
     ResponsePayload,
@@ -285,18 +284,6 @@ async function readMemRequestsFromPort(
                 }
                 // Don't send a response, no one is listening.
                 continue;
-            }
-            case MessageType.ReleaseChunks: {
-                const releaseInfo = msg[2] as AllocationChunksRelease;
-                printLog(
-                    `INFO: release ${releaseInfo.numChunks} chunks from `
-                        + `allocation ${releaseInfo.allocationId}`,
-                );
-                payload = memoryManager.releaseChunks(
-                    releaseInfo.allocationId,
-                    releaseInfo.numChunks,
-                );
-                break;
             }
             case MessageType.Register: {
                 const reg = msg[2] as AllocationRegister;

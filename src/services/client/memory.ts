@@ -34,7 +34,6 @@ type Payload =
     | AllocationRelease
     | AllocationClaim
     | AllocationClaimRelease
-    | AllocationChunksRelease
     | AllocationRegister
     | StatusRequest
     | SnapshotRequest;
@@ -88,11 +87,6 @@ export interface AllocationClaimRelease {
     allocationId: number;
     pid: number;
     hostname: string;
-}
-
-export interface AllocationChunksRelease {
-    allocationId: number;
-    numChunks: number;
 }
 
 export interface AllocationRegister {
@@ -322,36 +316,6 @@ export class MemoryClient extends Client<
             numChunks,
         };
         await this.sendMessage(MessageType.Register, payload);
-    }
-
-    /**
-     * Signal the MemoryAllocator that this allocation can shrink by the given amount
-     *
-     * @param allocationId The ID for the allocation
-     * @param numChunks    The number of chunks that can be released
-     * @returns            An allocation result describing the new set of chunks allocated to this ID
-     */
-    async releaseChunks(
-        allocationId: number,
-        numChunks: number,
-    ): Promise<AllocationResult> {
-        this.ns.print(
-            `INFO: releasing ${numChunks} chunks from allocation ${allocationId}`,
-        );
-
-        const payload: AllocationChunksRelease = {
-            allocationId,
-            numChunks,
-        };
-        const result = await this.sendMessageReceiveResponse(
-            MessageType.ReleaseChunks,
-            payload,
-        );
-        if (!result) {
-            this.ns.print('WARN: chunk release failed');
-            return null;
-        }
-        return result as AllocationResult;
     }
 
     /**
