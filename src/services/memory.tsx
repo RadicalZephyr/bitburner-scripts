@@ -58,13 +58,16 @@ This script handles allocating blocks of memory. A visualization of the
 reserved, allocated and free memory for each Worker host can be viewed in
 this script's log.
 
-OPTIONS
---help           Show this help message
---refresh-rate   Time to sleep between displaying memory usage
-
 Example:
+  > run ${ns.getScriptName()}
 
-> run ${ns.getScriptName()}
+OPTIONS
+  --help           Show this help message
+  --refresh-rate   Time to sleep between displaying memory usage
+
+CONFIGURATION
+  SERVICE_memoryGrowCheckRateMs  Length of time between attempting to grow undersized allocations
+  SERVICE_memResponseTimeoutMs   How long to attempt to send responses while response port is full
 `);
         return;
     }
