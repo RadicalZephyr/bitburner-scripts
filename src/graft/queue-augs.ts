@@ -2,7 +2,6 @@ import type { NS, AutocompleteData, Multipliers } from 'netscript';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { canAfford } from 'util/money';
-import { extend } from '/util/extend';
 
 type MultKey = keyof Multipliers;
 
