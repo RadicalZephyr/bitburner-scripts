@@ -4,6 +4,7 @@ const entries = [
     ['discoverWalkIntervalMs', 5000],
     ['garbageCollectionRateMs', 1000],
     ['memoryGrowCheckRateMs', 1000],
+    ['memResponseTimeoutMs', 5000],
     ['launchRetryMax', 5],
     ['subscriptionMaxRetries', 5],
     ['updateCheckIntervalMs', 1000 * 60 * 60],

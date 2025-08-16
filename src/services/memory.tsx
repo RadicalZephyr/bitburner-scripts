@@ -340,7 +340,14 @@ async function readMemRequestsFromPort(
             }
         }
 
+        const start = Date.now();
         while (!memResponsePort.tryWrite([requestId, payload])) {
+            if (Date.now() - start > CONFIG.memResponseTimeoutMs) {
+                printLog(
+                    `WARN: dropping response for ${requestId} due to full port`,
+                );
+                break;
+            }
             await ns.asleep(10);
         }
     }
