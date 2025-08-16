@@ -6,7 +6,7 @@ import type { CityName, LocationName, NS } from 'netscript';
  * @param ns   - Netscript API instance
  * @param city - City name
  */
-export function travelTo(ns: NS, city: CityName) {
+export function travelTo(ns: NS, city: CityName | `${CityName}`) {
     if (ns.getPlayer().city === city) return;
 
     if (ns.getServerMoneyAvailable('home') < 200_000)
