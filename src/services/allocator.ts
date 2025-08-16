@@ -434,6 +434,12 @@ export class MemoryAllocator {
                 (sum, c) => sum + c.numChunks,
                 0,
             );
+            allocation.claims = allocation.claims.filter(
+                (c) => c.numChunks > 0,
+            );
+            if (allocation.claims.length === 0) {
+                this.allocations.delete(id);
+            }
             return true;
         }
 

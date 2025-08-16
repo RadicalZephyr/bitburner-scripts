@@ -102,6 +102,33 @@ test('owner deallocation retains claimed chunks', () => {
     expect(alloc.allocations.has(res!.allocationId)).toBe(false);
 });
 
+test('deallocate removes zero-length claims', () => {
+    const hosts = { h1: { max: 16, used: 0 } };
+    const procs: ProcMap = { 1: true, 2: true };
+    const ns = makeNS(hosts, procs);
+    const alloc = new MemoryAllocator(ns);
+    alloc.pushWorker('h1');
+
+    const res = alloc.allocate(1, 'a.js', 4, 1);
+    expect(res).not.toBeNull();
+
+    const claimOk = alloc.claimAllocation({
+        allocationId: res!.allocationId,
+        pid: 2,
+        hostname: 'h1',
+        filename: 'b.js',
+        chunkSize: 4,
+        numChunks: 0,
+    });
+    expect(claimOk).toBe(true);
+    const allocation = alloc.allocations.get(res!.allocationId);
+    expect(allocation?.claims.length).toBe(1);
+
+    expect(alloc.deallocate(res!.allocationId, 1, 'h1')).toBe(true);
+    expect(alloc.allocations.has(res!.allocationId)).toBe(false);
+    expect(alloc.getFreeRamTotal()).toBeCloseTo(16);
+});
+
 test('garbage collect terminated processes', () => {
     const hosts = { h1: { max: 16, used: 0 } };
     const procs: ProcMap = { 1: false };
