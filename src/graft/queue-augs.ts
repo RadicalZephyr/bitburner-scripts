@@ -1,6 +1,8 @@
 import type { NS, AutocompleteData, Multipliers } from 'netscript';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
+import { travelTo } from 'automation/travel';
+
 import { canAfford } from 'util/money';
 
 type MultKey = keyof Multipliers;
@@ -235,9 +237,11 @@ async function graftAugmentation(
         if (!result) return false;
     }
 
-    while (!canAfford(ns, aug.price)) {
+    while (!canAfford(ns, aug.price + 200_000)) {
         await ns.asleep(1000);
     }
+
+    travelTo(ns, 'New Tokyo');
 
     const res = ns.grafting.graftAugmentation(aug.name, true);
     if (!res) return false;
