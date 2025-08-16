@@ -32,8 +32,8 @@ OPTIONS
   --help   Show this help message
 
 CONFIGURATION
-  DISCOVERY_discoverWalkIntervalMs  Delay between network scans
-  DISCOVERY_subscriptionMaxRetries   Failed notifications tolerated
+  SERVICE_discoverWalkIntervalMs  Delay between network scans
+  SERVICE_subscriptionMaxRetries  Failed notifications tolerated
 `);
         return;
     }
