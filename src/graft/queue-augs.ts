@@ -275,8 +275,9 @@ function augment(ns: NS, name: string): Augment {
 }
 
 function stripUnitMults(aug: Multipliers): Partial<Multipliers> {
+    const out: Partial<Multipliers> = {};
     for (const k in aug) {
-        if (aug[k] === 1) delete aug[k];
+        if (aug[k] !== 1) out[k] = aug[k];
     }
-    return aug;
+    return out;
 }
