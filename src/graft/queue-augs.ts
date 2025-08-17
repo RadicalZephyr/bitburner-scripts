@@ -173,7 +173,7 @@ async function graftAugments(ns: NS, dryRun: boolean, mults: MultKey[]) {
         .filter((a) => mults.some((m) => m in a));
 
     graftableAugs.sort((a, b) => {
-        if (Math.abs(a.price - b.price) < 1) {
+        if (Math.abs(a.installTime - b.installTime) > 1000) {
             return a.installTime - b.installTime;
         } else {
             return a.price - b.price;
