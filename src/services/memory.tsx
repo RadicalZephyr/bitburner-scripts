@@ -366,7 +366,7 @@ async function growAllocations(ns: NS, memoryManager: MemoryAllocator) {
 
         const port = ns.getPortHandle(alloc.notifyPort);
         while (!port.tryWrite(newChunks)) {
-            await ns.sleep(20);
+            await ns.asleep(20);
         }
     }
 }
