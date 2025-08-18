@@ -134,6 +134,7 @@ export class StatTracker<Type> {
                 samples += 1;
             }
         }
+        if (samples === 0) return 0;
         return velocitySum / samples;
     }
 
