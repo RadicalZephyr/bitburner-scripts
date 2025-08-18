@@ -2,27 +2,10 @@ import type { NS, UserInterfaceTheme } from 'netscript';
 import { parseFlags } from 'util/flags';
 
 import { canInstallBackdoor, needsBackdoor } from 'util/backdoor';
+import { FACTION_SERVERS } from 'util/faction-servers';
 import { useNsUpdate, useTheme } from 'util/hooks';
 import { sendTerminalCommand } from 'util/terminal';
 import { walkNetworkBFS } from 'util/walk';
-
-const FACTION_SERVERS = [
-    'CSEC',
-    'avmnite-02h',
-    'I.I.I.I',
-    'run4theh111z',
-    'b-and-a',
-    'blade',
-    'clarkinc',
-    'ecorp',
-    '4sigma',
-    'fulcrumassets',
-    'fulcrumtech',
-    'kuai-gong',
-    'megacorp',
-    'nwo',
-    'omnitek',
-];
 
 export async function main(ns: NS) {
     await parseFlags(ns, []);

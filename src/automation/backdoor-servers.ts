@@ -2,25 +2,8 @@ import type { NS } from 'netscript';
 import { parseFlags } from 'util/flags';
 
 import { canInstallBackdoor, needsBackdoor } from 'util/backdoor';
+import { FACTION_SERVERS } from 'util/faction-servers';
 import { shortestPath } from 'util/shortest-path';
-
-const FACTION_SERVERS = [
-    'CSEC',
-    'avmnite-02h',
-    'I.I.I.I',
-    'run4theh111z',
-    'b-and-a',
-    'blade',
-    'clarkinc',
-    'ecorp',
-    '4sigma',
-    'fulcrumassets',
-    'fulcrumtech',
-    'kuai-gong',
-    'megacorp',
-    'nwo',
-    'omnitek',
-];
 
 export async function main(ns: NS) {
     await parseFlags(ns, []);
