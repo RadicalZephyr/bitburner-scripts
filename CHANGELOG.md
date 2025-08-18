@@ -55,6 +55,7 @@
 - Noodle eater counts bowls eaten and travels to the Noodle Bar automatically when Source File\u202f4 is owned [#245][pr-245].
 - `gym` script renamed to `workout` and `port-openers` to `purchase-crackers` [#255][pr-255].
 - Automation scripts rely on the global focus setting via `ns.singularity.setFocus` [#255][pr-255].
+- Added `graft/queue-augs.ts` to queue augmentations for grafting with multiplier filters and prerequisite handling [#257][pr-257].
 
 ### Bladeburner
 
@@ -133,6 +134,7 @@
 [pr-246]: https://github.com/RadicalZephyr/bitburner-scripts/pull/246
 [pr-250]: https://github.com/RadicalZephyr/bitburner-scripts/pull/250
 [pr-255]: https://github.com/RadicalZephyr/bitburner-scripts/pull/255
+[pr-257]: https://github.com/RadicalZephyr/bitburner-scripts/pull/257
 [pr-260]: https://github.com/RadicalZephyr/bitburner-scripts/pull/260
 
 ## v2.1.0
