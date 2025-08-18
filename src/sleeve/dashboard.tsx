@@ -89,9 +89,13 @@ interface DashboardProps {
 function SleeveDashboard({ ns, pollFn }: DashboardProps) {
     const theme = useTheme(ns);
     const sleevesData = usePoll(ns, 1000, pollFn);
+    const style = {
+        display: 'grid',
+        gridTemplateColumns: 'repeat(2, 1fr)',
+    };
 
     return (
-        <div>
+        <div className="MuiBox-root" style={style}>
             {sleevesData.map((sd, idx) => (
                 <SleeveReady ns={ns} theme={theme} idx={idx} sleeveData={sd} />
             ))}
@@ -107,8 +111,14 @@ interface SleeveReadyProps {
 }
 
 function SleeveReady({ ns, theme, idx, sleeveData }: SleeveReadyProps) {
+    const style = {
+        border: '1px solid rgb(68, 68, 68)',
+    };
     return (
-        <div>
+        <div
+            style={style}
+            className="MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1"
+        >
             <div>Sleeve {idx}:</div>
             <div>
                 Recovered from Shock:
