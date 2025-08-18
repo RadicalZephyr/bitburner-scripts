@@ -42,10 +42,10 @@ OPTIONS
         return;
     }
 
-    await startCrimeRing(ns, flags.crime);
+    startCrimeRing(ns, flags.crime);
 }
 
-async function startCrimeRing(ns: NS, crime: CrimeType | `${CrimeType}`) {
+function startCrimeRing(ns: NS, crime: CrimeType | `${CrimeType}`) {
     const numSleeves = ns.sleeve.getNumSleeves();
     for (let i = 0; i < numSleeves; i++) {
         if (!ns.sleeve.setToCommitCrime(i, crime))
