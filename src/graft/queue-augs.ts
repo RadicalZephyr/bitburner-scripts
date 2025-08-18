@@ -120,6 +120,7 @@ Example:
 OPTIONS
   --dry-run  Don't buy anything, just display the augments that would be chosen
   --preset   Specify a built-in bundle of related multipliers
+             Available presets: ${Object.keys(PRESETS).join(', ')}
   --mult     Augmentation multipliers to filter by, may be specified multiple times
              Available multipliers: ${MULTIPLIERS.join(', ')}
   --help     Show this help message
