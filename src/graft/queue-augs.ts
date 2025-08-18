@@ -149,10 +149,12 @@ function buildMultipliers(
     const isMultKey = (m: string): m is MultKey =>
         Object.hasOwn(exampleMult, m);
 
-    const multipliers = new Set(mults.map((m) => m.trim()).filter(isMultKey));
+    const multipliers = new Set(
+        mults.map((m) => m.trim().toLocaleLowerCase()).filter(isMultKey),
+    );
 
     for (const p of presets) {
-        const preset = p.trim();
+        const preset = p.trim().toLocaleLowerCase();
         if (!(preset in PRESETS)) {
             ns.tprint(`unknown preset: '${preset}'`);
             continue;
