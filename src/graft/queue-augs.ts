@@ -253,7 +253,7 @@ async function graftAugmentation(
     for (const preReqAug of preReqs) {
         if (ownedAugs.has(preReqAug)) continue;
 
-        // TODO: try to purchase augmentation before grafting it
+        // TODO: (ZEFS 2025-08-17 #263) try to purchase augmentation before grafting it
         // Cannot graft pre-req, signal failure
         if (!graftableAugs.has(preReqAug)) return false;
 
