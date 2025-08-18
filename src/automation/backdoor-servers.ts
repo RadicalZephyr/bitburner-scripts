@@ -9,7 +9,17 @@ const FACTION_SERVERS = [
     'avmnite-02h',
     'I.I.I.I',
     'run4theh111z',
+    'b-and-a',
+    'blade',
+    'clarkinc',
+    'ecorp',
+    '4sigma',
     'fulcrumassets',
+    'fulcrumtech',
+    'kuai-gong',
+    'megacorp',
+    'nwo',
+    'omnitek',
 ];
 
 export async function main(ns: NS) {
