@@ -202,10 +202,10 @@ async function graftAugments(ns: NS, dryRun: boolean, mults: MultKey[]) {
         const result = await graftAugmentation(ns, ownedAugs, aug);
 
         if (result) {
-            ns.print(`finished grafting ${augment.name}`);
+            ns.print(`finished grafting ${aug.name}`);
         } else {
             ns.print(
-                `failed to graft ${augment.name} or one of it's pre-requisites`,
+                `failed to graft ${aug.name} or one of its pre-requisites`,
             );
         }
 
