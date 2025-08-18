@@ -113,6 +113,8 @@ USAGE: run ${ns.getScriptName()}
 Graft augments in order of least time and selecting for specific multipliers.
 If no multipliers or presets are specified then all augments will be purchased.
 
+Will wait until any ongoing grafting finishes before beginning new grafting queue.
+
 Example:
   > run ${ns.getScriptName()} --mult faction_rep
   > run ${ns.getScriptName()} --mult hacking --mult hacking_exp
@@ -125,6 +127,16 @@ OPTIONS
              Available multipliers: ${MULTIPLIERS.join(', ')}
   --help     Show this help message
 `);
+        return;
+    }
+
+    try {
+        await ns.grafting.waitForOngoingGrafting();
+    } catch (err) {
+        ns.print(`ERROR: ${String(err)}`);
+        ns.tprint(
+            `not currently grafting, please cancel any other activities before starting grafting.`,
+        );
         return;
     }
 
