@@ -172,6 +172,14 @@ async function graftAugments(ns: NS, dryRun: boolean, mults: MultKey[]) {
         .map((a) => augment(ns, a))
         .filter((a) => mults.some((m) => m in a));
 
+    if (graftableAugs.length === 0) {
+        ns.clearLog();
+        ns.print(
+            `WARN: no graftable augmetations found with desired multipliers ${mults.join(',')} `,
+        );
+        return;
+    }
+
     graftableAugs.sort((a, b) => {
         if (Math.abs(a.installTime - b.installTime) > 1000) {
             return a.installTime - b.installTime;
