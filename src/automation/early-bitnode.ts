@@ -1,7 +1,5 @@
-import type { AutocompleteData, NS } from 'netscript';
+import type { AutocompleteData, GymType, NS } from 'netscript';
 import { FlagsSchema, parseFlags } from 'util/flags';
-
-import { CONFIG } from 'automation/config';
 
 import { LaunchClient } from 'services/client/launch';
 
@@ -44,24 +42,62 @@ async function studyAndCode(ns: NS) {
         throw new Error('failed to study algorithms at Rothman University');
 
     // Wait until we can create BruteSSH.exe
-    await untilHackLevel(ns, CONFIG.bruteSshHackRequirement);
+    await untilHackLevel(ns, 10);
 
-    // Create BruteSSH.exe
-    if (!ns.singularity.createProgram('BruteSSH.exe', true))
-        throw new Error('failed to start working on BruteSSH.exe');
-
-    let work = ns.singularity.getCurrentWork();
-    while (work && work.type === 'CREATE_PROGRAM') {
-        await ns.asleep(10_000);
-        work = ns.singularity.getCurrentWork();
+    try {
+        startSleevesWorkingOut(ns);
+    } catch (err) {
+        ns.print(`WARN: failed to start sleeves working out: ${String(err)}`);
     }
 
-    // Wait until we can create FTPCrack.exe
-    await untilHackLevel(ns, CONFIG.ftpCrackHackRequirement);
+    if (!ns.singularity.gymWorkout('Powerhouse Gym', 'agi'))
+        throw new Error('failed to workout agility at Powerhouse Gym');
 
-    // Create FTPCrack.exe
-    if (!ns.singularity.createProgram('FTPCrack.exe', true))
-        throw new Error('failed to start working on FTPCrack.exe');
+    await untilCombatStat(ns, 'agi', 10);
+
+    try {
+        startSleevesShoplifting(ns);
+    } catch (err) {
+        ns.print(`WARN: failed to start sleeves shoplifting: ${String(err)}`);
+    }
+
+    if (!ns.singularity.commitCrime('Shoplift'))
+        throw new Error('Failed to start shoplifting!');
+}
+
+function startSleevesShoplifting(ns: NS) {
+    const numSleeves = ns.sleeve.getNumSleeves();
+    for (let i = 0; i < numSleeves; i++) {
+        if (!ns.sleeve.setToCommitCrime(i, 'Shoplift'))
+            throw new Error(`Failed to start sleeve ${i} shoplifting.`);
+    }
+}
+
+async function untilCombatStat(
+    ns: NS,
+    stat: GymType | `${GymType}`,
+    targetLevel: number,
+) {
+    while (true) {
+        const statLevel = ns.getPlayer().skills[stat];
+        if (statLevel >= targetLevel) return;
+        await ns.asleep(1000);
+    }
+}
+
+function startSleevesWorkingOut(ns: NS) {
+    const numSleeves = ns.sleeve.getNumSleeves();
+    for (let i = 0; i < numSleeves; i++) {
+        if (i % 2 === 0) {
+            if (!ns.sleeve.setToGymWorkout(i, 'Powerhouse Gym', 'agi'))
+                throw new Error('failed to workout agility at Powerhouse Gym');
+        } else {
+            if (!ns.sleeve.setToGymWorkout(i, 'Powerhouse Gym', 'dex'))
+                throw new Error(
+                    'failed to workout dexterity at Powerhouse Gym',
+                );
+        }
+    }
 }
 
 async function untilHackLevel(ns: NS, targetLevel: number) {
