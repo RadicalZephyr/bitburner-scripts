@@ -49,7 +49,7 @@ async function startCrimeRing(ns: NS, crime: CrimeType | `${CrimeType}`) {
     const numSleeves = ns.sleeve.getNumSleeves();
     for (let i = 0; i < numSleeves; i++) {
         if (!ns.sleeve.setToCommitCrime(i, crime))
-            throw new Error('failed to start shoplifting');
+            throw new Error(`failed to set sleeve ${i} to ${crime}`);
     }
 }
 
