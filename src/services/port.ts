@@ -79,6 +79,8 @@ class PortAllocator {
         const id = this.nextPort;
         this.allocated.add(id);
         this.nextPort += 1;
+        // Clear port before returning to ensure no stale messages exist
+        this.ns.clearPort(id);
         return id;
     }
 
