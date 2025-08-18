@@ -1,4 +1,4 @@
-import { computeIndicators, computeCorrelations } from './indicators';
+import { computeIndicators, computeCorrelations } from '../indicators';
 
 import { expect, test } from '@jest/globals';
 
