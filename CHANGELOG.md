@@ -31,6 +31,8 @@
     - Expanded options with `ramOverride` support [#175][pr-175].
 - Source File service exposes owned Source File levels for other scripts [#195][pr-195].
 - Memory allocator retains claimed chunks after owner deallocation and adds configurable garbage collection, grow-check, and response-port timeout settings [#260][pr-260].
+- Include megacorp servers in backdoor list [#264][pr-264].
+- The port allocator now clears ports before allocating them [#264][pr-264].
 
 ### IPvGO
 
@@ -56,6 +58,7 @@
 - `gym` script renamed to `workout` and `port-openers` to `purchase-crackers` [#255][pr-255].
 - Automation scripts rely on the global focus setting via `ns.singularity.setFocus` [#255][pr-255].
 - Added `graft/queue-augs.ts` to queue augmentations for grafting with multiplier filters and prerequisite handling [#257][pr-257].
+- Include megacorp servers in backdoor list [#264][pr-264].
 
 ### Bladeburner
 
@@ -136,6 +139,7 @@
 [pr-255]: https://github.com/RadicalZephyr/bitburner-scripts/pull/255
 [pr-257]: https://github.com/RadicalZephyr/bitburner-scripts/pull/257
 [pr-260]: https://github.com/RadicalZephyr/bitburner-scripts/pull/260
+[pr-264]: https://github.com/RadicalZephyr/bitburner-scripts/pull/264
 
 ## v2.1.0
 
