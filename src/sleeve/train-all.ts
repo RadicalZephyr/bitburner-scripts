@@ -34,11 +34,9 @@ OPTIONS
     trainAllSkills(ns);
 }
 
-type Role =
-    | GymType
-    | `${GymType}`
-    | UniversityClassType
-    | `${UniversityClassType}`;
+type Workout = `${GymType}`;
+type UniversityClass = `${UniversityClassType}`;
+type Role = GymType | Workout | UniversityClassType | UniversityClass;
 
 function trainAllSkills(ns: NS) {
     const roles: Role[] = [
@@ -52,11 +50,11 @@ function trainAllSkills(ns: NS) {
         'Leadership',
     ];
 
-    const gymRole: `${GymType}`[] = ['str', 'def', 'dex', 'agi'];
-    const isWorkout = (role: Role): role is `${GymType}` =>
+    const gymRole: Workout[] = ['str', 'def', 'dex', 'agi'];
+    const isWorkout = (role: Role): role is Workout =>
         gymRole.some((gr) => gr === role);
 
-    const courseRole: `${UniversityClassType}`[] = [
+    const courseRole: UniversityClass[] = [
         'Computer Science',
         'Data Structures',
         'Networks',
@@ -64,7 +62,7 @@ function trainAllSkills(ns: NS) {
         'Management',
         'Leadership',
     ];
-    const isCourse = (role: Role): role is `${UniversityClassType}` =>
+    const isCourse = (role: Role): role is UniversityClass =>
         courseRole.some((cr) => cr === role);
 
     const numSleeves = ns.sleeve.getNumSleeves();
