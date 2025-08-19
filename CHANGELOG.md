@@ -60,6 +60,10 @@
 - Added `graft/queue-augs.ts` to queue augmentations for grafting with multiplier filters and prerequisite handling [#257][pr-257].
 - Include megacorp servers in backdoor list [#264][pr-264].
 
+### Sleeves
+
+- Introduced sleeve scripts for augmentation purchases, crime ring coordination, direct management, and a progress dashboard [#266][pr-266].
+
 ### Bladeburner
 
 - Add a basic Bladeburner skill buying utility and a mission control script to select the best mission every cycle [#246][pr-246].
@@ -140,6 +144,7 @@
 [pr-257]: https://github.com/RadicalZephyr/bitburner-scripts/pull/257
 [pr-260]: https://github.com/RadicalZephyr/bitburner-scripts/pull/260
 [pr-264]: https://github.com/RadicalZephyr/bitburner-scripts/pull/264
+[pr-266]: https://github.com/RadicalZephyr/bitburner-scripts/pull/266
 
 ## v2.1.0
 
