@@ -26,10 +26,10 @@ OPTIONS
         return;
     }
 
-    await doBladeburnerStuff(ns);
+    doBladeburnerStuff(ns);
 }
 
-async function doBladeburnerStuff(ns: NS) {
+function doBladeburnerStuff(ns: NS) {
     const numSleeves = ns.sleeve.getNumSleeves();
     let i = 0;
     for (; i < Math.floor(numSleeves / 2); i++) {

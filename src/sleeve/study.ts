@@ -26,10 +26,10 @@ OPTIONS
         return;
     }
 
-    await studyAtUniversity(ns);
+    studyAtUniversity(ns);
 }
 
-async function studyAtUniversity(ns: NS) {
+function studyAtUniversity(ns: NS) {
     const numSleeves = ns.sleeve.getNumSleeves();
     for (let i = 0; i < numSleeves; i++) {
         ns.sleeve.travel(i, 'Volhaven');
