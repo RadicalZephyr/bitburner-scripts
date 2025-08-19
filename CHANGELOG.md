@@ -63,6 +63,8 @@
 ### Sleeves
 
 - Introduced sleeve scripts for augmentation purchases, crime ring coordination, direct management, and a progress dashboard [#266][pr-266].
+- Added more sleeve scripts for training all skills, working on
+  Bladeburner and studying [#267][pr-267].
 
 ### Bladeburner
 
@@ -145,6 +147,7 @@
 [pr-260]: https://github.com/RadicalZephyr/bitburner-scripts/pull/260
 [pr-264]: https://github.com/RadicalZephyr/bitburner-scripts/pull/264
 [pr-266]: https://github.com/RadicalZephyr/bitburner-scripts/pull/266
+[pr-267]: https://github.com/RadicalZephyr/bitburner-scripts/pull/267
 
 ## v2.1.0
 
