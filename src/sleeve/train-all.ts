@@ -34,42 +34,51 @@ OPTIONS
     trainAllSkills(ns);
 }
 
+type Role =
+    | GymType
+    | `${GymType}`
+    | UniversityClassType
+    | `${UniversityClassType}`;
+
 function trainAllSkills(ns: NS) {
+    const roles: Role[] = [
+        'str',
+        'def',
+        'dex',
+        'agi',
+        'Algorithms',
+        'Leadership',
+        'Algorithms',
+        'Leadership',
+    ];
+
+    const gymRole: `${GymType}`[] = ['str', 'def', 'dex', 'agi'];
+    const isWorkout = (role: Role): role is `${GymType}` =>
+        gymRole.some((gr) => gr === role);
+
+    const courseRole: `${UniversityClassType}`[] = [
+        'Computer Science',
+        'Data Structures',
+        'Networks',
+        'Algorithms',
+        'Management',
+        'Leadership',
+    ];
+    const isCourse = (role: Role): role is `${UniversityClassType}` =>
+        courseRole.some((cr) => cr === role);
+
     const numSleeves = ns.sleeve.getNumSleeves();
 
-    let i = 0;
-
-    if (numSleeves < 1) return;
-    sleeveWorkout(ns, i, 'str');
-    i += 1;
-
-    if (numSleeves < 2) return;
-    sleeveWorkout(ns, i, 'def');
-    i += 1;
-
-    if (numSleeves < 3) return;
-    sleeveWorkout(ns, i, 'dex');
-    i += 1;
-
-    if (numSleeves < 4) return;
-    sleeveWorkout(ns, i, 'agi');
-    i += 1;
-
-    if (numSleeves < 5) return;
-    sleeveStudy(ns, i, 'Algorithms');
-    i += 1;
-
-    if (numSleeves < 6) return;
-    sleeveStudy(ns, i, 'Leadership');
-    i += 1;
-
-    if (numSleeves < 7) return;
-    sleeveStudy(ns, i, 'Algorithms');
-    i += 1;
-
-    if (numSleeves < 8) return;
-    sleeveStudy(ns, i, 'Leadership');
-    i += 1;
+    for (let i = 0; i < numSleeves; i++) {
+        const role = roles[i];
+        if (isWorkout(role)) {
+            sleeveWorkout(ns, i, role);
+        } else if (isCourse(role)) {
+            sleeveStudy(ns, i, role);
+        } else {
+            ns.tprint(`Could not find role '${roles[i]}' for sleeve ${i}`);
+        }
+    }
 }
 
 function sleeveWorkout(ns: NS, i: number, stat: GymType | `${GymType}`) {
