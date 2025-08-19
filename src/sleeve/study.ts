@@ -32,11 +32,15 @@ OPTIONS
 function studyAtUniversity(ns: NS) {
     const numSleeves = ns.sleeve.getNumSleeves();
     for (let i = 0; i < numSleeves; i++) {
-        ns.sleeve.travel(i, 'Volhaven');
-        ns.sleeve.setToUniversityCourse(
-            i,
-            'ZB Institute of Technology',
-            'Algorithms',
-        );
+        if (!ns.sleeve.travel(i, 'Volhaven'))
+            throw new Error('Failed to travel to Volhaven to study.');
+        if (
+            !ns.sleeve.setToUniversityCourse(
+                i,
+                'ZB Institute of Technology',
+                'Algorithms',
+            )
+        )
+            throw new Error('failed to study Algorithms at ZBU');
     }
 }

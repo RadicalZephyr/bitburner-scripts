@@ -33,10 +33,16 @@ function doBladeburnerStuff(ns: NS) {
     const numSleeves = ns.sleeve.getNumSleeves();
     let i = 0;
     for (; i < Math.floor(numSleeves / 2); i++) {
-        ns.sleeve.setToBladeburnerAction(i, 'Field Analysis');
+        if (!ns.sleeve.setToBladeburnerAction(i, 'Field Analysis'))
+            throw new Error(
+                `failed to start sleeve ${i} doing Bladeburner Field Analysis`,
+            );
     }
 
     for (; i < numSleeves; i++) {
-        ns.sleeve.setToBladeburnerAction(i, 'Training');
+        if (!ns.sleeve.setToBladeburnerAction(i, 'Training'))
+            throw new Error(
+                `failed to start sleeve ${i} doing Bladeburner Training`,
+            );
     }
 }
