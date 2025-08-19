@@ -99,3 +99,29 @@ test('threshold can be updated', async () => {
 
     await expect(promise).resolves.toBe(1);
 });
+
+test('averageVelocity can average every history sample', () => {
+    const tracker = new StatTracker<Example>(3);
+
+    expect(tracker.averageVelocity(1, 'a')).toBe(0);
+
+    tracker.update(makeExample(1), 1000);
+    tracker.update(makeExample(2), 2000);
+    tracker.update(makeExample(3), 3000);
+    expect(tracker.averageVelocity(1, 'a')).toBe(1);
+});
+
+test('averageVelocity can average every other history sample', () => {
+    const tracker = new StatTracker<Example>(3);
+
+    tracker.update(makeExample(0.98), 500);
+    tracker.update(makeExample(2.01), 1000);
+    tracker.update(makeExample(3.03), 1500);
+    tracker.update(makeExample(4.05), 2000);
+    tracker.update(makeExample(5.07), 2500);
+    tracker.update(makeExample(6.09), 3000);
+    tracker.update(makeExample(7.11), 3500);
+
+    expect(tracker.velocity('a')).toBeCloseTo(2.04, 3);
+    expect(tracker.averageVelocity(2, 'a')).toBeCloseTo(2.04, 3);
+});
