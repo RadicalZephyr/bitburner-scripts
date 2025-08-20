@@ -58,8 +58,12 @@
 - Noodle eater counts bowls eaten and travels to the Noodle Bar automatically when Source File\u202f4 is owned [#245][pr-245].
 - `gym` script renamed to `workout` and `port-openers` to `purchase-crackers` [#255][pr-255].
 - Automation scripts rely on the global focus setting via `ns.singularity.setFocus` [#255][pr-255].
-- Added `graft/queue-augs.ts` to queue augmentations for grafting with multiplier filters and prerequisite handling [#257][pr-257].
 - Include megacorp servers in backdoor list [#264][pr-264].
+
+### Grafting
+
+- Added `graft/queue-augs.ts` to queue augmentations for grafting with multiplier filters and prerequisite handling [#257][pr-257].
+- `graft/queue-augs.ts` now scores augments by multiplier sum to install most impactful augments first [#270][pr-270].
 
 ### Sleeves
 
@@ -150,6 +154,7 @@
 [pr-266]: https://github.com/RadicalZephyr/bitburner-scripts/pull/266
 [pr-267]: https://github.com/RadicalZephyr/bitburner-scripts/pull/267
 [pr-268]: https://github.com/RadicalZephyr/bitburner-scripts/pull/268
+[pr-270]: https://github.com/RadicalZephyr/bitburner-scripts/pull/270
 
 ## v2.1.0
 
