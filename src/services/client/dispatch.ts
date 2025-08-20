@@ -3,7 +3,7 @@ import type { NS } from 'netscript';
 import { Client, Message as ClientMessage } from 'util/client';
 
 export const DISPATCH_PORT = 21;
-export const DISPATH_RESPONSE_PORT = 22;
+export const DISPATCH_RESPONSE_PORT = 22;
 
 // ---- Type utilities (types-only; erased at runtime) ----
 
@@ -71,7 +71,7 @@ export class DispatchClient extends Client<
     DaemonResponse
 > {
     constructor(ns: NS) {
-        super(ns, DISPATCH_PORT, DISPATH_RESPONSE_PORT);
+        super(ns, DISPATCH_PORT, DISPATCH_RESPONSE_PORT);
     }
 
     async dispatch<K extends NSMethodName>(

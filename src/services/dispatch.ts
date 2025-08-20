@@ -8,7 +8,7 @@ import { FlagsSchema, parseFlags } from 'util/flags';
 
 import {
     DISPATCH_PORT,
-    DISPATH_RESPONSE_PORT,
+    DISPATCH_RESPONSE_PORT,
     Message,
     MessageType,
     DaemonRequest,
@@ -79,7 +79,7 @@ OPTIONS
     memClient.registerAllocation(self.server, self.ramUsage, 1);
 
     const port = ns.getPortHandle(DISPATCH_PORT);
-    const respPort = ns.getPortHandle(DISPATH_RESPONSE_PORT);
+    const respPort = ns.getPortHandle(DISPATCH_RESPONSE_PORT);
 
     await readLoop(ns, port, () => readRequests(ns, port, respPort));
 }
