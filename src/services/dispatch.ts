@@ -14,13 +14,13 @@ import {
     DaemonRequest,
     DaemonResponse,
 } from 'services/client/dispatch';
-import { MemoryClient } from 'services/client/memory';
+import { MemoryClient, parseAndRegisterAlloc } from 'services/client/memory';
+import { ALLOC_ID_ARG } from 'services/client/memory_tag';
 
 import { readAllFromPort, readLoop } from 'util/ports';
 import { collectDependencies } from 'util/dependencies';
 
 import { CONFIG } from 'services/config';
-import { ALLOC_ID_ARG } from 'client/memory_tag';
 
 const EXECUTOR_OPT = 'executor' as const;
 
@@ -74,6 +74,8 @@ CONFIGURATION
     }
 
     ns.ui.setTailTitle(`Dispatch Message Receiver - ${ns.self().server}`);
+
+    await parseAndRegisterAlloc(ns, flags, true);
 
     await startExecutor(ns);
 
