@@ -25,6 +25,7 @@ export async function main(ns: NS) {
     for (const script of services) {
         await client.launch(script, {
             threads: 1,
+            preventDuplicates: true,
             alloc: { longRunning: true },
         });
     }

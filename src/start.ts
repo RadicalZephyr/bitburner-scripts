@@ -52,7 +52,12 @@ OPTIONS
     }
 
     const args = flags.minimal ? ['--minimal'] : [];
-    const pid = ns.exec(script, hostname, 1, ...args);
+    const pid = ns.exec(
+        script,
+        hostname,
+        { threads: 1, preventDuplicates: true },
+        ...args,
+    );
     if (pid === 0) {
         reportError(ns, `failed to launch ${script} on ${hostname}`);
         return;

@@ -39,6 +39,7 @@ export async function main(ns: NS) {
     for (const script of essentialServices) {
         await client.launch(script, {
             threads: 1,
+            preventDuplicates: true,
             alloc: { longRunning: true },
         });
     }
@@ -52,6 +53,7 @@ export async function main(ns: NS) {
     if (sf4 === 0) {
         await client.launch('/services/backdoor-notify.js', {
             threads: 1,
+            preventDuplicates: true,
             alloc: { longRunning: true },
         });
     }
@@ -77,7 +79,10 @@ function manualLaunch(ns: NS, script: string, hostname: string) {
         return;
     }
 
-    const pid = ns.exec(script, hostname);
+    const pid = ns.exec(script, hostname, {
+        threads: 1,
+        preventDuplicates: true,
+    });
     if (pid === 0) {
         const error = `failed to launch ${script} on ${hostname}`;
         ns.toast(error, 'error');
