@@ -53,7 +53,8 @@ OPTIONS
   --help      Show this help message
 
 CONFIGURATION
-  SERVICES_maxNsFnRam  Configured maximum RAM for the NS dispatch executor
+  SERVICES_maxDispatchQueueSize  Maximum number of pending dispatch requests
+  SERVICES_maxNsFnRam            Configured maximum RAM for the NS dispatch executor
 `);
         return;
     }
@@ -128,7 +129,7 @@ async function readRequests(ns: NS, port: NetscriptPort, resp: NetscriptPort) {
             response = { ok: false, error: 'Invalid request' };
         } else {
             try {
-                const value = await queueNsCommand(payload);
+                const value = await queueNsCommand(ns, payload);
                 response = { ok: true, value };
             } catch (err) {
                 response = {
@@ -158,7 +159,12 @@ let isPending: Promise<void> = Promise.resolve();
 let signalNext: () => void = () => null;
 const pending: NsRequest[] = [];
 
-function queueNsCommand(request: DaemonRequest): Promise<unknown> {
+function queueNsCommand(ns: NS, request: DaemonRequest): Promise<unknown> {
+    if (pending.length >= CONFIG.maxDispatchQueueSize) {
+        ns.print('WARN: Dispatch queue full. Rejecting request.');
+        return Promise.reject(new Error('Dispatch queue full'));
+    }
+
     return new Promise((resolve, reject) => {
         pending.push({ request, resolve, reject });
         signalNext();
