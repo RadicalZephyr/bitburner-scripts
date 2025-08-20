@@ -33,6 +33,7 @@
 - Memory allocator retains claimed chunks after owner deallocation and adds configurable garbage collection, grow-check, and response-port timeout settings [#260][pr-260].
 - Include megacorp servers in backdoor list [#264][pr-264].
 - The port allocator now clears ports before allocating them [#264][pr-264].
+- Bootstrap scripts prevent duplicate instances [#268][pr-268].
 
 ### IPvGO
 
@@ -148,6 +149,7 @@
 [pr-264]: https://github.com/RadicalZephyr/bitburner-scripts/pull/264
 [pr-266]: https://github.com/RadicalZephyr/bitburner-scripts/pull/266
 [pr-267]: https://github.com/RadicalZephyr/bitburner-scripts/pull/267
+[pr-268]: https://github.com/RadicalZephyr/bitburner-scripts/pull/268
 
 ## v2.1.0
 
