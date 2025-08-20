@@ -51,6 +51,9 @@ Run arbitrary Netscript functions in an ephemeral process.
 OPTIONS
   --${EXECUTOR_OPT}  Run as the ephemeral function executor
   --help      Show this help message
+
+CONFIGURATION
+  SERVICES_maxNsFnRam  Configured maximum RAM for the NS dispatch executor
 `);
         return;
     }
