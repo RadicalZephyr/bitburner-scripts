@@ -234,6 +234,7 @@ async function graftAugments(
         ns.print(
             'WARN: Player is busy with an action, refusing to start grafting while busy.',
         );
+        return;
     }
 
     const ownedAugs: Set<string> = new Set(
