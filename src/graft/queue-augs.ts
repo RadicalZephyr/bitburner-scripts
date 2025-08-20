@@ -210,17 +210,12 @@ async function graftAugments(
         }
     });
 
-    if (dryRun || ns.singularity.isBusy()) {
+    if (dryRun) {
         ns.disableLog('ALL');
         ns.clearLog();
 
         ns.print(JSON.stringify(graftableAugs, null, 2));
 
-        if (ns.singularity.isBusy()) {
-            ns.print(
-                'WARN: Player is busy with an action, refusing to start grafting while busy.',
-            );
-        }
         return;
     }
 
@@ -232,6 +227,13 @@ async function graftAugments(
             `not currently grafting, please cancel any other activities before starting grafting.`,
         );
         return;
+    }
+
+    await ns.sleep(0);
+    if (ns.singularity.isBusy()) {
+        ns.print(
+            'WARN: Player is busy with an action, refusing to start grafting while busy.',
+        );
     }
 
     const ownedAugs: Set<string> = new Set(
