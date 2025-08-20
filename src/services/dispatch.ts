@@ -40,7 +40,7 @@ async function readRequests(ns: NS, port: NetscriptPort, resp: NetscriptPort) {
             response = { ok: false, error: 'Invalid request' };
         } else {
             try {
-                const value = await dispatch(ns, payload);
+                const value = await queueNsCommand(payload);
                 response = { ok: true, value };
             } catch (err) {
                 response = {
@@ -60,7 +60,21 @@ function isValidRequest(req: DaemonRequest): boolean {
     return req && typeof req.method === 'string' && Array.isArray(req.args);
 }
 
-export async function dispatch(ns: NS, req: DaemonRequest): Promise<unknown> {
+interface NsRequest {
+    request: DaemonRequest;
+    resolve: (response: unknown) => void;
+    reject: (reason?: unknown) => void;
+}
+
+const pending: NsRequest[] = [];
+
+function queueNsCommand(request: DaemonRequest): Promise<unknown> {
+    return new Promise((resolve, reject) => {
+        pending.push({ request, resolve, reject });
+    });
+}
+
+async function dispatch(ns: NS, req: DaemonRequest): Promise<unknown> {
     const method = req.method.trim();
     if (!method) throw new Error('Empty method name');
 
