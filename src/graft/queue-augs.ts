@@ -190,7 +190,7 @@ async function graftAugments(
     const graftableAugs = ns.grafting
         .getGraftableAugmentations()
         .map((a) => scoredAugment(ns, a, mults))
-        .filter((a) => mults.some((m) => m in a));
+        .filter((a) => mults.some((m) => Object.hasOwn(a, m)));
 
     if (graftableAugs.length === 0) {
         ns.clearLog();
