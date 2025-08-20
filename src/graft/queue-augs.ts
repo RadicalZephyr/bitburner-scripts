@@ -5,6 +5,8 @@ import { travelTo } from 'automation/travel';
 
 import { canAfford } from 'util/money';
 
+import { CONFIG } from 'graft/config';
+
 type MultKey = keyof Multipliers;
 
 const MULTIPLIERS = [
@@ -201,9 +203,12 @@ async function graftAugments(
     }
 
     graftableAugs.sort((a, b) => {
-        if (Math.abs(b.score - a.score) > 0.001) {
+        if (Math.abs(b.score - a.score) > CONFIG.graftAugmentScoreTolerance) {
             return b.score - a.score;
-        } else if (Math.abs(a.installTime - b.installTime) > 1000) {
+        } else if (
+            Math.abs(a.installTime - b.installTime)
+            > CONFIG.graftAugmentTimeTolerance
+        ) {
             return a.installTime - b.installTime;
         } else {
             return a.price - b.price;

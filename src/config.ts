@@ -11,6 +11,7 @@ import { CONFIG as CorpConfig } from 'corp/config';
 import { CONFIG as HacknetConfig } from 'hacknet/config';
 import { CONFIG as BladeburnerConfig } from 'bladeburner/config';
 import { CONFIG as SleeveConfig } from 'sleeve/config';
+import { CONFIG as GraftConfig } from 'graft/config';
 
 const ALL_CONFIGS = [
     ServiceConfig,
@@ -23,6 +24,7 @@ const ALL_CONFIGS = [
     HacknetConfig,
     CorpConfig,
     SleeveConfig,
+    GraftConfig,
 ];
 
 const FLAGS = [
