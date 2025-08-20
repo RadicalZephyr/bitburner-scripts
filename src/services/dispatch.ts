@@ -1,5 +1,5 @@
-import type { NS, NetscriptPort } from 'netscript';
-import { parseFlags } from 'util/flags';
+import type { AutocompleteData, NS, NetscriptPort } from 'netscript';
+import { FlagsSchema, parseFlags } from 'util/flags';
 
 import {
     DISPATCH_PORT,
@@ -13,8 +13,38 @@ import { MemoryClient } from 'services/client/memory';
 
 import { readAllFromPort, readLoop } from 'util/ports';
 
+const FLAGS = [
+    ['executor', false],
+    ['help', false],
+] as const satisfies FlagsSchema;
+
+export function autocomplete(data: AutocompleteData): readonly string[] {
+    data.flags(FLAGS);
+    return [];
+}
+
 export async function main(ns: NS) {
-    await parseFlags(ns, []);
+    const flags = await parseFlags(ns, FLAGS);
+
+    if (flags.help) {
+        ns.tprint(`
+USAGE: run ${ns.getScriptName()} [--]
+
+Run arbitrary Netscript functions in an ephemeral process.
+
+OPTIONS
+  --executor  Run as the ephemeral function executor
+  --help      Show this help message
+`);
+        return;
+    }
+
+    if (flags.executor) {
+        await executeNextFn(ns);
+        return;
+    }
+
+    // TODO: start the executor loop
 
     ns.disableLog('sleep');
 
@@ -66,12 +96,35 @@ interface NsRequest {
     reject: (reason?: unknown) => void;
 }
 
+let isPending: Promise<void> = Promise.resolve();
+let signalNext: () => void = () => null;
 const pending: NsRequest[] = [];
 
 function queueNsCommand(request: DaemonRequest): Promise<unknown> {
     return new Promise((resolve, reject) => {
         pending.push({ request, resolve, reject });
+        signalNext.call(null);
     });
+}
+
+async function executeNextFn(ns: NS) {
+    await isPending;
+
+    if (pending.length > 0) {
+        const { request, resolve, reject } = pending.shift();
+        try {
+            const result = await dispatch(ns, request);
+            resolve(result);
+        } catch (err) {
+            reject(err);
+        }
+    }
+
+    if (pending.length === 0) {
+        isPending = new Promise((res) => {
+            signalNext = res;
+        });
+    }
 }
 
 async function dispatch(ns: NS, req: DaemonRequest): Promise<unknown> {
