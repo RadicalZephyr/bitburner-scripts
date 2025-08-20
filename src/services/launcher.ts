@@ -1,4 +1,4 @@
-import type { NS, NetscriptPort, ScriptArg } from 'netscript';
+import type { NS, NetscriptPort, RunOptions, ScriptArg } from 'netscript';
 import { parseFlags } from 'util/flags';
 
 import { ALLOC_ID_ARG } from 'services/client/memory_tag';
@@ -96,6 +96,7 @@ async function launch(
     let totalThreads: number;
     let explicitDependencies: string[] = [];
     let ramOverride: number | undefined;
+    let baseRunOpts = {};
     if (
         typeof threadOrOptions === 'number'
         || typeof threadOrOptions === 'undefined'
@@ -107,6 +108,7 @@ async function launch(
         totalThreads = threadOrOptions.threads ?? 1;
         explicitDependencies = threadOrOptions.dependencies ?? [];
         ramOverride = threadOrOptions.ramOverride;
+        baseRunOpts = baseRunOptions(threadOrOptions);
     }
 
     const allocation = await client.requestTransferableAllocation(
@@ -130,14 +132,11 @@ async function launch(
         const hostname = allocationChunk.hostname;
         ns.scp([...dependencies, ...explicitDependencies], hostname, 'home');
 
-        const runOptions =
-            ramOverride !== undefined
-                ? { threads: threadsHere, ramOverride }
-                : threadsHere;
+        const runOptions = createRunOptions(threadsHere, baseRunOpts);
         const pid = ns.exec(
             script,
             hostname,
-            runOptions as never,
+            runOptions,
             ...args,
             ALLOC_ID_ARG,
             allocation.allocationId,
@@ -161,4 +160,15 @@ async function launch(
         );
     }
     return { allocation, pids };
+}
+
+function baseRunOptions(opts: LaunchRunOptions): RunOptions {
+    const runOptions = { ...opts };
+    delete runOptions.alloc;
+    delete runOptions.dependencies;
+    return runOptions;
+}
+
+function createRunOptions(threads: number, options: RunOptions): RunOptions {
+    return { ...options, threads };
 }
