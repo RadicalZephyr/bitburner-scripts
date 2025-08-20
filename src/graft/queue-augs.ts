@@ -135,16 +135,6 @@ OPTIONS
         return;
     }
 
-    try {
-        await ns.grafting.waitForOngoingGrafting();
-    } catch (err) {
-        ns.print(`ERROR: ${String(err)}`);
-        ns.tprint(
-            `not currently grafting, please cancel any other activities before starting grafting.`,
-        );
-        return;
-    }
-
     const multipliers = buildMultipliers(ns, flags.mult, flags.preset);
     await graftAugments(ns, flags['dry-run'], multipliers);
 
@@ -231,6 +221,16 @@ async function graftAugments(
                 'WARN: Player is busy with an action, refusing to start grafting while busy.',
             );
         }
+        return;
+    }
+
+    try {
+        await ns.grafting.waitForOngoingGrafting();
+    } catch (err) {
+        ns.print(`ERROR: ${String(err)}`);
+        ns.tprint(
+            `not currently grafting, please cancel any other activities before starting grafting.`,
+        );
         return;
     }
 
