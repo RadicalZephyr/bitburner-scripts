@@ -1,4 +1,9 @@
-import type { AutocompleteData, NS, NetscriptPort } from 'netscript';
+import type {
+    AutocompleteData,
+    NS,
+    NetscriptPort,
+    RunOptions,
+} from 'netscript';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
 import {
@@ -16,10 +21,18 @@ import { collectDependencies } from 'util/dependencies';
 
 import { CONFIG } from 'services/config';
 
+const EXECUTOR_OPT = 'executor' as const;
+
 const FLAGS = [
-    ['executor', false],
+    [EXECUTOR_OPT, false],
     ['help', false],
 ] as const satisfies FlagsSchema;
+
+const executorOptions: RunOptions = {
+    threads: 1,
+    preventDuplicates: true,
+    temporary: true,
+};
 
 export function autocomplete(data: AutocompleteData): readonly string[] {
     data.flags(FLAGS);
@@ -36,16 +49,26 @@ USAGE: run ${ns.getScriptName()} [--]
 Run arbitrary Netscript functions in an ephemeral process.
 
 OPTIONS
-  --executor  Run as the ephemeral function executor
+  --${EXECUTOR_OPT}  Run as the ephemeral function executor
   --help      Show this help message
 `);
         return;
     }
 
+    ns.ui.openTail();
+
     if (flags.executor) {
+        ns.ui.setTailTitle(`Dispatch Executor - ${ns.self().server}`);
         await executeNextFn(ns);
+        ns.spawn(
+            ns.self().filename,
+            { spawnDelay: 0, ...executorOptions },
+            `--${EXECUTOR_OPT}`,
+        );
         return;
     }
+
+    ns.ui.setTailTitle(`Dispatch Message Receiver - ${ns.self().server}`);
 
     await startExecutor(ns);
 
@@ -84,12 +107,7 @@ async function startExecutor(ns: NS) {
     if (!ns.scp(files, hostname, 'home'))
         throw new Error('Failed to scp files for executor');
 
-    const pid = ns.exec(
-        script,
-        hostname,
-        { threads: 1, preventDuplicates: true, temporary: true },
-        '--executor',
-    );
+    const pid = ns.exec(script, hostname, executorOptions, `--${EXECUTOR_OPT}`);
 
     if (pid === 0)
         throw new Error(`Failed to start executor script on ${hostname}`);
