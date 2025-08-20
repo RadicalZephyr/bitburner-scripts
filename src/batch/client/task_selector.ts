@@ -32,15 +32,16 @@ export interface LifecycleRequest {}
 
 export type LifecycleSnapshot = [string, MonitorLifecycle][];
 
-export type Payload = string | string[] | Heartbeat | LifecycleRequest;
+export type Messages =
+    | { type: MessageType.NewTarget; payload: string }
+    | { type: MessageType.FinishedTilling; payload: string }
+    | { type: MessageType.FinishedSowing; payload: string }
+    | { type: MessageType.Heartbeat; payload: Heartbeat }
+    | { type: MessageType.RequestLifecycle; payload: LifecycleRequest };
 
-export type Message = ClientMessage<MessageType, Payload>;
+export type Message = ClientMessage<Messages>;
 
-export class TaskSelectorClient extends Client<
-    MessageType,
-    Payload,
-    LifecycleSnapshot
-> {
+export class TaskSelectorClient extends Client<Messages, LifecycleSnapshot> {
     constructor(ns: NS) {
         super(ns, TASK_SELECTOR_PORT, TASK_SELECTOR_RESPONSE_PORT);
     }

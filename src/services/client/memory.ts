@@ -27,7 +27,7 @@ export enum MessageType {
     Snapshot,
 }
 
-type Payload =
+export type Payload =
     | string
     | AllocationRequest
     | GrowableAllocationRequest
@@ -44,7 +44,19 @@ export type ResponsePayload =
     | MemorySnapshot
     | null;
 
-export type Message = ClientMessage<MessageType, Payload>;
+export type Messages =
+    | { type: MessageType.Worker; payload: string }
+    | { type: MessageType.Request; payload: AllocationRequest }
+    | { type: MessageType.GrowableRequest; payload: GrowableAllocationRequest }
+    | { type: MessageType.Release; payload: AllocationRelease }
+    | { type: MessageType.Claim; payload: AllocationClaim }
+    | { type: MessageType.ClaimRelease; payload: AllocationClaimRelease }
+    | { type: MessageType.ReleaseChunks; payload: AllocationRelease[] }
+    | { type: MessageType.Register; payload: AllocationRegister }
+    | { type: MessageType.Status; payload: StatusRequest }
+    | { type: MessageType.Snapshot; payload: SnapshotRequest };
+
+export type Message = ClientMessage<Messages>;
 
 export type Response = ClientResponse<ResponsePayload>;
 
@@ -170,11 +182,7 @@ export interface AllocOptions {
     longRunning?: boolean;
 }
 
-export class MemoryClient extends Client<
-    MessageType,
-    Payload,
-    ResponsePayload
-> {
+export class MemoryClient extends Client<Messages, ResponsePayload> {
     constructor(ns: NS) {
         super(ns, MEMORY_PORT, MEMORY_RESPONSE_PORT);
     }
@@ -389,14 +397,23 @@ export async function registerAllocationOwnership(
                 pid: self.pid,
                 hostname: self.server,
             };
-            trySendMessage(memPort, MessageType.ClaimRelease, release);
+            trySendMessage<Messages, MessageType.ClaimRelease>(
+                memPort,
+                MessageType.ClaimRelease,
+                release,
+            );
         },
         'registerAllocationOwnership-memoryRelease-' + makeFuid(ns),
     );
 
     const memPort = ns.getPortHandle(MEMORY_PORT);
 
-    await sendMessage(ns, memPort, MessageType.Claim, claim);
+    await sendMessage<Messages, MessageType.Claim>(
+        ns,
+        memPort,
+        MessageType.Claim,
+        claim,
+    );
 }
 
 /**
@@ -453,7 +470,12 @@ export class TransferableAllocation {
         };
 
         const memPort = ns.getPortHandle(MEMORY_PORT);
-        sendMessage(ns, memPort, MessageType.Release, release);
+        sendMessage<Messages, MessageType.Release>(
+            ns,
+            memPort,
+            MessageType.Release,
+            release,
+        );
     }
 
     releaseAtExit(ns: NS) {

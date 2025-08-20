@@ -23,12 +23,14 @@ export interface RequestTargets {
     pushUpdates?: Subscription;
 }
 
-export type Payload = RequestWorkers | RequestTargets | null;
+export type Messages =
+    | { type: MessageType.RequestWorkers; payload: RequestWorkers }
+    | { type: MessageType.RequestTargets; payload: RequestTargets };
 
-export type Message = ClientMessage<MessageType, Payload>;
+export type Message = ClientMessage<Messages>;
 
 /** Hide communication with the discovery service behind a simple API. */
-export class DiscoveryClient extends Client<MessageType, Payload, string[]> {
+export class DiscoveryClient extends Client<Messages, string[]> {
     constructor(ns: NS) {
         super(ns, DISCOVERY_PORT, DISCOVERY_RESPONSE_PORT);
     }

@@ -13,17 +13,16 @@ export interface RequestLevel {
     n: number;
 }
 
-export type Payload = RequestLevel | null;
-export type Message = ClientMessage<MessageType, Payload>;
+export type Messages =
+    | { type: MessageType.RequestLevel; payload: RequestLevel }
+    | { type: MessageType.RequestAll; payload: null };
+
+export type Message = ClientMessage<Messages>;
 
 export type ResponsePayload = number | Record<number, number>;
 
 /** Client for the SourceFile service. */
-export class SourceFileClient extends Client<
-    MessageType,
-    Payload,
-    ResponsePayload
-> {
+export class SourceFileClient extends Client<Messages, ResponsePayload> {
     constructor(ns: NS) {
         super(ns, SOURCE_FILE_PORT, SOURCE_FILE_RESPONSE_PORT);
     }

@@ -18,11 +18,19 @@ export enum Lifecycle {
 
 export type MessageType = Lifecycle;
 
-export type Payload = string | string[];
+export type Messages =
+    | { type: Lifecycle.Worker; payload: string }
+    | { type: Lifecycle.PendingTilling; payload: string }
+    | { type: Lifecycle.Tilling; payload: string }
+    | { type: Lifecycle.PendingSowing; payload: string }
+    | { type: Lifecycle.Sowing; payload: string }
+    | { type: Lifecycle.PendingHarvesting; payload: string }
+    | { type: Lifecycle.Harvesting; payload: string }
+    | { type: Lifecycle.Rebalancing; payload: string };
 
-export type Message = ClientMessage<Lifecycle, Payload>;
+export type Message = ClientMessage<Messages>;
 
-export class MonitorClient extends Client<MessageType, Payload, void> {
+export class MonitorClient extends Client<Messages, void> {
     constructor(ns: NS) {
         super(ns, MONITOR_PORT, MONITOR_RESPONSE_PORT);
     }

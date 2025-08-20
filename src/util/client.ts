@@ -1,15 +1,23 @@
 import type { NS, NetscriptPort } from 'netscript';
 import { makeFuid } from './fuid';
 
-export type Message<Type, Payload> = [
-    type: Type,
-    requestId: string,
-    payload: Payload,
+export type Message<M extends { type: unknown; payload: unknown }> = [
+    type: M['type'],
+    requestId: string | null,
+    payload: M['payload'],
 ];
 
 export type Response<Payload> = [requestId: string, payload: Payload];
 
-export class Client<Type, Payload, ResponsePayload> {
+export type PayloadFor<
+    M extends { type: unknown; payload: unknown },
+    T,
+> = Extract<M, { type: T }>['payload'];
+
+/**
+ * Client for sending messages over Netscript ports.
+ */
+export class Client<M extends { type: unknown; payload: unknown }, R> {
     ns: NS;
     sendPort: NetscriptPort;
     receivePort: NetscriptPort;
@@ -20,16 +28,19 @@ export class Client<Type, Payload, ResponsePayload> {
         this.receivePort = ns.getPortHandle(receivePort);
     }
 
-    trySendMessage(type: Type, payload: Payload): boolean {
-        return trySendMessage(this.sendPort, type, payload);
+    trySendMessage<T extends M['type']>(
+        type: T,
+        payload: PayloadFor<M, T>,
+    ): boolean {
+        return trySendMessage<M, T>(this.sendPort, type, payload);
     }
 
-    async sendMessage(
-        type: Type,
-        payload: Payload,
+    async sendMessage<T extends M['type']>(
+        type: T,
+        payload: PayloadFor<M, T>,
         pollPeriod?: number,
     ): Promise<void> {
-        return await sendMessage(
+        return await sendMessage<M, T>(
             this.ns,
             this.sendPort,
             type,
@@ -38,12 +49,12 @@ export class Client<Type, Payload, ResponsePayload> {
         );
     }
 
-    async sendMessageReceiveResponse(
-        type: Type,
-        payload: Payload,
+    async sendMessageReceiveResponse<T extends M['type']>(
+        type: T,
+        payload: PayloadFor<M, T>,
         pollPeriod?: number,
-    ): Promise<ResponsePayload> {
-        return await sendMessageReceiveResponse(
+    ): Promise<R> {
+        return await sendMessageReceiveResponse<M, R, T>(
             this.ns,
             this.sendPort,
             this.receivePort,
@@ -54,45 +65,77 @@ export class Client<Type, Payload, ResponsePayload> {
     }
 }
 
-export function trySendMessage<Type, Payload>(
-    sendPort: NetscriptPort,
-    type: Type,
-    payload: Payload,
-): boolean {
-    const message = [type, null, payload] as Message<Type, Payload>;
+/**
+ * Attempt to send a message without waiting for a response.
+ *
+ * @param sendPort - Port used to send the message
+ * @param type - Message type
+ * @param payload - Message payload
+ * @returns Whether the message was written to the port
+ */
+export function trySendMessage<
+    M extends { type: unknown; payload: unknown },
+    T extends M['type'],
+>(sendPort: NetscriptPort, type: T, payload: PayloadFor<M, T>): boolean {
+    const message = [type, null, payload] as Message<Extract<M, { type: T }>>;
     return sendPort.tryWrite(message);
 }
 
-export async function sendMessage<Type, Payload>(
+/**
+ * Send a message without expecting a response.
+ *
+ * @param ns - Netscript API
+ * @param sendPort - Port used to send the message
+ * @param type - Message type
+ * @param payload - Message payload
+ * @param pollPeriod - How often to retry if the port is full
+ */
+export async function sendMessage<
+    M extends { type: unknown; payload: unknown },
+    T extends M['type'],
+>(
     ns: NS,
     sendPort: NetscriptPort,
-    type: Type,
-    payload: Payload,
+    type: T,
+    payload: PayloadFor<M, T>,
     pollPeriod?: number,
 ): Promise<void> {
     const _pollPeriod = pollPeriod ?? 100;
-    const message = [type, null, payload] as Message<Type, Payload>;
+    const message = [type, null, payload] as Message<Extract<M, { type: T }>>;
 
     while (!sendPort.tryWrite(message)) {
         await ns.sleep(_pollPeriod);
     }
 }
 
+/**
+ * Send a message and wait for a response.
+ *
+ * @param ns - Netscript API
+ * @param sendPort - Port used to send the message
+ * @param receivePort - Port used to receive the response
+ * @param type - Message type
+ * @param payload - Message payload
+ * @param pollPeriod - How often to poll when waiting for a response
+ * @returns The response payload
+ */
 export async function sendMessageReceiveResponse<
-    Type,
-    Payload,
-    ResponsePayload,
+    M extends { type: unknown; payload: unknown },
+    R,
+    T extends M['type'],
 >(
     ns: NS,
     sendPort: NetscriptPort,
     receivePort: NetscriptPort,
-    type: Type,
-    payload: Payload,
+    type: T,
+    payload: PayloadFor<M, T>,
     pollPeriod?: number,
-): Promise<ResponsePayload> {
+): Promise<R> {
     const _pollPeriod = pollPeriod ?? 100;
     const requestId = makeReqId(ns);
-    const message = [type, requestId, payload] as Message<Type, Payload>;
+    const message = [type, requestId, payload] as Message<
+        Extract<M, { type: T }>
+    >;
 
     while (!sendPort.tryWrite(message)) {
         await ns.sleep(_pollPeriod);
@@ -107,7 +150,7 @@ export async function sendMessageReceiveResponse<
         // first message, then it's probably coming later and other
         // client's messages are before it in the port.
         while (!receivePort.empty()) {
-            const nextMessage = receivePort.peek() as Response<ResponsePayload>;
+            const nextMessage = receivePort.peek() as Response<R>;
             if (nextMessage[0] === requestId) {
                 // N.B. Important to pop our message from the port so
                 // other messages can be processed!

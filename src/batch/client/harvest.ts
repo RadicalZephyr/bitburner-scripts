@@ -7,16 +7,14 @@ export enum MessageType {
     Shutdown,
 }
 
-/** Payload for harvest control messages. */
-export type Payload = null;
+export type Messages = { type: MessageType.Shutdown; payload: null };
 
-/** Harvest control message format. */
-export type Message = ClientMessage<MessageType, Payload>;
+export type Message = ClientMessage<Messages>;
 
 /**
  * Client helper for communicating with harvest scripts.
  */
-export class HarvestClient extends Client<MessageType, Payload, void> {
+export class HarvestClient extends Client<Messages, void> {
     constructor(ns: NS, portId: number) {
         super(ns, portId, portId);
     }

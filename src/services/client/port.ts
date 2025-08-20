@@ -14,10 +14,13 @@ export interface PortRelease {
     port: number;
 }
 
-export type Payload = PortRelease | null;
-export type Message = ClientMessage<MessageType, Payload>;
+export type Messages =
+    | { type: MessageType.PortRequest; payload: null }
+    | { type: MessageType.PortRelease; payload: PortRelease };
 
-export class PortClient extends Client<MessageType, Payload, number | null> {
+export type Message = ClientMessage<Messages>;
+
+export class PortClient extends Client<Messages, number | null> {
     constructor(ns: NS) {
         super(ns, PORT_ALLOCATOR_PORT, PORT_ALLOCATOR_RESPONSE_PORT);
     }

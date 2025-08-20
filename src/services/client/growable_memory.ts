@@ -12,6 +12,7 @@ import {
     AllocationResult,
     HostAllocation,
     AllocationChunk,
+    Messages as MemoryMessages,
 } from 'services/client/memory';
 import { ALLOC_ID_ARG } from 'services/client/memory_tag';
 import { PortClient } from 'services/client/port';
@@ -169,7 +170,12 @@ export class GrowableAllocation extends TransferableAllocation {
             hostname: proc.server,
         };
         const memPort = ns.getPortHandle(MEMORY_PORT);
-        sendMessage(ns, memPort, MessageType.Release, release);
+        sendMessage<MemoryMessages, MessageType.Release>(
+            ns,
+            memPort,
+            MessageType.Release,
+            release,
+        );
         const portClient = new PortClient(ns);
         await portClient.releasePort(this.portId);
     }
