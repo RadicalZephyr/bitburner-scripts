@@ -96,7 +96,7 @@ async function launch(
     let totalThreads: number;
     let explicitDependencies: string[] = [];
     let ramOverride: number | undefined;
-    let baseRunOpts = {};
+    let baseRunOpts: RunOptions = {};
     if (
         typeof threadOrOptions === 'number'
         || typeof threadOrOptions === 'undefined'
