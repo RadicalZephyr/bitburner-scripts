@@ -197,7 +197,7 @@ async function graftAugments(
     if (graftableAugs.length === 0) {
         ns.clearLog();
         ns.print(
-            `WARN: no graftable augmetations found with desired multipliers ${mults.join(',')} `,
+            `WARN: no graftable augmentations found with desired multipliers ${mults.join(',')} `,
         );
         return;
     }
