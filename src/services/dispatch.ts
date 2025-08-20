@@ -179,6 +179,9 @@ async function executeNextFn(ns: NS) {
         const nextFnRam = ns.getFunctionRamCost(method);
         const nextDynamicRam = ns.self().dynamicRamUsage + nextFnRam;
         if (CONFIG.maxNsFnRam < nextDynamicRam) {
+            // Running next pending call would exceed RAM allotment,
+            // need to restart the dispatch executor to reset dynamic
+            // RAM usage to zero.
             return;
         }
 
