@@ -135,10 +135,10 @@ OPTIONS
         return;
     }
 
+    ns.ui.openTail();
+
     const multipliers = buildMultipliers(ns, flags.mult, flags.preset);
     await graftAugments(ns, flags['dry-run'], multipliers);
-
-    ns.ui.openTail();
 }
 
 function buildMultipliers(
