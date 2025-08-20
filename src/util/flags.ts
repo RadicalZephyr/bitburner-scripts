@@ -40,20 +40,22 @@ export type ParsedFlags<S extends readonly [string, DefaultValue][]> = {
  *
  * Allows Unix-like flag parsing. See for full details {@link NS.flags}.
  *
- * @param ns     - Netcript API instance
- * @param schema - Flags schema
+ * @param ns         - Netcript API instance
+ * @param schema     - Flags schema
+ * @param claimAlloc - Whether to send a claim message to the allocator for an alloc id arg
  * @returns object containing keys for all flags and '_' containing non-flag arguments
  */
 export async function parseFlags<S extends readonly [string, DefaultValue][]>(
     ns: NS,
     schema: S,
+    claimAlloc: boolean = true,
 ): Promise<ParsedFlags<S>> {
     const options = ns.flags([
         ...schema,
         ...MEM_TAG_FLAGS,
     ] as unknown as FlagsSchema);
 
-    const allocationId = await parseAndRegisterAlloc(ns, options);
+    const allocationId = await parseAndRegisterAlloc(ns, options, claimAlloc);
     if (
         typeof options[ALLOC_ID] === 'number'
         && options[ALLOC_ID] !== ALLOC_ID_DEFAULT

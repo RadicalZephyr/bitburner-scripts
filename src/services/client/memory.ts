@@ -534,14 +534,16 @@ export async function registerAllocationOwnership(
  * provided flags object, prints an error when the flag is not a
  * number, and registers ownership of the allocation when valid.
  *
- * @param ns    - The Netscript context
- * @param flags - Flags returned from `ns.flags`
- * @param name  - Optional name to tag the allocation release handler
+ * @param ns         - The Netscript context
+ * @param flags      - Flags returned from `ns.flags`
+ * @param name       - Optional name to tag the allocation release handler
+ * @param claimAlloc - Whether to send a claim message to the allocator for an alloc id arg
  * @returns     The allocation ID if ownership was registered, otherwise `null`.
  */
 export async function parseAndRegisterAlloc(
     ns: NS,
     flags: Record<string, unknown>,
+    claimAlloc: boolean = true,
 ): Promise<number | null> {
     const allocId = flags[ALLOC_ID];
     if (allocId === undefined || allocId === -1) {
@@ -552,7 +554,8 @@ export async function parseAndRegisterAlloc(
         return null;
     }
 
-    await registerAllocationOwnership(ns, allocId);
+    if (claimAlloc) await registerAllocationOwnership(ns, allocId);
+
     return allocId;
 }
 
