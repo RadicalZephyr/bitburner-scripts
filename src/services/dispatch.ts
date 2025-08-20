@@ -40,7 +40,7 @@ export function autocomplete(data: AutocompleteData): readonly string[] {
 }
 
 export async function main(ns: NS) {
-    const flags = await parseFlags(ns, FLAGS);
+    const flags = await parseFlags(ns, FLAGS, false);
 
     if (flags.help) {
         ns.tprint(`
