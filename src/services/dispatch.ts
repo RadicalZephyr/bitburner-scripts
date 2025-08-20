@@ -177,6 +177,13 @@ async function executeNextFn(ns: NS) {
     while (pending.length > 0) {
         const method = pending[0].request.method.trim();
         const nextFnRam = ns.getFunctionRamCost(method);
+
+        // Check if the next function exceeds maximum RAM usage
+        if (CONFIG.maxNsFnRam < nextFnRam) {
+            const { reject } = pending.shift();
+            reject(new Error(ramCostTooLargeMsg(ns, method, nextFnRam)));
+        }
+
         const nextDynamicRam = ns.self().dynamicRamUsage + nextFnRam;
         if (CONFIG.maxNsFnRam < nextDynamicRam) {
             // Running next pending call would exceed RAM allotment,
@@ -208,9 +215,7 @@ async function dispatch(ns: NS, req: DaemonRequest): Promise<unknown> {
 
     const ramCost = ns.getFunctionRamCost(method);
     if (CONFIG.maxNsFnRam < ramCost)
-        throw new Error(
-            `NS function 'ns.${method}' has a RAM cost of ${ns.formatRam(ramCost)} which is more than the configured maximum RAM cost of ${ns.formatRam(CONFIG.maxNsFnRam)}`,
-        );
+        throw new Error(ramCostTooLargeMsg(ns, method, ramCost));
 
     const currentRam = ns.self().dynamicRamUsage;
     ns.ramOverride(currentRam + ramCost);
@@ -246,4 +251,8 @@ async function dispatch(ns: NS, req: DaemonRequest): Promise<unknown> {
         const args = req.args.map((a) => JSON.stringify(a)).join(', ');
         throw new Error(`${method}(${args}) failed: ${msg}`);
     }
+}
+
+function ramCostTooLargeMsg(ns: NS, method: string, ramCost: number) {
+    return `NS function 'ns.${method}' has a RAM cost of ${ns.formatRam(ramCost)} which is more than the configured maximum RAM cost of ${ns.formatRam(CONFIG.maxNsFnRam)}`;
 }
