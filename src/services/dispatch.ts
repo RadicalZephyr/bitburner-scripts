@@ -165,8 +165,16 @@ function queueNsCommand(request: DaemonRequest): Promise<unknown> {
 async function executeNextFn(ns: NS) {
     await isPending;
 
-    if (pending.length > 0) {
+    while (pending.length > 0) {
+        const method = pending[0].request.method.trim();
+        const nextFnRam = ns.getFunctionRamCost(method);
+        const nextDynamicRam = ns.self().dynamicRamUsage + nextFnRam;
+        if (CONFIG.maxNsFnRam < nextDynamicRam) {
+            return;
+        }
+
         const { request, resolve, reject } = pending.shift();
+
         try {
             const result = await dispatch(ns, request);
             resolve(result);
