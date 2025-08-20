@@ -212,7 +212,7 @@ async function dispatch(ns: NS, req: DaemonRequest): Promise<unknown> {
     let ctx: unknown = ns;
     for (let i = 0; i < parts.length - 1; i++) {
         const seg = parts[i];
-        if (ctx == null || !(seg in (ctx as object))) {
+        if (ctx == null || !Object.hasOwn(ctx as object, seg)) {
             throw new Error(
                 `Unknown namespace: ${parts.slice(0, i + 1).join('.')}`,
             );
