@@ -187,10 +187,14 @@ function buildMultipliers(
     return Array.from(multipliers);
 }
 
-async function graftAugments(ns: NS, dryRun: boolean, mults: MultKey[]) {
+async function graftAugments(
+    ns: NS,
+    dryRun: boolean,
+    mults: readonly MultKey[],
+) {
     const graftableAugs = ns.grafting
         .getGraftableAugmentations()
-        .map((a) => augment(ns, a))
+        .map((a) => scoredAugment(ns, a, mults))
         .filter((a) => mults.some((m) => m in a));
 
     if (graftableAugs.length === 0) {
@@ -202,7 +206,9 @@ async function graftAugments(ns: NS, dryRun: boolean, mults: MultKey[]) {
     }
 
     graftableAugs.sort((a, b) => {
-        if (Math.abs(a.installTime - b.installTime) > 1000) {
+        if (Math.abs(b.score - a.score) > 0.001) {
+            return b.score - a.score;
+        } else if (Math.abs(a.installTime - b.installTime) > 1000) {
             return a.installTime - b.installTime;
         } else {
             return a.price - b.price;
@@ -293,6 +299,10 @@ interface Augment extends Partial<Multipliers> {
     installTime: number;
 }
 
+interface ScoredAugment extends Augment {
+    score: number;
+}
+
 function augment(ns: NS, name: string): Augment {
     const augMultipliers = ns.singularity.getAugmentationStats(name);
     return {
@@ -309,4 +319,25 @@ function stripUnitMults(aug: Multipliers): Partial<Multipliers> {
         if (aug[k] !== 1) out[k] = aug[k];
     }
     return out;
+}
+
+function scoredAugment(
+    ns: NS,
+    name: string,
+    mults: readonly MultKey[],
+): ScoredAugment {
+    const aug = augment(ns, name);
+    return {
+        ...aug,
+        score: scoreAug(aug, mults),
+    };
+}
+
+function scoreAug(a: Augment, mults: readonly MultKey[]): number {
+    let s = 0;
+    for (const k of mults) {
+        const v = a[k]; // only present if != 1
+        if (typeof v === 'number') s += v - 1; // additive improvement over baseline
+    }
+    return s;
 }
