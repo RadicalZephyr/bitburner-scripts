@@ -20,6 +20,7 @@ import { readAllFromPort, readLoop } from 'util/ports';
 import { collectDependencies } from 'util/dependencies';
 
 import { CONFIG } from 'services/config';
+import { ALLOC_ID_ARG } from 'client/memory_tag';
 
 const EXECUTOR_OPT = 'executor' as const;
 
@@ -67,7 +68,7 @@ CONFIGURATION
         ns.spawn(
             ns.self().filename,
             { spawnDelay: 0, ...executorOptions },
-            `--${EXECUTOR_OPT}`,
+            ...ns.args,
         );
         return;
     }
@@ -93,16 +94,22 @@ async function startExecutor(ns: NS) {
 
     const selfScript = ns.self();
     const selfRam = selfScript.ramUsage;
-    const alloc = await memClient.requestOwnedAllocation(
+    const alloc = await memClient.requestTransferableAllocation(
         selfRam + CONFIG.maxNsFnRam,
         1,
         { longRunning: true },
     );
 
-    if (!alloc || alloc.length < 1 || alloc[0].numChunks < 1)
+    if (
+        !alloc
+        || alloc.allocatedChunks.length < 1
+        || alloc.allocatedChunks[0].numChunks < 1
+    )
         throw new Error('Failed to allocate memory for dispatch executor.');
 
-    const hostname = alloc[0].hostname;
+    alloc.releaseAtExit(ns);
+
+    const hostname = alloc.allocatedChunks[0].hostname;
 
     const script = selfScript.filename;
     const dependencies = collectDependencies(ns, script);
@@ -111,7 +118,14 @@ async function startExecutor(ns: NS) {
     if (!ns.scp(files, hostname, 'home'))
         throw new Error('Failed to scp files for executor');
 
-    const pid = ns.exec(script, hostname, executorOptions, `--${EXECUTOR_OPT}`);
+    const pid = ns.exec(
+        script,
+        hostname,
+        executorOptions,
+        `--${EXECUTOR_OPT}`,
+        ALLOC_ID_ARG,
+        alloc.allocationId,
+    );
 
     if (pid === 0)
         throw new Error(`Failed to start executor script on ${hostname}`);
