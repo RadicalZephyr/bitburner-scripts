@@ -349,6 +349,27 @@ function scoredAugment(
     };
 }
 
+/**
+ * Calculate a score for an augmentation by summing the improvement of each
+ * requested multiplier over its baseline.
+ *
+ * Augmentations are primarily sorted by this score. When two scores fall
+ * within the configured tolerance, shorter install times take precedence and
+ * remaining ties are broken by lower price.
+ *
+ * @example
+ * ```ts
+ * // hacking = 1.1, hacking_exp = 1.05
+ * scoreAug({ hacking: 1.1, hacking_exp: 1.05 } as Augment, [
+ *   'hacking',
+ *   'hacking_exp',
+ * ]); // => 0.15
+ * ```
+ *
+ * @param a - Augmentation stats being scored
+ * @param mults - Multipliers to include in the score
+ * @returns Sum of each multiplier's improvement over 1
+ */
 function scoreAug(a: Augment, mults: readonly MultKey[]): number {
     let s = 0;
     for (const k of mults) {
