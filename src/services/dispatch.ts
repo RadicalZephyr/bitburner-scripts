@@ -196,6 +196,7 @@ async function executeNextFn(ns: NS) {
         if (CONFIG.maxNsFnRam < nextFnRam) {
             const { reject } = pending.shift();
             reject(new Error(ramCostTooLargeMsg(ns, method, nextFnRam)));
+            continue;
         }
 
         const nextDynamicRam = ns.self().dynamicRamUsage + nextFnRam;
