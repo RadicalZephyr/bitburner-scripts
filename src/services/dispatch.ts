@@ -53,8 +53,8 @@ OPTIONS
   --help      Show this help message
 
 CONFIGURATION
-  SERVICES_maxDispatchQueueSize  Maximum number of pending dispatch requests
-  SERVICES_maxNsFnRam            Configured maximum RAM for the NS dispatch executor
+  SERVICE_maxDispatchQueueSize  Maximum number of pending dispatch requests
+  SERVICE_maxNsFnRam            Configured maximum RAM for the NS dispatch executor
 `);
         return;
     }
