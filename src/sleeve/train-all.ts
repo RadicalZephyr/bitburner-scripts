@@ -102,7 +102,7 @@ function sleeveStudy(
         !ns.sleeve.setToUniversityCourse(
             i,
             'ZB Institute of Technology',
-            'Leadership',
+            courseName,
         )
     )
         throw new Error(
