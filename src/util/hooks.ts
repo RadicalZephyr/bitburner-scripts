@@ -14,7 +14,12 @@ export function usePoll<T>(ns: NS, interval: number, pollFn: () => T): T {
 
     React.useEffect(() => {
         const id = globalThis.setInterval(() => {
-            setData(pollFn());
+            try {
+                setData(pollFn());
+            } catch (err) {
+                console.error(err);
+                globalThis.clearInterval(id);
+            }
         }, interval);
 
         const exitHandlerName = 'usePoll-' + makeFuid(ns);
@@ -48,7 +53,12 @@ export function useNsUpdate<T>(
 
     React.useEffect(() => {
         const id = globalThis.setInterval(() => {
-            setData(updateFn(ns));
+            try {
+                setData(updateFn(ns));
+            } catch (err) {
+                console.error(err);
+                globalThis.clearInterval(id);
+            }
         }, interval);
 
         const exitHandlerName = 'useNsUpdate-' + makeFuid(ns);
