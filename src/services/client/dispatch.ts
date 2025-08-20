@@ -65,6 +65,9 @@ export enum MessageType {
 
 export type Message = ClientMessage<MessageType, DaemonRequest>;
 
+/**
+ * Client for the Netscript Dispatch service.
+ */
 export class DispatchClient extends Client<
     MessageType,
     DaemonRequest,
@@ -74,6 +77,15 @@ export class DispatchClient extends Client<
         super(ns, DISPATCH_PORT, DISPATCH_RESPONSE_PORT);
     }
 
+    /**
+     * Call a Netscript API in an ephemeral process and receive the result.
+     *
+     * @param methodName - Netscript API method path and name
+     * @param args       - Arguments for the Netscript API function in `methodName`
+     * @returns Whatever the API returns.
+     *
+     * @throws Promise rejects if `methodName` is not a valid Netscript API or if it throws an error.
+     */
     async dispatch<K extends NSMethodName>(
         methodName: K,
         ...args: NSArgs<K>
