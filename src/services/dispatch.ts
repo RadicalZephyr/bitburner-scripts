@@ -206,7 +206,7 @@ async function dispatch(ns: NS, req: DaemonRequest): Promise<unknown> {
     const ramCost = ns.getFunctionRamCost(method);
     if (CONFIG.maxNsFnRam < ramCost)
         throw new Error(
-            `NS function 'ns.${method}' has a RAM cost of ${ns.formatRam(ramCost)} which is less than the configured maximum RAM cost of ${ns.formatRam(CONFIG.maxNsFnRam)}`,
+            `NS function 'ns.${method}' has a RAM cost of ${ns.formatRam(ramCost)} which is more than the configured maximum RAM cost of ${ns.formatRam(CONFIG.maxNsFnRam)}`,
         );
 
     const currentRam = ns.self().dynamicRamUsage;
