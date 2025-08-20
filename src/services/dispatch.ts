@@ -12,6 +12,9 @@ import {
 import { MemoryClient } from 'services/client/memory';
 
 import { readAllFromPort, readLoop } from 'util/ports';
+import { collectDependencies } from 'util/dependencies';
+
+import { CONFIG } from 'services/config';
 
 const FLAGS = [
     ['executor', false],
@@ -44,7 +47,7 @@ OPTIONS
         return;
     }
 
-    // TODO: start the executor loop
+    await startExecutor(ns);
 
     ns.disableLog('sleep');
 
@@ -56,6 +59,40 @@ OPTIONS
     const respPort = ns.getPortHandle(DISPATH_RESPONSE_PORT);
 
     await readLoop(ns, port, () => readRequests(ns, port, respPort));
+}
+
+async function startExecutor(ns: NS) {
+    const memClient = new MemoryClient(ns);
+
+    const selfScript = ns.self();
+    const selfRam = selfScript.ramUsage;
+    const alloc = await memClient.requestOwnedAllocation(
+        selfRam + CONFIG.maxNsFnRam,
+        1,
+        { longRunning: true },
+    );
+
+    if (!alloc || alloc.length < 1 || alloc[0].numChunks < 1)
+        throw new Error('Failed to allocate memory for dispatch executor.');
+
+    const hostname = alloc[0].hostname;
+
+    const script = selfScript.filename;
+    const dependencies = collectDependencies(ns, script);
+    const files = [script, ...dependencies];
+
+    if (!ns.scp(files, hostname, 'home'))
+        throw new Error('Failed to scp files for executor');
+
+    const pid = ns.exec(
+        script,
+        hostname,
+        { threads: 1, preventDuplicates: true, temporary: true },
+        '--executor',
+    );
+
+    if (pid === 0)
+        throw new Error(`Failed to start executor script on ${hostname}`);
 }
 
 async function readRequests(ns: NS, port: NetscriptPort, resp: NetscriptPort) {
