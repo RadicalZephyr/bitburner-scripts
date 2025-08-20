@@ -224,7 +224,7 @@ async function graftAugments(
     } catch (err) {
         ns.print(`ERROR: ${String(err)}`);
         ns.tprint(
-            `not currently grafting, please cancel any other activities before starting grafting.`,
+            `ERROR: currently busy with something other than grafting, please cancel any other activities before starting grafting.`,
         );
         return;
     }
