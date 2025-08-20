@@ -158,7 +158,7 @@ const pending: NsRequest[] = [];
 function queueNsCommand(request: DaemonRequest): Promise<unknown> {
     return new Promise((resolve, reject) => {
         pending.push({ request, resolve, reject });
-        signalNext.call(null);
+        signalNext();
     });
 }
 
