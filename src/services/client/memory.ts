@@ -5,7 +5,6 @@ import { ALLOC_ID, ALLOC_ID_ARG } from 'services/client/memory_tag';
 import {
     Client,
     Message as ClientMessage,
-    Response as ClientResponse,
     sendMessage,
     trySendMessage,
 } from 'util/client';
@@ -27,38 +26,59 @@ export enum MessageType {
     Snapshot,
 }
 
-export type Payload =
-    | string
-    | AllocationRequest
-    | GrowableAllocationRequest
-    | AllocationRelease
-    | AllocationClaim
-    | AllocationClaimRelease
-    | AllocationRegister
-    | StatusRequest
-    | SnapshotRequest;
-
-export type ResponsePayload =
-    | AllocationResult
-    | FreeRam
-    | MemorySnapshot
-    | null;
-
 export type Messages =
-    | { type: MessageType.Worker; payload: string }
-    | { type: MessageType.Request; payload: AllocationRequest }
-    | { type: MessageType.GrowableRequest; payload: GrowableAllocationRequest }
-    | { type: MessageType.Release; payload: AllocationRelease }
-    | { type: MessageType.Claim; payload: AllocationClaim }
-    | { type: MessageType.ClaimRelease; payload: AllocationClaimRelease }
-    | { type: MessageType.ReleaseChunks; payload: AllocationRelease[] }
-    | { type: MessageType.Register; payload: AllocationRegister }
-    | { type: MessageType.Status; payload: StatusRequest }
-    | { type: MessageType.Snapshot; payload: SnapshotRequest };
+    | {
+          type: MessageType.Worker;
+          payload: string;
+          response: void;
+      }
+    | {
+          type: MessageType.Request;
+          payload: AllocationRequest;
+          response: AllocationResult | null;
+      }
+    | {
+          type: MessageType.GrowableRequest;
+          payload: GrowableAllocationRequest;
+          response: AllocationResult | null;
+      }
+    | {
+          type: MessageType.Release;
+          payload: AllocationRelease;
+          response: void;
+      }
+    | {
+          type: MessageType.Claim;
+          payload: AllocationClaim;
+          response: void;
+      }
+    | {
+          type: MessageType.ClaimRelease;
+          payload: AllocationClaimRelease;
+          response: void;
+      }
+    | {
+          type: MessageType.ReleaseChunks;
+          payload: AllocationRelease[];
+          response: void;
+      }
+    | {
+          type: MessageType.Register;
+          payload: AllocationRegister;
+          response: void;
+      }
+    | {
+          type: MessageType.Status;
+          payload: StatusRequest;
+          response: FreeRam | null;
+      }
+    | {
+          type: MessageType.Snapshot;
+          payload: SnapshotRequest;
+          response: MemorySnapshot | null;
+      };
 
 export type Message = ClientMessage<Messages>;
-
-export type Response = ClientResponse<ResponsePayload>;
 
 /**************************************************/
 /** Request Types
@@ -182,7 +202,7 @@ export interface AllocOptions {
     longRunning?: boolean;
 }
 
-export class MemoryClient extends Client<Messages, ResponsePayload> {
+export class MemoryClient extends Client<Messages> {
     constructor(ns: NS) {
         super(ns, MEMORY_PORT, MEMORY_RESPONSE_PORT);
     }
@@ -252,7 +272,7 @@ export class MemoryClient extends Client<Messages, ResponsePayload> {
             return null;
         }
 
-        const allocationResult = result as AllocationResult;
+        const allocationResult = result;
         const allocatedChunkSize = allocationResult.hosts[0]?.chunkSize;
         const allocatedNumChunks = allocationResult.hosts.reduce(
             (sum, chunk) => sum + chunk.numChunks,
@@ -343,7 +363,7 @@ export class MemoryClient extends Client<Messages, ResponsePayload> {
             this.ns.print('WARN: snapshot request failed');
             return null;
         }
-        return result as MemorySnapshot;
+        return result;
     }
 
     /**
@@ -361,8 +381,7 @@ export class MemoryClient extends Client<Messages, ResponsePayload> {
             this.ns.print('WARN: status request failed');
             return { freeRam: 0, chunks: [] };
         }
-        const status = result as FreeRam;
-        return status;
+        return result;
     }
 }
 

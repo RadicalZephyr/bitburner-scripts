@@ -14,15 +14,21 @@ export interface RequestLevel {
 }
 
 export type Messages =
-    | { type: MessageType.RequestLevel; payload: RequestLevel }
-    | { type: MessageType.RequestAll; payload: null };
+    | {
+          type: MessageType.RequestLevel;
+          payload: RequestLevel;
+          response: number;
+      }
+    | {
+          type: MessageType.RequestAll;
+          payload: null;
+          response: Record<number, number>;
+      };
 
 export type Message = ClientMessage<Messages>;
 
-export type ResponsePayload = number | Record<number, number>;
-
 /** Client for the SourceFile service. */
-export class SourceFileClient extends Client<Messages, ResponsePayload> {
+export class SourceFileClient extends Client<Messages> {
     constructor(ns: NS) {
         super(ns, SOURCE_FILE_PORT, SOURCE_FILE_RESPONSE_PORT);
     }
@@ -35,10 +41,10 @@ export class SourceFileClient extends Client<Messages, ResponsePayload> {
      */
     async getLevel(sf: number): Promise<number> {
         const payload: RequestLevel = { n: sf };
-        const lvl = (await this.sendMessageReceiveResponse(
+        const lvl = await this.sendMessageReceiveResponse(
             MessageType.RequestLevel,
             payload,
-        )) as number;
+        );
         return typeof lvl === 'number' ? lvl : 0;
     }
 
@@ -48,10 +54,10 @@ export class SourceFileClient extends Client<Messages, ResponsePayload> {
      * @returns Mapping of Source File number to level
      */
     async getAll(): Promise<Record<number, number>> {
-        const res = (await this.sendMessageReceiveResponse(
+        const res = await this.sendMessageReceiveResponse(
             MessageType.RequestAll,
             null,
-        )) as Record<number, number>;
+        );
         return res && typeof res === 'object' ? res : {};
     }
 }

@@ -33,15 +33,19 @@ export interface LifecycleRequest {}
 export type LifecycleSnapshot = [string, MonitorLifecycle][];
 
 export type Messages =
-    | { type: MessageType.NewTarget; payload: string }
-    | { type: MessageType.FinishedTilling; payload: string }
-    | { type: MessageType.FinishedSowing; payload: string }
-    | { type: MessageType.Heartbeat; payload: Heartbeat }
-    | { type: MessageType.RequestLifecycle; payload: LifecycleRequest };
+    | { type: MessageType.NewTarget; payload: string; response: void }
+    | { type: MessageType.FinishedTilling; payload: string; response: void }
+    | { type: MessageType.FinishedSowing; payload: string; response: void }
+    | { type: MessageType.Heartbeat; payload: Heartbeat; response: void }
+    | {
+          type: MessageType.RequestLifecycle;
+          payload: LifecycleRequest;
+          response: LifecycleSnapshot;
+      };
 
 export type Message = ClientMessage<Messages>;
 
-export class TaskSelectorClient extends Client<Messages, LifecycleSnapshot> {
+export class TaskSelectorClient extends Client<Messages> {
     constructor(ns: NS) {
         super(ns, TASK_SELECTOR_PORT, TASK_SELECTOR_RESPONSE_PORT);
     }

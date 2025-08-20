@@ -7,14 +7,18 @@ export enum MessageType {
     Shutdown,
 }
 
-export type Messages = { type: MessageType.Shutdown; payload: null };
+export type Messages = {
+    type: MessageType.Shutdown;
+    payload: null;
+    response: void;
+};
 
 export type Message = ClientMessage<Messages>;
 
 /**
  * Client helper for communicating with harvest scripts.
  */
-export class HarvestClient extends Client<Messages, void> {
+export class HarvestClient extends Client<Messages> {
     constructor(ns: NS, portId: number) {
         super(ns, portId, portId);
     }

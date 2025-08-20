@@ -19,18 +19,18 @@ export enum Lifecycle {
 export type MessageType = Lifecycle;
 
 export type Messages =
-    | { type: Lifecycle.Worker; payload: string }
-    | { type: Lifecycle.PendingTilling; payload: string }
-    | { type: Lifecycle.Tilling; payload: string }
-    | { type: Lifecycle.PendingSowing; payload: string }
-    | { type: Lifecycle.Sowing; payload: string }
-    | { type: Lifecycle.PendingHarvesting; payload: string }
-    | { type: Lifecycle.Harvesting; payload: string }
-    | { type: Lifecycle.Rebalancing; payload: string };
+    | { type: Lifecycle.Worker; payload: string; response: void }
+    | { type: Lifecycle.PendingTilling; payload: string; response: void }
+    | { type: Lifecycle.Tilling; payload: string; response: void }
+    | { type: Lifecycle.PendingSowing; payload: string; response: void }
+    | { type: Lifecycle.Sowing; payload: string; response: void }
+    | { type: Lifecycle.PendingHarvesting; payload: string; response: void }
+    | { type: Lifecycle.Harvesting; payload: string; response: void }
+    | { type: Lifecycle.Rebalancing; payload: string; response: void };
 
 export type Message = ClientMessage<Messages>;
 
-export class MonitorClient extends Client<Messages, void> {
+export class MonitorClient extends Client<Messages> {
     constructor(ns: NS) {
         super(ns, MONITOR_PORT, MONITOR_RESPONSE_PORT);
     }

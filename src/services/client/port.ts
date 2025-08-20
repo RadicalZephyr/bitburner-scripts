@@ -15,12 +15,20 @@ export interface PortRelease {
 }
 
 export type Messages =
-    | { type: MessageType.PortRequest; payload: null }
-    | { type: MessageType.PortRelease; payload: PortRelease };
+    | {
+          type: MessageType.PortRequest;
+          payload: null;
+          response: number | null;
+      }
+    | {
+          type: MessageType.PortRelease;
+          payload: PortRelease;
+          response: void;
+      };
 
 export type Message = ClientMessage<Messages>;
 
-export class PortClient extends Client<Messages, number | null> {
+export class PortClient extends Client<Messages> {
     constructor(ns: NS) {
         super(ns, PORT_ALLOCATOR_PORT, PORT_ALLOCATOR_RESPONSE_PORT);
     }

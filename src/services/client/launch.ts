@@ -36,11 +36,12 @@ export interface LaunchResponse {
 export type Messages = {
     type: MessageType.Launch;
     payload: LaunchRequest;
+    response: LaunchResponse | null;
 };
 
 export type Message = ClientMessage<Messages>;
 
-export class LaunchClient extends Client<Messages, LaunchResponse | null> {
+export class LaunchClient extends Client<Messages> {
     constructor(ns: NS) {
         super(ns, LAUNCH_PORT, LAUNCH_RESPONSE_PORT);
     }

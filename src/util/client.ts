@@ -1,23 +1,38 @@
 import type { NS, NetscriptPort } from 'netscript';
 import { makeFuid } from './fuid';
 
-export type Message<M extends { type: unknown; payload: unknown }> = [
+/** Shape of a message definition used to construct typed port messages. */
+export type MessageSpec = {
+    type: unknown;
+    payload: unknown;
+    response: unknown;
+};
+
+export type Message<M extends MessageSpec> = [
     type: M['type'],
     requestId: string | null,
     payload: M['payload'],
 ];
 
-export type Response<Payload> = [requestId: string, payload: Payload];
+export type Response<M extends MessageSpec> = [
+    requestId: string,
+    payload: M['response'],
+];
 
-export type PayloadFor<
-    M extends { type: unknown; payload: unknown },
-    T,
-> = Extract<M, { type: T }>['payload'];
+export type PayloadFor<M extends MessageSpec, T> = Extract<
+    M,
+    { type: T }
+>['payload'];
+
+export type ResponseFor<M extends MessageSpec, T> = Extract<
+    M,
+    { type: T }
+>['response'];
 
 /**
  * Client for sending messages over Netscript ports.
  */
-export class Client<M extends { type: unknown; payload: unknown }, R> {
+export class Client<M extends MessageSpec> {
     ns: NS;
     sendPort: NetscriptPort;
     receivePort: NetscriptPort;
@@ -53,8 +68,8 @@ export class Client<M extends { type: unknown; payload: unknown }, R> {
         type: T,
         payload: PayloadFor<M, T>,
         pollPeriod?: number,
-    ): Promise<R> {
-        return await sendMessageReceiveResponse<M, R, T>(
+    ): Promise<ResponseFor<M, T>> {
+        return await sendMessageReceiveResponse<M, T>(
             this.ns,
             this.sendPort,
             this.receivePort,
@@ -73,10 +88,11 @@ export class Client<M extends { type: unknown; payload: unknown }, R> {
  * @param payload - Message payload
  * @returns Whether the message was written to the port
  */
-export function trySendMessage<
-    M extends { type: unknown; payload: unknown },
-    T extends M['type'],
->(sendPort: NetscriptPort, type: T, payload: PayloadFor<M, T>): boolean {
+export function trySendMessage<M extends MessageSpec, T extends M['type']>(
+    sendPort: NetscriptPort,
+    type: T,
+    payload: PayloadFor<M, T>,
+): boolean {
     const message = [type, null, payload] as Message<Extract<M, { type: T }>>;
     return sendPort.tryWrite(message);
 }
@@ -90,10 +106,7 @@ export function trySendMessage<
  * @param payload - Message payload
  * @param pollPeriod - How often to retry if the port is full
  */
-export async function sendMessage<
-    M extends { type: unknown; payload: unknown },
-    T extends M['type'],
->(
+export async function sendMessage<M extends MessageSpec, T extends M['type']>(
     ns: NS,
     sendPort: NetscriptPort,
     type: T,
@@ -120,8 +133,7 @@ export async function sendMessage<
  * @returns The response payload
  */
 export async function sendMessageReceiveResponse<
-    M extends { type: unknown; payload: unknown },
-    R,
+    M extends MessageSpec,
     T extends M['type'],
 >(
     ns: NS,
@@ -130,7 +142,7 @@ export async function sendMessageReceiveResponse<
     type: T,
     payload: PayloadFor<M, T>,
     pollPeriod?: number,
-): Promise<R> {
+): Promise<ResponseFor<M, T>> {
     const _pollPeriod = pollPeriod ?? 100;
     const requestId = makeReqId(ns);
     const message = [type, requestId, payload] as Message<
@@ -150,7 +162,9 @@ export async function sendMessageReceiveResponse<
         // first message, then it's probably coming later and other
         // client's messages are before it in the port.
         while (!receivePort.empty()) {
-            const nextMessage = receivePort.peek() as Response<R>;
+            const nextMessage = receivePort.peek() as Response<
+                Extract<M, { type: T }>
+            >;
             if (nextMessage[0] === requestId) {
                 // N.B. Important to pop our message from the port so
                 // other messages can be processed!

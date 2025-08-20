@@ -1,9 +1,5 @@
 import type { NS } from 'netscript';
-import {
-    Client,
-    Message as ClientMessage,
-    Response as ClientResponse,
-} from 'util/client';
+import { Client, Message as ClientMessage } from 'util/client';
 
 export const TRACKER_PORT = 30;
 export const TRACKER_RESPONSE_PORT = 31;
@@ -16,11 +12,18 @@ export enum MessageType {
 type Payload = Record<string, Indicators>;
 
 export type Messages =
-    | { type: MessageType.RequestTicks; payload: object }
-    | { type: MessageType.RequestIndicators; payload: object };
+    | {
+          type: MessageType.RequestTicks;
+          payload: object;
+          response: Payload | null;
+      }
+    | {
+          type: MessageType.RequestIndicators;
+          payload: object;
+          response: Payload | null;
+      };
 
 export type Message = ClientMessage<Messages>;
-export type Response = ClientResponse<Record<string, Indicators>>;
 
 export interface BasicIndicators {
     count: number;
@@ -42,7 +45,7 @@ export interface Indicators extends BasicIndicators {
     maxRunUp: number;
 }
 
-export class TrackerClient extends Client<Messages, Payload | null> {
+export class TrackerClient extends Client<Messages> {
     constructor(ns: NS) {
         super(ns, TRACKER_PORT, TRACKER_RESPONSE_PORT);
     }

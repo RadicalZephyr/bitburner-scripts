@@ -273,7 +273,10 @@ function notifySubscriptions(
     for (const sub of subscriptions) {
         const hostsToSend = [...sub.missedUpdates, ...hosts];
         if (
-            trySendMessage<{ type: number; payload: string[] }, number>(
+            trySendMessage<
+                { type: number; payload: string[]; response: void },
+                number
+            >(
                 ns.getPortHandle(sub.port),
                 sub.messageType,
                 hostsToSend,

@@ -24,13 +24,21 @@ export interface RequestTargets {
 }
 
 export type Messages =
-    | { type: MessageType.RequestWorkers; payload: RequestWorkers }
-    | { type: MessageType.RequestTargets; payload: RequestTargets };
+    | {
+          type: MessageType.RequestWorkers;
+          payload: RequestWorkers;
+          response: string[];
+      }
+    | {
+          type: MessageType.RequestTargets;
+          payload: RequestTargets;
+          response: string[];
+      };
 
 export type Message = ClientMessage<Messages>;
 
 /** Hide communication with the discovery service behind a simple API. */
-export class DiscoveryClient extends Client<Messages, string[]> {
+export class DiscoveryClient extends Client<Messages> {
     constructor(ns: NS) {
         super(ns, DISCOVERY_PORT, DISCOVERY_RESPONSE_PORT);
     }

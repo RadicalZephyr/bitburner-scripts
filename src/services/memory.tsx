@@ -17,7 +17,7 @@ import {
     MessageType,
     AllocationRegister,
     MEMORY_RESPONSE_PORT,
-    ResponsePayload,
+    Messages,
 } from 'services/client/memory';
 
 import { DiscoveryClient } from 'services/client/discover';
@@ -198,7 +198,7 @@ async function readMemRequestsFromPort(
     for (const nextMsg of readAllFromPort(ns, memPort)) {
         const msg = nextMsg as Message;
         const requestId: string = msg[1] as string;
-        let payload: ResponsePayload;
+        let payload: Messages['response'];
         switch (msg[0]) {
             case MessageType.Worker: {
                 const hostPayload = msg[2];
