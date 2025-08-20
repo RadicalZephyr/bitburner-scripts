@@ -110,7 +110,12 @@ export async function main(ns: NS) {
         ns.tprint(`
 USAGE: run ${ns.getScriptName()}
 
-Graft augments in order of least time and selecting for specific multipliers.
+Graft augments with specific multipliers. Augments are selected in order of:
+
+ - best score
+ - least time
+ - least cost
+
 If no multipliers or presets are specified then all augments will be purchased.
 
 Will wait until any ongoing grafting finishes before beginning new grafting queue.
