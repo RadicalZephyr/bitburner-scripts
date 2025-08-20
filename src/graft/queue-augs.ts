@@ -295,6 +295,9 @@ async function graftAugmentation(
         return false;
     }
 
+    const nowOwned = new Set(ns.singularity.getOwnedAugmentations(true));
+    if (!nowOwned.has(aug.name)) return false;
+
     ownedAugs.add(aug.name);
 
     return true;
