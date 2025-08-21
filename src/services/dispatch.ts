@@ -159,7 +159,7 @@ async function executeNextFn(ns: NS, request: DaemonRequest) {
         // Running next pending call would exceed RAM allotment,
         // need to restart the dispatch executor to reset dynamic
         // RAM usage to zero.
-        throw new Error(ramCostTooLargeMsg(ns, method, nextFnRam), {
+        throw new Error('Dynamic RAM budget exceeded, need to restart', {
             cause: DispatchError.RamReset,
         });
     }
