@@ -63,10 +63,12 @@ CONFIGURATION
         running = false;
     }, makeFuid(ns));
 
+    const calledNsFns: Set<string> = new Set();
+
     let next = port.nextWrite();
     while (running) {
         try {
-            await readRequests(ns, port, respPort);
+            await readRequests(ns, port, respPort, calledNsFns);
         } catch (err) {
             if (err !== DispatchError.RamReset) {
                 ns.tprint(
@@ -95,7 +97,12 @@ enum DispatchError {
     RamLimitExceeded,
 }
 
-async function readRequests(ns: NS, port: NetscriptPort, resp: NetscriptPort) {
+async function readRequests(
+    ns: NS,
+    port: NetscriptPort,
+    resp: NetscriptPort,
+    calledNsFns: Set<string>,
+) {
     for (const next of readAllFromPort(ns, port)) {
         const msg = next as Message;
         const requestId = msg[1];
@@ -113,7 +120,7 @@ async function readRequests(ns: NS, port: NetscriptPort, resp: NetscriptPort) {
             ns.print('got a new valid DaemonRequest');
 
             try {
-                const value = await executeNextFn(ns, payload);
+                const value = await executeNextFn(ns, payload, calledNsFns);
                 response = { ok: true, value };
             } catch (err) {
                 if (err.cause) {
@@ -137,7 +144,11 @@ function isValidRequest(req: DaemonRequest): boolean {
     return req && typeof req.method === 'string' && Array.isArray(req.args);
 }
 
-async function executeNextFn(ns: NS, request: DaemonRequest) {
+async function executeNextFn(
+    ns: NS,
+    request: DaemonRequest,
+    calledNsFns: Set<string>,
+) {
     ns.print('INFO: waiting for next function to execute');
 
     const method = request.method.trim();
@@ -157,26 +168,30 @@ async function executeNextFn(ns: NS, request: DaemonRequest) {
         });
     }
 
-    const selfProcess = ns.self();
-    const currentDynRam = Math.max(
-        selfProcess.ramUsage,
-        selfProcess.dynamicRamUsage,
-    );
-    const nextDynamicRam = currentDynRam + nextFnRam;
-
-    if (CONFIG.maxNsFnRam < nextDynamicRam) {
-        ns.print(
-            `WARN: next call to ns.${method}() for ${ns.formatRam(nextFnRam)} would exceed dynamic RAM usage maximum of ${ns.formatRam(CONFIG.maxNsFnRam)}`,
+    if (!calledNsFns.has(request.method.trim())) {
+        const selfProcess = ns.self();
+        const currentDynRam = Math.max(
+            selfProcess.ramUsage,
+            selfProcess.dynamicRamUsage,
         );
-        // Running next pending call would exceed RAM allotment,
-        // need to restart the dispatch executor to reset dynamic
-        // RAM usage to zero.
-        throw new Error('Dynamic RAM budget exceeded, need to restart', {
-            cause: DispatchError.RamReset,
-        });
+        const nextDynamicRam = currentDynRam + nextFnRam;
+
+        if (CONFIG.maxNsFnRam < nextDynamicRam) {
+            ns.print(
+                `WARN: next call to ns.${method}() for ${ns.formatRam(nextFnRam)} would exceed dynamic RAM usage maximum of ${ns.formatRam(CONFIG.maxNsFnRam)}`,
+            );
+            // Running next pending call would exceed RAM allotment,
+            // need to restart the dispatch executor to reset dynamic
+            // RAM usage to zero.
+            throw new Error('Dynamic RAM budget exceeded, need to restart', {
+                cause: DispatchError.RamReset,
+            });
+        }
+
+        ns.ramOverride(currentDynRam + nextFnRam);
+        calledNsFns.add(request.method.trim());
     }
 
-    ns.ramOverride(currentDynRam + nextFnRam);
     const result = await dispatch(ns, request);
 
     ns.print(`received result: ${result}`);
