@@ -45,7 +45,6 @@ OPTIONS
   --help      Show this help message
 
 CONFIGURATION
-  SERVICE_maxDispatchQueueSize  Maximum number of pending dispatch requests
   SERVICE_maxNsFnRam            Configured maximum RAM for the NS dispatch executor
 `);
         return;
@@ -58,14 +57,36 @@ CONFIGURATION
     const port = ns.getPortHandle(DISPATCH_PORT);
     const respPort = ns.getPortHandle(DISPATCH_RESPONSE_PORT);
 
-    readLoop(ns, port, () => readRequests(ns, port, respPort));
+    let next = port.nextWrite();
+    while (true) {
+        try {
+            await readRequests(ns, port, respPort);
+        } catch (err) {
+            if (err !== DispatchError.RamReset) {
+                ns.tprint(
+                    `ERROR: Unexpected error in dispatch executor: ${String(err)}`,
+                );
+                console.error(err);
+                return;
+            }
 
-    await executeNextFn(ns);
+            ns.print('INFO: restarting dispatcher to reset RAM cost');
+            break;
+        }
+        await next;
+        next = port.nextWrite();
+    }
+
     ns.spawn(
         ns.self().filename,
         { spawnDelay: 0, ...executorOptions },
         ...ns.args,
     );
+}
+
+enum DispatchError {
+    RamReset,
+    RamLimitExceeded,
 }
 
 async function readRequests(ns: NS, port: NetscriptPort, resp: NetscriptPort) {
@@ -80,9 +101,13 @@ async function readRequests(ns: NS, port: NetscriptPort, resp: NetscriptPort) {
             response = { ok: false, error: 'Invalid request' };
         } else {
             try {
-                const value = await queueNsCommand(ns, payload);
+                const value = await executeNextFn(ns, payload);
                 response = { ok: true, value };
             } catch (err) {
+                if (err.cause) {
+                    throw err.cause;
+                }
+
                 response = {
                     ok: false,
                     error: err instanceof Error ? err.message : String(err),
@@ -100,77 +125,42 @@ function isValidRequest(req: DaemonRequest): boolean {
     return req && typeof req.method === 'string' && Array.isArray(req.args);
 }
 
-interface NsRequest {
-    request: DaemonRequest;
-    resolve: (response: unknown) => void;
-    reject: (reason?: unknown) => void;
-}
-
-let isPending: Promise<void> = Promise.resolve();
-let signalNext: () => void = () => null;
-const pending: NsRequest[] = [];
-
-function queueNsCommand(ns: NS, request: DaemonRequest): Promise<unknown> {
-    if (pending.length >= CONFIG.maxDispatchQueueSize) {
-        ns.print('WARN: Dispatch queue full. Rejecting request.');
-        return Promise.reject(new Error('Dispatch queue full'));
-    }
-
-    return new Promise((resolve, reject) => {
-        pending.push({ request, resolve, reject });
-        signalNext();
-    });
-}
-
-async function executeNextFn(ns: NS) {
+async function executeNextFn(ns: NS, request: DaemonRequest) {
     ns.print('INFO: waiting for next function to execute');
-    await isPending;
 
-    while (pending.length > 0) {
-        const method = pending[0].request.method.trim();
-        const nextFnRam = ns.getFunctionRamCost(method);
+    const method = request.method.trim();
+    const nextFnRam = ns.getFunctionRamCost(method);
 
+    ns.print(
+        `Got request to call ns.${method}() for ${ns.formatRam(nextFnRam)}`,
+    );
+
+    // Check if the next function exceeds maximum RAM usage
+    if (CONFIG.maxNsFnRam < nextFnRam) {
         ns.print(
-            `Got request to call ns.${method}() for ${ns.formatRam(nextFnRam)}`,
+            `Requested function exceeds max configured NS fn RAM ${ns.formatRam(CONFIG.maxNsFnRam)}`,
         );
-
-        // Check if the next function exceeds maximum RAM usage
-        if (CONFIG.maxNsFnRam < nextFnRam) {
-            ns.print(
-                `Requested function exceeds max configured NS fn RAM ${ns.formatRam(CONFIG.maxNsFnRam)}`,
-            );
-            const { reject } = pending.shift();
-            reject(new Error(ramCostTooLargeMsg(ns, method, nextFnRam)));
-            continue;
-        }
-
-        const nextDynamicRam = ns.self().dynamicRamUsage + nextFnRam;
-        if (CONFIG.maxNsFnRam < nextDynamicRam) {
-            ns.print(
-                `WARN: next call to ns.${method}() for ${ns.formatRam(nextFnRam)} would exceed dynamic RAM usage maximum of ${ns.formatRam(CONFIG.maxNsFnRam)}`,
-            );
-            // Running next pending call would exceed RAM allotment,
-            // need to restart the dispatch executor to reset dynamic
-            // RAM usage to zero.
-            return;
-        }
-
-        const { request, resolve, reject } = pending.shift();
-
-        try {
-            const result = await dispatch(ns, request);
-            ns.print(`received result: ${result}`);
-            resolve(result);
-        } catch (err) {
-            reject(err);
-        }
-    }
-
-    if (pending.length === 0) {
-        isPending = new Promise((res) => {
-            signalNext = res;
+        throw new Error(ramCostTooLargeMsg(ns, method, nextFnRam), {
+            cause: DispatchError.RamLimitExceeded,
         });
     }
+
+    const nextDynamicRam = ns.self().dynamicRamUsage + nextFnRam;
+    if (CONFIG.maxNsFnRam < nextDynamicRam) {
+        ns.print(
+            `WARN: next call to ns.${method}() for ${ns.formatRam(nextFnRam)} would exceed dynamic RAM usage maximum of ${ns.formatRam(CONFIG.maxNsFnRam)}`,
+        );
+        // Running next pending call would exceed RAM allotment,
+        // need to restart the dispatch executor to reset dynamic
+        // RAM usage to zero.
+        throw new Error(ramCostTooLargeMsg(ns, method, nextFnRam), {
+            cause: DispatchError.RamReset,
+        });
+    }
+
+    const result = await dispatch(ns, request);
+    ns.print(`received result: ${result}`);
+    return result;
 }
 
 async function dispatch(ns: NS, req: DaemonRequest): Promise<unknown> {
