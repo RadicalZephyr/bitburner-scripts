@@ -5,6 +5,7 @@ import { MemoryClient } from 'services/client/memory';
 import { ALLOC_ID_ARG } from 'services/client/memory_tag';
 
 import { collectDependencies } from 'util/dependencies';
+import { makeFuid } from 'util/fuid';
 
 import { CONFIG } from 'services/config';
 
@@ -40,7 +41,14 @@ OPTIONS
     }
 
     await launchDispatchExecutor(ns);
-    await new Promise(() => null);
+    let running = true;
+    ns.atExit(() => {
+        running = false;
+    }, makeFuid(ns));
+
+    while (running) {
+        await ns.sleep(60_000);
+    }
 }
 
 async function launchDispatchExecutor(ns: NS) {
