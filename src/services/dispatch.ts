@@ -15,7 +15,8 @@ import {
     DaemonResponse,
 } from 'services/client/dispatch';
 
-import { readAllFromPort, readLoop } from 'util/ports';
+import { makeFuid } from 'util/fuid';
+import { readAllFromPort } from 'util/ports';
 
 import { CONFIG } from 'services/config';
 
@@ -57,8 +58,13 @@ CONFIGURATION
     const port = ns.getPortHandle(DISPATCH_PORT);
     const respPort = ns.getPortHandle(DISPATCH_RESPONSE_PORT);
 
+    let running = true;
+    ns.atExit(() => {
+        running = false;
+    }, makeFuid(ns));
+
     let next = port.nextWrite();
-    while (true) {
+    while (running) {
         try {
             await readRequests(ns, port, respPort);
         } catch (err) {
