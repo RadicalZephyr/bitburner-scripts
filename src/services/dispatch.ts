@@ -206,7 +206,7 @@ function canExecuteNextFn(
             return DispatchResult.RamReset;
         }
 
-        ns.ramOverride(currentDynRam + nextFnRam);
+        ns.ramOverride(nextDynamicRam);
         calledNsFns.add(request.method.trim());
     }
 
