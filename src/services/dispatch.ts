@@ -106,6 +106,12 @@ async function readRequests(ns: NS, port: NetscriptPort, resp: NetscriptPort) {
         if (!isValidRequest(payload)) {
             response = { ok: false, error: 'Invalid request' };
         } else {
+            // This print is an implicit check if the Netscript
+            // instance is valid. Since we catch all other usages of
+            // NS, the script never dies because of an invalid NS
+            // object and that means the read loop never ends.
+            ns.print('got a new valid DaemonRequest');
+
             try {
                 const value = await executeNextFn(ns, payload);
                 response = { ok: true, value };
