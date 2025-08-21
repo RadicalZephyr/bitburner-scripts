@@ -188,14 +188,22 @@ function queueNsCommand(ns: NS, request: DaemonRequest): Promise<unknown> {
 }
 
 async function executeNextFn(ns: NS) {
+    ns.print('INFO: waiting for next function to execute');
     await isPending;
 
     while (pending.length > 0) {
         const method = pending[0].request.method.trim();
         const nextFnRam = ns.getFunctionRamCost(method);
 
+        ns.print(
+            `Got request to call ns.${method}() for ${ns.formatRam(nextFnRam)}`,
+        );
+
         // Check if the next function exceeds maximum RAM usage
         if (CONFIG.maxNsFnRam < nextFnRam) {
+            ns.print(
+                `Requested function exceeds max configured NS fn RAM ${ns.formatRam(CONFIG.maxNsFnRam)}`,
+            );
             const { reject } = pending.shift();
             reject(new Error(ramCostTooLargeMsg(ns, method, nextFnRam)));
             continue;
@@ -203,6 +211,9 @@ async function executeNextFn(ns: NS) {
 
         const nextDynamicRam = ns.self().dynamicRamUsage + nextFnRam;
         if (CONFIG.maxNsFnRam < nextDynamicRam) {
+            ns.print(
+                `WARN: next call to ns.${method}() for ${ns.formatRam(nextFnRam)} would exceed dynamic RAM usage maximum of ${ns.formatRam(CONFIG.maxNsFnRam)}`,
+            );
             // Running next pending call would exceed RAM allotment,
             // need to restart the dispatch executor to reset dynamic
             // RAM usage to zero.
@@ -213,6 +224,7 @@ async function executeNextFn(ns: NS) {
 
         try {
             const result = await dispatch(ns, request);
+            ns.print(`received result: ${result}`);
             resolve(result);
         } catch (err) {
             reject(err);
@@ -260,14 +272,15 @@ async function dispatch(ns: NS, req: DaemonRequest): Promise<unknown> {
         throw new Error(`NS method not found or not callable: ${method}`);
     }
 
+    const args = req.args.map((a) => JSON.stringify(a)).join(', ');
     try {
+        ns.print(`calling ns.${method}(${args})`);
         return await (candidate as (...a: unknown[]) => unknown).apply(
             ctx,
             req.args,
         );
     } catch (e) {
         const msg = e?.message ?? String(e);
-        const args = req.args.map((a) => JSON.stringify(a)).join(', ');
         throw new Error(`${method}(${args}) failed: ${msg}`);
     }
 }
