@@ -180,6 +180,15 @@ async function executeNextFn(
             ns.print(
                 `WARN: next call to ns.${method}() for ${ns.formatRam(nextFnRam)} would exceed dynamic RAM usage maximum of ${ns.formatRam(CONFIG.maxNsFnRam)}`,
             );
+            // TODO (ZEFS 2025-08-21): Reading directly from the Port
+            // and executing queries means that if we need to restart
+            // to reset the RAM counter then we lose the message we
+            // already popped from the port. In order to handle this,
+            // we need to peek at the messages in the port and then
+            // check the ram cost before we decide to either restart
+            // to reset the RAM counter or pop it from the port and
+            // run it.
+
             // Running next pending call would exceed RAM allotment,
             // need to restart the dispatch executor to reset dynamic
             // RAM usage to zero.
