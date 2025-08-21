@@ -93,8 +93,8 @@ CONFIGURATION
 }
 
 enum DispatchError {
-    RamReset,
-    RamLimitExceeded,
+    RamReset = 'RamReset',
+    RamLimitExceeded = 'RamLimitExceeded',
 }
 
 async function readRequests(
@@ -123,7 +123,7 @@ async function readRequests(
                 const value = await executeNextFn(ns, payload, calledNsFns);
                 response = { ok: true, value };
             } catch (err) {
-                if (err.cause) {
+                if (err.cause != null) {
                     throw err.cause;
                 }
 
