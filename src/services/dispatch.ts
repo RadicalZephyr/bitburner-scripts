@@ -109,34 +109,41 @@ async function readRequests(
         if (msg[0] !== MessageType.Dispatch) continue;
         const payload = msg[2];
 
-        let response: DaemonResponse;
-        if (!isValidRequest(payload)) {
-            response = { ok: false, error: 'Invalid request' };
-        } else {
-            // This print is an implicit check if the Netscript
-            // instance is valid. Since we catch all other usages of
-            // NS, the script never dies because of an invalid NS
-            // object and that means the read loop never ends.
-            ns.print('got a new valid DaemonRequest');
-
-            try {
-                const value = await executeNextFn(ns, payload, calledNsFns);
-                response = { ok: true, value };
-            } catch (err) {
-                if (err.cause != null) {
-                    throw err.cause;
-                }
-
-                response = {
-                    ok: false,
-                    error: err instanceof Error ? err.message : String(err),
-                };
-            }
-        }
+        const response = handleMessage(ns, payload, calledNsFns);
 
         while (!resp.tryWrite([requestId, response])) {
             await ns.sleep(20);
         }
+    }
+}
+
+async function handleMessage(
+    ns: NS,
+    request: DaemonRequest,
+    calledNsFns: Set<string>,
+): DaemonResponse {
+    if (!isValidRequest(payload)) {
+        return { ok: false, error: 'Invalid request' };
+    }
+
+    // This print is an implicit check if the Netscript
+    // instance is valid. Since we catch all other usages of
+    // NS, the script never dies because of an invalid NS
+    // object and that means the read loop never ends.
+    ns.print('got a new valid DaemonRequest');
+
+    try {
+        const value = await executeNextFn(ns, payload, calledNsFns);
+        return { ok: true, value };
+    } catch (err) {
+        if (err.cause != null) {
+            throw err.cause;
+        }
+
+        return {
+            ok: false,
+            error: err instanceof Error ? err.message : String(err),
+        };
     }
 }
 
