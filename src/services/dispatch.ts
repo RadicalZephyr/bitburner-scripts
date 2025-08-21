@@ -14,20 +14,12 @@ import {
     DaemonRequest,
     DaemonResponse,
 } from 'services/client/dispatch';
-import { MemoryClient, parseAndRegisterAlloc } from 'services/client/memory';
-import { ALLOC_ID_ARG } from 'services/client/memory_tag';
 
 import { readAllFromPort, readLoop } from 'util/ports';
-import { collectDependencies } from 'util/dependencies';
 
 import { CONFIG } from 'services/config';
 
-const EXECUTOR_OPT = 'executor' as const;
-
-const FLAGS = [
-    [EXECUTOR_OPT, false],
-    ['help', false],
-] as const satisfies FlagsSchema;
+const FLAGS = [['help', false]] as const satisfies FlagsSchema;
 
 const executorOptions: RunOptions = {
     threads: 1,
@@ -50,7 +42,6 @@ USAGE: run ${ns.getScriptName()} [--]
 Run arbitrary Netscript functions in an ephemeral process.
 
 OPTIONS
-  --${EXECUTOR_OPT}  Run as the ephemeral function executor
   --help      Show this help message
 
 CONFIGURATION
@@ -60,77 +51,21 @@ CONFIGURATION
         return;
     }
 
-    ns.ui.openTail();
-
-    if (flags.executor) {
-        ns.ui.setTailTitle(`Dispatch Executor - ${ns.self().server}`);
-        await executeNextFn(ns);
-        ns.spawn(
-            ns.self().filename,
-            { spawnDelay: 0, ...executorOptions },
-            ...ns.args,
-        );
-        return;
-    }
-
-    ns.ui.setTailTitle(`Dispatch Message Receiver - ${ns.self().server}`);
-
-    await parseAndRegisterAlloc(ns, flags, true);
-
-    await startExecutor(ns);
-
     ns.disableLog('sleep');
-
-    const memClient = new MemoryClient(ns);
-    const self = ns.self();
-    memClient.registerAllocation(self.server, self.ramUsage, 1);
+    ns.ui.openTail();
+    ns.ui.setTailTitle(`Dispatch Executor - ${ns.self().server}`);
 
     const port = ns.getPortHandle(DISPATCH_PORT);
     const respPort = ns.getPortHandle(DISPATCH_RESPONSE_PORT);
 
-    await readLoop(ns, port, () => readRequests(ns, port, respPort));
-}
+    readLoop(ns, port, () => readRequests(ns, port, respPort));
 
-async function startExecutor(ns: NS) {
-    const memClient = new MemoryClient(ns);
-
-    const selfScript = ns.self();
-    const selfRam = selfScript.ramUsage;
-    const alloc = await memClient.requestTransferableAllocation(
-        selfRam + CONFIG.maxNsFnRam,
-        1,
-        { longRunning: true },
+    await executeNextFn(ns);
+    ns.spawn(
+        ns.self().filename,
+        { spawnDelay: 0, ...executorOptions },
+        ...ns.args,
     );
-
-    if (
-        !alloc
-        || alloc.allocatedChunks.length < 1
-        || alloc.allocatedChunks[0].numChunks < 1
-    )
-        throw new Error('Failed to allocate memory for dispatch executor.');
-
-    alloc.releaseAtExit(ns);
-
-    const hostname = alloc.allocatedChunks[0].hostname;
-
-    const script = selfScript.filename;
-    const dependencies = collectDependencies(ns, script);
-    const files = [script, ...dependencies];
-
-    if (!ns.scp(files, hostname, 'home'))
-        throw new Error('Failed to scp files for executor');
-
-    const pid = ns.exec(
-        script,
-        hostname,
-        executorOptions,
-        `--${EXECUTOR_OPT}`,
-        ALLOC_ID_ARG,
-        alloc.allocationId,
-    );
-
-    if (pid === 0)
-        throw new Error(`Failed to start executor script on ${hostname}`);
 }
 
 async function readRequests(ns: NS, port: NetscriptPort, resp: NetscriptPort) {
