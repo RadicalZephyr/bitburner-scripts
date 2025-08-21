@@ -70,7 +70,7 @@ CONFIGURATION
         try {
             await readRequests(ns, port, respPort, calledNsFns);
         } catch (err) {
-            if (err !== DispatchError.RamReset) {
+            if (err !== DispatchResult.RamReset) {
                 ns.tprint(
                     `ERROR: Unexpected error in dispatch executor: ${String(err)}`,
                 );
@@ -92,7 +92,8 @@ CONFIGURATION
     );
 }
 
-enum DispatchError {
+enum DispatchResult {
+    RunFunction = 'RunFunction',
     RamReset = 'RamReset',
     RamLimitExceeded = 'RamLimitExceeded',
 }
@@ -119,10 +120,10 @@ async function readRequests(
 
 async function handleMessage(
     ns: NS,
-    request: DaemonRequest,
+    request: unknown,
     calledNsFns: Set<string>,
-): DaemonResponse {
-    if (!isValidRequest(payload)) {
+): Promise<DaemonResponse> {
+    if (!isValidRequest(request)) {
         return { ok: false, error: 'Invalid request' };
     }
 
@@ -131,15 +132,16 @@ async function handleMessage(
     // NS, the script never dies because of an invalid NS
     // object and that means the read loop never ends.
     ns.print('got a new valid DaemonRequest');
+    const result = canExecuteNextFn(ns, request, calledNsFns);
+
+    if (result !== DispatchResult.RunFunction) {
+        throw result;
+    }
 
     try {
-        const value = await executeNextFn(ns, payload, calledNsFns);
+        const value = await dispatch(ns, request);
         return { ok: true, value };
     } catch (err) {
-        if (err.cause != null) {
-            throw err.cause;
-        }
-
         return {
             ok: false,
             error: err instanceof Error ? err.message : String(err),
@@ -147,17 +149,20 @@ async function handleMessage(
     }
 }
 
-function isValidRequest(req: DaemonRequest): boolean {
-    return req && typeof req.method === 'string' && Array.isArray(req.args);
+function isValidRequest(req: unknown): req is DaemonRequest {
+    return (
+        req
+        && typeof req === 'object'
+        && typeof (req as Record<string, unknown>).method === 'string'
+        && Array.isArray((req as Record<string, unknown>).args)
+    );
 }
 
-async function executeNextFn(
+function canExecuteNextFn(
     ns: NS,
     request: DaemonRequest,
     calledNsFns: Set<string>,
 ) {
-    ns.print('INFO: waiting for next function to execute');
-
     const method = request.method.trim();
     const nextFnRam = ns.getFunctionRamCost(method);
 
@@ -170,9 +175,7 @@ async function executeNextFn(
         ns.print(
             `Requested function exceeds max configured NS fn RAM ${ns.formatRam(CONFIG.maxNsFnRam)}`,
         );
-        throw new Error(ramCostTooLargeMsg(ns, method, nextFnRam), {
-            cause: DispatchError.RamLimitExceeded,
-        });
+        return DispatchResult.RamLimitExceeded;
     }
 
     if (!calledNsFns.has(request.method.trim())) {
@@ -199,19 +202,14 @@ async function executeNextFn(
             // Running next pending call would exceed RAM allotment,
             // need to restart the dispatch executor to reset dynamic
             // RAM usage to zero.
-            throw new Error('Dynamic RAM budget exceeded, need to restart', {
-                cause: DispatchError.RamReset,
-            });
+            return DispatchResult.RamReset;
         }
 
         ns.ramOverride(currentDynRam + nextFnRam);
         calledNsFns.add(request.method.trim());
     }
 
-    const result = await dispatch(ns, request);
-
-    ns.print(`received result: ${result}`);
-    return result;
+    return DispatchResult.RunFunction;
 }
 
 async function dispatch(ns: NS, req: DaemonRequest): Promise<unknown> {
@@ -250,8 +248,4 @@ async function dispatch(ns: NS, req: DaemonRequest): Promise<unknown> {
         const msg = e?.message ?? String(e);
         throw new Error(`${method}(${args}) failed: ${msg}`);
     }
-}
-
-function ramCostTooLargeMsg(ns: NS, method: string, ramCost: number) {
-    return `NS function 'ns.${method}' has a RAM cost of ${ns.formatRam(ramCost)} which is more than the configured maximum RAM cost of ${ns.formatRam(CONFIG.maxNsFnRam)}`;
 }
