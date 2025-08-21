@@ -16,7 +16,7 @@ import {
 } from 'services/client/dispatch';
 
 import { makeFuid } from 'util/fuid';
-import { readAllFromPort } from 'util/ports';
+import { EMPTY_SENTINEL } from 'util/ports';
 
 import { CONFIG } from 'services/config';
 
@@ -104,13 +104,22 @@ async function readRequests(
     resp: NetscriptPort,
     calledNsFns: Set<string>,
 ) {
-    for (const next of readAllFromPort(ns, port)) {
+    while (true) {
+        const next = port.peek();
+        if (typeof next === 'string' && next === EMPTY_SENTINEL) {
+            return;
+        }
+
         const msg = next as Message;
         const requestId = msg[1];
-        if (msg[0] !== MessageType.Dispatch) continue;
+        if (msg[0] !== MessageType.Dispatch) {
+            port.read();
+            continue;
+        }
         const payload = msg[2];
 
         const response = handleMessage(ns, payload, calledNsFns);
+        port.read();
 
         while (!resp.tryWrite([requestId, response])) {
             await ns.sleep(20);
@@ -190,14 +199,6 @@ function canExecuteNextFn(
             ns.print(
                 `WARN: next call to ns.${method}() for ${ns.formatRam(nextFnRam)} would exceed dynamic RAM usage maximum of ${ns.formatRam(CONFIG.maxNsFnRam)}`,
             );
-            // TODO (ZEFS 2025-08-21): Reading directly from the Port
-            // and executing queries means that if we need to restart
-            // to reset the RAM counter then we lose the message we
-            // already popped from the port. In order to handle this,
-            // we need to peek at the messages in the port and then
-            // check the ram cost before we decide to either restart
-            // to reset the RAM counter or pop it from the port and
-            // run it.
 
             // Running next pending call would exceed RAM allotment,
             // need to restart the dispatch executor to reset dynamic
