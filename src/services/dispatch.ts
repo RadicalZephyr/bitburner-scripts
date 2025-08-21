@@ -234,8 +234,10 @@ async function dispatch(ns: NS, req: DaemonRequest): Promise<unknown> {
     if (CONFIG.maxNsFnRam < ramCost)
         throw new Error(ramCostTooLargeMsg(ns, method, ramCost));
 
-    const currentRam = ns.self().dynamicRamUsage;
-    ns.ramOverride(currentRam + ramCost);
+    const selfProcess = ns.self();
+    const currentRegularRam = selfProcess.ramUsage;
+    const currentDynRam = selfProcess.dynamicRamUsage;
+    ns.ramOverride(Math.max(currentRegularRam, currentDynRam) + ramCost);
 
     const parts = method.split('.');
     if (parts.length === 0) throw new Error('Malformed method path');
