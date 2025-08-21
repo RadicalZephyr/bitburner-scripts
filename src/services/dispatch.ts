@@ -145,7 +145,13 @@ async function executeNextFn(ns: NS, request: DaemonRequest) {
         });
     }
 
-    const nextDynamicRam = ns.self().dynamicRamUsage + nextFnRam;
+    const selfProcess = ns.self();
+    const currentDynRam = Math.max(
+        selfProcess.ramUsage,
+        selfProcess.dynamicRamUsage,
+    );
+    const nextDynamicRam = currentDynRam + nextFnRam;
+
     if (CONFIG.maxNsFnRam < nextDynamicRam) {
         ns.print(
             `WARN: next call to ns.${method}() for ${ns.formatRam(nextFnRam)} would exceed dynamic RAM usage maximum of ${ns.formatRam(CONFIG.maxNsFnRam)}`,
@@ -158,7 +164,9 @@ async function executeNextFn(ns: NS, request: DaemonRequest) {
         });
     }
 
+    ns.ramOverride(currentDynRam + nextFnRam);
     const result = await dispatch(ns, request);
+
     ns.print(`received result: ${result}`);
     return result;
 }
@@ -166,15 +174,6 @@ async function executeNextFn(ns: NS, request: DaemonRequest) {
 async function dispatch(ns: NS, req: DaemonRequest): Promise<unknown> {
     const method = req.method.trim();
     if (!method) throw new Error('Empty method name');
-
-    const ramCost = ns.getFunctionRamCost(method);
-    if (CONFIG.maxNsFnRam < ramCost)
-        throw new Error(ramCostTooLargeMsg(ns, method, ramCost));
-
-    const selfProcess = ns.self();
-    const currentRegularRam = selfProcess.ramUsage;
-    const currentDynRam = selfProcess.dynamicRamUsage;
-    ns.ramOverride(Math.max(currentRegularRam, currentDynRam) + ramCost);
 
     const parts = method.split('.');
     if (parts.length === 0) throw new Error('Malformed method path');
