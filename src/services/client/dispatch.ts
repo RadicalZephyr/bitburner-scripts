@@ -101,6 +101,10 @@ export class DispatchClient extends Client<
         if (!('ok' in res)) throw new Error('Unrecognized daemon response');
 
         if (res.ok) return res.value;
-        else throw new Error((res as DaemonErr).error);
+        else
+            throw new Error(
+                'Dispatch daemon errored while processing request',
+                { cause: (res as DaemonErr).error },
+            );
     }
 }
