@@ -71,11 +71,10 @@ CONFIGURATION
             await readRequests(ns, port, respPort, calledNsFns);
         } catch (err) {
             if (err !== DispatchResult.RamReset) {
-                ns.tprint(
-                    `ERROR: Unexpected error in dispatch executor: ${String(err)}`,
-                );
-                console.error(err);
-                return;
+                const msg = `ERROR: Unexpected error in dispatch executor: ${String(err)}`;
+                ns.tprint(msg);
+                console.error(msg);
+                throw new Error(msg, { cause: err });
             }
 
             ns.print('INFO: restarting dispatcher to reset RAM cost');
