@@ -117,7 +117,7 @@ async function readRequests(
         }
         const payload = msg[2];
 
-        const response = handleMessage(ns, payload, calledNsFns);
+        const response = await handleMessage(ns, payload, calledNsFns);
         port.read();
 
         while (!resp.tryWrite([requestId, response])) {
