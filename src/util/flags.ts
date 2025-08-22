@@ -40,10 +40,10 @@ export type ParsedFlags<S extends readonly [string, DefaultValue][]> = {
  *
  * Allows Unix-like flag parsing. See for full details {@link NS.flags}.
  *
- * @param ns         - Netcript API instance
+ * @param ns         - Netscript API instance
  * @param schema     - Flags schema
  * @param claimAlloc - Whether to send a claim message to the allocator for an alloc id arg
- * @returns object containing keys for all flags and '_' containing non-flag arguments
+ * @returns Object containing keys for all flags and '_' containing non-flag arguments
  */
 export async function parseFlags<S extends readonly [string, DefaultValue][]>(
     ns: NS,

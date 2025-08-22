@@ -484,6 +484,9 @@ export class MemoryClient {
 /**
  * Register the current script as owning an allocation and
  * automatically release that allocation when the script exits.
+ *
+ * @param ns           - Netscript API instance
+ * @param allocationId - Allocation ID to register claim on with allocator
  */
 export async function registerAllocationOwnership(
     ns: NS,
@@ -536,9 +539,8 @@ export async function registerAllocationOwnership(
  *
  * @param ns         - The Netscript context
  * @param flags      - Flags returned from `ns.flags`
- * @param name       - Optional name to tag the allocation release handler
  * @param claimAlloc - Whether to send a claim message to the allocator for an alloc id arg
- * @returns     The allocation ID if ownership was registered, otherwise `null`.
+ * @returns The allocation ID if ownership was registered, otherwise `null`.
  */
 export async function parseAndRegisterAlloc(
     ns: NS,
