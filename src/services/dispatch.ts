@@ -186,7 +186,7 @@ function canExecuteNextFn(
         return DispatchResult.RamLimitExceeded;
     }
 
-    if (!calledNsFns.has(request.method.trim())) {
+    if (!calledNsFns.has(method)) {
         const selfProcess = ns.self();
         const currentDynRam = Math.max(
             selfProcess.ramUsage,
@@ -206,7 +206,7 @@ function canExecuteNextFn(
         }
 
         ns.ramOverride(nextDynamicRam);
-        calledNsFns.add(request.method.trim());
+        calledNsFns.add(method);
     }
 
     return DispatchResult.RunFunction;
