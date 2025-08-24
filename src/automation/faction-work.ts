@@ -1,6 +1,8 @@
 import type { AutocompleteData, FactionWorkType, NS } from 'netscript';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
+import { CONFIG } from 'automation/config';
+
 const FLAGS = [['help', false]] as const satisfies FlagsSchema;
 
 export function autocomplete(data: AutocompleteData): string[] {
@@ -114,7 +116,7 @@ async function workForFactions(ns: NS) {
             return;
         }
 
-        await ns.asleep(10_000);
+        await ns.asleep(CONFIG.factionWorkTimeMs);
     }
 }
 
