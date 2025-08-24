@@ -40,7 +40,7 @@ OPTIONS
 async function manualTill(ns: NS, target: string) {
     await sendTerminalCommand(ns, `connect ${target}`);
 
-    const minSec = ns.getServerBaseSecurityLevel(target);
+    const minSec = ns.getServerMinSecurityLevel(target);
     while (minSec < ns.getServerSecurityLevel(target)) {
         await sendTerminalCommand(ns, 'weaken');
     }
