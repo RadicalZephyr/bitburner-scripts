@@ -3,7 +3,10 @@ import { FlagsSchema, parseFlags } from 'util/flags';
 
 import type { ContractData } from 'all-contracts';
 
+import { PortClient } from 'services/client/port';
+
 import { walkNetworkBFS } from 'util/walk';
+import { makeFuid } from 'util/fuid';
 
 const ALL_CONTRACT_TYPES = [
     'Algorithmic-Stock-Trader-I',
@@ -76,7 +79,12 @@ OPTIONS
     const network = walkNetworkBFS(ns);
     const allHosts = Array.from(network.keys());
 
-    const contractPortNum = 266; // "CON"
+    const portClient = new PortClient(ns);
+    const contractPortNum = await portClient.requestPort();
+    ns.atExit(() => {
+        portClient.releasePort(contractPortNum);
+    }, makeFuid(ns));
+
     const contractFile = /\.cct/;
 
     const contractPort = ns.getPortHandle(contractPortNum);
