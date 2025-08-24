@@ -42,6 +42,8 @@ async function donateForAugments(ns: NS) {
         const rep = ns.singularity.getFactionRep(f);
         const maxRep = getMaxRep(ns, f);
         const repDelta = maxRep - rep;
+        if (repDelta <= 0) continue;
+
         const donation = ns.formulas.reputation.donationForRep(
             repDelta,
             player,
