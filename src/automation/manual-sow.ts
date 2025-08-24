@@ -1,6 +1,7 @@
 import type { NS, AutocompleteData } from 'netscript';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
+import { connectTo } from 'util/connect';
 import { sendTerminalCommand } from 'util/terminal';
 
 const FLAGS = [['help', false]] as const satisfies FlagsSchema;
@@ -38,7 +39,7 @@ OPTIONS
 }
 
 async function manualSow(ns: NS, target: string) {
-    await sendTerminalCommand(ns, `connect ${target}`);
+    await connectTo(ns, target);
 
     const maxMoney = ns.getServerMaxMoney(target);
     while (maxMoney > ns.getServerMoneyAvailable(target)) {
