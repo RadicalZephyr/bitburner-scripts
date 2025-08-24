@@ -34,6 +34,7 @@ async function watchForAugments(ns: NS) {
     while (true) {
         const numSleeves = ns.sleeve.getNumSleeves();
         for (let i = 0; i < numSleeves; i++) {
+            if (ns.sleeve.getSleeve(i).shock > 0) continue;
             buyAugs(ns, i);
         }
         await ns.asleep(1000);
