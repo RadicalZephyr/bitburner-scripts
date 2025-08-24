@@ -1,6 +1,8 @@
 import type { AutocompleteData, NS } from 'netscript';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
+import { connectTo } from 'automation/connect';
+
 const FLAGS = [['help', false]] as const satisfies FlagsSchema;
 
 export function autocomplete(data: AutocompleteData): string[] {
@@ -35,8 +37,10 @@ OPTIONS:
     if (sing.isFocused()) {
         sing.setFocus(false);
     }
+
     sing.connect('home');
-    sing.connect(target);
+
+    await connectTo(ns, target);
 
     while (true) {
         await sing.manualHack();
