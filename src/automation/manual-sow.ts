@@ -34,10 +34,10 @@ OPTIONS
     }
 
     const target = flags._[0];
-    await manuallySow(ns, target);
+    await manualSow(ns, target);
 }
 
-async function manuallySow(ns: NS, target: string) {
+async function manualSow(ns: NS, target: string) {
     await sendTerminalCommand(ns, `connect ${target}`);
 
     const maxMoney = ns.getServerMaxMoney(target);

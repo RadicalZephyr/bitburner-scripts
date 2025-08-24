@@ -34,10 +34,10 @@ OPTIONS
     }
 
     const target = flags._[0];
-    await manuallySow(ns, target);
+    await manualTill(ns, target);
 }
 
-async function manuallySow(ns: NS, target: string) {
+async function manualTill(ns: NS, target: string) {
     await sendTerminalCommand(ns, `connect ${target}`);
 
     const minSec = ns.getServerBaseSecurityLevel(target);
