@@ -8,6 +8,7 @@ const entries = [
     ['gtpProxyPort', '18924'],
     ['maxEngineInvalidMoves', 5],
     ['maxOpponentPasses', 5],
+    ['playGo', true],
 ] as const;
 
 export const CONFIG: ConfigInstance<typeof entries> = new Config(

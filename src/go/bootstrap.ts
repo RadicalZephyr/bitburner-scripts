@@ -2,6 +2,7 @@ import type { AutocompleteData, NS } from 'netscript';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { LaunchClient } from 'services/client/launch';
+import { CONFIG } from 'go/config';
 
 // NOTE: These flags _must_ be the same as in the root bootstrap script
 // because we import and run this main function it sees the same
@@ -18,6 +19,8 @@ export function autocomplete(data: AutocompleteData): string[] {
 
 export async function main(ns: NS) {
     await parseFlags(ns, FLAGS);
+
+    if (!CONFIG.playGo) return;
 
     const client = new LaunchClient(ns);
     const services = ['/go/kataPlay.js'];
