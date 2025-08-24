@@ -140,8 +140,18 @@ CONFIGURATION
         function compareWorkers(a: Worker, b: Worker) {
             if (a.hostname === 'home') return -1;
             else if (b.hostname === 'home') return 1;
+            else if (
+                purchasedServers.has(a.hostname)
+                && purchasedServers.has(b.hostname)
+            )
+                return a.hostname.localeCompare(b.hostname);
             else if (purchasedServers.has(a.hostname)) return -1;
             else if (purchasedServers.has(b.hostname)) return 1;
+            else if (
+                a.hostname.startsWith('hacknet-server-')
+                && b.hostname.startsWith('hacknet-server-')
+            )
+                return a.hostname.localeCompare(b.hostname);
             else if (a.hostname.startsWith('hacknet-server-')) return -1;
             else if (b.hostname.startsWith('hacknet-server-')) return 1;
             return 0;
