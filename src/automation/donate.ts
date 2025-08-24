@@ -1,4 +1,4 @@
-import type { NS, AutocompleteData } from 'netscript';
+import type { NS, AutocompleteData, Player } from 'netscript';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
 const FLAGS = [['help', false]] as const satisfies FlagsSchema;
@@ -44,10 +44,7 @@ async function donateForAugments(ns: NS) {
         const repDelta = maxRep - rep;
         if (repDelta <= 0) continue;
 
-        const donation = ns.formulas.reputation.donationForRep(
-            repDelta,
-            player,
-        );
+        const donation = donationForRep(ns, repDelta, player);
         const result = ns.singularity.donateToFaction(f, donation);
         if (!result) ns.print(`WARN: failed to donate to ${f}`);
     }
@@ -63,4 +60,17 @@ function getMaxRep(ns: NS, f: string): number {
     augs.sort((a, b) => b.rep - a.rep);
 
     return augs[0].rep;
+}
+
+function donationForRep(ns: NS, rep: number, player: Player): number {
+    if (ns.fileExists('Formulas.exe', 'home')) {
+        return ns.formulas.reputation.donationForRep(rep, player);
+    } else {
+        return estDonationForRep(rep, player);
+    }
+}
+
+function estDonationForRep(rep: number, person: Player): number {
+    const DonateMoneyToRepDivisor = 1e6;
+    return (rep * DonateMoneyToRepDivisor) / person.mults.faction_rep;
 }
