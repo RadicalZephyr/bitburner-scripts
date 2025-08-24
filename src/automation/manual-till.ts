@@ -44,4 +44,6 @@ async function manualTill(ns: NS, target: string) {
     while (minSec < ns.getServerSecurityLevel(target)) {
         await sendTerminalCommand(ns, 'weaken');
     }
+
+    await sendTerminalCommand(ns, 'home');
 }

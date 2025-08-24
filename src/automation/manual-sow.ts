@@ -44,4 +44,6 @@ async function manualSow(ns: NS, target: string) {
     while (maxMoney > ns.getServerMoneyAvailable(target)) {
         await sendTerminalCommand(ns, 'grow ; weaken ; weaken ; weaken');
     }
+
+    await sendTerminalCommand(ns, 'home');
 }
