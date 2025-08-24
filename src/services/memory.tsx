@@ -135,7 +135,21 @@ CONFIGURATION
     );
 
     function getWorkers() {
-        return Array.from(memoryManager.workers.values());
+        const purchasedServers = new Set(ns.getPurchasedServers());
+
+        function compareWorkers(a: Worker, b: Worker) {
+            if (a.hostname === 'home') return -1;
+            else if (b.hostname === 'home') return 1;
+            else if (purchasedServers.has(a.hostname)) return -1;
+            else if (purchasedServers.has(b.hostname)) return 1;
+            else if (a.hostname.startsWith('hacknet-server-')) return -1;
+            else if (b.hostname.startsWith('hacknet-server-')) return 1;
+            return 0;
+        }
+
+        const workers = Array.from(memoryManager.workers.values());
+        workers.sort(compareWorkers);
+        return workers;
     }
 
     ns.clearLog();
