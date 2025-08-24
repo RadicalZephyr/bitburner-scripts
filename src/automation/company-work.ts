@@ -102,7 +102,7 @@ async function workForCompanies(ns: NS) {
             return;
         }
 
-        await ns.asleep(60_000);
+        await ns.asleep(CONFIG.companyWorkTimeMs);
     }
 }
 

@@ -5,6 +5,7 @@ const entries = [
     ['ftpCrackHackRequirement', 30],
     ['combatTrainTimeMs', 10_000],
     ['companyRepForFaction', 400_000],
+    ['companyWorkTimeMs', 10_000],
     ['moneyTrackerCadence', 10_000],
     ['moneyTrackerHistoryLen', 3],
     ['maxTimeToEarnNeuroFlux', 60 * 30],
