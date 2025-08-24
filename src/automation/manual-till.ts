@@ -40,7 +40,8 @@ OPTIONS
 async function manuallySow(ns: NS, target: string) {
     await sendTerminalCommand(ns, `connect ${target}`);
 
-    while (true) {
-        await sendTerminalCommand(ns, 'weaken ; weaken ; weaken');
+    const minSec = ns.getServerBaseSecurityLevel(target);
+    while (minSec < ns.getServerSecurityLevel(target)) {
+        await sendTerminalCommand(ns, 'weaken');
     }
 }
