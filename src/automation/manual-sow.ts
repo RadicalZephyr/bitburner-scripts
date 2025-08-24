@@ -40,7 +40,8 @@ OPTIONS
 async function manuallySow(ns: NS, target: string) {
     await sendTerminalCommand(ns, `connect ${target}`);
 
-    while (true) {
+    const maxMoney = ns.getServerMaxMoney(target);
+    while (maxMoney > ns.getServerMoneyAvailable(target)) {
         await sendTerminalCommand(ns, 'grow ; weaken ; weaken ; weaken');
     }
 }
