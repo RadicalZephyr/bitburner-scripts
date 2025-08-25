@@ -1,9 +1,10 @@
 import type { NS } from 'netscript';
 import { parseFlags } from 'util/flags';
 
+import { connectTo } from 'automation/connect';
+
 import { canInstallBackdoor, needsBackdoor } from 'util/backdoor';
 import { FACTION_SERVERS } from 'util/faction-servers';
-import { shortestPath } from 'util/shortest-path';
 
 export async function main(ns: NS) {
     await parseFlags(ns, []);
@@ -19,17 +20,14 @@ export async function main(ns: NS) {
         const startingHost = ns.singularity.getCurrentServer();
 
         for (const host of factionMissing) {
-            const currentHost = ns.singularity.getCurrentServer();
-            const path = await shortestPath(ns, currentHost, host);
-            traverseNetworkPath(ns, path);
+            await connectTo(ns, host);
             await ns.singularity.installBackdoor();
             await ns.asleep(0);
         }
 
         const currentHost = ns.singularity.getCurrentServer();
         if (startingHost !== currentHost) {
-            const path = await shortestPath(ns, currentHost, startingHost);
-            traverseNetworkPath(ns, path);
+            await connectTo(ns, startingHost);
         }
 
         await ns.sleep(10_000);
@@ -45,12 +43,4 @@ function backdoorableFactionServers(ns: NS) {
         }
     }
     return factionMissing;
-}
-
-function traverseNetworkPath(ns: NS, path: string[]) {
-    for (const host of path) {
-        const currentHost = ns.singularity.getCurrentServer();
-        if (!ns.singularity.connect(host))
-            throw new Error(`failed to connect to ${host} from ${currentHost}`);
-    }
 }
