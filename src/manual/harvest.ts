@@ -35,10 +35,10 @@ OPTIONS
     }
 
     const target = flags._[0];
-    await _manualHack(ns, target);
+    await manualHarvest(ns, target);
 }
 
-async function _manualHack(ns: NS, target: string) {
+async function manualHarvest(ns: NS, target: string) {
     await connectTo(ns, target);
 
     while (true) {
