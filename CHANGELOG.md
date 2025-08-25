@@ -34,12 +34,14 @@
 - Include megacorp servers in backdoor list [#264][pr-264].
 - The port allocator now clears ports before allocating them [#264][pr-264].
 - Bootstrap scripts prevent duplicate instances [#268][pr-268].
+- Memory service sorts workers with host prioritisation and alphabetical tie-breakers [#273][pr-273].
 
 ### IPvGO
 
 - Introduce `kataPlay.ts` which plays IPvGO using a KataGo HTTP proxy; setup instructions cover running the proxy and script [#206][pr-206].
 - KataGo proxy and NetScript client gain wall placement and cache-clearing support, with new limits on consecutive passes and invalid moves [#223][pr-223].
 - Make `kataPlay.ts` more robust against errors and capture game details when errors occur for later debugging [#240][pr-240].
+- Added a `playGo` config value that controls whether to start KataGo AI [#273][pr-273].
 
 ### Automation
 
@@ -59,6 +61,9 @@
 - `gym` script renamed to `workout` and `port-openers` to `purchase-crackers` [#255][pr-255].
 - Automation scripts rely on the global focus setting via `ns.singularity.setFocus` [#255][pr-255].
 - Include megacorp servers in backdoor list [#264][pr-264].
+- Added `donate`, `manual-sow`, and `manual-till` scripts for faction donations and manual till/sow/harvest operations [#273][pr-273].
+- Company and faction work automation use configurable `companyWorkTimeMs` and `factionWorkTimeMs` durations [#273][pr-273].
+- Contract fetcher allocates ports dynamically to avoid conflicts [#273][pr-273].
 
 ### Grafting
 
@@ -70,6 +75,7 @@
 - Introduced sleeve scripts for augmentation purchases, crime ring coordination, direct management, and a progress dashboard [#266][pr-266].
 - Added more sleeve scripts for training all skills, working on
   Bladeburner and studying [#267][pr-267].
+- Augmentation purchasing skips sleeves with shock to avoid crashing [#273][pr-273].
 
 ### Bladeburner
 
@@ -102,6 +108,7 @@
 - AGENTS guidelines clarified for PR reviewers [#189][pr-189].
 - Utility tests relocated under `src/util/__tests__` with coverage for terminal progress bar detection [#226][pr-226].
 - Updated memory management guide for claim-preserving deallocation and added tests for claim release and response-port timeouts [#260][pr-260].
+- Pull-request review guidelines moved to `docs/pull-requests.md` and referenced from `AGENTS.md` [#273][pr-273].
 
 ### Build Scripts
 
@@ -155,6 +162,7 @@
 [pr-267]: https://github.com/RadicalZephyr/bitburner-scripts/pull/267
 [pr-268]: https://github.com/RadicalZephyr/bitburner-scripts/pull/268
 [pr-270]: https://github.com/RadicalZephyr/bitburner-scripts/pull/270
+[pr-273]: https://github.com/RadicalZephyr/bitburner-scripts/pull/273
 
 ## v2.1.0
 
