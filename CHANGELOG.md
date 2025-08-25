@@ -61,9 +61,13 @@
 - `gym` script renamed to `workout` and `port-openers` to `purchase-crackers` [#255][pr-255].
 - Automation scripts rely on the global focus setting via `ns.singularity.setFocus` [#255][pr-255].
 - Include megacorp servers in backdoor list [#264][pr-264].
-- Added `donate`, `manual-sow`, and `manual-till` scripts for faction donations and manual till/sow/harvest operations [#273][pr-273].
+- Added `donate` for faction donations and operations [#273][pr-273].
 - Company and faction work automation use configurable `companyWorkTimeMs` and `factionWorkTimeMs` durations [#273][pr-273].
 - Contract fetcher allocates ports dynamically to avoid conflicts [#273][pr-273].
+
+### Manual Hacking
+
+- Added `manual/till`, `manual/sow`, and `manual/harvest` scripts for automating terminal till/sow/harvest operations [#273][pr-273].
 
 ### Grafting
 
