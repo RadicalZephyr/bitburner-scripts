@@ -265,6 +265,12 @@ function registerSubscriber(
     }
 }
 
+interface SubscriptionMessageType {
+    type: number;
+    payload: string[];
+    response: void;
+}
+
 function notifySubscriptions(
     ns: NS,
     hosts: string[],
@@ -273,10 +279,7 @@ function notifySubscriptions(
     for (const sub of subscriptions) {
         const hostsToSend = [...sub.missedUpdates, ...hosts];
         if (
-            trySendMessage<
-                { type: number; payload: string[]; response: void },
-                number
-            >(
+            trySendMessage<SubscriptionMessageType, number>(
                 ns.getPortHandle(sub.port),
                 sub.messageType,
                 hostsToSend,
