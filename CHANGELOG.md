@@ -23,6 +23,7 @@
 - Improved accuracy of harvest batch fitting algorithm [#191][pr-191].
 - Fixed sow task requesting smaller allocations than necessary [#191][pr-191].
 - Removed usage of broken `releaseChunks` API [#260][pr-260].
+- Harvest script can run without a control port and releases ports safely on exit [#276][pr-276].
 
 ### Services
 
@@ -42,6 +43,7 @@
 - KataGo proxy and NetScript client gain wall placement and cache-clearing support, with new limits on consecutive passes and invalid moves [#223][pr-223].
 - Make `kataPlay.ts` more robust against errors and capture game details when errors occur for later debugging [#240][pr-240].
 - Added a `playGo` config value that controls whether to start KataGo AI [#273][pr-273].
+- `wipe.ts` now closes the `go/kataPlay.js` HUD [#276][pr-276].
 
 ### Automation
 
@@ -64,6 +66,13 @@
 - Added `donate` for faction donations and operations [#273][pr-273].
 - Company and faction work automation use configurable `companyWorkTimeMs` and `factionWorkTimeMs` durations [#273][pr-273].
 - Contract fetcher allocates ports dynamically to avoid conflicts [#273][pr-273].
+- Added `best-crime` script to display money per second for each crime [#276][pr-276].
+- Company work automation pursues CEO positions after meeting faction reputation goals [#276][pr-276].
+- `fetch-contracts` `--test` flag defaults to an empty string and searches for contracts on `home` when testing [#276][pr-276].
+
+### Contracts
+
+- Added solvers for "Compression III: LZ Compression" and "Hamming Codes" coding contracts [#276][pr-276].
 
 ### Manual Hacking
 
@@ -80,6 +89,7 @@
 - Added more sleeve scripts for training all skills, working on
   Bladeburner and studying [#267][pr-267].
 - Augmentation purchasing skips sleeves with shock to avoid crashing [#273][pr-273].
+- Study script accepts a `--course` option to pick which class sleeves attend [#276][pr-276].
 
 ### Bladeburner
 
@@ -167,6 +177,7 @@
 [pr-268]: https://github.com/RadicalZephyr/bitburner-scripts/pull/268
 [pr-270]: https://github.com/RadicalZephyr/bitburner-scripts/pull/270
 [pr-273]: https://github.com/RadicalZephyr/bitburner-scripts/pull/273
+[pr-276]: https://github.com/RadicalZephyr/bitburner-scripts/pull/276
 
 ## v2.1.0
 
