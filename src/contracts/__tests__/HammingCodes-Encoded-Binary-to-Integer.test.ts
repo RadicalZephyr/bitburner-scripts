@@ -1,6 +1,6 @@
 import { describe, expect, test } from '@jest/globals';
 
-import { solve as hDecode } from '../incomplete/HammingCodes-Encoded-Binary-to-Integer';
+import { solve as hDecode } from '../HammingCodes-Encoded-Binary-to-Integer';
 
 describe('hamming codes', () => {
     test.each([
