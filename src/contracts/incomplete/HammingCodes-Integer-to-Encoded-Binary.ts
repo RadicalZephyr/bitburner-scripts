@@ -55,39 +55,62 @@ export async function main(ns: NS) {
     const contractData = JSON.parse(contractDataJSON);
     ns.tprintf('contract data: %s', JSON.stringify(contractData));
     const answer = solve(contractData);
-    ns.writePort(contractPortNum, JSON.stringify(answer));
+    ns.writePort(contractPortNum, answer);
 }
 
 /**
  * Encode an integer using extended Hamming code.
  */
-function solve(data: number): string {
-    const dataBits = data.toString(2).split('');
-    const m = dataBits.length;
-    let p = 0;
-    while (1 << p < m + p + 1) p++;
-    const total = m + p + 1;
-    const out = Array(total).fill('0');
+export function solve(data: number): string {
+    const enc: number[] = [0];
+    const data_bits: number[] = data
+        .toString(2)
+        .split('')
+        .reverse()
+        .map((value) => parseInt(value));
 
-    let d = m - 1;
-    for (let i = total - 1; i >= 0; i--) {
-        if (i === 0 || (i & (i - 1)) === 0) {
-            continue; // parity bit
+    let k = data_bits.length;
+
+    /* NOTE: writing the data like this flips the endianness, this is what the
+     * original implementation by Hedrauta did so I'm keeping it like it was. */
+    for (let i = 1; k > 0; i++) {
+        if ((i & (i - 1)) != 0) {
+            enc[i] = data_bits[--k];
+        } else {
+            enc[i] = 0;
         }
-        out[i] = dataBits[d--];
     }
 
-    for (let pIndex = 1; pIndex < total; pIndex <<= 1) {
-        let parity = 0;
-        for (let i = pIndex; i < total; i += 2 * pIndex) {
-            for (let j = i; j < i + pIndex && j < total; j++) {
-                parity ^= Number(out[j]);
-            }
+    let parityNumber = 0;
+
+    /* Figure out the subsection parities */
+    for (let i = 0; i < enc.length; i++) {
+        if (enc[i]) {
+            parityNumber ^= i;
         }
-        out[pIndex] = parity.toString();
     }
 
-    const overall = out.slice(1).reduce((a, b) => a ^ Number(b), 0);
-    out[0] = overall.toString();
-    return out.join('');
+    const parityArray = parityNumber
+        .toString(2)
+        .split('')
+        .reverse()
+        .map((value) => parseInt(value));
+
+    /* Set the parity bits accordingly */
+    for (let i = 0; i < parityArray.length; i++) {
+        enc[2 ** i] = parityArray[i] ? 1 : 0;
+    }
+
+    parityNumber = 0;
+    /* Figure out the overall parity for the entire block */
+    for (let i = 0; i < enc.length; i++) {
+        if (enc[i]) {
+            parityNumber++;
+        }
+    }
+
+    /* Finally set the overall parity bit */
+    enc[0] = parityNumber % 2 == 0 ? 0 : 1;
+
+    return enc.join('');
 }
