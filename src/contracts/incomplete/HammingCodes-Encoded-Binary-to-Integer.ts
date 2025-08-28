@@ -57,39 +57,44 @@ export async function main(ns: NS) {
     const contractData = JSON.parse(contractDataJSON);
     ns.tprintf('contract data: %s', JSON.stringify(contractData));
     const answer = solve(contractData);
-    ns.writePort(contractPortNum, JSON.stringify(answer));
+    ns.writePort(contractPortNum, answer);
 }
 
 /**
  * Decode extended Hamming code to an integer.
  */
-function solve(data: string): number {
-    const bits = data.split('');
-    const m = bits.length;
+export function solve(data: string): number {
+    let err = 0;
+    const bits: number[] = [];
 
-    const parityIndices: number[] = [];
-    for (let i = 0; 2 ** i < m; i++) parityIndices.push(2 ** i);
-    parityIndices.unshift(0);
+    const bitStringArray = data.split('');
+    for (let i = 0; i < bitStringArray.length; ++i) {
+        const bit = parseInt(bitStringArray[i]);
+        bits[i] = bit;
 
-    let error = 0;
-    for (const p of parityIndices.slice(1)) {
-        let parity = 0;
-        for (let i = p; i <= m; i += 2 * p) {
-            for (let j = i; j < i + p && j <= m; j++)
-                parity ^= Number(bits[j - 1]);
+        if (bit) {
+            err ^= +i;
         }
-        if (parity !== Number(bits[p - 1])) error ^= p;
-    }
-    const overall = bits.reduce((a, b) => a ^ Number(b), 0);
-    if (overall !== 0 && error === 0) error = 1; // overall parity bit
-    if (error > 0) {
-        const idx = error - 1;
-        bits[idx] = bits[idx] === '0' ? '1' : '0';
     }
 
-    const dataBits: string[] = [];
-    for (let i = 1; i <= m; i++) {
-        if (!parityIndices.includes(i)) dataBits.push(bits[i - 1]);
+    /* If err != 0 then it spells out the index of the bit that was flipped */
+    if (err) {
+        /* Flip to correct */
+        bits[err] = bits[err] ? 0 : 1;
     }
-    return parseInt(dataBits.join(''), 2);
+
+    /* Now we have to read the message, bit 0 is unused (it's the overall parity bit
+     * which we don't care about). Each bit at an index that is a power of 2 is
+     * a parity bit and not part of the actual message. */
+
+    let ans = '';
+
+    for (let i = 1; i < bits.length; i++) {
+        /* i is not a power of two so it's not a parity bit */
+        if ((i & (i - 1)) != 0) {
+            ans += bits[i];
+        }
+    }
+
+    return parseInt(ans, 2);
 }
