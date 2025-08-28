@@ -1,6 +1,6 @@
 import { describe, expect, test } from '@jest/globals';
 
-import { solve as lzCompress } from '../incomplete/Compression-III-LZ-Compression';
+import { solve as lzCompress } from '../Compression-III-LZ-Compression';
 
 describe('LZ Compression', () => {
     test.each([
