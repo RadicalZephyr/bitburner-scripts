@@ -27,9 +27,10 @@ import {
     maxHackPercentForMemory,
 } from 'batch/expected_value';
 
-import { CONFIG } from 'batch/config';
-
+import { makeFuid } from 'util/fuid';
 import { readAllFromPort, readLoop } from 'util/ports';
+
+import { CONFIG } from 'batch/config';
 
 const FLAGS = [
     ['max-ram', -1],
@@ -115,7 +116,12 @@ CONFIGURATION
     }
 
     const portId = flags['port-id'];
-    if (typeof portId !== 'number' || !Number.isInteger(portId) || portId < 1) {
+    if (
+        portId !== -1
+        && (typeof portId !== 'number'
+            || !Number.isInteger(portId)
+            || portId < 1)
+    ) {
         ns.tprint('--port-id must be a valid port number');
         return null;
     }
@@ -140,21 +146,32 @@ async function prepareHarvest(
         ns.tprint('failed to acquire a port');
         return null;
     }
-    ns.atExit(() => {
-        portClient.releasePort(donePortId);
-        portClient.releasePort(args.portId);
-    });
+    ns.atExit(
+        () => {
+            portClient.releasePort(donePortId);
+        },
+        'donePortRelease-' + makeFuid(ns),
+    );
 
     const shuttingDown = { value: false };
-    const controlPort = ns.getPortHandle(args.portId);
-    readLoop(ns, controlPort, async () => {
-        for (const msg of readAllFromPort(ns, controlPort)) {
-            const m = msg as Message;
-            if (Array.isArray(m) && m[0] === HarvestMessageType.Shutdown) {
-                shuttingDown.value = true;
+    if (args.portId !== -1) {
+        ns.atExit(
+            () => {
+                portClient.releasePort(args.portId);
+            },
+            'stopPortRelease-' + makeFuid(ns),
+        );
+
+        const controlPort = ns.getPortHandle(args.portId);
+        readLoop(ns, controlPort, async () => {
+            for (const msg of readAllFromPort(ns, controlPort)) {
+                const m = msg as Message;
+                if (Array.isArray(m) && m[0] === HarvestMessageType.Shutdown) {
+                    shuttingDown.value = true;
+                }
             }
-        }
-    });
+        });
+    }
 
     const memClient = new GrowableMemoryClient(ns);
     const memInfo = await memClient.getFreeRam();
