@@ -42,6 +42,7 @@ const hudScripts = new Set([
     'batch/task_selector.js',
     'batch/monitor.js',
     'services/memory.js',
+    'go/kataPlay.js',
 ]);
 
 function closeBatchHUDs(ns: NS, procs: ProcessInfo[]) {
