@@ -1,5 +1,6 @@
 import type { NS, NetscriptPort } from 'netscript';
-import { makeFuid } from './fuid';
+
+import { makeFuid } from 'util/fuid';
 
 /** Shape of a message definition used to construct typed port messages. */
 export type MessageSpec = {
