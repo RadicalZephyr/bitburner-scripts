@@ -59,64 +59,166 @@ export async function main(ns: NS) {
     const contractData = JSON.parse(contractDataJSON);
     ns.tprintf('contract data: %s', JSON.stringify(contractData));
     const answer = solve(contractData);
-    ns.writePort(contractPortNum, JSON.stringify(answer));
-}
-
-enum ChunkType {
-    Literal,
-    BackRef,
+    ns.writePort(contractPortNum, answer);
 }
 
 /**
  * Encode the string using minimal LZ compression.
  */
-function solve(data: string): string {
-    const memo = new Map<string, string>();
+export function solve(plain: string): string {
+    // for state[i][j]:
+    //      if i is 0, we're adding a literal of length j
+    //      else, we're adding a backreference of offset i and length j
+    let cur_state: (string | null)[][] = Array.from(Array(10), () =>
+        Array<string | null>(10).fill(null),
+    );
+    let new_state: (string | null)[][] = Array.from(Array(10), () =>
+        Array<string | null>(10),
+    );
 
-    function helper(pos: number, type: ChunkType): string {
-        if (pos >= data.length) return '';
-        const key = `${pos}|${type}`;
-        const cached = memo.get(key);
-        if (cached !== undefined) return cached;
+    function set(
+        state: (string | null)[][],
+        i: number,
+        j: number,
+        str: string,
+    ): void {
+        const current = state[i][j];
+        if (current == null || str.length < current.length) {
+            state[i][j] = str;
+        }
+    }
 
-        let best: string | null = null;
+    // initial state is a literal of length 1
+    cur_state[0][1] = '';
 
-        if (type === ChunkType.Literal) {
-            for (let len = 0; len <= 9 && pos + len <= data.length; len++) {
-                const chunk =
-                    len === 0 ? '0' : `${len}${data.slice(pos, pos + len)}`;
-                const cand = chunk + helper(pos + len, ChunkType.BackRef);
-                if (best === null || cand.length < best.length) best = cand;
+    for (let i = 1; i < plain.length; ++i) {
+        for (const row of new_state) {
+            row.fill(null);
+        }
+        const c = plain[i];
+
+        // handle literals
+        for (let length = 1; length <= 9; ++length) {
+            const string = cur_state[0][length];
+            if (string == null) {
+                continue;
             }
-        } else {
-            for (let len = 0; len <= 9; len++) {
-                if (len === 0) {
-                    const cand = '0' + helper(pos, ChunkType.Literal);
-                    if (best === null || cand.length < best.length) best = cand;
-                } else {
-                    for (let dist = 1; dist <= 9; dist++) {
-                        if (pos - dist < 0 || pos + len > data.length) continue;
-                        let ok = true;
-                        for (let j = 0; j < len; j++) {
-                            if (data[pos + j] !== data[pos + j - dist]) {
-                                ok = false;
-                                break;
-                            }
-                        }
-                        if (!ok) continue;
-                        const chunk = `${len}${dist}`;
-                        const cand =
-                            chunk + helper(pos + len, ChunkType.Literal);
-                        if (best === null || cand.length < best.length)
-                            best = cand;
+
+            if (length < 9) {
+                // extend current literal
+                set(new_state, 0, length + 1, string);
+            } else {
+                // start new literal
+                set(
+                    new_state,
+                    0,
+                    1,
+                    string + '9' + plain.substring(i - 9, i) + '0',
+                );
+            }
+
+            for (let offset = 1; offset <= Math.min(9, i); ++offset) {
+                if (plain[i - offset] === c) {
+                    // start new backreference
+                    set(
+                        new_state,
+                        offset,
+                        1,
+                        string
+                            + String(length)
+                            + plain.substring(i - length, i),
+                    );
+                }
+            }
+        }
+
+        // handle backreferences
+        for (let offset = 1; offset <= 9; ++offset) {
+            for (let length = 1; length <= 9; ++length) {
+                const string = cur_state[offset][length];
+                if (string == null) {
+                    continue;
+                }
+
+                if (plain[i - offset] === c) {
+                    if (length < 9) {
+                        // extend current backreference
+                        set(new_state, offset, length + 1, string);
+                    } else {
+                        // start new backreference
+                        set(
+                            new_state,
+                            offset,
+                            1,
+                            string + '9' + String(offset) + '0',
+                        );
+                    }
+                }
+
+                // start new literal
+                set(new_state, 0, 1, string + String(length) + String(offset));
+
+                // end current backreference and start new backreference
+                for (
+                    let new_offset = 1;
+                    new_offset <= Math.min(9, i);
+                    ++new_offset
+                ) {
+                    if (plain[i - new_offset] === c) {
+                        set(
+                            new_state,
+                            new_offset,
+                            1,
+                            string + String(length) + String(offset) + '0',
+                        );
                     }
                 }
             }
         }
 
-        memo.set(key, best!);
-        return best!;
+        const tmp_state = new_state;
+        new_state = cur_state;
+        cur_state = tmp_state;
     }
 
-    return helper(0, ChunkType.Literal);
+    let result = null;
+
+    for (let len = 1; len <= 9; ++len) {
+        let string = cur_state[0][len];
+        if (string == null) {
+            continue;
+        }
+
+        string +=
+            String(len) + plain.substring(plain.length - len, plain.length);
+        if (result == null || string.length < result.length) {
+            result = string;
+        } else if (
+            string.length == result.length
+            && string.localeCompare(result) < 0
+        ) {
+            result = string;
+        }
+    }
+
+    for (let offset = 1; offset <= 9; ++offset) {
+        for (let len = 1; len <= 9; ++len) {
+            let string = cur_state[offset][len];
+            if (string == null) {
+                continue;
+            }
+
+            string += String(len) + '' + String(offset);
+            if (result == null || string.length < result.length) {
+                result = string;
+            } else if (
+                string.length == result.length
+                && string.localeCompare(result) < 0
+            ) {
+                result = string;
+            }
+        }
+    }
+
+    return result ?? '';
 }
