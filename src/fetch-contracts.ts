@@ -40,7 +40,7 @@ const ALL_CONTRACT_TYPES = [
 ];
 
 const FLAGS = [
-    ['test', null] as const,
+    ['test', ''],
     ['count', -1],
     ['help', false],
 ] as const satisfies FlagsSchema;
@@ -62,7 +62,7 @@ export async function main(ns: NS) {
 
     if (
         flags.help
-        || (flags.test !== null && typeof flags.test != 'string')
+        || (flags.test !== '' && typeof flags.test != 'string')
         || (flags.count !== -1 && typeof flags.count !== 'number')
     ) {
         ns.tprint(`
@@ -96,7 +96,7 @@ OPTIONS
     let count = 0;
 
     outer: for (const host of allHosts) {
-        if (host == 'home') {
+        if (flags.test === '' && host == 'home') {
             continue;
         }
 
@@ -107,7 +107,7 @@ OPTIONS
                 .replace(':', '')
                 .replaceAll(' ', '-');
 
-            if (flags.test !== null && flags.test !== contractType) {
+            if (flags.test !== '' && flags.test !== contractType) {
                 continue;
             }
 
@@ -136,7 +136,7 @@ OPTIONS
                 if (ns.fileExists(incompleteContractScriptName)) {
                     incompleteScriptContracts.push(contract);
 
-                    if (flags.test !== null) {
+                    if (flags.test !== '') {
                         contractScriptName = incompleteContractScriptName;
                     } else {
                         // Skip running the contract if not in test
@@ -177,10 +177,10 @@ OPTIONS
 
             contracts.push(contract);
 
-            if (flags.test !== null && flags.count !== null) {
+            if (flags.test !== '' && flags.count !== -1) {
                 count += 1;
 
-                if (count >= (flags.count as number)) {
+                if (count >= flags.count) {
                     break outer;
                 }
             }
