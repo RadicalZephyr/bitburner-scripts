@@ -1,6 +1,8 @@
 import type { NS, AutocompleteData, BladeburnerSkillName } from 'netscript';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
+import { CONFIG } from 'bladeburner/config';
+
 const FLAGS = [
     ['black-ops', false],
     ['help', false],
@@ -26,6 +28,9 @@ Example:
 OPTIONS
   --black-ops  Prioritize skills for Black Ops success
   --help       Show this help message
+
+CONFIGURATION
+  BLADE_skillBuyRateMs  How many milliseconds to sleep between buying skill levels
 `);
         return;
     }
@@ -59,7 +64,7 @@ async function buySkills(ns: NS, blackOps: boolean) {
 
         ns.print(`SUCCESS: bought ${skillDescription}`);
 
-        await ns.asleep(10_000);
+        await ns.asleep(CONFIG.skillBuyRateMs);
     }
 }
 
@@ -79,7 +84,7 @@ class Skill {
 
 async function untilPoints(ns: NS, points: number) {
     while (ns.bladeburner.getSkillPoints() < points) {
-        await ns.asleep(10_000);
+        await ns.asleep(1_000);
     }
 }
 
