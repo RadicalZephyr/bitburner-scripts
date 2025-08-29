@@ -16,7 +16,10 @@ import {
     type Validator,
     defineProtocol,
     RequestUnknown,
+    ProtocolError,
 } from '../protocol';
+
+import { MockNetscriptPort } from '../../test_util/nsPortFixture';
 
 describe('our protocol abstraction', () => {
     test('is based on Validator functions', () => {
@@ -195,6 +198,72 @@ describe('custom protocols create precise request validators', () => {
                     payload: 'hello response',
                 }),
             ).toBeTruthy();
+        });
+    });
+});
+
+describe('custom protocols define message sending utility functions', () => {
+    const TestProtocol = defineProtocol({
+        withNoResponse: {
+            payload: isString,
+        },
+
+        withResponse: {
+            payload: isString,
+            response: isBoolean,
+        },
+    });
+
+    describe('messages with no response must be sent with', () => {
+        describe('trySendMessage', () => {
+            test('sends messages', () => {
+                const sendPort = new MockNetscriptPort(10);
+                const sent = TestProtocol.trySendMessage(
+                    sendPort,
+                    'withNoResponse',
+                    'payload',
+                );
+                expect(sent).toBeTruthy();
+
+                const received = sendPort.read();
+                expect(isRequestUnknown(received)).toBeTruthy();
+                // We need to cast to RequestUnknown because
+                // typescript flow control analysis doesn't recognize
+                // Jest expect failing as throwing an error
+                const request = received as RequestUnknown;
+                expect(TestProtocol.isRequest(request)).toBeTruthy();
+
+                expect(request).toEqual({
+                    type: 'withNoResponse',
+                    id: null,
+                    payload: 'payload',
+                });
+            });
+
+            test('does not always deliver', () => {
+                const sendPort = new MockNetscriptPort(1);
+                // Fill the port
+                sendPort.write({});
+
+                const sent = TestProtocol.trySendMessage(
+                    sendPort,
+                    'withNoResponse',
+                    'payload',
+                );
+                expect(sent).toBeFalsy();
+            });
+
+            test('rejects message types with a response validator', () => {
+                const sendPort = new MockNetscriptPort(10);
+                expect(() =>
+                    TestProtocol.trySendMessage(
+                        sendPort,
+                        // We have to blatantly lie to tsc to show this fails at runtime too
+                        'withResponse' as 'withNoResponse',
+                        'payload',
+                    ),
+                ).toThrow(ProtocolError);
+            });
         });
     });
 });

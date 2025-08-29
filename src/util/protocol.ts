@@ -1,5 +1,7 @@
 /*---------------- Type Predicates ----------------*/
 
+import { NetscriptPort } from 'netscript';
+
 export type Validator<T> = (v: unknown) => v is T;
 
 /**
@@ -105,6 +107,10 @@ export function isResponseUnknown(v: unknown): v is ResponseUnknown {
     );
 }
 
+/*---------------- Protocol Error ----------------*/
+
+export class ProtocolError extends Error {}
+
 /*---------------- Protocol Definitions ----------------*/
 
 export type ProtocolDef = Record<
@@ -116,6 +122,15 @@ export type ProtocolDef = Record<
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         response?: Validator<any>; // optional, cannot receive replies if missing
     }
+>;
+
+type KeysWithResponse<P extends ProtocolDef> = {
+    [K in keyof P]-?: P[K] extends { response: Validator<unknown> } ? K : never;
+}[keyof P];
+
+type KeysWithoutResponse<P extends ProtocolDef> = Exclude<
+    keyof P,
+    KeysWithResponse<P>
 >;
 
 type IdOf<P extends ProtocolDef, K extends keyof P> = P[K] extends {
@@ -171,5 +186,29 @@ export function defineProtocol<const P extends ProtocolDef>(def: P) {
         return spec.payload(m.payload);
     }
 
-    return { def, isRequest };
+    /**
+     * Attempt to queue a message to a port without waiting for space.
+     *
+     * @param sendPort - Netscript Port to send messages on
+     * @param type     - Message type tag
+     * @param payload  - Message payload
+     */
+    function trySendMessage<K extends KeysWithoutResponse<P>>(
+        sendPort: NetscriptPort,
+        type: K,
+        payload: PayloadOf<P, K>,
+    ): boolean {
+        const spec = def[type];
+        if (spec?.response) {
+            throw new ProtocolError(
+                `Protocol misuse: message type ${String(type)} expects a response. `
+                    + `Use sendMessageReceiveResponse(...) instead.`,
+            );
+        }
+
+        const message = { type, id: null, payload } satisfies AnyRequest<P>;
+        return sendPort.tryWrite(message);
+    }
+
+    return { def, isRequest, trySendMessage };
 }
