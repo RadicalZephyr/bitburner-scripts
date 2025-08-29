@@ -51,6 +51,13 @@ export function makeIsArray<T>(validateEl: Validator<T>): Validator<Array<T>> {
         typeof v === 'object' && Array.isArray(v) && v.every(validateEl);
 }
 
+/**
+ * Type predicate for objects with unknown values
+ */
+export const isObjectUnknown: Validator<Record<string, unknown>> = (
+    v,
+): v is Record<string, unknown> => typeof v === 'object' && v !== null;
+
 export type ProtocolDef = Record<
     string,
     {

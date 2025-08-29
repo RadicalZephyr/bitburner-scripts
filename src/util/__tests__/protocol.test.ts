@@ -6,6 +6,7 @@ import {
     isBoolean,
     isNull,
     isNumber,
+    isObjectUnknown,
     isString,
     isUndefined,
     makeIsArray,
@@ -38,6 +39,7 @@ describe('our protocol abstraction', () => {
             ['string', isString, '', 3],
             ['array of unknown', isArrayUnknown, [], null],
             ['array of T', makeIsArray(isNumber), [0, 1, 2], ['', 2, null]],
+            ['object', isObjectUnknown, {}, null],
         ])('%s validator', (type, validate, valid, invalid) => {
             expect(validate(valid)).toBeTruthy();
             expect(validate(invalid)).toBeFalsy();
