@@ -10,6 +10,13 @@ export interface SendWithResponseOptions {
 
     /** Overall timeout since we sent our request. Default: 30s */
     overallTimeoutMs?: number;
+
+    /**
+     * Request ID factory function.
+     *
+     * @returns A (fairly) unique request id every time it's called.
+     */
+    makeReqId: () => string;
 }
 
 /*---------------- Type Predicates ----------------*/
@@ -290,7 +297,33 @@ export function defineProtocol<const P extends ProtocolDef>(def: P) {
             );
         }
 
-        return null;
+        const _pollPeriod = Math.max(opts.pollPeriodMs ?? 100, 10);
+
+        const message = {
+            type,
+            id: opts.makeReqId(),
+            payload,
+        } satisfies RequestEnvelope<K, string, PayloadOf<P, K>>;
+
+        while (!sendPort.tryWrite(message)) {
+            await sleep(_pollPeriod);
+        }
+
+        while (true) {
+            const peeked = receivePort.peek() as unknown;
+            if (isResponseUnknown(peeked) && peeked.id === message.id) {
+                receivePort.read();
+                const validator = spec.response as Validator<ResponseOf<P, K>>;
+                if (validator && !validator(peeked.payload)) {
+                    throw new ProtocolError(
+                        `Invalid response payload for type=${String(type)} id=${message.id}: failed protocol validator`,
+                    );
+                }
+                return peeked.payload as ResponseOf<P, K>;
+            }
+
+            await sleep(_pollPeriod);
+        }
     }
 
     return {

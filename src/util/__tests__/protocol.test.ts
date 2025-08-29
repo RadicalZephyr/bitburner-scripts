@@ -235,6 +235,25 @@ describe('custom protocols define message sending utility functions', () => {
         });
     }
 
+    function expectWithResponse(
+        received: unknown,
+        id: string,
+        payload: string,
+    ) {
+        expect(received).toEqual({
+            type: 'withResponse',
+            id,
+            payload,
+        });
+
+        expect(isRequestUnknown(received)).toBeTruthy();
+        // We need to cast to RequestUnknown because
+        // typescript flow control analysis doesn't recognize
+        // Jest expect failing as throwing an error
+        const request = received as RequestUnknown;
+        expect(TestProtocol.isRequest(request)).toBeTruthy();
+    }
+
     describe('messages with no response must be sent with', () => {
         describe('trySendMessage', () => {
             test('sends messages', () => {
@@ -328,6 +347,35 @@ describe('custom protocols define message sending utility functions', () => {
 
     describe('messages with response must be sent with', () => {
         describe('sendMessageReceiveResponse', () => {
+            test('sends messages and receives a response', async () => {
+                const requestPort = new MockNetscriptPort(10);
+                const responsePort = new MockNetscriptPort(10);
+
+                const expectedId = '12-bead-123456';
+                const waiter = TestProtocol.sendMessageReceiveResponse(
+                    requestPort,
+                    responsePort,
+                    'withResponse',
+                    'payload',
+                    {
+                        makeReqId: () => expectedId,
+                    },
+                );
+
+                const request = requestPort.read();
+                expectWithResponse(request, expectedId, 'payload');
+
+                await expectPendingNow(waiter);
+
+                responsePort.tryWrite({
+                    type: request.type,
+                    id: expectedId,
+                    payload: true,
+                });
+
+                await expect(waiter).resolves.toBeTruthy();
+            });
+
             test('rejects message types without a response validator', async () => {
                 const requestPort = new MockNetscriptPort(10);
                 const responsePort = new MockNetscriptPort(10);
