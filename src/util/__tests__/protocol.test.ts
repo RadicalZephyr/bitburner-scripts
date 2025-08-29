@@ -21,6 +21,12 @@ import {
 
 import { MockNetscriptPort } from '../../test_util/nsPortFixture';
 
+async function expectPendingNow<T>(p: Promise<T>) {
+    const sentinel = Symbol('pending');
+    const winner = await Promise.race([p, Promise.resolve(sentinel)]);
+    expect(winner).toBe(sentinel);
+}
+
 describe('our protocol abstraction', () => {
     test('is based on Validator functions', () => {
         const isValid = ((o: unknown): o is object => {
@@ -267,6 +273,55 @@ describe('custom protocols define message sending utility functions', () => {
                         'payload',
                     ),
                 ).toThrow(ProtocolError);
+            });
+        });
+
+        describe('sendMessage', () => {
+            test('sends messages', async () => {
+                const sendPort = new MockNetscriptPort(10);
+                await TestProtocol.sendMessage(
+                    sendPort,
+                    'withNoResponse',
+                    'payload',
+                );
+
+                const received = sendPort.read();
+                expectWithNoResponse(received, 'payload');
+            });
+
+            test('waits for space before writing to port', async () => {
+                const sendPort = new MockNetscriptPort(1);
+                // Fill the port
+                const sentinel = 'messageSentinel';
+                sendPort.write(sentinel);
+
+                const sendFinished = TestProtocol.sendMessage(
+                    sendPort,
+                    'withNoResponse',
+                    'payload',
+                );
+                await expectPendingNow(sendFinished);
+
+                // Clear space in the port
+                const read = sendPort.read();
+                expect(read).toBe(sentinel);
+
+                await expect(sendFinished).resolves.toBeUndefined();
+
+                const received = sendPort.read();
+                expectWithNoResponse(received, 'payload');
+            });
+
+            test('rejects message types with a response validator', async () => {
+                const sendPort = new MockNetscriptPort(10);
+                await expect(
+                    TestProtocol.sendMessage(
+                        sendPort,
+                        // We have to blatantly lie to tsc to show this fails at runtime too
+                        'withResponse' as 'withNoResponse',
+                        'payload',
+                    ),
+                ).rejects.toThrow(ProtocolError);
             });
         });
     });

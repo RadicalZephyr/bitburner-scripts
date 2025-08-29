@@ -1,6 +1,8 @@
-/*---------------- Type Predicates ----------------*/
-
 import { NetscriptPort } from 'netscript';
+
+import { sleep } from 'util/time';
+
+/*---------------- Type Predicates ----------------*/
 
 export type Validator<T> = (v: unknown) => v is T;
 
@@ -210,5 +212,37 @@ export function defineProtocol<const P extends ProtocolDef>(def: P) {
         return sendPort.tryWrite(message);
     }
 
-    return { def, isRequest, trySendMessage };
+    /**
+     * Send a message to a server without waiting for a response.
+     *
+     * @remarks
+     * This method waits for the port to have space to accept the message.
+     *
+     * @param sendPort     - Netscript Port to send messages on
+     * @param type         - Message type tag
+     * @param payload      - Message payload
+     * @param pollPeriodMs - Period to wait between attempts to send message
+     */
+    async function sendMessage<K extends KeysWithoutResponse<P>>(
+        sendPort: NetscriptPort,
+        type: K,
+        payload: PayloadOf<P, K>,
+        pollPeriodMs?: number,
+    ): Promise<void> {
+        const spec = def[type];
+        if (spec?.response) {
+            throw new ProtocolError(
+                `Protocol misuse: message type ${String(type)} expects a response. `
+                    + `Use sendMessageReceiveResponse(...) instead.`,
+            );
+        }
+
+        const _pollPeriod = Math.max(pollPeriodMs ?? 100, 10);
+        const message = { type, id: null, payload } satisfies AnyRequest<P>;
+        while (!sendPort.tryWrite(message)) {
+            await sleep(_pollPeriod);
+        }
+    }
+
+    return { def, isRequest, trySendMessage, sendMessage };
 }
