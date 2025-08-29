@@ -8,6 +8,7 @@ import {
     isNumber,
     isString,
     isUndefined,
+    makeIsArray,
     type ProtocolDef,
     type Validator,
 } from '../protocol';
@@ -35,7 +36,8 @@ describe('our protocol abstraction', () => {
             ['number', isNumber, 0, 'hello'],
             ['bigint', isBigInt, 0n, undefined],
             ['string', isString, '', 3],
-            ['array', isArrayUnknown, [], null],
+            ['array of unknown', isArrayUnknown, [], null],
+            ['array of T', makeIsArray(isNumber), [0, 1, 2], ['', 2, null]],
         ])('%s validator', (type, validate, valid, invalid) => {
             expect(validate(valid)).toBeTruthy();
             expect(validate(invalid)).toBeFalsy();

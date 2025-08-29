@@ -37,11 +37,19 @@ export const isString: Validator<string> = (v): v is string =>
     typeof v === 'string';
 
 /**
- * Type predicate for array values
+ * Type predicate for arrays of unknown values
  */
 export const isArrayUnknown: Validator<Array<unknown>> = (
     v,
 ): v is Array<unknown> => typeof v === 'object' && Array.isArray(v);
+
+/**
+ * Type predicate constructor for arrays with values of a known type
+ */
+export function makeIsArray<T>(validateEl: Validator<T>): Validator<Array<T>> {
+    return (v): v is Array<T> =>
+        typeof v === 'object' && Array.isArray(v) && v.every(validateEl);
+}
 
 export type ProtocolDef = Record<
     string,
