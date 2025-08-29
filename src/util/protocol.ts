@@ -135,11 +135,8 @@ type KeysWithoutResponse<P extends ProtocolDef> = Exclude<
     KeysWithResponse<P>
 >;
 
-type IdOf<P extends ProtocolDef, K extends keyof P> = P[K] extends {
-    response: Validator<unknown>;
-}
-    ? string
-    : null;
+type IdOf<P extends ProtocolDef, K extends keyof P> =
+    K extends KeysWithResponse<P> ? string : null;
 
 type PayloadOf<P extends ProtocolDef, K extends keyof P> = P[K] extends {
     payload: Validator<infer A>;
