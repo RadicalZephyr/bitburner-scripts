@@ -1,3 +1,5 @@
+/*---------------- Type Predicates ----------------*/
+
 export type Validator<T> = (v: unknown) => v is T;
 
 /**
@@ -57,6 +59,8 @@ export function makeIsArray<T>(validateEl: Validator<T>): Validator<Array<T>> {
 export const isObjectUnknown: Validator<Record<string, unknown>> = (
     v,
 ): v is Record<string, unknown> => typeof v === 'object' && v !== null;
+
+/*---------------- Protocol Definitions ----------------*/
 
 export type ProtocolDef = Record<
     string,
