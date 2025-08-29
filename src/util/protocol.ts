@@ -1,5 +1,48 @@
 export type Validator<T> = (v: unknown) => v is T;
 
+/**
+ * Type predicate for undefined values
+ */
+export const isUndefined: Validator<undefined> = (v): v is undefined =>
+    typeof v === 'undefined';
+
+/**
+ * Type predicate for null values
+ */
+export const isNull: Validator<null> = (v): v is null =>
+    !v && typeof v === 'object';
+
+/**
+ * Type predicate for boolean values
+ */
+export const isBoolean: Validator<boolean> = (v): v is boolean =>
+    typeof v === 'boolean';
+
+/**
+ * Type predicate for number values
+ */
+export const isNumber: Validator<number> = (v): v is number =>
+    typeof v === 'number';
+
+/**
+ * Type predicate for BigInt values
+ */
+export const isBigInt: Validator<bigint> = (v): v is bigint =>
+    typeof v === 'bigint';
+
+/**
+ * Type predicate for string values
+ */
+export const isString: Validator<string> = (v): v is string =>
+    typeof v === 'string';
+
+/**
+ * Type predicate for array values
+ */
+export const isArrayUnknown: Validator<Array<unknown>> = (
+    v,
+): v is Array<unknown> => typeof v === 'object' && Array.isArray(v);
+
 export type ProtocolDef = Record<
     string,
     {

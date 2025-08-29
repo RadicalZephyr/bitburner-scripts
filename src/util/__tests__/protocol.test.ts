@@ -1,6 +1,16 @@
 import { describe, expect, test } from '@jest/globals';
 
-import { type ProtocolDef, type Validator } from '../protocol';
+import {
+    isArrayUnknown,
+    isBigInt,
+    isBoolean,
+    isNull,
+    isNumber,
+    isString,
+    isUndefined,
+    type ProtocolDef,
+    type Validator,
+} from '../protocol';
 
 describe('our protocol abstraction', () => {
     test('is based on Validator functions', () => {
@@ -15,6 +25,21 @@ describe('our protocol abstraction', () => {
         expect(isValid(1)).toBeFalsy();
         expect(isValid(1n)).toBeFalsy();
         expect(isValid('thing')).toBeFalsy();
+    });
+
+    describe('core JS type validator functions are provided', () => {
+        test.each([
+            ['undefined', isUndefined, undefined, null],
+            ['null', isNull, null, undefined],
+            ['boolean', isBoolean, false, null],
+            ['number', isNumber, 0, 'hello'],
+            ['bigint', isBigInt, 0n, undefined],
+            ['string', isString, '', 3],
+            ['array', isArrayUnknown, [], null],
+        ])('%s validator', (type, validate, valid, invalid) => {
+            expect(validate(valid)).toBeTruthy();
+            expect(validate(invalid)).toBeFalsy();
+        });
     });
 });
 
