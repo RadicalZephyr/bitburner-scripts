@@ -144,6 +144,15 @@ export function defineProtocol<const P extends ProtocolDef>(def: P) {
      * - Message types with no response validator _must not_ have an id field set.
      * - Message types with a response validator _must_ have a string id field.
      *
+     * The reason for this strict checking is to help validate
+     * protocol usage errors. If no response validator is defined for
+     * a message type, then this says that the protocol is defined
+     * such that the client code will not wait for a response. If the
+     * client code sends a string message id this signals that the
+     * client code _is_ waiting for a response. If these two signals
+     * are in opposition then there is an error in the protocol
+     * implementation and the request is invalid.
+     *
      * @param v - Message envelope object to check
      * @param k - Message type to check
      * @returns Whether this message has known type and a well formed payload for it's type
