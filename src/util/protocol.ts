@@ -62,13 +62,13 @@ export const isObjectUnknown: Validator<Record<string, unknown>> = (
 
 /*---------------- Protocol Envelopes ----------------*/
 
-export interface RequestEnvelope<T, R> {
+export interface RequestEnvelope<T, I, R> {
     type: T;
-    id?: string | null;
+    id: I;
     payload: R;
 }
 
-export type RequestUnknown = RequestEnvelope<unknown, unknown>;
+export type RequestUnknown = RequestEnvelope<unknown, string | null, unknown>;
 
 export function isRequestUnknown(v: unknown): v is RequestUnknown {
     if (
@@ -118,6 +118,12 @@ export type ProtocolDef = Record<
     }
 >;
 
+type IdOf<P extends ProtocolDef, K extends keyof P> = P[K] extends {
+    response: Validator<unknown>;
+}
+    ? string
+    : null;
+
 type PayloadOf<P extends ProtocolDef, K extends keyof P> = P[K] extends {
     payload: Validator<infer A>;
 }
@@ -125,7 +131,7 @@ type PayloadOf<P extends ProtocolDef, K extends keyof P> = P[K] extends {
     : never;
 
 export type AnyRequest<P extends ProtocolDef> = {
-    [K in keyof P]: RequestEnvelope<K, PayloadOf<P, K>>;
+    [K in keyof P]: RequestEnvelope<K, IdOf<P, K>, PayloadOf<P, K>>;
 }[keyof P];
 
 export function defineProtocol<const P extends ProtocolDef>(def: P) {
@@ -151,7 +157,7 @@ export function defineProtocol<const P extends ProtocolDef>(def: P) {
             if (!isString(m.id)) return false;
         } else {
             // Response validator is undefined, must NOT have id field
-            if (isString(m.id)) return false;
+            if (!Object.hasOwn(m, 'id') || isString(m.id)) return false;
         }
         return spec.payload(m.payload);
     }

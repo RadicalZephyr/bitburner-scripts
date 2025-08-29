@@ -15,6 +15,7 @@ import {
     type ProtocolDef,
     type Validator,
     defineProtocol,
+    RequestUnknown,
 } from '../protocol';
 
 describe('our protocol abstraction', () => {
@@ -130,13 +131,13 @@ describe('custom protocols create precise request validators', () => {
     });
 
     describe('type with no response validator', () => {
-        test('is valid with no id', () => {
+        test('is invalid with no id', () => {
             expect(
                 TestProtocol.isRequest({
                     type: 'withNoResponse',
                     payload: 'hello protocol',
-                }),
-            ).toBeTruthy();
+                } as RequestUnknown),
+            ).toBeFalsy();
         });
 
         test.each([
@@ -169,7 +170,7 @@ describe('custom protocols create precise request validators', () => {
                 TestProtocol.isRequest({
                     type: 'withResponse',
                     payload: 'hello response',
-                }),
+                } as RequestUnknown),
             ).toBeFalsy();
         });
 
