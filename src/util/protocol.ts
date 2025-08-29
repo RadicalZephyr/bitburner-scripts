@@ -205,7 +205,11 @@ export function defineProtocol<const P extends ProtocolDef>(def: P) {
             );
         }
 
-        const message = { type, id: null, payload } satisfies AnyRequest<P>;
+        const message = {
+            type,
+            id: null,
+            payload,
+        } satisfies RequestEnvelope<K, null, PayloadOf<P, K>>;
         return sendPort.tryWrite(message);
     }
 
@@ -235,7 +239,11 @@ export function defineProtocol<const P extends ProtocolDef>(def: P) {
         }
 
         const _pollPeriod = Math.max(pollPeriodMs ?? 100, 10);
-        const message = { type, id: null, payload } satisfies AnyRequest<P>;
+        const message = {
+            type,
+            id: null,
+            payload,
+        } satisfies RequestEnvelope<K, null, PayloadOf<P, K>>;
         while (!sendPort.tryWrite(message)) {
             await sleep(_pollPeriod);
         }
