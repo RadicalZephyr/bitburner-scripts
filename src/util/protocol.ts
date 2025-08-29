@@ -2,6 +2,16 @@ import { NetscriptPort } from 'netscript';
 
 import { sleep } from 'util/time';
 
+/*---------------- Options Interfaces ----------------*/
+
+export interface SendWithResponseOptions {
+    /** How often to poll while a foreign head is blocking. Default: 100ms */
+    pollPeriodMs?: number;
+
+    /** Overall timeout since we sent our request. Default: 30s */
+    overallTimeoutMs?: number;
+}
+
 /*---------------- Type Predicates ----------------*/
 
 export type Validator<T> = (v: unknown) => v is T;
@@ -144,6 +154,12 @@ type PayloadOf<P extends ProtocolDef, K extends keyof P> = P[K] extends {
     ? A
     : never;
 
+type ResponseOf<P extends ProtocolDef, K extends keyof P> = P[K] extends {
+    response: Validator<infer R>;
+}
+    ? R
+    : void;
+
 export type AnyRequest<P extends ProtocolDef> = {
     [K in keyof P]: RequestEnvelope<K, IdOf<P, K>, PayloadOf<P, K>>;
 }[keyof P];
@@ -249,5 +265,39 @@ export function defineProtocol<const P extends ProtocolDef>(def: P) {
         }
     }
 
-    return { def, isRequest, trySendMessage, sendMessage };
+    /**
+     * Send a message type and payload to a server and wait for a response.
+     *
+     * @param sendPort    - Netscript Port to send messages on
+     * @param receivePort - Netscript Port to receive messages on
+     * @param type        - Message type tag
+     * @param payload     - Message payload
+     * @param opts        - Sending options
+     * @returns Response from server
+     */
+    async function sendMessageReceiveResponse<K extends KeysWithResponse<P>>(
+        sendPort: NetscriptPort,
+        receivePort: NetscriptPort,
+        type: K,
+        payload: PayloadOf<P, K>,
+        opts?: SendWithResponseOptions,
+    ): Promise<ResponseOf<P, K>> {
+        const spec = def[type];
+        if (!spec?.response) {
+            throw new ProtocolError(
+                `Protocol misuse: message type ${String(type)} declares no response. `
+                    + `Use trySendMessage or sendMessage instead.`,
+            );
+        }
+
+        return null;
+    }
+
+    return {
+        def,
+        isRequest,
+        trySendMessage,
+        sendMessage,
+        sendMessageReceiveResponse,
+    };
 }

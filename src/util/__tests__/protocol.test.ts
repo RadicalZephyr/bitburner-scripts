@@ -325,4 +325,23 @@ describe('custom protocols define message sending utility functions', () => {
             });
         });
     });
+
+    describe('messages with response must be sent with', () => {
+        describe('sendMessageReceiveResponse', () => {
+            test('rejects message types without a response validator', async () => {
+                const requestPort = new MockNetscriptPort(10);
+                const responsePort = new MockNetscriptPort(10);
+
+                const responseReceived =
+                    TestProtocol.sendMessageReceiveResponse(
+                        requestPort,
+                        responsePort,
+                        // We have to blatantly lie to tsc to show this fails at runtime too
+                        'withNoResponse' as 'withResponse',
+                        'payload',
+                    );
+                await expect(responseReceived).rejects.toThrow(ProtocolError);
+            });
+        });
+    });
 });
