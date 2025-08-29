@@ -214,6 +214,21 @@ describe('custom protocols define message sending utility functions', () => {
         },
     });
 
+    function expectWithNoResponse(received: unknown, payload: string) {
+        expect(isRequestUnknown(received)).toBeTruthy();
+        // We need to cast to RequestUnknown because
+        // typescript flow control analysis doesn't recognize
+        // Jest expect failing as throwing an error
+        const request = received as RequestUnknown;
+        expect(TestProtocol.isRequest(request)).toBeTruthy();
+
+        expect(request).toEqual({
+            type: 'withNoResponse',
+            id: null,
+            payload,
+        });
+    }
+
     describe('messages with no response must be sent with', () => {
         describe('trySendMessage', () => {
             test('sends messages', () => {
@@ -226,18 +241,7 @@ describe('custom protocols define message sending utility functions', () => {
                 expect(sent).toBeTruthy();
 
                 const received = sendPort.read();
-                expect(isRequestUnknown(received)).toBeTruthy();
-                // We need to cast to RequestUnknown because
-                // typescript flow control analysis doesn't recognize
-                // Jest expect failing as throwing an error
-                const request = received as RequestUnknown;
-                expect(TestProtocol.isRequest(request)).toBeTruthy();
-
-                expect(request).toEqual({
-                    type: 'withNoResponse',
-                    id: null,
-                    payload: 'payload',
-                });
+                expectWithNoResponse(received, 'payload');
             });
 
             test('does not always deliver', () => {
