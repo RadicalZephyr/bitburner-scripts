@@ -4,9 +4,11 @@ import {
     isArrayUnknown,
     isBigInt,
     isBoolean,
+    isRequestUnknown,
     isNull,
     isNumber,
     isObjectUnknown,
+    isResponseUnknown,
     isString,
     isUndefined,
     makeIsArray,
@@ -73,5 +75,43 @@ describe('protocol definitions map a message type', () => {
         const validate = TestProtoDef[testProtoType].response;
         expect(validate('')).toBeTruthy();
         expect(validate(1)).toBeFalsy();
+    });
+});
+
+describe('all protocols use common envelopes', () => {
+    describe('requests', () => {
+        test.each([
+            ['with message id', { type: 'foo', id: '', payload: {} }],
+            ['with missing message id', { type: 'bar', payload: [] }],
+            ['with null message id', { type: 'bar', id: null, payload: [] }],
+            [
+                'with explicitly undefined message id',
+                { type: 'bar', id: undefined, payload: [] },
+            ],
+        ])('%s are valid', (description, message) => {
+            expect(isRequestUnknown(message)).toBeTruthy();
+        });
+
+        test.each([
+            ['with no type', { id: '', payload: 1 }],
+            ['with no payload', { type: 'foo', id: '' }],
+        ])('%s are invalid', (description, message) => {
+            expect(isRequestUnknown(message)).toBeFalsy();
+        });
+    });
+
+    describe('responses', () => {
+        test('with type, id and payload are valid', () => {
+            const response = { type: 'foo', id: '', payload: {} };
+            expect(isResponseUnknown(response)).toBeTruthy();
+        });
+
+        test.each([
+            ['with no type', { id: '', payload: 1 }],
+            ['with no id', { type: 'bar', payload: 0n }],
+            ['with no payload', { type: 'foo', id: '' }],
+        ])('%s are invalid', (description, response) => {
+            expect(isResponseUnknown(response)).toBeFalsy();
+        });
     });
 });

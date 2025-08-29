@@ -60,6 +60,51 @@ export const isObjectUnknown: Validator<Record<string, unknown>> = (
     v,
 ): v is Record<string, unknown> => typeof v === 'object' && v !== null;
 
+/*---------------- Protocol Envelopes ----------------*/
+
+export interface RequestEnvelope<T, R> {
+    type: T;
+    id: string | null;
+    payload: R;
+}
+
+export type RequestUnknown = RequestEnvelope<unknown, unknown>;
+
+export function isRequestUnknown(v: unknown): v is RequestUnknown {
+    if (
+        !isObjectUnknown(v)
+        || !Object.hasOwn(v, 'type')
+        || !Object.hasOwn(v, 'payload')
+    )
+        return false;
+
+    if (
+        Object.hasOwn(v, 'id')
+        && !(isString(v.id) || isNull(v.id) || isUndefined(v.id))
+    )
+        return false;
+
+    return true;
+}
+
+export interface ResponseEnvelope<T, R> {
+    type: T;
+    id: string;
+    payload: R;
+}
+
+export type ResponseUnknown = ResponseEnvelope<unknown, unknown>;
+
+export function isResponseUnknown(v: unknown): v is ResponseUnknown {
+    return (
+        isObjectUnknown(v)
+        && Object.hasOwn(v, 'type')
+        && Object.hasOwn(v, 'id')
+        && isString(v.id)
+        && Object.hasOwn(v, 'payload')
+    );
+}
+
 /*---------------- Protocol Definitions ----------------*/
 
 export type ProtocolDef = Record<
