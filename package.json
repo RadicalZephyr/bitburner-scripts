@@ -11,7 +11,7 @@
         "format": "prettier --write .",
         "clean": "find dist -depth ! -name 'dist' ! -name .gitkeep -delete",
         "watch:init": "node build/init.js",
-        "watch:test": "jest --watch --notify --maxWorkers=50%",
+        "watch:test": "jest --roots src/ --watch --notify --maxWorkers=50%",
         "watch:clean": "node build/clean.js",
         "watch:transpile": "tsc --watch --preserveWatchOutput",
         "watch:remote": "bitburner-filesync",
