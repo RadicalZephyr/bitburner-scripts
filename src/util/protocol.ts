@@ -309,9 +309,15 @@ export function defineProtocol<const P extends ProtocolDef>(def: P) {
             await sleep(_pollPeriod);
         }
 
-        while (true) {
+        const deadline =
+            Date.now() + Math.max(opts.overallTimeoutMs ?? 30_000, _pollPeriod);
+        while (Date.now() < deadline) {
             const peeked = receivePort.peek() as unknown;
-            if (isResponseUnknown(peeked) && peeked.id === message.id) {
+            if (
+                isResponseUnknown(peeked)
+                && peeked.id === message.id
+                && peeked.type === type
+            ) {
                 receivePort.read();
                 const validator = spec.response as Validator<ResponseOf<P, K>>;
                 if (validator && !validator(peeked.payload)) {
@@ -324,6 +330,10 @@ export function defineProtocol<const P extends ProtocolDef>(def: P) {
 
             await sleep(_pollPeriod);
         }
+
+        throw new ProtocolError(
+            `Timeout waiting for response: type=${String(type)} id=${message.id}`,
+        );
     }
 
     return {

@@ -209,6 +209,14 @@ describe('custom protocols create precise request validators', () => {
 });
 
 describe('custom protocols define message sending utility functions', () => {
+    beforeEach(() => {
+        jest.useFakeTimers();
+    });
+
+    afterEach(() => {
+        jest.useRealTimers();
+    });
+
     const TestProtocol = defineProtocol({
         withNoResponse: {
             payload: isString,
@@ -325,6 +333,8 @@ describe('custom protocols define message sending utility functions', () => {
                 const read = sendPort.read();
                 expect(read).toBe(sentinel);
 
+                await jest.runAllTimersAsync();
+
                 await expect(sendFinished).resolves.toBeUndefined();
 
                 const received = sendPort.read();
@@ -372,8 +382,45 @@ describe('custom protocols define message sending utility functions', () => {
                     id: expectedId,
                     payload: true,
                 });
+                jest.runAllTimers();
 
                 await expect(waiter).resolves.toBeTruthy();
+            });
+
+            test('sends messages and times out if no response received', async () => {
+                const requestPort = new MockNetscriptPort(10);
+                const responsePort = new MockNetscriptPort(10);
+
+                const overallTimeoutMs = 100;
+                const expectedId = '12-bead-123456';
+                const waiter = TestProtocol.sendMessageReceiveResponse(
+                    requestPort,
+                    responsePort,
+                    'withResponse',
+                    'payload',
+                    {
+                        makeReqId: () => expectedId,
+                        overallTimeoutMs,
+                    },
+                );
+
+                const request = requestPort.read();
+                expectWithResponse(request, expectedId, 'payload');
+
+                await expectPendingNow(waiter);
+
+                responsePort.tryWrite({
+                    type: request.type,
+                    id: 'a-different-id',
+                    payload: true,
+                });
+
+                await expectPendingNow(waiter);
+
+                // Advance timers
+                jest.advanceTimersByTime(overallTimeoutMs + 10);
+
+                await expect(waiter).rejects.toThrow(ProtocolError);
             });
 
             test('rejects message types without a response validator', async () => {
