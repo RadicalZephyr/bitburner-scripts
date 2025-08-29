@@ -14,6 +14,7 @@ import {
     makeIsArray,
     type ProtocolDef,
     type Validator,
+    defineProtocol,
 } from '../protocol';
 
 describe('our protocol abstraction', () => {
@@ -112,6 +113,87 @@ describe('all protocols use common envelopes', () => {
             ['with no payload', { type: 'foo', id: '' }],
         ])('%s are invalid', (description, response) => {
             expect(isResponseUnknown(response)).toBeFalsy();
+        });
+    });
+});
+
+describe('custom protocols create precise request validators', () => {
+    const TestProtocol = defineProtocol({
+        withNoResponse: {
+            payload: isString,
+        },
+
+        withResponse: {
+            payload: isString,
+            response: isBoolean,
+        },
+    });
+
+    describe('type with no response validator', () => {
+        test('is valid with no id', () => {
+            expect(
+                TestProtocol.isRequest({
+                    type: 'withNoResponse',
+                    payload: 'hello protocol',
+                }),
+            ).toBeTruthy();
+        });
+
+        test.each([
+            ['null', null],
+            ['undefined', undefined],
+        ])('is valid with %s id', (description, id) => {
+            expect(
+                TestProtocol.isRequest({
+                    type: 'withNoResponse',
+                    id,
+                    payload: 'hello protocol',
+                }),
+            ).toBeTruthy();
+        });
+
+        test('is invalid with a string id', () => {
+            expect(
+                TestProtocol.isRequest({
+                    type: 'withNoResponse',
+                    id: '',
+                    payload: 'hello protocol',
+                }),
+            ).toBeFalsy();
+        });
+    });
+
+    describe('type with a response validator', () => {
+        test('is invalid with no id', () => {
+            expect(
+                TestProtocol.isRequest({
+                    type: 'withResponse',
+                    payload: 'hello response',
+                }),
+            ).toBeFalsy();
+        });
+
+        test.each([
+            ['null', null],
+            ['undefined', undefined],
+        ])('is invalid with %s id', (description, id) => {
+            expect(
+                TestProtocol.isRequest({
+                    type: 'withResponse',
+                    id,
+                    payload: 'hello response',
+                }),
+            ).toBeFalsy();
+        });
+
+        test('is valid with a string id', () => {
+            expect(
+                TestProtocol.isRequest({
+                    type: 'withResponse',
+                    id: '',
+                    payload: 'hello response',
+                }),
+            ).toBeTruthy();
         });
     });
 });

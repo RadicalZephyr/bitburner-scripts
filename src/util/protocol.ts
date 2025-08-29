@@ -64,7 +64,7 @@ export const isObjectUnknown: Validator<Record<string, unknown>> = (
 
 export interface RequestEnvelope<T, R> {
     type: T;
-    id: string | null;
+    id?: string | null;
     payload: R;
 }
 
@@ -117,3 +117,44 @@ export type ProtocolDef = Record<
         response?: Validator<any>; // optional, cannot receive replies if missing
     }
 >;
+
+type PayloadOf<P extends ProtocolDef, K extends keyof P> = P[K] extends {
+    payload: Validator<infer A>;
+}
+    ? A
+    : never;
+
+export type AnyRequest<P extends ProtocolDef> = {
+    [K in keyof P]: RequestEnvelope<K, PayloadOf<P, K>>;
+}[keyof P];
+
+export function defineProtocol<const P extends ProtocolDef>(def: P) {
+    const types = new Set(Object.keys(def));
+
+    /**
+     * Type predicate for checking if a Request is valid.
+     *
+     * @remarks
+     * - Message types with no response validator _must not_ have an id field set.
+     * - Message types with a response validator _must_ have a string id field.
+     *
+     * @param v - Message envelope object to check
+     * @param k - Message type to check
+     * @returns Whether this message has known type and a well formed payload for it's type
+     */
+    function isRequest(m: RequestUnknown): m is AnyRequest<P> {
+        if (!types.has(String(m.type))) return false;
+        const spec = def[m.type as keyof P];
+        if (!spec || typeof spec.payload !== 'function') return false;
+        if (spec.response) {
+            // Response validator is defined, must have id field
+            if (!isString(m.id)) return false;
+        } else {
+            // Response validator is undefined, must NOT have id field
+            if (isString(m.id)) return false;
+        }
+        return spec.payload(m.payload);
+    }
+
+    return { def, isRequest };
+}
