@@ -298,6 +298,10 @@ export function defineProtocol<const P extends ProtocolDef>(def: P) {
         }
 
         const _pollPeriod = Math.max(opts.pollPeriodMs ?? 100, 10);
+        const _overallTimeoutMs = Math.max(
+            opts.overallTimeoutMs ?? 30_000,
+            _pollPeriod,
+        );
 
         const message = {
             type,
@@ -309,8 +313,7 @@ export function defineProtocol<const P extends ProtocolDef>(def: P) {
             await sleep(_pollPeriod);
         }
 
-        const deadline =
-            Date.now() + Math.max(opts.overallTimeoutMs ?? 30_000, _pollPeriod);
+        const deadline = Date.now() + _overallTimeoutMs;
         while (Date.now() < deadline) {
             const peeked = receivePort.peek() as unknown;
             if (
