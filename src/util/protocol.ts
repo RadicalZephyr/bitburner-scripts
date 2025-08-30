@@ -4,6 +4,8 @@ import { sleep } from 'util/time';
 
 /*---------------- Options Interfaces ----------------*/
 
+export type MakeReqId = () => string;
+
 export interface SendWithResponseOptions {
     /** How often to poll while a foreign head is blocking. Default: 100ms */
     pollPeriodMs?: number;
@@ -16,7 +18,7 @@ export interface SendWithResponseOptions {
      *
      * @returns A (fairly) unique request id every time it's called.
      */
-    makeReqId: () => string;
+    makeReqId: MakeReqId;
 }
 
 /*---------------- Type Predicates ----------------*/
@@ -302,10 +304,11 @@ export function defineProtocol<const P extends ProtocolDef>(def: P) {
             opts.overallTimeoutMs ?? 30_000,
             _pollPeriod,
         );
+        const makeReqId = getRequestId(opts.makeReqId);
 
         const message = {
             type,
-            id: opts.makeReqId(),
+            id: makeReqId(),
             payload,
         } satisfies RequestEnvelope<K, string, PayloadOf<P, K>>;
 
@@ -345,5 +348,17 @@ export function defineProtocol<const P extends ProtocolDef>(def: P) {
         trySendMessage,
         sendMessage,
         sendMessageReceiveResponse,
+    };
+}
+
+function getRequestId(makeReqId: MakeReqId): MakeReqId {
+    if (typeof makeReqId === 'function') return makeReqId;
+    if (typeof crypto?.randomUUID === 'function')
+        return crypto.randomUUID.bind(crypto);
+    return () => {
+        const r1 = Math.floor(Math.random() * 1e9);
+        const ts = Date.now();
+        const r2 = Math.floor(Math.random() * 1e9);
+        return `${r1.toString(36)}-${ts.toString(36)}-${r2.toString(36)}`;
     };
 }
