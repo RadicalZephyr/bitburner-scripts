@@ -1,5 +1,6 @@
 import { NetscriptPort } from 'netscript';
 
+import { ServerNS } from 'util/ns';
 import { sleep } from 'util/time';
 
 /*---------------- Options Interfaces ----------------*/
@@ -349,6 +350,90 @@ export function defineProtocol<const P extends ProtocolDef>(def: P) {
         sendMessage,
         sendMessageReceiveResponse,
     };
+}
+
+export type Protocol<P extends ProtocolDef> = ReturnType<
+    typeof defineProtocol<P>
+>;
+
+/**
+ * Client class for building custom client methods on top of a
+ * `Protocol`.
+ */
+export class BaseClient<P extends ProtocolDef> {
+    #protocol: Protocol<P>;
+    #requestPort: NetscriptPort;
+    #responsePort: NetscriptPort;
+
+    constructor(
+        protocol: Protocol<P>,
+        requestPort: NetscriptPort,
+        responsePort: NetscriptPort,
+    ) {
+        this.#protocol = protocol;
+        this.#requestPort = requestPort;
+        this.#responsePort = responsePort;
+    }
+
+    trySendMessage<K extends KeysWithoutResponse<P>>(
+        type: K,
+        payload: PayloadOf<P, K>,
+    ): boolean {
+        return this.#protocol.trySendMessage(this.#requestPort, type, payload);
+    }
+
+    async sendMessage<K extends KeysWithoutResponse<P>>(
+        type: K,
+        payload: PayloadOf<P, K>,
+        pollPeriod?: number,
+    ): Promise<void> {
+        return await this.#protocol.sendMessage(
+            this.#requestPort,
+            type,
+            payload,
+            pollPeriod,
+        );
+    }
+
+    async sendMessageReceiveResponse<K extends KeysWithResponse<P>>(
+        type: K,
+        payload: PayloadOf<P, K>,
+        opts?: SendWithResponseOptions,
+    ): Promise<ResponseOf<P, K>> {
+        return await this.#protocol.sendMessageReceiveResponse(
+            this.#requestPort,
+            this.#responsePort,
+            type,
+            payload,
+            opts,
+        );
+    }
+}
+
+export type Handlers<P extends ProtocolDef> = {
+    [K in keyof P]: (payload: PayloadOf<P, K>) => Promise<ResponseOf<P, K>>;
+};
+
+export class BaseServer<P extends ProtocolDef> {
+    #ns: ServerNS;
+    #protocol: Protocol<P>;
+    #requestPort: NetscriptPort;
+    #responsePort: NetscriptPort;
+    #handlers: Handlers<P>;
+
+    constructor(
+        ns: ServerNS,
+        protocol: Protocol<P>,
+        requestPort: NetscriptPort,
+        responsePort: NetscriptPort,
+        handlers: Handlers<P>,
+    ) {
+        this.#ns = ns;
+        this.#protocol = protocol;
+        this.#requestPort = requestPort;
+        this.#responsePort = responsePort;
+        this.#handlers = handlers;
+    }
 }
 
 function getRequestId(makeReqId: MakeReqId): MakeReqId {

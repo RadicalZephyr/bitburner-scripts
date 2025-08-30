@@ -1,5 +1,7 @@
 import { describe, expect, jest, test } from '@jest/globals';
 
+import { ServerNS } from '../ns';
+
 import {
     isArrayUnknown,
     isBigInt,
@@ -15,11 +17,18 @@ import {
     type ProtocolDef,
     type Validator,
     defineProtocol,
-    RequestUnknown,
+    BaseClient,
+    BaseServer,
+    Handlers,
     ProtocolError,
+    RequestUnknown,
 } from '../protocol';
 
-import { MockNetscriptPort } from '../../test_util/nsPortFixture';
+import { createAtExitFixture } from '../../test_util/nsAtExitFixture';
+import {
+    createPortsFixture,
+    MockNetscriptPort,
+} from '../../test_util/nsPortFixture';
 
 async function expectPendingNow<T>(p: Promise<T>) {
     const sentinel = Symbol('pending');
@@ -438,5 +447,93 @@ describe('custom protocols define message sending utility functions', () => {
                 await expect(responseReceived).rejects.toThrow(ProtocolError);
             });
         });
+    });
+});
+
+describe('BaseClient and BaseServer provide a higher-level interface to custom protocols', () => {
+    const atExitFixture = createAtExitFixture();
+    atExitFixture.hookJest();
+
+    const portsFixture = createPortsFixture();
+    portsFixture.hookJest();
+
+    beforeEach(() => {
+        jest.useFakeTimers();
+    });
+
+    afterEach(() => {
+        jest.useRealTimers();
+    });
+
+    const TestProtocol = defineProtocol({
+        withNoResponse: {
+            payload: isString,
+        },
+
+        withResponse: {
+            payload: isString,
+            response: isBigInt,
+        },
+    });
+
+    type TestProtocolDef = (typeof TestProtocol)['def'];
+
+    const getPortHandle = portsFixture.port;
+
+    class TestClient {
+        #client: BaseClient<TestProtocolDef>;
+
+        constructor() {
+            const requestPort = getPortHandle(1);
+            const responsePort = getPortHandle(2);
+            this.#client = new BaseClient(
+                TestProtocol,
+                requestPort,
+                responsePort,
+            );
+        }
+
+        attempt(payload: string): boolean {
+            return this.#client.trySendMessage('withNoResponse', payload);
+        }
+
+        async definitelySend(payload: string) {
+            await this.#client.sendMessage('withNoResponse', payload);
+        }
+
+        async sendAndReceive(payload: string): Promise<bigint> {
+            return await this.#client.sendMessageReceiveResponse(
+                'withResponse',
+                payload,
+            );
+        }
+    }
+
+    const mockWithNoResponse = jest.fn();
+    const mockWithResponse = jest.fn((payload: string) =>
+        BigInt(payload.length),
+    );
+
+    class TestServer extends BaseServer<TestProtocolDef> {
+        constructor(ns: ServerNS) {
+            const requestPort = getPortHandle(1);
+            const responsePort = getPortHandle(2);
+            const handlers: Handlers<TestProtocolDef> = {
+                withNoResponse: async (payload) => {
+                    mockWithNoResponse(payload);
+                },
+                withResponse: async (payload) => {
+                    return mockWithResponse(payload);
+                },
+            };
+            super(ns, TestProtocol, requestPort, responsePort, handlers);
+        }
+    }
+
+    test('communicate with protocol messages', () => {
+        const testServer = new TestServer(atExitFixture.ns);
+
+        // testServer.readLoop();
+        const testClient = new TestClient();
     });
 });
