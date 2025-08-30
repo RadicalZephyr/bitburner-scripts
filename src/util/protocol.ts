@@ -1,6 +1,7 @@
 import { NetscriptPort } from 'netscript';
 
 import { ServerNS } from 'util/ns';
+import { readAllFromPort } from 'util/ports';
 import { sleep } from 'util/time';
 
 /*---------------- Options Interfaces ----------------*/
@@ -433,6 +434,56 @@ export class BaseServer<P extends ProtocolDef> {
         this.#requestPort = requestPort;
         this.#responsePort = responsePort;
         this.#handlers = handlers;
+    }
+
+    async readLoop() {
+        const makeReqId = getRequestId(null);
+        let running = true;
+        this.#ns.atExit(() => {
+            running = false;
+        }, `readLoop-${makeReqId()}`);
+
+        while (running) {
+            await this.readFn();
+            await this.#requestPort.nextWrite();
+        }
+    }
+
+    async readFn() {
+        for (const msg of readAllFromPort(null, this.#requestPort)) {
+            if (!isRequestUnknown(msg)) {
+                // TODO: Log an error
+                continue;
+            }
+
+            if (!this.#protocol.isRequest(msg)) {
+                // TODO: Send an error response if message is invalid and message id is present.
+                continue;
+            }
+
+            const handler = this.#handlers[msg.type];
+            if (!handler || typeof handler !== 'function') {
+                // throw an error because a missing handler is a server definition error
+                throw new Error(
+                    `missing handler for message type ${String(msg.type)}`,
+                );
+            }
+
+            const responsePayload = await handler(msg.payload);
+
+            if (responsePayload != null) {
+                const response = {
+                    id: msg.id,
+                    type: msg.type,
+                    payload: responsePayload,
+                } satisfies ResponseUnknown;
+
+                // Send response
+                while (!this.#responsePort.tryWrite(response)) {
+                    await sleep(20);
+                }
+            }
+        }
     }
 }
 
