@@ -60,6 +60,7 @@ CONFIGURATION
 
     ns.run('batch/harvest.js', 1, 'n00dles');
     await ns.sleep(10_000);
+    ns.run('sleeve/study.js', 1, '--course', 'Algorithms');
     ns.run('automation/hack.js');
 
     await trainCombat(ns, powerhouseGym, 1200);
