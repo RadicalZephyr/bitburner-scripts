@@ -21,6 +21,9 @@ required rep to buy all augmentations only available from this faction.
 
 OPTIONS
   --help           Show this help message
+
+CONFIGURATION
+  AUTO_factionWorkTimeMs  The length of time to work for one company.
 `);
         return;
     }

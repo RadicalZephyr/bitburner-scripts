@@ -30,6 +30,7 @@ OPTIONS
 
 CONFIGURATION
   AUTO_companyRepForFaction  Sets the target reputation for getting invited to the company faction.
+  AUTO_companyWorkTimeMs     The length of time to work for one company.
 `);
         return;
     }
