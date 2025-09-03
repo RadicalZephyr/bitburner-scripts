@@ -452,11 +452,16 @@ export class BaseServer<P extends ProtocolDef> {
     async readFn() {
         for (const msg of readAllFromPort(null, this.#requestPort)) {
             if (!isRequestUnknown(msg)) {
-                // TODO: Log an error
+                this.#ns.print(
+                    `WARN: received unexpected request envelope: ${JSON.stringify(msg)}`,
+                );
                 continue;
             }
 
             if (!this.#protocol.isRequest(msg)) {
+                this.#ns.print(
+                    `ERROR: received unknown message type: '${msg.type}' with payload: ${JSON.stringify(msg.payload)}`,
+                );
                 // TODO: Send an error response if message is invalid and message id is present.
                 continue;
             }
