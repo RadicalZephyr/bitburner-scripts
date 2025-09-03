@@ -223,7 +223,7 @@ export function defineProtocol<const P extends ProtocolDef>(def: P) {
      * Type predicate for checking if a Request is valid.
      *
      * @remarks
-     * - Message types with no response validator _must not_ have an id field set.
+     * - Message types with no response validator _must_ have a null/undefined id field.
      * - Message types with a response validator _must_ have a string id field.
      *
      * The reason for this strict checking is to help validate
