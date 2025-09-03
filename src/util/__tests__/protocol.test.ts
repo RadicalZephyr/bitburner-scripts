@@ -29,6 +29,7 @@ import {
     createPortsFixture,
     MockNetscriptPort,
 } from '../../test_util/nsPortFixture';
+import { createPrintFixture } from '../../test_util/nsPrintFixture';
 
 async function expectPendingNow<T>(p: Promise<T>) {
     const sentinel = Symbol('pending');
@@ -457,6 +458,9 @@ describe('BaseClient and BaseServer provide a higher-level interface to custom p
     const portsFixture = createPortsFixture();
     portsFixture.hookJest();
 
+    const printFixture = createPrintFixture();
+    printFixture.hookJest();
+
     beforeEach(() => {
         jest.useFakeTimers();
     });
@@ -531,7 +535,8 @@ describe('BaseClient and BaseServer provide a higher-level interface to custom p
     }
 
     test('communicate with protocol messages', () => {
-        const testServer = new TestServer(atExitFixture.ns);
+        const ns = { ...atExitFixture.ns, ...printFixture.ns };
+        const testServer = new TestServer(ns);
 
         // testServer.readLoop();
         const testClient = new TestClient();
