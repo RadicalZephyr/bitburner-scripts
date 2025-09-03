@@ -1,16 +1,4 @@
-export interface ServerNS {
-    /**
-     * Add a callback to be executed when the script dies.
-     *
-     * Each script can only register one callback per callback ID.
-     * If another callback is registered with the same callback ID
-     * the previous callback with that ID is forgotten and will not be executed when the script dies.
-     *
-     * @param f - A function to execute when the script dies.
-     * @param id - Callback ID. Optional, defaults to `"default"`.
-     */
-    atExit(f: () => void, id?: string): void;
-
+export interface PrintNS {
     /**
      * Prints one or more values or variables to the script’s logs.
      *
@@ -60,4 +48,18 @@ export interface ServerNS {
      * @param args - Value(s) to be printed.
      */
     print(...args: unknown[]): void;
+}
+
+export interface ServerNS extends PrintNS {
+    /**
+     * Add a callback to be executed when the script dies.
+     *
+     * Each script can only register one callback per callback ID.
+     * If another callback is registered with the same callback ID
+     * the previous callback with that ID is forgotten and will not be executed when the script dies.
+     *
+     * @param f - A function to execute when the script dies.
+     * @param id - Callback ID. Optional, defaults to `"default"`.
+     */
+    atExit(f: () => void, id?: string): void;
 }
