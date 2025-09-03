@@ -85,6 +85,14 @@ export const isObjectUnknown: Validator<Record<string, unknown>> = (
     v,
 ): v is Record<string, unknown> => typeof v === 'object' && v !== null;
 
+export const isError: Validator<Error> = (v): v is Error => {
+    return (
+        isObjectUnknown(v)
+        && Object.hasOwn(v, 'name')
+        && Object.hasOwn(v, 'message')
+    );
+};
+
 /*---------------- Protocol Envelopes ----------------*/
 
 export interface RequestEnvelope<T, I, R> {
@@ -159,7 +167,7 @@ export function isResponseErrUnknown(
     return (
         !v.ok
         && Object.hasOwn(v, 'error')
-        && (v as ResponseErrUnknown).error instanceof Error
+        && isError((v as ResponseErrUnknown).error)
     );
 }
 
