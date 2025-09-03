@@ -123,14 +123,14 @@ describe('all protocols use common envelopes', () => {
 
     describe('responses', () => {
         test('with type, id and payload are valid', () => {
-            const response = { type: 'foo', id: '', payload: {} };
+            const response = { type: 'foo', id: '', payload: {}, ok: true };
             expect(isResponseUnknown(response)).toBeTruthy();
         });
 
         test.each([
-            ['with no type', { id: '', payload: 1 }],
-            ['with no id', { type: 'bar', payload: 0n }],
-            ['with no payload', { type: 'foo', id: '' }],
+            ['with no type', { id: '', ok: true, payload: 1 }],
+            ['with no id', { type: 'bar', ok: true, payload: 0n }],
+            ['with no ok', { type: 'foo', id: '', payload: 0n }],
         ])('%s are invalid', (description, response) => {
             expect(isResponseUnknown(response)).toBeFalsy();
         });
@@ -390,6 +390,7 @@ describe('custom protocols define message sending utility functions', () => {
                 responsePort.tryWrite({
                     type: request.type,
                     id: expectedId,
+                    ok: true,
                     payload: true,
                 });
                 jest.runAllTimers();

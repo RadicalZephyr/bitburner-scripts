@@ -112,11 +112,27 @@ export function isRequestUnknown(v: unknown): v is RequestUnknown {
     return true;
 }
 
-export interface ResponseEnvelope<T, R> {
+export interface ResponseOkEnvelope<T, R> {
     type: T;
     id: string;
+    ok: true;
     payload: R;
 }
+
+export interface ResponseErrEnvelope<T> {
+    type: T;
+    id: string;
+    ok: false;
+    error: Error;
+}
+
+export type ResponseEnvelope<T, R> =
+    | ResponseOkEnvelope<T, R>
+    | ResponseErrEnvelope<T>;
+
+export type ResponseOkUnknown = ResponseOkEnvelope<unknown, unknown>;
+
+export type ResponseErrUnknown = ResponseErrEnvelope<unknown>;
 
 export type ResponseUnknown = ResponseEnvelope<unknown, unknown>;
 
@@ -126,7 +142,24 @@ export function isResponseUnknown(v: unknown): v is ResponseUnknown {
         && Object.hasOwn(v, 'type')
         && Object.hasOwn(v, 'id')
         && isString(v.id)
-        && Object.hasOwn(v, 'payload')
+        && Object.hasOwn(v, 'ok')
+        && isBoolean(v.ok)
+    );
+}
+
+export function isResponseOkUnknown(
+    v: ResponseUnknown,
+): v is ResponseOkUnknown {
+    return v.ok && Object.hasOwn(v, 'payload');
+}
+
+export function isResponseErrUnknown(
+    v: ResponseUnknown,
+): v is ResponseErrUnknown {
+    return (
+        !v.ok
+        && Object.hasOwn(v, 'error')
+        && (v as ResponseErrUnknown).error instanceof Error
     );
 }
 
@@ -326,14 +359,31 @@ export function defineProtocol<const P extends ProtocolDef>(def: P) {
                 && peeked.id === message.id
                 && peeked.type === type
             ) {
+                // We've identified our response, remove it from the
+                // port so other clients can proceed.
                 receivePort.read();
-                const validator = spec.response as Validator<ResponseOf<P, K>>;
-                if (validator && !validator(peeked.payload)) {
+
+                if (isResponseOkUnknown(peeked)) {
+                    const validator = spec.response as Validator<
+                        ResponseOf<P, K>
+                    >;
+                    if (validator && !validator(peeked.payload)) {
+                        throw new ProtocolError(
+                            `Invalid response payload for type=${String(type)} id=${message.id}: failed protocol validator`,
+                        );
+                    }
+                    return peeked.payload as ResponseOf<P, K>;
+                } else if (isResponseErrUnknown(peeked)) {
                     throw new ProtocolError(
-                        `Invalid response payload for type=${String(type)} id=${message.id}: failed protocol validator`,
+                        `Server returned an error for type=${String(type)} id=${message.id}`,
+                        { cause: peeked.error },
+                    );
+                } else {
+                    throw new ProtocolError(
+                        `Impossible error in protocol client!`,
+                        { cause: peeked },
                     );
                 }
-                return peeked.payload as ResponseOf<P, K>;
             }
 
             await sleep(_pollPeriod);
@@ -459,10 +509,20 @@ export class BaseServer<P extends ProtocolDef> {
             }
 
             if (!this.#protocol.isRequest(msg)) {
-                this.#ns.print(
-                    `ERROR: received unknown message type: '${msg.type}' with payload: ${JSON.stringify(msg.payload)}`,
-                );
-                // TODO: Send an error response if message is invalid and message id is present.
+                const errorMsg = `ERROR: received unknown message type: '${msg.type}' with payload: ${JSON.stringify(msg.payload)}`;
+                this.#ns.print(errorMsg);
+                const response = {
+                    id: msg.id,
+                    type: msg.type,
+                    ok: false,
+                    error: new ProtocolError(errorMsg, { cause: msg }),
+                } satisfies ResponseErrUnknown;
+
+                // Send response
+                while (!this.#responsePort.tryWrite(response)) {
+                    await sleep(20);
+                }
+
                 continue;
             }
 
@@ -480,8 +540,9 @@ export class BaseServer<P extends ProtocolDef> {
                 const response = {
                     id: msg.id,
                     type: msg.type,
+                    ok: true,
                     payload: responsePayload,
-                } satisfies ResponseUnknown;
+                } satisfies ResponseOkUnknown;
 
                 // Send response
                 while (!this.#responsePort.tryWrite(response)) {
