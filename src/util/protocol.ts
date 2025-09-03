@@ -334,12 +334,12 @@ export function defineProtocol<const P extends ProtocolDef>(def: P) {
             );
         }
 
-        const _pollPeriod = Math.max(opts.pollPeriodMs ?? 100, 10);
+        const _pollPeriod = Math.max(opts?.pollPeriodMs ?? 100, 10);
         const _overallTimeoutMs = Math.max(
-            opts.overallTimeoutMs ?? 30_000,
+            opts?.overallTimeoutMs ?? 30_000,
             _pollPeriod,
         );
-        const makeReqId = getRequestId(opts.makeReqId);
+        const makeReqId = getRequestId(opts?.makeReqId);
 
         const message = {
             type,
