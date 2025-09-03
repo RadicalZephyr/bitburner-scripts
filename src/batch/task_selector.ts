@@ -84,6 +84,7 @@ OPTIONS
 
 CONFIGURATION
   BATCH_expectedValueThreshold      Minimum value for harvesting targets
+  BATCH_hackHistoryMax              Number of hack level history samples to use to calculate velocity
   BATCH_hackLevelVelocityThreshold  Hack level change threshold for target churn
   BATCH_harvestGainThreshold        Profit threshold when picking harvests
   BATCH_heartbeatTimeoutMs          Timeout before assuming tasks are dead
@@ -346,7 +347,7 @@ class TaskSelector {
         const lvl = this.ns.getHackingLevel();
         this.hackHistory.push({ time: now, level: lvl });
         // Keep last 5 samples
-        if (this.hackHistory.length > 5) {
+        if (this.hackHistory.length > CONFIG.hackHistoryMax) {
             this.hackHistory.shift();
         }
         if (this.hackHistory.length >= 2) {

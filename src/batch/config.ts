@@ -3,6 +3,7 @@ import { Config, ConfigInstance } from 'util/config';
 const entries = [
     ['batchInterval', 80],
     ['expectedValueThreshold', 100],
+    ['hackHistoryMax', 5],
     ['hackLevelVelocityThreshold', 0.05],
     ['harvestRetryMax', 5],
     ['harvestRetryWait', 50],
