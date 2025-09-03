@@ -83,17 +83,17 @@ OPTIONS
   --help   Show this help message
 
 CONFIGURATION
-  BATCH_taskSelectorTickMs       Delay between task selection cycles
-  BATCH_minSecTolerance          Security tolerance before retilling
-  BATCH_maxMoneyTolerance        Money threshold before resowing
-  BATCH_launchFailLimit          Failed launch attempts before giving up
-  BATCH_launchFailBackoffMs      Backoff after a failed launch
-  BATCH_heartbeatTimeoutMs       Timeout before assuming tasks are dead
-  BATCH_expectedValueThreshold   Minimum value for harvesting targets
-  BATCH_harvestGainThreshold     Profit threshold when picking harvests
-  BATCH_maxSowTargets            Maximum concurrent sow targets
-  BATCH_maxTillTargets           Maximum concurrent till targets
+  BATCH_expectedValueThreshold      Minimum value for harvesting targets
   BATCH_hackLevelVelocityThreshold  Hack level change threshold for target churn
+  BATCH_harvestGainThreshold        Profit threshold when picking harvests
+  BATCH_heartbeatTimeoutMs          Timeout before assuming tasks are dead
+  BATCH_launchFailBackoffMs         Backoff after a failed launch
+  BATCH_launchFailLimit             Failed launch attempts before giving up
+  BATCH_maxMoneyTolerance           Money threshold before resowing
+  BATCH_maxSowTargets               Maximum concurrent sow targets
+  BATCH_maxTillTargets              Maximum concurrent till targets
+  BATCH_minSecTolerance             Security tolerance before retilling
+  BATCH_taskSelectorTickMs          Delay between task selection cycles
 `);
         return;
     }
