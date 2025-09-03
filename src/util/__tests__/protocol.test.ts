@@ -22,7 +22,6 @@ import {
     Handlers,
     ProtocolError,
     RequestUnknown,
-    RequestEnvelope,
     ResponseErrUnknown,
 } from '../protocol';
 
@@ -545,6 +544,13 @@ describe('BaseClient and BaseServer provide a higher-level interface to custom p
     }
 
     //
+    // Small helpers
+    //
+    async function microtaskPump(times = 2) {
+        for (let i = 0; i < times; i++) await Promise.resolve();
+    }
+
+    //
     // --- Tests ---
     //
 
@@ -650,6 +656,120 @@ describe('BaseClient and BaseServer provide a higher-level interface to custom p
             await expect(server.readFn()).rejects.toThrow(
                 /missing handler for message type withNoResponse/,
             );
+        });
+    });
+
+    describe('integration tests', () => {
+        test('sendAndReceive round-trips a message via readLoop', async () => {
+            // Use real timers for this integration path
+            jest.useRealTimers();
+
+            const ns = { ...atExitFixture.ns, ...printFixture.ns } as ServerNS;
+            const server = new TestServer(ns);
+            const client = new TestClient();
+
+            // Start read loop (don’t await it)
+            const loopPromise = server.readLoop();
+
+            // Fire a request and await response
+            const responsePromise = client.sendAndReceive('hello');
+
+            await expect(responsePromise).resolves.toBe(5n);
+            expect(mockWithResponse).toHaveBeenCalledTimes(1);
+            expect(mockWithResponse).toHaveBeenCalledWith('hello');
+
+            // Stop the read loop
+            atExitFixture.runAll();
+
+            // Give the loop a moment to observe running=false and return
+            await microtaskPump(4);
+            await expect(loopPromise).resolves.toBeUndefined();
+        });
+
+        test('fire-and-forget request hits the right handler via readLoop', async () => {
+            jest.useRealTimers();
+
+            const ns = { ...atExitFixture.ns, ...printFixture.ns } as ServerNS;
+            const server = new TestServer(ns);
+            const client = new TestClient();
+
+            const loopPromise = server.readLoop();
+
+            // Fire a best-effort send; it should enqueue and be consumed
+            const ok = client.attempt('hi');
+            expect(ok).toBe(true);
+
+            // Allow the loop to drain the request queue
+            await microtaskPump(4);
+
+            expect(mockWithNoResponse).toHaveBeenCalledTimes(1);
+            expect(mockWithNoResponse).toHaveBeenCalledWith('hi');
+
+            atExitFixture.runAll();
+            await loopPromise;
+        });
+
+        test('server backpressure loop waits until response port has space', async () => {
+            // This exercises the `while (!responsePort.tryWrite(response)) { await sleep(20); }` path
+            // by filling the response port to capacity, sending a request, then freeing space.
+            jest.useRealTimers();
+
+            const ns = { ...atExitFixture.ns, ...printFixture.ns } as ServerNS;
+            const server = new TestServer(ns);
+            const client = new TestClient();
+
+            const resPort = getPortHandle(2);
+
+            // Fill the response port to capacity so server cannot write immediately.
+            // The ports fixture should default to capacity=100 (or whatever your default is).
+            // We only need to fill until tryWrite() returns false at least once.
+            let wrote = true;
+            const blocker = { sentinel: true };
+            while (wrote) {
+                wrote = resPort.tryWrite(blocker);
+            }
+
+            const loopPromise = server.readLoop();
+
+            // Now send a request that expects a response
+            const responsePromise = client.sendAndReceive('blockme');
+
+            // Give the server time to read & attempt (and block on) writing the response
+            await microtaskPump(6);
+
+            // The promise should still be pending because the server can’t write yet.
+            // Free one slot in the response port to unblock the server
+            resPort.read(); // consume one blocker
+            // Clean up: drain remaining blockers so loop can continue cleanly
+            while (resPort.peek()?.sentinel) resPort.read();
+
+            // Allow event loop to continue; server should complete tryWrite and client resolves
+            const result = await responsePromise;
+            expect(result).toBe(7n);
+
+            atExitFixture.runAll();
+            await loopPromise;
+        });
+
+        test('readLoop idles until a write occurs (nextWrite wakeup)', async () => {
+            jest.useRealTimers();
+
+            const ns = { ...atExitFixture.ns, ...printFixture.ns } as ServerNS;
+            const server = new TestServer(ns);
+            const client = new TestClient();
+
+            const loopPromise = server.readLoop();
+
+            // No writes yet—server should be idling on nextWrite(). Now write.
+            const p = client.definitelySend('tick');
+
+            // Allow processing
+            await p;
+
+            expect(mockWithNoResponse).toHaveBeenCalledWith('tick');
+
+            atExitFixture.runAll();
+            await loopPromise;
         });
     });
 });
