@@ -488,14 +488,22 @@ export class BaseServer<P extends ProtocolDef> {
 
     async readLoop() {
         const makeReqId = getRequestId(null);
+
+        // A tiny "Deferred" exit signal we can resolve from atExit
+        let resolveExit!: () => void;
+        const exit = new Promise<void>((r) => {
+            resolveExit = r;
+        });
+
         let running = true;
         this.#ns.atExit(() => {
             running = false;
+            resolveExit();
         }, `readLoop-${makeReqId()}`);
 
         while (running) {
             await this.readFn();
-            await this.#requestPort.nextWrite();
+            await Promise.race([this.#requestPort.nextWrite(), exit]);
         }
     }
 
