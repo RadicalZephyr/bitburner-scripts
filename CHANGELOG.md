@@ -107,6 +107,8 @@
 - Consolidated custom React hooks into `util/hooks.ts`, adding polling helpers for single-render components [#229][pr-229].
 - Improved `config.ts` helper program: read and write configs with autocomplete and better output formatting [#241][pr-241];
 - `sendTerminalCommand` now queues commands, verifies echoed output, and recognizes timed commands for more reliable terminal automation [#250][pr-250].
+- Base client/server abstractions and protocol helpers simplify custom port services [#278][pr-278].
+- `readLoop` uses unique at-exit handler IDs to prevent collisions between scripts [#278][pr-278].
 
 ### User interface
 
@@ -178,6 +180,7 @@
 [pr-270]: https://github.com/RadicalZephyr/bitburner-scripts/pull/270
 [pr-273]: https://github.com/RadicalZephyr/bitburner-scripts/pull/273
 [pr-276]: https://github.com/RadicalZephyr/bitburner-scripts/pull/276
+[pr-278]: https://github.com/RadicalZephyr/bitburner-scripts/pull/278
 
 ## v2.1.0
 
