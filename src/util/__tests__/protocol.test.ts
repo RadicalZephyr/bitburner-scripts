@@ -22,6 +22,8 @@ import {
     Handlers,
     ProtocolError,
     RequestUnknown,
+    RequestEnvelope,
+    ResponseErrUnknown,
 } from '../protocol';
 
 import { createAtExitFixture } from '../../test_util/nsAtExitFixture';
@@ -453,6 +455,9 @@ describe('custom protocols define message sending utility functions', () => {
 });
 
 describe('BaseClient and BaseServer provide a higher-level interface to custom protocols', () => {
+    //
+    // --- NS fixtures ---
+    //
     const atExitFixture = createAtExitFixture();
     atExitFixture.hookJest();
 
@@ -463,13 +468,17 @@ describe('BaseClient and BaseServer provide a higher-level interface to custom p
     printFixture.hookJest();
 
     beforeEach(() => {
-        jest.useFakeTimers();
+        jest.useFakeTimers(); // default; we’ll opt-in to real timers per test where helpful
+        jest.clearAllMocks();
     });
 
     afterEach(() => {
         jest.useRealTimers();
     });
 
+    //
+    // --- Protocol under test ---
+    //
     const TestProtocol = defineProtocol({
         withNoResponse: {
             payload: isString,
@@ -535,11 +544,112 @@ describe('BaseClient and BaseServer provide a higher-level interface to custom p
         }
     }
 
-    test('communicate with protocol messages', () => {
-        const ns = { ...atExitFixture.ns, ...printFixture.ns };
-        const testServer = new TestServer(ns);
+    //
+    // --- Tests ---
+    //
 
-        // testServer.readLoop();
-        const testClient = new TestClient();
+    describe('unit tests', () => {
+        test('server emits error response for structurally-valid but unknown message type', async () => {
+            // We bypass client and craft an “unknown type” envelope that passes isRequestUnknown
+            const ns = { ...atExitFixture.ns, ...printFixture.ns } as ServerNS;
+            const server = new TestServer(ns);
+
+            const reqPort = getPortHandle(1);
+            const resPort = getPortHandle(2);
+
+            // This shape should match your “unknown request” envelope that the server recognizes
+            const unknownReq = {
+                id: 'abc-123',
+                type: 'noSuchType', // not in TestProtocol
+                payload: 'whatever',
+            };
+
+            // Write unknown request to the request port
+            reqPort.write(unknownReq);
+
+            // Run a single read cycle deterministically
+            await server.readFn();
+
+            // The server prints an error and writes an error response
+            // (response shape follows ResponseErrUnknown)
+            // Pull whatever the first response is
+            const resp = resPort.read();
+            expect(resp && typeof resp === 'object' && 'ok' in resp).toBe(true);
+
+            const respUnknown = resp as ResponseErrUnknown;
+            expect(respUnknown.ok).toBeFalsy();
+            expect(respUnknown.id).toBe('abc-123');
+            expect(respUnknown.type).toBe('noSuchType');
+
+            // Also confirm a diagnostic was printed
+            const lines = printFixture.lines();
+            expect(
+                lines.some((l) =>
+                    l.includes(
+                        "ERROR: received unknown message type: 'noSuchType'",
+                    ),
+                ),
+            ).toBeTruthy();
+        });
+
+        test('unexpected envelope logs warning and is dropped', async () => {
+            const ns = { ...atExitFixture.ns, ...printFixture.ns } as ServerNS;
+            const server = new TestServer(ns);
+
+            const reqPort = getPortHandle(1);
+
+            // Send something that is NOT a request envelope at all
+            reqPort.write({ totally: 'not-a-request' });
+
+            await server.readFn();
+
+            const lines = printFixture.lines();
+            expect(
+                lines.some((l) =>
+                    l.includes('WARN: received unexpected request envelope'),
+                ),
+            ).toBe(true);
+
+            // No handler should be invoked
+            expect(mockWithNoResponse).not.toHaveBeenCalled();
+            expect(mockWithResponse).not.toHaveBeenCalled();
+        });
+
+        test('missing handler throws (server definition error)', async () => {
+            const ns = { ...atExitFixture.ns, ...printFixture.ns } as ServerNS;
+
+            // Build a server with a missing handler
+            class BrokenServer extends BaseServer<TestProtocolDef> {
+                constructor() {
+                    const req = getPortHandle(1);
+                    const res = getPortHandle(2);
+                    const handlers: Handlers<TestProtocolDef> = {
+                        // withNoResponse missing entirely
+                        withResponse: async (payload) =>
+                            mockWithResponse(payload as string),
+                    } as unknown as Handlers<TestProtocolDef>;
+                    super(ns, TestProtocol, req, res, handlers);
+                }
+            }
+
+            const server = new BrokenServer();
+
+            // Craft a valid protocol request for the missing handler
+            const reqPort = getPortHandle(1);
+            const validRequestForMissing = {
+                type: 'withNoResponse',
+                id: null,
+                payload: 'ping',
+            } satisfies RequestUnknown;
+            reqPort.write(validRequestForMissing);
+
+            // No response should be written for server definition error
+            const resPort = getPortHandle(2);
+            expect(resPort.peek()).toBe('NULL PORT DATA');
+
+            await expect(server.readFn()).rejects.toThrow(
+                /missing handler for message type withNoResponse/,
+            );
+        });
     });
 });
