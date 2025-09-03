@@ -1,5 +1,5 @@
 import type { NS, NetscriptPort } from 'netscript';
-import { makeFuid } from './fuid';
+import { makeFuid } from 'util/fuid';
 
 export type Message<Type, Payload> = [
     type: Type,
