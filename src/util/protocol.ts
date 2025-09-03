@@ -502,8 +502,15 @@ export class BaseServer<P extends ProtocolDef> {
         }, `readLoop-${makeReqId()}`);
 
         while (running) {
+            const nextWrite = this.#requestPort.nextWrite();
             await this.readFn();
-            await Promise.race([this.#requestPort.nextWrite(), exit]);
+
+            if (!running) break;
+
+            // If a write landed during readFn() (or was already queued), don’t sleep
+            if (!this.#requestPort.empty()) continue;
+
+            await Promise.race([nextWrite, exit]);
         }
     }
 
