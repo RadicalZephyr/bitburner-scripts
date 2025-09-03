@@ -24,6 +24,7 @@
 - Fixed sow task requesting smaller allocations than necessary [#191][pr-191].
 - Removed usage of broken `releaseChunks` API [#260][pr-260].
 - Harvest script can run without a control port and releases ports safely on exit [#276][pr-276].
+- Make number of hack level history samples configurable [#285][pr-285].
 
 ### Services
 
@@ -69,6 +70,7 @@
 - Added `best-crime` script to display money per second for each crime [#276][pr-276].
 - Company work automation pursues CEO positions after meeting faction reputation goals [#276][pr-276].
 - `fetch-contracts` `--test` flag defaults to an empty string and searches for contracts on `home` when testing [#276][pr-276].
+- Set sleeves to study algorithms in `loop-install` script [#285][pr-285].
 
 ### Contracts
 
@@ -94,6 +96,7 @@
 ### Bladeburner
 
 - Add a basic Bladeburner skill buying utility and a mission control script to select the best mission every cycle [#246][pr-246].
+- Make Bladeburner skill buying script delay configurable [#285][pr-285].
 
 ### Utilities
 
@@ -181,7 +184,7 @@
 [pr-273]: https://github.com/RadicalZephyr/bitburner-scripts/pull/273
 [pr-276]: https://github.com/RadicalZephyr/bitburner-scripts/pull/276
 [pr-278]: https://github.com/RadicalZephyr/bitburner-scripts/pull/278
-
+[pr-285]: https://github.com/RadicalZephyr/bitburner-scripts/pull/285
 ## v2.1.0
 
 - Services bootstrap now launches the updater on `n00dles` to avoid running too many scripts on `foodnstuff`.
