@@ -10,6 +10,7 @@ import {
     isString,
     isUndefined,
     isArrayOf,
+    isObjectLike,
 } from '../validate';
 
 describe('Validator functions', () => {
@@ -44,6 +45,36 @@ describe('Validator functions', () => {
 
         test.each([null, 0, 0n, '', []])('%s is not an object', (value) => {
             expect(isObjectUnknown(value)).toBeFalsy();
+        });
+    });
+
+    describe('compound objects can be validated by spec', () => {
+        const isTestObject = isObjectLike({
+            bool: isBoolean,
+            num: isNumber,
+            str: isString,
+            bi: isBigInt,
+            arr: isArrayOf(isString),
+        });
+
+        const baseObject = { bool: false, num: 0, str: '', bi: 0n, arr: [] };
+        test('with all keys present', () => {
+            expect(isTestObject(baseObject)).toBeTruthy();
+        });
+
+        for (const k of Object.keys(baseObject)) {
+            const missingK = { ...baseObject };
+            delete missingK[k];
+
+            test(`missing ${k}`, () => {
+                expect(isTestObject(missingK)).toBeFalsy();
+            });
+        }
+
+        describe("non-objects don't validate", () => {
+            test.each([null, 0, 1n, 'string', true, []])('%s', (notObj) => {
+                expect(isTestObject(notObj)).toBeFalsy();
+            });
         });
     });
 });

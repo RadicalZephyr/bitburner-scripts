@@ -71,3 +71,32 @@ export const isError: Validator<Error> = (v): v is Error => {
         && Object.hasOwn(v, 'message')
     );
 };
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type ObjectSpec = Record<string, Validator<any>>;
+
+type ObjectFor<Spec extends ObjectSpec> = {
+    [K in keyof Spec]: Spec[K] extends Validator<infer R> ? R : never;
+};
+
+/**
+ * Type predicate for objects with keys of specific types
+ */
+export function isObjectLike<const Spec extends ObjectSpec>(
+    spec: Spec,
+): Validator<ObjectFor<Spec>> {
+    for (const k of Object.keys(spec)) {
+        if (typeof spec[k] !== 'function')
+            throw new Error(`ObjectSpec key ${k} is not a function!`);
+    }
+
+    return (v): v is ObjectFor<Spec> => {
+        if (!isObjectUnknown(v)) return false;
+
+        for (const k of Object.keys(spec)) {
+            const validate = spec[k];
+            if (!Object.hasOwn(v, k) || !validate(v[k])) return false;
+        }
+        return true;
+    };
+}
