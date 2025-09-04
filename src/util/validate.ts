@@ -53,6 +53,21 @@ export function isArrayOf<T>(validateEl: Validator<T>): Validator<Array<T>> {
         typeof v === 'object' && Array.isArray(v) && v.every(validateEl);
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type UnionFromValidators<Vs extends readonly Validator<any>[]> =
+    Vs[number] extends Validator<infer U> ? U : never;
+
+/**
+ * Type predicate for unions
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function isAnyOf<Vs extends readonly Validator<any>[]>(
+    ...validators: Vs
+): Validator<UnionFromValidators<Vs>> {
+    return (v): v is UnionFromValidators<Vs> =>
+        validators.some((val) => val(v));
+}
+
 /**
  * Type predicate for objects with unknown values
  */

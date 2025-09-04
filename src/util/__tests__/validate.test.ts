@@ -1,16 +1,17 @@
 import { describe, expect, test } from '@jest/globals';
 
 import {
+    isAnyOf,
+    isArrayOf,
     isArrayUnknown,
     isBigInt,
     isBoolean,
     isNull,
     isNumber,
+    isObjectLike,
     isObjectUnknown,
     isString,
     isUndefined,
-    isArrayOf,
-    isObjectLike,
 } from '../validate';
 
 describe('Validator functions', () => {
@@ -29,6 +30,20 @@ describe('Validator functions', () => {
             expect(validate(valid)).toBeTruthy();
             expect(validate(invalid)).toBeFalsy();
         });
+    });
+
+    describe('isAnyOf allows multiple different types', () => {
+        const isAnyNumber = isAnyOf(isNumber, isBigInt);
+        test.each([0n, 0])('%s is valid', (value) => {
+            expect(isAnyNumber(value)).toBeTruthy();
+        });
+
+        test.each([null, false, 'string', [], {}])(
+            '%s is not valid',
+            (value) => {
+                expect(isAnyNumber(value)).toBeFalsy();
+            },
+        );
     });
 
     describe('isObjectUnknown', () => {
