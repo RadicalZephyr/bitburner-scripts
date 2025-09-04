@@ -130,7 +130,7 @@ export function isObjectLike<const Spec extends ObjectSpec>(
 
         for (const k of Object.keys(spec)) {
             const validate = spec[k];
-            if (!Object.hasOwn(v, k) || !validate(v[k])) return false;
+            if (!validate(v[k])) return false;
         }
         return true;
     };

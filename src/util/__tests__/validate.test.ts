@@ -122,4 +122,26 @@ describe('Validator functions', () => {
             });
         });
     });
+
+    describe('objects with optional fields', () => {
+        const isOptions = isObjectLike({
+            threads: isOptional(isNumber),
+        });
+
+        test('missing optional field is valid', () => {
+            expect(isOptions({})).toBeTruthy();
+        });
+
+        test('undefined optional field is valid', () => {
+            expect(isOptions({ threads: undefined })).toBeTruthy();
+        });
+
+        test('null optional field is valid', () => {
+            expect(isOptions({ threads: null })).toBeTruthy();
+        });
+
+        test('present optional field is valid', () => {
+            expect(isOptions({ threads: 0 })).toBeTruthy();
+        });
+    });
 });
