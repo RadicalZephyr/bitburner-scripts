@@ -129,6 +129,10 @@
 - Updated memory management guide for claim-preserving deallocation and added tests for claim release and response-port timeouts [#260][pr-260].
 - Pull-request review guidelines moved to `docs/pull-requests.md` and referenced from `AGENTS.md` [#273][pr-273].
 
+### Exploits
+
+- Add scripts for achieving all REDACTED exploits [#286][pr-286].
+
 ### Build Scripts
 
 - Added a script to audit Netscript API RAM footprint (`npm run audit-ram`) [#230][pr-230].
@@ -185,6 +189,7 @@
 [pr-276]: https://github.com/RadicalZephyr/bitburner-scripts/pull/276
 [pr-278]: https://github.com/RadicalZephyr/bitburner-scripts/pull/278
 [pr-285]: https://github.com/RadicalZephyr/bitburner-scripts/pull/285
+[pr-286]: https://github.com/RadicalZephyr/bitburner-scripts/pull/286
 
 ## v2.1.0
 
