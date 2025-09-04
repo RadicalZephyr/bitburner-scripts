@@ -109,13 +109,13 @@ describe('custom protocols create precise request validators', () => {
     });
 
     describe('type with no response validator', () => {
-        test('is invalid with no id', () => {
+        test('is valid with no id', () => {
             expect(
                 TestProtocol.isRequest({
                     type: 'withNoResponse',
                     payload: 'hello protocol',
                 } as RequestUnknown),
-            ).toBeFalsy();
+            ).toBeTruthy();
         });
 
         test.each([
@@ -131,7 +131,12 @@ describe('custom protocols create precise request validators', () => {
             ).toBeTruthy();
         });
 
-        test('is invalid with a string id', () => {
+        test.each([
+            ['string', ''],
+            ['number', 0],
+            ['bigint', 0n],
+            ['array', []],
+        ])('is invalid with a %s id', () => {
             expect(
                 TestProtocol.isRequest({
                     type: 'withNoResponse',

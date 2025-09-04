@@ -7,9 +7,11 @@ import {
     isAnyOf,
     isError,
     isLiteral,
+    isNull,
     isObjectLike,
     isOptional,
     isString,
+    isUndefined,
     isUnknown,
     type Validator,
 } from 'util/validate';
@@ -170,8 +172,9 @@ export function defineProtocol<const P extends ProtocolDef>(def: P) {
             // Response validator is defined, must have id field
             if (!isString(m.id)) return false;
         } else {
-            // Response validator is undefined, must NOT have id field
-            if (!Object.hasOwn(m, 'id') || isString(m.id)) return false;
+            // Response validator is undefined, must NOT have a non-null id field
+            if (Object.hasOwn(m, 'id') && !(isNull(m.id) || isUndefined(m.id)))
+                return false;
         }
         return spec.payload(m.payload);
     }
