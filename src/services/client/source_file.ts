@@ -1,31 +1,64 @@
 import type { NS } from 'netscript';
-import { Client, Message as ClientMessage } from 'util/client';
+
+import { defineProtocol, BaseClient, AnyRequest } from 'util/protocol';
+import {
+    isLiteral,
+    isNumber,
+    isObjectLike,
+    isRecordOf,
+    Validator,
+} from 'util/validate';
 
 export const SOURCE_FILE_PORT = 19;
 export const SOURCE_FILE_RESPONSE_PORT = 20;
 
-export enum MessageType {
-    RequestLevel,
-    RequestAll,
-}
+export const MessageType = {
+    RequestLevel: 'RequestLevel',
+    RequestAll: 'RequestAll',
+} as const;
 
-export interface RequestLevel {
+export interface LevelRequest {
     n: number;
 }
 
-export type Payload = RequestLevel | null;
-export type Message = ClientMessage<MessageType, Payload>;
+const isLevelRequest: Validator<LevelRequest> = isObjectLike({
+    n: isNumber,
+});
 
-export type ResponsePayload = number | Record<number, number>;
+const AllSourceFilesRequest = 'SSF_AllSourceFiles';
+
+const isAllSourceFilesRequest: Validator<typeof AllSourceFilesRequest> =
+    isLiteral(AllSourceFilesRequest);
+
+export type AllSourceFiles = Record<string, number>;
+
+const isAllSourceFiles: Validator<AllSourceFiles> = isRecordOf(isNumber);
+
+export const SourceFileProtocol = defineProtocol({
+    [MessageType.RequestLevel]: {
+        payload: isLevelRequest,
+        response: isNumber,
+    },
+    [MessageType.RequestAll]: {
+        payload: isAllSourceFilesRequest,
+        response: isAllSourceFiles,
+    },
+});
+
+export type SourceFileProtocolDef = (typeof SourceFileProtocol)['def'];
+
+export type Message = AnyRequest<SourceFileProtocolDef>;
 
 /** Client for the SourceFile service. */
-export class SourceFileClient extends Client<
-    MessageType,
-    Payload,
-    ResponsePayload
-> {
+export class SourceFileClient {
+    #client: BaseClient<SourceFileProtocolDef>;
+
     constructor(ns: NS) {
-        super(ns, SOURCE_FILE_PORT, SOURCE_FILE_RESPONSE_PORT);
+        this.#client = new BaseClient(
+            SourceFileProtocol,
+            ns.getPortHandle(SOURCE_FILE_PORT),
+            ns.getPortHandle(SOURCE_FILE_RESPONSE_PORT),
+        );
     }
 
     /**
@@ -34,13 +67,12 @@ export class SourceFileClient extends Client<
      * @param sf - Source File number
      * @returns Level of the Source File or 0 if not owned
      */
-    async getLevel(sf: number): Promise<number> {
-        const payload: RequestLevel = { n: sf };
-        const lvl = (await this.sendMessageReceiveResponse(
+    getLevel(sf: number): Promise<number> {
+        const payload: LevelRequest = { n: sf };
+        return this.#client.sendMessageReceiveResponse(
             MessageType.RequestLevel,
             payload,
-        )) as number;
-        return typeof lvl === 'number' ? lvl : 0;
+        );
     }
 
     /**
@@ -48,12 +80,11 @@ export class SourceFileClient extends Client<
      *
      * @returns Mapping of Source File number to level
      */
-    async getAll(): Promise<Record<number, number>> {
-        const res = (await this.sendMessageReceiveResponse(
+    getAll(): Promise<AllSourceFiles> {
+        return this.#client.sendMessageReceiveResponse(
             MessageType.RequestAll,
-            null,
-        )) as Record<number, number>;
-        return res && typeof res === 'object' ? res : {};
+            AllSourceFilesRequest,
+        );
     }
 }
 

@@ -1,16 +1,16 @@
-import type { NS, NetscriptPort } from 'netscript';
+import type { NS } from 'netscript';
 import { parseFlags } from 'util/flags';
 
+import { MemoryClient } from 'services/client/memory';
 import {
-    Message,
     MessageType,
     SOURCE_FILE_PORT,
     SOURCE_FILE_RESPONSE_PORT,
-    RequestLevel,
+    SourceFileProtocolDef,
+    SourceFileProtocol,
 } from 'services/client/source_file';
-import { MemoryClient } from 'services/client/memory';
 
-import { readAllFromPort, readLoop } from 'util/ports';
+import { BaseServer, type Handlers } from 'util/protocol';
 
 export async function main(ns: NS) {
     await parseFlags(ns, []);
@@ -21,44 +21,28 @@ export async function main(ns: NS) {
     const self = ns.self();
     memClient.registerAllocation(self.server, self.ramUsage, 1);
 
-    const port = ns.getPortHandle(SOURCE_FILE_PORT);
-    const respPort = ns.getPortHandle(SOURCE_FILE_RESPONSE_PORT);
-
     const owned = ns.singularity.getOwnedSourceFiles();
     const levels = new Map<number, number>();
     for (const sf of owned) {
         levels.set(sf.n, sf.lvl);
     }
 
-    await readLoop(ns, port, () => readRequests(ns, port, respPort, levels));
+    const server = new Server(ns, levels);
+    await server.readLoop();
 }
 
-async function readRequests(
-    ns: NS,
-    port: NetscriptPort,
-    resp: NetscriptPort,
-    levels: Map<number, number>,
-) {
-    for (const next of readAllFromPort(ns, port)) {
-        const msg = next as Message;
-        const requestId = msg[1];
-        if (typeof requestId !== 'string') continue;
-        let payload: number | Record<number, number>;
-        switch (msg[0]) {
-            case MessageType.RequestLevel: {
-                const req = msg[2] as RequestLevel;
-                payload = levels.get(req.n) ?? 0;
-                break;
-            }
-            case MessageType.RequestAll:
-                payload = Object.fromEntries(levels);
-                break;
-            default:
-                payload = 0;
-                break;
-        }
-        while (!resp.tryWrite([requestId, payload])) {
-            await ns.sleep(20);
-        }
+class Server extends BaseServer<SourceFileProtocolDef> {
+    constructor(ns: NS, levels: Map<number, number>) {
+        const requestPort = ns.getPortHandle(SOURCE_FILE_PORT);
+        const responsePort = ns.getPortHandle(SOURCE_FILE_RESPONSE_PORT);
+        const handlers: Handlers<SourceFileProtocolDef> = {
+            [MessageType.RequestLevel]: (req) => {
+                return Promise.resolve(levels.get(req.n) ?? 0);
+            },
+            [MessageType.RequestAll]: () => {
+                return Promise.resolve(Object.fromEntries(levels));
+            },
+        };
+        super(ns, SourceFileProtocol, requestPort, responsePort, handlers);
     }
 }
