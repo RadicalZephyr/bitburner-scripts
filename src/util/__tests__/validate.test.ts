@@ -12,6 +12,7 @@ import {
     isObjectLike,
     isObjectUnknown,
     isOptional,
+    isRecordOf,
     isString,
     isUndefined,
     isUnknown,
@@ -105,6 +106,22 @@ describe('Validator functions', () => {
 
         test.each([null, 0, 0n, '', []])('%s is not an object', (value) => {
             expect(isObjectUnknown(value)).toBeFalsy();
+        });
+    });
+
+    describe('isRecord', () => {
+        const isNumRecord = isRecordOf(isNumber);
+
+        test('empty object is valid', () => {
+            expect(isNumRecord({})).toBeTruthy();
+        });
+
+        test('objects with number values are valid', () => {
+            expect(isNumRecord({ anyKey: 0 })).toBeTruthy();
+        });
+
+        test('objects with other values are invalid', () => {
+            expect(isNumRecord({ anyKey: 'bad' })).toBeFalsy();
         });
     });
 

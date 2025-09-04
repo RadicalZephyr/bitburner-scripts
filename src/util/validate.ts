@@ -113,6 +113,16 @@ export const isError: Validator<Error> = (v): v is Error => {
     );
 };
 
+/**
+ * Type predicate for records of string to V
+ */
+export function isRecordOf<V>(
+    valueValidator: Validator<V>,
+): Validator<Record<string, V>> {
+    return (v: unknown): v is Record<string, V> =>
+        isObjectUnknown(v) && Object.keys(v).every((k) => valueValidator(v[k]));
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ObjectSpec = Record<string, Validator<any>>;
 
