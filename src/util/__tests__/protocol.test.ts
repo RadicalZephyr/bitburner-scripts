@@ -3,27 +3,18 @@ import { describe, expect, jest, test } from '@jest/globals';
 import { ServerNS } from '../ns';
 
 import {
-    isArrayUnknown,
-    isBigInt,
-    isBoolean,
     isRequestUnknown,
-    isNull,
-    isNumber,
-    isObjectUnknown,
     isResponseUnknown,
-    isString,
-    isUndefined,
-    makeIsArray,
-    type ProtocolDef,
-    type Validator,
     defineProtocol,
     BaseClient,
     BaseServer,
     Handlers,
+    type ProtocolDef,
     ProtocolError,
     RequestUnknown,
     ResponseErrUnknown,
 } from '../protocol';
+import { isBigInt, isBoolean, isString } from '../validate';
 
 import { createAtExitFixture } from '../../test_util/nsAtExitFixture';
 import {
@@ -37,39 +28,6 @@ async function expectPendingNow<T>(p: Promise<T>) {
     const winner = await Promise.race([p, Promise.resolve(sentinel)]);
     expect(winner).toBe(sentinel);
 }
-
-describe('our protocol abstraction', () => {
-    test('is based on Validator functions', () => {
-        const isValid = ((o: unknown): o is object => {
-            return typeof o === 'object' && o !== null;
-        }) satisfies Validator<object>;
-
-        expect(isValid({})).toBeTruthy();
-
-        expect(isValid(undefined)).toBeFalsy();
-        expect(isValid(null)).toBeFalsy();
-        expect(isValid(1)).toBeFalsy();
-        expect(isValid(1n)).toBeFalsy();
-        expect(isValid('thing')).toBeFalsy();
-    });
-
-    describe('core JS type validator functions are provided', () => {
-        test.each([
-            ['undefined', isUndefined, undefined, null],
-            ['null', isNull, null, undefined],
-            ['boolean', isBoolean, false, null],
-            ['number', isNumber, 0, 'hello'],
-            ['bigint', isBigInt, 0n, undefined],
-            ['string', isString, '', 3],
-            ['array of unknown', isArrayUnknown, [], null],
-            ['array of T', makeIsArray(isNumber), [0, 1, 2], ['', 2, null]],
-            ['object', isObjectUnknown, {}, null],
-        ])('%s validator', (type, validate, valid, invalid) => {
-            expect(validate(valid)).toBeTruthy();
-            expect(validate(invalid)).toBeFalsy();
-        });
-    });
-});
 
 describe('protocol definitions map a message type', () => {
     test('to a payload', () => {
