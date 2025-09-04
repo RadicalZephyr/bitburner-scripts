@@ -1,14 +1,31 @@
 import type { NS, ScriptArg, RunOptions } from 'netscript';
+
 import type { AllocOptions, HostAllocation } from 'services/client/memory';
-import { TransferableAllocation } from 'services/client/memory';
-import { Client, Message as ClientMessage } from 'util/client';
+import {
+    isHostAllocation,
+    TransferableAllocation,
+} from 'services/client/memory';
+
+import { defineProtocol, BaseClient, AnyRequest } from 'util/protocol';
+import {
+    type Validator,
+    isAnyOf,
+    isArrayOf,
+    isBoolean,
+    isError,
+    isLiteral,
+    isNumber,
+    isObjectLike,
+    isOptional,
+    isString,
+} from 'util/validate';
 
 export const LAUNCH_PORT = 17;
 export const LAUNCH_RESPONSE_PORT = 18;
 
-export enum MessageType {
-    Launch,
-}
+export const MessageType = {
+    Launch: 'Launch',
+} as const;
 
 /**
  * Options for running a script remotely.
@@ -27,21 +44,89 @@ export interface LaunchRequest {
     args: ScriptArg[];
 }
 
-export interface LaunchResponse {
+export interface LaunchOkResponse {
+    ok: true;
     allocationId: number;
     hosts: HostAllocation[];
     pids: number[];
 }
 
-export type Message = ClientMessage<MessageType, LaunchRequest>;
+export interface LaunchErrResponse {
+    ok: false;
+    error: Error;
+}
 
-export class LaunchClient extends Client<
-    MessageType,
-    LaunchRequest,
-    LaunchResponse | null
-> {
+export type LaunchResponse = LaunchOkResponse | LaunchErrResponse;
+
+const isScriptArg: Validator<ScriptArg> = isAnyOf(
+    isString,
+    isNumber,
+    isBoolean,
+);
+
+const isScriptArgArray: Validator<ScriptArg[]> = isArrayOf(isScriptArg);
+
+const isAllocOptions: Validator<AllocOptions> = isObjectLike({
+    contiguous: isOptional(isBoolean),
+    coreDependent: isOptional(isBoolean),
+    shrinkable: isOptional(isBoolean),
+    longRunning: isOptional(isBoolean),
+});
+
+const isLaunchRunOptions: Validator<RunOptions> = isObjectLike({
+    alloc: isOptional(isAllocOptions),
+    dependencies: isOptional(isArrayOf(isString)),
+    threads: isOptional(isNumber),
+    temporary: isOptional(isBoolean),
+    ramOverride: isOptional(isNumber),
+    preventDuplicates: isOptional(isBoolean),
+});
+
+const isLaunchRequest: Validator<LaunchRequest> = isObjectLike({
+    script: isString,
+    options: isLaunchRunOptions,
+    args: isScriptArgArray,
+});
+
+const isLaunchErrResponse: Validator<LaunchErrResponse> = isObjectLike({
+    ok: isLiteral(false),
+    error: isError,
+});
+
+const isLaunchOkResponse: Validator<LaunchOkResponse> = isObjectLike({
+    ok: isLiteral(true),
+    allocationId: isNumber,
+    hosts: isArrayOf<HostAllocation>(isHostAllocation),
+    pids: isArrayOf(isNumber),
+});
+
+const isLaunchResponse: Validator<LaunchResponse> = isAnyOf(
+    isLaunchOkResponse,
+    isLaunchErrResponse,
+);
+
+export const LaunchProtocol = defineProtocol({
+    [MessageType.Launch]: {
+        payload: isLaunchRequest,
+        response: isLaunchResponse,
+    },
+});
+
+export type LaunchProtocolDef = (typeof LaunchProtocol)['def'];
+
+export type LaunchMessage = AnyRequest<LaunchProtocolDef>;
+
+export class LaunchClient {
+    #ns: NS;
+    #client: BaseClient<LaunchProtocolDef>;
+
     constructor(ns: NS) {
-        super(ns, LAUNCH_PORT, LAUNCH_RESPONSE_PORT);
+        this.#ns = ns;
+        this.#client = new BaseClient(
+            LaunchProtocol,
+            ns.getPortHandle(LAUNCH_PORT),
+            ns.getPortHandle(LAUNCH_RESPONSE_PORT),
+        );
     }
 
     /**
@@ -56,13 +141,15 @@ export class LaunchClient extends Client<
         script: string,
         options: LaunchRunOptions,
         ...args: ScriptArg[]
-    ): Promise<{ allocation: TransferableAllocation; pids: number[] } | null> {
+    ): Promise<{ allocation: TransferableAllocation; pids: number[] }> {
         const payload: LaunchRequest = { script, options, args };
-        const result = await this.sendMessageReceiveResponse(
+        const result = await this.#client.sendMessageReceiveResponse(
             MessageType.Launch,
             payload,
         );
-        if (!result) {
+        if (!result.ok) {
+            const errMessage = (result as LaunchErrResponse).error.message;
+            this.#ns.print(`ERROR: ${errMessage}`);
             return null;
         }
         const alloc = new TransferableAllocation(

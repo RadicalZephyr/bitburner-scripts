@@ -10,6 +10,12 @@ import {
     trySendMessage,
 } from 'util/client';
 import { makeFuid } from 'util/fuid';
+import {
+    isNumber,
+    isObjectLike,
+    isString,
+    type Validator,
+} from 'util/validate';
 
 export const MEMORY_PORT: number = 3;
 export const MEMORY_RESPONSE_PORT: number = 4;
@@ -169,6 +175,12 @@ export interface AllocOptions {
     shrinkable?: boolean;
     longRunning?: boolean;
 }
+
+export const isHostAllocation: Validator<HostAllocation> = isObjectLike({
+    hostname: isString,
+    chunkSize: isNumber,
+    numChunks: isNumber,
+});
 
 export class MemoryClient extends Client<
     MessageType,

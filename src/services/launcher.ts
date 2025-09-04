@@ -1,4 +1,4 @@
-import type { NS, NetscriptPort, RunOptions, ScriptArg } from 'netscript';
+import type { NS, RunOptions, ScriptArg } from 'netscript';
 import { parseFlags } from 'util/flags';
 
 import { ALLOC_ID_ARG } from 'services/client/memory_tag';
@@ -7,14 +7,14 @@ import {
     LAUNCH_PORT,
     LAUNCH_RESPONSE_PORT,
     MessageType,
-    LaunchRequest,
-    LaunchResponse,
+    LaunchProtocol,
     LaunchRunOptions,
+    LaunchProtocolDef,
 } from 'services/client/launch';
 import { MemoryClient, TransferableAllocation } from 'services/client/memory';
 
-import { readAllFromPort, readLoop } from 'util/ports';
 import { collectDependencies } from 'util/dependencies';
+import { BaseServer, Handlers } from 'util/protocol';
 
 export async function main(ns: NS) {
     await parseFlags(ns, []);
@@ -25,53 +25,45 @@ export async function main(ns: NS) {
     const self = ns.self();
     memClient.registerAllocation(self.server, self.ramUsage, 1);
 
-    const port = ns.getPortHandle(LAUNCH_PORT);
-    const respPort = ns.getPortHandle(LAUNCH_RESPONSE_PORT);
+    const server = new Server(ns);
 
-    await readLoop(ns, port, () => readRequests(ns, port, respPort));
+    await server.readLoop();
 }
 
-async function readRequests(ns: NS, port: NetscriptPort, resp: NetscriptPort) {
-    for (const next of readAllFromPort(ns, port)) {
-        const msg = next as [MessageType, string, LaunchRequest];
-        const requestId = msg[1];
-        if (msg[0] !== MessageType.Launch) continue;
-        const payload = msg[2];
-        if (!isValidRequest(payload)) {
-            ns.print('ERROR: invalid launch request');
-            resp.write([requestId, null]);
-            continue;
-        }
-        const result = await launch(
-            ns,
-            payload.script,
-            payload.options,
-            ...payload.args,
-        );
-        const response: LaunchResponse | null = result
-            ? {
-                  allocationId: result.allocation.allocationId,
-                  hosts: result.allocation.allocatedChunks.map((c) => ({
-                      hostname: c.hostname,
-                      chunkSize: c.chunkSize,
-                      numChunks: c.numChunks,
-                  })),
-                  pids: result.pids,
-              }
-            : null;
-        while (!resp.tryWrite([requestId, response])) {
-            await ns.sleep(20);
-        }
+class Server extends BaseServer<LaunchProtocolDef> {
+    constructor(ns: NS) {
+        const requestPort = ns.getPortHandle(LAUNCH_PORT);
+        const responsePort = ns.getPortHandle(LAUNCH_RESPONSE_PORT);
+        const handlers: Handlers<LaunchProtocolDef> = {
+            [MessageType.Launch]: async (payload) => {
+                const result = await launch(
+                    ns,
+                    payload.script,
+                    payload.options,
+                    ...payload.args,
+                );
+
+                if (result == null) {
+                    return {
+                        ok: false,
+                        error: new Error('Failed to launch script'),
+                    };
+                }
+
+                return {
+                    ok: true,
+                    allocationId: result.allocation.allocationId,
+                    hosts: result.allocation.allocatedChunks.map((c) => ({
+                        hostname: c.hostname,
+                        chunkSize: c.chunkSize,
+                        numChunks: c.numChunks,
+                    })),
+                    pids: result.pids,
+                };
+            },
+        } as const;
+        super(ns, LaunchProtocol, requestPort, responsePort, handlers);
     }
-}
-
-function isValidRequest(req: LaunchRequest): boolean {
-    return (
-        req
-        && typeof req.script === 'string'
-        && typeof req.options === 'object'
-        && Array.isArray(req.args)
-    );
 }
 
 /**
