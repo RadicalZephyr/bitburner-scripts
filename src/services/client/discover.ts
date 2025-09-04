@@ -1,41 +1,72 @@
 import type { NS } from 'netscript';
 
-import { Client, Message as ClientMessage } from 'util/client';
+import { defineProtocol, BaseClient, AnyRequest } from 'util/protocol';
+import {
+    isArrayOf,
+    isNumber,
+    isObjectLike,
+    isOptional,
+    isString,
+    Validator,
+} from 'util/validate';
 
 export const DISCOVERY_PORT = 1;
 export const DISCOVERY_RESPONSE_PORT = 2;
 
-export enum MessageType {
-    RequestWorkers,
-    RequestTargets,
-}
+export const MessageType = {
+    RequestWorkers: 'RequestWorkers',
+    RequestTargets: 'RequestTargets',
+} as const;
 
 export interface Subscription {
+    // TODO: [ZEFS 2025-09-04] Change this to string after all other protocols use string types
     messageType: number;
     port: number;
 }
 
-export interface RequestWorkers {
+const isSubscription: Validator<Subscription> = isObjectLike({
+    messageType: isNumber,
+    port: isNumber,
+});
+
+export interface HostRequest {
     pushUpdates?: Subscription;
 }
 
-export interface RequestTargets {
-    pushUpdates?: Subscription;
-}
+const isHostRequest: Validator<HostRequest> = isObjectLike({
+    pushUpdates: isOptional(isSubscription),
+});
 
-export type Payload = RequestWorkers | RequestTargets | null;
+export const DiscoverProtocol = defineProtocol({
+    [MessageType.RequestWorkers]: {
+        payload: isHostRequest,
+        response: isArrayOf(isString),
+    },
+    [MessageType.RequestTargets]: {
+        payload: isHostRequest,
+        response: isArrayOf(isString),
+    },
+});
 
-export type Message = ClientMessage<MessageType, Payload>;
+export type DiscoverProtocolDef = (typeof DiscoverProtocol)['def'];
+
+export type Message = AnyRequest<DiscoverProtocolDef>;
 
 /** Hide communication with the discovery service behind a simple API. */
-export class DiscoveryClient extends Client<MessageType, Payload, string[]> {
+export class DiscoveryClient {
+    #client: BaseClient<DiscoverProtocolDef>;
+
     constructor(ns: NS) {
-        super(ns, DISCOVERY_PORT, DISCOVERY_RESPONSE_PORT);
+        this.#client = new BaseClient(
+            DiscoverProtocol,
+            ns.getPortHandle(DISCOVERY_PORT),
+            ns.getPortHandle(DISCOVERY_RESPONSE_PORT),
+        );
     }
 
     /** Request the list of known worker hosts. */
-    async requestWorkers(pushUpdates?: Subscription): Promise<string[]> {
-        return await this.sendMessageReceiveResponse(
+    requestWorkers(pushUpdates?: Subscription): Promise<string[]> {
+        return this.#client.sendMessageReceiveResponse(
             MessageType.RequestWorkers,
             {
                 pushUpdates,
@@ -44,8 +75,8 @@ export class DiscoveryClient extends Client<MessageType, Payload, string[]> {
     }
 
     /** Request the list of known target hosts. */
-    async requestTargets(pushUpdates?: Subscription): Promise<string[]> {
-        return await this.sendMessageReceiveResponse(
+    requestTargets(pushUpdates?: Subscription): Promise<string[]> {
+        return this.#client.sendMessageReceiveResponse(
             MessageType.RequestTargets,
             {
                 pushUpdates,

@@ -1,12 +1,13 @@
-import type { NS, NetscriptPort } from 'netscript';
+import type { NS } from 'netscript';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
 import {
     DISCOVERY_PORT,
     DISCOVERY_RESPONSE_PORT,
-    Message,
     MessageType,
     Subscription as ClientSubscription,
+    DiscoverProtocolDef,
+    DiscoverProtocol,
 } from 'services/client/discover';
 import { MemoryClient } from 'services/client/memory';
 
@@ -16,7 +17,7 @@ const FLAGS = [['help', false]] as const satisfies FlagsSchema;
 
 import { trySendMessage } from 'util/client';
 import { extend } from 'util/extend';
-import { readAllFromPort, readLoop } from 'util/ports';
+import { BaseServer, Handlers } from 'util/protocol';
 import { walkNetworkBFS } from 'util/walk';
 
 export async function main(ns: NS) {
@@ -50,10 +51,8 @@ CONFIGURATION
     const self = ns.self();
     memClient.registerAllocation(self.server, self.ramUsage, 1);
 
-    const port = ns.getPortHandle(DISCOVERY_PORT);
-    const respPort = ns.getPortHandle(DISCOVERY_RESPONSE_PORT);
-
-    readLoop(ns, port, () => readRequests(ns, port, respPort, discovery));
+    const server = new Server(ns, discovery);
+    server.readLoop();
 
     while (true) {
         const network = walkNetworkBFS(ns);
@@ -87,52 +86,24 @@ CONFIGURATION
     }
 }
 
-async function readRequests(
-    ns: NS,
-    port: NetscriptPort,
-    respPort: NetscriptPort,
-    discovery: Discovery,
-) {
-    for (const next of readAllFromPort(ns, port)) {
-        const msg = next as Message;
-        const requestId = msg[1] as string;
-
-        if (typeof msg[2] !== 'object' || msg[2] === null) {
-            ns.print('ERROR: discovery received malformed request payload');
-            continue;
-        }
-
-        const subscription = msg[2].pushUpdates;
-        const validSubscription = isValidSubscription(subscription);
-
-        let payload: string[] = null;
-        switch (msg[0]) {
-            case MessageType.RequestWorkers:
-                if (subscription && validSubscription) {
-                    discovery.registerWorkerSubscriber(subscription);
-                }
-                payload = discovery.workers;
-                break;
-            case MessageType.RequestTargets:
-                if (subscription && validSubscription) {
-                    discovery.registerTargetSubscriber(subscription);
-                }
-                payload = discovery.targets;
-                break;
-        }
-        while (!respPort.tryWrite([requestId, payload])) {
-            await ns.sleep(20);
-        }
+class Server extends BaseServer<DiscoverProtocolDef> {
+    constructor(ns: NS, discovery: Discovery) {
+        const requestPort = ns.getPortHandle(DISCOVERY_PORT);
+        const responsePort = ns.getPortHandle(DISCOVERY_RESPONSE_PORT);
+        const handlers: Handlers<DiscoverProtocolDef> = {
+            [MessageType.RequestWorkers]: (request) => {
+                if (request.pushUpdates)
+                    discovery.registerWorkerSubscriber(request.pushUpdates);
+                return Promise.resolve(discovery.workers);
+            },
+            [MessageType.RequestTargets]: (request) => {
+                if (request.pushUpdates)
+                    discovery.registerTargetSubscriber(request.pushUpdates);
+                return Promise.resolve(discovery.targets);
+            },
+        };
+        super(ns, DiscoverProtocol, requestPort, responsePort, handlers);
     }
-}
-
-function isValidSubscription(subscription?: ClientSubscription): boolean {
-    return (
-        subscription
-        && typeof subscription === 'object'
-        && typeof subscription.messageType !== 'undefined'
-        && typeof subscription.port === 'number'
-    );
 }
 
 type CrackProgramFn = (host: string) => void;
