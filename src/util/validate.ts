@@ -38,6 +38,15 @@ export const isString: Validator<string> = (v): v is string =>
     typeof v === 'string';
 
 /**
+ * Type predicate for literal value types
+ */
+export function isLiteral<
+    T extends string | number | boolean | null | undefined,
+>(lit: T): Validator<T> {
+    return (v: unknown): v is T => v === lit;
+}
+
+/**
  * Type predicate for arrays of unknown values
  */
 export const isArrayUnknown: Validator<Array<unknown>> = (

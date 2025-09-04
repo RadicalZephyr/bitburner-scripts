@@ -6,6 +6,7 @@ import {
     isArrayUnknown,
     isBigInt,
     isBoolean,
+    isLiteral,
     isNull,
     isNumber,
     isObjectLike,
@@ -29,6 +30,22 @@ describe('Validator functions', () => {
         ])('%s validator', (type, validate, valid, invalid) => {
             expect(validate(valid)).toBeTruthy();
             expect(validate(invalid)).toBeFalsy();
+        });
+    });
+
+    describe('isLiteral', () => {
+        const isThing = isLiteral('thing');
+
+        test('thing string', () => {
+            expect(isThing('thing')).toBeTruthy();
+            expect(isThing('')).toBeFalsy();
+        });
+
+        const isZero = isLiteral(0);
+
+        test('zero', () => {
+            expect(isZero(0)).toBeTruthy();
+            expect(isZero(1)).toBeFalsy();
         });
     });
 
