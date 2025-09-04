@@ -4,12 +4,13 @@ import { ServerNS } from 'util/ns';
 import { readAllFromPort } from 'util/ports';
 import { sleep } from 'util/time';
 import {
-    isBoolean,
+    isAnyOf,
     isError,
-    isNull,
-    isObjectUnknown,
+    isLiteral,
+    isObjectLike,
+    isOptional,
     isString,
-    isUndefined,
+    isUnknown,
     type Validator,
 } from 'util/validate';
 
@@ -36,28 +37,17 @@ export interface SendWithResponseOptions {
 
 export interface RequestEnvelope<T, I, R> {
     type: T;
-    id: I;
+    id?: I;
     payload: R;
 }
 
 export type RequestUnknown = RequestEnvelope<unknown, string | null, unknown>;
 
-export function isRequestUnknown(v: unknown): v is RequestUnknown {
-    if (
-        !isObjectUnknown(v)
-        || !Object.hasOwn(v, 'type')
-        || !Object.hasOwn(v, 'payload')
-    )
-        return false;
-
-    if (
-        Object.hasOwn(v, 'id')
-        && !(isString(v.id) || isNull(v.id) || isUndefined(v.id))
-    )
-        return false;
-
-    return true;
-}
+export const isRequestUnknown: Validator<RequestUnknown> = isObjectLike({
+    type: isUnknown,
+    id: isOptional(isString),
+    payload: isUnknown,
+});
 
 export interface ResponseOkEnvelope<T, R> {
     type: T;
@@ -83,32 +73,26 @@ export type ResponseErrUnknown = ResponseErrEnvelope<unknown>;
 
 export type ResponseUnknown = ResponseEnvelope<unknown, unknown>;
 
-export function isResponseUnknown(v: unknown): v is ResponseUnknown {
-    return (
-        isObjectUnknown(v)
-        && Object.hasOwn(v, 'type')
-        && Object.hasOwn(v, 'id')
-        && isString(v.id)
-        && Object.hasOwn(v, 'ok')
-        && isBoolean(v.ok)
-    );
-}
+export const isResponseOkUnknown: Validator<ResponseOkUnknown> = isObjectLike({
+    type: isString,
+    id: isString,
+    ok: isLiteral(true),
+    payload: isUnknown,
+});
 
-export function isResponseOkUnknown(
-    v: ResponseUnknown,
-): v is ResponseOkUnknown {
-    return v.ok && Object.hasOwn(v, 'payload');
-}
+export const isResponseErrUnknown: Validator<ResponseErrUnknown> = isObjectLike(
+    {
+        type: isString,
+        id: isString,
+        ok: isLiteral(false),
+        error: isError,
+    },
+);
 
-export function isResponseErrUnknown(
-    v: ResponseUnknown,
-): v is ResponseErrUnknown {
-    return (
-        !v.ok
-        && Object.hasOwn(v, 'error')
-        && isError((v as ResponseErrUnknown).error)
-    );
-}
+export const isResponseUnknown = isAnyOf(
+    isResponseOkUnknown,
+    isResponseErrUnknown,
+);
 
 /*---------------- Protocol Error ----------------*/
 
