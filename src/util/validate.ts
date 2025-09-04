@@ -79,9 +79,12 @@ export const isObjectUnknown: Validator<Record<string, unknown>> = (
  */
 export const isError: Validator<Error> = (v): v is Error => {
     return (
-        isObjectUnknown(v)
-        && Object.hasOwn(v, 'name')
-        && Object.hasOwn(v, 'message')
+        v instanceof Error
+        || (isObjectUnknown(v)
+            && Object.hasOwn(v, 'name')
+            && isString(v.name)
+            && Object.hasOwn(v, 'message')
+            && isString(v.message))
     );
 };
 
