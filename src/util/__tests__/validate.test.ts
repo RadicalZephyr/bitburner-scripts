@@ -14,6 +14,7 @@ import {
     isOptional,
     isString,
     isUndefined,
+    isUnknown,
 } from '../validate';
 
 describe('Validator functions', () => {
@@ -31,6 +32,20 @@ describe('Validator functions', () => {
         ])('%s validator', (type, validate, valid, invalid) => {
             expect(validate(valid)).toBeTruthy();
             expect(validate(invalid)).toBeFalsy();
+        });
+    });
+
+    describe('isUnknown', () => {
+        test('undefined is not valid', () => {
+            expect(isUnknown(undefined)).toBeFalsy();
+        });
+
+        test('null is not valid', () => {
+            expect(isUnknown(null)).toBeFalsy();
+        });
+
+        test.each([false, 0, 0n, '', [], {}])('%s', (value) => {
+            expect(isUnknown(value)).toBeTruthy();
         });
     });
 
