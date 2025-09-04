@@ -9,7 +9,7 @@ import {
     isObjectUnknown,
     isString,
     isUndefined,
-    makeIsArray,
+    isArrayOf,
 } from '../validate';
 
 describe('Validator functions', () => {
@@ -22,7 +22,7 @@ describe('Validator functions', () => {
             ['bigint', isBigInt, 0n, undefined],
             ['string', isString, '', 3],
             ['array of unknown', isArrayUnknown, [], null],
-            ['array of T', makeIsArray(isNumber), [0, 1, 2], ['', 2, null]],
+            ['array of T', isArrayOf(isNumber), [0, 1, 2], ['', 2, null]],
             ['object', isObjectUnknown, {}, null],
         ])('%s validator', (type, validate, valid, invalid) => {
             expect(validate(valid)).toBeTruthy();

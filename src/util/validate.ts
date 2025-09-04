@@ -48,7 +48,7 @@ export const isArrayUnknown: Validator<Array<unknown>> = (
 /**
  * Type predicate constructor for arrays with values of a known type
  */
-export function makeIsArray<T>(validateEl: Validator<T>): Validator<Array<T>> {
+export function isArrayOf<T>(validateEl: Validator<T>): Validator<Array<T>> {
     return (v): v is Array<T> =>
         typeof v === 'object' && Array.isArray(v) && v.every(validateEl);
 }
