@@ -50,7 +50,7 @@ describe('protocol definitions map a message type', () => {
                 payload: (v: unknown): v is number => typeof v === 'number',
                 response: (v: unknown): v is string => typeof v === 'string',
             },
-        } as const satisfies ProtocolDef; // todo
+        } as const satisfies ProtocolDef;
 
         const validate = TestProtoDef[testProtoType].response;
         expect(validate('')).toBeTruthy();
