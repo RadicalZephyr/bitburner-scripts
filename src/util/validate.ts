@@ -53,7 +53,7 @@ export function isLiteral<
 }
 
 /**
- * Type predicate for optional values
+ * Type predicate for optional values. Must be either the type, null or undefined.
  */
 export function isOptional<T>(
     validator: Validator<T>,
