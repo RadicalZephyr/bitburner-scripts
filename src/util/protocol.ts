@@ -460,16 +460,18 @@ export class BaseServer<P extends ProtocolDef> {
             if (!this.#protocol.isRequest(msg)) {
                 const errorMsg = `ERROR: received unknown message type: '${msg.type}' with payload: ${JSON.stringify(msg.payload)}`;
                 this.#ns.print(errorMsg);
-                const response = {
-                    id: msg.id,
-                    type: msg.type,
-                    ok: false,
-                    error: new ProtocolError(errorMsg, { cause: msg }),
-                } satisfies ResponseErrUnknown;
+                if (typeof msg.id === 'string') {
+                    const response = {
+                        id: msg.id,
+                        type: msg.type,
+                        ok: false,
+                        error: new ProtocolError(errorMsg, { cause: msg }),
+                    } satisfies ResponseErrUnknown;
 
-                // Send response
-                while (!this.#responsePort.tryWrite(response)) {
-                    await sleep(20);
+                    // Send response
+                    while (!this.#responsePort.tryWrite(response)) {
+                        await sleep(20);
+                    }
                 }
 
                 continue;
@@ -485,7 +487,7 @@ export class BaseServer<P extends ProtocolDef> {
 
             const responsePayload = await handler(msg.payload);
 
-            if (responsePayload != null) {
+            if (typeof msg.id === 'string') {
                 const response = {
                     id: msg.id,
                     type: msg.type,

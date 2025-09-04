@@ -561,6 +561,43 @@ describe('BaseClient and BaseServer provide a higher-level interface to custom p
             ).toBeTruthy();
         });
 
+        test('server only logs for structurally-valid but unknown message type with no id', async () => {
+            // We bypass client and craft an “unknown type” envelope that passes isRequestUnknown
+            const ns = { ...atExitFixture.ns, ...printFixture.ns } as ServerNS;
+            const server = new TestServer(ns);
+
+            const reqPort = getPortHandle(1);
+            const resPort = getPortHandle(2);
+
+            // This shape should match your “unknown request” envelope that the server recognizes
+            const unknownReq = {
+                id: null,
+                type: 'noSuchType', // not in TestProtocol
+                payload: 'whatever',
+            };
+
+            // Write unknown request to the request port
+            reqPort.write(unknownReq);
+
+            // Run a single read cycle deterministically
+            await server.readFn();
+
+            // The server doesn't send a response because no id was specified
+            // Pull whatever the first response is
+            const resp = resPort.read();
+            expect(resp).toBe('NULL PORT DATA');
+
+            // Also confirm a diagnostic was printed
+            const lines = printFixture.lines();
+            expect(
+                lines.some((l) =>
+                    l.includes(
+                        "ERROR: received unknown message type: 'noSuchType'",
+                    ),
+                ),
+            ).toBeTruthy();
+        });
+
         test('unexpected envelope logs warning and is dropped', async () => {
             const ns = { ...atExitFixture.ns, ...printFixture.ns } as ServerNS;
             const server = new TestServer(ns);
