@@ -85,6 +85,9 @@ export const isObjectUnknown: Validator<Record<string, unknown>> = (
     v,
 ): v is Record<string, unknown> => typeof v === 'object' && v !== null;
 
+/**
+ * Type predicate for error-like values
+ */
 export const isError: Validator<Error> = (v): v is Error => {
     return (
         isObjectUnknown(v)
