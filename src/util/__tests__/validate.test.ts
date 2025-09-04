@@ -11,6 +11,7 @@ import {
     isNumber,
     isObjectLike,
     isObjectUnknown,
+    isOptional,
     isString,
     isUndefined,
 } from '../validate';
@@ -46,6 +47,18 @@ describe('Validator functions', () => {
         test('zero', () => {
             expect(isZero(0)).toBeTruthy();
             expect(isZero(1)).toBeFalsy();
+        });
+    });
+
+    describe('isOptional', () => {
+        const isOptNumber = isOptional(isNumber);
+
+        test.each([null, 0, 1, 100])('allows null or numbers: %s', (value) => {
+            expect(isOptNumber(value)).toBeTruthy();
+        });
+
+        test.each(['', true, [], {}])('other values are invalid', (value) => {
+            expect(isOptNumber(value)).toBeFalsy();
         });
     });
 

@@ -47,6 +47,16 @@ export function isLiteral<
 }
 
 /**
+ * Type predicate for optional values
+ */
+export function isOptional<T>(
+    validator: Validator<T>,
+): Validator<T | null | undefined> {
+    return (v: unknown): v is T | null | undefined =>
+        v === null || v === undefined || validator(v);
+}
+
+/**
  * Type predicate for arrays of unknown values
  */
 export const isArrayUnknown: Validator<Array<unknown>> = (
