@@ -29,4 +29,21 @@ describe('Validator functions', () => {
             expect(validate(invalid)).toBeFalsy();
         });
     });
+
+    describe('isObjectUnknown', () => {
+        test.each([
+            ['empty', {}],
+            ['non-empty', { has: 'a-key' }],
+        ])('validates %s object ', (description, value) => {
+            expect(isObjectUnknown(value)).toBeTruthy();
+        });
+
+        test('undefined is not an object', () => {
+            expect(isObjectUnknown(undefined)).toBeFalsy();
+        });
+
+        test.each([null, 0, 0n, '', []])('%s is not an object', (value) => {
+            expect(isObjectUnknown(value)).toBeFalsy();
+        });
+    });
 });

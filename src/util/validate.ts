@@ -58,7 +58,8 @@ export function makeIsArray<T>(validateEl: Validator<T>): Validator<Array<T>> {
  */
 export const isObjectUnknown: Validator<Record<string, unknown>> = (
     v,
-): v is Record<string, unknown> => typeof v === 'object' && v !== null;
+): v is Record<string, unknown> =>
+    typeof v === 'object' && v != null && !Array.isArray(v);
 
 /**
  * Type predicate for error-like values
