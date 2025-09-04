@@ -42,14 +42,13 @@ export const isString: Validator<string> = (v): v is string =>
  */
 export const isArrayUnknown: Validator<Array<unknown>> = (
     v,
-): v is Array<unknown> => typeof v === 'object' && Array.isArray(v);
+): v is Array<unknown> => Array.isArray(v);
 
 /**
  * Type predicate constructor for arrays with values of a known type
  */
-export function isArrayOf<T>(validateEl: Validator<T>): Validator<Array<T>> {
-    return (v): v is Array<T> =>
-        typeof v === 'object' && Array.isArray(v) && v.every(validateEl);
+export function isArrayOf<T>(validateEl: Validator<T>): Validator<T[]> {
+    return (v): v is T[] => Array.isArray(v) && v.every(validateEl);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
