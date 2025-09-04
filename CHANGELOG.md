@@ -97,6 +97,7 @@
 
 - Add a basic Bladeburner skill buying utility and a mission control script to select the best mission every cycle [#246][pr-246].
 - Make Bladeburner skill buying script delay configurable [#285][pr-285].
+- Penalize dangerous actions in Bladeburner [#287][pr-287].
 
 ### Utilities
 
@@ -190,6 +191,7 @@
 [pr-278]: https://github.com/RadicalZephyr/bitburner-scripts/pull/278
 [pr-285]: https://github.com/RadicalZephyr/bitburner-scripts/pull/285
 [pr-286]: https://github.com/RadicalZephyr/bitburner-scripts/pull/286
+[pr-287]: https://github.com/RadicalZephyr/bitburner-scripts/pull/287
 
 ## v2.1.0
 
