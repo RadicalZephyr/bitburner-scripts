@@ -113,6 +113,7 @@
 - `sendTerminalCommand` now queues commands, verifies echoed output, and recognizes timed commands for more reliable terminal automation [#250][pr-250].
 - Base client/server abstractions and protocol helpers simplify custom port services [#278][pr-278].
 - `readLoop` uses unique at-exit handler IDs to prevent collisions between scripts [#278][pr-278].
+- Extract protocol validators to a new validator module [#288][pr-288].
 
 ### User interface
 
@@ -192,6 +193,7 @@
 [pr-285]: https://github.com/RadicalZephyr/bitburner-scripts/pull/285
 [pr-286]: https://github.com/RadicalZephyr/bitburner-scripts/pull/286
 [pr-287]: https://github.com/RadicalZephyr/bitburner-scripts/pull/287
+[pr-288]: https://github.com/RadicalZephyr/bitburner-scripts/pull/288
 
 ## v2.1.0
 
