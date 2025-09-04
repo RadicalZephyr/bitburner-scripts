@@ -6,13 +6,12 @@ export type Validator<T> = (v: unknown) => v is T;
  * Type predicate for undefined values
  */
 export const isUndefined: Validator<undefined> = (v): v is undefined =>
-    typeof v === 'undefined';
+    v === undefined;
 
 /**
  * Type predicate for null values
  */
-export const isNull: Validator<null> = (v): v is null =>
-    !v && typeof v === 'object';
+export const isNull: Validator<null> = (v): v is null => v === null;
 
 /**
  * Type predicate for boolean values
