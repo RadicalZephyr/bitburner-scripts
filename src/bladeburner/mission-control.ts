@@ -257,8 +257,10 @@ function candidate(ns: NS, action: Action): ActionCandidate {
     );
     const rankGain = ns.bladeburner.getActionRepGain(action.type, action.name);
     const duration = ns.bladeburner.getActionTime(action.type, action.name);
+    const penalty = getActionPenalty(action);
     const successChance = actionChance(ns, action);
-    const expectedRankPerSecond = (rankGain * successChance) / duration / 1000;
+    const expectedRankPerSecond =
+        (rankGain * successChance * penalty) / (duration / 1000);
     return {
         count,
         rankGain,
@@ -279,6 +281,17 @@ async function startAction(ns: NS, action: Action): Promise<boolean> {
 
     await ns.asleep(actionTime + 1000);
     return true;
+}
+
+const DANGEROUS_ACTIONS: Set<`${BladeburnerActionName}`> = new Set([
+    'Sting Operation',
+    'Raid',
+    'Stealth Retirement Operation',
+]);
+
+function getActionPenalty(action: Action): number {
+    if (DANGEROUS_ACTIONS.has(action.name)) return 0.1;
+    return 1.0;
 }
 
 function actionChance(ns: NS, action: Action): number {
