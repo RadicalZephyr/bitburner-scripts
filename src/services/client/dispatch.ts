@@ -15,6 +15,7 @@ import {
     isLiteral,
     isObjectLike,
     isString,
+    isAny,
 } from 'util/validate';
 
 export const DISPATCH_PORT = 21;
@@ -74,7 +75,7 @@ interface DispatchResponseOk<T = unknown> {
 
 const isDispatchResponseOk: Validator<DispatchResponseOk> = isObjectLike({
     ok: isLiteral(true),
-    value: isDefined,
+    value: isAny,
 });
 
 interface DispatchResponseErr {
