@@ -285,9 +285,19 @@ export function defineProtocol<const P extends ProtocolDef>(def: P) {
             await sleep(_pollPeriod);
         }
 
+        let warned = false;
         const deadline = Date.now() + _overallTimeoutMs;
-        while (Date.now() < deadline) {
+
+        while (true) {
             const peeked = receivePort.peek() as unknown;
+            if (!warned && Date.now() > deadline) {
+                console.warn(
+                    `Timeout waiting for response: type=${String(type)} id=${message.id}`,
+                    peeked,
+                );
+                warned = true;
+            }
+
             if (
                 isResponseUnknown(peeked)
                 && peeked.id === message.id
@@ -330,12 +340,12 @@ export function defineProtocol<const P extends ProtocolDef>(def: P) {
 
             await sleep(_pollPeriod);
         }
-
-        const peeked = receivePort.peek() as unknown;
-        throw new ProtocolError(
-            `Timeout waiting for response: type=${String(type)} id=${message.id}`,
-            { cause: peeked },
-        );
+        throw new Error(`Netscript script exited!`);
+        // const peeked = receivePort.peek() as unknown;
+        // throw new ProtocolError(
+        //     `Timeout waiting for response: type=${String(type)} id=${message.id}`,
+        //     { cause: peeked },
+        // );
     }
 
     return {

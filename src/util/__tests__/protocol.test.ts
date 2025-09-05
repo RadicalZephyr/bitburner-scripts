@@ -362,7 +362,8 @@ describe('custom protocols define message sending utility functions', () => {
                 await expect(waiter).resolves.toBeTruthy();
             });
 
-            test('sends messages and times out if no response received', async () => {
+            // TODO [ZEFS 2025-09-05]: Disabled because timeouts are more of a logging tool now
+            test.skip('sends messages and times out if no response received', async () => {
                 const requestPort = new MockNetscriptPort(10);
                 const responsePort = new MockNetscriptPort(10);
 
