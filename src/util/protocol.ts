@@ -502,8 +502,9 @@ export class BaseServer<P extends ProtocolDef> {
                     id: msg.id,
                     type: msg.type,
                     ok: true,
+                    request: msg.payload,
                     payload: responsePayload,
-                } satisfies ResponseOkUnknown;
+                } as ResponseOkUnknown;
 
                 // Send response
                 while (!this.#responsePort.tryWrite(response)) {
