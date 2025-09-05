@@ -170,13 +170,9 @@ function canExecuteNextFn(
     ns: NS,
     request: DaemonRequest,
     calledNsFns: Set<string>,
-) {
+): DispatchResult {
     const method = request.method.trim();
     const nextFnRam = ns.getFunctionRamCost(method);
-
-    ns.print(
-        `Got request to call ns.${method}() for ${ns.formatRam(nextFnRam)}`,
-    );
 
     // Check if the next function exceeds maximum RAM usage
     if (CONFIG.maxNsFnRam < nextFnRam) {
@@ -187,25 +183,18 @@ function canExecuteNextFn(
     }
 
     if (!calledNsFns.has(method)) {
-        const selfProcess = ns.self();
-        const currentDynRam = Math.max(
-            selfProcess.ramUsage,
-            selfProcess.dynamicRamUsage,
-        );
-        const nextDynamicRam = currentDynRam + nextFnRam;
+        const self = ns.self();
+        const currentDynRam = Math.max(self.ramUsage, self.dynamicRamUsage);
+        const nextDynRam = currentDynRam + nextFnRam;
 
-        if (CONFIG.maxNsFnRam < nextDynamicRam) {
+        if (CONFIG.maxNsFnRam < nextDynRam) {
             ns.print(
-                `WARN: next call to ns.${method}() for ${ns.formatRam(nextFnRam)} would exceed dynamic RAM usage maximum of ${ns.formatRam(CONFIG.maxNsFnRam)}`,
+                `WARN: next call to ns.${method}() would push dynamic RAM from ${ns.formatRam(currentDynRam)} to ${ns.formatRam(nextDynRam)} which exceeds ${ns.formatRam(CONFIG.maxNsFnRam)}.`,
             );
-
-            // Running next pending call would exceed RAM allotment,
-            // need to restart the dispatch executor to reset dynamic
-            // RAM usage to zero.
             return DispatchResult.RamReset;
         }
 
-        ns.ramOverride(nextDynamicRam);
+        ns.ramOverride(nextDynRam);
         calledNsFns.add(method);
     }
 
