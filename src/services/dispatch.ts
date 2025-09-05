@@ -94,7 +94,7 @@ async function runLoop(ns: NS) {
             ns.print('INFO: restarting dispatcher to reset dynamic RAM cost');
             ns.spawn(
                 ns.self().filename,
-                { spawnDelay: 0, ...executorOptions },
+                { spawnDelay: 1, ...executorOptions },
                 ...ns.args,
             );
             return;
