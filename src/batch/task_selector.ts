@@ -3,6 +3,10 @@ import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { HarvestClient } from 'batch/client/harvest';
 import {
+    MonitorClient,
+    Lifecycle as MonitorLifecycle,
+} from 'batch/client/monitor';
+import {
     TASK_SELECTOR_PORT,
     TASK_SELECTOR_RESPONSE_PORT,
     Message,
@@ -10,31 +14,29 @@ import {
     Heartbeat,
     Lifecycle,
 } from 'batch/client/task_selector';
-import {
-    MonitorClient,
-    Lifecycle as MonitorLifecycle,
-} from 'batch/client/monitor';
 
-import { CONFIG } from 'batch/config';
 import {
     calculateBatchLogistics,
     expectedValueForMemory,
     maxHackPercentForMemory,
     availableBatchCount,
 } from 'batch/expected_value';
-import type { BatchLogistics } from 'services/batch';
-import { calculateWeakenThreads } from 'batch/till';
 import { calculateSowThreads } from 'batch/sow';
+import { calculateWeakenThreads } from 'batch/till';
+
+import type { BatchLogistics } from 'services/batch';
 
 import { DiscoveryClient } from 'services/client/discover';
-import { MemoryClient, type FreeRam } from 'services/client/memory';
 import { LaunchClient } from 'services/client/launch';
+import { MemoryClient, type FreeRam } from 'services/client/memory';
 import { PortClient } from 'services/client/port';
 
 import { growthAnalyze } from 'util/growthAnalyze';
 import { readAllFromPort, readLoop } from 'util/ports';
 import { sleep } from 'util/time';
 import { HUD_HEIGHT, KARMA_HEIGHT } from 'util/ui';
+
+import { CONFIG } from 'batch/config';
 
 const FLAGS = [['help', false]] as const satisfies FlagsSchema;
 
