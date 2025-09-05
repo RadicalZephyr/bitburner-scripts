@@ -9,16 +9,16 @@ import { FlagsSchema, parseFlags } from 'util/flags';
 import {
     DISPATCH_PORT,
     DISPATCH_RESPONSE_PORT,
-    Message,
-    MessageType,
     DaemonRequest,
     DaemonResponse,
+    DispatchProtocol,
 } from 'services/client/dispatch';
 
 import { makeFuid } from 'util/fuid';
 import { EMPTY_SENTINEL } from 'util/ports';
 
 import { CONFIG } from 'services/config';
+import { isRequestUnknown } from '/util/protocol';
 
 const FLAGS = [['help', false]] as const satisfies FlagsSchema;
 
@@ -55,40 +55,61 @@ CONFIGURATION
     ns.ui.openTail();
     ns.ui.setTailTitle(`Dispatch Executor - ${ns.self().server}`);
 
-    const port = ns.getPortHandle(DISPATCH_PORT);
-    const respPort = ns.getPortHandle(DISPATCH_RESPONSE_PORT);
+    await runLoop(ns);
+}
 
+enum ResetAction {
+    Ok = 'ok',
+    RamReset = 'ram-reset',
+}
+
+async function runLoop(ns: NS) {
     let running = true;
     ns.atExit(() => {
         running = false;
     }, makeFuid(ns));
 
+    const requestPort = ns.getPortHandle(DISPATCH_PORT);
+    const responsePort = ns.getPortHandle(DISPATCH_RESPONSE_PORT);
+
     const calledNsFns: Set<string> = new Set();
 
-    let next = port.nextWrite();
+    let next: Promise<void>;
     while (running) {
-        try {
-            await readRequests(ns, port, respPort, calledNsFns);
-        } catch (err) {
-            if (err !== DispatchResult.RamReset) {
-                const msg = `ERROR: Unexpected error in dispatch executor: ${String(err)}`;
-                ns.tprint(msg);
-                console.error(msg);
-                throw new Error(msg, { cause: err });
-            }
+        next = requestPort.nextWrite();
 
-            ns.print('INFO: restarting dispatcher to reset RAM cost');
-            break;
+        // Drain all currently queued work
+        const result = await drainQueue(
+            ns,
+            requestPort,
+            responsePort,
+            calledNsFns,
+        );
+
+        if (result === ResetAction.RamReset) {
+            ns.print('INFO: restarting dispatcher to reset dynamic RAM cost');
+            ns.spawn(
+                ns.self().filename,
+                { spawnDelay: 0, ...executorOptions },
+                ...ns.args,
+            );
+            return;
         }
-        await next;
-        next = port.nextWrite();
-    }
 
-    ns.spawn(
-        ns.self().filename,
-        { spawnDelay: 0, ...executorOptions },
-        ...ns.args,
-    );
+        // Block until something new arrives
+        await next;
+    }
+}
+
+enum LoopAction {
+    // handled a message, keep draining
+    Continue = 'Continue',
+
+    // queue is empty for now
+    Idle = 'Idle',
+
+    // dynamic RAM would exceed configured cap; caller should respawn
+    RamReset = 'RamReset',
 }
 
 enum DispatchResult {
@@ -97,57 +118,85 @@ enum DispatchResult {
     RamLimitExceeded = 'RamLimitExceeded',
 }
 
-async function readRequests(
+async function drainQueue(
     ns: NS,
     port: NetscriptPort,
     resp: NetscriptPort,
     calledNsFns: Set<string>,
-) {
+): Promise<ResetAction> {
+    let handled = 0;
+
     while (true) {
-        const next = port.peek();
-        if (typeof next === 'string' && next === EMPTY_SENTINEL) {
-            return;
+        const action = await pumpOnce(ns, port, resp, calledNsFns);
+
+        if (action === LoopAction.Idle) {
+            return ResetAction.Ok; // nothing to do right now
+        }
+        if (action === LoopAction.RamReset) {
+            return ResetAction.RamReset;
         }
 
-        const msg = next as Message;
-        const requestId = msg[1];
-        if (msg[0] !== MessageType.Dispatch) {
-            port.read();
-            continue;
-        }
-        const payload = msg[2];
-
-        const response = await handleMessage(ns, payload, calledNsFns);
-        port.read();
-
-        while (!resp.tryWrite([requestId, response])) {
-            await ns.sleep(20);
+        // Periodically yield the event loop so UI doesn’t starve.
+        if ((++handled & 0xf) === 0) {
+            await ns.sleep(0);
         }
     }
 }
 
-async function handleMessage(
+async function pumpOnce(
     ns: NS,
-    request: unknown,
+    port: NetscriptPort,
+    resp: NetscriptPort,
     calledNsFns: Set<string>,
-): Promise<DaemonResponse> {
-    if (!isValidRequest(request)) {
-        return { ok: false, error: 'Invalid request' };
+): Promise<LoopAction> {
+    const peeked = port.peek() as unknown;
+
+    // Empty queue → let caller go idle and await nextWrite()
+    if (typeof peeked === 'string' && peeked === EMPTY_SENTINEL) {
+        return LoopAction.Idle;
     }
 
+    if (!isRequestUnknown(peeked) || !DispatchProtocol.isRequest(peeked)) {
+        port.read();
+        return LoopAction.Continue;
+    }
+
+    const payload = peeked.payload;
+
+    const ramDecision = canExecuteNextFn(ns, payload, calledNsFns);
+    if (ramDecision === DispatchResult.RamReset) {
+        return LoopAction.RamReset; // don't consume; tell caller to respawn
+    }
+
+    // Safe to run → do it, then consume and reply
+    const response = await handleMessage(ns, payload);
+    port.read();
+
+    const envelope = {
+        type: peeked.type,
+        id: peeked.id,
+        ok: true,
+        payload: response,
+    };
+    while (!resp.tryWrite(envelope)) {
+        await ns.sleep(20);
+    }
+
+    return LoopAction.Continue;
+}
+
+async function handleMessage(
+    ns: NS,
+    req: DaemonRequest,
+): Promise<DaemonResponse> {
     // This print is an implicit check if the Netscript
     // instance is valid. Since we catch all other usages of
     // NS, the script never dies because of an invalid NS
     // object and that means the read loop never ends.
     ns.print('got a new valid DaemonRequest');
-    const result = canExecuteNextFn(ns, request, calledNsFns);
-
-    if (result !== DispatchResult.RunFunction) {
-        throw result;
-    }
 
     try {
-        const value = await dispatch(ns, request);
+        const value = await dispatch(ns, req);
         return { ok: true, value };
     } catch (error) {
         return {
@@ -155,15 +204,6 @@ async function handleMessage(
             error,
         };
     }
-}
-
-function isValidRequest(req: unknown): req is DaemonRequest {
-    return (
-        req
-        && typeof req === 'object'
-        && typeof (req as Record<string, unknown>).method === 'string'
-        && Array.isArray((req as Record<string, unknown>).args)
-    );
 }
 
 function canExecuteNextFn(
