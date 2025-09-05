@@ -1,4 +1,4 @@
-import type { NS, NetscriptPort } from 'netscript';
+import type { NS } from 'netscript';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { CONFIG } from 'stock/config';
@@ -8,11 +8,11 @@ import {
     TRACKER_PORT,
     TRACKER_RESPONSE_PORT,
     Indicators,
-    Message,
     MessageType,
+    TrackerProtocol,
+    TrackerProtocolDef,
 } from 'stock/client/tracker';
-
-import { readAllFromPort } from 'util/ports';
+import { BaseServer, type Handlers } from 'util/protocol';
 
 const FLAGS = [['help', false]] as const satisfies FlagsSchema;
 
@@ -62,27 +62,11 @@ CONFIGURATION
         buffers.set(sym, ticks);
     }
 
-    const port = ns.getPortHandle(TRACKER_PORT);
-    const respPort = ns.getPortHandle(TRACKER_RESPONSE_PORT);
-
-    let waiting = true;
-    let stockUpdated = true;
+    const server = new Server(ns, buffers);
+    server.readLoop();
 
     while (true) {
-        if (waiting) {
-            waiting = false;
-            port.nextWrite().then(() => {
-                waiting = true;
-            });
-            await processMessages(ns, port, respPort, buffers);
-        }
-
-        if (stockUpdated) {
-            stockUpdated = false;
-            ns.stock.nextUpdate().then(() => {
-                stockUpdated = true;
-            });
-
+        {
             const windowSize = CONFIG.windowSize;
             for (const sym of symbols) {
                 const tick: TickData = {
@@ -121,31 +105,21 @@ CONFIGURATION
                         + ns.formatPercent(corr[symbols[0]][symbols[1]]),
                 );
             }
-        }
 
-        await ns.sleep(100);
+            await ns.stock.nextUpdate();
+        }
     }
 }
 
-async function processMessages(
-    ns: NS,
-    port: NetscriptPort,
-    respPort: NetscriptPort,
-    buffers: Map<string, TickData[]>,
-) {
-    for (const next of readAllFromPort(ns, port)) {
-        const msg = next as Message;
-        const requestId = msg[1];
-        let response:
-            | Record<string, Indicators>
-            | Record<string, TickData[]>
-            | void = null;
-        switch (msg[0]) {
-            case MessageType.RequestTicks: {
-                response = Object.fromEntries(buffers);
-                break;
-            }
-            case MessageType.RequestIndicators: {
+class Server extends BaseServer<TrackerProtocolDef> {
+    constructor(ns: NS, buffers: Map<string, TickData[]>) {
+        const requestPort = ns.getPortHandle(TRACKER_PORT);
+        const responsePort = ns.getPortHandle(TRACKER_RESPONSE_PORT);
+        const handlers: Handlers<TrackerProtocolDef> = {
+            [MessageType.RequestTicks]: () => {
+                return Promise.resolve(Object.fromEntries(buffers));
+            },
+            [MessageType.RequestIndicators]: () => {
                 const res: Record<string, Indicators> = {};
                 for (const [sym, buf] of buffers.entries()) {
                     res[sym] = computeIndicators(buf, {
@@ -159,12 +133,10 @@ async function processMessages(
                         ],
                     });
                 }
-                response = res;
-                break;
-            }
-        }
-        while (!respPort.tryWrite([requestId, response])) {
-            await ns.sleep(20);
-        }
+                return Promise.resolve(res);
+            },
+        };
+
+        super(ns, TrackerProtocol, requestPort, responsePort, handlers);
     }
 }
