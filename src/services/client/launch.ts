@@ -9,7 +9,7 @@ import {
 import { defineProtocol, BaseClient, AnyRequest } from 'util/protocol';
 import {
     type Validator,
-    isAnyOf,
+    isUnionOf,
     isArrayOf,
     isBoolean,
     isError,
@@ -58,7 +58,7 @@ export interface LaunchErrResponse {
 
 export type LaunchResponse = LaunchOkResponse | LaunchErrResponse;
 
-const isScriptArg: Validator<ScriptArg> = isAnyOf(
+const isScriptArg: Validator<ScriptArg> = isUnionOf(
     isString,
     isNumber,
     isBoolean,
@@ -100,7 +100,7 @@ const isLaunchOkResponse: Validator<LaunchOkResponse> = isObjectLike({
     pids: isArrayOf(isNumber),
 });
 
-const isLaunchResponse: Validator<LaunchResponse> = isAnyOf(
+const isLaunchResponse: Validator<LaunchResponse> = isUnionOf(
     isLaunchOkResponse,
     isLaunchErrResponse,
 );

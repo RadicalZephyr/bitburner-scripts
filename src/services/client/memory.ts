@@ -5,7 +5,7 @@ import { ALLOC_ID, ALLOC_ID_ARG } from 'services/client/memory_tag';
 import { defineProtocol, BaseClient } from 'util/protocol';
 import { makeFuid } from 'util/fuid';
 import {
-    isAnyOf,
+    isUnionOf,
     isArrayOf,
     isBoolean,
     isLiteral,
@@ -253,7 +253,7 @@ const isFreeRam: Validator<FreeRam> = isObjectLike({
 
 export const MemoryProtocol = defineProtocol({
     [MessageType.Worker]: {
-        payload: isAnyOf(isString, isArrayOf(isString)),
+        payload: isUnionOf(isString, isArrayOf(isString)),
     },
     [MessageType.AllocationRequest]: {
         payload: isAllocationRequest,

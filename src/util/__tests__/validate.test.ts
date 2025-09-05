@@ -1,7 +1,7 @@
 import { describe, expect, test } from '@jest/globals';
 
 import {
-    isAnyOf,
+    isUnionOf,
     isArrayOf,
     isArrayUnknown,
     isBigInt,
@@ -86,7 +86,7 @@ describe('Validator functions', () => {
     });
 
     describe('isAnyOf allows multiple different types', () => {
-        const isAnyNumber = isAnyOf(isNumber, isBigInt);
+        const isAnyNumber = isUnionOf(isNumber, isBigInt);
         test.each([0n, 0])('%s is valid', (value) => {
             expect(isAnyNumber(value)).toBeTruthy();
         });

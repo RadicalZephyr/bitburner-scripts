@@ -4,7 +4,7 @@ import { ServerNS } from 'util/ns';
 import { readAllFromPort } from 'util/ports';
 import { sleep } from 'util/time';
 import {
-    isAnyOf,
+    isUnionOf,
     isError,
     isLiteral,
     isNull,
@@ -91,7 +91,7 @@ export const isResponseErrUnknown: Validator<ResponseErrUnknown> = isObjectLike(
     },
 );
 
-export const isResponseUnknown = isAnyOf(
+export const isResponseUnknown = isUnionOf(
     isResponseOkUnknown,
     isResponseErrUnknown,
 );

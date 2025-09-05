@@ -4,7 +4,7 @@ import { defineProtocol, BaseClient, AnyRequest } from 'util/protocol';
 import { isLifecycle as isMonitorLifecycle } from 'batch/client/monitor';
 import type { Lifecycle as MonitorLifecycle } from 'batch/client/monitor';
 import {
-    isAnyOf,
+    isUnionOf,
     isArrayOf,
     isLiteral,
     isNumber,
@@ -30,7 +30,7 @@ export enum Lifecycle {
     Harvest,
 }
 
-const isLifecycle = isAnyOf(
+const isLifecycle = isUnionOf(
     isLiteral(Lifecycle.Till),
     isLiteral(Lifecycle.Sow),
     isLiteral(Lifecycle.Harvest),

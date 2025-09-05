@@ -2,7 +2,7 @@ import type { NS } from 'netscript';
 
 import { defineProtocol, BaseClient } from 'util/protocol';
 import {
-    isAnyOf,
+    isUnionOf,
     isArrayOf,
     isLiteral,
     isString,
@@ -24,7 +24,7 @@ export const Lifecycle = {
 } as const;
 export type Lifecycle = (typeof Lifecycle)[keyof typeof Lifecycle];
 
-export const isLifecycle: Validator<Lifecycle> = isAnyOf(
+export const isLifecycle: Validator<Lifecycle> = isUnionOf(
     isLiteral(Lifecycle.Worker),
     isLiteral(Lifecycle.PendingTilling),
     isLiteral(Lifecycle.Tilling),
@@ -37,7 +37,7 @@ export const isLifecycle: Validator<Lifecycle> = isAnyOf(
 
 type HostPayload = string | string[];
 
-const isHostPayload: Validator<HostPayload> = isAnyOf(
+const isHostPayload: Validator<HostPayload> = isUnionOf(
     isString,
     isArrayOf(isString),
 );

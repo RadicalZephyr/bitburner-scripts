@@ -90,7 +90,7 @@ type UnionFromValidators<Vs extends readonly Validator<any>[]> =
  * Type predicate for unions
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isAnyOf<Vs extends readonly Validator<any>[]>(
+export function isUnionOf<Vs extends readonly Validator<any>[]>(
     ...validators: Vs
 ): Validator<UnionFromValidators<Vs>> {
     return (v): v is UnionFromValidators<Vs> =>

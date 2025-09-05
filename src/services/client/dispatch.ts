@@ -3,7 +3,7 @@ import type { NS } from 'netscript';
 import { AnyRequest, BaseClient, defineProtocol } from 'util/protocol';
 import {
     Validator,
-    isAnyOf,
+    isUnionOf,
     isArrayUnknown,
     isDefined,
     isError,
@@ -86,7 +86,7 @@ export type DispatchResponse<T = unknown> =
     | DispatchResponseOk<T>
     | DispatchResponseErr;
 
-const isDispatchResponse: Validator<DispatchResponse> = isAnyOf(
+const isDispatchResponse: Validator<DispatchResponse> = isUnionOf(
     isDispatchResponseOk,
     isDispatchResponseErr,
 );
