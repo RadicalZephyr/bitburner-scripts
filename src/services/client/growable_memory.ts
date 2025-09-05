@@ -162,17 +162,29 @@ export class GrowableAllocation extends TransferableAllocation {
     }
 
     /** Release this allocation and free the port. */
-    async release(ns: NS): Promise<void> {
-        this.running = false;
+    release(ns: NS): Promise<void> {
         const proc = ns.self();
+        const memPort = ns.getPortHandle(MEMORY_PORT);
+        const portClient = new PortClient(ns);
+        return this._release(proc, memPort, portClient);
+    }
+
+    private async _release(
+        proc: {
+            pid: number;
+            server: string;
+        },
+        memPort: NetscriptPort,
+        portClient: PortClient,
+    ): Promise<void> {
+        this.running = false;
         const release: AllocationRelease = {
             allocationId: this.allocationId,
             pid: proc.pid,
             hostname: proc.server,
         };
-        const memPort = ns.getPortHandle(MEMORY_PORT);
+
         await MemoryProtocol.sendMessage(memPort, MessageType.Release, release);
-        const portClient = new PortClient(ns);
         await portClient.releasePort(this.portId);
     }
 
@@ -180,7 +192,9 @@ export class GrowableAllocation extends TransferableAllocation {
      * Release the allocation when the script exits.
      */
     releaseAtExit(ns: NS) {
-        const rel = this.release.bind(this, ns);
+        const memPort = ns.getPortHandle(MEMORY_PORT);
+        const portClient = new PortClient(ns);
+        const rel = this._release.bind(this, ns.self(), memPort, portClient);
         ns.atExit(
             () => {
                 rel();
