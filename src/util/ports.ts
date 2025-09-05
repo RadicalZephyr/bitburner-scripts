@@ -1,4 +1,4 @@
-import type { NS, NetscriptPort } from 'netscript';
+import type { NetscriptPort } from 'netscript';
 
 export const EMPTY_SENTINEL: string = 'NULL PORT DATA';
 export const DONE_SENTINEL: string = 'PORT CLOSED';
@@ -10,7 +10,7 @@ export const DONE_SENTINEL: string = 'PORT CLOSED';
  * @param port - NetscriptPort to wait to read from
  * @yields Messages read from the given port
  */
-export function* readAllFromPort(ns: NS, port: NetscriptPort) {
+export function* readAllFromPort(port: NetscriptPort) {
     while (true) {
         const nextMsg = port.read();
         if (

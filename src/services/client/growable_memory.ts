@@ -150,7 +150,7 @@ export class GrowableAllocation extends TransferableAllocation {
      */
     pollGrowth(shouldMergeChunks: boolean = false) {
         const isHostAllocArray = isArrayOf(isHostAllocation);
-        for (const msg of readAllFromPort(this.ns, this.port)) {
+        for (const msg of readAllFromPort(this.port)) {
             if (isHostAllocArray(msg)) {
                 if (shouldMergeChunks) {
                     mergeChunks(this.allocatedChunks, msg);

@@ -472,7 +472,7 @@ export class BaseServer<P extends ProtocolDef> {
     }
 
     async readFn() {
-        for (const msg of readAllFromPort(null, this.#requestPort)) {
+        for (const msg of readAllFromPort(this.#requestPort)) {
             if (!isRequestUnknown(msg)) {
                 this.#ns.print(
                     `WARN: received unexpected request envelope: ${JSON.stringify(msg)}`,
