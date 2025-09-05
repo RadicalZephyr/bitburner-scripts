@@ -1,31 +1,43 @@
 import type { NS } from 'netscript';
 
-import { Client, Message as ClientMessage } from 'util/client';
+import { defineProtocol, BaseClient } from 'util/protocol';
+import { isLiteral, Validator } from 'util/validate';
 
 /** Supported message types for harvest control. */
-export enum MessageType {
-    Shutdown,
-}
+export const MessageType = {
+    Shutdown: 'Shutdown',
+} as const;
 
 /** Payload for harvest control messages. */
-export type Payload = null;
+const Payload = 'B_HarvestShutdown';
+export type Payload = typeof Payload;
 
-/** Harvest control message format. */
-export type Message = ClientMessage<MessageType, Payload>;
+const isPayload: Validator<Payload> = isLiteral(Payload);
+
+export const HarvestProtocol = defineProtocol({
+    [MessageType.Shutdown]: {
+        payload: isPayload,
+    },
+});
+
+export type HarvestProtocolDef = (typeof HarvestProtocol)['def'];
 
 /**
  * Client helper for communicating with harvest scripts.
  */
-export class HarvestClient extends Client<MessageType, Payload, void> {
+export class HarvestClient {
+    #client: BaseClient<HarvestProtocolDef>;
+
     constructor(ns: NS, portId: number) {
-        super(ns, portId, portId);
+        const port = ns.getPortHandle(portId);
+        this.#client = new BaseClient(HarvestProtocol, port, port);
     }
 
     /**
      * Request that the harvest script shut down gracefully.
      */
-    async shutdown() {
-        await this.sendMessage(MessageType.Shutdown, null);
+    shutdown() {
+        return this.#client.sendMessage(MessageType.Shutdown, Payload);
     }
 
     /**
@@ -34,6 +46,6 @@ export class HarvestClient extends Client<MessageType, Payload, void> {
      * @returns True if the message was written successfully.
      */
     tryShutdown(): boolean {
-        return this.trySendMessage(MessageType.Shutdown, null);
+        return this.#client.trySendMessage(MessageType.Shutdown, Payload);
     }
 }

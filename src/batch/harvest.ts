@@ -16,7 +16,7 @@ import {
 
 import { PortClient } from 'services/client/port';
 import {
-    Message,
+    HarvestProtocol,
     MessageType as HarvestMessageType,
 } from 'batch/client/harvest';
 import { TaskSelectorClient, Lifecycle } from 'batch/client/task_selector';
@@ -28,7 +28,7 @@ import {
 } from 'batch/expected_value';
 
 import { makeFuid } from 'util/fuid';
-import { readAllFromPort, readLoop } from 'util/ports';
+import { BaseServer } from 'util/protocol';
 
 import { CONFIG } from 'batch/config';
 
@@ -163,14 +163,13 @@ async function prepareHarvest(
         );
 
         const controlPort = ns.getPortHandle(args.portId);
-        readLoop(ns, controlPort, async () => {
-            for (const msg of readAllFromPort(ns, controlPort)) {
-                const m = msg as Message;
-                if (Array.isArray(m) && m[0] === HarvestMessageType.Shutdown) {
-                    shuttingDown.value = true;
-                }
-            }
+        const server = new BaseServer(ns, HarvestProtocol, controlPort, null, {
+            [HarvestMessageType.Shutdown]: () => {
+                shuttingDown.value = true;
+                return Promise.resolve();
+            },
         });
+        server.readLoop();
     }
 
     const memClient = new GrowableMemoryClient(ns);

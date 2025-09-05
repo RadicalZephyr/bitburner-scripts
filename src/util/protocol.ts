@@ -442,7 +442,7 @@ export class BaseServer<P extends ProtocolDef> {
 
     async readLoop() {
         // Clear the response port to get rid of stale responses
-        this.#responsePort.clear();
+        if (this.#responsePort) this.#responsePort.clear();
 
         const makeReqId = getRequestId(null);
 
@@ -483,7 +483,7 @@ export class BaseServer<P extends ProtocolDef> {
             if (!this.#protocol.isRequest(msg)) {
                 const errorMsg = `ERROR: received unknown message type: '${msg.type}' with payload: ${JSON.stringify(msg.payload)}`;
                 this.#ns.print(errorMsg);
-                if (typeof msg.id === 'string') {
+                if (this.#responsePort && typeof msg.id === 'string') {
                     const response = {
                         id: msg.id,
                         type: msg.type,
@@ -510,7 +510,7 @@ export class BaseServer<P extends ProtocolDef> {
 
             const responsePayload = await handler(msg.payload);
 
-            if (typeof msg.id === 'string') {
+            if (this.#responsePort && typeof msg.id === 'string') {
                 const response = {
                     id: msg.id,
                     type: msg.type,
