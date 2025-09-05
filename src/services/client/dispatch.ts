@@ -107,9 +107,11 @@ export type Message = AnyRequest<DispatchProtocolDef>;
  * Client for the Netscript Dispatch service.
  */
 export class DispatchClient {
+    #ns: NS;
     #client: BaseClient<DispatchProtocolDef>;
 
     constructor(ns: NS) {
+        this.#ns = ns;
         this.#client = new BaseClient(
             DispatchProtocol,
             ns.getPortHandle(DISPATCH_PORT),
@@ -130,6 +132,9 @@ export class DispatchClient {
         methodName: K,
         ...args: NSArgs<K>
     ): Promise<NSReturn<K>> {
+        if (!this.#ns.getFunctionRamCost(methodName))
+            throw new Error(`${methodName} is not a valid Netscript function!`);
+
         const req: DaemonRequest<K> = { method: methodName, args };
         const res = (await this.#client.sendMessageReceiveResponse(
             MessageType.Dispatch,
