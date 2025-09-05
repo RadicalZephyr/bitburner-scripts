@@ -57,7 +57,6 @@ CONFIGURATION
     }
 
     ns.disableLog('sleep');
-    ns.ui.openTail();
     ns.ui.setTailTitle(`Dispatch Executor - ${ns.self().server}`);
 
     await runLoop(ns);
