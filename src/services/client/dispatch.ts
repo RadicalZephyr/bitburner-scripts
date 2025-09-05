@@ -1,6 +1,15 @@
 import type { NS } from 'netscript';
 
-import { Client, Message as ClientMessage } from 'util/client';
+import { AnyRequest, BaseClient, defineProtocol } from 'util/protocol';
+import {
+    Validator,
+    isAnyOf,
+    isArrayUnknown,
+    isDefined,
+    isLiteral,
+    isObjectLike,
+    isString,
+} from 'util/validate';
 
 export const DISPATCH_PORT = 21;
 export const DISPATCH_RESPONSE_PORT = 22;
@@ -47,34 +56,65 @@ export interface DaemonRequest<K extends NSMethodName = NSMethodName> {
     args: NSArgs<K>;
 }
 
-export type DaemonResponse<T = unknown> = DaemonOk<T> | DaemonErr;
+const isDaemonRequest: Validator<DaemonRequest> = isObjectLike({
+    method: isString as Validator<NSMethodName>,
+    args: isArrayUnknown,
+});
 
 interface DaemonOk<T = unknown> {
     ok: true;
     value: T;
 }
 
+const isDaemonOk: Validator<DaemonOk> = isObjectLike({
+    ok: isLiteral(true),
+    value: isDefined,
+});
+
 interface DaemonErr {
     ok: false;
     error: string;
 }
 
-export enum MessageType {
-    Dispatch,
-}
+const isDaemonErr: Validator<DaemonErr> = isObjectLike({
+    ok: isLiteral(false),
+    error: isString,
+});
 
-export type Message = ClientMessage<MessageType, DaemonRequest>;
+export type DaemonResponse<T = unknown> = DaemonOk<T> | DaemonErr;
+
+const isDaemonResponse: Validator<DaemonResponse> = isAnyOf(
+    isDaemonOk,
+    isDaemonErr,
+);
+
+export const MessageType = {
+    Dispatch: 'NS_Dispatch',
+} as const;
+
+export const DispatchProtocol = defineProtocol({
+    [MessageType.Dispatch]: {
+        payload: isDaemonRequest,
+        response: isDaemonResponse,
+    },
+});
+
+export type DispatchProtocolDef = (typeof DispatchProtocol)['def'];
+
+export type Message = AnyRequest<DispatchProtocolDef>;
 
 /**
  * Client for the Netscript Dispatch service.
  */
-export class DispatchClient extends Client<
-    MessageType,
-    DaemonRequest,
-    DaemonResponse
-> {
+export class DispatchClient {
+    #client: BaseClient<DispatchProtocolDef>;
+
     constructor(ns: NS) {
-        super(ns, DISPATCH_PORT, DISPATCH_RESPONSE_PORT);
+        this.#client = new BaseClient(
+            DispatchProtocol,
+            ns.getPortHandle(DISPATCH_PORT),
+            ns.getPortHandle(DISPATCH_RESPONSE_PORT),
+        );
     }
 
     /**
@@ -91,7 +131,7 @@ export class DispatchClient extends Client<
         ...args: NSArgs<K>
     ): Promise<NSReturn<K>> {
         const req: DaemonRequest<K> = { method: methodName, args };
-        const res = (await this.sendMessageReceiveResponse(
+        const res = (await this.#client.sendMessageReceiveResponse(
             MessageType.Dispatch,
             req,
         )) as DaemonResponse<NSReturn<K>>;
