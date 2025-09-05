@@ -718,6 +718,11 @@ describe('BaseClient and BaseServer provide a higher-level interface to custom p
             const server = new TestServer(ns);
             const client = new TestClient();
 
+            // The server clears the response port when starting
+            // readLoop so we need to start this before filling the
+            // response port.
+            const loopPromise = server.readLoop();
+
             const resPort = getPortHandle(2);
 
             // Fill the response port to capacity so server cannot write immediately.
@@ -728,8 +733,6 @@ describe('BaseClient and BaseServer provide a higher-level interface to custom p
             while (wrote) {
                 wrote = resPort.tryWrite(blocker);
             }
-
-            const loopPromise = server.readLoop();
 
             // Now send a request that expects a response
             const responsePromise = client.sendAndReceive('blockme');

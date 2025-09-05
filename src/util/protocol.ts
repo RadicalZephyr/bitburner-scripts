@@ -431,6 +431,9 @@ export class BaseServer<P extends ProtocolDef> {
     }
 
     async readLoop() {
+        // Clear the response port to get rid of stale responses
+        this.#responsePort.clear();
+
         const makeReqId = getRequestId(null);
 
         // A tiny "Deferred" exit signal we can resolve from atExit
