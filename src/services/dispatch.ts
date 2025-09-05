@@ -9,8 +9,8 @@ import { FlagsSchema, parseFlags } from 'util/flags';
 import {
     DISPATCH_PORT,
     DISPATCH_RESPONSE_PORT,
-    DaemonRequest,
-    DaemonResponse,
+    DispatchRequest,
+    DispatchResponse,
     DispatchProtocol,
 } from 'services/client/dispatch';
 
@@ -187,8 +187,8 @@ async function pumpOnce(
 
 async function handleMessage(
     ns: NS,
-    req: DaemonRequest,
-): Promise<DaemonResponse> {
+    req: DispatchRequest,
+): Promise<DispatchResponse> {
     // This print is an implicit check if the Netscript
     // instance is valid. Since we catch all other usages of
     // NS, the script never dies because of an invalid NS
@@ -208,7 +208,7 @@ async function handleMessage(
 
 function canExecuteNextFn(
     ns: NS,
-    request: DaemonRequest,
+    request: DispatchRequest,
     calledNsFns: Set<string>,
 ): DispatchResult {
     const method = request.method.trim();
@@ -241,7 +241,7 @@ function canExecuteNextFn(
     return DispatchResult.RunFunction;
 }
 
-async function dispatch(ns: NS, req: DaemonRequest): Promise<unknown> {
+async function dispatch(ns: NS, req: DispatchRequest): Promise<unknown> {
     const method = req.method.trim();
     if (!method) throw new Error('Empty method name');
 

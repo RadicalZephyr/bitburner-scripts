@@ -49,43 +49,45 @@ export type NSReturn<K extends NSMethodName> = ReturnType<
     ExtractFn<PathValue<NS, K>>
 >;
 
-export interface DaemonRequest<K extends NSMethodName = NSMethodName> {
+export interface DispatchRequest<K extends NSMethodName = NSMethodName> {
     /** Dotted method path, e.g. "corporation.createCorporation" */
     method: K;
     /** Exact tuple for the method's args */
     args: NSArgs<K>;
 }
 
-const isDaemonRequest: Validator<DaemonRequest> = isObjectLike({
+const isDispatchRequest: Validator<DispatchRequest> = isObjectLike({
     method: isString as Validator<NSMethodName>,
     args: isArrayUnknown,
 });
 
-interface DaemonOk<T = unknown> {
+interface DispatchResponseOk<T = unknown> {
     ok: true;
     value: T;
 }
 
-const isDaemonOk: Validator<DaemonOk> = isObjectLike({
+const isDispatchResponseOk: Validator<DispatchResponseOk> = isObjectLike({
     ok: isLiteral(true),
     value: isDefined,
 });
 
-interface DaemonErr {
+interface DispatchResponseErr {
     ok: false;
     error: string;
 }
 
-const isDaemonErr: Validator<DaemonErr> = isObjectLike({
+const isDispatchResponseErr: Validator<DispatchResponseErr> = isObjectLike({
     ok: isLiteral(false),
     error: isString,
 });
 
-export type DaemonResponse<T = unknown> = DaemonOk<T> | DaemonErr;
+export type DispatchResponse<T = unknown> =
+    | DispatchResponseOk<T>
+    | DispatchResponseErr;
 
-const isDaemonResponse: Validator<DaemonResponse> = isAnyOf(
-    isDaemonOk,
-    isDaemonErr,
+const isDispatchResponse: Validator<DispatchResponse> = isAnyOf(
+    isDispatchResponseOk,
+    isDispatchResponseErr,
 );
 
 export const MessageType = {
@@ -94,8 +96,8 @@ export const MessageType = {
 
 export const DispatchProtocol = defineProtocol({
     [MessageType.Dispatch]: {
-        payload: isDaemonRequest,
-        response: isDaemonResponse,
+        payload: isDispatchRequest,
+        response: isDispatchResponse,
     },
 });
 
@@ -135,11 +137,11 @@ export class DispatchClient {
         if (!this.#ns.getFunctionRamCost(methodName))
             throw new Error(`${methodName} is not a valid Netscript function!`);
 
-        const req: DaemonRequest<K> = { method: methodName, args };
+        const req: DispatchRequest<K> = { method: methodName, args };
         const res = (await this.#client.sendMessageReceiveResponse(
             MessageType.Dispatch,
             req,
-        )) as DaemonResponse<NSReturn<K>>;
+        )) as DispatchResponse<NSReturn<K>>;
 
         if (!res || typeof res !== 'object')
             throw new Error('Malformed daemon response');
@@ -149,7 +151,7 @@ export class DispatchClient {
         else
             throw new Error(
                 'Dispatch daemon errored while processing request',
-                { cause: (res as DaemonErr).error },
+                { cause: (res as DispatchResponseErr).error },
             );
     }
 }
