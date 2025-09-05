@@ -41,11 +41,7 @@ describe('Validator functions', () => {
             expect(isUnknown(undefined)).toBeFalsy();
         });
 
-        test('null is not valid', () => {
-            expect(isUnknown(null)).toBeFalsy();
-        });
-
-        test.each([false, 0, 0n, '', [], {}])('%s', (value) => {
+        test.each([null, false, 0, 0n, '', [], {}])('%s', (value) => {
             expect(isUnknown(value)).toBeTruthy();
         });
     });
