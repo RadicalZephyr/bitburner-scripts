@@ -1,15 +1,12 @@
-import type {
-    AutocompleteData,
-    NetscriptPort,
-    NS,
-    UserInterfaceTheme,
-} from 'netscript';
+import type { AutocompleteData, NS, UserInterfaceTheme } from 'netscript';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
 import {
     MONITOR_PORT,
+    MONITOR_RESPONSE_PORT,
     Lifecycle,
-    Message as MonitorMessage,
+    MonitorProtocol,
+    type MonitorProtocolDef,
 } from 'batch/client/monitor';
 
 import {
@@ -27,7 +24,7 @@ import { MoneyTracker, primedMoneyTracker } from 'util/money-tracker';
 
 import { extend } from 'util/extend';
 import { useNsUpdate, usePoll, useTheme } from 'util/hooks';
-import { readAllFromPort, readLoop } from 'util/ports';
+import { BaseServer, type Handlers } from 'util/protocol';
 import { HUD_HEIGHT, HUD_WIDTH, STATUS_WINDOW_WIDTH } from 'util/ui';
 
 const FLAGS = [
@@ -125,8 +122,6 @@ CONFIGURATION
         extend(openTailQueue, pids);
     }
 
-    const monitorPort = ns.getPortHandle(MONITOR_PORT);
-
     const discoveryClient = new DiscoveryClient(ns);
     const taskSelectorClient = new TaskSelectorClient(ns);
 
@@ -138,9 +133,8 @@ CONFIGURATION
 
     const lifecycleByHost: Map<string, Lifecycle> = new Map(snapshot);
 
-    readLoop(ns, monitorPort, async () =>
-        readMonitorMessages(ns, monitorPort, workers, lifecycleByHost),
-    );
+    const server = new Server(ns, workers, lifecycleByHost);
+    server.readLoop();
 
     const moneyTracker: MoneyTracker = await primedMoneyTracker(ns, 3, 1000);
 
@@ -226,6 +220,70 @@ CONFIGURATION
     }
 }
 
+class Server extends BaseServer<MonitorProtocolDef> {
+    constructor(
+        ns: NS,
+        workers: string[],
+        lifecycleByHost: Map<string, Lifecycle>,
+    ) {
+        const requestPort = ns.getPortHandle(MONITOR_PORT);
+        const responsePort = ns.getPortHandle(MONITOR_RESPONSE_PORT);
+
+        const handleHosts = (
+            payload: string | string[],
+            fn: (host: string) => void,
+        ) => {
+            const hosts = Array.isArray(payload) ? payload : [payload];
+            for (const host of hosts) fn(host);
+        };
+
+        const handlers: Handlers<MonitorProtocolDef> = {
+            [Lifecycle.Worker]: async (payload) => {
+                handleHosts(payload, (host) => {
+                    if (!workers.includes(host)) workers.push(host);
+                });
+            },
+            [Lifecycle.PendingTilling]: async (payload) => {
+                handleHosts(payload, (host) =>
+                    lifecycleByHost.set(host, Lifecycle.PendingTilling),
+                );
+            },
+            [Lifecycle.Tilling]: async (payload) => {
+                handleHosts(payload, (host) =>
+                    lifecycleByHost.set(host, Lifecycle.Tilling),
+                );
+            },
+            [Lifecycle.PendingSowing]: async (payload) => {
+                handleHosts(payload, (host) =>
+                    lifecycleByHost.set(host, Lifecycle.PendingSowing),
+                );
+            },
+            [Lifecycle.Sowing]: async (payload) => {
+                handleHosts(payload, (host) =>
+                    lifecycleByHost.set(host, Lifecycle.Sowing),
+                );
+            },
+            [Lifecycle.PendingHarvesting]: async (payload) => {
+                handleHosts(payload, (host) =>
+                    lifecycleByHost.set(host, Lifecycle.PendingHarvesting),
+                );
+            },
+            [Lifecycle.Harvesting]: async (payload) => {
+                handleHosts(payload, (host) =>
+                    lifecycleByHost.set(host, Lifecycle.Harvesting),
+                );
+            },
+            [Lifecycle.Rebalancing]: async (payload) => {
+                handleHosts(payload, (host) =>
+                    lifecycleByHost.set(host, Lifecycle.Rebalancing),
+                );
+            },
+        };
+
+        super(ns, MonitorProtocol, requestPort, responsePort, handlers);
+    }
+}
+
 enum Dir {
     Asc,
     Desc,
@@ -235,31 +293,6 @@ interface SortBy {
     key: string;
     dir: Dir;
     data: HostInfo[];
-}
-
-function readMonitorMessages(
-    ns: NS,
-    monitorPort: NetscriptPort,
-    workers: string[],
-    lifecycleByHost: Map<string, Lifecycle>,
-) {
-    for (const nextMsg of readAllFromPort(ns, monitorPort)) {
-        if (typeof nextMsg === 'object') {
-            const [phase, reqId, payload] = nextMsg as MonitorMessage;
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const _ = reqId; // Minimize code surface where lint is suppressed
-            const hosts = Array.isArray(payload) ? payload : [payload];
-            for (const host of hosts) {
-                if (phase === Lifecycle.Worker) {
-                    if (!workers.includes(host)) {
-                        workers.push(host);
-                    }
-                } else {
-                    lifecycleByHost.set(host, phase);
-                }
-            }
-        }
-    }
 }
 
 function sortByFn(sortBy: SortBy) {

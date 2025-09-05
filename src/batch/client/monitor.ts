@@ -1,21 +1,28 @@
 import type { NS } from 'netscript';
 
-import { Client, Message as ClientMessage } from 'util/client';
-import { isAnyOf, isLiteral, Validator } from '/util/validate';
+import { defineProtocol, BaseClient } from 'util/protocol';
+import {
+    isAnyOf,
+    isArrayOf,
+    isLiteral,
+    isString,
+    Validator,
+} from 'util/validate';
 
 export const MONITOR_PORT = 13;
 export const MONITOR_RESPONSE_PORT = 14;
 
-export enum Lifecycle {
-    Worker,
-    PendingTilling,
-    Tilling,
-    PendingSowing,
-    Sowing,
-    PendingHarvesting,
-    Harvesting,
-    Rebalancing,
-}
+export const Lifecycle = {
+    Worker: 'Worker',
+    PendingTilling: 'PendingTilling',
+    Tilling: 'Tilling',
+    PendingSowing: 'PendingSowing',
+    Sowing: 'Sowing',
+    PendingHarvesting: 'PendingHarvesting',
+    Harvesting: 'Harvesting',
+    Rebalancing: 'Rebalancing',
+} as const;
+export type Lifecycle = (typeof Lifecycle)[keyof typeof Lifecycle];
 
 export const isLifecycle: Validator<Lifecycle> = isAnyOf(
     isLiteral(Lifecycle.Worker),
@@ -28,46 +35,66 @@ export const isLifecycle: Validator<Lifecycle> = isAnyOf(
     isLiteral(Lifecycle.Rebalancing),
 );
 
-export type MessageType = Lifecycle;
+type HostPayload = string | string[];
 
-export type Payload = string | string[];
+const isHostPayload: Validator<HostPayload> = isAnyOf(
+    isString,
+    isArrayOf(isString),
+);
 
-export type Message = ClientMessage<Lifecycle, Payload>;
+export const MonitorProtocol = defineProtocol({
+    [Lifecycle.Worker]: { payload: isHostPayload },
+    [Lifecycle.PendingTilling]: { payload: isHostPayload },
+    [Lifecycle.Tilling]: { payload: isHostPayload },
+    [Lifecycle.PendingSowing]: { payload: isHostPayload },
+    [Lifecycle.Sowing]: { payload: isHostPayload },
+    [Lifecycle.PendingHarvesting]: { payload: isHostPayload },
+    [Lifecycle.Harvesting]: { payload: isHostPayload },
+    [Lifecycle.Rebalancing]: { payload: isHostPayload },
+});
 
-export class MonitorClient extends Client<MessageType, Payload, void> {
+export type MonitorProtocolDef = (typeof MonitorProtocol)['def'];
+
+export class MonitorClient {
+    #client: BaseClient<MonitorProtocolDef>;
+
     constructor(ns: NS) {
-        super(ns, MONITOR_PORT, MONITOR_RESPONSE_PORT);
+        this.#client = new BaseClient(
+            MonitorProtocol,
+            ns.getPortHandle(MONITOR_PORT),
+            ns.getPortHandle(MONITOR_RESPONSE_PORT),
+        );
     }
 
-    async worker(hostname: string) {
-        await this.sendMessage(Lifecycle.Worker, hostname);
+    worker(hostnames: HostPayload) {
+        return this.#client.sendMessage(Lifecycle.Worker, hostnames);
     }
 
-    async pendingTilling(hostname: string) {
-        await this.sendMessage(Lifecycle.PendingTilling, hostname);
+    pendingTilling(hostnames: HostPayload) {
+        return this.#client.sendMessage(Lifecycle.PendingTilling, hostnames);
     }
 
-    async tilling(hostname: string) {
-        await this.sendMessage(Lifecycle.Tilling, hostname);
+    tilling(hostnames: HostPayload) {
+        return this.#client.sendMessage(Lifecycle.Tilling, hostnames);
     }
 
-    async pendingSowing(hostname: string) {
-        await this.sendMessage(Lifecycle.PendingSowing, hostname);
+    pendingSowing(hostnames: HostPayload) {
+        return this.#client.sendMessage(Lifecycle.PendingSowing, hostnames);
     }
 
-    async sowing(hostname: string) {
-        await this.sendMessage(Lifecycle.Sowing, hostname);
+    sowing(hostnames: HostPayload) {
+        return this.#client.sendMessage(Lifecycle.Sowing, hostnames);
     }
 
-    async pendingHarvesting(hostname: string) {
-        await this.sendMessage(Lifecycle.PendingHarvesting, hostname);
+    pendingHarvesting(hostnames: HostPayload) {
+        return this.#client.sendMessage(Lifecycle.PendingHarvesting, hostnames);
     }
 
-    async harvesting(hostname: string) {
-        await this.sendMessage(Lifecycle.Harvesting, hostname);
+    harvesting(hostnames: HostPayload) {
+        return this.#client.sendMessage(Lifecycle.Harvesting, hostnames);
     }
 
-    async rebalancing(hostname: string) {
-        await this.sendMessage(Lifecycle.Rebalancing, hostname);
+    rebalancing(hostnames: HostPayload) {
+        return this.#client.sendMessage(Lifecycle.Rebalancing, hostnames);
     }
 }

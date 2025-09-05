@@ -1,10 +1,8 @@
 import type { NS } from 'netscript';
 
 import { defineProtocol, BaseClient, AnyRequest } from 'util/protocol';
-import {
-    isLifecycle as isMonitorLifecycle,
-    Lifecycle as MonitorLifecycle,
-} from 'batch/client/monitor';
+import { isLifecycle as isMonitorLifecycle } from 'batch/client/monitor';
+import type { Lifecycle as MonitorLifecycle } from 'batch/client/monitor';
 import {
     isAnyOf,
     isArrayOf,

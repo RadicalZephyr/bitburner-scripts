@@ -6,6 +6,7 @@ import {
     MonitorClient,
     Lifecycle as MonitorLifecycle,
 } from 'batch/client/monitor';
+import type { Lifecycle as MonitorLifecycleType } from 'batch/client/monitor';
 import {
     TASK_SELECTOR_PORT,
     TASK_SELECTOR_RESPONSE_PORT,
@@ -306,9 +307,12 @@ class TaskSelector {
      *
      * @returns Array of `[hostname, Lifecycle]` pairs for display.
      */
-    snapshotLifecycle(): [string, MonitorLifecycle][] {
-        const result: [string, MonitorLifecycle][] = [];
-        const pushAll = (hosts: Iterable<string>, phase: MonitorLifecycle) => {
+    snapshotLifecycle(): [string, MonitorLifecycleType][] {
+        const result: [string, MonitorLifecycleType][] = [];
+        const pushAll = (
+            hosts: Iterable<string>,
+            phase: MonitorLifecycleType,
+        ) => {
             for (const h of hosts) result.push([h, phase]);
         };
         pushAll(this.pendingTillTargets, MonitorLifecycle.PendingTilling);
