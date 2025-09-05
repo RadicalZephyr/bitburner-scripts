@@ -149,10 +149,10 @@ async function handleMessage(
     try {
         const value = await dispatch(ns, request);
         return { ok: true, value };
-    } catch (err) {
+    } catch (error) {
         return {
             ok: false,
-            error: err instanceof Error ? err.message : String(err),
+            error,
         };
     }
 }
