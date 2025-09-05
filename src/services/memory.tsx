@@ -192,7 +192,9 @@ class Server extends BaseServer<MemoryProtocolDef> {
                     memoryManager.pushWorker(h);
                 }
             },
-            [MessageType.Request]: async (request: AllocationRequest) => {
+            [MessageType.AllocationRequest]: async (
+                request: AllocationRequest,
+            ) => {
                 printLog(
                     `INFO: request pid=${request.pid} filename=${request.filename} `
                         + `${request.numChunks}x${ns.formatRam(request.chunkSize)} `

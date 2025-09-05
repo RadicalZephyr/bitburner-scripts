@@ -21,7 +21,7 @@ export const MEMORY_RESPONSE_PORT: number = 4;
 
 export const MessageType = {
     Worker: 'Worker',
-    Request: 'Request',
+    AllocationRequest: 'AllocationRequest',
     GrowableRequest: 'GrowableRequest',
     Release: 'Release',
     Claim: 'Claim',
@@ -255,7 +255,7 @@ export const MemoryProtocol = defineProtocol({
     [MessageType.Worker]: {
         payload: isAnyOf(isString, isArrayOf(isString)),
     },
-    [MessageType.Request]: {
+    [MessageType.AllocationRequest]: {
         payload: isAllocationRequest,
         response: isOptional(isAllocationResult),
     },
@@ -372,7 +372,7 @@ export class MemoryClient {
             longRunning: longRunning,
         } as AllocationRequest;
         const result = await this.client.sendMessageReceiveResponse(
-            MessageType.Request,
+            MessageType.AllocationRequest,
             payload,
         );
         if (!result) {
