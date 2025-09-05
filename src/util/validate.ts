@@ -14,9 +14,9 @@ export const isUndefined: Validator<undefined> = (v): v is undefined =>
 export const isNull: Validator<null> = (v): v is null => v === null;
 
 /**
- * Type predicate for unknown not null or missing values
+ * Type predicate for values that are defined (i.e., not `undefined`).
  */
-export const isUnknown: Validator<unknown> = (v): v is unknown =>
+export const isDefined: Validator<unknown> = (v): v is unknown =>
     !isUndefined(v);
 
 /**

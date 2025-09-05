@@ -15,7 +15,7 @@ import {
     isRecordOf,
     isString,
     isUndefined,
-    isUnknown,
+    isDefined,
 } from '../validate';
 
 describe('Validator functions', () => {
@@ -36,13 +36,13 @@ describe('Validator functions', () => {
         });
     });
 
-    describe('isUnknown', () => {
+    describe('isDefined', () => {
         test('undefined is not valid', () => {
-            expect(isUnknown(undefined)).toBeFalsy();
+            expect(isDefined(undefined)).toBeFalsy();
         });
 
         test.each([null, false, 0, 0n, '', [], {}])('%s', (value) => {
-            expect(isUnknown(value)).toBeTruthy();
+            expect(isDefined(value)).toBeTruthy();
         });
     });
 

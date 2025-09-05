@@ -12,7 +12,7 @@ import {
     isOptional,
     isString,
     isUndefined,
-    isUnknown,
+    isDefined,
     type Validator,
 } from 'util/validate';
 
@@ -46,9 +46,9 @@ export interface RequestEnvelope<T, I, R> {
 export type RequestUnknown = RequestEnvelope<unknown, string | null, unknown>;
 
 export const isRequestUnknown: Validator<RequestUnknown> = isObjectLike({
-    type: isUnknown,
+    type: isDefined,
     id: isOptional(isString),
-    payload: isUnknown,
+    payload: isDefined,
 });
 
 export interface ResponseOkEnvelope<T, R> {
@@ -79,7 +79,7 @@ export const isResponseOkUnknown: Validator<ResponseOkUnknown> = isObjectLike({
     type: isString,
     id: isString,
     ok: isLiteral(true),
-    payload: isUnknown,
+    payload: isDefined,
 });
 
 export const isResponseErrUnknown: Validator<ResponseErrUnknown> = isObjectLike(
