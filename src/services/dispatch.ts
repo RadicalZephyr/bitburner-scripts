@@ -18,7 +18,11 @@ import { makeFuid } from 'util/fuid';
 import { EMPTY_SENTINEL } from 'util/ports';
 
 import { CONFIG } from 'services/config';
-import { isRequestUnknown } from '/util/protocol';
+import {
+    isRequestUnknown,
+    ResponseErrUnknown,
+    ResponseOkEnvelope,
+} from 'util/protocol';
 
 const FLAGS = [['help', false]] as const satisfies FlagsSchema;
 
@@ -156,8 +160,25 @@ async function pumpOnce(
         return LoopAction.Idle;
     }
 
-    if (!isRequestUnknown(peeked) || !DispatchProtocol.isRequest(peeked)) {
+    if (!isRequestUnknown(peeked)) {
         port.read();
+        return LoopAction.Continue;
+    }
+
+    if (!DispatchProtocol.isRequest(peeked)) {
+        port.read();
+        const errorMsg = `ERROR: received unknown message type: '${peeked.type}' with payload: ${JSON.stringify(peeked.payload)}`;
+        ns.print(errorMsg);
+        const response = {
+            id: peeked.id,
+            type: peeked.type,
+            ok: false,
+            error: new Error(errorMsg, { cause: peeked }),
+        } satisfies ResponseErrUnknown;
+        // Send response
+        while (!resp.tryWrite(response)) {
+            await ns.sleep(20);
+        }
         return LoopAction.Continue;
     }
 
@@ -173,11 +194,11 @@ async function pumpOnce(
     port.read();
 
     const envelope = {
-        type: peeked.type,
         id: peeked.id,
+        type: peeked.type,
         ok: true,
         payload: response,
-    };
+    } satisfies ResponseOkEnvelope<unknown, DispatchResponse>;
     while (!resp.tryWrite(envelope)) {
         await ns.sleep(20);
     }
