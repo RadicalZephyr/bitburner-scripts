@@ -2,7 +2,7 @@ import type { NS } from 'netscript';
 
 import { ALLOC_ID, ALLOC_ID_ARG } from 'services/client/memory_tag';
 
-import { defineProtocol, BaseClient, type AnyRequest } from 'util/protocol';
+import { defineProtocol, BaseClient } from 'util/protocol';
 import { makeFuid } from 'util/fuid';
 import {
     isAnyOf,
