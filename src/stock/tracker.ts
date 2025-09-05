@@ -66,48 +66,46 @@ CONFIGURATION
     server.readLoop();
 
     while (true) {
-        {
-            const windowSize = CONFIG.windowSize;
-            for (const sym of symbols) {
-                const tick: TickData = {
-                    ts: Date.now(),
-                    askPrice: ns.stock.getAskPrice(sym),
-                    bidPrice: ns.stock.getBidPrice(sym),
-                    volatility: ns.stock.getVolatility(sym),
-                    forecast: ns.stock.getForecast(sym),
-                };
-                const buf = buffers.get(sym)!;
-                buf.push(tick);
-                if (buf.length > windowSize) {
-                    buf.splice(0, buf.length - windowSize);
-                }
-                ns.write(`${dataPath}${sym}.json`, JSON.stringify(buf), 'w');
+        const windowSize = CONFIG.windowSize;
+        for (const sym of symbols) {
+            const tick: TickData = {
+                ts: Date.now(),
+                askPrice: ns.stock.getAskPrice(sym),
+                bidPrice: ns.stock.getBidPrice(sym),
+                volatility: ns.stock.getVolatility(sym),
+                forecast: ns.stock.getForecast(sym),
+            };
+            const buf = buffers.get(sym)!;
+            buf.push(tick);
+            if (buf.length > windowSize) {
+                buf.splice(0, buf.length - windowSize);
             }
-            const percentiles = [CONFIG.buyPercentile, CONFIG.sellPercentile];
-            const stats = computeIndicators(buffers.get(symbols[0])!, {
-                smaPeriods: [CONFIG.smaPeriod],
-                emaPeriods: [CONFIG.emaPeriod],
-                rocPeriods: [CONFIG.rocPeriod],
-                bollingerK: CONFIG.bollingerK,
-                percentiles,
-            });
-            const corr = computeCorrelations(Object.fromEntries(buffers));
-            ns.print(
-                `INFO: ${symbols[0]} μ=${ns.formatNumber(stats.mean)} `
-                    + `median=${ns.formatNumber(stats.median)} `
-                    + `σ=${ns.formatNumber(stats.std)} `
-                    + `z=${ns.formatNumber(stats.zScore)} `
-                    + `roc=${ns.formatPercent(stats.roc[5])}`,
-            );
-            if (symbols.length > 1) {
-                ns.print(
-                    `INFO: corr ${symbols[0]}-${symbols[1]}=`
-                        + ns.formatPercent(corr[symbols[0]][symbols[1]]),
-                );
-            }
-
-            await ns.stock.nextUpdate();
+            ns.write(`${dataPath}${sym}.json`, JSON.stringify(buf), 'w');
         }
+        const percentiles = [CONFIG.buyPercentile, CONFIG.sellPercentile];
+        const stats = computeIndicators(buffers.get(symbols[0])!, {
+            smaPeriods: [CONFIG.smaPeriod],
+            emaPeriods: [CONFIG.emaPeriod],
+            rocPeriods: [CONFIG.rocPeriod],
+            bollingerK: CONFIG.bollingerK,
+            percentiles,
+        });
+        const corr = computeCorrelations(Object.fromEntries(buffers));
+        ns.print(
+            `INFO: ${symbols[0]} μ=${ns.formatNumber(stats.mean)} `
+                + `median=${ns.formatNumber(stats.median)} `
+                + `σ=${ns.formatNumber(stats.std)} `
+                + `z=${ns.formatNumber(stats.zScore)} `
+                + `roc=${ns.formatPercent(stats.roc[5])}`,
+        );
+        if (symbols.length > 1) {
+            ns.print(
+                `INFO: corr ${symbols[0]}-${symbols[1]}=`
+                    + ns.formatPercent(corr[symbols[0]][symbols[1]]),
+            );
+        }
+
+        await ns.stock.nextUpdate();
     }
 }
 
