@@ -134,10 +134,12 @@ export class DispatchClient {
         methodName: K,
         ...args: NSArgs<K>
     ): Promise<NSReturn<K>> {
-        if (!this.#ns.getFunctionRamCost(methodName))
-            throw new Error(`${methodName} is not a valid Netscript function!`);
-
         const req: DispatchRequest<K> = { method: methodName, args };
+        // Zero RAM cost functions can be called in the current process!
+        if (this.#ns.getFunctionRamCost(methodName) === 0) {
+            return callNsFn(this.#ns, methodName, args);
+        }
+
         const res = (await this.#client.sendMessageReceiveResponse(
             MessageType.Dispatch,
             req,
@@ -153,5 +155,55 @@ export class DispatchClient {
                 'Dispatch daemon errored while processing request',
                 { cause: (res as DispatchResponseErr).error },
             );
+    }
+}
+
+/**
+ * Call a Netscript API method by string name.
+ *
+ * @param ns      - Netscript API instance
+ * @param _method - Fully-qualified NS method name, excluding the leading `ns.`
+ * @param _args   - Array of arguments to pass to the method
+ * @returns Whatever the return value of the called method is
+ */
+export async function callNsFn<K extends NSMethodName = NSMethodName>(
+    ns: NS,
+    _method: K,
+    _args: NSArgs<K>,
+): Promise<NSReturn<K>> {
+    const method = _method.trim();
+    if (!method) throw new Error('Empty method name');
+
+    const parts = method.split('.');
+    if (parts.length === 0) throw new Error('Malformed method path');
+
+    let ctx: unknown = ns;
+    for (let i = 0; i < parts.length - 1; i++) {
+        const seg = parts[i];
+        if (ctx == null || !Object.hasOwn(ctx as object, seg)) {
+            throw new Error(
+                `Unknown namespace: ${parts.slice(0, i + 1).join('.')}`,
+            );
+        }
+        ctx = (ctx as Record<string, unknown>)[seg];
+    }
+
+    const fnName = parts[parts.length - 1]!;
+    const candidate = (ctx as Record<string, unknown>)?.[fnName];
+
+    if (typeof candidate !== 'function') {
+        throw new Error(`NS method not found or not callable: ${method}`);
+    }
+
+    const args = _args.map((a) => JSON.stringify(a)).join(', ');
+    try {
+        ns.print(`calling ns.${method}(${args})`);
+        return await (candidate as (...a: unknown[]) => unknown).apply(
+            ctx,
+            _args,
+        );
+    } catch (e) {
+        const msg = e?.message ?? String(e);
+        throw new Error(`${method}(${args}) failed: ${msg}`, { cause: e });
     }
 }

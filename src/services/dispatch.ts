@@ -12,6 +12,7 @@ import {
     DispatchRequest,
     DispatchResponse,
     DispatchProtocol,
+    callNsFn,
 } from 'services/client/dispatch';
 
 import { makeFuid } from 'util/fuid';
@@ -217,7 +218,7 @@ async function handleMessage(
     ns.print('got a new valid DaemonRequest');
 
     try {
-        const value = await dispatch(ns, req);
+        const value = await callNsFn(ns, req.method, req.args);
         return { ok: true, value };
     } catch (error) {
         return {
@@ -260,42 +261,4 @@ function canExecuteNextFn(
     }
 
     return DispatchResult.RunFunction;
-}
-
-async function dispatch(ns: NS, req: DispatchRequest): Promise<unknown> {
-    const method = req.method.trim();
-    if (!method) throw new Error('Empty method name');
-
-    const parts = method.split('.');
-    if (parts.length === 0) throw new Error('Malformed method path');
-
-    let ctx: unknown = ns;
-    for (let i = 0; i < parts.length - 1; i++) {
-        const seg = parts[i];
-        if (ctx == null || !Object.hasOwn(ctx as object, seg)) {
-            throw new Error(
-                `Unknown namespace: ${parts.slice(0, i + 1).join('.')}`,
-            );
-        }
-        ctx = (ctx as Record<string, unknown>)[seg];
-    }
-
-    const fnName = parts[parts.length - 1]!;
-    const candidate = (ctx as Record<string, unknown>)?.[fnName];
-
-    if (typeof candidate !== 'function') {
-        throw new Error(`NS method not found or not callable: ${method}`);
-    }
-
-    const args = req.args.map((a) => JSON.stringify(a)).join(', ');
-    try {
-        ns.print(`calling ns.${method}(${args})`);
-        return await (candidate as (...a: unknown[]) => unknown).apply(
-            ctx,
-            req.args,
-        );
-    } catch (e) {
-        const msg = e?.message ?? String(e);
-        throw new Error(`${method}(${args}) failed: ${msg}`);
-    }
 }
