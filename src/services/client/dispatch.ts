@@ -1,6 +1,11 @@
 import type { NS } from 'netscript';
 
-import { AnyRequest, BaseClient, defineProtocol } from 'util/protocol';
+import {
+    AnyRequest,
+    BaseClient,
+    defineProtocol,
+    isResponseUnknown,
+} from 'util/protocol';
 import {
     Validator,
     isUnionOf,
@@ -146,14 +151,10 @@ export class DispatchClient {
             req,
         )) as DispatchResponse<NSReturn<K>>;
 
-        if (!res || typeof res !== 'object')
-            throw new Error('Malformed daemon response');
-        if (!('ok' in res)) throw new Error('Unrecognized daemon response');
-
         if (res.ok) return res.value;
         else
             throw new Error(
-                'Dispatch daemon errored while processing request',
+                `Dispatch daemon errored while processing request: ${String((res as DispatchResponseErr).error)}`,
                 { cause: (res as DispatchResponseErr).error },
             );
     }
