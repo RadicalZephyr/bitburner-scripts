@@ -12,13 +12,11 @@ import {
 import { MemoryClient } from 'services/client/memory';
 
 import { CONFIG } from 'services/config';
-
-const FLAGS = [['help', false]] as const satisfies FlagsSchema;
-
-import { trySendMessage } from 'util/client';
 import { extend } from 'util/extend';
 import { BaseServer, Handlers } from 'util/protocol';
 import { walkNetworkBFS } from 'util/walk';
+
+const FLAGS = [['help', false]] as const satisfies FlagsSchema;
 
 export async function main(ns: NS) {
     const flags = await parseFlags(ns, FLAGS);
@@ -243,13 +241,17 @@ function notifySubscriptions(
 ) {
     for (const sub of subscriptions) {
         const hostsToSend = [...sub.missedUpdates, ...hosts];
-        if (
-            trySendMessage(
-                ns.getPortHandle(sub.port),
-                sub.messageType,
-                hostsToSend,
-            )
-        ) {
+        // TODO [ZEFS 2025-09-05 #292]: This is janky as hell and
+        // completely unchecked on the client-side, but it will
+        // probably work on the server side? Is there a better way to
+        // handle this? We can't send the whole protocol through the
+        // port because it has validator functions.
+        const envelope = {
+            type: sub.messageType,
+            id: null,
+            payload: hostsToSend,
+        };
+        if (ns.tryWritePort(sub.port, envelope)) {
             // Reset failed notifications when we succeed in sending them
             sub.failedNotifications = 0;
             sub.missedUpdates = [];

@@ -2,7 +2,6 @@ import type { NS } from 'netscript';
 
 import { defineProtocol, BaseClient, AnyRequest } from 'util/protocol';
 import {
-    isAnyOf,
     isArrayOf,
     isNumber,
     isObjectLike,
@@ -20,13 +19,12 @@ export const MessageType = {
 } as const;
 
 export interface Subscription {
-    // TODO: [ZEFS 2025-09-04] Change this to string after all other protocols use string types
-    messageType: string | number;
+    messageType: string;
     port: number;
 }
 
 const isSubscription: Validator<Subscription> = isObjectLike({
-    messageType: isAnyOf(isString, isNumber),
+    messageType: isString,
     port: isNumber,
 });
 
