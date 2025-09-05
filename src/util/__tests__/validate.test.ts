@@ -16,6 +16,7 @@ import {
     isString,
     isUndefined,
     isDefined,
+    isAny,
 } from '../validate';
 
 describe('Validator functions', () => {
@@ -33,6 +34,16 @@ describe('Validator functions', () => {
         ])('%s validator', (type, validate, valid, invalid) => {
             expect(validate(valid)).toBeTruthy();
             expect(validate(invalid)).toBeFalsy();
+        });
+    });
+
+    describe('isAny', () => {
+        test('undefined is valid', () => {
+            expect(isAny(undefined)).toBeTruthy();
+        });
+
+        test.each([null, false, 0, 0n, '', [], {}])('%s is valid', (value) => {
+            expect(isAny(value)).toBeTruthy();
         });
     });
 

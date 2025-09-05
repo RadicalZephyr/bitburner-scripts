@@ -3,6 +3,12 @@
 export type Validator<T> = (v: unknown) => v is T;
 
 /**
+ * Type predicate for any value
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const isAny: Validator<any> = (v): v is any => true;
+
+/**
  * Type predicate for undefined values
  */
 export const isUndefined: Validator<undefined> = (v): v is undefined =>
