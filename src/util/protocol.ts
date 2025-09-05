@@ -302,9 +302,17 @@ export function defineProtocol<const P extends ProtocolDef>(def: P) {
                         ResponseOf<P, K>
                     >;
                     if (validator && !validator(peeked.payload)) {
-                        throw new ProtocolError(
+                        const err = new ProtocolError(
                             `Invalid response payload for type=${String(type)} id=${message.id}: failed protocol validator`,
+                            {
+                                cause: {
+                                    validator,
+                                    badPayload: peeked.payload,
+                                },
+                            },
                         );
+                        console.error(err);
+                        throw err;
                     }
                     return peeked.payload as ResponseOf<P, K>;
                 } else if (isResponseErrUnknown(peeked)) {
