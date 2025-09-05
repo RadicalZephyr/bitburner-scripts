@@ -1,16 +1,16 @@
-import type { NS, NetscriptPort } from 'netscript';
+import type { NS } from 'netscript';
 import { parseFlags } from 'util/flags';
 
 import {
     PORT_ALLOCATOR_PORT,
     PORT_ALLOCATOR_RESPONSE_PORT,
-    Message,
     MessageType,
-    PortRelease,
+    PortAllocatorProtocol,
+    PortAllocatorProtocolDef,
 } from 'services/client/port';
 import { MemoryClient } from 'services/client/memory';
 
-import { readAllFromPort, readLoop } from 'util/ports';
+import { BaseServer, type Handlers } from 'util/protocol';
 
 /**
  * Main loop for the PortAllocator daemon.
@@ -20,9 +20,6 @@ export async function main(ns: NS) {
 
     ns.disableLog('sleep');
 
-    const port = ns.getPortHandle(PORT_ALLOCATOR_PORT);
-    const respPort = ns.getPortHandle(PORT_ALLOCATOR_RESPONSE_PORT);
-
     const allocator = new PortAllocator(ns);
 
     const memClient = new MemoryClient(ns);
@@ -30,36 +27,27 @@ export async function main(ns: NS) {
     const self = ns.self();
     memClient.registerAllocation(self.server, self.ramUsage, 1);
 
-    await readLoop(ns, port, () => readRequests(ns, port, respPort, allocator));
+    const server = new Server(ns, allocator);
+    await server.readLoop();
 }
 
-async function readRequests(
-    ns: NS,
-    port: NetscriptPort,
-    respPort: NetscriptPort,
-    allocator: PortAllocator,
-) {
-    for (const next of readAllFromPort(ns, port)) {
-        const msg = next as Message;
-        const requestId = msg[1] as string;
-
-        let payload: number | null;
-        switch (msg[0]) {
-            case MessageType.PortRequest: {
-                payload = allocator.allocate();
-                ns.print(`SUCCESS: allocated port ${payload}`);
-                break;
-            }
-            case MessageType.PortRelease: {
-                const rel = msg[2] as PortRelease;
-                allocator.release(rel.port);
-                ns.print(`SUCCESS: released port ${rel.port}`);
-                continue;
-            }
-        }
-        while (!respPort.tryWrite([requestId, payload])) {
-            await ns.sleep(20);
-        }
+class Server extends BaseServer<PortAllocatorProtocolDef> {
+    constructor(ns: NS, allocator: PortAllocator) {
+        const requestPort = ns.getPortHandle(PORT_ALLOCATOR_PORT);
+        const responsePort = ns.getPortHandle(PORT_ALLOCATOR_RESPONSE_PORT);
+        const handlers: Handlers<PortAllocatorProtocolDef> = {
+            [MessageType.PortRequest]: () => {
+                const port = allocator.allocate();
+                ns.print(`SUCCESS: allocated port ${port}`);
+                return Promise.resolve(port);
+            },
+            [MessageType.PortRelease]: (port) => {
+                allocator.release(port);
+                ns.print(`SUCCESS: released port ${port}`);
+                return Promise.resolve();
+            },
+        };
+        super(ns, PortAllocatorProtocol, requestPort, responsePort, handlers);
     }
 }
 

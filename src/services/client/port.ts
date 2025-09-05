@@ -1,37 +1,56 @@
 import type { NS } from 'netscript';
 
-import { Client, Message as ClientMessage } from 'util/client';
+import { defineProtocol, BaseClient } from 'util/protocol';
+import { isLiteral, isNumber, isOptional, Validator } from 'util/validate';
 
 export const PORT_ALLOCATOR_PORT = 15;
 export const PORT_ALLOCATOR_RESPONSE_PORT = 16;
 
-export enum MessageType {
-    PortRequest,
-    PortRelease,
-}
+export const MessageType = {
+    PortRequest: 'PortRequest',
+    PortRelease: 'PortRelease',
+} as const;
 
-export interface PortRelease {
-    port: number;
-}
+const PortRequest = 'SP_PortRequest';
 
-export type Payload = PortRelease | null;
-export type Message = ClientMessage<MessageType, Payload>;
+const isPortRequest: Validator<typeof PortRequest> = isLiteral(PortRequest);
 
-export class PortClient extends Client<MessageType, Payload, number | null> {
+export const PortAllocatorProtocol = defineProtocol({
+    [MessageType.PortRequest]: {
+        payload: isPortRequest,
+        response: isOptional(isNumber),
+    },
+    [MessageType.PortRelease]: {
+        payload: isNumber,
+    },
+});
+
+export type PortAllocatorProtocolDef = (typeof PortAllocatorProtocol)['def'];
+
+/**
+ * Client for interacting with the PortAllocator service.
+ */
+export class PortClient {
+    #client: BaseClient<PortAllocatorProtocolDef>;
+
     constructor(ns: NS) {
-        super(ns, PORT_ALLOCATOR_PORT, PORT_ALLOCATOR_RESPONSE_PORT);
+        this.#client = new BaseClient(
+            PortAllocatorProtocol,
+            ns.getPortHandle(PORT_ALLOCATOR_PORT),
+            ns.getPortHandle(PORT_ALLOCATOR_RESPONSE_PORT),
+        );
     }
 
     /** Request a port from the allocator. */
-    async requestPort(): Promise<number | null> {
-        return await this.sendMessageReceiveResponse(
+    requestPort(): Promise<number | null | undefined> {
+        return this.#client.sendMessageReceiveResponse(
             MessageType.PortRequest,
-            null,
+            PortRequest,
         );
     }
 
     /** Release a previously allocated port. */
-    async releasePort(port: number): Promise<void> {
-        await this.sendMessage(MessageType.PortRelease, { port });
+    releasePort(port: number): Promise<void> {
+        return this.#client.sendMessage(MessageType.PortRelease, port);
     }
 }
