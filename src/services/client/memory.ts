@@ -2,17 +2,16 @@ import type { NS } from 'netscript';
 
 import { ALLOC_ID, ALLOC_ID_ARG } from 'services/client/memory_tag';
 
-import {
-    Client,
-    Message as ClientMessage,
-    Response as ClientResponse,
-    sendMessage,
-    trySendMessage,
-} from 'util/client';
+import { defineProtocol, BaseClient, type AnyRequest } from 'util/protocol';
 import { makeFuid } from 'util/fuid';
 import {
+    isAnyOf,
+    isArrayOf,
+    isBoolean,
+    isLiteral,
     isNumber,
     isObjectLike,
+    isOptional,
     isString,
     type Validator,
 } from 'util/validate';
@@ -20,39 +19,19 @@ import {
 export const MEMORY_PORT: number = 3;
 export const MEMORY_RESPONSE_PORT: number = 4;
 
-export enum MessageType {
-    Worker,
-    Request,
-    GrowableRequest,
-    Release,
-    Claim,
-    ClaimRelease,
-    ReleaseChunks,
-    Register,
-    Status,
-    Snapshot,
-}
+export const MessageType = {
+    Worker: 'Worker',
+    Request: 'Request',
+    GrowableRequest: 'GrowableRequest',
+    Release: 'Release',
+    Claim: 'Claim',
+    ClaimRelease: 'ClaimRelease',
+    Register: 'Register',
+    Status: 'Status',
+    Snapshot: 'Snapshot',
+} as const;
 
-type Payload =
-    | string
-    | AllocationRequest
-    | GrowableAllocationRequest
-    | AllocationRelease
-    | AllocationClaim
-    | AllocationClaimRelease
-    | AllocationRegister
-    | StatusRequest
-    | SnapshotRequest;
-
-export type ResponsePayload =
-    | AllocationResult
-    | FreeRam
-    | MemorySnapshot
-    | null;
-
-export type Message = ClientMessage<MessageType, Payload>;
-
-export type Response = ClientResponse<ResponsePayload>;
+export type MessageType = (typeof MessageType)[keyof typeof MessageType];
 
 /**************************************************/
 /** Request Types
@@ -70,15 +49,45 @@ export interface AllocationRequest {
     longRunning?: boolean;
 }
 
+const isAllocationRequest: Validator<AllocationRequest> = isObjectLike({
+    pid: isNumber,
+    filename: isString,
+    chunkSize: isNumber,
+    numChunks: isNumber,
+    contiguous: isOptional(isBoolean),
+    coreDependent: isOptional(isBoolean),
+    shrinkable: isOptional(isBoolean),
+    longRunning: isOptional(isBoolean),
+});
+
 export interface GrowableAllocationRequest extends AllocationRequest {
     port: number;
 }
+
+const isGrowableAllocationRequest: Validator<GrowableAllocationRequest> =
+    isObjectLike({
+        pid: isNumber,
+        filename: isString,
+        chunkSize: isNumber,
+        numChunks: isNumber,
+        contiguous: isOptional(isBoolean),
+        coreDependent: isOptional(isBoolean),
+        shrinkable: isOptional(isBoolean),
+        longRunning: isOptional(isBoolean),
+        port: isNumber,
+    });
 
 export interface AllocationRelease {
     allocationId: number;
     pid: number;
     hostname: string;
 }
+
+const isAllocationRelease: Validator<AllocationRelease> = isObjectLike({
+    allocationId: isNumber,
+    pid: isNumber,
+    hostname: isString,
+});
 
 export interface AllocationClaim {
     allocationId: number;
@@ -89,11 +98,27 @@ export interface AllocationClaim {
     numChunks: number;
 }
 
+const isAllocationClaim: Validator<AllocationClaim> = isObjectLike({
+    allocationId: isNumber,
+    pid: isNumber,
+    hostname: isString,
+    filename: isString,
+    chunkSize: isNumber,
+    numChunks: isNumber,
+});
+
 export interface AllocationClaimRelease {
     allocationId: number;
     pid: number;
     hostname: string;
 }
+
+const isAllocationClaimRelease: Validator<AllocationClaimRelease> =
+    isObjectLike({
+        allocationId: isNumber,
+        pid: isNumber,
+        hostname: isString,
+    });
 
 export interface AllocationRegister {
     pid: number;
@@ -103,9 +128,24 @@ export interface AllocationRegister {
     numChunks: number;
 }
 
-export type StatusRequest = object;
+const isAllocationRegister: Validator<AllocationRegister> = isObjectLike({
+    pid: isNumber,
+    hostname: isString,
+    filename: isString,
+    chunkSize: isNumber,
+    numChunks: isNumber,
+});
 
-export type SnapshotRequest = object;
+export const StatusRequest = 'SMA_StatusRequest';
+export type StatusRequest = typeof StatusRequest;
+
+const isStatusRequest: Validator<StatusRequest> = isLiteral(StatusRequest);
+
+export const SnapshotRequest = 'SMA_SnapshotRequest';
+export type SnapshotRequest = typeof SnapshotRequest;
+
+const isSnapshotRequest: Validator<SnapshotRequest> =
+    isLiteral(SnapshotRequest);
 
 /**************************************************/
 /** Response Types
@@ -119,6 +159,14 @@ export interface WorkerSnapshot {
     allocatedRam: number;
 }
 
+const isWorkerSnapshot: Validator<WorkerSnapshot> = isObjectLike({
+    hostname: isString,
+    totalRam: isNumber,
+    setAsideRam: isNumber,
+    reservedRam: isNumber,
+    allocatedRam: isNumber,
+});
+
 export interface ClaimSnapshot {
     pid: number;
     hostname: string;
@@ -126,6 +174,36 @@ export interface ClaimSnapshot {
     chunkSize: number;
     numChunks: number;
 }
+
+const isClaimSnapshot: Validator<ClaimSnapshot> = isObjectLike({
+    pid: isNumber,
+    hostname: isString,
+    filename: isString,
+    chunkSize: isNumber,
+    numChunks: isNumber,
+});
+
+export interface HostAllocation {
+    hostname: string;
+    chunkSize: number;
+    numChunks: number;
+}
+
+export const isHostAllocation: Validator<HostAllocation> = isObjectLike({
+    hostname: isString,
+    chunkSize: isNumber,
+    numChunks: isNumber,
+});
+
+export interface AllocationResult {
+    allocationId: number;
+    hosts: HostAllocation[];
+}
+
+const isAllocationResult: Validator<AllocationResult> = isObjectLike({
+    allocationId: isNumber,
+    hosts: isArrayOf(isHostAllocation),
+});
 
 export interface AllocationSnapshot {
     allocationId: number;
@@ -135,31 +213,79 @@ export interface AllocationSnapshot {
     claims: ClaimSnapshot[];
 }
 
+const isAllocationSnapshot: Validator<AllocationSnapshot> = isObjectLike({
+    allocationId: isNumber,
+    pid: isNumber,
+    filename: isString,
+    hosts: isArrayOf(isHostAllocation),
+    claims: isArrayOf(isClaimSnapshot),
+});
+
 export interface MemorySnapshot {
     workers: WorkerSnapshot[];
     allocations: AllocationSnapshot[];
 }
 
-export interface HostAllocation {
-    hostname: string;
-    chunkSize: number;
-    numChunks: number;
-}
-
-export interface AllocationResult {
-    allocationId: number;
-    hosts: HostAllocation[];
-}
+const isMemorySnapshot: Validator<MemorySnapshot> = isObjectLike({
+    workers: isArrayOf(isWorkerSnapshot),
+    allocations: isArrayOf(isAllocationSnapshot),
+});
 
 export interface FreeChunk {
     hostname: string;
     freeRam: number;
 }
 
+const isFreeChunk: Validator<FreeChunk> = isObjectLike({
+    hostname: isString,
+    freeRam: isNumber,
+});
+
 export interface FreeRam {
     freeRam: number;
     chunks: FreeChunk[];
 }
+
+const isFreeRam: Validator<FreeRam> = isObjectLike({
+    freeRam: isNumber,
+    chunks: isArrayOf(isFreeChunk),
+});
+
+export const MemoryProtocol = defineProtocol({
+    [MessageType.Worker]: {
+        payload: isAnyOf(isString, isArrayOf(isString)),
+    },
+    [MessageType.Request]: {
+        payload: isAllocationRequest,
+        response: isOptional(isAllocationResult),
+    },
+    [MessageType.GrowableRequest]: {
+        payload: isGrowableAllocationRequest,
+        response: isOptional(isAllocationResult),
+    },
+    [MessageType.Release]: {
+        payload: isAllocationRelease,
+    },
+    [MessageType.Claim]: {
+        payload: isAllocationClaim,
+    },
+    [MessageType.ClaimRelease]: {
+        payload: isAllocationClaimRelease,
+    },
+    [MessageType.Register]: {
+        payload: isAllocationRegister,
+    },
+    [MessageType.Status]: {
+        payload: isStatusRequest,
+        response: isFreeRam,
+    },
+    [MessageType.Snapshot]: {
+        payload: isSnapshotRequest,
+        response: isMemorySnapshot,
+    },
+});
+
+export type MemoryProtocolDef = (typeof MemoryProtocol)['def'];
 
 /**
  * Optional flags to request specific allocation strategies.
@@ -176,19 +302,17 @@ export interface AllocOptions {
     longRunning?: boolean;
 }
 
-export const isHostAllocation: Validator<HostAllocation> = isObjectLike({
-    hostname: isString,
-    chunkSize: isNumber,
-    numChunks: isNumber,
-});
+export class MemoryClient {
+    protected ns: NS;
+    protected client: BaseClient<MemoryProtocolDef>;
 
-export class MemoryClient extends Client<
-    MessageType,
-    Payload,
-    ResponsePayload
-> {
     constructor(ns: NS) {
-        super(ns, MEMORY_PORT, MEMORY_RESPONSE_PORT);
+        this.ns = ns;
+        this.client = new BaseClient(
+            MemoryProtocol,
+            ns.getPortHandle(MEMORY_PORT),
+            ns.getPortHandle(MEMORY_RESPONSE_PORT),
+        );
     }
 
     /**
@@ -198,7 +322,7 @@ export class MemoryClient extends Client<
      */
     async newWorker(hostname: string) {
         this.ns.print(`INFO: registering worker ${hostname}`);
-        await this.sendMessage(MessageType.Worker, hostname);
+        await this.client.sendMessage(MessageType.Worker, hostname);
     }
 
     /**
@@ -247,7 +371,7 @@ export class MemoryClient extends Client<
             shrinkable: shrinkable,
             longRunning: longRunning,
         } as AllocationRequest;
-        const result = await this.sendMessageReceiveResponse(
+        const result = await this.client.sendMessageReceiveResponse(
             MessageType.Request,
             payload,
         );
@@ -256,7 +380,7 @@ export class MemoryClient extends Client<
             return null;
         }
 
-        const allocationResult = result as AllocationResult;
+        const allocationResult = result;
         const allocatedChunkSize = allocationResult.hosts[0]?.chunkSize;
         const allocatedNumChunks = allocationResult.hosts.reduce(
             (sum, chunk) => sum + chunk.numChunks,
@@ -327,7 +451,7 @@ export class MemoryClient extends Client<
             chunkSize,
             numChunks,
         };
-        await this.sendMessage(MessageType.Register, payload);
+        await this.client.sendMessage(MessageType.Register, payload);
     }
 
     /**
@@ -338,16 +462,10 @@ export class MemoryClient extends Client<
     async memorySnapshot(): Promise<MemorySnapshot> {
         this.ns.print('INFO: requesting memory snapshot');
 
-        const payload: SnapshotRequest = {};
-        const result = await this.sendMessageReceiveResponse(
+        return await this.client.sendMessageReceiveResponse(
             MessageType.Snapshot,
-            payload,
+            SnapshotRequest,
         );
-        if (!result) {
-            this.ns.print('WARN: snapshot request failed');
-            return null;
-        }
-        return result as MemorySnapshot;
     }
 
     /**
@@ -356,17 +474,10 @@ export class MemoryClient extends Client<
      * @returns Total free RAM across all workers
      */
     async getFreeRam(): Promise<FreeRam> {
-        const payload: StatusRequest = {};
-        const result = await this.sendMessageReceiveResponse(
+        return await this.client.sendMessageReceiveResponse(
             MessageType.Status,
-            payload,
+            StatusRequest,
         );
-        if (!result) {
-            this.ns.print('WARN: status request failed');
-            return { freeRam: 0, chunks: [] };
-        }
-        const status = result as FreeRam;
-        return status;
     }
 }
 
@@ -401,14 +512,18 @@ export async function registerAllocationOwnership(
                 pid: self.pid,
                 hostname: self.server,
             };
-            trySendMessage(memPort, MessageType.ClaimRelease, release);
+            MemoryProtocol.trySendMessage(
+                memPort,
+                MessageType.ClaimRelease,
+                release,
+            );
         },
         'registerAllocationOwnership-memoryRelease-' + makeFuid(ns),
     );
 
     const memPort = ns.getPortHandle(MEMORY_PORT);
 
-    await sendMessage(ns, memPort, MessageType.Claim, claim);
+    await MemoryProtocol.sendMessage(memPort, MessageType.Claim, claim);
 }
 
 /**
@@ -465,7 +580,7 @@ export class TransferableAllocation {
         };
 
         const memPort = ns.getPortHandle(MEMORY_PORT);
-        sendMessage(ns, memPort, MessageType.Release, release);
+        await MemoryProtocol.sendMessage(memPort, MessageType.Release, release);
     }
 
     releaseAtExit(ns: NS) {

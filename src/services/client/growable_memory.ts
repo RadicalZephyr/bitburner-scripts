@@ -12,16 +12,18 @@ import {
     AllocationResult,
     HostAllocation,
     AllocationChunk,
+    MemoryProtocol,
+    isHostAllocation,
 } from 'services/client/memory';
 import { ALLOC_ID_ARG } from 'services/client/memory_tag';
 import { PortClient } from 'services/client/port';
 
 import { CONFIG } from 'services/config';
 
-import { sendMessage } from 'util/client';
 import { readAllFromPort } from 'util/ports';
 import { collectDependencies } from 'util/dependencies';
 import { makeFuid } from 'util/fuid';
+import { isArrayOf } from 'util/validate';
 
 /** Client helper for growable allocations. */
 export class GrowableMemoryClient extends MemoryClient {
@@ -62,7 +64,7 @@ export class GrowableMemoryClient extends MemoryClient {
             port,
         };
 
-        const result = await this.sendMessageReceiveResponse(
+        const result = await this.client.sendMessageReceiveResponse(
             MessageType.GrowableRequest,
             payload,
         );
@@ -147,13 +149,13 @@ export class GrowableAllocation extends TransferableAllocation {
      * @param shouldMergeChunks - If true, merges new chunks into existing host entries. If false, appends them as separate entries.
      */
     pollGrowth(shouldMergeChunks: boolean = false) {
+        const isHostAllocArray = isArrayOf(isHostAllocation);
         for (const msg of readAllFromPort(this.ns, this.port)) {
-            const chunks = msg as HostAllocation[];
-            if (Array.isArray(chunks)) {
+            if (isHostAllocArray(msg)) {
                 if (shouldMergeChunks) {
-                    mergeChunks(this.allocatedChunks, chunks);
+                    mergeChunks(this.allocatedChunks, msg);
                 } else {
-                    appendChunks(this.allocatedChunks, chunks);
+                    appendChunks(this.allocatedChunks, msg);
                 }
             }
         }
@@ -169,7 +171,7 @@ export class GrowableAllocation extends TransferableAllocation {
             hostname: proc.server,
         };
         const memPort = ns.getPortHandle(MEMORY_PORT);
-        sendMessage(ns, memPort, MessageType.Release, release);
+        await MemoryProtocol.sendMessage(memPort, MessageType.Release, release);
         const portClient = new PortClient(ns);
         await portClient.releasePort(this.portId);
     }

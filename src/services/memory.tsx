@@ -1,9 +1,4 @@
-import type {
-    AutocompleteData,
-    NS,
-    NetscriptPort,
-    UserInterfaceTheme,
-} from 'netscript';
+import type { AutocompleteData, NS, UserInterfaceTheme } from 'netscript';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
 import {
@@ -13,23 +8,22 @@ import {
     AllocationRequest,
     GrowableAllocationRequest,
     MEMORY_PORT,
-    Message,
+    MemoryProtocol,
     MessageType,
     AllocationRegister,
     MEMORY_RESPONSE_PORT,
-    ResponsePayload,
+    MemoryProtocolDef,
 } from 'services/client/memory';
 
 import { DiscoveryClient } from 'services/client/discover';
 
 import { fromFixed, MemoryAllocator, Worker } from 'services/allocator';
 
-import { readAllFromPort, readLoop } from 'util/ports';
+import { useNsUpdate, useTheme } from 'util/hooks';
+import { BaseServer, Handlers } from 'util/protocol';
 import { HUD_HEIGHT, HUD_WIDTH, STATUS_WINDOW_WIDTH } from 'util/ui';
 
 import {} from 'lib/react';
-
-import { useNsUpdate, useTheme } from 'util/hooks';
 
 import { CONFIG } from 'services/config';
 
@@ -89,9 +83,6 @@ CONFIGURATION
         }
     };
 
-    const memPort = ns.getPortHandle(MEMORY_PORT);
-    const memResponsePort = ns.getPortHandle(MEMORY_RESPONSE_PORT);
-
     const memoryManager = new MemoryAllocator(ns, printLog);
 
     printLog(`INFO: starting memory manager on ${ns.self().server}`);
@@ -127,12 +118,11 @@ CONFIGURATION
         numChunks: 1,
     });
 
+    const server = new Server(ns, memoryManager);
+    server.readLoop();
+
     let lastCollection = Date.now();
     let lastGrowCheck = 0;
-
-    readLoop(ns, memPort, () =>
-        readMemRequestsFromPort(ns, memPort, memResponsePort, memoryManager),
-    );
 
     function getWorkers() {
         const purchasedServers = new Set(ns.getPurchasedServers());
@@ -189,30 +179,20 @@ CONFIGURATION
     }
 }
 
-async function readMemRequestsFromPort(
-    ns: NS,
-    memPort: NetscriptPort,
-    memResponsePort: NetscriptPort,
-    memoryManager: MemoryAllocator,
-) {
-    for (const nextMsg of readAllFromPort(ns, memPort)) {
-        const msg = nextMsg as Message;
-        const requestId: string = msg[1] as string;
-        let payload: ResponsePayload;
-        switch (msg[0]) {
-            case MessageType.Worker: {
-                const hostPayload = msg[2];
+class Server extends BaseServer<MemoryProtocolDef> {
+    constructor(ns: NS, memoryManager: MemoryAllocator) {
+        const requestPort = ns.getPortHandle(MEMORY_PORT);
+        const responsePort = ns.getPortHandle(MEMORY_RESPONSE_PORT);
+        const handlers: Handlers<MemoryProtocolDef> = {
+            [MessageType.Worker]: async (hostPayload: string | string[]) => {
                 const hosts = Array.isArray(hostPayload)
                     ? hostPayload
-                    : [hostPayload as string];
+                    : [hostPayload];
                 for (const h of hosts) {
                     memoryManager.pushWorker(h);
                 }
-                // Don't send a response, no one is listening.
-                continue;
-            }
-            case MessageType.Request: {
-                const request = msg[2] as AllocationRequest;
+            },
+            [MessageType.Request]: async (request: AllocationRequest) => {
                 printLog(
                     `INFO: request pid=${request.pid} filename=${request.filename} `
                         + `${request.numChunks}x${ns.formatRam(request.chunkSize)} `
@@ -220,7 +200,6 @@ async function readMemRequestsFromPort(
                         + `coreDependent=${request.coreDependent ?? false} `
                         + `longRunning=${request.longRunning ?? false}`,
                 );
-
                 const allocation = memoryManager.allocate(
                     request.pid,
                     request.filename,
@@ -239,11 +218,11 @@ async function readMemRequestsFromPort(
                 } else {
                     printLog('WARN: allocation failed, not enough space');
                 }
-                payload = allocation;
-                break;
-            }
-            case MessageType.GrowableRequest: {
-                const growReq = msg[2] as GrowableAllocationRequest;
+                return allocation;
+            },
+            [MessageType.GrowableRequest]: async (
+                growReq: GrowableAllocationRequest,
+            ) => {
                 printLog(
                     `INFO: growable request pid=${growReq.pid} filename=${growReq.filename} `
                         + `${growReq.numChunks}x${ns.formatRam(growReq.chunkSize)}`,
@@ -267,11 +246,9 @@ async function readMemRequestsFromPort(
                 } else {
                     printLog('WARN: growable allocation failed');
                 }
-                payload = growAlloc;
-                break;
-            }
-            case MessageType.Release: {
-                const release = msg[2] as AllocationRelease;
+                return growAlloc;
+            },
+            [MessageType.Release]: async (release: AllocationRelease) => {
                 if (
                     memoryManager.deallocate(
                         release.allocationId,
@@ -288,11 +265,10 @@ async function readMemRequestsFromPort(
                         `WARN: allocation ${release.allocationId} not found for pid ${release.pid}`,
                     );
                 }
-                // Don't send a response, no one is listening.
-                continue;
-            }
-            case MessageType.ClaimRelease: {
-                const claimRel = msg[2] as AllocationClaimRelease;
+            },
+            [MessageType.ClaimRelease]: async (
+                claimRel: AllocationClaimRelease,
+            ) => {
                 if (
                     memoryManager.releaseClaim(
                         claimRel.allocationId,
@@ -309,34 +285,26 @@ async function readMemRequestsFromPort(
                         `WARN: claim for allocation ${claimRel.allocationId} not found for pid ${claimRel.pid}`,
                     );
                 }
-                // Don't send a response, no one is listening.
-                continue;
-            }
-            case MessageType.Register: {
-                const reg = msg[2] as AllocationRegister;
+            },
+            [MessageType.Register]: async (reg: AllocationRegister) => {
                 printLog(
                     `INFO: register pid=${reg.pid} host=${reg.hostname} `
                         + `${reg.numChunks}x${ns.formatRam(reg.chunkSize)} `
                         + `${reg.filename}`,
                 );
                 memoryManager.registerAllocation(reg);
-                // Don't send a response, no one is listening.
-                continue;
-            }
-            case MessageType.Status: {
-                payload = {
+            },
+            [MessageType.Status]: async () => {
+                return {
                     freeRam: memoryManager.getFreeRamTotal(),
                     chunks: memoryManager.getFreeChunks(),
                 };
-                break;
-            }
-            case MessageType.Snapshot: {
-                printLog(`INFO: processing snapshot request ${requestId}`);
-                payload = memoryManager.getSnapshot();
-                break;
-            }
-            case MessageType.Claim: {
-                const claimInfo = msg[2] as AllocationClaim;
+            },
+            [MessageType.Snapshot]: async () => {
+                printLog(`INFO: processing snapshot request`);
+                return memoryManager.getSnapshot();
+            },
+            [MessageType.Claim]: async (claimInfo: AllocationClaim) => {
                 if (memoryManager.claimAllocation(claimInfo)) {
                     printLog(
                         `INFO: claimed allocation ${claimInfo.allocationId} `
@@ -349,21 +317,10 @@ async function readMemRequestsFromPort(
                         `WARN: failed to claim allocation ${claimInfo.allocationId}`,
                     );
                 }
-                // Don't send a response, no one is listening.
-                continue;
-            }
-        }
+            },
+        };
 
-        const start = Date.now();
-        while (!memResponsePort.tryWrite([requestId, payload])) {
-            if (Date.now() - start > CONFIG.memResponseTimeoutMs) {
-                printLog(
-                    `WARN: dropping response for ${requestId} due to full port`,
-                );
-                break;
-            }
-            await ns.asleep(10);
-        }
+        super(ns, MemoryProtocol, requestPort, responsePort, handlers);
     }
 }
 
