@@ -323,8 +323,10 @@ export function defineProtocol<const P extends ProtocolDef>(def: P) {
             await sleep(_pollPeriod);
         }
 
+        const peeked = receivePort.peek() as unknown;
         throw new ProtocolError(
             `Timeout waiting for response: type=${String(type)} id=${message.id}`,
+            { cause: peeked },
         );
     }
 
