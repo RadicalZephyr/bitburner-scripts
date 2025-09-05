@@ -1,24 +1,42 @@
 import type { NS } from 'netscript';
 
-import { Client, Message as ClientMessage } from 'util/client';
-import { Lifecycle as MonitorLifecycle } from 'batch/client/monitor';
+import { defineProtocol, BaseClient, AnyRequest } from 'util/protocol';
+import {
+    isLifecycle as isMonitorLifecycle,
+    Lifecycle as MonitorLifecycle,
+} from 'batch/client/monitor';
+import {
+    isAnyOf,
+    isArrayOf,
+    isLiteral,
+    isNumber,
+    isObjectLike,
+    isString,
+    Validator,
+} from 'util/validate';
 
 export const TASK_SELECTOR_PORT: number = 11;
 export const TASK_SELECTOR_RESPONSE_PORT: number = 12;
 
-export enum MessageType {
-    NewTarget,
-    FinishedTilling,
-    FinishedSowing,
-    Heartbeat,
-    RequestLifecycle,
-}
+export const MessageType = {
+    NewTarget: 'NewTarget',
+    FinishedTilling: 'FinishedTilling',
+    FinishedSowing: 'FinishedSowing',
+    Heartbeat: 'Heartbeat',
+    RequestLifecycle: 'RequestLifecycle',
+} as const;
 
 export enum Lifecycle {
     Till,
     Sow,
     Harvest,
 }
+
+const isLifecycle = isAnyOf(
+    isLiteral(Lifecycle.Till),
+    isLiteral(Lifecycle.Sow),
+    isLiteral(Lifecycle.Harvest),
+);
 
 export interface Heartbeat {
     pid: number;
@@ -27,34 +45,65 @@ export interface Heartbeat {
     lifecycle: Lifecycle;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface LifecycleRequest {}
+const isHeartbeat = isObjectLike({
+    pid: isNumber,
+    filename: isString,
+    target: isString,
+    lifecycle: isLifecycle,
+});
+
+export const LifecycleRequest = 'BTS_LifecycleRequest';
+
+const isLifecycleRequest: Validator<typeof LifecycleRequest> =
+    isLiteral(LifecycleRequest);
 
 export type LifecycleSnapshot = [string, MonitorLifecycle][];
 
-export type Payload = string | string[] | Heartbeat | LifecycleRequest;
+const isLifecycleSnapshot = isArrayOf(
+    (v): v is [string, MonitorLifecycle] =>
+        Array.isArray(v)
+        && v.length === 2
+        && isString(v[0])
+        && isMonitorLifecycle(v[1]),
+);
 
-export type Message = ClientMessage<MessageType, Payload>;
+export const TaskSelectorProtocol = defineProtocol({
+    [MessageType.NewTarget]: { payload: isArrayOf(isString) },
+    [MessageType.FinishedTilling]: { payload: isString },
+    [MessageType.FinishedSowing]: { payload: isString },
+    [MessageType.Heartbeat]: { payload: isHeartbeat },
+    [MessageType.RequestLifecycle]: {
+        payload: isLifecycleRequest,
+        response: isLifecycleSnapshot,
+    },
+});
 
-export class TaskSelectorClient extends Client<
-    MessageType,
-    Payload,
-    LifecycleSnapshot
-> {
+export type TaskSelectorProtocolDef = (typeof TaskSelectorProtocol)['def'];
+
+export type Message = AnyRequest<TaskSelectorProtocolDef>;
+
+/** Hide communication with the TaskSelector behind a simple API. */
+export class TaskSelectorClient {
+    #client: BaseClient<TaskSelectorProtocolDef>;
+
     constructor(ns: NS) {
-        super(ns, TASK_SELECTOR_PORT, TASK_SELECTOR_RESPONSE_PORT);
+        this.#client = new BaseClient(
+            TaskSelectorProtocol,
+            ns.getPortHandle(TASK_SELECTOR_PORT),
+            ns.getPortHandle(TASK_SELECTOR_RESPONSE_PORT),
+        );
     }
 
-    async newTarget(hostname: string) {
-        await this.sendMessage(MessageType.NewTarget, hostname);
+    newTarget(hostname: string) {
+        return this.#client.sendMessage(MessageType.NewTarget, [hostname]);
     }
 
-    async finishedTilling(hostname: string) {
-        await this.sendMessage(MessageType.FinishedTilling, hostname);
+    finishedTilling(hostname: string) {
+        return this.#client.sendMessage(MessageType.FinishedTilling, hostname);
     }
 
-    async finishedSowing(hostname: string) {
-        await this.sendMessage(MessageType.FinishedSowing, hostname);
+    finishedSowing(hostname: string) {
+        return this.#client.sendMessage(MessageType.FinishedSowing, hostname);
     }
 
     /**
@@ -62,14 +111,14 @@ export class TaskSelectorClient extends Client<
      *
      * This allows the manager to recover running targets when it is restarted.
      */
-    async heartbeat(
+    heartbeat(
         pid: number,
         filename: string,
         target: string,
         lifecycle: Lifecycle,
     ) {
         const hb: Heartbeat = { pid, filename, target, lifecycle };
-        await this.sendMessage(MessageType.Heartbeat, hb);
+        return this.#client.sendMessage(MessageType.Heartbeat, hb);
     }
 
     /**
@@ -85,7 +134,7 @@ export class TaskSelectorClient extends Client<
         lifecycle: Lifecycle,
     ): boolean {
         const hb: Heartbeat = { pid, filename, target, lifecycle };
-        return this.trySendMessage(MessageType.Heartbeat, hb);
+        return this.#client.trySendMessage(MessageType.Heartbeat, hb);
     }
 
     /**
@@ -93,11 +142,10 @@ export class TaskSelectorClient extends Client<
      *
      * @returns Array of `[hostname, Lifecycle]` pairs describing current state.
      */
-    async requestLifecycle(): Promise<LifecycleSnapshot> {
-        const payload: LifecycleRequest = {};
-        return await this.sendMessageReceiveResponse(
+    requestLifecycle(): Promise<LifecycleSnapshot> {
+        return this.#client.sendMessageReceiveResponse(
             MessageType.RequestLifecycle,
-            payload,
+            LifecycleRequest,
         );
     }
 }

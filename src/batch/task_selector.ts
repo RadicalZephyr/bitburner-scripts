@@ -1,4 +1,4 @@
-import type { NetscriptPort, NS } from 'netscript';
+import type { NS } from 'netscript';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { HarvestClient } from 'batch/client/harvest';
@@ -9,10 +9,11 @@ import {
 import {
     TASK_SELECTOR_PORT,
     TASK_SELECTOR_RESPONSE_PORT,
-    Message,
     MessageType,
     Heartbeat,
     Lifecycle,
+    TaskSelectorProtocol,
+    type TaskSelectorProtocolDef,
 } from 'batch/client/task_selector';
 
 import {
@@ -32,7 +33,7 @@ import { MemoryClient, type FreeRam } from 'services/client/memory';
 import { PortClient } from 'services/client/port';
 
 import { growthAnalyze } from 'util/growthAnalyze';
-import { readAllFromPort, readLoop } from 'util/ports';
+import { BaseServer, type Handlers } from 'util/protocol';
 import { sleep } from 'util/time';
 import { HUD_HEIGHT, KARMA_HEIGHT } from 'util/ui';
 
@@ -112,9 +113,6 @@ CONFIGURATION
     ns.ui.moveTail(ww - WIDTH, HUD_HEIGHT + KARMA_HEIGHT);
     ns.print(`INFO: starting manager on ${ns.getHostname()}`);
 
-    const taskSelectorPort = ns.getPortHandle(TASK_SELECTOR_PORT);
-    const responsePort = ns.getPortHandle(TASK_SELECTOR_RESPONSE_PORT);
-
     const discovery = new DiscoveryClient(ns);
     const monitor = new MonitorClient(ns);
     const memory = new MemoryClient(ns);
@@ -134,9 +132,8 @@ CONFIGURATION
         manager.pushTarget(target);
     }
 
-    readLoop(ns, taskSelectorPort, () =>
-        readHostsFromPort(ns, taskSelectorPort, responsePort, manager, monitor),
-    );
+    const server = new Server(ns, manager, monitor);
+    server.readLoop();
 
     while (true) {
         await tick(ns, memory, manager);
@@ -144,56 +141,35 @@ CONFIGURATION
     }
 }
 
-async function readHostsFromPort(
-    ns: NS,
-    managerPort: NetscriptPort,
-    responsePort: NetscriptPort,
-    manager: TaskSelector,
-    monitor: MonitorClient,
-) {
-    for (const nextMsg of readAllFromPort(ns, managerPort)) {
-        if (typeof nextMsg === 'object') {
-            const nextHostMsg = nextMsg as Message;
-            const payload = nextHostMsg[2];
-            switch (nextHostMsg[0]) {
-                case MessageType.NewTarget: {
-                    const targets = Array.isArray(payload)
-                        ? payload
-                        : [payload as string];
-                    ns.print(`INFO: received target ${targets.join(', ')}`);
-                    for (const t of targets) {
-                        await manager.pushTarget(t);
-                    }
-                    break;
+class Server extends BaseServer<TaskSelectorProtocolDef> {
+    constructor(ns: NS, manager: TaskSelector, monitor: MonitorClient) {
+        const requestPort = ns.getPortHandle(TASK_SELECTOR_PORT);
+        const responsePort = ns.getPortHandle(TASK_SELECTOR_RESPONSE_PORT);
+        const handlers: Handlers<TaskSelectorProtocolDef> = {
+            [MessageType.NewTarget]: async (targets) => {
+                ns.print(`INFO: received target ${targets.join(', ')}`);
+                for (const t of targets) {
+                    await manager.pushTarget(t);
                 }
-                case MessageType.FinishedTilling: {
-                    ns.print(`SUCCESS: finished tilling ${payload}`);
-                    await monitor.sowing(payload as string);
-                    await manager.pushTarget(payload as string);
-                    break;
-                }
-                case MessageType.FinishedSowing: {
-                    ns.print(`SUCCESS: finished sowing ${payload}`);
-                    await manager.pushTarget(payload as string);
-                    break;
-                }
-                case MessageType.Heartbeat: {
-                    ns.print(
-                        `INFO: heartbeat from ${(payload as Heartbeat).target}`,
-                    );
-                    await manager.handleHeartbeat(payload as Heartbeat);
-                    break;
-                }
-                case MessageType.RequestLifecycle: {
-                    const requestId = nextHostMsg[1] as string;
-                    const snapshot = manager.snapshotLifecycle();
-                    while (!responsePort.tryWrite([requestId, snapshot])) {
-                        await ns.sleep(20);
-                    }
-                    break;
-                }
-            }
-        }
+            },
+            [MessageType.FinishedTilling]: async (hostname) => {
+                ns.print(`SUCCESS: finished tilling ${hostname}`);
+                await monitor.sowing(hostname);
+                await manager.pushTarget(hostname);
+            },
+            [MessageType.FinishedSowing]: async (hostname) => {
+                ns.print(`SUCCESS: finished sowing ${hostname}`);
+                await manager.pushTarget(hostname);
+            },
+            [MessageType.Heartbeat]: async (hb) => {
+                ns.print(`INFO: heartbeat from ${hb.target}`);
+                await manager.handleHeartbeat(hb);
+            },
+            [MessageType.RequestLifecycle]: async () => {
+                return manager.snapshotLifecycle();
+            },
+        };
+        super(ns, TaskSelectorProtocol, requestPort, responsePort, handlers);
     }
 }
 

@@ -1,6 +1,7 @@
 import type { NS } from 'netscript';
 
 import { Client, Message as ClientMessage } from 'util/client';
+import { isAnyOf, isLiteral, Validator } from '/util/validate';
 
 export const MONITOR_PORT = 13;
 export const MONITOR_RESPONSE_PORT = 14;
@@ -15,6 +16,17 @@ export enum Lifecycle {
     Harvesting,
     Rebalancing,
 }
+
+export const isLifecycle: Validator<Lifecycle> = isAnyOf(
+    isLiteral(Lifecycle.Worker),
+    isLiteral(Lifecycle.PendingTilling),
+    isLiteral(Lifecycle.Tilling),
+    isLiteral(Lifecycle.PendingSowing),
+    isLiteral(Lifecycle.Sowing),
+    isLiteral(Lifecycle.PendingHarvesting),
+    isLiteral(Lifecycle.Harvesting),
+    isLiteral(Lifecycle.Rebalancing),
+);
 
 export type MessageType = Lifecycle;
 
