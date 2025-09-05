@@ -306,8 +306,8 @@ export function defineProtocol<const P extends ProtocolDef>(def: P) {
                             `Invalid response payload for type=${String(type)} id=${message.id}: failed protocol validator`,
                             {
                                 cause: {
-                                    validator,
-                                    badPayload: peeked.payload,
+                                    request: payload,
+                                    response: peeked.payload,
                                 },
                             },
                         );
