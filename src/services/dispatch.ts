@@ -190,6 +190,25 @@ async function pumpOnce(
         return LoopAction.RamReset; // don't consume; tell caller to respawn
     }
 
+    if (ramDecision === DispatchResult.RamLimitExceeded) {
+        port.read();
+        const envelope = {
+            id: peeked.id,
+            type: peeked.type,
+            ok: true,
+            payload: {
+                ok: false,
+                error: new Error(
+                    `Requested function exceeds max configured NS fn RAM ${ns.formatRam(CONFIG.maxNsFnRam)}`,
+                ),
+            },
+        } satisfies ResponseOkEnvelope<unknown, DispatchResponse>;
+        while (!resp.tryWrite(envelope)) {
+            await ns.sleep(20);
+        }
+        return LoopAction.Continue;
+    }
+
     // Safe to run → do it, then consume and reply
     const response = await handleMessage(ns, payload);
     port.read();
