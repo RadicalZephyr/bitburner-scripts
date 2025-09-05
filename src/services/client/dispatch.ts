@@ -6,6 +6,7 @@ import {
     isAnyOf,
     isArrayUnknown,
     isDefined,
+    isError,
     isLiteral,
     isObjectLike,
     isString,
@@ -73,12 +74,12 @@ const isDispatchResponseOk: Validator<DispatchResponseOk> = isObjectLike({
 
 interface DispatchResponseErr {
     ok: false;
-    error: string;
+    error: Error;
 }
 
 const isDispatchResponseErr: Validator<DispatchResponseErr> = isObjectLike({
     ok: isLiteral(false),
-    error: isString,
+    error: isError,
 });
 
 export type DispatchResponse<T = unknown> =
