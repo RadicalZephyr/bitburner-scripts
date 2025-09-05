@@ -343,13 +343,13 @@ export class MemoryClient {
      * @param chunkSize Size in GB of the smallest chunk usable
      * @param numChunks The requested number of chunks
      * @param options   Requests about how the MemoryAllocator chooses chunks
-     * @returns
+     * @returns a transferable allocation or null if allocation fails
      */
     async requestTransferableAllocation(
         chunkSize: number,
         numChunks: number,
         options?: AllocOptions,
-    ): Promise<TransferableAllocation> {
+    ): Promise<TransferableAllocation | null> {
         const contiguous = options?.contiguous ?? false;
         const coreDependent = options?.coreDependent ?? false;
         const shrinkable = options?.shrinkable ?? false;
