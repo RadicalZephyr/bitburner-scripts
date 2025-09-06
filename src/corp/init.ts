@@ -1,4 +1,4 @@
-import type { AutocompleteData, NS } from '@ns';
+import type { AutocompleteData, CorpEmployeePosition, NS } from '@ns';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { AGRI_DIVISION, CITIES, CORPORATION_NAME } from 'corp/constants';
@@ -163,6 +163,46 @@ async function initCorporation(ns: NS, selfFund: boolean) {
         }
         for (let i = warehouse.level; i < 2; i++) {
             _ns('corporation.upgradeWarehouse', agriDivision.name, city);
+        }
+    }
+
+    while (agriDivision.researchPoints < 55) {
+        await ns.sleep(1000);
+        agriDivision = await _ns('corporation.getDivision', agriDivision.name);
+    }
+
+    for (const city of agriDivision.cities) {
+        const office = await _ns(
+            'corporation.getOffice',
+            agriDivision.name,
+            city,
+        );
+        // Remove workers from current jobs
+        for (const job in office.employeeJobs) {
+            if (office.employeeJobs[job] === 0) continue;
+            await _ns(
+                'corporation.setAutoJobAssignment',
+                agriDivision.name,
+                city,
+                job,
+                0,
+            );
+        }
+
+        const jobs: CorpEmployeePosition[] = [
+            'Operations',
+            'Engineer',
+            'Business',
+            'Management',
+        ];
+        for (const job of jobs) {
+            await _ns(
+                'corporation.setAutoJobAssignment',
+                agriDivision.name,
+                city,
+                job,
+                1,
+            );
         }
     }
 }
