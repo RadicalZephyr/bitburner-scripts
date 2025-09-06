@@ -46,6 +46,7 @@ OPTIONS
         running = false;
     }, makeFuid(ns));
 
+    // Keep the script alive so the memory allocation remains valid.
     while (running) {
         await ns.sleep(60_000);
     }
