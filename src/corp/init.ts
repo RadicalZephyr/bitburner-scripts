@@ -2,7 +2,7 @@ import type { AutocompleteData, CorpEmployeePosition, NS } from '@ns';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { AGRI_DIVISION, CITIES, CORPORATION_NAME } from 'corp/constants';
-import { DispatchClient } from '/services/client/dispatch';
+import { DispatchClient, DispatchFn } from 'services/client/dispatch';
 
 const FLAGS = [
     ['self-fund', false],
@@ -37,10 +37,7 @@ Example:
 }
 
 async function initCorporation(ns: NS, selfFund: boolean) {
-    const dispatchClient = new DispatchClient(ns);
-    const _ns = dispatchClient.dispatch.bind(
-        dispatchClient,
-    ) as (typeof dispatchClient)['dispatch'];
+    const _ns = new DispatchClient(ns).asNs();
 
     if (!ns.corporation.hasCorporation()) {
         if (!(await _ns('corporation.canCreateCorporation', selfFund))) {
