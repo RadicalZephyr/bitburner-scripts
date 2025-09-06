@@ -122,6 +122,17 @@ async function initCorporation(ns: NS, selfFund: boolean) {
         for (let i = office.numEmployees; i < 4; i++) {
             await _ns('corporation.hireEmployee', agriDivision.name, city);
         }
+
+        for (const job in office.employeeJobs) {
+            if (office.employeeJobs[job] === 0) continue;
+            await _ns(
+                'corporation.setAutoJobAssignment',
+                agriDivision.name,
+                city,
+                job,
+                0,
+            );
+        }
         await _ns(
             'corporation.setAutoJobAssignment',
             agriDivision.name,
