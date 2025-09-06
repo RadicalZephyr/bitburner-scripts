@@ -5,7 +5,7 @@ import { AGRI_DIVISION, CITIES, CORPORATION_NAME } from 'corp/constants';
 import { DispatchClient } from '/services/client/dispatch';
 
 const FLAGS = [
-    ['self', false],
+    ['self-fund', false],
     ['help', false],
 ] as const satisfies FlagsSchema;
 
@@ -27,8 +27,8 @@ USAGE: run ${ns.getScriptName()}
 Create our corporation and initial agriculture division.
 
 OPTIONS
-  --help Display this help message
-  --self Self fund starting your corporation (need +$150 billion)
+  --help       Display this help message
+  --self-fund  Self fund starting your corporation (need +$150 billion)
 
 Example:
   > run ${ns.getScriptName()}
@@ -36,7 +36,7 @@ Example:
         return;
     }
 
-    await initCorporation(ns, flags.self);
+    await initCorporation(ns, flags['self-fund']);
 }
 
 async function initCorporation(ns: NS, selfFund: boolean) {
