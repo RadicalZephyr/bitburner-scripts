@@ -188,6 +188,11 @@ export class DispatchClient {
     }
 }
 
+export type DispatchFn = <K extends NSMethodName>(
+    methodName: K,
+    ...args: NSArgs<K>
+) => Promise<NSReturn<K>>;
+
 /**
  * Call a Netscript API method by string name.
  *
