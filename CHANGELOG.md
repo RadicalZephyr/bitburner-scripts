@@ -37,6 +37,7 @@
 - The port allocator now clears ports before allocating them [#264][pr-264].
 - Bootstrap scripts prevent duplicate instances [#268][pr-268].
 - Memory service sorts workers with host prioritisation and alphabetical tie-breakers [#273][pr-273].
+- Dispatch executor runs Netscript functions in isolated processes, with a `DispatchClient` and configurable `SERVICE_maxNsFnRam` limit [#271][pr-271].
 
 ### IPvGO
 
@@ -194,6 +195,7 @@
 [pr-286]: https://github.com/RadicalZephyr/bitburner-scripts/pull/286
 [pr-287]: https://github.com/RadicalZephyr/bitburner-scripts/pull/287
 [pr-288]: https://github.com/RadicalZephyr/bitburner-scripts/pull/288
+[pr-271]: https://github.com/RadicalZephyr/bitburner-scripts/pull/271
 
 ## v2.1.0
 
