@@ -108,6 +108,39 @@ export type Message = AnyRequest<DispatchProtocolDef>;
 
 /**
  * Client for the Netscript Dispatch service.
+ *
+ * The dispatcher executes Netscript APIs in a temporary background process so
+ * the caller does not pay the target function's RAM cost.
+ *
+ * Advantages:
+ * - Expensive APIs can be used without their RAM cost in the calling script.
+ *
+ * Disadvantages:
+ * - Each request spawns an additional process which adds latency and requires free RAM.
+ * - Calls are rejected when the function's RAM cost exceeds `SERVICE_maxNsFnRam`.
+ *
+ * @remarks
+ * The ideal use-case for the `DispatchClient` is for infrequent calls
+ * to NS APIs that have very high RAM costs, such as the Corporation
+ * API, or the Gang initialization APIs.
+ *
+ * Usage of the `DispatchClient` and the regular `NS` API instance can
+ * be mixed freely.
+ *
+ * Any Netscript functions that have zero RAM cost will not be sent to
+ * the dispatch executor process, instead they will be immediately
+ * invoked in the current process.
+ *
+ * WARNING:
+ * All Netscript APIs are awaited to completion, so calling any
+ * Netscript API that blocks for long periods of time will cause the
+ * executor process to block until the promise resolves!
+ *
+ * @example
+ * ```ts
+ * const _ns = new DispatchClient(ns);
+ * const server = await _ns.dispatch('getServer', 'n00dles');
+ * ```
  */
 export class DispatchClient {
     #ns: NS;
