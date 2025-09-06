@@ -1,21 +1,15 @@
 import type { NS } from 'netscript';
 
-import {
-    AnyRequest,
-    BaseClient,
-    defineProtocol,
-    isResponseUnknown,
-} from 'util/protocol';
+import { AnyRequest, BaseClient, defineProtocol } from 'util/protocol';
 import {
     Validator,
-    isUnionOf,
+    isAny,
     isArrayUnknown,
-    isDefined,
     isError,
     isLiteral,
     isObjectLike,
     isString,
-    isAny,
+    isUnionOf,
 } from 'util/validate';
 
 export const DISPATCH_PORT = 21;
