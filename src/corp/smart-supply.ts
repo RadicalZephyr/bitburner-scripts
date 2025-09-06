@@ -10,6 +10,8 @@ import type {
 } from '@ns';
 import { parseFlags } from 'util/flags';
 
+import { DispatchClient, DispatchFn } from 'services/client/dispatch';
+
 export async function main(ns: NS) {
     await parseFlags(ns, []);
 
@@ -33,31 +35,34 @@ async function manageSupply(
     SmartSupplyData: Record<string, number>,
     WarehouseCongestionData: Record<string, number>,
 ) {
-    const corp = ns.corporation;
+    const dispatchClient = new DispatchClient(ns);
+    const _ns = dispatchClient.dispatch.bind(dispatchClient) as DispatchFn;
+
     while (true) {
-        const corpInfo = corp.getCorporation();
+        const corpInfo = await _ns('corporation.getCorporation');
         for (const divName of corpInfo.divisions)
-            manageDivisionSupply(
+            await manageDivisionSupply(
                 ns,
+                _ns,
                 SmartSupplyData,
                 WarehouseCongestionData,
                 corpInfo,
                 divName,
             );
-        await corp.nextUpdate();
+        await ns.corporation.nextUpdate();
     }
 }
 
-function manageDivisionSupply(
+async function manageDivisionSupply(
     ns: NS,
+    _ns: DispatchFn,
     SmartSupplyData: Record<string, number>,
     WarehouseCongestionData: Record<string, number>,
     corpInfo: CorporationInfo,
     divName: string,
 ) {
-    const corp = ns.corporation;
-    const division = corp.getDivision(divName);
-    const industry = corp.getIndustryData(division.type);
+    const division = await _ns('corporation.getDivision', divName);
+    const industry = await _ns('corporation.getIndustryData', division.type);
     const reqMats = industry.requiredMaterials as Record<
         CorpMaterialName,
         number
