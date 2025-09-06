@@ -17,10 +17,7 @@ export function autocomplete(data: AutocompleteData): string[] {
 export async function main(ns: NS) {
     const flags = await parseFlags(ns, FLAGS);
 
-    if (
-        (typeof flags.help !== 'boolean' && flags.help)
-        || typeof flags.self !== 'boolean'
-    ) {
+    if (flags.help) {
         ns.tprint(`
 USAGE: run ${ns.getScriptName()}
 
@@ -91,7 +88,7 @@ async function initCorporation(ns: NS, selfFund: boolean) {
         agriDivision.name,
     );
     for (let i = adCount; i < 2; i++) {
-        _ns('corporation.hireAdVert', agriDivision.name));
+        _ns('corporation.hireAdVert', agriDivision.name);
     }
 
     const agriCities = new Set(agriDivision.cities);
