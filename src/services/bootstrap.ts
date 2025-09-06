@@ -34,7 +34,11 @@ export async function main(ns: NS) {
 
     const client = new LaunchClient(ns);
 
-    const essentialServices = ['/services/port.js', '/services/source_file.js'];
+    const essentialServices = [
+        '/services/port.js',
+        '/services/source_file.js',
+        '/services/dispatch-init.js',
+    ];
 
     for (const script of essentialServices) {
         await client.launch(script, {
