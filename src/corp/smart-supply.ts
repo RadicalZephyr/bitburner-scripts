@@ -1,11 +1,156 @@
-import type { NS, CityName, CorpMaterialName, Material, Product } from '@ns';
+import type {
+    NS,
+    CityName,
+    CorpMaterialName,
+    Material,
+    Product,
+    CorporationInfo,
+    CorpIndustryData,
+    Division,
+} from '@ns';
 import { parseFlags } from 'util/flags';
 
-/** Data tracked between cycles for calculating input requirements. */
-const SmartSupplyData: Record<string, number> = {};
+export async function main(ns: NS) {
+    await parseFlags(ns, []);
 
-/** Heuristic counters used for detecting warehouse congestion. */
-const WarehouseCongestionData: Record<string, number> = {};
+    const corp = ns.corporation;
+    if (!corp.hasCorporation()) {
+        ns.tprint('ERROR: you must create a corporation first');
+        return;
+    }
+
+    /** Data tracked between cycles for calculating input requirements. */
+    const SmartSupplyData: Record<string, number> = {};
+
+    /** Heuristic counters used for detecting warehouse congestion. */
+    const WarehouseCongestionData: Record<string, number> = {};
+
+    await manageSupply(ns, SmartSupplyData, WarehouseCongestionData);
+}
+
+async function manageSupply(
+    ns: NS,
+    SmartSupplyData: Record<string, number>,
+    WarehouseCongestionData: Record<string, number>,
+) {
+    const corp = ns.corporation;
+    while (true) {
+        const corpInfo = corp.getCorporation();
+        for (const divName of corpInfo.divisions)
+            manageDivisionSupply(
+                ns,
+                SmartSupplyData,
+                WarehouseCongestionData,
+                corpInfo,
+                divName,
+            );
+        await corp.nextUpdate();
+    }
+}
+
+function manageDivisionSupply(
+    ns: NS,
+    SmartSupplyData: Record<string, number>,
+    WarehouseCongestionData: Record<string, number>,
+    corpInfo: CorporationInfo,
+    divName: string,
+) {
+    const corp = ns.corporation;
+    const division = corp.getDivision(divName);
+    const industry = corp.getIndustryData(division.type);
+    const reqMats = industry.requiredMaterials as Record<
+        CorpMaterialName,
+        number
+    >;
+    for (const city of division.cities) {
+        manageDivisionRegionSupply(
+            ns,
+            SmartSupplyData,
+            WarehouseCongestionData,
+            corpInfo,
+            division,
+            industry,
+            city,
+            reqMats,
+        );
+    }
+}
+
+function manageDivisionRegionSupply(
+    ns: NS,
+    SmartSupplyData: Record<string, number>,
+    WarehouseCongestionData: Record<string, number>,
+    corpInfo: CorporationInfo,
+    division: Division,
+    industry: CorpIndustryData,
+    city: CityName,
+    reqMats: Record<CorpMaterialName, number>,
+) {
+    const corp = ns.corporation;
+    const divName = division.name;
+    const key = `${divName}|${city}`;
+
+    if (corpInfo.prevState === 'PURCHASE') {
+        let total = 0;
+        if (industry.makesMaterials && industry.producedMaterials) {
+            for (const mat of industry.producedMaterials) {
+                const data = corp.getMaterialData(mat);
+                total += getLimitedRawProduction(
+                    ns,
+                    divName,
+                    city,
+                    data.size,
+                    reqMats,
+                );
+            }
+        }
+        if (industry.makesProducts) {
+            for (const prodName of division.products) {
+                const prod = corp.getProduct(divName, city, prodName);
+                if (prod.developmentProgress >= 100) {
+                    total += getLimitedRawProduction(
+                        ns,
+                        divName,
+                        city,
+                        prod.size,
+                        reqMats,
+                        true,
+                    );
+                }
+            }
+        }
+        SmartSupplyData[key] = total;
+    } else if (corpInfo.nextState === 'PURCHASE') {
+        const outputs: (Material | Product)[] = [];
+        if (industry.makesMaterials && industry.producedMaterials) {
+            for (const mat of industry.producedMaterials) {
+                outputs.push(corp.getMaterial(divName, city, mat));
+            }
+        }
+        if (industry.makesProducts) {
+            for (const prodName of division.products) {
+                const prod = corp.getProduct(divName, city, prodName);
+                if (prod.developmentProgress >= 100) outputs.push(prod);
+            }
+        }
+        const congested = checkCongestion(
+            ns,
+            WarehouseCongestionData,
+            divName,
+            city,
+            outputs,
+        );
+        if (!congested) {
+            const totalRaw = SmartSupplyData[key] ?? 0;
+            if (totalRaw > 0) buyInputs(ns, divName, city, totalRaw, reqMats);
+        } else {
+            for (const mat of Object.keys(reqMats)) {
+                corp.sellMaterial(divName, city, mat, 'MAX', '0');
+                corp.buyMaterial(divName, city, mat, 0);
+            }
+        }
+    }
+}
 
 /**
  * Calculate the raw production for a city limited by free warehouse space.
@@ -28,10 +173,9 @@ export function getLimitedRawProduction(
     requiredMaterials: Record<CorpMaterialName, number>,
     isProduct = false,
 ): number {
-    const corp = ns.corporation;
-    const office = corp.getOffice(division, city);
-    const warehouse = corp.getWarehouse(division, city);
-    const divisionInfo = corp.getDivision(division);
+    const office = ns.corporation.getOffice(division, city);
+    const warehouse = ns.corporation.getWarehouse(division, city);
+    const divisionInfo = ns.corporation.getDivision(division);
 
     const ops = office.employeeProductionByJob['Operations'];
     const eng = office.employeeProductionByJob['Engineer'];
@@ -46,7 +190,8 @@ export function getLimitedRawProduction(
     let officeMult = balancing * employeeMult;
     if (isProduct) officeMult *= 0.5;
 
-    const upgradeMult = 1 + 0.03 * corp.getUpgradeLevel('Smart Factories');
+    const upgradeMult =
+        1 + 0.03 * ns.corporation.getUpgradeLevel('Smart Factories');
     const researchMult = 1; // approximation
     const rawProduction =
         officeMult * divisionInfo.productionMult * upgradeMult * researchMult;
@@ -56,7 +201,8 @@ export function getLimitedRawProduction(
     let inputSpace = 0;
     for (const [mat, coeff] of Object.entries(requiredMaterials)) {
         inputSpace +=
-            coeff * corp.getMaterialData(mat as CorpMaterialName).size;
+            coeff
+            * ns.corporation.getMaterialData(mat as CorpMaterialName).size;
     }
     const requiredSpacePerUnit = outputSize - inputSpace;
     if (requiredSpacePerUnit > 0) {
@@ -69,6 +215,7 @@ export function getLimitedRawProduction(
 
 function checkCongestion(
     ns: NS,
+    WarehouseCongestionData: Record<string, number>,
     division: string,
     city: CityName,
     outputs: (Material | Product)[],
@@ -135,101 +282,5 @@ function buyInputs(
 
     for (const [name, qty] of Object.entries(amounts)) {
         corp.buyMaterial(division, city, name, qty / 10);
-    }
-}
-
-export async function main(ns: NS) {
-    await parseFlags(ns, []);
-
-    const corp = ns.corporation;
-    if (!corp.hasCorporation()) {
-        ns.tprint('ERROR: you must create a corporation first');
-        return;
-    }
-
-    while (true) {
-        const corpInfo = corp.getCorporation();
-        for (const divName of corpInfo.divisions) {
-            const division = corp.getDivision(divName);
-            const industry = corp.getIndustryData(division.type);
-            const reqMats = industry.requiredMaterials as Record<
-                CorpMaterialName,
-                number
-            >;
-            for (const city of division.cities) {
-                const key = `${divName}|${city}`;
-
-                if (corpInfo.prevState === 'PURCHASE') {
-                    let total = 0;
-                    if (industry.makesMaterials && industry.producedMaterials) {
-                        for (const mat of industry.producedMaterials) {
-                            const data = corp.getMaterialData(mat);
-                            total += getLimitedRawProduction(
-                                ns,
-                                divName,
-                                city,
-                                data.size,
-                                reqMats,
-                            );
-                        }
-                    }
-                    if (industry.makesProducts) {
-                        for (const prodName of division.products) {
-                            const prod = corp.getProduct(
-                                divName,
-                                city,
-                                prodName,
-                            );
-                            if (prod.developmentProgress >= 100) {
-                                total += getLimitedRawProduction(
-                                    ns,
-                                    divName,
-                                    city,
-                                    prod.size,
-                                    reqMats,
-                                    true,
-                                );
-                            }
-                        }
-                    }
-                    SmartSupplyData[key] = total;
-                } else if (corpInfo.nextState === 'PURCHASE') {
-                    const outputs: (Material | Product)[] = [];
-                    if (industry.makesMaterials && industry.producedMaterials) {
-                        for (const mat of industry.producedMaterials) {
-                            outputs.push(corp.getMaterial(divName, city, mat));
-                        }
-                    }
-                    if (industry.makesProducts) {
-                        for (const prodName of division.products) {
-                            const prod = corp.getProduct(
-                                divName,
-                                city,
-                                prodName,
-                            );
-                            if (prod.developmentProgress >= 100)
-                                outputs.push(prod);
-                        }
-                    }
-                    const congested = checkCongestion(
-                        ns,
-                        divName,
-                        city,
-                        outputs,
-                    );
-                    if (!congested) {
-                        const totalRaw = SmartSupplyData[key] ?? 0;
-                        if (totalRaw > 0)
-                            buyInputs(ns, divName, city, totalRaw, reqMats);
-                    } else {
-                        for (const mat of Object.keys(reqMats)) {
-                            corp.sellMaterial(divName, city, mat, 'MAX', '0');
-                            corp.buyMaterial(divName, city, mat, 0);
-                        }
-                    }
-                }
-            }
-        }
-        await corp.nextUpdate();
     }
 }
