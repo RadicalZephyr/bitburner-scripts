@@ -86,6 +86,14 @@ async function initCorporation(ns: NS, selfFund: boolean) {
         }
     }
 
+    const adCount = await _ns(
+        'corporation.getHireAdVertCount',
+        agriDivision.name,
+    );
+    for (let i = adCount; i < 2; i++) {
+        _ns('corporation.hireAdVert', agriDivision.name));
+    }
+
     const agriCities = new Set(agriDivision.cities);
     for (const city of CITIES) {
         if (!agriCities.has(city)) {
@@ -125,13 +133,28 @@ async function initCorporation(ns: NS, selfFund: boolean) {
             4,
         );
 
-        const warehouse = await _ns(
+        let warehouse = await _ns(
             'corporation.getWarehouse',
             agriDivision.name,
             city,
         );
         if (!warehouse) {
             await _ns('corporation.purchaseWarehouse', agriDivision.name, city);
+            warehouse = await _ns(
+                'corporation.getWarehouse',
+                agriDivision.name,
+                city,
+            );
+            if (!warehouse) {
+                ns.ui.openTail();
+                ns.print(
+                    `WARN: could not buy warehouse for ${agriDivision.name} in ${city}`,
+                );
+                return;
+            }
+        }
+        for (let i = warehouse.level; i < 2; i++) {
+            _ns('corporation.upgradeWarehouse', agriDivision.name, city);
         }
     }
 }
