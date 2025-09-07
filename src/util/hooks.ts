@@ -13,12 +13,14 @@ export function usePoll<T>(ns: NS, interval: number, pollFn: () => T): T {
     const [data, setData] = React.useState(pollFn());
 
     React.useEffect(() => {
-        const id = globalThis.setInterval(() => {
+        let id: number | null;
+        id = globalThis.setInterval(() => {
             try {
                 setData(pollFn());
             } catch (err) {
                 console.error(err);
-                globalThis.clearInterval(id);
+                if (id) globalThis.clearInterval(id);
+                id = null;
             }
         }, interval);
 
@@ -28,7 +30,8 @@ export function usePoll<T>(ns: NS, interval: number, pollFn: () => T): T {
 
         return () => {
             ns.atExit(() => null, exitHandlerName);
-            globalThis.clearInterval(id);
+            if (id) globalThis.clearInterval(id);
+            id = null;
         };
     }, [ns, interval, pollFn]);
 
@@ -52,12 +55,14 @@ export function useNsUpdate<T>(
     const [data, setData] = React.useState(updateFn(ns));
 
     React.useEffect(() => {
-        const id = globalThis.setInterval(() => {
+        let id: number | null;
+        id = globalThis.setInterval(() => {
             try {
                 setData(updateFn(ns));
             } catch (err) {
                 console.error(err);
-                globalThis.clearInterval(id);
+                if (id) globalThis.clearInterval(id);
+                id = null;
             }
         }, interval);
 
@@ -67,7 +72,8 @@ export function useNsUpdate<T>(
 
         return () => {
             ns.atExit(() => null, exitHandlerName);
-            globalThis.clearInterval(id);
+            if (id) globalThis.clearInterval(id);
+            id = null;
         };
     }, [ns, interval, updateFn]);
 
