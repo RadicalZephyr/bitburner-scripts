@@ -115,9 +115,9 @@ async function getResultSequence(
 
 function flipResult(coinResult: HTMLElement): HeadsOrTails {
     const flipText = coinResult.textContent;
-    if (flipText === 'H' || flipText === 'Head') {
+    if (isHeads(flipText)) {
         return HeadsOrTails.H;
-    } else if (flipText === 'T' || flipText === 'Tail') {
+    } else if (isTails(flipText)) {
         return HeadsOrTails.T;
     } else {
         throw new Error(
@@ -125,6 +125,9 @@ function flipResult(coinResult: HTMLElement): HeadsOrTails {
         );
     }
 }
+
+const isHeads = (text: string) => text === 'H' || text === 'Head';
+const isTails = (text: string) => text === 'T' || text === 'Tail';
 
 interface CoinFlipGame {
     root: HTMLElement;
@@ -165,7 +168,11 @@ async function searchForCoinFlip(ns: NS): Promise<CoinFlipGameWithResult> {
     coinFlip.bet(1);
     coinFlip.clickHeads();
 
-    const coinResult = findElementWithTagName(coinFlip.root, 'p');
+    const coinResult = findElementWithTagName(
+        coinFlip.root,
+        'p',
+        (p) => isHeads(p.textContent) || isTails(p.textContent),
+    );
     if (!coinResult)
         throw new Error('No coin result tag found! Did the game HTML change?');
 
@@ -208,7 +215,10 @@ function findCoinFlipGame(root: Element): CoinFlipGame | null {
 
         const bet = (amount: number) => {
             input.value = String(amount);
-            changeInput({ target: { value: amount } });
+            changeInput({
+                currentTarget: { value: amount },
+                target: { value: amount },
+            });
         };
 
         const clickHeads = bindPropFn(
