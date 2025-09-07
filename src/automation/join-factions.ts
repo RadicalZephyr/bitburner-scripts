@@ -88,7 +88,7 @@ function companyFactions(ns: NS): FactionName[] {
     return [
         fn.ECorp,
         fn.MegaCorp,
-        fn.BachmanAssociates,
+        fn.BachmanAndAssociates,
         fn.BladeIndustries,
         fn.NWO,
         fn.ClarkeIncorporated,
