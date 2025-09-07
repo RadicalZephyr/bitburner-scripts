@@ -1,6 +1,6 @@
 import type { NS, AutocompleteData } from 'netscript';
 import { FlagsSchema, parseFlags } from 'util/flags';
-import { canAfford } from '/util/money';
+import { canAfford } from 'util/money';
 
 const FLAGS = [['help', false]] as const satisfies FlagsSchema;
 

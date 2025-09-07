@@ -30,7 +30,6 @@
         "allowJs": true,
         "types": ["jest"],
         "paths": {
-            "/*": ["*"],
             "netscript": ["../NetScriptDefinitions.d.ts"]
         }
     }
