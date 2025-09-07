@@ -5,9 +5,10 @@ import { makeFuid } from 'util/fuid';
 /**
  * Get an updating state value derived from polling the given function.
  *
- * @param interval - Milliseconds between polling `pollFn`
- * @param pollFn   - Function to poll state changes
- * @returns Reactive state produced by `pollFn`
+ * @template T
+ * @param {number} interval  - Milliseconds between polling `pollFn`
+ * @param {() => T} pollFn   - Function to poll state changes
+ * @returns {T} Reactive state produced by `pollFn`
  */
 export function usePoll<T>(ns: NS, interval: number, pollFn: () => T): T {
     const [data, setData] = React.useState(pollFn());
@@ -42,10 +43,11 @@ export function usePoll<T>(ns: NS, interval: number, pollFn: () => T): T {
  * Get an updating state value derived from polling the Netscript API
  * with an update function.
  *
- * @param ns       - Netscript API instance
- * @param interval - Milliseconds between polling `updateFn`
- * @param updateFn - Function to poll state from Netscript APIs
- * @returns Reactive state produced by `updateFn`
+ * @template T
+ * @param {NS} ns                  - Netscript API instance
+ * @param {number} interval        - Milliseconds between polling `updateFn`
+ * @param {(ns: NS) => T} updateFn - Function to poll state from Netscript APIs
+ * @returns {T} Reactive state produced by `updateFn`
  */
 export function useNsUpdate<T>(
     ns: NS,
@@ -83,14 +85,20 @@ export function useNsUpdate<T>(
 /**
  * Keep a UserInterfaceTheme updated by polling `ns.ui.getTheme()`.
  *
- * @param ns - Netscript API instance
- * @param interval - Milliseconds between theme refreshes
- * @returns The current theme from the UI
+ * @param {NS} ns - Netscript API instance
+ * @param {number} interval - Milliseconds between theme refreshes
+ * @returns {UserInterfaceTheme} The current theme from the UI
  */
 export function useTheme(ns: NS, interval = 200): UserInterfaceTheme {
     return useNsUpdate(ns, interval, getTheme);
 }
 
+/**
+ * Return the current UI theme.
+ *
+ * @param {NS} ns
+ * @returns {UserInterfaceTheme}
+ */
 function getTheme(ns: NS): UserInterfaceTheme {
     return ns.ui.getTheme();
 }

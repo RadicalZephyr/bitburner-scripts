@@ -7,10 +7,10 @@ import { NS } from 'netscript';
  * in milliseconds since the epoch start (Jan. 1st, 1970), and a 6
  * digit random number.
  *
- * @param ns - Netscript API instance
- * @returns A string representation of the FUID
+ * @param {NS} ns - Netscript API instance
+ * @returns {string} A string representation of the FUID
  */
-export function makeFuid(ns: NS) {
+export function makeFuid(ns: NS): string {
     const pid = ns.pid;
     const ts = Date.now();
     const r = Math.floor(Math.random() * 1e6);
