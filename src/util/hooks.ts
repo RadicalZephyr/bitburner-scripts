@@ -15,27 +15,26 @@ export function usePoll<T>(ns: NS, interval: number, pollFn: () => T): T {
 
     React.useEffect(() => {
         let id: number | null;
+        const clearInterval = () => {
+            if (id != null) globalThis.clearInterval(id);
+            id = null;
+        };
         id = globalThis.setInterval(() => {
             try {
                 setData(pollFn());
             } catch (err) {
                 console.error(err);
-                if (id != null) globalThis.clearInterval(id);
-                id = null;
+                clearInterval();
             }
         }, interval);
 
         const exitHandlerName = 'usePoll-' + makeFuid(ns);
 
-        ns.atExit(() => {
-            if (id != null) globalThis.clearInterval(id);
-            id = null;
-        }, exitHandlerName);
+        ns.atExit(clearInterval, exitHandlerName);
 
         return () => {
             ns.atExit(() => null, exitHandlerName);
-            if (id != null) globalThis.clearInterval(id);
-            id = null;
+            clearInterval();
         };
     }, [ns, interval, pollFn]);
 
@@ -61,27 +60,26 @@ export function useNsUpdate<T>(
 
     React.useEffect(() => {
         let id: number | null;
+        const clearInterval = () => {
+            if (id != null) globalThis.clearInterval(id);
+            id = null;
+        };
         id = globalThis.setInterval(() => {
             try {
                 setData(updateFn(ns));
             } catch (err) {
                 console.error(err);
-                if (id != null) globalThis.clearInterval(id);
-                id = null;
+                clearInterval();
             }
         }, interval);
 
         const exitHandlerName = 'useNsUpdate-' + makeFuid(ns);
 
-        ns.atExit(() => {
-            if (id != null) globalThis.clearInterval(id);
-            id = null;
-        }, exitHandlerName);
+        ns.atExit(clearInterval, exitHandlerName);
 
         return () => {
             ns.atExit(() => null, exitHandlerName);
-            if (id != null) globalThis.clearInterval(id);
-            id = null;
+            clearInterval();
         };
     }, [ns, interval, updateFn]);
 
