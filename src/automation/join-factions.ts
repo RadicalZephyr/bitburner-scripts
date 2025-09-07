@@ -1,15 +1,15 @@
 import type { FactionName, NS } from 'netscript';
 import { parseFlags } from 'util/flags';
 
+import { exitOnKill } from 'util/exitOnKill';
+
 export async function main(ns: NS) {
     await parseFlags(ns, []);
 
     acceptInvites(ns);
     pursueInvites(ns);
 
-    while (true) {
-        await ns.asleep(60_000);
-    }
+    return exitOnKill(ns);
 }
 
 async function acceptInvites(ns: NS) {

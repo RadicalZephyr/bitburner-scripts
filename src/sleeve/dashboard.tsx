@@ -6,6 +6,7 @@ import type {
 } from 'netscript';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
+import { exitOnKill } from 'util/exitOnKill';
 import { usePoll, useTheme } from 'util/hooks';
 import { StatTracker } from 'util/stat-tracker';
 
@@ -71,9 +72,7 @@ OPTIONS
     ns.printRaw(<SleeveDashboard ns={ns} pollFn={pollFn} />);
     ns.ui.renderTail();
 
-    while (true) {
-        await ns.asleep(60_000);
-    }
+    return exitOnKill(ns);
 }
 
 interface SleeveData extends SleevePerson {

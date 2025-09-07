@@ -6,6 +6,7 @@ import type {
 } from 'netscript';
 import { parseFlags } from 'util/flags';
 
+import { exitOnKill } from 'util/exitOnKill';
 import { useNsUpdate, useTheme } from 'util/hooks';
 
 export async function main(ns: NS) {
@@ -19,9 +20,7 @@ export async function main(ns: NS) {
     ns.clearLog();
     ns.printRaw(<LocationBlock ns={ns} />);
 
-    while (true) {
-        await ns.asleep(60_000);
-    }
+    return exitOnKill(ns);
 }
 
 function getInfiltrations(ns: NS) {

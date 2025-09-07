@@ -1,6 +1,9 @@
 import type { NS, AutocompleteData, CompanyName } from 'netscript';
 import { FlagsSchema, parseFlags } from 'util/flags';
+
 import { bestJob } from 'automation/company-work';
+
+import { exitOnKill } from 'util/exitOnKill';
 
 const FLAGS = [['help', false]] as const satisfies FlagsSchema;
 
@@ -59,6 +62,6 @@ async function workFor(ns: NS, companyName: CompanyName) {
             return;
         }
 
-        await ns.asleep(60_000);
+        return exitOnKill(ns);
     }
 }

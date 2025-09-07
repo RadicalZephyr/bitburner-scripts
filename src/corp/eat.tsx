@@ -5,6 +5,7 @@ import { getSourceFileLevel } from 'services/client/source_file';
 
 import { travelToCityForLocation } from 'automation/travel';
 
+import { exitOnKill } from 'util/exitOnKill';
 import { makeFuid } from 'util/fuid';
 import { useTheme } from 'util/hooks';
 import { getReactProps } from 'util/props';
@@ -47,9 +48,7 @@ CONFIGURATION
     ns.printRaw(<EatIt ns={ns} className={className} eatFn={eatFn} />);
     ns.ui.renderTail();
 
-    while (true) {
-        await ns.asleep(60_000);
-    }
+    return exitOnKill(ns);
 }
 
 interface EatButton {
