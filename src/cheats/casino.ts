@@ -40,10 +40,46 @@ OPTIONS
     await cheatTheHouse(ns);
 }
 
+const coinFlipPeriod = 1024;
+const maxCoinFlipBet = 10_000;
+const maxCasinoWinnings = 10_000_000_000;
+
 async function cheatTheHouse(ns: NS) {
     const coinFlipGame = await searchForCoinFlip(ns);
 
-    const resultSequence = getResultSequence(ns, coinFlipGame);
+    const resultSequence = await getResultSequence(ns, coinFlipGame);
+
+    await cheatAtCoinFlips(ns, coinFlipGame, resultSequence);
+}
+
+async function cheatAtCoinFlips(
+    ns: NS,
+    coinFlipGame: CoinFlipGameWithResult,
+    results: HeadsOrTails[],
+) {
+    // Set bet to max value
+    coinFlipGame.bet(maxCoinFlipBet);
+
+    ns.print('Finished calculating. You can leave the casino now!');
+
+    const getCasinoWinnings = () => ns.getMoneySources().sinceInstall.casino;
+
+    let loops = 0;
+    while (getCasinoWinnings() < maxCasinoWinnings) {
+        if (loops % 1000 == 0) {
+            await ns.asleep(0);
+        }
+
+        const nextToss = results[loops % coinFlipPeriod];
+        if (nextToss === HeadsOrTails.H) coinFlipGame.clickHeads();
+        else if (nextToss === HeadsOrTails.T) coinFlipGame.clickTails();
+        else
+            throw new Error(
+                'This should never happen, what did you do to my results array?!',
+            );
+
+        loops += 1;
+    }
 }
 
 const HeadsOrTails = {
@@ -56,6 +92,8 @@ async function getResultSequence(
     ns: NS,
     coinFlipGame: CoinFlipGameWithResult,
 ): Promise<HeadsOrTails[]> {
+    ns.print('Calculating sequence, wait here for a moment...');
+
     // Set bet to 1 while recording sequence
     coinFlipGame.bet(1);
 
@@ -66,7 +104,7 @@ async function getResultSequence(
 
     // Record sequence of results from the bad RNG for coin flipping
     const results: HeadsOrTails[] = [];
-    for (let i = 0; i < 1024; i++) {
+    for (let i = 0; i < coinFlipPeriod; i++) {
         flipCoin();
         results.push(flipResult(coinFlipGame.coinResult));
         if (i % 200 === 0) await ns.asleep(0);
