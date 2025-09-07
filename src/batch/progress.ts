@@ -84,8 +84,8 @@ export function printRoundProgress(ns: NS, info: RoundInfo) {
     ns.clearLog();
     ns.print(`
 Round ${info.round} of ${info.totalRounds}
-Elapsed time:    ${ns.tFormat(elapsed)}
-Round ends:      ${ns.tFormat(info.roundEnd)}
-Total expected:  ${ns.tFormat(info.totalExpectedEnd)}
+Elapsed time:    ${ns.format.time(elapsed)}
+Round ends:      ${ns.format.time(info.roundEnd)}
+Total expected:  ${ns.format.time(info.totalExpectedEnd)}
 `);
 }

@@ -53,7 +53,7 @@ CONFIGURATION
 
         const value = numToSell * 1000000;
         ns.print(
-            `sold ${numToSell * cost} hashes for $${ns.formatNumber(value)}`,
+            `sold ${numToSell * cost} hashes for $${ns.format.number(value)}`,
         );
     } while (flags.continue);
 }

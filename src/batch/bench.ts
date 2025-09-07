@@ -68,9 +68,9 @@ OPTIONS
             const wasteStd = std(wastes);
 
             ns.print(
-                `INFO: ${target} ${name} μ=${ns.formatNumber(iterMean)} `
-                    + `median=${ns.formatNumber(iterMed)} `
-                    + `Δ=${ns.formatNumber(wasteMean)} σ=${ns.formatNumber(wasteStd)}`,
+                `INFO: ${target} ${name} μ=${ns.format.number(iterMean)} `
+                    + `median=${ns.format.number(iterMed)} `
+                    + `Δ=${ns.format.number(wasteMean)} σ=${ns.format.number(wasteStd)}`,
             );
             await ns.sleep(10);
         }

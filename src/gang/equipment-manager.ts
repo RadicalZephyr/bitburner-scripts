@@ -60,7 +60,7 @@ export function purchaseBestGear(
             continue;
 
         ns.print(
-            `INFO: ROI on buying ${equip.name} is ${ns.tFormat(equip.roi * 1000)}`,
+            `INFO: ROI on buying ${equip.name} is ${ns.format.time(equip.roi * 1000)}`,
         );
         if (equip.roi <= limit) {
             if (ns.gang.purchaseEquipment(memberName, equip.name)) {

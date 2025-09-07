@@ -198,7 +198,7 @@ async function pumpOnce(
             payload: {
                 ok: false,
                 error: new Error(
-                    `Requested function exceeds max configured NS fn RAM ${ns.formatRam(CONFIG.maxNsFnRam)}`,
+                    `Requested function exceeds max configured NS fn RAM ${ns.format.ram(CONFIG.maxNsFnRam)}`,
                 ),
             },
         } satisfies ResponseOkEnvelope<unknown, DispatchResponse>;
@@ -257,7 +257,7 @@ function canExecuteNextFn(
     // Check if the next function exceeds maximum RAM usage
     if (CONFIG.maxNsFnRam < nextFnRam) {
         ns.print(
-            `Requested function exceeds max configured NS fn RAM ${ns.formatRam(CONFIG.maxNsFnRam)}`,
+            `Requested function exceeds max configured NS fn RAM ${ns.format.ram(CONFIG.maxNsFnRam)}`,
         );
         return DispatchResult.RamLimitExceeded;
     }
@@ -269,7 +269,7 @@ function canExecuteNextFn(
 
         if (CONFIG.maxNsFnRam < nextDynRam) {
             ns.print(
-                `WARN: next call to ns.${method}() would push dynamic RAM from ${ns.formatRam(currentDynRam)} to ${ns.formatRam(nextDynRam)} which exceeds ${ns.formatRam(CONFIG.maxNsFnRam)}.`,
+                `WARN: next call to ns.${method}() would push dynamic RAM from ${ns.format.ram(currentDynRam)} to ${ns.format.ram(nextDynRam)} which exceeds ${ns.format.ram(CONFIG.maxNsFnRam)}.`,
             );
             return DispatchResult.RamReset;
         }

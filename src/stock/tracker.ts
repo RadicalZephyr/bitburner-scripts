@@ -92,16 +92,16 @@ CONFIGURATION
         });
         const corr = computeCorrelations(Object.fromEntries(buffers));
         ns.print(
-            `INFO: ${symbols[0]} μ=${ns.formatNumber(stats.mean)} `
-                + `median=${ns.formatNumber(stats.median)} `
-                + `σ=${ns.formatNumber(stats.std)} `
-                + `z=${ns.formatNumber(stats.zScore)} `
-                + `roc=${ns.formatPercent(stats.roc[5])}`,
+            `INFO: ${symbols[0]} μ=${ns.format.number(stats.mean)} `
+                + `median=${ns.format.number(stats.median)} `
+                + `σ=${ns.format.number(stats.std)} `
+                + `z=${ns.format.number(stats.zScore)} `
+                + `roc=${ns.format.percent(stats.roc[5])}`,
         );
         if (symbols.length > 1) {
             ns.print(
                 `INFO: corr ${symbols[0]}-${symbols[1]}=`
-                    + ns.formatPercent(corr[symbols[0]][symbols[1]]),
+                    + ns.format.percent(corr[symbols[0]][symbols[1]]),
             );
         }
 

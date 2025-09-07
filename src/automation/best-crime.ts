@@ -44,7 +44,7 @@ async function printBestCrime(ns: NS) {
                 const successChance = crimeSuccessChance(ns, c);
                 const expectedMoneyPerSec =
                     (c.money * successChance) / (c.time / 1000);
-                return `${c.name}: $${ns.formatNumber(expectedMoneyPerSec)}`;
+                return `${c.name}: $${ns.format.number(expectedMoneyPerSec)}`;
             },
         );
 

@@ -183,7 +183,7 @@ CONFIGURATION
     const backtestPnlLog = '/logs/backtest-pnl.json';
     ns.write(backtestPnlLog, JSON.stringify(timeline, null, 2), 'w');
     ns.tprint(
-        `INFO: Backtest final value ${ns.formatNumber(result.finalValue)} with ${result.trades} trades`,
+        `INFO: Backtest final value ${ns.format.number(result.finalValue)} with ${result.trades} trades`,
     );
     ns.tprint(
         `INFO: Wrote P&L timeline to ${backtestPnlLog} with ${timeline.length} points`,

@@ -35,8 +35,8 @@ export async function main(ns: NS) {
 Usage: ${ns.getScriptName()} [OPTIONS]
 
 OPTIONS
-  --min         The minimum amount of RAM to purchase servers at (default ${ns.formatRam(DEFAULT_MIN_RAM)})
-  --spend       Percentage of money to spend on upgrading (default ${ns.formatPercent(DEFAULT_SPEND)})
+  --min         The minimum amount of RAM to purchase servers at (default ${ns.format.ram(DEFAULT_MIN_RAM)})
+  --spend       Percentage of money to spend on upgrading (default ${ns.format.percent(DEFAULT_SPEND)})
   --dry-run     Print out the number and tier of servers you could buy but don't actually buy anything
   --no-upgrade  Don't upgrade existing servers
   --wait        Wait for money to become available to buy servers
@@ -89,7 +89,7 @@ OPTIONS
 
     if (options['no-upgrade']) {
         ns.tprint(
-            `not upgrading existing ${ramOrderedServers.length} servers with less than ${ns.formatRam(ram)} of RAM`,
+            `not upgrading existing ${ramOrderedServers.length} servers with less than ${ns.format.ram(ram)} of RAM`,
         );
         return;
     }
@@ -149,6 +149,6 @@ export function reportServerComplementCost(ns: NS, ram: number): void {
     const serverCost = ns.getPurchasedServerCost(ram);
     const totalCost = maxServers * serverCost;
     ns.tprint(
-        `you can buy ${maxServers} servers with ${ns.formatRam(ram)} of RAM for $${ns.formatNumber(serverCost)} per server for a total of $${ns.formatNumber(totalCost)}`,
+        `you can buy ${maxServers} servers with ${ns.format.ram(ram)} of RAM for $${ns.format.number(serverCost)} per server for a total of $${ns.format.number(totalCost)}`,
     );
 }

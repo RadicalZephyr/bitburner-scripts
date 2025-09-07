@@ -150,7 +150,7 @@ process exits.
 - **Decision log**: CSV or JSON lines with timestamp, symbol, price, indicators, action.
 - Log output should follow the `AGENTS.md` guidance: use prefixes like
   `INFO:` and `WARN:` with `ns.print()` and format money values with
-  `ns.formatNumber()`.
+  `ns.format.number()`.
 
 ### 5. Development Roadmap / TODOs
 

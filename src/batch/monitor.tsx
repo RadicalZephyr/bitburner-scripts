@@ -473,7 +473,7 @@ function formatThreads(ns: NS, threads: number): string {
         return '';
     }
 
-    return ns.formatNumber(threads, 2, 1000, true);
+    return ns.format.number(threads, 2, 1000, true);
 }
 
 interface IMonitorSettings {
@@ -578,7 +578,7 @@ export function ServerBlock({
             <h2>
                 {title} - {phase.data.length} targets
                 {moneyPerSec !== undefined
-                    ? ` for $${ns.formatNumber(moneyPerSec)}/s`
+                    ? ` for $${ns.format.number(moneyPerSec)}/s`
                     : ''}
             </h2>
             <table>
@@ -773,19 +773,19 @@ function ServerRow({
                 />
             </td>
             <td style={cellStyle}>
-                {`$${ns.formatNumber(host.harvestMoney, 2)}`}
+                {`$${ns.format.number(host.harvestMoney, 2)}`}
             </td>
             <td style={cellStyle}>
-                {`$${ns.formatNumber(host.expectedProfit, 2)}`}
+                {`$${ns.format.number(host.expectedProfit, 2)}`}
             </td>
             <td style={cellStyle}>
-                {`$${ns.formatNumber(host.expectedValue, 2)}`}
+                {`$${ns.format.number(host.expectedValue, 2)}`}
             </td>
             <td style={cellStyle}>
-                {`${ns.formatNumber(host.hckLevel, 0, 1000000, true)}`}
+                {`${ns.format.number(host.hckLevel, 0, 1000000, true)}`}
             </td>
-            <td style={cellStyle}>{`$${ns.formatNumber(host.maxMoney, 2)}`}</td>
-            <td style={cellStyle}>{formatPercent(ns, host.moneyPercent)}</td>
+            <td style={cellStyle}>{`$${ns.format.number(host.maxMoney, 2)}`}</td>
+            <td style={cellStyle}>{format.percent(ns, host.moneyPercent)}</td>
             <td style={cellStyle}>{formatSecurity(ns, host.secPlus)}</td>
             <td style={cellStyle}>{formatThreads(ns, host.threadsH)}</td>
             <td style={cellStyle}>{formatThreads(ns, host.threadsG)}</td>
@@ -812,8 +812,8 @@ function Hostname({ host, queuePidsForTail, theme }: IHostnameSettings) {
     );
 }
 
-function formatPercent(ns: NS, value: number) {
-    return Math.abs(value - 1) < 0.001 ? '100.0%' : ns.formatPercent(value);
+function format.percent(ns: NS, value: number) {
+    return Math.abs(value - 1) < 0.001 ? '100.0%' : ns.format.percent(value);
 }
 
 function formatSecurity(ns: NS, sec: number) {

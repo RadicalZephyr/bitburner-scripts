@@ -356,7 +356,7 @@ export class MemoryClient {
         const longRunning = options?.longRunning ?? false;
 
         this.ns.print(
-            `INFO: requesting ${numChunks} x ${this.ns.formatRam(chunkSize)} `
+            `INFO: requesting ${numChunks} x ${this.ns.format.ram(chunkSize)} `
                 + `contiguous=${contiguous} coreDependent=${coreDependent} `
                 + `shrinkable=${shrinkable} longRunning=${longRunning}`,
         );
@@ -388,7 +388,7 @@ export class MemoryClient {
         );
         this.ns.print(
             `SUCCESS: allocated id ${allocationResult.allocationId} `
-                + `${allocatedNumChunks}x${this.ns.formatRam(allocatedChunkSize)} `
+                + `${allocatedNumChunks}x${this.ns.format.ram(allocatedChunkSize)} `
                 + `on ${allocationResult.hosts.length} hosts`,
         );
         return new TransferableAllocation(
@@ -505,7 +505,7 @@ export async function registerAllocationOwnership(
     ns.print(
         `INFO: claiming allocation ${allocationId} `
             + `pid=${claim.pid} host=${claim.hostname} `
-            + `${claim.numChunks}x${ns.formatRam(claim.chunkSize)} `
+            + `${claim.numChunks}x${ns.format.ram(claim.chunkSize)} `
             + `${claim.filename}`,
     );
     ns.atExit(

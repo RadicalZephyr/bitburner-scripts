@@ -36,7 +36,7 @@ Example:
 
 OPTIONS
   --return-time  Desired payback time window (default ${DEFAULT_RETURN_TIME} hours)
-  --spend        Portion of money to spend (default ${ns.formatPercent(DEFAULT_SPEND)})
+  --spend        Portion of money to spend (default ${ns.format.percent(DEFAULT_SPEND)})
   --help         Show this help message
 
 CONFIGURATION
@@ -48,7 +48,7 @@ CONFIGURATION
     const returnTimeSeconds = flags['return-time'] * 60 * 60;
     const totalSpend = ns.getServerMoneyAvailable('home') * flags.spend;
     ns.print(
-        `INFO: starting with budget $${ns.formatNumber(totalSpend)} and payback time ${ns.tFormat(returnTimeSeconds * 1000)}`,
+        `INFO: starting with budget $${ns.format.number(totalSpend)} and payback time ${ns.format.time(returnTimeSeconds * 1000)}`,
     );
 
     const budget: Budget = {
@@ -347,7 +347,7 @@ function upgradeDescription(ns: NS, upgrade: UpgradeCandidate): string {
     const numNodes = ns.hacknet.numNodes();
 
     if (upgrade.type === 'node') {
-        return `hacknet-${hacknetType}-${numNodes} for $${ns.formatNumber(upgrade.cost)} payback ${ns.tFormat(upgrade.paybackTime * 1000)}`;
+        return `hacknet-${hacknetType}-${numNodes} for $${ns.format.number(upgrade.cost)} payback ${ns.format.time(upgrade.paybackTime * 1000)}`;
     }
-    return `${upgrade.type} of hacknet-${hacknetType}-${upgrade.index} for $${ns.formatNumber(upgrade.cost)} payback ${ns.tFormat(upgrade.paybackTime * 1000)}`;
+    return `${upgrade.type} of hacknet-${hacknetType}-${upgrade.index} for $${ns.format.number(upgrade.cost)} payback ${ns.format.time(upgrade.paybackTime * 1000)}`;
 }

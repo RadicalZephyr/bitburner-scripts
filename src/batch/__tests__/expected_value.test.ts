@@ -23,7 +23,7 @@ function makeNS(): NS {
         getServerMoneyAvailable: () => 1000,
         fileExists: () => false,
         getPlayer: () => ({}),
-        formatRam: (n: number) => `${n}`,
+        format.ram: (n: number) => `${n}`,
     } as unknown as NS;
 }
 

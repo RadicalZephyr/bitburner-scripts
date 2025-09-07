@@ -50,7 +50,7 @@ function Karma({ ns, cellStyle }: KarmaProps) {
                     <tr>
                         <td style={cellStyle}>Karma: </td>
                         <td style={cellStyle}>
-                            {ns.formatNumber(karmaStats.karma)}
+                            {ns.format.number(karmaStats.karma)}
                         </td>
                     </tr>
                     <tr>

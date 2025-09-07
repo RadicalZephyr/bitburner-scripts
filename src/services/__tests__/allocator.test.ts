@@ -27,7 +27,7 @@ function makeNS(
         getServerUsedRam: (h: string) => hosts[h].used,
         isRunning: (pid: number) => procs[pid] ?? false,
         ps: (host?: string) => (host ? (psMap[host] ?? []) : []),
-        formatRam: (ram: number) => `${ram}`,
+        format.ram: (ram: number) => `${ram}`,
         getPurchasedServers: () => purchased,
     } as unknown as NS;
 }

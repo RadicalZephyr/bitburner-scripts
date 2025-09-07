@@ -153,11 +153,11 @@ function canBuyWithinMaxTime(
     // velocity remains zero and we keep looping forever.
     if (hackMoneyVelocity === 0) return true;
 
-    ns.print(`money for next NFG level: $${ns.formatNumber(moneyToEarn)}`);
-    ns.print(`current earn rate: $${ns.formatNumber(hackMoneyVelocity)}/s `);
+    ns.print(`money for next NFG level: $${ns.format.number(moneyToEarn)}`);
+    ns.print(`current earn rate: $${ns.format.number(hackMoneyVelocity)}/s `);
     const timeToEarn = moneyToEarn / hackMoneyVelocity;
     ns.print(
-        `time to earn next NeuroFlux Governor level: ${ns.tFormat(timeToEarn * 1000)}`,
+        `time to earn next NeuroFlux Governor level: ${ns.format.time(timeToEarn * 1000)}`,
     );
     return timeToEarn <= CONFIG.maxTimeToEarnNeuroFlux;
 }

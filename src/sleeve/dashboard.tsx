@@ -169,7 +169,9 @@ function FinishTime({ ns, theme, fromNow }: FinishTimeProps) {
             <span style={{ color: theme.cha }}>
                 {finishDate.toDateString()} {time}
             </span>
-            <span style={{ color: theme.info }}>(+{ns.tFormat(fromNow)})</span>
+            <span style={{ color: theme.info }}>
+                (+{ns.format.time(fromNow)})
+            </span>
         </div>
     );
 }

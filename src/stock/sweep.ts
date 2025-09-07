@@ -68,7 +68,7 @@ CONFIGURATION
                 Number(flags.cash),
             );
             ns.tprint(
-                `INFO: buy=${buyPct} sell=${sellPct} value=${ns.formatNumber(result.finalValue)}`,
+                `INFO: buy=${buyPct} sell=${sellPct} value=${ns.format.number(result.finalValue)}`,
             );
         }
     }

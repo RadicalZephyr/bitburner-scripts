@@ -179,7 +179,7 @@ async function prepareHarvest(
 
     if (hackPercent === 0) {
         ns.print(
-            `total free RAM ${ns.formatRam(memInfo.freeRam)} is too small for one minimal batch`,
+            `total free RAM ${ns.format.ram(memInfo.freeRam)} is too small for one minimal batch`,
         );
         const logistics = calculateBatchLogistics(ns, args.target);
         ns.print(`Minimal batch:\n${JSON.stringify(logistics, null, 2)}`);
@@ -196,7 +196,7 @@ async function prepareHarvest(
     }
     if (overlapLimit < 1) {
         ns.print(
-            `max-ram ${ns.formatRam(args.maxRam)} is too small for one batch`,
+            `max-ram ${ns.format.ram(args.maxRam)} is too small for one batch`,
         );
         return null;
     }
@@ -205,9 +205,9 @@ async function prepareHarvest(
     ns.printf(
         `%s: batch ram %s, overlap x%d => required %s\nphases: %s`,
         logistics.target,
-        ns.formatRam(logistics.batchRam),
+        ns.format.ram(logistics.batchRam),
         overlapLimit,
-        ns.formatRam(requiredRam),
+        ns.format.ram(requiredRam),
         JSON.stringify(logistics.phases, undefined, 2),
     );
 
@@ -413,10 +413,10 @@ async function harvestPipeline(ns: NS, target: string, setup: HarvestSetup) {
             );
             if (rebalance.batchRam <= batchRam) {
                 const secDelta = (actualSecurity - minSecurity).toFixed(2);
-                const moneyPct = ns.formatPercent(actualMoney / maxMoney);
+                const moneyPct = ns.format.percent(actualMoney / maxMoney);
                 ns.print(
                     `INFO: rebalancing ${target} sec +${secDelta} money ${moneyPct} `
-                        + `ram ${ns.formatRam(rebalance.batchRam)}`,
+                        + `ram ${ns.format.ram(rebalance.batchRam)}`,
                 );
                 phases = rebalance.phases;
             }

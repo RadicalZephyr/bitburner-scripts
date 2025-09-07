@@ -197,7 +197,7 @@ class Server extends BaseServer<MemoryProtocolDef> {
             ) => {
                 printLog(
                     `INFO: request pid=${request.pid} filename=${request.filename} `
-                        + `${request.numChunks}x${ns.formatRam(request.chunkSize)} `
+                        + `${request.numChunks}x${ns.format.ram(request.chunkSize)} `
                         + `contiguous=${request.contiguous ?? false} `
                         + `coreDependent=${request.coreDependent ?? false} `
                         + `longRunning=${request.longRunning ?? false}`,
@@ -227,7 +227,7 @@ class Server extends BaseServer<MemoryProtocolDef> {
             ) => {
                 printLog(
                     `INFO: growable request pid=${growReq.pid} filename=${growReq.filename} `
-                        + `${growReq.numChunks}x${ns.formatRam(growReq.chunkSize)}`,
+                        + `${growReq.numChunks}x${ns.format.ram(growReq.chunkSize)}`,
                 );
                 const growAlloc = memoryManager.allocate(
                     growReq.pid,
@@ -291,7 +291,7 @@ class Server extends BaseServer<MemoryProtocolDef> {
             [MessageType.Register]: async (reg: AllocationRegister) => {
                 printLog(
                     `INFO: register pid=${reg.pid} host=${reg.hostname} `
-                        + `${reg.numChunks}x${ns.formatRam(reg.chunkSize)} `
+                        + `${reg.numChunks}x${ns.format.ram(reg.chunkSize)} `
                         + `${reg.filename}`,
                 );
                 memoryManager.registerAllocation(reg);
@@ -311,7 +311,7 @@ class Server extends BaseServer<MemoryProtocolDef> {
                     printLog(
                         `INFO: claimed allocation ${claimInfo.allocationId} `
                             + `pid=${claimInfo.pid} host=${claimInfo.hostname} `
-                            + `${claimInfo.numChunks}x${ns.formatRam(claimInfo.chunkSize)} `
+                            + `${claimInfo.numChunks}x${ns.format.ram(claimInfo.chunkSize)} `
                             + `${claimInfo.filename}`,
                     );
                 } else {
@@ -341,7 +341,7 @@ async function growAllocations(ns: NS, memoryManager: MemoryAllocator) {
 
         const firstChunk = newChunks[0];
         const host = firstChunk.hostname;
-        const chunkSize = ns.formatRam(firstChunk?.chunkSize ?? 0);
+        const chunkSize = ns.format.ram(firstChunk?.chunkSize ?? 0);
         const totalChunks = newChunks.reduce((s, c) => s + c.numChunks, 0);
         printLog(
             `INFO: growing allocation ${alloc.id} by ${totalChunks}x${chunkSize} from ${host}`,

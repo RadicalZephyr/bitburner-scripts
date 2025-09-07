@@ -25,11 +25,11 @@ export async function main(ns: NS) {
     const ram = getHighestPurchasableRamLevel(ns, percentSpend);
     ns.tprintf(
         'by spending %s of your money:\n',
-        ns.formatPercent(percentSpend),
+        ns.format.percent(percentSpend),
     );
     reportServerComplementCost(ns, ram);
     ns.tprintf(
         'Highest possible RAM purchase is %s',
-        ns.formatRam(ns.getPurchasedServerMaxRam()),
+        ns.format.ram(ns.getPurchasedServerMaxRam()),
     );
 }

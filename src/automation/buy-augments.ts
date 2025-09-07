@@ -27,7 +27,7 @@ in order from most expensive to least.
 
 OPTIONS
   --dry-run    Print out the augmentations you could buy, but don't actually buy anything
-  --spend      Percentage of money to spend on augmentations (default ${ns.formatPercent(DEFAULT_SPEND)})
+  --spend      Percentage of money to spend on augmentations (default ${ns.format.percent(DEFAULT_SPEND)})
   --neuroflux  Buy Neuroflux Governor levels after buying all other augments
   --help       Show this help message
 `);

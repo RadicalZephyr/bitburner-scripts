@@ -15,9 +15,9 @@ export function reportServerComplementCost(ns: NS, ram: number): void {
     ns.tprintf(
         'you can buy %s servers with %s of RAM for $%s per server for a total of $%s',
         maxServers,
-        ns.formatRam(ram),
-        ns.formatNumber(serverCost, 2),
-        ns.formatNumber(totalCost, 2),
+        ns.format.ram(ram),
+        ns.format.number(serverCost, 2),
+        ns.format.number(totalCost, 2),
     );
 }
 

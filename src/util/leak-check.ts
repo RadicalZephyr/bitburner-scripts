@@ -47,13 +47,13 @@ function checkWorkers(
         if (Math.abs(actualTotal - w.totalRam) > 0.0001) {
             ns.print(
                 `ERROR: worker ${w.hostname} snapshot has incorrect total RAM `
-                    + `snapshot ${ns.formatRam(w.totalRam)} actual ${ns.formatRam(actualTotal)}`,
+                    + `snapshot ${ns.format.ram(w.totalRam)} actual ${ns.format.ram(actualTotal)}`,
             );
         }
         if (Math.abs(actualInUse - used) > 0.0001) {
             ns.print(
                 `WARN: worker ${w.hostname} is not using all allocated RAM  `
-                    + `snapshot ${ns.formatRam(used)} actual ${ns.formatRam(actualInUse)}`,
+                    + `snapshot ${ns.format.ram(used)} actual ${ns.format.ram(actualInUse)}`,
             );
 
             for (const alloc of allocations) {
@@ -69,7 +69,7 @@ function checkWorkers(
                 if (allocClaims.length > 0) {
                     const claims = allocClaims.map(
                         (c) =>
-                            `\n    ${c.filename} claimed ${c.numChunks}x${ns.formatRam(c.chunkSize)}`,
+                            `\n    ${c.filename} claimed ${c.numChunks}x${ns.format.ram(c.chunkSize)}`,
                     );
                     ns.print(
                         `INFO: allocating process ${alloc.pid} running ${alloc.filename}`
@@ -83,15 +83,15 @@ function checkWorkers(
                     );
                     ns.print(
                         `INFO: allocating process ${alloc.pid} running ${alloc.filename} `
-                            + `has an unused allocation ${alloc.allocationId} of ${totalChunks}x${ns.formatRam(chunkSize)}`,
+                            + `has an unused allocation ${alloc.allocationId} of ${totalChunks}x${ns.format.ram(chunkSize)}`,
                     );
                 }
             }
         }
         if (used > w.totalRam + 0.0001) {
             ns.print(
-                `ERROR: worker ${w.hostname} uses ${ns.formatRam(used)} `
-                    + `of ${ns.formatRam(w.totalRam)}`,
+                `ERROR: worker ${w.hostname} uses ${ns.format.ram(used)} `
+                    + `of ${ns.format.ram(w.totalRam)}`,
             );
         }
     }
@@ -109,7 +109,7 @@ function checkAllocations(ns: NS, allocations: AllocationSnapshot[]): void {
             );
             ns.print(
                 `ERROR: allocating process ${alloc.pid} running ${alloc.filename} on ${hosts.join(', ')} has exited and no `
-                    + `other process has claimed this allocation of ${totalChunks}x${ns.formatRam(chunkSize)}`,
+                    + `other process has claimed this allocation of ${totalChunks}x${ns.format.ram(chunkSize)}`,
             );
         }
 
@@ -137,7 +137,7 @@ function checkAllocations(ns: NS, allocations: AllocationSnapshot[]): void {
                 ns.print(
                     `ERROR: exited claimaint process ${claim.pid} running `
                         + `${claim.filename} on ${claim.hostname} still has an `
-                        + `active claim for ${claim.numChunks}x${ns.formatRam(claim.chunkSize)}`,
+                        + `active claim for ${claim.numChunks}x${ns.format.ram(claim.chunkSize)}`,
                 );
             }
         }
@@ -153,8 +153,8 @@ function crossCheck(ns: NS, snapshot: MemorySnapshot): void {
         const usedRam = worker.allocatedRam;
         if (Math.abs(total - usedRam) > 0.001) {
             ns.print(
-                `ERROR: worker ${worker.hostname} reports ${ns.formatRam(usedRam)} `
-                    + `allocated but Allocation chunks sum to ${ns.formatRam(total)}`,
+                `ERROR: worker ${worker.hostname} reports ${ns.format.ram(usedRam)} `
+                    + `allocated but Allocation chunks sum to ${ns.format.ram(total)}`,
             );
         }
     }

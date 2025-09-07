@@ -39,13 +39,13 @@ export async function main(ns: NS) {
     ns.tprint(`
 ${server}:
     RAM        : ${usedRam} / ${maxRam} (${(usedRam / maxRam) * 100}%)
-    $          : $${ns.formatNumber(money)} / $${ns.formatNumber(maxMoney)} (${ns.formatPercent(money / maxMoney)})
+    $          : $${ns.format.number(money)} / $${ns.format.number(maxMoney)} (${ns.format.percent(money / maxMoney)})
     security   : ${sec.toFixed(2)} / ${minSec.toFixed(2)} (${(sec / minSec).toFixed(2)}x)
     growth     : ${ns.getServerGrowth(server)}
     hackChance : ${(ns.hackAnalyzeChance(server) * 100).toFixed(2)}%
-    hack time  : ${ns.tFormat(ns.getHackTime(server) / ns.getHackingMultipliers().speed)}
-    grow time  : ${ns.tFormat(ns.getGrowTime(server) / ns.getHackingMultipliers().speed)}
-    weaken time: ${ns.tFormat(ns.getWeakenTime(server) / ns.getHackingMultipliers().speed)}
+    hack time  : ${ns.format.time(ns.getHackTime(server) / ns.getHackingMultipliers().speed)}
+    grow time  : ${ns.format.time(ns.getGrowTime(server) / ns.getHackingMultipliers().speed)}
+    weaken time: ${ns.format.time(ns.getWeakenTime(server) / ns.getHackingMultipliers().speed)}
     grow x2    : ${grow2x} threads
     grow x3    : ${grow3x} threads
     grow x4    : ${grow4x} threads

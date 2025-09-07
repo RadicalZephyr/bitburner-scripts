@@ -96,7 +96,7 @@ export class MemoryAllocator {
         this.workers.set(hostname, worker);
         this.printLog(
             `INFO: registered worker ${hostname} with `
-                + `${this.ns.formatRam(this.ns.getServerMaxRam(hostname))}`,
+                + `${this.ns.format.ram(this.ns.getServerMaxRam(hostname))}`,
         );
     }
 
@@ -191,8 +191,8 @@ export class MemoryAllocator {
                 else foreignRam += ram;
             }
             if (allocRam > worker.allocatedRam) {
-                const allocRamStr = this.ns.formatRam(fromFixed(allocRam));
-                const workerAllocRamStr = this.ns.formatRam(
+                const allocRamStr = this.ns.format.ram(fromFixed(allocRam));
+                const workerAllocRamStr = this.ns.format.ram(
                     fromFixed(worker.allocatedRam),
                 );
                 this.printLog(
@@ -676,7 +676,7 @@ export class Worker {
 
     updateTotalRam() {
         this.totalRam = this.ns.getServerMaxRam(this.hostname);
-        this.totalRamStr = this.ns.formatRam(this.totalRam, 0);
+        this.totalRamStr = this.ns.format.ram(this.totalRam, 0);
         if (this.hostname === 'home' && this.totalRam > 32) {
             this.setAsideRam = toFixed(32);
         }
@@ -721,6 +721,6 @@ export class Worker {
     /** Update server's total RAM. */
     updateRam() {
         this.totalRam = this.ns.getServerMaxRam(this.hostname);
-        this.totalRamStr = this.ns.formatRam(this.totalRam, 0);
+        this.totalRamStr = this.ns.format.ram(this.totalRam, 0);
     }
 }
