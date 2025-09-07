@@ -20,18 +20,21 @@ export function usePoll<T>(ns: NS, interval: number, pollFn: () => T): T {
                 setData(pollFn());
             } catch (err) {
                 console.error(err);
-                if (id) globalThis.clearInterval(id);
+                if (id != null) globalThis.clearInterval(id);
                 id = null;
             }
         }, interval);
 
         const exitHandlerName = 'usePoll-' + makeFuid(ns);
 
-        ns.atExit(() => globalThis.clearInterval(id), exitHandlerName);
+        ns.atExit(() => {
+            if (id != null) globalThis.clearInterval(id);
+            id = null;
+        }, exitHandlerName);
 
         return () => {
             ns.atExit(() => null, exitHandlerName);
-            if (id) globalThis.clearInterval(id);
+            if (id != null) globalThis.clearInterval(id);
             id = null;
         };
     }, [ns, interval, pollFn]);
@@ -63,18 +66,21 @@ export function useNsUpdate<T>(
                 setData(updateFn(ns));
             } catch (err) {
                 console.error(err);
-                if (id) globalThis.clearInterval(id);
+                if (id != null) globalThis.clearInterval(id);
                 id = null;
             }
         }, interval);
 
         const exitHandlerName = 'useNsUpdate-' + makeFuid(ns);
 
-        ns.atExit(() => globalThis.clearInterval(id), exitHandlerName);
+        ns.atExit(() => {
+            if (id != null) globalThis.clearInterval(id);
+            id = null;
+        }, exitHandlerName);
 
         return () => {
             ns.atExit(() => null, exitHandlerName);
-            if (id) globalThis.clearInterval(id);
+            if (id != null) globalThis.clearInterval(id);
             id = null;
         };
     }, [ns, interval, updateFn]);
