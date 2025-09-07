@@ -1,5 +1,6 @@
 import type { NS } from 'netscript';
 
+import { assertEl } from 'util/assertEl';
 import { getReactPropKey } from 'util/props';
 import { sleep } from 'util/time';
 
@@ -177,8 +178,6 @@ function withTerminalLock<T>(fn: () => Promise<T>): Promise<T> {
     return next;
 }
 
-type GuardFn<T> = (el: unknown) => el is T;
-
 async function sendOneTimedTerminalCommand(
     ns: NS,
     command: string,
@@ -327,29 +326,6 @@ function getHostFromPrompt(terminalInput: Element): string {
     const nonHostRE = /[^\w.-]+/g;
     return promptText.replaceAll(nonHostRE, '');
 }
-
-/**
- * Throws an error if the element is null.
- */
-function assertEl(el: unknown, msg: string): Element;
-function assertEl<T extends Element>(
-    el: unknown,
-    msg: string,
-    guard: GuardFn<T>,
-): T;
-function assertEl<T extends Element>(
-    el: unknown,
-    msg: string,
-    guard?: GuardFn<T>,
-): T {
-    const g = guard ?? (isElement as GuardFn<T>);
-    if (!(el != null && g(el))) throw new Error(msg);
-    return el;
-}
-
-const isElement: GuardFn<Element> = (el: unknown) => {
-    return el instanceof Element;
-};
 
 /**
  * Send a manual grow command in the terminal.
