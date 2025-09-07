@@ -7,6 +7,8 @@ export function assertEl<T extends Element>(
     guard: GuardFn<T>,
 ): T;
 /**
+ * Ensure the provided value is a DOM Element, otherwise throw.
+ *
  * @template {Element} T
  * @param {unknown} el
  * @param {string} msg
