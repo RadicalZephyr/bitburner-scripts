@@ -156,6 +156,26 @@ export class DispatchClient {
     }
 
     /**
+     * Convenience wrapper for making usage of `dispatch` more concise.
+     *
+     * @remarks
+     *
+     * I usually bind this to `_ns` like this:
+     *
+     * @example
+     *
+     * ```ts
+     * const dispatchClient = new DispatchClient(ns);
+     * const _ns = dispatchClient.asNs();
+     *
+     * const s = await _ns('getServer', 'n00dles');
+     * ```
+     */
+    asNs(): DispatchFn {
+        return this.dispatch.bind(this) as DispatchFn;
+    }
+
+    /**
      * Call a Netscript API in an ephemeral process and receive the result.
      *
      * @param methodName - Netscript API method path and name
