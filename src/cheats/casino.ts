@@ -150,13 +150,10 @@ async function searchForCoinFlip(ns: NS): Promise<CoinFlipGameWithResult> {
         if (!ns.singularity.goToLocation(casino))
             throw new Error('failed to go to the Casino');
 
-        message = 'Please enter the Casino!';
-        ns.print(`WARN: ${message}`);
-        ns.alert(message);
-
-        // TODO: open the coin flip game!
+        message = 'Please open the coin flip game!';
     } else {
-        message = 'Please travel to Aevum and enter the Casino!';
+        message =
+            'Please travel to Aevum and enter the Casino to the coin flip game!';
     }
     ns.print(`WARN: ${message}`);
     ns.alert(message);
