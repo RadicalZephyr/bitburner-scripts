@@ -160,9 +160,12 @@ async function searchForCoinFlip(ns: NS): Promise<CoinFlipGameWithResult> {
     ns.print(`WARN: ${message}`);
     ns.alert(message);
 
-    while (!findCoinFlipGame(root)) await ns.asleep(200);
-
-    const coinFlip = findCoinFlipGame(root);
+    let coinFlip: CoinFlipGame | null;
+    while (true) {
+        coinFlip = findCoinFlipGame(root);
+        if (coinFlip != null) break;
+        await ns.asleep(200);
+    }
 
     coinFlip.bet(1);
     coinFlip.clickHeads();
