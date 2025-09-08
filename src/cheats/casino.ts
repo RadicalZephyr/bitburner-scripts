@@ -138,7 +138,6 @@ interface CoinFlipGame {
 
 interface CoinFlipGameWithResult extends CoinFlipGame {
     coinResult: HTMLParagraphElement;
-    betResult: HTMLHeadingElement;
 }
 
 async function searchForCoinFlip(ns: NS): Promise<CoinFlipGameWithResult> {
@@ -176,11 +175,7 @@ async function searchForCoinFlip(ns: NS): Promise<CoinFlipGameWithResult> {
     if (!coinResult)
         throw new Error('No coin result tag found! Did the game HTML change?');
 
-    const betResult = findElementWithTagName(coinFlip.root, 'h3');
-    if (!betResult)
-        throw new Error('No coin result tag found! Did the game HTML change?');
-
-    return { ...coinFlip, coinResult, betResult };
+    return { ...coinFlip, coinResult };
 }
 
 function findCoinFlipGame(root: Element): CoinFlipGame | null {
