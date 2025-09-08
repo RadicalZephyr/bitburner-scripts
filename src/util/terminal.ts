@@ -252,6 +252,14 @@ function dispatchReactInputAndEnter(
     terminalInput[propKey].onChange({ target: terminalInput });
 
     // Simulate an enter press
+
+    // NOTE: it's important to fetch this `onKeyDown` property
+    // starting from the terminalInput element after updating the
+    // value because React v17.0.2 actually sets a new property object
+    // when that happens, not just a new `onKeyDown` handler. This
+    // handler closes over the state value, so even though the value
+    // is updated you need to get the new handler for the new value to
+    // be used.
     terminalInput[propKey].onKeyDown({
         key: 'Enter',
         preventDefault: (): void => null,
