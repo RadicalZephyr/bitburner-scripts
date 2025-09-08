@@ -114,7 +114,7 @@ async function getResultSequence(
 }
 
 function flipResult(coinResult: HTMLElement): HeadsOrTails {
-    const flipText = coinResult.textContent;
+    const flipText = (coinResult.textContent ?? '').trim();
     if (isHeads(flipText)) {
         return HeadsOrTails.H;
     } else if (isTails(flipText)) {
