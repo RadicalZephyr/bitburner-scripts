@@ -30,13 +30,6 @@ export function getReactProps(el: Element): Record<string, unknown> {
 }
 
 /**
- * Extract the keys of `T` whose values are functions.
- */
-type FnKeys<T> = {
-    [P in keyof T]: T[P] extends (...args: unknown[]) => unknown ? P : never;
-}[keyof T];
-
-/**
  * Bind a function key on an object as a callable function with the
  * object bound as `this`.
  *
@@ -52,28 +45,17 @@ type FnKeys<T> = {
  * @param args - Other arguments to bind to the function
  * @returns A function object with the given `this` and arguments bound
  */
-export function bindPropFn<
-    T extends Record<string, unknown>,
-    K extends FnKeys<T>,
-    A extends unknown[],
->(
-    obj: T,
-    key: K,
+export function bindPropFn<A extends unknown[]>(
+    obj: Record<string, unknown>,
+    key: string,
     msg: string,
     ...args: A
-): T[K] extends (...a: [...A, ...infer R]) => infer R0
-    ? (...a: R) => R0
-    : never {
+): (...args: unknown[]) => void {
     if (!Object.hasOwn(obj, key))
         throw new Error(`${msg}: Key ${String(key)} does not exist on object`);
     const fn = obj[key];
     if (typeof fn !== 'function')
         throw new Error(`${msg}: Key ${String(key)} is not a function`);
 
-    return (fn as (...a: [...A, ...unknown[]]) => unknown).bind(
-        obj,
-        ...args,
-    ) as T[K] extends (...a: [...A, ...infer R]) => infer R0
-        ? (...a: R) => R0
-        : never;
+    return (fn as (...a: [...A, ...unknown[]]) => unknown).bind(obj, ...args);
 }
