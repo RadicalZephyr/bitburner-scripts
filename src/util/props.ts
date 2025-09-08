@@ -40,6 +40,12 @@ type FnKeys<T> = {
  * Bind a function key on an object as a callable function with the
  * object bound as `this`.
  *
+ * @example
+ * const props = { count: 0, inc() { this.count++; } };
+ * const inc = bindPropFn(props, 'inc', 'missing inc');
+ * inc();
+ * props.count; // 1
+ *
  * @param obj    - Prop object to access key on
  * @param key    - Function prop key to bind
  * @param msg  - Error message if the key does not exist or is not a function
