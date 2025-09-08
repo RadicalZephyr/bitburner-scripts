@@ -63,7 +63,7 @@ const DEFAULT_OPTIONS: TerminalOptions = {
  * @param options - Optional behavior controls.
  *
  *   - `actionBufferMs` (default: `100`, minimum: `10`): additional time to wait to ensure timed commands are complete.
- *   - `commandEchoTimeoutMs` (default: `500`): how long to wait for the command echo to appear in the terminal before rejecting.
+ *   - `commandTimeoutMs` (default: `0`): how long to wait for the terminal element to become available before rejecting.
  *
  * @returns A promise that resolves with a list of commands that were sent when:
  *   1) the command was sent to the terminal
@@ -85,8 +85,8 @@ const DEFAULT_OPTIONS: TerminalOptions = {
  * await sendTerminalCommand(ns, "home"); // awaits completion of all prior queued commands
  *
  * @example
- * // Tighter timeout if you expect an immediate echo or want fast failure
- * await sendTerminalCommand(ns, "home", { commandEchoTimeoutMs: 200 });
+ * // Add a command timeout if we want the script to end if the terminal is unavailable for more than 2 seconds
+ * await sendTerminalCommand(ns, "home", { commandTimeoutMs: 2000 });
  *
  * @example
  * // Tighter action buffer if you want faster command throughput
