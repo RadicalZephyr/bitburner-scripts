@@ -216,8 +216,8 @@ function findCoinFlipGame(root: Element): CoinFlipGame | null {
         const bet = (amount: number) => {
             input.value = String(amount);
             changeInput({
-                currentTarget: { value: amount },
-                target: { value: amount },
+                currentTarget: { value: String(amount) },
+                target: { value: String(amount) },
             });
         };
 
