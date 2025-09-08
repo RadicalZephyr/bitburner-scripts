@@ -66,7 +66,7 @@ async function cheatAtCoinFlips(
 
     let loops = 0;
     while (getCasinoWinnings() < maxCasinoWinnings) {
-        if (loops % 1000 == 0) {
+        if (loops % 200 == 0) {
             await ns.asleep(0);
         }
 
