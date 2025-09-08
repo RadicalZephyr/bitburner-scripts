@@ -40,8 +40,8 @@ type FnKeys<T> = {
  * Bind a function key on an object as a callable function with the
  * object bound as `this`.
  *
- * @param v    - Prop object to access key on
- * @param k    - Function prop key to bind
+ * @param obj    - Prop object to access key on
+ * @param key    - Function prop key to bind
  * @param msg  - Error message if the key does not exist or is not a function
  * @param args - Other arguments to bind to the function
  * @returns A function object with the given `this` and arguments bound
@@ -51,21 +51,21 @@ export function bindPropFn<
     K extends FnKeys<T>,
     A extends unknown[],
 >(
-    v: T,
-    k: K,
+    obj: T,
+    key: K,
     msg: string,
     ...args: A
 ): T[K] extends (...a: [...A, ...infer R]) => infer R0
     ? (...a: R) => R0
     : never {
-    if (!Object.hasOwn(v, k))
-        throw new Error(`${msg}: Key ${String(k)} does not exist on object`);
-    const fn = v[k];
+    if (!Object.hasOwn(obj, key))
+        throw new Error(`${msg}: Key ${String(key)} does not exist on object`);
+    const fn = obj[key];
     if (typeof fn !== 'function')
-        throw new Error(`${msg}: Key ${String(k)} is not a function`);
+        throw new Error(`${msg}: Key ${String(key)} is not a function`);
 
     return (fn as (...a: [...A, ...unknown[]]) => unknown).bind(
-        v,
+        obj,
         ...args,
     ) as T[K] extends (...a: [...A, ...infer R]) => infer R0
         ? (...a: R) => R0
