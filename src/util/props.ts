@@ -28,3 +28,28 @@ export function getReactProps(el: Element): Record<string, unknown> {
     const propKey = getReactPropKey(el);
     return el[propKey];
 }
+
+/**
+ * Bind a function key on an object as a callable function with the
+ * object bound as `this`.
+ *
+ * @param v    - Prop object to access key on
+ * @param k    - Prop key to bind
+ * @param msg  - Error message if the key does not exist or is not a function
+ * @param args - Other arguments to bind to the function
+ * @returns A function object with the given `this` and arguments bound
+ */
+export function bindPropFn(
+    v: Record<string, unknown>,
+    k: string,
+    msg: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ...args: any[]
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): (...args: any[]) => void {
+    if (!v[k]) throw new Error(`${msg}: Key ${k} does not exist on object`);
+    if (typeof v[k] !== 'function')
+        throw new Error(`${msg}: Key ${k} is not a function`);
+
+    return v[k].bind(v, ...args);
+}
