@@ -45,7 +45,7 @@ const DEFAULT_OPTIONS: TerminalOptions = {
  * - “Timed” commands end detection is calculated according to game
  *   internals based on the server the terminal is currently visiting.
  *   Commands that do not produce a timer bar will resolve immediately
- *   after echo.
+ *   after the command is sent.
  * - Calls are **serialized process-wide** (tab-wide) by an internal promise queue.
  *   You can “enqueue” several commands by calling this function without awaiting them,
  *   then `await` a final call to flush the queue (see examples).
@@ -189,7 +189,7 @@ async function sendOneTimedTerminalCommand(
     // command and simulate hitting 'Enter'
     dispatchReactInputAndEnter(terminalInput, command);
 
-    // after echo
+    // after input
     if (isTimedCommand(command)) {
         const server = getHostFromPrompt(terminalInput);
         const ms = expectedMillisFor(ns, server, command);
