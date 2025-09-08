@@ -20,14 +20,14 @@ export interface TerminalOptions {
     /**
      * How long to wait for the command to be sent.
      *
-     * Default: 10 seconds
+     * Default: Wait forever
      */
     commandTimeoutMs?: number;
 }
 
 const DEFAULT_OPTIONS: TerminalOptions = {
     actionBufferMs: 100,
-    commandTimeoutMs: 10_000,
+    commandTimeoutMs: 0,
 };
 
 /**
@@ -183,7 +183,7 @@ async function sendOneTimedTerminalCommand(
 
     // Find terminal input, waiting for it to appear if the player has
     // it hidden.
-    const terminalInput = await findTerminalInput();
+    const terminalInput = await findTerminalInput(ns, opts.commandTimeoutMs);
 
     // Trigger event handlers to set component state for new
     // command and simulate hitting 'Enter'
@@ -200,20 +200,34 @@ async function sendOneTimedTerminalCommand(
 }
 
 /**
- * Find the terminal input element.
+ * Find the terminal input element within a time limit.
  *
- * Waits until the terminal input element is on-screen.
+ * Waits until the terminal input element is on-screen or the timeout expires.
  *
+ * If the timeout is zero then it will wait indefinitely.
+ *
+ * @param ns        - Netscript API instance
+ * @param timeoutMs - Maximum time to wait for the terminal input element, in milliseconds.
  * @returns {HTMLInputElement} The terminal input element
  *
- * @throws If the terminal-input element isn't an `HTMLInputElement`
+ * @throws If the terminal-input element isn't an `HTMLInputElement` or the timeout expires
  */
-export async function findTerminalInput(): Promise<HTMLInputElement> {
+export async function findTerminalInput(
+    ns: NS,
+    timeoutMs = DEFAULT_OPTIONS.commandTimeoutMs,
+): Promise<HTMLInputElement> {
     let termInputEl: unknown | null;
-    do {
+    const start = Date.now();
+
+    while (true) {
         termInputEl = globalThis['terminal-input'] as unknown;
-        await sleep(100);
-    } while (!termInputEl);
+        if (termInputEl) break;
+        if (timeoutMs > 0 && Date.now() > start + timeoutMs)
+            throw new Error(
+                `Timed out after ${timeoutMs}ms waiting for terminal input`,
+            );
+        await ns.asleep(100);
+    }
 
     if (!(termInputEl instanceof HTMLInputElement))
         throw new Error("Found terminal input but it wasn't an input element!");
