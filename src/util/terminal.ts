@@ -178,8 +178,8 @@ async function sendOneTimedTerminalCommand(
     command: string,
     opts: TerminalOptions,
 ): Promise<string> {
+    // N.B. the minimum is enforced by `sendTerminalCommand`
     const { actionBufferMs } = opts;
-    const _actionBufferMs = Math.max(actionBufferMs, 10);
 
     // Find terminal input, waiting for it to appear if the player has
     // it hidden.
@@ -193,7 +193,7 @@ async function sendOneTimedTerminalCommand(
     if (isTimedCommand(command)) {
         const server = getHostFromPrompt(terminalInput);
         const ms = expectedMillisFor(ns, server, command);
-        await sleep(ms + _actionBufferMs);
+        await sleep(ms + actionBufferMs);
     }
 
     return command;
