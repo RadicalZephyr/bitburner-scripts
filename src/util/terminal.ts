@@ -20,14 +20,14 @@ export interface TerminalOptions {
     /**
      * How long to wait for the command to be sent.
      *
-     * Default: 500 milliseconds
+     * Default: 10 seconds
      */
-    commandEchoTimeoutMs?: number;
+    commandTimeoutMs?: number;
 }
 
 const DEFAULT_OPTIONS: TerminalOptions = {
     actionBufferMs: 100,
-    commandEchoTimeoutMs: 500,
+    commandTimeoutMs: 10_000,
 };
 
 /**
@@ -36,15 +36,16 @@ const DEFAULT_OPTIONS: TerminalOptions = {
  * This helper is designed to be **safe** and **deterministic** when multiple scripts
  * try to talk to the terminal:
  *
- * - **Waits for the command to appear in terminal output** (with a timeout).
+ * - **Waits for the terminal input** to be available the Terminal page must be visible.
  * - **Waits for timed commands to complete** by sleeping for the appropriate amount of time.
  * - **Serializes access** to the terminal via an internal lock so commands from different
  *   callers do not interleave. Calls are queued in the order invoked.
  *
  * @remarks
- * - The function uses DOM observation to detect when the command has been echoed.
- * - “Timed” commands end detection is calculated according to game internals based on targeted server.
- *   Commands that do not produce a timer bar will resolve immediately after echo.
+ * - “Timed” commands end detection is calculated according to game
+ *   internals based on the server the terminal is currently visiting.
+ *   Commands that do not produce a timer bar will resolve immediately
+ *   after echo.
  * - Calls are **serialized process-wide** (tab-wide) by an internal promise queue.
  *   You can “enqueue” several commands by calling this function without awaiting them,
  *   then `await` a final call to flush the queue (see examples).
@@ -65,16 +66,10 @@ const DEFAULT_OPTIONS: TerminalOptions = {
  *   - `commandEchoTimeoutMs` (default: `500`): how long to wait for the command echo to appear in the terminal before rejecting.
  *
  * @returns A promise that resolves with a list of commands that were sent when:
- *   1) the command echo appears (always), and
+ *   1) the command was sent to the terminal
  *   2) if the command is timed, waits until the timed command finishes.
- *   The promise rejects on timeout or if the terminal DOM cannot be found. If
- *   multiple commands are supplied and any of them fail, the promise rejects.
  *
- * @throws
- * - `Error("Could not find terminal input element!")` or
- *   `Error("Could not find terminal output element!")` if the UI elements are missing.
- * - `Error("Timed out waiting for terminal output")` if the command echo does not appear
- *   within `commandEchoTimeoutMs`.
+ * @throws If the terminal-input element isn't an `HTMLInputElement`
  *
  * @example
  * // Basic usage: send a chained command and wait until any timed part completes
@@ -183,43 +178,47 @@ async function sendOneTimedTerminalCommand(
     command: string,
     opts: TerminalOptions,
 ): Promise<string> {
-    const { actionBufferMs, commandEchoTimeoutMs } = opts;
+    const { actionBufferMs } = opts;
+    const _actionBufferMs = Math.max(actionBufferMs, 10);
 
-    // Acquire a reference to the terminal text field
-    const terminalInput = assertEl(
-        globalThis['terminal-input'],
-        'Could not find terminal input element!',
-        (el) => el instanceof HTMLInputElement,
-    );
-
-    // Acquire a reference to the terminal output list
-    const terminalOutput = assertEl(
-        globalThis['terminal'],
-        'Could not find terminal output element!',
-    );
-
-    // Create the observer before we send the 'Enter' event
-    const commandEchoed = waitForCommandEcho(
-        terminalOutput,
-        command,
-        commandEchoTimeoutMs,
-    );
+    // Find terminal input, waiting for it to appear if the player has
+    // it hidden.
+    const terminalInput = await findTerminalInput();
 
     // Trigger event handlers to set component state for new
     // command and simulate hitting 'Enter'
     dispatchReactInputAndEnter(terminalInput, command);
 
-    // Wait for our command to appear in the output
-    await commandEchoed;
-
     // after echo
     if (isTimedCommand(command)) {
         const server = getHostFromPrompt(terminalInput);
         const ms = expectedMillisFor(ns, server, command);
-        await sleep(ms + actionBufferMs);
+        await sleep(ms + _actionBufferMs);
     }
 
     return command;
+}
+
+/**
+ * Find the terminal input element.
+ *
+ * Waits until the terminal input element is on-screen.
+ *
+ * @returns {HTMLInputElement} The terminal input element
+ *
+ * @throws If the terminal-input element isn't an `HTMLInputElement`
+ */
+export async function findTerminalInput(): Promise<HTMLInputElement> {
+    let termInputEl: unknown | null;
+    do {
+        termInputEl = globalThis['terminal-input'] as unknown;
+        await sleep(100);
+    } while (!termInputEl);
+
+    if (!(termInputEl instanceof HTMLInputElement))
+        throw new Error("Found terminal input but it wasn't an input element!");
+
+    return termInputEl;
 }
 
 /**
@@ -242,52 +241,6 @@ function dispatchReactInputAndEnter(
     terminalInput[propKey].onKeyDown({
         key: 'Enter',
         preventDefault: (): void => null,
-    });
-}
-
-/**
- * Watches the terminal output for our command to appear.
- */
-function waitForCommandEcho(
-    container: Element,
-    command: string,
-    timeoutMs: number,
-): Promise<void> {
-    const initialLastContent = container.lastElementChild?.textContent ?? '';
-    return new Promise((resolve, reject) => {
-        const deadline = setTimeout(() => {
-            observer.disconnect();
-            const currentLastContent =
-                container.lastElementChild?.textContent ?? '';
-            // If last terminal output is the same, fail
-            if (initialLastContent == currentLastContent)
-                reject(new Error(`Timed out waiting for echo of ${command}`));
-            else resolve();
-        }, timeoutMs);
-
-        const observer = new MutationObserver(() => {
-            const last = container.lastElementChild;
-            if (!last) return;
-
-            const tail = [last.previousElementSibling, last];
-            for (const el of tail) {
-                const contents = el?.textContent ?? '';
-                if (contents.trim().endsWith(command.trim())) {
-                    clearTimeout(deadline);
-                    observer.disconnect();
-                    resolve();
-                    return;
-                }
-            }
-        });
-
-        // We observe the whole container because the terminal may add
-        // new children, update text or replace the last line element.
-        observer.observe(container, {
-            childList: true,
-            subtree: true,
-            characterData: true,
-        });
     });
 }
 
