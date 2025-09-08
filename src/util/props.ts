@@ -47,7 +47,8 @@ export function bindPropFn(
     ...args: any[]
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): (...args: any[]) => void {
-    if (!v[k]) throw new Error(`${msg}: Key ${k} does not exist on object`);
+    if (!Object.hasOwn(v, k))
+        throw new Error(`${msg}: Key ${k} does not exist on object`);
     if (typeof v[k] !== 'function')
         throw new Error(`${msg}: Key ${k} is not a function`);
 
