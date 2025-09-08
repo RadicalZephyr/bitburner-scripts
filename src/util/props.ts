@@ -39,18 +39,28 @@ export function getReactProps(el: Element): Record<string, unknown> {
  * @param args - Other arguments to bind to the function
  * @returns A function object with the given `this` and arguments bound
  */
-export function bindPropFn(
-    v: Record<string, unknown>,
-    k: string,
+export function bindPropFn<
+    T extends Record<string, unknown>,
+    K extends keyof T & string,
+    A extends unknown[],
+>(
+    v: T,
+    k: K,
     msg: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ...args: any[]
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-): (...args: any[]) => void {
+    ...args: A
+): T[K] extends (...a: [...A, ...infer R]) => infer R0
+    ? (...a: R) => R0
+    : never {
     if (!Object.hasOwn(v, k))
         throw new Error(`${msg}: Key ${k} does not exist on object`);
-    if (typeof v[k] !== 'function')
+    const fn = v[k];
+    if (typeof fn !== 'function')
         throw new Error(`${msg}: Key ${k} is not a function`);
 
-    return v[k].bind(v, ...args);
+    return (fn as (...a: [...A, ...unknown[]]) => unknown).bind(
+        v,
+        ...args,
+    ) as T[K] extends (...a: [...A, ...infer R]) => infer R0
+        ? (...a: R) => R0
+        : never;
 }
