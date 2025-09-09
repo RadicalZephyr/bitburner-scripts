@@ -10,6 +10,7 @@ import {
     augCost,
     buyReputation,
     getBestFaction,
+    neededReputationCost,
 } from 'automation/buy-augments';
 import { trainCombat } from 'automation/workout';
 import { buyPortOpeners } from 'automation/purchase-crackers';
@@ -70,8 +71,10 @@ CONFIGURATION
     travelTo(ns, Volhaven);
     study(ns, zbU, algClass);
 
-    // Sleep for ten minutes to let the hacking get up to speed
-    await ns.sleep(10 * 60 * 1000);
+    // Wait until we can buy at least one NFG level
+    await buyOneNeuroFlux(ns);
+
+    // Buy as many NFG levels as we can within a reasonable time
     await buyNeuroFlux(ns);
 
     // The final step, this eventually restarts this script after a
@@ -94,6 +97,34 @@ async function untilHackLevel(ns: NS, targetLevel: number) {
         if (hackLevel >= targetLevel) return;
         await ns.sleep(1000);
     }
+}
+
+async function buyOneNeuroFlux(ns: NS) {
+    const sing = ns.singularity;
+
+    const nfgName = 'NeuroFlux Governor';
+
+    let bestFaction = getBestFaction(ns);
+    while (!bestFaction) {
+        await ns.asleep(10_000);
+        bestFaction = getBestFaction(ns);
+    }
+
+    const neuro = new Aug(ns, nfgName, bestFaction);
+    const donation = neededReputationCost(ns, neuro);
+
+    if (!Number.isFinite(donation))
+        throw new Error(
+            `Cannot donate to buy Neuroflux Governor, you need more faction rep!`,
+        );
+    while (!canAfford(ns, donation)) await ns.asleep(1000);
+    ns.singularity.donateToFaction(neuro.faction, donation);
+
+    const cost = augCost(ns, nfgName);
+    while (!canAfford(ns, cost)) await ns.asleep(1000);
+
+    const res = sing.purchaseAugmentation(neuro.faction, neuro.name);
+    if (!res) throw new Error('Could not buy Neuroflux Governor!');
 }
 
 async function buyNeuroFlux(ns: NS) {
