@@ -68,7 +68,9 @@ CONFIGURATION
     travelTo(ns, Volhaven);
     study(ns, zbU, algClass);
 
-    grindIntelligence(ns);
+    void grindIntelligence(ns).catch((e) =>
+        ns.print(`ERROR: Grind intelligence failed: ${String(e)}`),
+    );
 
     // Wait until we can buy at least one NFG level
     await buyOneNeuroFlux(ns);
