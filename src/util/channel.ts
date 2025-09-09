@@ -87,6 +87,10 @@ export class Channel<T = unknown> {
             return w.value;
         }
 
+        // Check if abort signal has been received
+        if (opts.signal?.aborted) {
+            throw new DOMException('Aborted', 'AbortError');
+        }
         const d = defer<T>();
         let timeout: ReturnType<typeof setTimeout> | undefined;
         const cleanup = () => {
@@ -144,6 +148,11 @@ export class Channel<T = unknown> {
         if (this.buf.length < this.capacity) {
             this.buf.push(value);
             return;
+        }
+
+        // Check if abort signal has been received
+        if (opts.signal?.aborted) {
+            throw new DOMException('Aborted', 'AbortError');
         }
         // Otherwise, block (backpressure): queue this writer until space frees
         const d = defer<void>();

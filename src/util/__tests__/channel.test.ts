@@ -120,6 +120,14 @@ describe('unit', () => {
             ac.abort();
             await expect(promise).rejects.toThrow('Aborted');
         });
+
+        test('honors abort signal even when triggered before read call', async () => {
+            const chan = new Channel<number>();
+            const ac = new AbortController();
+            ac.abort();
+            const promise = chan.read({ signal: ac.signal });
+            await expect(promise).rejects.toThrow('Aborted');
+        });
     });
 
     describe('write', () => {
@@ -166,6 +174,15 @@ describe('unit', () => {
             const ac = new AbortController();
             const promise = chan.write(2, { signal: ac.signal });
             ac.abort();
+            await expect(promise).rejects.toThrow('Aborted');
+        });
+
+        test('honors abort signal even when triggered before write call', async () => {
+            const chan = new Channel<number>(1);
+            await chan.write(1);
+            const ac = new AbortController();
+            ac.abort();
+            const promise = chan.write(2, { signal: ac.signal });
             await expect(promise).rejects.toThrow('Aborted');
         });
     });
