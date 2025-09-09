@@ -1,13 +1,5 @@
 import { Channel, getChannel } from 'util/channel';
 
-// Silence unhandled rejections from channels that intentionally throw when
-// closed with pending readers in the test environment.
-declare const process: { on: (event: string, handler: () => void) => void };
-beforeAll(() => {
-    process.on('unhandledRejection', () => {});
-    process.on('uncaughtException', () => {});
-});
-
 describe('unit', () => {
     describe('constructor', () => {
         test('throws for non-positive capacity', () => {
