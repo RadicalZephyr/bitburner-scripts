@@ -1,3 +1,5 @@
+import { RingBuffer } from 'util/ring-buffer';
+
 type Defer<T> = {
     promise: Promise<T>;
     resolve: (v: T) => void;
@@ -29,7 +31,7 @@ interface Writer<T> {
 }
 
 export class Channel<T = unknown> {
-    private readonly buf: T[] = [];
+    private readonly buf: RingBuffer<T>;
     private readonly readers: Array<Reader<T>> = [];
     private readonly writers: Array<Writer<T>> = [];
     private _closed = false;
@@ -37,23 +39,24 @@ export class Channel<T = unknown> {
     constructor(public readonly capacity: number = 100) {
         if (capacity <= 0 || !Number.isFinite(capacity))
             throw new Error(`Invalid capacity: ${capacity}`);
+        this.buf = new RingBuffer(capacity);
     }
 
     get closed() {
         return this._closed;
     }
     size() {
-        return this.buf.length;
+        return this.buf.size;
     }
     empty() {
-        return this.buf.length === 0;
+        return this.buf.size === 0;
     }
     full() {
-        return this.buf.length >= this.capacity;
+        return this.buf.size >= this.capacity;
     }
 
     clear() {
-        this.buf.length = 0;
+        this.buf.clear();
         // Do not disturb waiters; this is a data-only flush.
     }
 
@@ -69,7 +72,7 @@ export class Channel<T = unknown> {
     async read(opts: ReadOptions = {}): Promise<T> {
         if (this._closed && this.empty()) throw new Error('Channel closed');
         // Fast path: buffered item
-        if (this.buf.length > 0) {
+        if (this.buf.size > 0) {
             const v = this.buf.shift() as T;
             // If writers are queued (blocked due to full earlier), promote one into the buffer
             if (this.writers.length > 0) {
@@ -144,7 +147,7 @@ export class Channel<T = unknown> {
             return;
         }
         // If buffer has room, enqueue
-        if (this.buf.length < this.capacity) {
+        if (this.buf.size < this.capacity) {
             this.buf.push(value);
             return;
         }
