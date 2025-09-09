@@ -57,21 +57,35 @@ export class Channel<T = unknown> {
     get closed() {
         return this._closed;
     }
+
+    /** Returns number of currently buffered messages. */
     size() {
         return this.buf.size;
     }
+
+    /** Returns whether the channel buffer is empty. */
     empty() {
         return this.buf.size === 0;
     }
+
+    /** Returns whether the channel buffer is full. */
     full() {
         return this.buf.size >= this.capacity;
     }
 
+    /** Remove all buffered messages.
+     *
+     * Does not affect any waiters.
+     */
     clear() {
         this.buf.clear();
         // Do not disturb waiters; this is a data-only flush.
     }
 
+    /** Mark the queue as closed preventing future reads and writes.
+     *
+     * Any waiting readers or writers are also rejected.
+     */
     close(err?: unknown) {
         if (this._closed) return;
         this._closed = true;
@@ -82,6 +96,12 @@ export class Channel<T = unknown> {
         for (const r of this.readers.drain()) r.reject(e);
     }
 
+    /**
+     * Read one item from the channel.
+     *
+     * Readers are stored in a queue and messages are delivered to
+     * exactly one reader, in the order they registered interest.
+     */
     async read(opts: ReadOptions = {}): Promise<T> {
         if (this._closed && this.empty()) throw new Error('Channel closed');
         // Fast path: buffered item
@@ -145,6 +165,12 @@ export class Channel<T = unknown> {
         return d.promise;
     }
 
+    /**
+     * Write one message to the queue.
+     *
+     * Completes immediately if there are waiting readers or if there
+     * is space in the channel buffer.
+     */
     async write(value: T, opts: WriteOptions = {}): Promise<void> {
         if (this._closed) throw new Error('Channel closed');
 
@@ -203,6 +229,9 @@ export class Channel<T = unknown> {
         return d.promise;
     }
 
+    /**
+     * Return an asyncIterator that reads from the channel until it is closed.
+     */
     readAll() {
         // eslint-disable-next-line @typescript-eslint/no-this-alias
         const chan = this;
