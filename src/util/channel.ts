@@ -94,14 +94,16 @@ export class Channel<T = unknown> {
             throw new DOMException('Aborted', 'AbortError');
         }
         const d = defer<T>();
-        let timeout: ReturnType<typeof setTimeout> | undefined;
-        const cleanup = () => {
-            if (timeout) clearTimeout(timeout);
-            if (opts.signal) opts.signal.removeEventListener('abort', onAbort);
-            // Remove from readers if still present (rare race)
-            const i = this.readers.indexOf(entry);
-            if (i >= 0) this.readers.splice(i, 1);
+        let cleanup = () => {};
+        const onAbort = () => {
+            cleanup();
+            d.reject(new DOMException('Aborted', 'AbortError'));
         };
+        const onTimeout = () => {
+            cleanup();
+            d.reject(new Error('Timeout'));
+        };
+        const removeHandlers = setupWaiter(onAbort, onTimeout, opts);
         const entry = {
             resolve: (v: T) => {
                 cleanup();
@@ -112,18 +114,12 @@ export class Channel<T = unknown> {
                 d.reject(e);
             },
         };
-        const onAbort = () => {
-            cleanup();
-            d.reject(new DOMException('Aborted', 'AbortError'));
+        cleanup = () => {
+            removeHandlers();
+            // Remove from readers if still present (rare race)
+            const i = this.readers.indexOf(entry);
+            if (i >= 0) this.readers.splice(i, 1);
         };
-
-        if (opts.signal)
-            opts.signal.addEventListener('abort', onAbort, { once: true });
-        if (opts.timeoutMs != null)
-            timeout = setTimeout(() => {
-                cleanup();
-                d.reject(new Error('Timeout'));
-            }, opts.timeoutMs);
 
         // Queue this reader; the first write that arrives will resolve us.
         this.readers.push(entry);
@@ -158,18 +154,16 @@ export class Channel<T = unknown> {
         }
         // Otherwise, block (backpressure): queue this writer until space frees
         const d = defer<void>();
-        let timeout: ReturnType<typeof setTimeout> | undefined;
+        let cleanup = () => {};
         const onAbort = () => {
             cleanup();
             d.reject(new DOMException('Aborted', 'AbortError'));
         };
-        const cleanup = () => {
-            if (timeout) clearTimeout(timeout);
-            if (opts.signal) opts.signal.removeEventListener('abort', onAbort);
-            // Remove from writers if still present
-            const i = this.writers.indexOf(entry);
-            if (i >= 0) this.writers.splice(i, 1);
+        const onTimeout = () => {
+            cleanup();
+            d.reject(new Error('Timeout'));
         };
+        const removeHandlers = setupWaiter(onAbort, onTimeout, opts);
         const entry = {
             value,
             resolve: () => {
@@ -181,14 +175,12 @@ export class Channel<T = unknown> {
                 d.reject(e);
             },
         };
-
-        if (opts.signal)
-            opts.signal.addEventListener('abort', onAbort, { once: true });
-        if (opts.timeoutMs != null)
-            timeout = setTimeout(() => {
-                cleanup();
-                d.reject(new Error('Timeout'));
-            }, opts.timeoutMs);
+        cleanup = () => {
+            removeHandlers();
+            // Remove from writers if still present
+            const i = this.writers.indexOf(entry);
+            if (i >= 0) this.writers.splice(i, 1);
+        };
 
         this.writers.push(entry);
 
@@ -204,6 +196,24 @@ export class Channel<T = unknown> {
     async *[Symbol.asyncIterator](): AsyncIterator<T> {
         while (true) yield await this.read();
     }
+}
+
+function setupWaiter(
+    onAbort: () => void,
+    onTimeout: () => void,
+    opts: { signal?: AbortSignal; timeoutMs?: number },
+): () => void {
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    if (opts.signal)
+        opts.signal.addEventListener('abort', onAbort, { once: true });
+    if (opts.timeoutMs != null) timeout = setTimeout(onTimeout, opts.timeoutMs);
+    return () => {
+        if (timeout) {
+            clearTimeout(timeout);
+            timeout = undefined;
+        }
+        if (opts.signal) opts.signal.removeEventListener('abort', onAbort);
+    };
 }
 
 const ports = new Map<number, Channel>();
