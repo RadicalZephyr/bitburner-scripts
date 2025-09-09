@@ -205,6 +205,32 @@ describe('unit', () => {
     });
 });
 
+describe('getChannel', () => {
+    test('returns a Channel instance', () => {
+        const chan = getChannel(10);
+        expect(chan).toBeInstanceOf(Channel);
+    });
+
+    test('returns same instance for same index', () => {
+        const a = getChannel(1);
+        const b = getChannel(1);
+        const c = getChannel(2);
+        expect(a).toBe(b);
+        expect(a).not.toBe(c);
+    });
+
+    test('throws when given a negative index', () => {
+        expect(() => getChannel(-1)).toThrow(RangeError);
+    });
+
+    test.each([1.5, Infinity, -Infinity, NaN])(
+        'throws when given a non-integer index: %s',
+        (i) => {
+            expect(() => getChannel(i)).toThrow(RangeError);
+        },
+    );
+});
+
 describe('integration', () => {
     test('multiple pending readers receive values in order', async () => {
         const chan = new Channel<number>();
@@ -214,14 +240,6 @@ describe('integration', () => {
         await chan.write(2);
         await expect(p1).resolves.toBe(1);
         await expect(p2).resolves.toBe(2);
-    });
-
-    test('getChannel returns same instance for same index', () => {
-        const a = getChannel(1);
-        const b = getChannel(1);
-        const c = getChannel(2);
-        expect(a).toBe(b);
-        expect(a).not.toBe(c);
     });
 
     test('reads that timeout are cleaned up properly', async () => {
