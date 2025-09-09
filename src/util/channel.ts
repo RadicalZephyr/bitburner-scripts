@@ -26,7 +26,6 @@ interface Writer<T> {
     value: T;
     resolve: () => void;
     reject: (e: unknown) => void;
-    signal?: AbortSignal;
 }
 
 export class Channel<T = unknown> {
@@ -178,7 +177,6 @@ export class Channel<T = unknown> {
                 cleanup();
                 d.reject(e);
             },
-            signal: opts.signal,
         };
 
         if (opts.signal)
