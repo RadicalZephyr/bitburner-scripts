@@ -1,11 +1,12 @@
 type Defer<T> = {
     promise: Promise<T>;
     resolve: (v: T) => void;
-    reject: (e: any) => void;
+    reject: (e: unknown) => void;
 };
+
 function defer<T>(): Defer<T> {
     let resolve!: (v: T) => void;
-    let reject!: (e: any) => void;
+    let reject!: (e: unknown) => void;
     const promise = new Promise<T>((res, rej) => {
         resolve = res;
         reject = rej;
@@ -22,7 +23,7 @@ export class Channel<T = unknown> {
     private readonly writers: Array<{
         value: T;
         resolve: () => void;
-        reject: (e: any) => void;
+        reject: (e: unknown) => void;
         signal?: AbortSignal;
     }> = [];
     private _closed = false;
