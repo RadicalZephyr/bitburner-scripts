@@ -167,19 +167,39 @@ function purchaseAugmentation(
  * @returns False if unable to buy donate money for reputation
  */
 export function buyReputation(ns: NS, aug: Aug): boolean {
+    const donation = neededReputationCost(ns, aug);
+
+    if (!Number.isFinite(donation)) return false;
+
+    if (donation === 0) return false;
+
+    return ns.singularity.donateToFaction(aug.faction, donation);
+}
+
+/**
+ * Calculate the amount of money to donate to be able to buy this augment.
+ *
+ * @param ns  - Netscript API instance
+ * @param aug - Augment to buy reputation for
+ * @returns Amount of money to donate to be able to buy this
+ * augment. Zero if no donation needed, Infinity if donation is not
+ * possible.
+ */
+export function neededReputationCost(ns: NS, aug: Aug): number {
     const sing = ns.singularity;
 
     const factionFavor = sing.getFactionFavor(aug.faction);
     const favorToDonate = ns.getFavorToDonate();
-    if (factionFavor < favorToDonate) return false;
+    // Cannot donate to this faction, rep has infinite cost
+    if (factionFavor < favorToDonate) return Infinity;
 
     const factionRep = sing.getFactionRep(aug.faction);
     const repDelta = aug.rep - factionRep;
-    if (repDelta <= 0) return false;
+    // No need to donate, so rep has zero cost
+    if (repDelta <= 0) return 0;
 
     const player = ns.getPlayer();
-    const donation = ns.formulas.reputation.donationForRep(repDelta, player);
-    return ns.singularity.donateToFaction(aug.faction, donation);
+    return ns.formulas.reputation.donationForRep(repDelta, player);
 }
 
 async function buyNeuroFluxGovernor(ns: NS, budget: number) {
