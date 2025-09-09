@@ -21,7 +21,6 @@ describe('RingBuffer', () => {
             expect(new RingBuffer(8).capacity).toBe(8);
             // non-integer gets ceiled before rounding
             // 2.2 -> ceil 3 -> pow2 4
-            // @ts-ignore – runtime behavior
             expect(new RingBuffer(2.2).capacity).toBe(4);
         });
 
@@ -31,7 +30,6 @@ describe('RingBuffer', () => {
                 new RingBuffer(5, { roundCapacityToPow2: false }).capacity,
             ).toBe(5);
             // 3.2 -> ceil 4; no pow2 step
-            // @ts-ignore – runtime behavior
             expect(
                 new RingBuffer(3.2, { roundCapacityToPow2: false }).capacity,
             ).toBe(4);
