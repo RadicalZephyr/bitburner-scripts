@@ -59,10 +59,7 @@ CONFIGURATION
     ns.run('start.js');
     await ns.sleep(10_000);
 
-    ns.run('batch/harvest.js', 1, 'n00dles');
-    await ns.sleep(10_000);
     ns.run('sleeve/study.js', 1, '--course', 'Algorithms');
-    ns.run('automation/hack.js');
 
     await trainCombat(ns, powerhouseGym, 1200);
 
@@ -70,6 +67,8 @@ CONFIGURATION
 
     travelTo(ns, Volhaven);
     study(ns, zbU, algClass);
+
+    grindIntelligence(ns);
 
     // Wait until we can buy at least one NFG level
     await buyOneNeuroFlux(ns);
@@ -80,6 +79,12 @@ CONFIGURATION
     // The final step, this eventually restarts this script after a
     // fresh install.
     ns.singularity.installAugmentations('automation/loop-install.js');
+}
+
+async function grindIntelligence(ns: NS) {
+    const fulcrumHackLevel = ns.getServerRequiredHackingLevel('fulcrumassets');
+    await untilHackLevel(ns, 10 * fulcrumHackLevel);
+    ns.run('grind/intelligence.js');
 }
 
 function study(
