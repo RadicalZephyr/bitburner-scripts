@@ -231,7 +231,7 @@ describe('integration', () => {
 
         const pendingRead = chan.read({ timeoutMs: 10 });
         jest.runAllTimers();
-        expect(pendingRead).rejects.toThrow('Timeout');
+        await expect(pendingRead).rejects.toThrow('Timeout');
 
         const p1 = chan.read();
         const p2 = chan.read();
