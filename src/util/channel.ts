@@ -66,7 +66,7 @@ export class Channel<T = unknown> {
         }
     }
 
-    async readAsync(opts: ReadOptions = {}): Promise<T> {
+    async read(opts: ReadOptions = {}): Promise<T> {
         if (this._closed && this.empty()) throw new Error('Channel closed');
         // Fast path: buffered item
         if (this.buf.length > 0) {
@@ -123,7 +123,7 @@ export class Channel<T = unknown> {
         return d.promise;
     }
 
-    async writeAsync(value: T, opts: WriteOptions = {}): Promise<void> {
+    async write(value: T, opts: WriteOptions = {}): Promise<void> {
         if (this._closed) throw new Error('Channel closed');
 
         // If a reader is waiting, complete it immediately (no buffering, lowest latency)
@@ -184,7 +184,7 @@ export class Channel<T = unknown> {
 
     // Nice sugar for consumers: for await (const item of chan) { ... }
     async *[Symbol.asyncIterator](): AsyncIterator<T> {
-        while (true) yield await this.readAsync();
+        while (true) yield await this.read();
     }
 }
 
