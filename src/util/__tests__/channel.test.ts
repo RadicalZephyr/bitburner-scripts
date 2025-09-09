@@ -202,6 +202,20 @@ describe('unit', () => {
             await reader;
             expect(received).toEqual([1, 2]);
         });
+
+        test('exits when channel is closed', async () => {
+            const chan = new Channel<number>();
+            const received: number[] = [];
+            const reader = (async () => {
+                for await (const v of chan) {
+                    received.push(v);
+                }
+            })();
+            await chan.write(1);
+            chan.close();
+            await expect(reader).resolves.toBeUndefined();
+            expect(received).toEqual([1]);
+        });
     });
 });
 

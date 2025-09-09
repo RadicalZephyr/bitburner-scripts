@@ -205,7 +205,13 @@ export class Channel<T = unknown> {
 
     // Nice sugar for consumers: for await (const item of chan) { ... }
     async *[Symbol.asyncIterator](): AsyncIterator<T> {
-        while (true) yield await this.read();
+        while (true) {
+            try {
+                yield await this.read();
+            } catch {
+                return;
+            }
+        }
     }
 }
 
