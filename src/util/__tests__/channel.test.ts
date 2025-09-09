@@ -1,4 +1,4 @@
-import { Channel, getChannel } from 'util/channel';
+import { Channel, getChannel } from '../channel';
 
 describe('unit', () => {
     describe('constructor', () => {
