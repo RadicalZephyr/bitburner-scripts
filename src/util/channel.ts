@@ -1,4 +1,5 @@
 import { RingBuffer } from 'util/ring-buffer';
+import { SetQueue } from 'util/set-queue';
 
 type Defer<T> = {
     promise: Promise<T>;
@@ -32,8 +33,8 @@ interface Writer<T> {
 
 export class Channel<T = unknown> {
     private readonly buf: RingBuffer<T>;
-    private readonly readers: Array<Reader<T>> = [];
-    private readonly writers: Array<Writer<T>> = [];
+    private readonly readers: SetQueue<Reader<T>> = new SetQueue();
+    private readonly writers: SetQueue<Writer<T>> = new SetQueue();
     private _closed = false;
 
     constructor(public readonly capacity: number = 100) {
@@ -65,8 +66,9 @@ export class Channel<T = unknown> {
         this._closed = true;
         // Fail all pending writers/readers.
         const e = err ?? new Error('Channel closed');
-        for (const w of this.writers.splice(0)) w.reject(e);
-        for (const r of this.readers.splice(0)) r.reject(e);
+
+        for (const w of this.writers.drain()) w.reject(e);
+        for (const r of this.readers.drain()) r.reject(e);
     }
 
     async read(opts: ReadOptions = {}): Promise<T> {
@@ -75,7 +77,7 @@ export class Channel<T = unknown> {
         if (this.buf.size > 0) {
             const v = this.buf.shift() as T;
             // If writers are queued (blocked due to full earlier), promote one into the buffer
-            if (this.writers.length > 0) {
+            if (this.writers.size > 0) {
                 const w = this.writers.shift()!;
                 this.buf.push(w.value);
                 w.resolve();
@@ -83,7 +85,7 @@ export class Channel<T = unknown> {
             return v;
         }
         // If a writer is already waiting, handoff directly (zero buffering)
-        if (this.writers.length > 0) {
+        if (this.writers.size > 0) {
             const w = this.writers.shift()!;
             w.resolve();
             return w.value;
@@ -116,9 +118,8 @@ export class Channel<T = unknown> {
         };
         cleanup = () => {
             removeHandlers();
-            // Remove from readers if still present (rare race)
-            const i = this.readers.indexOf(entry);
-            if (i >= 0) this.readers.splice(i, 1);
+            // Remove from readers if still present
+            this.readers.delete(entry);
         };
 
         // Queue this reader; the first write that arrives will resolve us.
@@ -137,7 +138,7 @@ export class Channel<T = unknown> {
         if (this._closed) throw new Error('Channel closed');
 
         // If a reader is waiting, complete it immediately (no buffering, lowest latency)
-        if (this.readers.length > 0) {
+        if (this.readers.size > 0) {
             const r = this.readers.shift()!;
             r.resolve(value);
             return;
@@ -178,8 +179,7 @@ export class Channel<T = unknown> {
         cleanup = () => {
             removeHandlers();
             // Remove from writers if still present
-            const i = this.writers.indexOf(entry);
-            if (i >= 0) this.writers.splice(i, 1);
+            this.writers.delete(entry);
         };
 
         this.writers.push(entry);
