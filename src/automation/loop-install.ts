@@ -107,8 +107,6 @@ async function untilHackLevel(ns: NS, targetLevel: number) {
 }
 
 async function buyOneNeuroFlux(ns: NS) {
-    const sing = ns.singularity;
-
     const nfgName = 'NeuroFlux Governor';
 
     let bestFaction = getBestFaction(ns);
@@ -125,13 +123,18 @@ async function buyOneNeuroFlux(ns: NS) {
             `Cannot donate to buy Neuroflux Governor, you need more faction rep!`,
         );
     while (!canAfford(ns, donation)) await ns.asleep(1000);
-    ns.singularity.donateToFaction(neuro.faction, donation);
+    const donated = ns.singularity.donateToFaction(neuro.faction, donation);
+    if (!donated)
+        throw new Error(`Could not donate to ${neuro.faction} for reputation!`);
 
     const cost = augCost(ns, nfgName);
     while (!canAfford(ns, cost)) await ns.asleep(1000);
 
-    const res = sing.purchaseAugmentation(neuro.faction, neuro.name);
-    if (!res) throw new Error('Could not buy Neuroflux Governor!');
+    const purchased = ns.singularity.purchaseAugmentation(
+        neuro.faction,
+        neuro.name,
+    );
+    if (!purchased) throw new Error('Could not buy Neuroflux Governor!');
 }
 
 async function buyNeuroFlux(ns: NS) {
