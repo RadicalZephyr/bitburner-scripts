@@ -17,6 +17,24 @@ describe('SetQueue', () => {
             expect(q.isEmpty()).toBe(false);
             expect(q.size).toBe(1);
         });
+
+        test('ignores duplicate pushes of same element', () => {
+            const q = new SetQueue<number>();
+            q.push(1);
+            q.push(1);
+            q.push(1);
+            expect(q.size).toBe(1);
+            expect(Array.from(q.values())).toEqual([1]);
+        });
+
+        test('allows re-adding element after removal', () => {
+            const q = new SetQueue<number>();
+            q.push(1);
+            expect(q.shift()).toBe(1);
+            q.push(1);
+            expect(q.size).toBe(1);
+            expect(Array.from(q.values())).toEqual([1]);
+        });
     });
 
     describe('shift', () => {

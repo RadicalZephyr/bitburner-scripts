@@ -1,9 +1,9 @@
 /**
  * FIFO queue that deduplicates entries.
  *
- * Backed by a {@link Set} to preserve insertion order while ignoring
- * duplicate pushes. Useful for tracking unique waiters without
- * reordering.
+ * Backed by a {@link Set} to preserve insertion order while ignoring duplicate
+ * pushes. Adding an element that's already present is a no-op, so the queue is
+ * useful for tracking unique waiters without reordering.
  *
  * @typeParam T - Element type stored in the queue
  */
@@ -18,6 +18,12 @@ export class SetQueue<T> {
         return this.set.size === 0;
     }
 
+    /**
+     * Enqueue an element if it is not already present.
+     * Subsequent pushes of the same element are ignored.
+     *
+     * @param x - Element to enqueue
+     */
     push(x: T): void {
         this.set.add(x);
     }
