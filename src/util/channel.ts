@@ -31,6 +31,17 @@ interface Writer<T> {
     reject: (e: unknown) => void;
 }
 
+/**
+ * Multi-producer, multi-consumer asynchronous channel.
+ *
+ * Items are delivered in FIFO order and buffered up to the configured
+ * `capacity`. When the buffer is empty, readers block until a writer
+ * arrives; when full, writers block until space frees. The `read` and
+ * `write` methods accept optional `{ signal, timeoutMs }` options to
+ * abort or time out waiting operations.
+ *
+ * @typeParam T - Item type carried by the channel
+ */
 export class Channel<T = unknown> {
     private readonly buf: RingBuffer<T>;
     private readonly readers: SetQueue<Reader<T>> = new SetQueue();

@@ -1,3 +1,12 @@
+/**
+ * FIFO queue that deduplicates entries.
+ *
+ * Backed by a {@link Set} to preserve insertion order while ignoring
+ * duplicate pushes. Useful for tracking unique waiters without
+ * reordering.
+ *
+ * @typeParam T - Element type stored in the queue
+ */
 export class SetQueue<T> {
     private set = new Set<T>();
 
