@@ -63,6 +63,13 @@ describe('unit', () => {
     });
 
     describe('close', () => {
+        test('rejects pending reads', async () => {
+            const chan = new Channel<number>(1);
+            const pending = chan.read();
+            chan.close();
+            await expect(pending).rejects.toThrow('Channel closed');
+        });
+
         test('rejects pending writes', async () => {
             const chan = new Channel<number>(1);
             await chan.write(1);
@@ -198,5 +205,22 @@ describe('integration', () => {
         const c = getChannel(2);
         expect(a).toBe(b);
         expect(a).not.toBe(c);
+    });
+
+    test('reads that timeout are cleaned up properly', async () => {
+        jest.useFakeTimers();
+
+        const chan = new Channel<number>();
+
+        const pendingRead = chan.read({ timeoutMs: 10 });
+        jest.runAllTimers();
+        expect(pendingRead).rejects.toThrow('Timeout');
+
+        const p1 = chan.read();
+        const p2 = chan.read();
+        await chan.write(1);
+        await chan.write(2);
+        await expect(p1).resolves.toBe(1);
+        await expect(p2).resolves.toBe(2);
     });
 });

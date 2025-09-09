@@ -17,15 +17,22 @@ function defer<T>(): Defer<T> {
 export type ReadOptions = { signal?: AbortSignal; timeoutMs?: number };
 export type WriteOptions = { signal?: AbortSignal; timeoutMs?: number };
 
+interface Reader<T> {
+    resolve: (v: T) => void;
+    reject: (e: unknown) => void;
+}
+
+interface Writer<T> {
+    value: T;
+    resolve: () => void;
+    reject: (e: unknown) => void;
+    signal?: AbortSignal;
+}
+
 export class Channel<T = unknown> {
     private readonly buf: T[] = [];
-    private readonly readers: Array<(v: T) => void> = [];
-    private readonly writers: Array<{
-        value: T;
-        resolve: () => void;
-        reject: (e: unknown) => void;
-        signal?: AbortSignal;
-    }> = [];
+    private readonly readers: Array<Reader<T>> = [];
+    private readonly writers: Array<Writer<T>> = [];
     private _closed = false;
 
     constructor(public readonly capacity: number = 100) {
@@ -57,14 +64,7 @@ export class Channel<T = unknown> {
         // Fail all pending writers/readers.
         const e = err ?? new Error('Channel closed');
         for (const w of this.writers.splice(0)) w.reject(e);
-        while (this.readers.length > 0) {
-            this.readers.shift();
-            /* wake readers with error via microtask */ Promise.resolve().then(
-                () => {
-                    throw e;
-                },
-            );
-        }
+        for (const r of this.readers.splice(0)) r.reject(e);
     }
 
     async read(opts: ReadOptions = {}): Promise<T> {
@@ -93,8 +93,18 @@ export class Channel<T = unknown> {
             if (timeout) clearTimeout(timeout);
             if (opts.signal) opts.signal.removeEventListener('abort', onAbort);
             // Remove from readers if still present (rare race)
-            const i = this.readers.indexOf(d.resolve);
+            const i = this.readers.indexOf(entry);
             if (i >= 0) this.readers.splice(i, 1);
+        };
+        const entry = {
+            resolve: (v: T) => {
+                cleanup();
+                d.resolve(v);
+            },
+            reject: (e: unknown) => {
+                cleanup();
+                d.reject(e);
+            },
         };
         const onAbort = () => {
             cleanup();
@@ -110,10 +120,7 @@ export class Channel<T = unknown> {
             }, opts.timeoutMs);
 
         // Queue this reader; the first write that arrives will resolve us.
-        this.readers.push((v: T) => {
-            cleanup();
-            d.resolve(v);
-        });
+        this.readers.push(entry);
 
         // If channel closed after we queued
         if (this._closed) {
@@ -130,7 +137,7 @@ export class Channel<T = unknown> {
         // If a reader is waiting, complete it immediately (no buffering, lowest latency)
         if (this.readers.length > 0) {
             const r = this.readers.shift()!;
-            r(value);
+            r.resolve(value);
             return;
         }
         // If buffer has room, enqueue
