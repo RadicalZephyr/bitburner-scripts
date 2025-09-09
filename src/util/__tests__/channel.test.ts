@@ -187,12 +187,12 @@ describe('unit', () => {
         });
     });
 
-    describe('async iterator', () => {
+    describe('readAll', () => {
         test('yields values as they are written', async () => {
             const chan = new Channel<number>();
             const received: number[] = [];
             const reader = (async () => {
-                for await (const v of chan) {
+                for await (const v of chan.readAll()) {
                     received.push(v);
                     if (received.length === 2) break;
                 }
@@ -207,7 +207,7 @@ describe('unit', () => {
             const chan = new Channel<number>();
             const received: number[] = [];
             const reader = (async () => {
-                for await (const v of chan) {
+                for await (const v of chan.readAll()) {
                     received.push(v);
                 }
             })();

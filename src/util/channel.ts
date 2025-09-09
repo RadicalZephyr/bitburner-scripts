@@ -203,15 +203,20 @@ export class Channel<T = unknown> {
         return d.promise;
     }
 
-    // Nice sugar for consumers: for await (const item of chan) { ... }
-    async *[Symbol.asyncIterator](): AsyncIterator<T> {
-        while (true) {
-            try {
-                yield await this.read();
-            } catch {
-                return;
-            }
-        }
+    readAll() {
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
+        const chan = this;
+        return {
+            async *[Symbol.asyncIterator](): AsyncIterator<T> {
+                while (true) {
+                    try {
+                        yield await chan.read();
+                    } catch {
+                        return;
+                    }
+                }
+            },
+        };
     }
 }
 
