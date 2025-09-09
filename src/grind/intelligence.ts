@@ -37,7 +37,13 @@ async function grindThatLevel(ns: NS) {
     const launch = new LaunchClient(ns);
 
     const launchOptions = { threads: 1, alloc: { longRunning: true } };
-    launch.launch('batch/harvest.js', launchOptions, target);
-    launch.launch('automation/hack.js', launchOptions, target);
-    launch.launch('manual/hack.js', launchOptions, target);
+    const harvest = launch.launch('batch/harvest.js', launchOptions, target);
+    const automation = launch.launch(
+        'automation/hack.js',
+        launchOptions,
+        target,
+    );
+    const manual = launch.launch('manual/hack.js', launchOptions, target);
+
+    await Promise.all([harvest, automation, manual]);
 }
