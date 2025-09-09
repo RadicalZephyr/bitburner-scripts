@@ -51,13 +51,14 @@ export class Channel<T = unknown> {
         // Do not disturb waiters; this is a data-only flush.
     }
 
-    close(err?: any) {
+    close(err?: unknown) {
         if (this._closed) return;
         this._closed = true;
         // Fail all pending writers/readers.
         const e = err ?? new Error('Channel closed');
         for (const w of this.writers.splice(0)) w.reject(e);
-        for (const r of this.readers.splice(0)) {
+        while (this.readers.length > 0) {
+            this.readers.shift();
             /* wake readers with error via microtask */ Promise.resolve().then(
                 () => {
                     throw e;
@@ -87,7 +88,7 @@ export class Channel<T = unknown> {
         }
 
         const d = defer<T>();
-        let timeout: any;
+        let timeout: ReturnType<typeof setTimeout> | undefined;
         const cleanup = () => {
             if (timeout) clearTimeout(timeout);
             if (opts.signal) opts.signal.removeEventListener('abort', onAbort);
@@ -139,7 +140,7 @@ export class Channel<T = unknown> {
         }
         // Otherwise, block (backpressure): queue this writer until space frees
         const d = defer<void>();
-        let timeout: any;
+        let timeout: ReturnType<typeof setTimeout> | undefined;
         const onAbort = () => {
             cleanup();
             d.reject(new DOMException('Aborted', 'AbortError'));
@@ -157,7 +158,7 @@ export class Channel<T = unknown> {
                 cleanup();
                 d.resolve();
             },
-            reject: (e: any) => {
+            reject: (e: unknown) => {
                 cleanup();
                 d.reject(e);
             },
