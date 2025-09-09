@@ -53,9 +53,11 @@ export class SetQueue<T> {
     }
 
     /**
-     * Drain up to `limit` items into `out` (if provided), FIFO order.
-     * Removes the drained items from the list. Returns the count drained.
-     * If `limit` is omitted, drains everything.
+     * Drain up to `limit` items in FIFO order.
+     *
+     * Removes the drained items from the list. Returns an array of
+     * the drained elements.  If `limit` is omitted, drains
+     * everything.
      */
     drain(limit = Number.POSITIVE_INFINITY): T[] {
         if (limit <= 0 || this.set.size === 0) return [];
