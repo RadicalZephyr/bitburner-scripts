@@ -104,6 +104,11 @@ export class Channel<T = unknown> {
      */
     async read(opts: ReadOptions = {}): Promise<T> {
         if (this._closed && this.empty()) throw new Error('Channel closed');
+        // Check if abort signal has been received
+        if (opts.signal?.aborted) {
+            throw new DOMException('Aborted', 'AbortError');
+        }
+
         // Fast path: buffered item
         if (this.buf.size > 0) {
             const v = this.buf.shift() as T;
@@ -122,10 +127,6 @@ export class Channel<T = unknown> {
             return w.value;
         }
 
-        // Check if abort signal has been received
-        if (opts.signal?.aborted) {
-            throw new DOMException('Aborted', 'AbortError');
-        }
         const d = defer<T>();
         let cleanup = () => {};
         const onAbort = () => {
@@ -174,6 +175,11 @@ export class Channel<T = unknown> {
     async write(value: T, opts: WriteOptions = {}): Promise<void> {
         if (this._closed) throw new Error('Channel closed');
 
+        // Check if abort signal has been received
+        if (opts.signal?.aborted) {
+            throw new DOMException('Aborted', 'AbortError');
+        }
+
         // If a reader is waiting, complete it immediately (no buffering, lowest latency)
         if (this.readers.size > 0) {
             const r = this.readers.shift()!;
@@ -186,10 +192,6 @@ export class Channel<T = unknown> {
             return;
         }
 
-        // Check if abort signal has been received
-        if (opts.signal?.aborted) {
-            throw new DOMException('Aborted', 'AbortError');
-        }
         // Otherwise, block (backpressure): queue this writer until space frees
         const d = defer<void>();
         let cleanup = () => {};
