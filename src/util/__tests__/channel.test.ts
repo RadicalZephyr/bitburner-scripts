@@ -55,9 +55,10 @@ describe('unit', () => {
             await chan.write(1);
             const pendingWrite = chan.write(2);
             chan.clear();
-            expect(chan.size()).toBe(0);
-            const read = chan.read();
+            // Write should complete immediately after clear
             await expect(pendingWrite).resolves.toBeUndefined();
+            expect(chan.size()).toBe(1);
+            const read = chan.read();
             await expect(read).resolves.toBe(2);
         });
     });

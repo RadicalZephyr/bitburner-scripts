@@ -73,13 +73,16 @@ export class Channel<T = unknown> {
         return this.buf.size >= this.capacity;
     }
 
-    /** Remove all buffered messages.
+    /**
+     * Remove all buffered messages.
      *
      * Does not affect any waiters.
      */
     clear() {
         this.buf.clear();
-        // Do not disturb waiters; this is a data-only flush.
+        while (!(this.buf.isFull() || this.writers.isEmpty())) {
+            this.promoteWriter();
+        }
     }
 
     /** Mark the queue as closed preventing future reads and writes.
@@ -113,11 +116,7 @@ export class Channel<T = unknown> {
         if (this.buf.size > 0) {
             const v = this.buf.shift() as T;
             // If writers are queued (blocked due to full earlier), promote one into the buffer
-            if (this.writers.size > 0) {
-                const w = this.writers.shift()!;
-                this.buf.push(w.value);
-                w.resolve();
-            }
+            this.promoteWriter();
             return v;
         }
         // If a writer is already waiting, handoff directly (zero buffering)
@@ -248,6 +247,14 @@ export class Channel<T = unknown> {
                 }
             },
         };
+    }
+
+    private promoteWriter() {
+        if (this.writers.size > 0) {
+            const w = this.writers.shift()!;
+            this.buf.push(w.value);
+            w.resolve();
+        }
     }
 }
 
