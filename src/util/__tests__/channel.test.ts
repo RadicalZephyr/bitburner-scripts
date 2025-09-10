@@ -233,6 +233,22 @@ describe('unit', () => {
             await expect(reader).resolves.toBeUndefined();
             expect(received).toEqual([1]);
         });
+
+        test('honors abort signal to stop iteration', async () => {
+            const chan = new Channel<number>();
+            const ac = new AbortController();
+            const signal = ac.signal;
+            const received: number[] = [];
+            const reader = (async () => {
+                for await (const v of chan.readAll({ signal })) {
+                    received.push(v);
+                }
+            })();
+            await chan.write(1);
+            ac.abort();
+            await expect(reader).resolves.toBeUndefined();
+            expect(received).toEqual([1]);
+        });
     });
 });
 

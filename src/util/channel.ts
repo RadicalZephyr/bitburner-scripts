@@ -234,14 +234,14 @@ export class Channel<T = unknown> {
     /**
      * Return an asyncIterator that reads from the channel until it is closed.
      */
-    readAll() {
+    readAll(opts: ReadOptions = {}) {
         // eslint-disable-next-line @typescript-eslint/no-this-alias
         const chan = this;
         return {
             async *[Symbol.asyncIterator](): AsyncIterator<T> {
                 while (true) {
                     try {
-                        yield await chan.read();
+                        yield await chan.read(opts);
                     } catch {
                         return;
                     }
