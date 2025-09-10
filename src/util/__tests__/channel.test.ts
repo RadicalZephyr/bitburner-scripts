@@ -63,6 +63,18 @@ describe('unit', () => {
         });
     });
 
+    describe('clearAll', () => {
+        test('empties buffer and all pending writers', async () => {
+            const chan = new Channel<number>(1);
+            await chan.write(1);
+            const pendingWrite = chan.write(2);
+            chan.clearAll();
+            // Write should reject immediately after clear
+            await expect(pendingWrite).rejects.toThrow('Channel cleared');
+            expect(chan.size()).toBe(0);
+        });
+    });
+
     describe('close', () => {
         test('rejects pending reads', async () => {
             const chan = new Channel<number>(1);

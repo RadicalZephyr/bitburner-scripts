@@ -85,6 +85,15 @@ export class Channel<T = unknown> {
         }
     }
 
+    /**
+     * Remove all buffered messages and waiting writers.
+     */
+    clearAll(err?: unknown) {
+        const e = err ?? new Error('Channel cleared');
+        this.buf.clear();
+        for (const w of this.writers.drain()) w.reject(e);
+    }
+
     /** Mark the queue as closed preventing future reads and writes.
      *
      * Any waiting readers or writers are also rejected.
