@@ -1,10 +1,11 @@
 import { NS } from 'netscript';
 
 import { useTheme } from 'util/hooks';
+import { RingBuffer } from 'util/ring-buffer';
 
 export interface LogDisplayProps {
     ns: NS;
-    lines: string[];
+    lines: RingBuffer<string>;
 }
 
 /**
@@ -14,12 +15,12 @@ export interface LogDisplayProps {
  * @param theme - The UI theme.
  */
 export function LogDisplay({ ns, lines: extLines }: LogDisplayProps) {
-    const [lines, setLines] = React.useState(extLines);
+    const [lines, setLines] = React.useState(Array.from(extLines.values()));
     const theme = useTheme(ns, 1000);
 
     React.useEffect(() => {
         const id = globalThis.setInterval(() => {
-            setLines(extLines);
+            setLines(Array.from(extLines.values()));
         }, 1000);
         return () => {
             globalThis.clearInterval(id);

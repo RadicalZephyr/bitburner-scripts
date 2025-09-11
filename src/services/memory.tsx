@@ -21,6 +21,7 @@ import { fromFixed, MemoryAllocator, Worker } from 'services/allocator';
 
 import { useNsUpdate, useTheme } from 'util/hooks';
 import { LogDisplay } from 'ui/LogDisplay';
+import { RingBuffer } from 'util/ring-buffer';
 import { BaseServer, Handlers } from 'util/protocol';
 import { HUD_HEIGHT, HUD_WIDTH, STATUS_WINDOW_WIDTH } from 'util/ui';
 
@@ -75,11 +76,11 @@ CONFIGURATION
     const [ww] = ns.ui.windowSize();
     ns.ui.moveTail(ww - (2 * HUD_WIDTH + STATUS_WINDOW_WIDTH), 0);
 
-    const log: string[] = [];
     const maxLog = 72;
+    const log: RingBuffer<string> = new RingBuffer(maxLog + 1);
     printLog = (msg: string) => {
         log.push(msg);
-        if (log.length > maxLog) {
+        if (log.size > maxLog) {
             log.shift();
         }
     };
