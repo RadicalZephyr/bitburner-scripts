@@ -63,6 +63,7 @@ export const LogToolbar: React.FC<LogToolbarProps> = ({
                     style={buttonStyle(theme, true)}
                 >
                     <svg
+                        className="MuiSvgIcon-root MuiSvgIcon-colorSecondary MuiSvgIcon-fontSizeMedium"
                         viewBox="0 0 24 24"
                         fill="currentColor"
                         width={18}
@@ -83,6 +84,7 @@ export const LogToolbar: React.FC<LogToolbarProps> = ({
                             style={buttonStyle(theme, mode === 'logs')}
                         >
                             <svg
+                                className="MuiSvgIcon-root MuiSvgIcon-colorSecondary MuiSvgIcon-fontSizeMedium"
                                 viewBox="0 0 24 24"
                                 fill="currentColor"
                                 width={18}
@@ -98,6 +100,7 @@ export const LogToolbar: React.FC<LogToolbarProps> = ({
                             style={buttonStyle(theme, mode === 'custom')}
                         >
                             <svg
+                                className="MuiSvgIcon-root MuiSvgIcon-colorSecondary MuiSvgIcon-fontSizeMedium"
                                 viewBox="0 0 24 24"
                                 fill="currentColor"
                                 width={18}
@@ -113,6 +116,7 @@ export const LogToolbar: React.FC<LogToolbarProps> = ({
                             style={buttonStyle(theme, mode === 'split')}
                         >
                             <svg
+                                className="MuiSvgIcon-root MuiSvgIcon-colorSecondary MuiSvgIcon-fontSizeMedium"
                                 viewBox="0 0 24 24"
                                 fill="currentColor"
                                 width={18}
