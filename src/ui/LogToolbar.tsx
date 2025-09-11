@@ -38,7 +38,7 @@ export const LogToolbar: React.FC<LogToolbarProps> = ({
     return (
         <div
             className="lur-toolbar"
-            style={{ top: 8, right: 8, position: 'absolute' }}
+            style={{ top: 40, right: 6, position: 'absolute' }}
         >
             <div
                 className="lur-bar"
