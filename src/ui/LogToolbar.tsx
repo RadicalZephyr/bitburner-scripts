@@ -50,7 +50,7 @@ export const LogToolbar: React.FC<LogToolbarProps> = ({
                     background: theme.backgroundsecondary,
                     border: `1px solid ${theme.primarydark}`,
                     padding: '4px 6px',
-                    width: expanded ? 230 : 28,
+                    width: expanded ? 140 : 28,
                     overflow: 'hidden',
                     transition:
                         'width .16s ease-out, border-color .16s ease-out',
