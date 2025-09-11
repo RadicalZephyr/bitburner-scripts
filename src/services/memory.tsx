@@ -20,10 +20,11 @@ import { DiscoveryClient } from 'services/client/discover';
 import { fromFixed, MemoryAllocator, Worker } from 'services/allocator';
 
 import { useNsUpdate, useTheme } from 'util/hooks';
-import { LogDisplay } from 'ui/LogDisplay';
 import { RingBuffer } from 'util/ring-buffer';
 import { BaseServer, Handlers } from 'util/protocol';
 import { HUD_HEIGHT, HUD_WIDTH, STATUS_WINDOW_WIDTH } from 'util/ui';
+
+import { LogRoot } from 'ui/LogRoot';
 
 import {} from 'lib/react';
 
@@ -156,10 +157,9 @@ CONFIGURATION
 
     ns.clearLog();
     ns.printRaw(
-        <div style={{ display: 'flex', gap: '1em' }}>
+        <LogRoot ns={ns} buffer={log}>
             <MemoryDisplay ns={ns} getWorkers={getWorkers} />
-            <LogDisplay ns={ns} lines={log}></LogDisplay>
-        </div>,
+        </LogRoot>,
     );
 
     while (true) {
