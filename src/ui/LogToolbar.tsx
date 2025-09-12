@@ -13,6 +13,13 @@ interface LogToolbarProps {
 
 const styleId = 'LogToolbarStyles';
 
+/**
+ * View selector between custom, logs, and split modes.
+ *
+ * @param ns - Netscript API.
+ * @param mode - Current view selection.
+ * @param onChange - Handler invoked when the mode changes.
+ */
 export const LogToolbar: React.FC<LogToolbarProps> = ({
     ns,
     mode,

@@ -11,8 +11,8 @@ export interface LogDisplayProps {
 /**
  * Show recent log lines in a styled list.
  *
+ * @param ns - Netscript API.
  * @param lines - Log messages to display.
- * @param theme - The UI theme.
  */
 export function LogDisplay({ ns, lines: extLines }: LogDisplayProps) {
     const [lines, setLines] = React.useState(Array.from(extLines.values()));

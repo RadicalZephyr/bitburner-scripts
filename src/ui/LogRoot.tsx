@@ -11,6 +11,13 @@ export interface LogRootProps {
     children: React.ReactNode;
 }
 
+/**
+ * Container that toggles between a custom UI and log views.
+ *
+ * @param ns - Netscript API.
+ * @param buffer - Log lines to display.
+ * @param children - Custom content to render.
+ */
 export function LogRoot({ ns, buffer, children }: LogRootProps) {
     const [mode, setMode] = React.useState<LogMode>('custom');
 
