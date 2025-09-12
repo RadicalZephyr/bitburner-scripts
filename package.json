@@ -10,6 +10,7 @@
         "codex-test": "jest --config codex-jest.config.js",
         "format": "prettier --write .",
         "clean": "find dist -depth ! -name 'dist' ! -name .gitkeep -delete",
+        "test": "jest --config jest.config.js --roots src --maxWorkers=50%",
         "watch:init": "node build/init.js",
         "watch:test": "jest --roots src/ --watch --notify --maxWorkers=50%",
         "watch:clean": "node build/clean.js",
