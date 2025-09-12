@@ -1,6 +1,7 @@
 import type { NS, UserInterfaceTheme } from 'netscript';
 
 import { makeFuid } from 'util/fuid';
+import { isStructuralEqual } from 'util/structural-equals';
 
 /**
  * Get an updating state value derived from polling the given function.
@@ -97,6 +98,8 @@ export function useTheme(ns: NS, interval = 200): UserInterfaceTheme {
     return useNsUpdate(ns, interval, getTheme);
 }
 
+let currentTheme: UserInterfaceTheme | null = null;
+
 /**
  * Return the current UI theme.
  *
@@ -104,5 +107,11 @@ export function useTheme(ns: NS, interval = 200): UserInterfaceTheme {
  * @returns {UserInterfaceTheme}
  */
 function getTheme(ns: NS): UserInterfaceTheme {
-    return ns.ui.getTheme();
+    const newTheme = ns.ui.getTheme();
+    if (currentTheme && isStructuralEqual(currentTheme, newTheme)) {
+        return currentTheme;
+    } else {
+        currentTheme = newTheme;
+    }
+    return newTheme;
 }
