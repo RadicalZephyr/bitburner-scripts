@@ -20,8 +20,9 @@ import { DiscoveryClient } from 'services/client/discover';
 import { fromFixed, MemoryAllocator, Worker } from 'services/allocator';
 
 import { useNsUpdate, useTheme } from 'util/hooks';
-import { RingBuffer } from 'util/ring-buffer';
+import { installLogger } from 'util/logger';
 import { BaseServer, Handlers } from 'util/protocol';
+import { RingBuffer } from 'util/ring-buffer';
 import { HUD_HEIGHT, HUD_WIDTH, STATUS_WINDOW_WIDTH } from 'util/ui';
 
 import { LogRoot } from 'ui/LogRoot';
@@ -29,8 +30,6 @@ import { LogRoot } from 'ui/LogRoot';
 import {} from 'lib/react';
 
 import { CONFIG } from 'services/config';
-
-let printLog: (msg: string) => void;
 
 const FLAGS = [
     ['refresh-rate', 1000],
@@ -77,22 +76,16 @@ CONFIGURATION
     const [ww] = ns.ui.windowSize();
     ns.ui.moveTail(ww - (2 * HUD_WIDTH + STATUS_WINDOW_WIDTH), 0);
 
-    const maxLog = 500;
-    const log: RingBuffer<string> = new RingBuffer(maxLog + 1);
-    printLog = (msg: string) => {
-        log.push(msg);
-        if (log.size > maxLog) {
-            log.shift();
-        }
-    };
+    const bufferCap = 500;
+    const { ns: logNS, buffer } = installLogger(ns, { bufferCap });
 
-    await startMemoryAllocator(ns, log);
+    await startMemoryAllocator(logNS, buffer);
 }
 
 async function startMemoryAllocator(ns: NS, log: RingBuffer<string>) {
-    const memoryManager = new MemoryAllocator(ns, printLog);
+    const memoryManager = new MemoryAllocator(ns);
 
-    printLog(`INFO: starting memory manager on ${ns.self().server}`);
+    ns.print(`INFO: starting memory manager on ${ns.self().server}`);
 
     if (ns.getServerMaxRam('home') > 32) {
         memoryManager.pushWorker('home', 32);
@@ -102,13 +95,13 @@ async function startMemoryAllocator(ns: NS, log: RingBuffer<string>) {
 
     const discoveryClient = new DiscoveryClient(ns);
 
-    printLog(`INFO: requesting workers from Discover service`);
+    ns.print(`INFO: requesting workers from Discover service`);
     const workers = await discoveryClient.requestWorkers({
         messageType: MessageType.Worker,
         port: MEMORY_PORT,
     });
 
-    printLog(
+    ns.print(
         `INFO: received workers from Discover service: ${workers.join(', ')}`,
     );
     for (const worker of workers) {
@@ -201,7 +194,7 @@ class Server extends BaseServer<MemoryProtocolDef> {
             [MessageType.AllocationRequest]: async (
                 request: AllocationRequest,
             ) => {
-                printLog(
+                ns.print(
                     `INFO: request pid=${request.pid} filename=${request.filename} `
                         + `${request.numChunks}x${ns.formatRam(request.chunkSize)} `
                         + `contiguous=${request.contiguous ?? false} `
@@ -219,19 +212,19 @@ class Server extends BaseServer<MemoryProtocolDef> {
                     request.longRunning ?? false,
                 );
                 if (allocation) {
-                    printLog(
+                    ns.print(
                         `SUCCESS: allocated id ${allocation.allocationId} `
                             + `across ${allocation.hosts.length} hosts`,
                     );
                 } else {
-                    printLog('WARN: allocation failed, not enough space');
+                    ns.print('WARN: allocation failed, not enough space');
                 }
                 return allocation;
             },
             [MessageType.GrowableRequest]: async (
                 growReq: GrowableAllocationRequest,
             ) => {
-                printLog(
+                ns.print(
                     `INFO: growable request pid=${growReq.pid} filename=${growReq.filename} `
                         + `${growReq.numChunks}x${ns.formatRam(growReq.chunkSize)}`,
                 );
@@ -247,12 +240,12 @@ class Server extends BaseServer<MemoryProtocolDef> {
                     growReq.port,
                 );
                 if (growAlloc) {
-                    printLog(
+                    ns.print(
                         `SUCCESS: allocated id ${growAlloc.allocationId} `
                             + `across ${growAlloc.hosts.length} hosts`,
                     );
                 } else {
-                    printLog('WARN: growable allocation failed');
+                    ns.print('WARN: growable allocation failed');
                 }
                 return growAlloc;
             },
@@ -264,12 +257,12 @@ class Server extends BaseServer<MemoryProtocolDef> {
                         release.hostname,
                     )
                 ) {
-                    printLog(
+                    ns.print(
                         `SUCCESS: released allocation ${release.allocationId} `
                             + `pid=${release.pid} host=${release.hostname}`,
                     );
                 } else {
-                    printLog(
+                    ns.print(
                         `WARN: allocation ${release.allocationId} not found for pid ${release.pid}`,
                     );
                 }
@@ -284,18 +277,18 @@ class Server extends BaseServer<MemoryProtocolDef> {
                         claimRel.hostname,
                     )
                 ) {
-                    printLog(
+                    ns.print(
                         `SUCCESS: released claim for ${claimRel.allocationId} `
                             + `pid=${claimRel.pid} host=${claimRel.hostname}`,
                     );
                 } else {
-                    printLog(
+                    ns.print(
                         `WARN: claim for allocation ${claimRel.allocationId} not found for pid ${claimRel.pid}`,
                     );
                 }
             },
             [MessageType.Register]: async (reg: AllocationRegister) => {
-                printLog(
+                ns.print(
                     `INFO: register pid=${reg.pid} host=${reg.hostname} `
                         + `${reg.numChunks}x${ns.formatRam(reg.chunkSize)} `
                         + `${reg.filename}`,
@@ -309,19 +302,19 @@ class Server extends BaseServer<MemoryProtocolDef> {
                 };
             },
             [MessageType.Snapshot]: async () => {
-                printLog(`INFO: processing snapshot request`);
+                ns.print(`INFO: processing snapshot request`);
                 return memoryManager.getSnapshot();
             },
             [MessageType.Claim]: async (claimInfo: AllocationClaim) => {
                 if (memoryManager.claimAllocation(claimInfo)) {
-                    printLog(
+                    ns.print(
                         `INFO: claimed allocation ${claimInfo.allocationId} `
                             + `pid=${claimInfo.pid} host=${claimInfo.hostname} `
                             + `${claimInfo.numChunks}x${ns.formatRam(claimInfo.chunkSize)} `
                             + `${claimInfo.filename}`,
                     );
                 } else {
-                    printLog(
+                    ns.print(
                         `WARN: failed to claim allocation ${claimInfo.allocationId}`,
                     );
                 }
@@ -349,7 +342,7 @@ async function growAllocations(ns: NS, memoryManager: MemoryAllocator) {
         const host = firstChunk.hostname;
         const chunkSize = ns.formatRam(firstChunk?.chunkSize ?? 0);
         const totalChunks = newChunks.reduce((s, c) => s + c.numChunks, 0);
-        printLog(
+        ns.print(
             `INFO: growing allocation ${alloc.id} by ${totalChunks}x${chunkSize} from ${host}`,
         );
 

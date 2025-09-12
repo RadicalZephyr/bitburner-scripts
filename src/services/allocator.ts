@@ -58,7 +58,7 @@ export class MemoryAllocator {
 
     constructor(ns: NS, printLog?: LogFn) {
         this.ns = ns;
-        this.printLog = printLog ?? (() => null);
+        this.printLog = printLog ?? ns.print ?? (() => null);
     }
 
     /**
