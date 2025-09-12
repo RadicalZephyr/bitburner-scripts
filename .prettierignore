@@ -4,3 +4,4 @@ archive
 *.gz
 *.cfg
 NetScriptDefinitions.d.ts
+fonts/
