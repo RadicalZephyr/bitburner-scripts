@@ -122,6 +122,7 @@
 - Monitor HUD displays expected profit per second alongside expected value [#185][pr-185].
 - Monitor HUD displays total hacking profit-per-second [#214][pr-214].
 - Tail UIs like monitor, infiltration list, and backdoor notifier render once and poll for updates using hook utilities [#229][pr-229].
+- Added a new `LogRoot` container and logging interceptor for preserving access to script logging output when implementing custom UIs [pr-315].
 
 ### Documentation and tests
 
@@ -196,6 +197,7 @@
 [pr-287]: https://github.com/RadicalZephyr/bitburner-scripts/pull/287
 [pr-288]: https://github.com/RadicalZephyr/bitburner-scripts/pull/288
 [pr-271]: https://github.com/RadicalZephyr/bitburner-scripts/pull/271
+[pr-315]: https://github.com/RadicalZephyr/bitburner-scripts/pull/315
 
 ## v2.1.0
 
