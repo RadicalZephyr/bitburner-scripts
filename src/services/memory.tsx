@@ -71,10 +71,10 @@ CONFIGURATION
     ns.disableLog('ALL');
     ns.ui.openTail();
     ns.ui.setTailTitle('Memory Allocator');
-    ns.ui.resizeTail(HUD_WIDTH, HUD_HEIGHT);
+    ns.ui.resizeTail(HUD_WIDTH / 2, HUD_HEIGHT);
 
     const [ww] = ns.ui.windowSize();
-    ns.ui.moveTail(ww - (2 * HUD_WIDTH + STATUS_WINDOW_WIDTH), 0);
+    ns.ui.moveTail(ww - (1.5 * HUD_WIDTH + STATUS_WINDOW_WIDTH), 0);
 
     const bufferCap = 500;
     const { ns: logNS, buffer } = installLogger(ns, { bufferCap });
