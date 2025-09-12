@@ -77,7 +77,7 @@ CONFIGURATION
     const [ww] = ns.ui.windowSize();
     ns.ui.moveTail(ww - (2 * HUD_WIDTH + STATUS_WINDOW_WIDTH), 0);
 
-    const maxLog = 72;
+    const maxLog = 500;
     const log: RingBuffer<string> = new RingBuffer(maxLog + 1);
     printLog = (msg: string) => {
         log.push(msg);
@@ -86,6 +86,10 @@ CONFIGURATION
         }
     };
 
+    await startMemoryAllocator(ns, log);
+}
+
+async function startMemoryAllocator(ns: NS, log: RingBuffer<string>) {
     const memoryManager = new MemoryAllocator(ns, printLog);
 
     printLog(`INFO: starting memory manager on ${ns.self().server}`);
