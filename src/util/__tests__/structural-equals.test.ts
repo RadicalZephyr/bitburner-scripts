@@ -25,4 +25,24 @@ describe('isStructuralEqual', () => {
             });
         });
     });
+
+    describe('arrays compare element wise', () => {
+        test('numeric arrays with same elements are equal', () => {
+            expect(isStructuralEqual([1, 2, 3], [1, 2, 3])).toBeTruthy();
+        });
+
+        test('numeric arrays with same array elements are equal', () => {
+            expect(
+                isStructuralEqual([[1], [2], [3]], [[1], [2], [3]]),
+            ).toBeTruthy();
+        });
+
+        test("numeric arrays with different elements aren't equal", () => {
+            expect(isStructuralEqual([1, 2, 3], [4, 5, 6])).toBeFalsy();
+        });
+
+        test("numeric arrays with same elements in a different order aren't equal", () => {
+            expect(isStructuralEqual([1, 2, 3], [2, 1, 3])).toBeFalsy();
+        });
+    });
 });
