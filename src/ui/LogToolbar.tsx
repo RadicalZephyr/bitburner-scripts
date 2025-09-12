@@ -69,9 +69,9 @@ export const LogToolbar: React.FC<LogToolbarProps> = ({
                     >
                         <g
                             stroke="none"
-                            stroke-width="1"
+                            strokeWidth="1"
                             fill="none"
-                            fill-rule="evenodd"
+                            fillRule="evenodd"
                         >
                             <g
                                 transform="translate(-310.000000, -1039.000000)"
@@ -100,9 +100,9 @@ export const LogToolbar: React.FC<LogToolbarProps> = ({
                             >
                                 <g
                                     stroke="none"
-                                    stroke-width="1"
+                                    strokeWidth="1"
                                     fill="none"
-                                    fill-rule="evenodd"
+                                    fillRule="evenodd"
                                 >
                                     <g
                                         transform="translate(-256.000000, -671.000000)"
@@ -126,9 +126,9 @@ export const LogToolbar: React.FC<LogToolbarProps> = ({
                             >
                                 <g
                                     stroke="none"
-                                    stroke-width="1"
+                                    strokeWidth="1"
                                     fill="none"
-                                    fill-rule="evenodd"
+                                    fillRule="evenodd"
                                 >
                                     <g
                                         transform="translate(-308.000000, -99.000000)"
