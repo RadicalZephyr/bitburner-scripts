@@ -507,17 +507,19 @@ export class BaseServer<P extends ProtocolDef> {
             try {
                 responsePayload = await handler(msg.payload);
             } catch (err) {
-                if (err.cause == null) {
-                    err.cause = {};
-                }
-                err.cause.request = msg;
+                const error =
+                    err instanceof Error ? err : new Error(String(err));
+                const cause =
+                    (error.cause as Record<string, unknown> | undefined) ?? {};
+                cause.request = msg.payload;
+                error.cause = cause;
 
                 if (this.#responsePort && typeof msg.id === 'string') {
                     const response = {
                         id: msg.id,
                         type: msg.type,
                         ok: false,
-                        error: err,
+                        error,
                     } as ResponseErrUnknown;
 
                     // Send response
@@ -525,7 +527,7 @@ export class BaseServer<P extends ProtocolDef> {
                         await sleep(20);
                     }
                 } else {
-                    console.error(``, err);
+                    console.error(error);
                 }
                 continue;
             }

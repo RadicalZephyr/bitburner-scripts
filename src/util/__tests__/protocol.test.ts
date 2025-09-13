@@ -659,7 +659,7 @@ describe('BaseClient and BaseServer provide a higher-level interface to custom p
             );
         });
 
-        test('handler error returns an error response with request message attached as cause', async () => {
+        test('handler error returns an error response with request payload attached as cause', async () => {
             const ns = { ...atExitFixture.ns, ...printFixture.ns } as ServerNS;
 
             // Build a server with a missing handler
@@ -705,7 +705,9 @@ describe('BaseClient and BaseServer provide a higher-level interface to custom p
                 cause?: { request: unknown };
             };
             expect(typeof err).toBe('object');
-            expect(err.cause?.request).toEqual(validRequestForMissing);
+            expect(err.cause?.request).toEqual(validRequestForMissing.payload);
+
+            expect(resPort.read()).toBe('NULL PORT DATA');
         });
     });
 
