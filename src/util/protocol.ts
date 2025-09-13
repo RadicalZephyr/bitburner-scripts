@@ -340,12 +340,6 @@ export function defineProtocol<const P extends ProtocolDef>(def: P) {
 
             await sleep(_pollPeriod);
         }
-        throw new Error(`Netscript script exited!`);
-        // const peeked = receivePort.peek() as unknown;
-        // throw new ProtocolError(
-        //     `Timeout waiting for response: type=${String(type)} id=${message.id}`,
-        //     { cause: peeked },
-        // );
     }
 
     return {
