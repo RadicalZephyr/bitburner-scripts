@@ -2,13 +2,22 @@ import { isObjectUnknown } from 'util/validate';
 
 /**
  * Compare two values structurally.
+ *
+ * Only primitives, arrays, and plain objects are supported. Types like `Map`,
+ * `Set`, `Date`, and functions are always considered unequal. The algorithm
+ * also does not handle cyclic references and will recurse infinitely if given
+ * such structures.
+ *
+ * @param a - First value to compare
+ * @param b - Second value to compare
+ * @returns Whether {@link a} and {@link b} are structurally equal
  */
 export function isStructuralEqual(a: unknown, b: unknown): boolean {
     if (typeof a !== typeof b) return false;
 
     if (typeof a === 'object') {
         if (Array.isArray(a) && Array.isArray(b))
-            return isArrayStructuralEquals(a, b);
+            return isArrayStructuralEqual(a, b);
 
         if (isObjectUnknown(a) && isObjectUnknown(b))
             return isObjectStructuralEqual(a, b);
@@ -17,7 +26,14 @@ export function isStructuralEqual(a: unknown, b: unknown): boolean {
     return a === b;
 }
 
-export function isArrayStructuralEquals(
+/**
+ * Compare two arrays element by element using structural equality.
+ *
+ * @param a - First array to compare
+ * @param b - Second array to compare
+ * @returns Whether the arrays are structurally equal
+ */
+export function isArrayStructuralEqual(
     a: readonly unknown[],
     b: readonly unknown[],
 ): boolean {
@@ -30,6 +46,13 @@ export function isArrayStructuralEquals(
     return true;
 }
 
+/**
+ * Compare two plain objects key-by-key using structural equality.
+ *
+ * @param a - First object to compare
+ * @param b - Second object to compare
+ * @returns Whether the objects are structurally equal
+ */
 export function isObjectStructuralEqual(a: object, b: object): boolean {
     const aKeys = Object.keys(a);
     const bKeys = Object.keys(b);

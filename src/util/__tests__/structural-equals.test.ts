@@ -1,6 +1,9 @@
 import { describe, test, expect } from '@jest/globals';
 
-import { isStructuralEqual } from '../structural-equals';
+import {
+    isArrayStructuralEqual,
+    isStructuralEqual,
+} from '../structural-equals';
 
 describe('isStructuralEqual', () => {
     describe('primitive values compare with ===', () => {
@@ -72,5 +75,12 @@ describe('isStructuralEqual', () => {
         test('objects with different keys are not equal', () => {
             expect(isStructuralEqual({ a: 1 }, { b: 1 })).toBeFalsy();
         });
+    });
+});
+
+describe('isArrayStructuralEqual', () => {
+    test('arrays compare element wise', () => {
+        expect(isArrayStructuralEqual([1, 2], [1, 2])).toBeTruthy();
+        expect(isArrayStructuralEqual([1, 2], [2, 1])).toBeFalsy();
     });
 });
