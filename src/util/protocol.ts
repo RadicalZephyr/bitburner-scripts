@@ -502,7 +502,33 @@ export class BaseServer<P extends ProtocolDef> {
                 );
             }
 
-            const responsePayload = await handler(msg.payload);
+            let responsePayload: Awaited<ResponseOf<P, keyof P>> | undefined;
+
+            try {
+                responsePayload = await handler(msg.payload);
+            } catch (err) {
+                if (err.cause == null) {
+                    err.cause = {};
+                }
+                err.cause.request = msg;
+
+                if (this.#responsePort && typeof msg.id === 'string') {
+                    const response = {
+                        id: msg.id,
+                        type: msg.type,
+                        ok: false,
+                        error: err,
+                    } as ResponseErrUnknown;
+
+                    // Send response
+                    while (!this.#responsePort.tryWrite(response)) {
+                        await sleep(20);
+                    }
+                } else {
+                    console.error(``, err);
+                }
+                continue;
+            }
 
             if (this.#responsePort && typeof msg.id === 'string') {
                 const response = {

@@ -658,6 +658,55 @@ describe('BaseClient and BaseServer provide a higher-level interface to custom p
                 /missing handler for message type withNoResponse/,
             );
         });
+
+        test('handler error returns an error response with request message attached as cause', async () => {
+            const ns = { ...atExitFixture.ns, ...printFixture.ns } as ServerNS;
+
+            // Build a server with a missing handler
+            class ErrorServer extends BaseServer<TestProtocolDef> {
+                constructor() {
+                    const req = getPortHandle(1);
+                    const res = getPortHandle(2);
+                    const handlers: Handlers<TestProtocolDef> = {
+                        withNoResponse: async () => null,
+                        withResponse: async () => {
+                            throw new Error('An Error with no cause');
+                        },
+                    };
+                    super(ns, TestProtocol, req, res, handlers);
+                }
+            }
+
+            const server = new ErrorServer();
+
+            // Craft a valid protocol request for the error throwing handler
+            const reqPort = getPortHandle(1);
+            const validRequestForMissing = {
+                type: 'withResponse',
+                id: '1234-foo',
+                payload: 'ping',
+            } satisfies RequestUnknown;
+            reqPort.write(validRequestForMissing);
+
+            await server.readFn();
+
+            const resPort = getPortHandle(2);
+            const resp = resPort.read();
+            expect(resp).not.toBeNull();
+            expect(typeof resp).toBe('object');
+            expect('ok' in resp).toBeTruthy();
+
+            const respUnknown = resp as ResponseErrUnknown;
+            expect(respUnknown.ok).toBeFalsy();
+            expect(respUnknown.id).toBe('1234-foo');
+            expect(respUnknown.type).toBe('withResponse');
+
+            const err = respUnknown.error as {
+                cause?: { request: unknown };
+            };
+            expect(typeof err).toBe('object');
+            expect(err.cause?.request).toEqual(validRequestForMissing);
+        });
     });
 
     describe('integration tests', () => {
