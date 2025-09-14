@@ -10,14 +10,14 @@ import {
 } from 'services/client/port';
 import { MemoryClient } from 'services/client/memory';
 
-import {} from 'lib/react';
-
 import { LogRoot } from 'ui/LogRoot';
 
 import { usePoll, useNsUpdate, useTheme } from 'util/hooks';
 import { installLogger } from 'util/logger';
 import { BaseServer, type Handlers } from 'util/protocol';
 import { RingBuffer } from 'util/ring-buffer';
+
+import { React } from 'lib/react';
 
 /**
  * Main loop for the PortAllocator daemon.

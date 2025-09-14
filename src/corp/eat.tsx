@@ -10,6 +10,8 @@ import { makeFuid } from 'util/fuid';
 import { useTheme } from 'util/hooks';
 import { getReactProps } from 'util/props';
 
+import { React } from 'lib/react';
+
 import { CONFIG } from 'corp/config';
 
 const FLAGS = [['help', false]] as const satisfies FlagsSchema;

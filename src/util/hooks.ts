@@ -3,6 +3,8 @@ import type { NS, UserInterfaceTheme } from 'netscript';
 import { makeFuid } from 'util/fuid';
 import { isStructuralEqual } from 'util/structural-equals';
 
+import { React } from 'lib/react';
+
 /**
  * Get an updating state value derived from polling the given function.
  *

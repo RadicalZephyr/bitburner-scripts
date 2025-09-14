@@ -9,6 +9,8 @@ import {
     KARMA_HEIGHT,
 } from 'util/ui';
 
+import { React } from 'lib/react';
+
 export async function main(ns: NS) {
     await parseFlags(ns, []);
 

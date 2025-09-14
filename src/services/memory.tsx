@@ -27,7 +27,7 @@ import { HUD_HEIGHT, HUD_WIDTH, STATUS_WINDOW_WIDTH } from 'util/ui';
 
 import { LogRoot } from 'ui/LogRoot';
 
-import {} from 'lib/react';
+import { React } from 'lib/react';
 
 import { CONFIG } from 'services/config';
 

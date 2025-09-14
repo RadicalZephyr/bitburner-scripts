@@ -3,6 +3,8 @@ import { NS } from 'netscript';
 import { assertEl } from 'util/assertEl';
 import { useTheme } from 'util/hooks';
 
+import { React } from 'lib/react';
+
 export type LogMode = 'custom' | 'logs' | 'split';
 
 interface LogToolbarProps {

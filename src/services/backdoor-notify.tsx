@@ -7,6 +7,8 @@ import { useNsUpdate, useTheme } from 'util/hooks';
 import { sendTerminalCommand } from 'util/terminal';
 import { walkNetworkBFS } from 'util/walk';
 
+import { React } from 'lib/react';
+
 export async function main(ns: NS) {
     await parseFlags(ns, []);
 

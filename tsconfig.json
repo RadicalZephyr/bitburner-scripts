@@ -17,7 +17,6 @@
         "target": "esnext",
         "moduleResolution": "node",
         "jsx": "react",
-        "allowUmdGlobalAccess": true,
         "skipLibCheck": true,
         "noImplicitReturns": true,
         "noImplicitThis": true,

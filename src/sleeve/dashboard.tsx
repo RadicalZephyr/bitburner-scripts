@@ -10,6 +10,8 @@ import { exitOnKill } from 'util/exitOnKill';
 import { usePoll, useTheme } from 'util/hooks';
 import { StatTracker } from 'util/stat-tracker';
 
+import { React } from 'lib/react';
+
 import { CONFIG } from 'sleeve/config';
 
 const FLAGS = [['help', false]] as const satisfies FlagsSchema;

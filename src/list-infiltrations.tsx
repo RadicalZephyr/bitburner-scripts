@@ -9,6 +9,8 @@ import { parseFlags } from 'util/flags';
 import { exitOnKill } from 'util/exitOnKill';
 import { useNsUpdate, useTheme } from 'util/hooks';
 
+import { React } from 'lib/react';
+
 export async function main(ns: NS) {
     await parseFlags(ns, []);
 

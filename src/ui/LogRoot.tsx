@@ -5,6 +5,8 @@ import { LogMode, LogToolbar } from 'ui/LogToolbar';
 
 import { RingBuffer } from 'util/ring-buffer';
 
+import { React } from 'lib/react';
+
 export interface LogRootProps {
     ns: NS;
     buffer: RingBuffer<string>;

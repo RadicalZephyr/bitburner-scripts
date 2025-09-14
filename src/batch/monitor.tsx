@@ -27,6 +27,8 @@ import { useNsUpdate, usePoll, useTheme } from 'util/hooks';
 import { BaseServer, type Handlers } from 'util/protocol';
 import { HUD_HEIGHT, HUD_WIDTH, STATUS_WINDOW_WIDTH } from 'util/ui';
 
+import { React } from 'lib/react';
+
 const FLAGS = [
     ['refreshrate', 200],
     ['help', false],

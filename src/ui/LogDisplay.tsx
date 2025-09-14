@@ -3,6 +3,8 @@ import { NS } from 'netscript';
 import { useTheme } from 'util/hooks';
 import { RingBuffer } from 'util/ring-buffer';
 
+import { React } from 'lib/react';
+
 export interface LogDisplayProps {
     ns: NS;
     lines: RingBuffer<string>;
