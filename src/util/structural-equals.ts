@@ -53,7 +53,10 @@ export function isArrayStructuralEqual(
  * @param b - Second object to compare
  * @returns Whether the objects are structurally equal
  */
-export function isObjectStructuralEqual(a: object, b: object): boolean {
+export function isObjectStructuralEqual(
+    a: Record<string, unknown>,
+    b: Record<string, unknown>,
+): boolean {
     const aKeys = Object.keys(a);
     const bKeys = Object.keys(b);
     if (aKeys.length !== bKeys.length) return false;
