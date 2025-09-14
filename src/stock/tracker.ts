@@ -95,8 +95,7 @@ CONFIGURATION
             `INFO: ${symbols[0]} μ=${ns.formatNumber(stats.mean)} `
                 + `median=${ns.formatNumber(stats.median)} `
                 + `σ=${ns.formatNumber(stats.std)} `
-                + `z=${ns.formatNumber(stats.zScore)} `
-                + `roc=${ns.formatPercent(stats.roc[5])}`,
+                + `z=${ns.formatNumber(stats.zScore)} `,
         );
         if (symbols.length > 1) {
             ns.print(
