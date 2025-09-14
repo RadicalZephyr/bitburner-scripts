@@ -110,11 +110,14 @@ function PortDisplay({ ns, allocator }: PortDisplayProps) {
     const theme = useTheme(ns);
     const nextPort = usePoll(ns, 200, () => allocator.nextPort);
     const ports = useNsUpdate(ns, 200, (ns) =>
-        Array.from(allocator.allocated).map((p) => ({
-            id: p,
-            empty: ns.getPortHandle(p).empty(),
-            full: ns.getPortHandle(p).full(),
-        })),
+        Array.from(allocator.allocated).map((p) => {
+            const port = ns.getPortHandle(p);
+            return {
+                id: p,
+                empty: port.empty(),
+                full: port.full(),
+            };
+        }),
     );
     return (
         <div>
