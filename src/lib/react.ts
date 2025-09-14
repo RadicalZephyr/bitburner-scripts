@@ -1,2 +1,6 @@
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import type ReactType from 'react';
+import { assertGlobal } from 'util/script-import';
+
+export const React = assertGlobal<typeof import('react')>(
+    'React',
+    'Global React not found!',
+);
