@@ -1,6 +1,5 @@
 type InsertRemoteScriptOptions = {
-    url: string; // remote URL (can be relative)
-    containerId: string; // where all scripts go
+    containerId?: string;
     module?: boolean; // use type="module"
     attributes?: Record<string, string>; // extra attrs (e.g. { nonce: "..." })
     timeoutMs?: number; // default 30_000
@@ -71,11 +70,11 @@ function resolveUrl(input: string): string {
 
 /** Load a remote script by URL, with de-dupe + optional content hashing. */
 export async function insertRemoteScript(
+    url: string,
     opts: InsertRemoteScriptOptions,
 ): Promise<void> {
     const {
-        url,
-        containerId,
+        containerId = 'dyn-scripts',
         module = false,
         attributes,
         timeoutMs = 30_000,
@@ -217,9 +216,9 @@ export function clearRemoteScriptRegistries(containerId?: string) {
 export async function importFromGlobal<T>(
     url: string,
     globalKey: string,
-    containerId = 'dyn-scripts',
+    opts: InsertRemoteScriptOptions = {},
 ): Promise<T> {
-    await insertRemoteScript({ url, containerId });
+    await insertRemoteScript(url, opts);
     return assertGlobal<T>(
         globalKey,
         `Global "${globalKey}" not found after loading ${url}`,
