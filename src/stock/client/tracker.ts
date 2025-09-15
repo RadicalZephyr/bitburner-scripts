@@ -16,14 +16,14 @@ export const TRACKER_PORT = 30;
 export const TRACKER_RESPONSE_PORT = 31;
 
 export const MessageType = {
-    RequestTicks: 'RequestTicks',
+    RequestAllTicks: 'RequestAllTicks',
     RequestIndicators: 'RequestIndicators',
 } as const;
 
-const TickDataRequest = 'STR_TickDataRequest';
+const AllTickDataRequest = 'STR_AllTickDataRequest';
 
-const isTickDataRequest: Validator<typeof TickDataRequest> =
-    isLiteral(TickDataRequest);
+const isAllTickDataRequest: Validator<typeof AllTickDataRequest> =
+    isLiteral(AllTickDataRequest);
 
 const isTickData: Validator<TickData> = isObjectLike({
     ts: isNumber,
@@ -81,8 +81,8 @@ const isIndicators: Validator<Indicators> = isObjectLike({
 });
 
 export const TrackerProtocol = defineProtocol({
-    [MessageType.RequestTicks]: {
-        payload: isTickDataRequest,
+    [MessageType.RequestAllTicks]: {
+        payload: isAllTickDataRequest,
         response: isRecordOf(isArrayOf(isTickData)),
     },
     [MessageType.RequestIndicators]: {
@@ -106,10 +106,10 @@ export class TrackerClient extends BaseClient<TrackerProtocolDef> {
     }
 
     /** Request raw tick data for all tracked symbols. */
-    requestTicks() {
+    requestAllTicks() {
         return this.sendMessageReceiveResponse(
-            MessageType.RequestTicks,
-            TickDataRequest,
+            MessageType.RequestAllTicks,
+            AllTickDataRequest,
         );
     }
 

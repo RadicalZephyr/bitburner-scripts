@@ -113,7 +113,7 @@ class Server extends BaseServer<TrackerProtocolDef> {
         const requestPort = ns.getPortHandle(TRACKER_PORT);
         const responsePort = ns.getPortHandle(TRACKER_RESPONSE_PORT);
         const handlers: Handlers<TrackerProtocolDef> = {
-            [MessageType.RequestTicks]: () => {
+            [MessageType.RequestAllTicks]: () => {
                 return Promise.resolve(Object.fromEntries(buffers));
             },
             [MessageType.RequestIndicators]: () => {
