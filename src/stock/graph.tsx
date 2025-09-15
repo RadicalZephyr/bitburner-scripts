@@ -55,30 +55,47 @@ OPTIONS
 }
 
 async function displayChartsAndStuff(ns: NS, company: string) {
+    const stockData = await fetchStockData(ns, company);
+    if (stockData === undefined || stockData.length === 0) return;
+
+    const { sym } = stockData[0];
+
+    ns.disableLog('ALL');
+    ns.clearLog();
+    ns.ui.openTail();
+    ns.ui.setTailTitle(`Stock Price of ${company} (${sym})`);
+    ns.printRaw(<StockChart ns={ns} stockData={stockData} />);
+}
+
+/**
+ * Look up a company's stock symbol and enrich its tick data.
+ *
+ * @param ns - Netscript API
+ * @param company - Company name to fetch data for
+ * @returns Array of enhanced tick data or `undefined` if not found
+ */
+async function fetchStockData(
+    ns: NS,
+    company: string,
+): Promise<EnhancedTickData[] | undefined> {
     const companySymbol = ns.stock
         .getSymbols()
         .find((sym) => ns.stock.getOrganization(sym) === company);
 
     if (!companySymbol) {
         ns.tprint(`Could not find stock symbol for ${company}`);
-        return;
+        return undefined;
     }
 
     const stockClient = new TrackerClient(ns);
     const data = await stockClient.requestStockTicks(companySymbol);
-    const stockData = data.map((d) => ({
+    return data.map((d) => ({
         sym: companySymbol,
         mid: (d.askPrice + d.bidPrice) / 2,
         spread: d.askPrice - d.bidPrice,
         conf: Math.abs(d.forecast - 0.5) * 2,
         ...d,
     }));
-
-    ns.disableLog('ALL');
-    ns.clearLog();
-    ns.ui.openTail();
-    ns.ui.setTailTitle(`Stock Price of ${company} (${companySymbol})`);
-    ns.printRaw(<StockChart ns={ns} stockData={stockData} />);
 }
 
 interface Props {
