@@ -104,8 +104,7 @@ interface Props {
 }
 
 function StockChart({ stockData }: Props) {
-    const containerRef: React.Ref<HTMLDivElement | undefined> =
-        React.useRef(null);
+    const containerRef = React.useRef<HTMLDivElement>(null);
 
     React.useEffect(() => {
         if (stockData === undefined || !containerRef.current) return undefined;
