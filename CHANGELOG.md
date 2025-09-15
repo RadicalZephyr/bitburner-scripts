@@ -5,7 +5,8 @@
 ### Repository Wide Improvements
 
 - Added support for autocompleting flags to all scripts [#213][pr-213].
-- Help messages now list all CONFIG values used by each script. [#218][pr-218].
+- Help messages now list all CONFIG values used by each script [#218][pr-218].
+- Introduced utilities for importing scripts from a CDN and accessing UMD globals from imports [#317][pr-317].
 
 ### Startup
 
@@ -99,6 +100,10 @@
 - Add a basic Bladeburner skill buying utility and a mission control script to select the best mission every cycle [#246][pr-246].
 - Make Bladeburner skill buying script delay configurable [#285][pr-285].
 - Penalize dangerous actions in Bladeburner [#287][pr-287].
+
+### Stocks
+
+- Add a script to graph a single companies stock value [#317][pr-317].
 
 ### Utilities
 
@@ -198,6 +203,7 @@
 [pr-288]: https://github.com/RadicalZephyr/bitburner-scripts/pull/288
 [pr-271]: https://github.com/RadicalZephyr/bitburner-scripts/pull/271
 [pr-315]: https://github.com/RadicalZephyr/bitburner-scripts/pull/315
+[pr-317]: https://github.com/RadicalZephyr/bitburner-scripts/pull/317
 
 ## v2.1.0
 
