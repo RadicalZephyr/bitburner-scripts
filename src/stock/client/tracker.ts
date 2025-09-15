@@ -7,6 +7,7 @@ import {
     isNumber,
     isObjectLike,
     isRecordOf,
+    isString,
     type Validator,
 } from 'util/validate';
 
@@ -16,6 +17,7 @@ export const TRACKER_PORT = 30;
 export const TRACKER_RESPONSE_PORT = 31;
 
 export const MessageType = {
+    RequestStockTicks: 'RequestStockTicks',
     RequestAllTicks: 'RequestAllTicks',
     RequestIndicators: 'RequestIndicators',
 } as const;
@@ -32,6 +34,8 @@ const isTickData: Validator<TickData> = isObjectLike({
     volatility: isNumber,
     forecast: isNumber,
 });
+
+const isStockTickDataRequest: Validator<string> = isString;
 
 const IndicatorsRequest = 'STR_IndicatorsRequest';
 
@@ -81,6 +85,10 @@ const isIndicators: Validator<Indicators> = isObjectLike({
 });
 
 export const TrackerProtocol = defineProtocol({
+    [MessageType.RequestStockTicks]: {
+        payload: isStockTickDataRequest,
+        response: isArrayOf(isTickData),
+    },
     [MessageType.RequestAllTicks]: {
         payload: isAllTickDataRequest,
         response: isRecordOf(isArrayOf(isTickData)),
@@ -102,6 +110,14 @@ export class TrackerClient extends BaseClient<TrackerProtocolDef> {
             TrackerProtocol,
             ns.getPortHandle(TRACKER_PORT),
             ns.getPortHandle(TRACKER_RESPONSE_PORT),
+        );
+    }
+
+    /** Request raw stock tick data for one symbol. */
+    requestStockTicks(sym: string) {
+        return this.sendMessageReceiveResponse(
+            MessageType.RequestStockTicks,
+            sym,
         );
     }
 
