@@ -213,6 +213,7 @@ export function clearRemoteScriptRegistries(containerId?: string) {
     // contentHashByUrl.clear();
 }
 
+/** Insert a script tag to fetch a script and return the UMD global the script installs. */
 export async function importFromGlobal<T>(
     url: string,
     globalKey: string,
@@ -225,6 +226,7 @@ export async function importFromGlobal<T>(
     );
 }
 
+/** Assert that a global binding exists. */
 export function assertGlobal<T>(globalKey: string, errorMessage: string): T {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const v = (globalThis as any)[globalKey] as T | undefined;
