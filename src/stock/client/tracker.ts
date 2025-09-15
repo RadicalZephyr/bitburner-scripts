@@ -105,16 +105,21 @@ export type TrackerProtocolDef = (typeof TrackerProtocol)['def'];
  * Client for interacting with the stock tracker daemon.
  */
 export class TrackerClient extends BaseClient<TrackerProtocolDef> {
+    #ns: NS;
+
     constructor(ns: NS) {
         super(
             TrackerProtocol,
             ns.getPortHandle(TRACKER_PORT),
             ns.getPortHandle(TRACKER_RESPONSE_PORT),
         );
+        this.#ns = ns;
     }
 
     /** Request raw stock tick data for one symbol. */
     requestStockTicks(sym: string) {
+        const syms = new Set(this.#ns.stock.getSymbols());
+        if (!syms.has(sym)) throw new Error(`Unknown stock symbol ${sym}.`);
         return this.sendMessageReceiveResponse(
             MessageType.RequestStockTicks,
             sym,
