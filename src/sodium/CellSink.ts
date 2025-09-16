@@ -7,10 +7,10 @@ import {
     Lambda2,
     Lambda2_deps,
     Lambda2_toFunction,
-} from 'sodium/Lambda';
-import { Cell } from 'sodium/Cell';
-import { StreamSink } from 'sodium/StreamSink';
-import { Transaction } from 'sodium/Transaction';
+} from 'sodium/Lambda.js';
+import { Cell } from 'sodium/Cell.js';
+import { StreamSink } from 'sodium/StreamSink.js';
+import { Transaction } from 'sodium/Transaction.js';
 
 /**
  * A cell that allows values to be pushed into it, acting as an interface between the

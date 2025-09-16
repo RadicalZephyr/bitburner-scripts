@@ -8,10 +8,10 @@ import {
     Lambda2_deps,
     Lambda2_toFunction,
     toSources,
-} from 'sodium/Lambda';
-import { Transaction } from 'sodium/Transaction';
-import { StreamWithSend } from 'sodium/Stream';
-import { Vertex } from 'sodium/Vertex';
+} from 'sodium/Lambda.js';
+import { Transaction } from 'sodium/Transaction.js';
+import { StreamWithSend } from 'sodium/Stream.js';
+import { Vertex } from 'sodium/Vertex.js';
 
 export class CoalesceHandler<A> {
     constructor(

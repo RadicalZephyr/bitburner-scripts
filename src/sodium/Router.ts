@@ -1,6 +1,6 @@
-import { Dictionary, Set } from 'typescript-collections';
-import { Stream, StreamWithSend } from 'sodium/Stream';
-import { Vertex, Source } from 'sodium/Vertex';
+import { Dictionary, Set } from 'typescript-collections.js';
+import { Stream, StreamWithSend } from 'sodium/Stream.js';
+import { Vertex, Source } from 'sodium/Vertex.js';
 
 /* eslint-disable prefer-const */
 

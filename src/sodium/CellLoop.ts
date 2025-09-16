@@ -1,7 +1,7 @@
-import { Cell } from 'sodium/Cell';
-import { LazyCell } from 'sodium/LazyCell';
-import { Transaction } from 'sodium/Transaction';
-import { StreamLoop } from 'sodium/Stream';
+import { Cell } from 'sodium/Cell.js';
+import { LazyCell } from 'sodium/LazyCell.js';
+import { Transaction } from 'sodium/Transaction.js';
+import { StreamLoop } from 'sodium/Stream.js';
 
 /* eslint-disable @typescript-eslint/no-this-alias */
 

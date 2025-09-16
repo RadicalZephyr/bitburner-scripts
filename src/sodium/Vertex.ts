@@ -3,4 +3,4 @@ export {
     Source,
     Color,
     Vertex,
-} from 'sodium/Transaction';
+} from 'sodium/Transaction.js';

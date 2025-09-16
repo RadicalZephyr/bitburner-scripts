@@ -8,11 +8,11 @@ import {
     Lambda2,
     Lambda2_deps,
     Lambda2_toFunction,
-} from 'sodium/Lambda';
-import { StreamWithSend } from 'sodium/Stream';
-import { CoalesceHandler } from 'sodium/CoalesceHandler';
-import { Transaction } from 'sodium/Transaction';
-import { Vertex } from 'sodium/Vertex';
+} from 'sodium/Lambda.js';
+import { StreamWithSend } from 'sodium/Stream.js';
+import { CoalesceHandler } from 'sodium/CoalesceHandler.js';
+import { Transaction } from 'sodium/Transaction.js';
+import { Vertex } from 'sodium/Vertex.js';
 
 /**
  * A stream that allows values to be pushed into it, acting as an interface between the

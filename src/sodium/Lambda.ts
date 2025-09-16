@@ -1,6 +1,6 @@
-import type { Stream } from 'sodium/Stream';
-import type { Cell } from 'sodium/Cell';
-import { Source } from 'sodium/Vertex';
+import type { Stream } from 'sodium/Stream.js';
+import type { Cell } from 'sodium/Cell.js';
+import { Source } from 'sodium/Vertex.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 

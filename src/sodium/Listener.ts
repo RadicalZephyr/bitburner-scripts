@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import { Source, Vertex } from 'sodium/Vertex';
+import { Source, Vertex } from 'sodium/Vertex.js';
 
 export class Listener<A> {
     constructor(h: (a: A) => void, target: Vertex) {

@@ -24,18 +24,18 @@ import {
     Lambda6_toFunction,
     toSources,
     lambda1,
-} from 'sodium/Lambda';
-import { Lazy } from 'sodium/Lazy';
-import { Listener } from 'sodium/Listener';
-import { Tuple2 } from 'sodium/Tuple2';
+} from 'sodium/Lambda.js';
+import { Lazy } from 'sodium/Lazy.js';
+import { Listener } from 'sodium/Listener.js';
+import { Tuple2 } from 'sodium/Tuple2.js';
 
-import { CoalesceHandler } from 'sodium/CoalesceHandler';
+import { CoalesceHandler } from 'sodium/CoalesceHandler.js';
 //import { StreamLoop } from "sodium/StreamLoop";
-import * as Z from 'sanctuary-type-classes';
+import * as Z from 'sanctuary-type-classes.js';
 
-import { Transaction } from 'sodium/Transaction';
-import { Unit } from 'sodium/Unit';
-import { Source, Vertex } from 'sodium/Vertex';
+import { Transaction } from 'sodium/Transaction.js';
+import { Unit } from 'sodium/Unit.js';
+import { Source, Vertex } from 'sodium/Vertex.js';
 
 export class Operational {
     /**
