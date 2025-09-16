@@ -8,6 +8,8 @@ import {
     Subscription as ClientSubscription,
     DiscoverProtocolDef,
     DiscoverProtocol,
+    TargetSource,
+    WorkerSource,
 } from 'services/client/discover';
 import { MemoryClient } from 'services/client/memory';
 
@@ -15,6 +17,7 @@ import { CONFIG } from 'services/config';
 import { extend } from 'util/extend';
 import { BaseServer, Handlers } from 'util/protocol';
 import { walkNetworkBFS } from 'util/walk';
+import { StreamSink } from 'lib/sodium';
 
 const FLAGS = [['help', false]] as const satisfies FlagsSchema;
 
@@ -141,8 +144,13 @@ interface Subscription extends ClientSubscription {
     missedUpdates: string[];
 }
 
+type Hostname = string;
+
 class Discovery {
     ns: NS;
+
+    #newWorkers: StreamSink<Hostname> = new StreamSink();
+    #newTargets: StreamSink<Hostname> = new StreamSink();
 
     _workers: Set<string> = new Set();
     _targets: Set<string> = new Set();
@@ -152,6 +160,9 @@ class Discovery {
 
     constructor(ns: NS) {
         this.ns = ns;
+
+        WorkerSource.newHostsSource = this.#newWorkers;
+        TargetSource.newHostsSource = this.#newTargets;
     }
 
     pushHosts(hosts: string[]) {
@@ -162,6 +173,7 @@ class Discovery {
             if (this.ns.getServerMaxRam(host) > 0 && !this._workers.has(host)) {
                 this._workers.add(host);
                 newWorkers.push(host);
+                this.#newWorkers.send(host);
             }
 
             if (
@@ -170,6 +182,7 @@ class Discovery {
             ) {
                 this._targets.add(host);
                 newTargets.push(host);
+                this.#newTargets.send(host);
             }
         }
 
