@@ -1,12 +1,10 @@
-import type { NS, AutocompleteData } from '@ns';
+import type { NS, AutocompleteData, Player } from '@ns';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
-import { Player } from 'services/client/player-info';
+import { Player as PlayerCell } from 'services/client/player-info';
 
-import { makeFuid } from 'util/fuid';
+import { ApiCellUpdater, updateCells } from 'util/sodium-api';
 import { isStructuralEqual } from 'util/structural-equals';
-
-import { CellSink } from 'lib/sodium';
 
 const FLAGS = [['help', false]] as const satisfies FlagsSchema;
 
@@ -33,20 +31,15 @@ OPTIONS
         return;
     }
 
-    await updatePlayer(ns);
+    await updateCells(ns, 100, updaters(ns));
 }
 
-async function updatePlayer(ns: NS) {
-    const playerCellSink = new CellSink(ns.getPlayer());
-    const unlisten = Player.setSource(playerCellSink.calm(isStructuralEqual));
-
-    let running = true;
-    ns.atExit(() => {
-        running = false;
-        unlisten();
-    }, makeFuid(ns));
-    while (running) {
-        playerCellSink.send(ns.getPlayer());
-        await ns.sleep(100);
-    }
+export function updaters(ns: NS) {
+    return [
+        new ApiCellUpdater<Player>(
+            PlayerCell,
+            () => ns.getPlayer(),
+            isStructuralEqual,
+        ),
+    ];
 }

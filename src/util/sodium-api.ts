@@ -1,4 +1,9 @@
+import { NS } from '@ns';
+
+import { makeFuid } from 'util/fuid';
+
 import { Cell, CellSink, Stream } from 'lib/sodium';
+import { isFunction } from 'lib/typescript-collections/util';
 
 /**
  * A forward-declaration of a `Stream` whose source can be changed
@@ -60,5 +65,73 @@ export class ApiCell<T> {
             this.#source.send(new Cell(current));
             unlisten();
         };
+    }
+}
+
+export class ApiCellUpdater<T> {
+    readonly #sink: CellSink<T>;
+    readonly #unlisten: () => void;
+
+    readonly cell: Cell<T>;
+
+    /**
+     * Construct a new ApiCellUpdater.
+     *
+     * @param apiCell  - ApiCell to update
+     * @param pollFn   - Function to produce new values of T
+     * @param isEqual  - Predicate function to prevent spurious updates to the ApiCell, default null
+     */
+    constructor(
+        public readonly apiCell: ApiCell<T>,
+        public readonly pollFn: () => T,
+        isEqual: (a: T, b: T) => boolean = null,
+    ) {
+        this.#sink = new CellSink(this.pollFn());
+        this.cell = this.#sink;
+        this.#unlisten = this.apiCell.setSource(this.cell);
+        if (isFunction(isEqual)) this.cell = this.cell.calm(isEqual);
+    }
+
+    unlisten() {
+        this.#unlisten();
+    }
+
+    poll(): T {
+        return this.pollFn();
+    }
+
+    update() {
+        this.#sink.send(this.poll());
+    }
+}
+
+/**
+ * Start a task to periodically run an array of ApiCellUpdater using a
+ * given polling function.
+ *
+ * @param ns       - Netscript API instance
+ * @param periodMs - The number of milliseconds to sleep between updates
+ * @param updaters - An array of ApiCellUpdater to update periodically
+ */
+export async function updateCells(
+    ns: NS,
+    periodMs: number,
+    updaters: ApiCellUpdater<unknown>[],
+) {
+    if (updaters.length === 0) return;
+
+    let running = true;
+    ns.atExit(() => {
+        running = false;
+        for (const updater of updaters) {
+            updater.unlisten();
+        }
+    }, makeFuid(ns));
+
+    while (running) {
+        for (const updater of updaters) {
+            updater.update();
+        }
+        await ns.asleep(periodMs);
     }
 }
