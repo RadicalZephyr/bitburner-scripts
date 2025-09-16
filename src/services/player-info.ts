@@ -6,6 +6,8 @@ import { Player as PlayerCell } from 'services/client/player-info';
 import { ApiCellUpdater, updateCells } from 'util/sodium-api';
 import { isStructuralEqual } from 'util/structural-equals';
 
+import { Transaction } from 'lib/sodium';
+
 const FLAGS = [['help', false]] as const satisfies FlagsSchema;
 
 export function autocomplete(data: AutocompleteData): string[] {
@@ -35,11 +37,13 @@ OPTIONS
 }
 
 export function updaters(ns: NS) {
-    return [
-        new ApiCellUpdater<Player>(
-            PlayerCell,
-            () => ns.getPlayer(),
-            isStructuralEqual,
-        ),
-    ];
+    return Transaction.run(() => {
+        return [
+            new ApiCellUpdater<Player>(
+                PlayerCell,
+                () => ns.getPlayer(),
+                isStructuralEqual,
+            ),
+        ];
+    });
 }

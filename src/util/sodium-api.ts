@@ -2,7 +2,7 @@ import { NS } from '@ns';
 
 import { makeFuid } from 'util/fuid';
 
-import { Cell, CellSink, Stream } from 'lib/sodium';
+import { Cell, CellSink, Stream, Transaction } from 'lib/sodium';
 import { isFunction } from 'lib/typescript-collections/util';
 
 /**
@@ -123,15 +123,19 @@ export async function updateCells(
     let running = true;
     ns.atExit(() => {
         running = false;
-        for (const updater of updaters) {
-            updater.unlisten();
-        }
+        Transaction.run(() => {
+            for (const updater of updaters) {
+                updater.unlisten();
+            }
+        });
     }, makeFuid(ns));
 
     while (running) {
-        for (const updater of updaters) {
-            updater.update();
-        }
+        Transaction.run(() => {
+            for (const updater of updaters) {
+                updater.update();
+            }
+        });
         await ns.asleep(periodMs);
     }
 }
