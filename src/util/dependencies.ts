@@ -21,7 +21,7 @@ export function collectDependencies(
         const regex = /^\s*import[^\n]*? from ["'](.+?)["']/gm;
         let match: RegExpExecArray | null;
         while ((match = regex.exec(content)) !== null) {
-            const dep = resolveImport(file, match[1]);
+            const dep = resolveImport(ns, file, match[1]);
             collectDependencies(ns, dep, visited);
         }
     }
@@ -35,9 +35,13 @@ export function collectDependencies(
  * @param importPath - Import path
  * @returns Import path relative to base path
  */
-function resolveImport(base: string, importPath: string): string {
-    if (!importPath.endsWith('.js')) {
-        importPath += '.js';
+function resolveImport(ns: NS, base: string, importPath: string): string {
+    const extRE = /.*\.([jt]sx?|json)$/;
+
+    if (!importPath.match(extRE)) {
+        for (const ext of ['.ts', '.tsx', '.js', '.jsx', '.json']) {
+            if (ns.fileExists(`${importPath}${ext}`, 'home')) importPath += ext;
+        }
     }
     if (importPath.startsWith('./')) {
         const idx = base.lastIndexOf('/');
