@@ -21,6 +21,8 @@ export function collectDependencies(
         const regex = /^\s*import[^'"]*? from ["'](.+?)["']/gm;
         let match: RegExpExecArray | null;
         while ((match = regex.exec(content)) !== null) {
+            // Don't try to resolve dependencies for netscript import
+            if (match[1] === '@ns') continue;
             const dep = resolveImport(ns, file, match[1]);
             collectDependencies(ns, dep, visited);
         }
