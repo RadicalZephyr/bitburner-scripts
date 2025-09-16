@@ -13,11 +13,14 @@ import {
 } from 'services/client/discover';
 import { MemoryClient } from 'services/client/memory';
 
-import { CONFIG } from 'services/config';
 import { extend } from 'util/extend';
+import { makeFuid } from 'util/fuid';
 import { BaseServer, Handlers } from 'util/protocol';
 import { walkNetworkBFS } from 'util/walk';
+
 import { StreamSink } from 'lib/sodium';
+
+import { CONFIG } from 'services/config';
 
 const FLAGS = [['help', false]] as const satisfies FlagsSchema;
 
@@ -163,6 +166,17 @@ class Discovery {
 
         WorkerSource.newHostsSource = this.#newWorkers;
         TargetSource.newHostsSource = this.#newTargets;
+
+        // Add dummy listeners to the hosts streams to prevent Sodium
+        // from throwing an error that there are no listeners when we
+        // send hosts.
+        const unlistenWorkers = WorkerSource.hosts.listen(() => null);
+        const unlistenTargets = TargetSource.hosts.listen(() => null);
+
+        ns.atExit(() => {
+            unlistenTargets();
+            unlistenWorkers();
+        }, makeFuid(ns));
     }
 
     pushHosts(hosts: string[]) {
