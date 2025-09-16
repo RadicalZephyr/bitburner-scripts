@@ -2,6 +2,7 @@ import { describe, test, expect } from '@jest/globals';
 
 import {
     isArrayStructuralEqual,
+    isMapStructuralEqual,
     isStructuralEqual,
 } from '../structural-equals';
 
@@ -76,11 +77,85 @@ describe('isStructuralEqual', () => {
             expect(isStructuralEqual({ a: 1 }, { b: 1 })).toBeFalsy();
         });
     });
+
+    describe('Maps compare key-wise', () => {
+        test('empty maps are equal', () => {
+            expect(isStructuralEqual(new Map(), new Map())).toBeTruthy();
+        });
+
+        test('maps with the same key-value mappings are equal', () => {
+            const a = new Map([
+                ['a', 1],
+                ['c', 7],
+            ]);
+            const b = new Map([
+                ['a', 1],
+                ['c', 7],
+            ]);
+            expect(isStructuralEqual(a, b)).toBeTruthy();
+        });
+
+        test('maps with the different keys are not equal', () => {
+            const a = new Map([['a', 1]]);
+            const b = new Map([
+                ['a', 5],
+                ['c', 2],
+            ]);
+            expect(isStructuralEqual(a, b)).toBeFalsy();
+        });
+
+        test('maps with the same keys but different values are not equal', () => {
+            const a = new Map([
+                ['a', 1],
+                ['c', 7],
+            ]);
+            const b = new Map([
+                ['a', 5],
+                ['c', 2],
+            ]);
+            expect(isStructuralEqual(a, b)).toBeFalsy();
+        });
+    });
 });
 
 describe('isArrayStructuralEqual', () => {
     test('arrays compare element wise', () => {
         expect(isArrayStructuralEqual([1, 2], [1, 2])).toBeTruthy();
         expect(isArrayStructuralEqual([1, 2], [2, 1])).toBeFalsy();
+    });
+});
+
+describe('isMapEqual', () => {
+    test('maps with all the same key-value mappings are equal', () => {
+        const a = new Map([
+            ['a', 1],
+            ['c', 7],
+        ]);
+        const b = new Map([
+            ['a', 1],
+            ['c', 7],
+        ]);
+        expect(isMapStructuralEqual(a, b)).toBeTruthy();
+    });
+
+    test('maps of different numbers of keys are not equal', () => {
+        const a = new Map([
+            ['a', 1],
+            ['c', 7],
+        ]);
+        const b = new Map([['a', 1]]);
+        expect(isMapStructuralEqual(a, b)).toBeFalsy();
+    });
+
+    test('maps with the same keys but different values are not equal', () => {
+        const a = new Map([
+            ['a', 3],
+            ['c', 4],
+        ]);
+        const b = new Map([
+            ['a', 1],
+            ['c', 7],
+        ]);
+        expect(isMapStructuralEqual(a, b)).toBeFalsy();
     });
 });

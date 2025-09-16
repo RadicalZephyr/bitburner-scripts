@@ -19,6 +19,9 @@ export function isStructuralEqual(a: unknown, b: unknown): boolean {
         if (Array.isArray(a) && Array.isArray(b))
             return isArrayStructuralEqual(a, b);
 
+        if (a instanceof Map && b instanceof Map)
+            return isMapStructuralEqual(a, b);
+
         if (isObjectUnknown(a) && isObjectUnknown(b))
             return isObjectStructuralEqual(a, b);
     }
@@ -65,6 +68,26 @@ export function isObjectStructuralEqual(
         if (!(k in b)) return false;
 
         if (!isStructuralEqual(a[k], b[k])) return false;
+    }
+
+    return true;
+}
+
+/**
+ * Compare two maps key-by-key using structural equality.
+ *
+ * @param a - First map to compare
+ * @param b - Second map to compare
+ * @returns Whether the two maps are structurally equal
+ */
+export function isMapStructuralEqual<K, V>(
+    a: Map<K, V>,
+    b: Map<K, V>,
+): boolean {
+    if (a.size !== b.size) return false;
+
+    for (const k of a.keys()) {
+        if (!isStructuralEqual(a.get(k), b.get(k))) return false;
     }
 
     return true;
