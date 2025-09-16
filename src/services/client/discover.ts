@@ -1,6 +1,7 @@
 import type { NS } from '@ns';
 
 import { defineProtocol, BaseClient, AnyRequest } from 'util/protocol';
+import { ApiStream } from 'util/sodium-api';
 import {
     isArrayOf,
     isNumber,
@@ -10,15 +11,14 @@ import {
     Validator,
 } from 'util/validate';
 
-import { Cell, CellSink, Stream } from 'lib/sodium';
+import { Cell, Stream } from 'lib/sodium';
 
 type Hostname = string;
 
 class HostSource {
-    readonly #newHostsSource: CellSink<Stream<Hostname>> = new CellSink(
-        new Stream(),
-    );
-    readonly newHosts: Stream<Hostname> = Cell.switchS(this.#newHostsSource);
+    readonly #newHostsSource: ApiStream<Hostname> = new ApiStream();
+
+    readonly newHosts: Stream<Hostname> = this.#newHostsSource.stream;
 
     readonly hosts: Cell<Set<Hostname>> = this.newHosts.accum<Set<Hostname>>(
         new Set() satisfies Set<Hostname>,
@@ -28,8 +28,8 @@ class HostSource {
         },
     );
 
-    set newHostsSource(source: Stream<Hostname>) {
-        this.#newHostsSource.send(source);
+    registerNewHostsSource(source: Stream<Hostname>): () => void {
+        return this.#newHostsSource.setSource(source);
     }
 }
 

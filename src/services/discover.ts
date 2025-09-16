@@ -164,14 +164,12 @@ class Discovery {
     constructor(ns: NS) {
         this.ns = ns;
 
-        WorkerSource.newHostsSource = this.#newWorkers;
-        TargetSource.newHostsSource = this.#newTargets;
-
-        // Add dummy listeners to the hosts streams to prevent Sodium
-        // from throwing an error that there are no listeners when we
-        // send hosts.
-        const unlistenWorkers = WorkerSource.hosts.listen(() => null);
-        const unlistenTargets = TargetSource.hosts.listen(() => null);
+        const unlistenWorkers = WorkerSource.registerNewHostsSource(
+            this.#newWorkers,
+        );
+        const unlistenTargets = TargetSource.registerNewHostsSource(
+            this.#newTargets,
+        );
 
         ns.atExit(() => {
             unlistenTargets();
