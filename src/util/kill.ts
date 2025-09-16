@@ -1,4 +1,4 @@
-import { NS } from 'netscript';
+import { NS } from '@ns';
 
 import { walkNetworkBFS } from 'util/walk';
 

@@ -1,4 +1,4 @@
-import { GoOpponent } from 'netscript';
+import { GoOpponent } from '@ns';
 import { Config, ConfigInstance } from 'util/config';
 
 const entries = [

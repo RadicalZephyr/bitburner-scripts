@@ -1,4 +1,4 @@
-import { NS } from 'netscript';
+import { NS } from '@ns';
 
 /**
  * Calculate the number of threads needed to build the server by a

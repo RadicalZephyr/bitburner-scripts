@@ -1,4 +1,4 @@
-import type { NS, Server } from 'netscript';
+import type { NS, Server } from '@ns';
 
 /**
  * Check whether this server needs a backdoor installed.

@@ -1,4 +1,4 @@
-import type { NS } from 'netscript';
+import type { NS } from '@ns';
 
 /**
  * Check whether you can currently afford to spend some amount of money.

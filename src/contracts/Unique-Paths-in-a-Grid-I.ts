@@ -12,7 +12,7 @@ of rows and columns:
 [4, 6]
  */
 
-import type { NS } from 'netscript';
+import type { NS } from '@ns';
 import { parseFlags } from 'util/flags';
 
 export async function main(ns: NS) {

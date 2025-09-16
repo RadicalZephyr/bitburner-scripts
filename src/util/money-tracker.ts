@@ -1,4 +1,4 @@
-import type { MoneySource, NS } from 'netscript';
+import type { MoneySource, NS } from '@ns';
 
 import { makeFuid } from 'util/fuid';
 import { StatTracker } from 'util/stat-tracker';

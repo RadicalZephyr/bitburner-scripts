@@ -1,4 +1,4 @@
-import type { NS, ScriptArg } from 'netscript';
+import type { NS, ScriptArg } from '@ns';
 
 import {
     ALLOC_ID,

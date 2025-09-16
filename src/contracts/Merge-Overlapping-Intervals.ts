@@ -16,7 +16,7 @@ in an interval, the first number will always be smaller than the
 second.
 */
 
-import type { NS } from 'netscript';
+import type { NS } from '@ns';
 import { parseFlags } from 'util/flags';
 
 export async function main(ns: NS) {

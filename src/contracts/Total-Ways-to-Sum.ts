@@ -11,7 +11,7 @@ How many different distinct ways can the number 93 be written as a sum
 of at least two positive integers?
  */
 
-import type { NS } from 'netscript';
+import type { NS } from '@ns';
 import { parseFlags } from 'util/flags';
 
 export async function main(ns: NS) {

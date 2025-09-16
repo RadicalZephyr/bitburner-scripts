@@ -26,7 +26,7 @@ Input: [3, [[0, 1], [0, 2], [1, 2]]]
 Output: []
  */
 
-import type { NS } from 'netscript';
+import type { NS } from '@ns';
 import { parseFlags } from 'util/flags';
 
 export async function main(ns: NS) {

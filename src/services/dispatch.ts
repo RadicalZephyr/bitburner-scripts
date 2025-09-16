@@ -1,9 +1,4 @@
-import type {
-    AutocompleteData,
-    NS,
-    NetscriptPort,
-    RunOptions,
-} from 'netscript';
+import type { AutocompleteData, NS, NetscriptPort, RunOptions } from '@ns';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
 import {

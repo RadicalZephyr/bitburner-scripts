@@ -1,4 +1,4 @@
-import type { NS, ProcessInfo } from 'netscript';
+import type { NS, ProcessInfo } from '@ns';
 
 import {
     HostAllocation,

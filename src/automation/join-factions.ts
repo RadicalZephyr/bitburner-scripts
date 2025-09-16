@@ -1,4 +1,4 @@
-import type { FactionName, NS } from 'netscript';
+import type { FactionName, NS } from '@ns';
 import { parseFlags } from 'util/flags';
 
 import { exitOnKill } from 'util/exitOnKill';

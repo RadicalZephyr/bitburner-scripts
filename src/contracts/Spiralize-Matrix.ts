@@ -39,7 +39,7 @@ Note that the matrix will not always be square:
 Answer: [1, 2, 3, 4, 8, 12, 11, 10, 9, 5, 6, 7]
  */
 
-import type { NS } from 'netscript';
+import type { NS } from '@ns';
 import { parseFlags } from 'util/flags';
 
 export async function main(ns: NS) {

@@ -1,8 +1,4 @@
-import type {
-    NS,
-    UniversityClassType,
-    UniversityLocationName,
-} from 'netscript';
+import type { NS, UniversityClassType, UniversityLocationName } from '@ns';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
 import {

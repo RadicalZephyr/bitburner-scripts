@@ -1,4 +1,4 @@
-import type { NS } from 'netscript';
+import type { NS } from '@ns';
 
 export class Target {
     ns: NS;

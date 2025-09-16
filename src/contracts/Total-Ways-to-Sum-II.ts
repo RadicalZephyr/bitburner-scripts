@@ -8,7 +8,7 @@ of integers contained in the set:
 You may use each integer in the set zero or more times.
  */
 
-import type { NS } from 'netscript';
+import type { NS } from '@ns';
 import { parseFlags } from 'util/flags';
 
 export async function main(ns: NS) {

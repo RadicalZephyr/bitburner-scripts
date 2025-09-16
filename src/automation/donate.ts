@@ -1,4 +1,4 @@
-import type { NS, AutocompleteData, Player } from 'netscript';
+import type { NS, AutocompleteData, Player } from '@ns';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
 const FLAGS = [['help', false]] as const satisfies FlagsSchema;

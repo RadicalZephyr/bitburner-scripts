@@ -27,7 +27,7 @@ Example: If you are given the following triangle:
 The minimum path sum is 11 (2 -> 3 -> 5 -> 1).
  */
 
-import type { NS } from 'netscript';
+import type { NS } from '@ns';
 import { parseFlags } from 'util/flags';
 
 export async function main(ns: NS) {

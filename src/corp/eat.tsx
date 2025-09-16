@@ -1,4 +1,4 @@
-import type { NS } from 'netscript';
+import type { NS } from '@ns';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { getSourceFileLevel } from 'services/client/source_file';

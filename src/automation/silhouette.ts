@@ -1,4 +1,4 @@
-import type { NS, AutocompleteData, CompanyName } from 'netscript';
+import type { NS, AutocompleteData, CompanyName } from '@ns';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { bestJob } from 'automation/company-work';

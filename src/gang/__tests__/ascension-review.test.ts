@@ -1,4 +1,4 @@
-import type { NS, GangGenInfo, GangMemberInfo } from 'netscript';
+import type { NS, GangGenInfo, GangMemberInfo } from '@ns';
 import { describe, expect, test } from '@jest/globals';
 
 import { AscensionReviewBoard } from 'gang/ascension-review';

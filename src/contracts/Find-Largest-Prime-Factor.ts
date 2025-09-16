@@ -4,7 +4,7 @@ A prime factor is a factor that is a prime number. What is the largest
 prime factor of 129983129?
  */
 
-import type { NS } from 'netscript';
+import type { NS } from '@ns';
 import { parseFlags } from 'util/flags';
 
 /**

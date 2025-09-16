@@ -29,7 +29,7 @@ For more information on the 'rule' of encoding, refer to Wikipedia
 Hamming Codes. (https://youtube.com/watch?v=X8jsijhllIA)
  */
 
-import type { NS } from 'netscript';
+import type { NS } from '@ns';
 import { parseFlags } from 'util/flags';
 
 export async function main(ns: NS) {

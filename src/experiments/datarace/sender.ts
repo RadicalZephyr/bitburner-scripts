@@ -1,4 +1,4 @@
-import type { NS } from 'netscript';
+import type { NS } from '@ns';
 
 const PORT_SYNC = 98;
 const PORT_DATA = 99;

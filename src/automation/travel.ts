@@ -1,4 +1,4 @@
-import type { CityName, LocationName, NS } from 'netscript';
+import type { CityName, LocationName, NS } from '@ns';
 
 /**
  * Travel to city.

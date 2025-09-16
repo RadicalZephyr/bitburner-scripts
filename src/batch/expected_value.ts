@@ -1,4 +1,4 @@
-import type { AutocompleteData, NS, Server } from 'netscript';
+import type { AutocompleteData, NS, Server } from '@ns';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { FreeChunk, FreeRam } from 'services/client/memory';

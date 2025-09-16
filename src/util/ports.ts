@@ -1,4 +1,4 @@
-import type { NetscriptPort } from 'netscript';
+import type { NetscriptPort } from '@ns';
 
 export const EMPTY_SENTINEL: string = 'NULL PORT DATA';
 

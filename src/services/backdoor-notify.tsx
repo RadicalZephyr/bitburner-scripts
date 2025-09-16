@@ -1,4 +1,4 @@
-import type { NS, UserInterfaceTheme } from 'netscript';
+import type { NS, UserInterfaceTheme } from '@ns';
 import { parseFlags } from 'util/flags';
 
 import { canInstallBackdoor, needsBackdoor } from 'util/backdoor';

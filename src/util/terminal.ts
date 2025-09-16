@@ -1,4 +1,4 @@
-import type { NS } from 'netscript';
+import type { NS } from '@ns';
 
 import { assertEl } from 'util/assertEl';
 import { getReactPropKey } from 'util/props';

@@ -4,7 +4,7 @@ import type {
     CompanyPositionInfo,
     Player,
     NS,
-} from 'netscript';
+} from '@ns';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { CONFIG } from 'automation/config';

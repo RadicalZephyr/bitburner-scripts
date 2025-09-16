@@ -1,4 +1,4 @@
-import type { NS } from 'netscript';
+import type { NS } from '@ns';
 
 import { shortestPath } from 'util/shortest-path';
 import { sendTerminalCommand } from 'util/terminal';

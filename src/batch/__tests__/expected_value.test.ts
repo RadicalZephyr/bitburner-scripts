@@ -1,4 +1,4 @@
-import type { NS } from 'netscript';
+import type { NS } from '@ns';
 import { describe, expect, test, beforeAll } from '@jest/globals';
 
 let expectedValueForMemory: typeof import('batch/expected_value').expectedValueForMemory;

@@ -3,7 +3,7 @@ import type {
     InfiltrationLocation,
     NS,
     UserInterfaceTheme,
-} from 'netscript';
+} from '@ns';
 import { parseFlags } from 'util/flags';
 
 import { exitOnKill } from 'util/exitOnKill';

@@ -1,4 +1,4 @@
-import type { NS, AutocompleteData, NSEnums } from 'netscript';
+import type { NS, AutocompleteData, NSEnums } from '@ns';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { d3 } from 'lib/d3';

@@ -1,6 +1,6 @@
 import { describe, expect, test, beforeAll } from '@jest/globals';
 import { setLocalStorage } from 'util/localStorage';
-import type { NS } from 'netscript';
+import type { NS } from '@ns';
 import type { TaskAnalyzer } from 'gang/task-analyzer';
 
 let distributeTasks: typeof import('gang/task-balancer').distributeTasks;

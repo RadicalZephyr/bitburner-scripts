@@ -1,4 +1,4 @@
-import type { NS, UserInterfaceTheme } from 'netscript';
+import type { NS, UserInterfaceTheme } from '@ns';
 
 import { makeFuid } from 'util/fuid';
 import { isStructuralEqual } from 'util/structural-equals';

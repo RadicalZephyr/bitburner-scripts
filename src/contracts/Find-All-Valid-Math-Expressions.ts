@@ -28,7 +28,7 @@ Input: digits = "105", target = 5
 Output: ["1*0+5", "10-5"]
  */
 
-import type { NS } from 'netscript';
+import type { NS } from '@ns';
 import { parseFlags } from 'util/flags';
 
 export async function main(ns: NS) {

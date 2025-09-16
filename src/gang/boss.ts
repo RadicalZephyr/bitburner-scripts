@@ -1,9 +1,4 @@
-import type {
-    AutocompleteData,
-    GangMemberInfo,
-    MoneySource,
-    NS,
-} from 'netscript';
+import type { AutocompleteData, GangMemberInfo, MoneySource, NS } from '@ns';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { AscensionReviewBoard } from 'gang/ascension-review';

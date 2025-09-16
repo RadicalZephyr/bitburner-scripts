@@ -1,4 +1,4 @@
-import type { NS, AutocompleteData, RunOptions } from 'netscript';
+import type { NS, AutocompleteData, RunOptions } from '@ns';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { MemoryClient } from 'services/client/memory';

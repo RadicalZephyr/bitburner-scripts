@@ -1,4 +1,4 @@
-import type { NS } from 'netscript';
+import type { NS } from '@ns';
 
 import { AGRI_DIVISION, CITIES } from 'corp/constants';
 

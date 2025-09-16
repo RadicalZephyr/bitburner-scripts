@@ -1,4 +1,4 @@
-import type { NS, ScriptArg, RunOptions } from 'netscript';
+import type { NS, ScriptArg, RunOptions } from '@ns';
 
 import type { AllocOptions, HostAllocation } from 'services/client/memory';
 import {

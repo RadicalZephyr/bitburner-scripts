@@ -1,4 +1,4 @@
-import type { NS, RunOptions, ScriptArg } from 'netscript';
+import type { NS, RunOptions, ScriptArg } from '@ns';
 import { parseFlags } from 'util/flags';
 
 import { ALLOC_ID_ARG } from 'services/client/memory_tag';

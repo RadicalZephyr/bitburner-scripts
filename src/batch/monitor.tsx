@@ -1,4 +1,4 @@
-import type { AutocompleteData, NS, UserInterfaceTheme } from 'netscript';
+import type { AutocompleteData, NS, UserInterfaceTheme } from '@ns';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
 import {

@@ -1,4 +1,4 @@
-import { NS } from 'netscript';
+import { NS } from '@ns';
 
 /**
  * Create a FUID (fairly unique identifier)

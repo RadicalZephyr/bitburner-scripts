@@ -20,7 +20,7 @@ NOTE: The data returned for this contract is an 2D array of numbers
 representing the grid.
  */
 
-import type { NS } from 'netscript';
+import type { NS } from '@ns';
 import { parseFlags } from 'util/flags';
 
 export async function main(ns: NS) {

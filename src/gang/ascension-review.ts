@@ -1,4 +1,4 @@
-import type { GangGenInfo, GangMemberInfo, NS } from 'netscript';
+import type { GangGenInfo, GangMemberInfo, NS } from '@ns';
 
 /**
  * Centralized board for staging gang member ascensions while preserving a

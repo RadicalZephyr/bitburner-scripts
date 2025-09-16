@@ -1,4 +1,4 @@
-import type { GangMemberInfo, NS } from 'netscript';
+import type { GangMemberInfo, NS } from '@ns';
 
 import type { RoleProfiles } from 'gang/task-analyzer';
 

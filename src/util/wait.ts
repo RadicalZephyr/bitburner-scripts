@@ -1,4 +1,4 @@
-import type { NS } from 'netscript';
+import type { NS } from '@ns';
 
 export async function waitForExit(ns: NS, pid: number): Promise<void> {
     while (true) {

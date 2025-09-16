@@ -37,7 +37,7 @@ test('client waits for space before writing', async () => {
 
 */
 
-import type { NetscriptPort, NS } from 'netscript';
+import type { NetscriptPort, NS } from '@ns';
 
 /** Matches Bitburner behavior for simple JSON-like values. */
 const cloneValue: <T>(v: T) => T =

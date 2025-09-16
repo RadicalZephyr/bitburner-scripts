@@ -13,7 +13,7 @@ The first element is the plaintext, the second element is the left shift value.
 Return the ciphertext as uppercase string. Spaces remains the same.
  */
 
-import type { NS } from 'netscript';
+import type { NS } from '@ns';
 import { parseFlags } from 'util/flags';
 
 export async function main(ns: NS) {

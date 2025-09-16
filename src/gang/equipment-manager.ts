@@ -1,9 +1,4 @@
-import type {
-    EquipmentStats,
-    GangMemberInfo,
-    MoneySource,
-    NS,
-} from 'netscript';
+import type { EquipmentStats, GangMemberInfo, MoneySource, NS } from '@ns';
 
 import type { Role, RoleProfile } from 'gang/task-analyzer';
 

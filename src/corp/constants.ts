@@ -1,4 +1,4 @@
-import type { CityName } from 'netscript';
+import type { CityName } from '@ns';
 
 export const CORPORATION_NAME = 'Turtle Vision';
 export const AGRI_DIVISION = 'Sift & Sow Farms';

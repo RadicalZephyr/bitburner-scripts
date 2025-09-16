@@ -1,4 +1,4 @@
-import type { AutocompleteData, NS } from 'netscript';
+import type { AutocompleteData, NS } from '@ns';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { LaunchClient } from 'services/client/launch';

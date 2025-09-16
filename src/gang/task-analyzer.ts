@@ -1,4 +1,4 @@
-import type { GangGenInfo, GangMemberInfo, GangTaskStats, NS } from 'netscript';
+import type { GangGenInfo, GangMemberInfo, GangTaskStats, NS } from '@ns';
 import { pickByType, PickByType } from 'util/stat-tracker';
 
 /**

@@ -15,7 +15,7 @@ Examples:
 1938718066 -> ["193.87.180.66"]
  */
 
-import type { NS } from 'netscript';
+import type { NS } from '@ns';
 import { parseFlags } from 'util/flags';
 
 export async function main(ns: NS) {

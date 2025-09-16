@@ -1,4 +1,4 @@
-import { NS } from 'netscript';
+import { NS } from '@ns';
 
 import { assertEl } from 'util/assertEl';
 import { useTheme } from 'util/hooks';

@@ -1,4 +1,4 @@
-import type { AutocompleteData, FactionWorkType, NS } from 'netscript';
+import type { AutocompleteData, FactionWorkType, NS } from '@ns';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { CONFIG } from 'automation/config';

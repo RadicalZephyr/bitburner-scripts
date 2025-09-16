@@ -3,7 +3,7 @@ import type {
     AutocompleteData,
     SleevePerson,
     UserInterfaceTheme,
-} from 'netscript';
+} from '@ns';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { exitOnKill } from 'util/exitOnKill';

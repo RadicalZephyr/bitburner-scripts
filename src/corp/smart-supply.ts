@@ -1,10 +1,4 @@
-import type {
-    NS,
-    CityName,
-    CorpMaterialName,
-    Material,
-    Product,
-} from 'netscript';
+import type { NS, CityName, CorpMaterialName, Material, Product } from '@ns';
 import { parseFlags } from 'util/flags';
 
 /** Data tracked between cycles for calculating input requirements. */

@@ -3,7 +3,7 @@ import type {
     AutocompleteData,
     BladeburnerActionName,
     BladeburnerActionType,
-} from 'netscript';
+} from '@ns';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { CONFIG } from 'bladeburner/config';

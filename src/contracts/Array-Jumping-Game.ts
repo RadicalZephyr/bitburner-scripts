@@ -15,7 +15,7 @@ Your answer should be submitted as 1 or 0, representing true and false
 respectively
  */
 
-import type { NS } from 'netscript';
+import type { NS } from '@ns';
 import { parseFlags } from 'util/flags';
 
 export async function main(ns: NS) {

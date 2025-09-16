@@ -1,7 +1,7 @@
 import { selectTrainingTask } from 'gang/training-focus-manager';
 import type { RoleProfiles } from 'gang/task-analyzer';
 import { describe, expect, test } from '@jest/globals';
-import type { GangMemberInfo } from 'netscript';
+import type { GangMemberInfo } from '@ns';
 
 const profiles: RoleProfiles = {
     bootstrapping: {

@@ -1,4 +1,4 @@
-import type { NS, AutocompleteData, BladeburnerSkillName } from 'netscript';
+import type { NS, AutocompleteData, BladeburnerSkillName } from '@ns';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { CONFIG } from 'bladeburner/config';

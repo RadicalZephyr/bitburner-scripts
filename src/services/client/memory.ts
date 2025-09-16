@@ -1,4 +1,4 @@
-import type { NS } from 'netscript';
+import type { NS } from '@ns';
 
 import { ALLOC_ID, ALLOC_ID_ARG } from 'services/client/memory_tag';
 

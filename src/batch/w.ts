@@ -1,4 +1,4 @@
-import type { NS, ScriptArg } from 'netscript';
+import type { NS, ScriptArg } from '@ns';
 
 import { MEM_TAG_FLAGS } from 'services/client/memory_tag';
 

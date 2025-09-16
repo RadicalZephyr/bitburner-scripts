@@ -1,4 +1,4 @@
-import type { AutocompleteData, GoOpponent, NS } from 'netscript';
+import type { AutocompleteData, GoOpponent, NS } from '@ns';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { GtpClient } from 'go/GtpClient';

@@ -1,4 +1,4 @@
-import type { NS, AutocompleteData, CrimeType, NSEnums } from 'netscript';
+import type { NS, AutocompleteData, CrimeType, NSEnums } from '@ns';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
 const FLAGS = [

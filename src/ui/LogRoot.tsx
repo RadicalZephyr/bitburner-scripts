@@ -1,4 +1,4 @@
-import { NS } from 'netscript';
+import { NS } from '@ns';
 
 import { LogDisplay } from 'ui/LogDisplay';
 import { LogMode, LogToolbar } from 'ui/LogToolbar';

@@ -4,7 +4,7 @@ import type {
     GangMemberInfo,
     MoneySource,
     NS,
-} from 'netscript';
+} from '@ns';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { CONFIG } from 'gang/config';

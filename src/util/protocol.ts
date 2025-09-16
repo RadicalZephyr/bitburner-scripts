@@ -1,4 +1,4 @@
-import { NetscriptPort } from 'netscript';
+import { NetscriptPort } from '@ns';
 
 import { ServerNS } from 'util/ns';
 import { readAllFromPort } from 'util/ports';

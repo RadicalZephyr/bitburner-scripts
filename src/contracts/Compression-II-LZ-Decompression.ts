@@ -29,7 +29,7 @@ Example: decoding '5aaabb450723abb' chunk-by-chunk
     5aaabb450723abb  ->  aaabbaaababababaabb
  */
 
-import type { NS } from 'netscript';
+import type { NS } from '@ns';
 import { parseFlags } from 'util/flags';
 
 export async function main(ns: NS) {

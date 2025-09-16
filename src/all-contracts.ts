@@ -1,4 +1,4 @@
-import { CodingContractObject } from 'netscript';
+import { CodingContractObject } from '@ns';
 
 export type ContractData = {
     file: string;

@@ -29,7 +29,7 @@
         "allowJs": true,
         "types": ["jest"],
         "paths": {
-            "netscript": ["../NetScriptDefinitions.d.ts"]
+            "@ns": ["../NetScriptDefinitions.d.ts"]
         }
     }
 }

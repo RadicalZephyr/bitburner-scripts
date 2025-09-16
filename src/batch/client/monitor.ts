@@ -1,4 +1,4 @@
-import type { NS } from 'netscript';
+import type { NS } from '@ns';
 
 import { defineProtocol, BaseClient } from 'util/protocol';
 import {

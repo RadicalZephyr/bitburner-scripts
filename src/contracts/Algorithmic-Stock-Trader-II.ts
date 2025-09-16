@@ -14,7 +14,7 @@
 
 // If no profit can be made, then the answer should be 0
 
-import type { NS } from 'netscript';
+import type { NS } from '@ns';
 import { parseFlags } from 'util/flags';
 
 export async function main(ns: NS) {

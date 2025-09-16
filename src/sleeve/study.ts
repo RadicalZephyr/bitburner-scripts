@@ -1,9 +1,4 @@
-import type {
-    NS,
-    AutocompleteData,
-    UniversityClassType,
-    NSEnums,
-} from 'netscript';
+import type { NS, AutocompleteData, UniversityClassType, NSEnums } from '@ns';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
 const FLAGS = [

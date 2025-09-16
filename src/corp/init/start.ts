@@ -1,4 +1,4 @@
-import type { NS } from 'netscript';
+import type { NS } from '@ns';
 
 import { CORPORATION_NAME } from 'corp/constants';
 

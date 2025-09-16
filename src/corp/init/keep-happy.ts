@@ -1,4 +1,4 @@
-import type { NS, Office } from 'netscript';
+import type { NS, Office } from '@ns';
 
 export async function main(ns: NS) {
     const corpNS = ns.corporation;

@@ -1,4 +1,4 @@
-import type { NS, AutocompleteData, Multipliers } from 'netscript';
+import type { NS, AutocompleteData, Multipliers } from '@ns';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { travelTo } from 'automation/travel';

@@ -1,4 +1,4 @@
-import type { AutocompleteData, NS } from 'netscript';
+import type { AutocompleteData, NS } from '@ns';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { AGRI_DIVISION, CITIES, CORPORATION_NAME } from 'corp/constants';

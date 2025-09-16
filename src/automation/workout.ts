@@ -5,7 +5,7 @@ import type {
     GymLocationName,
     LocationName,
     NSEnums,
-} from 'netscript';
+} from '@ns';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { CONFIG } from 'automation/config';
