@@ -18,7 +18,7 @@ export function collectDependencies(
     ns.scp(file, ns.self().server, 'home');
     const content = ns.read(file);
     if (typeof content === 'string' && content.length > 0) {
-        const regex = /^\s*import[^\n]*? from ["'](.+?)["']/gm;
+        const regex = /^\s*import[^'"]*? from ["'](.+?)["']/gm;
         let match: RegExpExecArray | null;
         while ((match = regex.exec(content)) !== null) {
             const dep = resolveImport(ns, file, match[1]);
