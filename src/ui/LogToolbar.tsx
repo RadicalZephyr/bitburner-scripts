@@ -1,4 +1,4 @@
-import { NS } from '@ns';
+import type { NS } from '@ns';
 
 import { assertEl } from 'util/assertEl';
 import { useTheme } from 'util/hooks';

@@ -1,4 +1,4 @@
-import { NS } from '@ns';
+import type { NS } from '@ns';
 
 import { LogDisplay } from 'ui/LogDisplay';
 import { LogMode, LogToolbar } from 'ui/LogToolbar';

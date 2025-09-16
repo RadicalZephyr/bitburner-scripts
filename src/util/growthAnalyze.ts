@@ -1,4 +1,4 @@
-import { NS } from '@ns';
+import type { NS } from '@ns';
 
 /**
  * Calculate the number of threads needed to build the server by a
