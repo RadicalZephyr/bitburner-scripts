@@ -80,7 +80,7 @@ function manualLaunch(ns: NS, script: string, hostname: string) {
         ns.toast(error, 'error');
         ns.print(`ERROR: ${error}`);
         ns.ui.openTail();
-        return;
+        throw new Error(error);
     }
 
     const pid = ns.exec(script, hostname, {
@@ -92,6 +92,6 @@ function manualLaunch(ns: NS, script: string, hostname: string) {
         ns.toast(error, 'error');
         ns.print(`ERROR: ${error}`);
         ns.ui.openTail();
-        return;
+        throw new Error(error);
     }
 }
