@@ -18,12 +18,12 @@ export function collectDependencies(
     ns.scp(file, ns.self().server, 'home');
     const content = ns.read(file);
     if (typeof content === 'string' && content.length > 0) {
-        const regex = /^\s*import[^'"]*? from ["'](.+?)["']/gm;
+        const regex = /^\s*(im|ex)port[^'"]*? from ["'](.+?)["']/gm;
         let match: RegExpExecArray | null;
         while ((match = regex['exec'](content)) !== null) {
             // Don't try to resolve dependencies for netscript import
-            if (match[1] === '@ns') continue;
-            const dep = resolveImport(ns, file, match[1]);
+            if (match[2] === '@ns') continue;
+            const dep = resolveImport(ns, file, match[2]);
             collectDependencies(ns, dep, visited);
         }
     }
