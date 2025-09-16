@@ -507,12 +507,15 @@ export class BaseServer<P extends ProtocolDef> {
             try {
                 responsePayload = await handler(msg.payload);
             } catch (err) {
+                const cause = {
+                    request: msg.payload,
+                    error: err,
+                };
+
                 const error =
-                    err instanceof Error ? err : new Error(String(err));
-                const cause =
-                    (error.cause as Record<string, unknown> | undefined) ?? {};
-                cause.request = msg.payload;
-                error.cause = cause;
+                    err instanceof Error
+                        ? new Error('Handler error', { cause })
+                        : new Error(`Handler error: ${String(err)}`, { cause });
 
                 if (this.#responsePort && typeof msg.id === 'string') {
                     const response = {
