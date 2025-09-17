@@ -42,8 +42,10 @@ OPTIONS
 async function hackManual(ns: NS, target: string) {
     await connectTo(ns, target);
 
+    let i = 0;
     while (true) {
         await sendTerminalCommand(ns, 'hack');
-        await sendTerminalCommand(ns, 'grow');
+        if (i % 4 === 0) await sendTerminalCommand(ns, 'grow');
+        i += 1;
     }
 }
