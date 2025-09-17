@@ -1,7 +1,7 @@
 import type { NS } from '@ns';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
-import { getSourceFileLevel } from 'services/client/source_file';
+import { getSourceFileLevel } from 'services/client/reset-info';
 
 import { travelToCityForLocation } from 'automation/travel';
 
@@ -61,7 +61,7 @@ interface EatButton {
 type EatFn = () => void;
 
 async function searchForNoodles(ns: NS): Promise<EatButton> {
-    const sf4 = await getSourceFileLevel(ns, 4);
+    const sf4 = getSourceFileLevel(4);
     if (sf4 > 0) {
         const noodleBar = ns.enums.LocationName.NewTokyoNoodleBar;
         travelToCityForLocation(ns, noodleBar);

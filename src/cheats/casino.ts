@@ -1,7 +1,7 @@
 import type { NS, AutocompleteData } from '@ns';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
-import { getSourceFileLevel } from 'services/client/source_file';
+import { getSourceFileLevel } from 'services/client/reset-info';
 
 import { travelToCityForLocation } from 'automation/travel';
 
@@ -141,7 +141,7 @@ interface CoinFlipGameWithResult extends CoinFlipGame {
 }
 
 async function searchForCoinFlip(ns: NS): Promise<CoinFlipGameWithResult> {
-    const hasSF4 = (await getSourceFileLevel(ns, 4)) > 0;
+    const hasSF4 = getSourceFileLevel(4) > 0;
 
     const root = assertEl(globalThis['root'], 'Could not find root element!');
 

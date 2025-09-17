@@ -6,7 +6,7 @@ import { main as batchBootstrap } from 'batch/bootstrap';
 import { main as automationBootstrap } from 'automation/bootstrap';
 import { main as goBootstrap } from 'go/bootstrap';
 
-import { getSourceFileLevel } from 'services/client/source_file';
+import { getSourceFileLevel } from 'services/client/reset-info';
 
 // NOTE: When adding flags to this bootstrap script the same flags
 // must also be specified to all `**/bootstrap` scripts called by this
@@ -48,7 +48,7 @@ OPTIONS
 
     await batchBootstrap(ns);
 
-    const sf4 = await getSourceFileLevel(ns, 4);
+    const sf4 = getSourceFileLevel(4);
     if (sf4 > 0) {
         await automationBootstrap(ns);
     }

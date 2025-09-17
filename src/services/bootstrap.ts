@@ -2,7 +2,7 @@ import type { AutocompleteData, NS } from '@ns';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { LaunchClient } from 'services/client/launch';
-import { getSourceFileLevel } from 'services/client/source_file';
+import { getSourceFileLevel } from 'services/client/reset-info';
 
 import { collectDependencies } from 'util/dependencies';
 
@@ -36,7 +36,7 @@ export async function main(ns: NS) {
 
     const essentialServices = [
         '/services/port.js',
-        '/services/source_file.js',
+        '/services/reset-info.js',
         '/services/dispatch-init.js',
     ];
 
@@ -52,7 +52,7 @@ export async function main(ns: NS) {
 
     startService(ns, '/services/updater.js', 'n00dles');
 
-    const sf4 = await getSourceFileLevel(ns, 4);
+    const sf4 = getSourceFileLevel(4);
 
     if (sf4 === 0) {
         await client.launch('/services/backdoor-notify.js', {
