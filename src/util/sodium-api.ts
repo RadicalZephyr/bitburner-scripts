@@ -123,7 +123,7 @@ export async function updateCells(
     let running = true;
     ns.atExit(() => {
         running = false;
-        Transaction.run(() => {
+        Transaction.execute(() => {
             for (const updater of updaters) {
                 updater.unlisten();
             }
@@ -131,7 +131,7 @@ export async function updateCells(
     }, makeFuid(ns));
 
     while (running) {
-        Transaction.run(() => {
+        Transaction.execute(() => {
             for (const updater of updaters) {
                 updater.update();
             }

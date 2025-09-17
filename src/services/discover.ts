@@ -118,7 +118,7 @@ class Discovery {
     constructor(ns: NS) {
         this.ns = ns;
 
-        Transaction.run(() => {
+        Transaction.execute(() => {
             const newWorkers = this.#newHosts.filter((host) => {
                 const workers = WorkerSource.hosts.sample();
                 return this.ns.getServerMaxRam(host) > 0 && !workers.has(host);

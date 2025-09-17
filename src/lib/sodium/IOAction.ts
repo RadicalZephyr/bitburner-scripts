@@ -20,7 +20,7 @@ export class IOAction {
                             out.getVertex__(),
                             (a: A) => {
                                 performIO(a, (b: B) => {
-                                    Transaction.run(() => {
+                                    Transaction.execute(() => {
                                         out.send_(b);
                                     });
                                 });

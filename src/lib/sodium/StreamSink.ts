@@ -35,7 +35,7 @@ export class StreamSink<A> extends StreamWithSend<A> {
     private coalescer: CoalesceHandler<A>;
 
     send(a: A): void {
-        Transaction.run<void>(() => {
+        Transaction.execute<void>(() => {
             // We throw this error if we send into FRP logic that has been constructed
             // but nothing is listening to it yet. We need to do it this way because
             // it's the only way to manage memory in a language with no finalizers.

@@ -421,7 +421,7 @@ export class Transaction {
     }
 
     public static _collectCyclesAtEnd(): void {
-        Transaction.run(() => (Transaction.collectCyclesAtEnd = true));
+        Transaction.execute(() => (Transaction.collectCyclesAtEnd = true));
     }
 
     /**
@@ -517,7 +517,7 @@ export class Transaction {
         Transaction.onStartHooks.push(r);
     }
 
-    public static run<A>(f: () => A): A {
+    public static execute<A>(f: () => A): A {
         const transWas: Transaction = Transaction.currentTransaction;
         if (transWas === null) {
             if (!Transaction.runningOnStartHooks) {

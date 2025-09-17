@@ -37,7 +37,7 @@ OPTIONS
 }
 
 function updaters(ns: NS) {
-    return Transaction.run(() => {
+    return Transaction.execute(() => {
         return [
             new ApiCellUpdater(
                 OwnedAugs,

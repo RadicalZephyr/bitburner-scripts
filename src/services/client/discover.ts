@@ -107,7 +107,7 @@ export class DiscoveryClient {
 
     /** Request the list of known worker hosts. */
     requestWorkers(sub?: Subscription): Promise<Hostname[]> {
-        return Transaction.run(() => {
+        return Transaction.execute(() => {
             if (isSubscription(sub)) {
                 registerSubscriber(this.#ns, sub, this.#workerSubscriptions);
             }
@@ -117,7 +117,7 @@ export class DiscoveryClient {
 
     /** Request the list of known target hosts. */
     requestTargets(sub?: Subscription): Promise<Hostname[]> {
-        return Transaction.run(() => {
+        return Transaction.execute(() => {
             if (isSubscription(sub)) {
                 registerSubscriber(this.#ns, sub, this.#targetSubscriptions);
             }

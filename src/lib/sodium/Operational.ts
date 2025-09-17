@@ -82,7 +82,7 @@ export class Operational {
      * that do not allow the caller to detect the cell updates.
      */
     static value<A>(c: Cell<A>): Stream<A> {
-        return Transaction.run(() => {
+        return Transaction.execute(() => {
             const sSpark = new StreamWithSend<Unit>();
             Transaction.currentTransaction.prioritized(
                 sSpark.getVertex__(),
@@ -129,7 +129,7 @@ export class Operational {
                                     Transaction.currentTransaction.post(
                                         i,
                                         () => {
-                                            Transaction.run(() => {
+                                            Transaction.execute(() => {
                                                 out.send_(as[i]);
                                             });
                                         },
@@ -670,7 +670,7 @@ export class Stream<A> {
         f: ((a: A, s: S) => Tuple2<B, S>) | Lambda2<A, S, Tuple2<B, S>>,
     ): Stream<B> {
         const ea = this;
-        return Transaction.run(() => {
+        return Transaction.execute(() => {
             const es = new StreamLoop<S>(),
                 s = es.holdLazy(initState),
                 ebs = ea.snapshot(s, f),
@@ -709,7 +709,7 @@ export class Stream<A> {
         f: ((a: A, s: S) => S) | Lambda2<A, S, S>,
     ): Cell<S> {
         const ea = this;
-        return Transaction.run(() => {
+        return Transaction.execute(() => {
             const es = new StreamLoop<S>(),
                 s = es.holdLazy(initState),
                 es_out = ea.snapshot(s, f);
@@ -744,11 +744,11 @@ export class Stream<A> {
         // We can revisit this another time. For now we will use the less
         // efficient implementation below.
         const me = this;
-        return Transaction.run(() => me.gate(me.mapTo(false).hold(true)));
+        return Transaction.execute(() => me.gate(me.mapTo(false).hold(true)));
     }
 
     listen(h: (a: A) => void): () => void {
-        return Transaction.run<() => void>(() => {
+        return Transaction.execute<() => void>(() => {
             return this.listen_(Vertex.NULL, h, false);
         });
     }
@@ -912,7 +912,7 @@ export class Cell<A> {
         if (!str) {
             this.str = new Stream<A>();
             this.vertex = new Vertex('ConstCell', 0, []);
-        } else Transaction.run(() => this.setStream(str));
+        } else Transaction.execute(() => this.setStream(str));
     }
 
     protected setStream(str: Stream<A>) {
@@ -980,7 +980,7 @@ export class Cell<A> {
      * by something that is ultimately being listened to.
      */
     sample(): A {
-        return Transaction.run(() => {
+        return Transaction.execute(() => {
             return this.sampleNoTrans__();
         });
     }
@@ -997,7 +997,7 @@ export class Cell<A> {
      */
     sampleLazy(): Lazy<A> {
         const me = this;
-        return Transaction.run(() => me.sampleLazyNoTrans__());
+        return Transaction.execute(() => me.sampleLazyNoTrans__());
     }
 
     sampleLazyNoTrans__(): Lazy<A> {
@@ -1023,7 +1023,7 @@ export class Cell<A> {
      */
     map<B>(f: ((a: A) => B) | Lambda1<A, B>): Cell<B> {
         const c = this;
-        return Transaction.run(() =>
+        return Transaction.execute(() =>
             Operational.updates(c)
                 .map(f)
                 .holdLazy(c.sampleLazy().map(Lambda1_toFunction(f))),
@@ -1252,7 +1252,7 @@ export class Cell<A> {
         ca: Cell<A>,
         sources?: Source[],
     ): Cell<B> {
-        return Transaction.run(() => {
+        return Transaction.execute(() => {
             let pumping = false;
             const state = new ApplyState<A, B>(),
                 out = new StreamWithSend<B>(),
@@ -1316,7 +1316,7 @@ export class Cell<A> {
      * Unwrap a cell inside another cell to give a time-varying cell implementation.
      */
     static switchC<A>(cca: Cell<Cell<A>>): Cell<A> {
-        return Transaction.run(() => {
+        return Transaction.execute(() => {
             const za = cca.sampleLazy().map((ba: Cell<A>) => ba.sample()),
                 out = new StreamWithSend<A>();
             let outValue: A = null;
@@ -1381,7 +1381,7 @@ export class Cell<A> {
      * Unwrap a stream inside a cell to give a time-varying stream implementation.
      */
     static switchS<A>(csa: Cell<Stream<A>>): Stream<A> {
-        return Transaction.run(() => {
+        return Transaction.execute(() => {
             const out = new StreamWithSend<A>(),
                 h2 = (a: A) => {
                     out.send_(a);
@@ -1454,7 +1454,7 @@ export class Cell<A> {
      *   your own primitives.
      */
     listen(h: (a: A) => void): () => void {
-        return Transaction.run(() => {
+        return Transaction.execute(() => {
             return Operational.value(this).listen(h);
         });
     }
@@ -1484,7 +1484,7 @@ export class Cell<A> {
 export class LazyCell<A> extends Cell<A> {
     constructor(lazyInitValue: Lazy<A>, str?: Stream<A>) {
         super(null, null);
-        Transaction.run(() => {
+        Transaction.execute(() => {
             if (str) this.setStream(str);
             this.lazyInitValue = lazyInitValue;
         });
