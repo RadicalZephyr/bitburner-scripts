@@ -27,6 +27,7 @@ const PRESETS = {
         'Evasive System',
         'Hyperdrive',
     ],
+    'late-game': ['Hands of Midas', 'Hyperdrive'],
 } as const satisfies Record<string, readonly `${BladeburnerSkillName}`[]>;
 
 const FLAGS = [
