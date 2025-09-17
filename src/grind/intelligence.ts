@@ -2,6 +2,7 @@ import type { NS, AutocompleteData } from '@ns';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { LaunchClient } from 'services/client/launch';
+import { makeFuid } from 'util/fuid';
 
 const FLAGS = [['help', false]] as const satisfies FlagsSchema;
 
@@ -46,4 +47,26 @@ async function grindThatLevel(ns: NS) {
     const manual = launch.launch('manual/hack.js', launchOptions, target);
 
     await Promise.all([harvest, automation, manual]);
+
+    await writePrograms(ns);
+}
+
+async function writePrograms(ns: NS) {
+    const program = 'ServerProfiler.exe';
+
+    let running = true;
+    ns.atExit(() => {
+        running = false;
+    }, makeFuid(ns));
+    while (running) {
+        ns.rm(program);
+        ns.singularity.createProgram(program, false);
+        await doneWorking(ns);
+    }
+}
+
+async function doneWorking(ns: NS) {
+    while (ns.singularity.isBusy()) {
+        await ns.asleep(10);
+    }
 }
