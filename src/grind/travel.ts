@@ -15,19 +15,15 @@ export async function main(ns: NS) {
 
     if (flags.help) {
         ns.tprint(`
-        USAGE: run ${ns.getScriptName()}
+USAGE: run ${ns.getScriptName()}
 
-        Grind intelligence by traveling constantly.
+Grind intelligence by traveling constantly.
 
-        Example:
-        > run ${ns.getScriptName()}
+Example:
+  > run ${ns.getScriptName()}
 
-        OPTIONS
-        --help   Show this help message
-        {{ other FLAGS options }}
-
-        CONFIGURATION
-        {{ CONFIG values used }}
+OPTIONS
+  --help   Show this help message
 `);
         return;
     }
