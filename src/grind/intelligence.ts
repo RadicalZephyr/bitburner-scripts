@@ -46,7 +46,9 @@ async function grindThatLevel(ns: NS) {
     );
     const manual = launch.launch('manual/hack.js', launchOptions, target);
 
-    await Promise.all([harvest, automation, manual]);
+    const travel = launch.launch('grind/travel.js', launchOptions);
+
+    await Promise.all([harvest, automation, manual, travel]);
 
     await writePrograms(ns);
 }
