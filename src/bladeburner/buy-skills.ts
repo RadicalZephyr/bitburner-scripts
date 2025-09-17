@@ -71,7 +71,7 @@ Example:
 
 OPTIONS
   --skill      Add a skill to buy (can be specified multiple times)
-  --presets    Add a predefined group of skills to buy (can be specified multiple times)
+  --preset     Add a predefined group of skills to buy (can be specified multiple times)
   --help       Show this help message
 
 CONFIGURATION
