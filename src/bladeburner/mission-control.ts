@@ -314,5 +314,4 @@ function actionChance(ns: NS, action: Action): number {
 
 const increaseChaos: Action = { type: 'General', name: 'Incite Violence' };
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const recruit: Action = { type: 'General', name: 'Recruitment' };
