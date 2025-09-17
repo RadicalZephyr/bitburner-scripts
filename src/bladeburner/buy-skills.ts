@@ -92,9 +92,10 @@ function buildSkills(
     skills: string[],
     presets: string[],
 ): `${BladeburnerSkillName}`[] {
-    if (skills.length === 0 && presets.length === 0) return [...SKILLS];
+    const _allSkills = ns.bladeburner.getSkillNames();
+    if (skills.length === 0 && presets.length === 0) return _allSkills;
 
-    const allSkills = new Set(ns.bladeburner.getSkillNames() as string[]);
+    const allSkills = new Set(_allSkills as string[]);
     const isSkill = (s: string): s is `${BladeburnerSkillName}` =>
         allSkills.has(s);
 
