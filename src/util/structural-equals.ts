@@ -3,10 +3,11 @@ import { isObjectUnknown } from 'util/validate';
 /**
  * Compare two values structurally.
  *
- * Only primitives, arrays, and plain objects are supported. Types like `Map`,
- * `Set`, `Date`, and functions are always considered unequal. The algorithm
- * also does not handle cyclic references and will recurse infinitely if given
- * such structures.
+ * Only primitives, arrays, plain objects and `Map` are
+ * supported. Types like `Set`, `Date`, and functions are always
+ * compared using object identity. The algorithm also does not handle
+ * cyclic references and will recurse infinitely if given such
+ * structures.
  *
  * @param a - First value to compare
  * @param b - Second value to compare
