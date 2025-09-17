@@ -1,21 +1,10 @@
 import type { NS } from '@ns';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
-import {
-    DISCOVERY_PORT,
-    DISCOVERY_RESPONSE_PORT,
-    MessageType,
-    Subscription as ClientSubscription,
-    DiscoverProtocolDef,
-    DiscoverProtocol,
-    TargetSource,
-    WorkerSource,
-} from 'services/client/discover';
+import { TargetSource, WorkerSource } from 'services/client/discover';
 import { MemoryClient } from 'services/client/memory';
 
-import { extend } from 'util/extend';
 import { makeFuid } from 'util/fuid';
-import { BaseServer, Handlers } from 'util/protocol';
 import { walkNetworkBFS } from 'util/walk';
 
 import { StreamSink } from 'lib/sodium';
@@ -55,9 +44,6 @@ CONFIGURATION
     const self = ns.self();
     memClient.registerAllocation(self.server, self.ramUsage, 1);
 
-    const server = new Server(ns, discovery);
-    server.readLoop();
-
     while (true) {
         const network = walkNetworkBFS(ns);
         const newHosts: string[] = [];
@@ -87,26 +73,6 @@ CONFIGURATION
         }
 
         await ns.asleep(CONFIG.discoverWalkIntervalMs);
-    }
-}
-
-class Server extends BaseServer<DiscoverProtocolDef> {
-    constructor(ns: NS, discovery: Discovery) {
-        const requestPort = ns.getPortHandle(DISCOVERY_PORT);
-        const responsePort = ns.getPortHandle(DISCOVERY_RESPONSE_PORT);
-        const handlers: Handlers<DiscoverProtocolDef> = {
-            [MessageType.RequestWorkers]: (request) => {
-                if (request.pushUpdates)
-                    discovery.registerWorkerSubscriber(request.pushUpdates);
-                return Promise.resolve(discovery.workers);
-            },
-            [MessageType.RequestTargets]: (request) => {
-                if (request.pushUpdates)
-                    discovery.registerTargetSubscriber(request.pushUpdates);
-                return Promise.resolve(discovery.targets);
-            },
-        };
-        super(ns, DiscoverProtocol, requestPort, responsePort, handlers);
     }
 }
 
@@ -142,34 +108,27 @@ function attemptCrack(ns: NS, host: string) {
     ns.nuke(host);
 }
 
-interface Subscription extends ClientSubscription {
-    failedNotifications: number;
-    missedUpdates: string[];
-}
-
 type Hostname = string;
 
 class Discovery {
     ns: NS;
 
-    #newWorkers: StreamSink<Hostname> = new StreamSink();
-    #newTargets: StreamSink<Hostname> = new StreamSink();
-
-    _workers: Set<string> = new Set();
-    _targets: Set<string> = new Set();
-
-    workerSubscriptions: Subscription[] = [];
-    targetSubscriptions: Subscription[] = [];
+    #newHosts: StreamSink<Hostname> = new StreamSink();
 
     constructor(ns: NS) {
         this.ns = ns;
 
-        const unlistenWorkers = WorkerSource.registerNewHostsSource(
-            this.#newWorkers,
-        );
-        const unlistenTargets = TargetSource.registerNewHostsSource(
-            this.#newTargets,
-        );
+        const newWorkers = this.#newHosts.filter((host) => {
+            const workers = WorkerSource.hosts.sample();
+            return this.ns.getServerMaxRam(host) > 0 && !workers.has(host);
+        });
+        const unlistenWorkers = WorkerSource.registerNewHostsSource(newWorkers);
+
+        const newTargets = this.#newHosts.filter((host) => {
+            const targets = TargetSource.hosts.sample();
+            return this.ns.getServerMaxMoney(host) > 0 && !targets.has(host);
+        });
+        const unlistenTargets = TargetSource.registerNewHostsSource(newTargets);
 
         ns.atExit(() => {
             unlistenTargets();
@@ -177,117 +136,9 @@ class Discovery {
         }, makeFuid(ns));
     }
 
-    pushHosts(hosts: string[]) {
-        const newWorkers: string[] = [];
-        const newTargets: string[] = [];
-
+    pushHosts(hosts: Hostname[]) {
         for (const host of hosts) {
-            if (this.ns.getServerMaxRam(host) > 0 && !this._workers.has(host)) {
-                this._workers.add(host);
-                newWorkers.push(host);
-                this.#newWorkers.send(host);
-            }
-
-            if (
-                this.ns.getServerMaxMoney(host) > 0
-                && !this._targets.has(host)
-            ) {
-                this._targets.add(host);
-                newTargets.push(host);
-                this.#newTargets.send(host);
-            }
-        }
-
-        if (newWorkers.length > 0) {
-            notifySubscriptions(this.ns, newWorkers, this.workerSubscriptions);
-            this.workerSubscriptions = this.workerSubscriptions.filter(
-                (sub) =>
-                    sub.failedNotifications < CONFIG.subscriptionMaxRetries,
-            );
-        }
-
-        if (newTargets.length > 0) {
-            notifySubscriptions(this.ns, newTargets, this.targetSubscriptions);
-            this.targetSubscriptions = this.targetSubscriptions.filter(
-                (sub) =>
-                    sub.failedNotifications < CONFIG.subscriptionMaxRetries,
-            );
-        }
-    }
-
-    registerWorkerSubscriber(subscription: ClientSubscription) {
-        registerSubscriber(this.ns, subscription, this.workerSubscriptions);
-    }
-
-    registerTargetSubscriber(subscription: ClientSubscription) {
-        registerSubscriber(this.ns, subscription, this.targetSubscriptions);
-    }
-
-    get workers(): string[] {
-        return Array.from(this._workers);
-    }
-
-    get targets(): string[] {
-        return Array.from(this._targets);
-    }
-}
-
-function registerSubscriber(
-    ns: NS,
-    subscription: ClientSubscription,
-    subscriptions: Subscription[],
-) {
-    const existingSubscription = subscriptions.find(
-        (sub) => sub.port === subscription.port,
-    );
-    if (existingSubscription) {
-        // Assume that subscriptions with the same port are for
-        // the same service.
-        ns.print(
-            `WARN: replacing subscription for port ${subscription.port}. `
-                + `Old: ${existingSubscription.messageType} `
-                + `New: ${subscription.messageType}`,
-        );
-        existingSubscription.messageType = subscription.messageType;
-        existingSubscription.failedNotifications = 0;
-    } else {
-        subscriptions.push({
-            failedNotifications: 0,
-            missedUpdates: [],
-            ...subscription,
-        } as Subscription);
-    }
-}
-
-function notifySubscriptions(
-    ns: NS,
-    hosts: string[],
-    subscriptions: Subscription[],
-) {
-    for (const sub of subscriptions) {
-        const hostsToSend = [...sub.missedUpdates, ...hosts];
-        // TODO [ZEFS 2025-09-05 #292]: This is janky as hell and
-        // completely unchecked on the client-side, but it will
-        // probably work on the server side? Is there a better way to
-        // handle this? We can't send the whole protocol through the
-        // port because it has validator functions.
-        const envelope = {
-            type: sub.messageType,
-            id: null,
-            payload: hostsToSend,
-        };
-        if (ns.tryWritePort(sub.port, envelope)) {
-            // Reset failed notifications when we succeed in sending them
-            sub.failedNotifications = 0;
-            sub.missedUpdates = [];
-        } else {
-            ns.print(
-                `WARN: failed to send message ${sub.messageType} to port ${sub.port}`,
-            );
-            // We retry a failing subscription a configurable number
-            // of times
-            sub.failedNotifications += 1;
-            extend(sub.missedUpdates, hosts);
+            this.#newHosts.send(host);
         }
     }
 }
