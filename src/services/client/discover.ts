@@ -23,7 +23,15 @@ class HostSource {
     });
 
     registerNewHostsSource(source: Stream<Hostname>): () => void {
-        return this.#newHostsSource.setSource(source);
+        const unlistenStream = this.#newHostsSource.setSource(source);
+        // NOTE: It's very important that we listen to the cell,
+        // otherwise it will be cleaned up I guess and never receive
+        // updates!
+        const unlistenCell = this.hosts.listen(() => null);
+        return () => {
+            unlistenStream();
+            unlistenCell();
+        };
     }
 }
 
@@ -68,17 +76,30 @@ export class DiscoveryClient {
             unlistenWorkers();
             unlistenTargets();
         }, makeFuid(ns));
+        void this.pollFlushSubscriptions();
     }
 
-    private notifyTargetSubscriptions(target: string) {
-        notifySubscriptions(this.#ns, target, this.#targetSubscriptions);
+    private async pollFlushSubscriptions() {
+        let running = true;
+        this.#ns.atExit(() => {
+            running = false;
+        }, makeFuid(this.#ns));
+        while (running) {
+            this.notifyWorkerSubscriptions();
+            this.notifyTargetSubscriptions();
+            await this.#ns.asleep(100);
+        }
+    }
+
+    private notifyTargetSubscriptions(target?: string) {
+        notifySubscriptions(this.#ns, this.#targetSubscriptions, target);
         this.#targetSubscriptions = this.#targetSubscriptions.filter(
             (sub) => sub.failedNotifications < CONFIG.subscriptionMaxRetries,
         );
     }
 
-    private notifyWorkerSubscriptions(worker: string) {
-        notifySubscriptions(this.#ns, worker, this.#workerSubscriptions);
+    private notifyWorkerSubscriptions(worker?: string) {
+        notifySubscriptions(this.#ns, this.#workerSubscriptions, worker);
         this.#workerSubscriptions = this.#workerSubscriptions.filter(
             (sub) => sub.failedNotifications < CONFIG.subscriptionMaxRetries,
         );
@@ -134,11 +155,14 @@ function registerSubscriber(
 
 function notifySubscriptions(
     ns: NS,
-    host: string,
     subscriptions: ServerSubscription[],
+    host?: string,
 ) {
     for (const sub of subscriptions) {
-        const hostsToSend = [...sub.missedUpdates, host];
+        const hostsToSend =
+            host != null ? [...sub.missedUpdates, host] : sub.missedUpdates;
+        if (hostsToSend.length === 0) continue;
+
         // TODO [ZEFS 2025-09-05 #292]: This is janky as hell and
         // completely unchecked on the client-side, but it will
         // probably work on the server side? Is there a better way to
@@ -160,7 +184,7 @@ function notifySubscriptions(
             // We retry a failing subscription a configurable number
             // of times
             sub.failedNotifications += 1;
-            sub.missedUpdates.push(host);
+            if (host != null) sub.missedUpdates.push(host);
         }
     }
 }
