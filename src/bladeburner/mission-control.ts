@@ -245,7 +245,8 @@ function bestAction(ns: NS): Action {
         (a, b) => b.expectedRankPerSecond - a.expectedRankPerSecond,
     );
 
-    if (allActionCandidates.length === 0) return increaseChaos;
+    if (allActionCandidates.length === 0)
+        return CONFIG.includeDangerousActions ? increaseChaos : recruit;
 
     return allActionCandidates[0];
 }
