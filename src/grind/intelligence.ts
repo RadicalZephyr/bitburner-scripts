@@ -50,7 +50,33 @@ async function grindThatLevel(ns: NS) {
 
     await Promise.all([harvest, automation, manual, travel]);
 
+    const programs = [
+        'BruteSSH.exe',
+        'FTPCrack.exe',
+        'relaySMTP.exe',
+        'HTTPWorm.exe',
+        'SQLInject.exe',
+        'DeepscanV1.exe',
+        'DeepscanV2.exe',
+        'AutoLink.exe',
+    ];
+    for (const program of programs) {
+        void buyProgram(ns, program);
+    }
+
     await writePrograms(ns);
+}
+
+async function buyProgram(ns: NS, programName: string) {
+    let running = true;
+    ns.atExit(() => {
+        running = false;
+    }, makeFuid(ns));
+    while (running) {
+        ns.rm(programName);
+        ns.singularity.purchaseProgram(programName);
+        await ns.asleep(10);
+    }
 }
 
 async function writePrograms(ns: NS) {
