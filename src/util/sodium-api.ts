@@ -88,8 +88,8 @@ export class ApiCellUpdater<T> {
     ) {
         this.#sink = new CellSink(this.pollFn());
         this.cell = this.#sink;
-        this.#unlisten = this.apiCell.setSource(this.cell);
         if (isFunction(isEqual)) this.cell = this.cell.calm(isEqual);
+        this.#unlisten = this.apiCell.setSource(this.cell);
     }
 
     unlisten() {
