@@ -32,6 +32,7 @@ OPTIONS
 
 CONFIGURATION
   BLADE_chaosSwitchToDiplomacy  Chaos level over which Diplomacy is more effective than SRO
+  BLADE_dangerousActionPenalty  Percent of actual gains to count for dangerous actions
   BLADE_highStaminaPercent      Percent of max stamina that is considered "high"
   BLADE_lowStaminaPercent       Percent of max stamina that is considered "low"
   BLADE_maxChaos                Maximum allowed city chaos before we try to lower it
@@ -290,7 +291,8 @@ const DANGEROUS_ACTIONS: Set<`${BladeburnerActionName}`> = new Set([
 ]);
 
 function getActionPenalty(action: Action): number {
-    if (DANGEROUS_ACTIONS.has(action.name)) return 0.1;
+    if (DANGEROUS_ACTIONS.has(action.name))
+        return CONFIG.dangerousActionPenalty;
     return 1.0;
 }
 
