@@ -32,7 +32,7 @@ export async function main(ns: NS) {
         return;
     }
 
-    travelTheWorld(ns);
+    await travelTheWorld(ns);
 }
 
 async function travelTheWorld(ns: NS) {
