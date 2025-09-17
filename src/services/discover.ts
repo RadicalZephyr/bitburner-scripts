@@ -7,7 +7,7 @@ import { MemoryClient } from 'services/client/memory';
 import { makeFuid } from 'util/fuid';
 import { walkNetworkBFS } from 'util/walk';
 
-import { StreamSink } from 'lib/sodium';
+import { StreamSink, Transaction } from 'lib/sodium';
 
 import { CONFIG } from 'services/config';
 
@@ -118,22 +118,28 @@ class Discovery {
     constructor(ns: NS) {
         this.ns = ns;
 
-        const newWorkers = this.#newHosts.filter((host) => {
-            const workers = WorkerSource.hosts.sample();
-            return this.ns.getServerMaxRam(host) > 0 && !workers.has(host);
-        });
-        const unlistenWorkers = WorkerSource.registerNewHostsSource(newWorkers);
+        Transaction.run(() => {
+            const newWorkers = this.#newHosts.filter((host) => {
+                const workers = WorkerSource.hosts.sample();
+                return this.ns.getServerMaxRam(host) > 0 && !workers.has(host);
+            });
+            const unlistenWorkers =
+                WorkerSource.registerNewHostsSource(newWorkers);
 
-        const newTargets = this.#newHosts.filter((host) => {
-            const targets = TargetSource.hosts.sample();
-            return this.ns.getServerMaxMoney(host) > 0 && !targets.has(host);
-        });
-        const unlistenTargets = TargetSource.registerNewHostsSource(newTargets);
+            const newTargets = this.#newHosts.filter((host) => {
+                const targets = TargetSource.hosts.sample();
+                return (
+                    this.ns.getServerMaxMoney(host) > 0 && !targets.has(host)
+                );
+            });
+            const unlistenTargets =
+                TargetSource.registerNewHostsSource(newTargets);
 
-        ns.atExit(() => {
-            unlistenTargets();
-            unlistenWorkers();
-        }, makeFuid(ns));
+            ns.atExit(() => {
+                unlistenTargets();
+                unlistenWorkers();
+            }, makeFuid(ns));
+        });
     }
 
     pushHosts(hosts: Hostname[]) {

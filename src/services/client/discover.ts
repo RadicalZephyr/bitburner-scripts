@@ -5,7 +5,7 @@ import { ApiStream } from 'util/sodium-api';
 import { isNumber, isObjectLike, isString, Validator } from 'util/validate';
 
 import { Set } from 'lib/immutable';
-import { Cell, Stream } from 'lib/sodium';
+import { Cell, Stream, Transaction } from 'lib/sodium';
 
 import { CONFIG } from 'services/config';
 
@@ -86,18 +86,22 @@ export class DiscoveryClient {
 
     /** Request the list of known worker hosts. */
     requestWorkers(sub?: Subscription): Promise<Hostname[]> {
-        if (isSubscription(sub)) {
-            registerSubscriber(this.#ns, sub, this.#workerSubscriptions);
-        }
-        return Promise.resolve(WorkerSource.hosts.sample().toArray());
+        return Transaction.run(() => {
+            if (isSubscription(sub)) {
+                registerSubscriber(this.#ns, sub, this.#workerSubscriptions);
+            }
+            return Promise.resolve(WorkerSource.hosts.sample().toArray());
+        });
     }
 
     /** Request the list of known target hosts. */
     requestTargets(sub?: Subscription): Promise<Hostname[]> {
-        if (isSubscription(sub)) {
-            registerSubscriber(this.#ns, sub, this.#targetSubscriptions);
-        }
-        return Promise.resolve(TargetSource.hosts.sample().toArray());
+        return Transaction.run(() => {
+            if (isSubscription(sub)) {
+                registerSubscriber(this.#ns, sub, this.#targetSubscriptions);
+            }
+            return Promise.resolve(TargetSource.hosts.sample().toArray());
+        });
     }
 }
 
