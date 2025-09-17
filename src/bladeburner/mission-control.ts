@@ -34,6 +34,7 @@ CONFIGURATION
   BLADE_chaosSwitchToDiplomacy  Chaos level over which Diplomacy is more effective than SRO
   BLADE_dangerousActionPenalty  Percent of actual gains to count for dangerous actions
   BLADE_highStaminaPercent      Percent of max stamina that is considered "high"
+  BLADE_includeDangerousActions Whether to consider performing dangerous actions
   BLADE_lowStaminaPercent       Percent of max stamina that is considered "low"
   BLADE_maxChaos                Maximum allowed city chaos before we try to lower it
   BLADE_maxSuccessChanceSpread  Maxmimum allowed success chance spread before we need to survery population
@@ -231,9 +232,15 @@ function bestAction(ns: NS): Action {
     if (staminaStatus === Stamina.Low)
         return { type: 'General', name: 'Field Analysis' };
 
+    const dangerousActionsPred: (c: ActionCandidate) => boolean =
+        CONFIG.includeDangerousActions
+            ? () => true
+            : (c) => !DANGEROUS_ACTIONS.has(c.name);
+
     const allActionCandidates = allContractsAndOperations(ns)
         .map((a) => candidate(ns, a))
-        .filter((c) => c.count > 1);
+        .filter((c) => c.count > 1)
+        .filter(dangerousActionsPred);
     allActionCandidates.sort(
         (a, b) => b.expectedRankPerSecond - a.expectedRankPerSecond,
     );

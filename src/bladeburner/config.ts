@@ -4,6 +4,7 @@ const entries = [
     ['chaosSwitchToDiplomacy', 10],
     ['dangerousActionPenalty', 0.1],
     ['highStaminaPercent', 0.95],
+    ['includeDangerousActions', false],
     ['lowStaminaPercent', 0.56],
     ['maxChaos', 1.0],
     ['maxSuccessChanceSpread', 0.1],
