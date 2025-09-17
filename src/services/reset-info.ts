@@ -4,8 +4,8 @@ import { FlagsSchema, parseFlags } from 'util/flags';
 import { OwnedAugs, SourceFiles } from 'services/client/reset-info';
 
 import { ApiCellUpdater, updateCells } from 'util/sodium-api';
-import { isStructuralEqual } from 'util/structural-equals';
 
+import { Map, is } from 'lib/immutable';
 import { Transaction } from 'lib/sodium';
 
 const FLAGS = [['help', false]] as const satisfies FlagsSchema;
@@ -41,13 +41,13 @@ function updaters(ns: NS) {
         return [
             new ApiCellUpdater(
                 OwnedAugs,
-                () => ns.getResetInfo().ownedAugs,
-                isStructuralEqual,
+                () => Map(ns.getResetInfo().ownedAugs),
+                is,
             ),
             new ApiCellUpdater(
                 SourceFiles,
-                () => ns.getResetInfo().ownedSF,
-                isStructuralEqual,
+                () => Map(ns.getResetInfo().ownedSF),
+                is,
             ),
         ];
     });

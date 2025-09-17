@@ -1,6 +1,10 @@
 import { ApiCell } from 'util/sodium-api';
 
-export const OwnedAugs = new ApiCell<Map<string, number>>(new Map());
+import { Map } from 'lib/immutable';
+
+export const OwnedAugs = new ApiCell<Immutable.Map<string, number>>(
+    Map<string, number>(),
+);
 
 /**
  * Return the full list of all currently owned augmentations.
@@ -21,7 +25,9 @@ export function getNeurofluxGovernorLevel(): number {
     return OwnedAugs.cell.sample().get('NeuroFlux Governor') ?? 0;
 }
 
-export const SourceFiles = new ApiCell<Map<number, number>>(new Map());
+export const SourceFiles = new ApiCell<Immutable.Map<number, number>>(
+    Map<number, number>(),
+);
 
 /**
  * Get the owned level of the given source file.
@@ -40,6 +46,6 @@ export function getSourceFileLevel(n: number): number {
  * corresponding value is the level of that Source File owned by the
  * player.  Source Files not owned are omitted from the map.
  */
-export function getAllSourceFileLevels(): Map<number, number> {
+export function getAllSourceFileLevels(): Immutable.Map<number, number> {
     return SourceFiles.cell.sample();
 }
