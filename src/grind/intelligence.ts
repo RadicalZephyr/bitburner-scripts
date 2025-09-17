@@ -61,13 +61,16 @@ async function grindThatLevel(ns: NS) {
         'AutoLink.exe',
     ];
     for (const program of programs) {
-        void buyProgram(ns, program);
+        void buyProgramGrindLoop(ns, program);
     }
 
     await writePrograms(ns);
 }
 
-async function buyProgram(ns: NS, programName: string) {
+/**
+ * Grind intelligence by buying and removing a program repeatedly.
+ */
+async function buyProgramGrindLoop(ns: NS, programName: string) {
     let running = true;
     ns.atExit(() => {
         running = false;
@@ -79,6 +82,9 @@ async function buyProgram(ns: NS, programName: string) {
     }
 }
 
+/**
+ * Grind intelligence by creating a program and removing it repeatedly.
+ */
 async function writePrograms(ns: NS) {
     const program = 'ServerProfiler.exe';
 
