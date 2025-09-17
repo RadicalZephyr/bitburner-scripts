@@ -11,6 +11,7 @@ import {
     Validator,
 } from 'util/validate';
 
+import { Set } from 'lib/immutable';
 import { Cell, Stream } from 'lib/sodium';
 
 type Hostname = string;
@@ -20,13 +21,11 @@ class HostSource {
 
     readonly newHosts: Stream<Hostname> = this.#newHostsSource.stream;
 
-    readonly hosts: Cell<Set<Hostname>> = this.newHosts.accum<Set<Hostname>>(
-        new Set() satisfies Set<Hostname>,
-        (newHost, hosts) => {
-            hosts.add(newHost);
-            return hosts;
-        },
-    );
+    readonly hosts: Cell<Immutable.Set<Hostname>> = this.newHosts.accum<
+        Immutable.Set<Hostname>
+    >(Set<Hostname>(), (newHost, hosts) => {
+        return hosts.add(newHost);
+    });
 
     registerNewHostsSource(source: Stream<Hostname>): () => void {
         return this.#newHostsSource.setSource(source);
