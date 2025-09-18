@@ -207,7 +207,7 @@ async function buyNeuroFluxGovernor(ns: NS, budget: number) {
 
     const nfgName = 'NeuroFlux Governor';
 
-    const bestFaction = getBestFaction(ns);
+    const bestFaction = getBestFactionForNFG(ns);
     if (!bestFaction) {
         ns.print('WARN: no factions to buy NeuroFlux Governor from.');
         return;
@@ -248,7 +248,7 @@ export function augCost(ns: NS, augName: string): number {
  * @param ns  - Netscript API instance
  * @returns Name of Faction with most favor or rep, null if you are not in any factions
  */
-export function getBestFaction(ns: NS): string | null {
+export function getBestFactionForNFG(ns: NS): string | null {
     const factions = ns
         .getPlayer()
         .factions.filter((f) => canBuyNFGFrom(ns, f))

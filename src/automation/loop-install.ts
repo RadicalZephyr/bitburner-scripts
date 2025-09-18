@@ -5,7 +5,7 @@ import {
     Aug,
     augCost,
     buyReputation,
-    getBestFaction,
+    getBestFactionForNFG,
     neededReputationCost,
 } from 'automation/buy-augments';
 import { trainCombat } from 'automation/workout';
@@ -105,10 +105,10 @@ async function untilHackLevel(ns: NS, targetLevel: number) {
 async function buyOneNeuroFlux(ns: NS) {
     const nfgName = 'NeuroFlux Governor';
 
-    let bestFaction = getBestFaction(ns);
+    let bestFaction = getBestFactionForNFG(ns);
     while (!bestFaction) {
         await ns.asleep(10_000);
-        bestFaction = getBestFaction(ns);
+        bestFaction = getBestFactionForNFG(ns);
     }
 
     const neuro = new Aug(ns, nfgName, bestFaction);
@@ -138,10 +138,10 @@ async function buyNeuroFlux(ns: NS) {
 
     const nfgName = 'NeuroFlux Governor';
 
-    let bestFaction = getBestFaction(ns);
+    let bestFaction = getBestFactionForNFG(ns);
     while (!bestFaction) {
         await ns.asleep(10_000);
-        bestFaction = getBestFaction(ns);
+        bestFaction = getBestFactionForNFG(ns);
     }
 
     let cost = augCost(ns, nfgName);
