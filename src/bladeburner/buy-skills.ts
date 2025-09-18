@@ -190,5 +190,5 @@ async function untilPoints(ns: NS, points: number) {
 
 function skillMaxUpgradeCount(name: SkillName, level: number): number {
     if (name === 'Overclock') return 90 - level;
-    return Number.MAX_SAFE_INTEGER;
+    return Number.MAX_SAFE_INTEGER - level;
 }
