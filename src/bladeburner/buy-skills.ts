@@ -174,11 +174,11 @@ class Skill {
     constructor(ns: NS, name: SkillName) {
         this.name = name;
         this.level = ns.bladeburner.getSkillLevel(name);
-        this.levelsToBuy = CONFIG.skillBuyAmount;
-        this.cost = ns.bladeburner.getSkillUpgradeCost(
-            name,
+        this.levelsToBuy = Math.min(
             CONFIG.skillBuyAmount,
+            skillMaxUpgradeCount(this.name, this.level),
         );
+        this.cost = ns.bladeburner.getSkillUpgradeCost(name, this.levelsToBuy);
     }
 }
 
@@ -186,4 +186,9 @@ async function untilPoints(ns: NS, points: number) {
     while (ns.bladeburner.getSkillPoints() < points) {
         await ns.asleep(1_000);
     }
+}
+
+function skillMaxUpgradeCount(name: SkillName, level: number): number {
+    if (name === 'Overclock') return 90 - level;
+    return Number.MAX_SAFE_INTEGER;
 }
