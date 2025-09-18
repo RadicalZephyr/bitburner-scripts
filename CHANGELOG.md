@@ -105,6 +105,8 @@
 - Penalize dangerous actions in Bladeburner [#287][pr-287].
 - Increase flexibility of skill buying script with presets and individual skill selections [#322][pr-322].
 - Add configuration to allow turning off dangerous actions entirely [#322][pr-322].
+- Add configuration for buying skills in larger quantities [#326][pr-326].
+- Remove feature to run SRO to reduce city chaos [#326][pr-326].
 
 ### Stocks
 
@@ -212,6 +214,7 @@
 [pr-317]: https://github.com/RadicalZephyr/bitburner-scripts/pull/317
 [pr-322]: https://github.com/RadicalZephyr/bitburner-scripts/pull/322
 [pr-323]: https://github.com/RadicalZephyr/bitburner-scripts/pull/323
+[pr-326]: https://github.com/RadicalZephyr/bitburner-scripts/pull/326
 
 ## v2.1.0
 
