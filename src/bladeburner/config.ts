@@ -13,6 +13,7 @@ const entries = [
     ['minHealthPercent', 0.8],
     ['minSROSuccess', 0.8],
     ['minSurveySuccess', 0.75],
+    ['skillBuyAmount', 1],
     ['skillBuyRateMs', 1000],
 ] as const;
 

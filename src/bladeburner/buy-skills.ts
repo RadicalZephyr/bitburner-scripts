@@ -76,6 +76,7 @@ OPTIONS
   --help       Show this help message
 
 CONFIGURATION
+  BLADE_skillBuyAmount  How many skill levels to buy each cycle
   BLADE_skillBuyRateMs  How many milliseconds to sleep between buying skill levels
 `);
         return;
@@ -142,12 +143,14 @@ async function buySkills(ns: NS, skillNames: `${BladeburnerSkillName}`[]) {
         if (skills.length < 1) throw new Error(`empty skills list!`);
 
         const skillToBuy = skills[0];
-        const skillDescription = `${skillToBuy.name} ${skillToBuy.level + 1} for ${skillToBuy.cost}`;
+        const skillDescription = `${skillToBuy.name} ${skillToBuy.level + CONFIG.skillBuyAmount} for ${skillToBuy.cost}`;
         ns.print(`INFO: trying to buy ${skillDescription}`);
 
         await untilPoints(ns, skillToBuy.cost);
 
-        if (!ns.bladeburner.upgradeSkill(skillToBuy.name, 1))
+        if (
+            !ns.bladeburner.upgradeSkill(skillToBuy.name, CONFIG.skillBuyAmount)
+        )
             throw new Error(`ERROR: failed to buy ${skillDescription}`);
 
         ns.print(`SUCCESS: bought ${skillDescription}`);
@@ -166,7 +169,10 @@ class Skill {
     constructor(ns: NS, name: SkillName) {
         this.name = name;
         this.level = ns.bladeburner.getSkillLevel(name);
-        this.cost = ns.bladeburner.getSkillUpgradeCost(name);
+        this.cost = ns.bladeburner.getSkillUpgradeCost(
+            name,
+            CONFIG.skillBuyAmount,
+        );
     }
 }
 
