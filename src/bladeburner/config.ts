@@ -1,7 +1,6 @@
 import { Config, ConfigInstance } from 'util/config';
 
 const entries = [
-    ['chaosSwitchToDiplomacy', 10],
     ['dangerousActionPenalty', 0.1],
     ['highStaminaPercent', 0.95],
     ['includeDangerousActions', false],
@@ -11,7 +10,6 @@ const entries = [
     ['minBlackOpSuccess', 0.9],
     ['minSuccessSpread', 0.001],
     ['minHealthPercent', 0.8],
-    ['minSROSuccess', 0.8],
     ['minSurveySuccess', 0.75],
     ['skillBuyAmount', 1],
     ['skillBuyRateMs', 1000],

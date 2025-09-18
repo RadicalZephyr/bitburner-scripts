@@ -31,7 +31,6 @@ OPTIONS
   --help   Show this help message
 
 CONFIGURATION
-  BLADE_chaosSwitchToDiplomacy  Chaos level over which Diplomacy is more effective than SRO
   BLADE_dangerousActionPenalty  Percent of actual gains to count for dangerous actions
   BLADE_highStaminaPercent      Percent of max stamina that is considered "high"
   BLADE_includeDangerousActions Whether to consider performing dangerous actions
@@ -41,7 +40,6 @@ CONFIGURATION
   BLADE_minBlackOpSuccess       Minimum success chance to attempt next Black Op
   BLADE_minSuccessSpread        Minimum success chance used to estimate population accuracy
   BLADE_minHealthPercent        Minimum percentage of health before we try to heal
-  BLADE_minSROSuccess           Minimum success chance to attempt stealth retirement operations
   BLADE_minSurveySuccess        Minimum success chance to attempt surveying actions
 `);
         return;
@@ -122,24 +120,12 @@ async function handleChaos(ns: NS): Promise<boolean> {
     const currentChaos = ns.bladeburner.getCityChaos(currentCity);
 
     if (currentChaos > CONFIG.maxChaos) {
-        const staminaStatus = getStaminaStatus(ns);
-        if (
-            currentChaos < CONFIG.chaosSwitchToDiplomacy
-            && staminaStatus !== Stamina.Low
-            && actionChance(ns, sro) > CONFIG.minSROSuccess
-        ) {
-            return await startAction(ns, sro);
-        }
         return await startAction(ns, diplomacy);
     }
     return false;
 }
 
 const diplomacy: Action = { type: 'General', name: 'Diplomacy' };
-const sro: Action = {
-    type: 'Operations',
-    name: 'Stealth Retirement Operation',
-};
 
 async function handleSurveying(ns: NS): Promise<boolean> {
     const avgSuccessSpread = getAvgSuccessSpread(ns);
