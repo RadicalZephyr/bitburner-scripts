@@ -76,6 +76,7 @@
 - Company work automation pursues CEO positions after meeting faction reputation goals [#276][pr-276].
 - `fetch-contracts` `--test` flag defaults to an empty string and searches for contracts on `home` when testing [#276][pr-276].
 - Set sleeves to study algorithms in `loop-install` script [#285][pr-285].
+- Improve robustness of `loop-install` script [#331][pr-331].
 
 ### Contracts
 
@@ -136,6 +137,7 @@
 - Monitor HUD displays total hacking profit-per-second [#214][pr-214].
 - Tail UIs like monitor, infiltration list, and backdoor notifier render once and poll for updates using hook utilities [#229][pr-229].
 - Added a new `LogRoot` container and logging interceptor for preserving access to script logging output when implementing custom UIs [pr-315].
+- Position Port Allocator HUD in line with other HUD script displays [#331][pr-331].
 
 ### Documentation and tests
 
@@ -215,6 +217,7 @@
 [pr-322]: https://github.com/RadicalZephyr/bitburner-scripts/pull/322
 [pr-323]: https://github.com/RadicalZephyr/bitburner-scripts/pull/323
 [pr-326]: https://github.com/RadicalZephyr/bitburner-scripts/pull/326
+[pr-331]: https://github.com/RadicalZephyr/bitburner-scripts/pull/331
 
 ## v2.1.0
 
