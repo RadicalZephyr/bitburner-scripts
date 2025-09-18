@@ -102,14 +102,19 @@ async function untilHackLevel(ns: NS, targetLevel: number) {
     }
 }
 
-async function buyOneNeuroFlux(ns: NS) {
-    const nfgName = 'NeuroFlux Governor';
-
+async function eventuallyGetBestFactionForNGF(ns: NS): Promise<string> {
     let bestFaction = getBestFactionForNFG(ns);
     while (!bestFaction) {
         await ns.asleep(10_000);
         bestFaction = getBestFactionForNFG(ns);
     }
+    return bestFaction;
+}
+
+async function buyOneNeuroFlux(ns: NS) {
+    const nfgName = 'NeuroFlux Governor';
+
+    const bestFaction = await eventuallyGetBestFactionForNGF(ns);
 
     const neuro = new Aug(ns, nfgName, bestFaction);
     const donation = neededReputationCost(ns, neuro);
@@ -138,11 +143,7 @@ async function buyNeuroFlux(ns: NS) {
 
     const nfgName = 'NeuroFlux Governor';
 
-    let bestFaction = getBestFactionForNFG(ns);
-    while (!bestFaction) {
-        await ns.asleep(10_000);
-        bestFaction = getBestFactionForNFG(ns);
-    }
+    const bestFaction = await eventuallyGetBestFactionForNGF(ns);
 
     let cost = augCost(ns, nfgName);
 
