@@ -138,7 +138,7 @@ async function buySkills(ns: NS, skillNames: `${BladeburnerSkillName}`[]) {
     while (true) {
         const skills = skillNames
             .map((s) => new Skill(ns, s))
-            .filter((s) => Number.isFinite(s.cost))
+            .filter((s) => Number.isFinite(s.cost) && s.levelsToBuy > 0)
             .sort((a, b) => a.cost - b.cost);
 
         if (skills.length < 1) throw new Error(`empty skills list!`);
