@@ -1,5 +1,5 @@
-import type { NS, RunOptions, ScriptArg } from '@ns';
-import { parseFlags } from 'util/flags';
+import type { AutocompleteData, NS, RunOptions, ScriptArg } from '@ns';
+import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { ALLOC_ID_ARG } from 'services/client/memory_tag';
 
@@ -16,9 +16,35 @@ import { MemoryClient, TransferableAllocation } from 'services/client/memory';
 import { collectDependencies } from 'util/dependencies';
 import { BaseServer, Handlers } from 'util/protocol';
 
-export async function main(ns: NS) {
-    await parseFlags(ns, []);
+const FLAGS = [['help', false]] as const satisfies FlagsSchema;
 
+export function autocomplete(data: AutocompleteData): string[] {
+    data.flags(FLAGS);
+    return [];
+}
+
+export async function main(ns: NS) {
+    const flags = await parseFlags(ns, FLAGS);
+
+    if (flags.help) {
+        ns.tprint(`
+USAGE: run ${ns.getScriptName()}
+
+Provide a script executing service.
+
+Example:
+  > run ${ns.getScriptName()}
+
+OPTIONS
+  --help   Show this help message
+`);
+        return;
+    }
+
+    await startLaunchService(ns);
+}
+
+async function startLaunchService(ns: NS) {
     ns.disableLog('sleep');
 
     const memClient = new MemoryClient(ns);
