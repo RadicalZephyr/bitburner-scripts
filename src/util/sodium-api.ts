@@ -37,13 +37,22 @@ export class ApiStream<T> {
  * without requiring subscribers to be updated.
  */
 export class ApiCell<T> {
+    #init: T;
     readonly #source: CellSink<Cell<T>>;
 
     cell: Cell<T>;
 
     constructor(init: T) {
+        this.#init = init;
         this.#source = new CellSink(new Cell(init));
         this.cell = Cell.switchC(this.#source);
+    }
+
+    /**
+     * Reset to the original default value.
+     */
+    reset() {
+        this.#source.send(new Cell(this.#init));
     }
 
     /**
