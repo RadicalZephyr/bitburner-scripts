@@ -39,6 +39,9 @@
 - Bootstrap scripts prevent duplicate instances [#268][pr-268].
 - Memory service sorts workers with host prioritisation and alphabetical tie-breakers [#273][pr-273].
 - Dispatch executor runs Netscript functions in isolated processes, with a `DispatchClient` and configurable `SERVICE_maxNsFnRam` limit [#271][pr-271].
+- Reimplement Discovery service API using new Sodium ApiCells [#323][pr-323].
+- Replace Singularity based `source-file` service with a new `ResetInfo` service [#323][pr-323].
+- Add new services for publishing updates to the `Player` and `MoneySources` objects [#323][pr-323].
 
 ### IPvGO
 
@@ -122,6 +125,7 @@
 - Base client/server abstractions and protocol helpers simplify custom port services [#278][pr-278].
 - `readLoop` uses unique at-exit handler IDs to prevent collisions between scripts [#278][pr-278].
 - Extract protocol validators to a new validator module [#288][pr-288].
+- Add new utilities for creating and implementing inter-script APIs using Sodium `Stream`s and `Cell`s [#323][pr-323].
 
 ### User interface
 
@@ -207,6 +211,7 @@
 [pr-315]: https://github.com/RadicalZephyr/bitburner-scripts/pull/315
 [pr-317]: https://github.com/RadicalZephyr/bitburner-scripts/pull/317
 [pr-322]: https://github.com/RadicalZephyr/bitburner-scripts/pull/322
+[pr-323]: https://github.com/RadicalZephyr/bitburner-scripts/pull/323
 
 ## v2.1.0
 
