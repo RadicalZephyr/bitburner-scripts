@@ -119,6 +119,7 @@ class Discovery {
         this.ns = ns;
 
         Transaction.execute(() => {
+            WorkerSource.reset();
             const newWorkers = this.#newHosts.filter((host) => {
                 const workers = WorkerSource.hosts.sample();
                 return this.ns.getServerMaxRam(host) > 0 && !workers.has(host);
@@ -126,6 +127,7 @@ class Discovery {
             const unlistenWorkers =
                 WorkerSource.registerNewHostsSource(newWorkers);
 
+            TargetSource.reset();
             const newTargets = this.#newHosts.filter((host) => {
                 const targets = TargetSource.hosts.sample();
                 return (

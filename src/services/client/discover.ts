@@ -1,11 +1,11 @@
 import type { NS } from '@ns';
 
 import { makeFuid } from 'util/fuid';
-import { ApiStream } from 'util/sodium-api';
+import { ApiStream, resettableAccumulator } from 'util/sodium-api';
 import { isNumber, isObjectLike, isString, Validator } from 'util/validate';
 
 import { Set } from 'lib/immutable';
-import { Cell, Stream, Transaction } from 'lib/sodium';
+import { Cell, Stream, StreamSink, Transaction, Unit } from 'lib/sodium';
 
 import { CONFIG } from 'services/config';
 
@@ -13,14 +13,20 @@ type Hostname = string;
 
 class HostSource {
     readonly #newHostsSource: ApiStream<Hostname> = new ApiStream();
+    readonly #resetStream: StreamSink<Unit> = new StreamSink();
 
     readonly newHosts: Stream<Hostname> = this.#newHostsSource.stream;
 
-    readonly hosts: Cell<Immutable.Set<Hostname>> = this.newHosts.accum<
+    readonly hosts: Cell<Immutable.Set<Hostname>> = resettableAccumulator<
+        Hostname,
         Immutable.Set<Hostname>
-    >(Set<Hostname>(), (newHost, hosts) => {
+    >(Set<Hostname>(), this.newHosts, this.#resetStream, (newHost, hosts) => {
         return hosts.add(newHost);
     });
+
+    reset() {
+        this.#resetStream.send(Unit.UNIT);
+    }
 
     registerNewHostsSource(source: Stream<Hostname>): () => void {
         const unlistenStream = this.#newHostsSource.setSource(source);
