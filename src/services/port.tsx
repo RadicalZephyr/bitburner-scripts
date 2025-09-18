@@ -16,6 +16,7 @@ import { usePoll, useNsUpdate, useTheme } from 'util/hooks';
 import { installLogger } from 'util/logger';
 import { BaseServer, type Handlers } from 'util/protocol';
 import { RingBuffer } from 'util/ring-buffer';
+import { HUD_HEIGHT, HUD_WIDTH, STATUS_WINDOW_WIDTH } from 'util/ui';
 
 import { React } from 'lib/react';
 
@@ -29,6 +30,11 @@ export async function main(ns: NS) {
     ns.clearLog();
     ns.ui.openTail();
     ns.ui.setTailTitle('Port Allocator');
+    ns.ui.resizeTail(HUD_WIDTH / 4, HUD_HEIGHT);
+
+    const [ww] = ns.ui.windowSize();
+    const xPos = Math.max(0, ww - (1.75 * HUD_WIDTH + STATUS_WINDOW_WIDTH));
+    ns.ui.moveTail(xPos, 0);
 
     const { ns: logNS, buffer } = installLogger(ns, { bufferCap: 100 });
 
