@@ -169,8 +169,21 @@ organized as follows:
 - Main functions should remain short and lean, delegating to helper
   functions for the majority of their functionality.
 
-## Limitations of the Netscript2 Runtime Environment
+## Specifics of the Netscript2 Runtime Environment
 
+- Netscript 2 is really just vanilla Javascript running in a browser
+  or an Electron app.
+- All scripts run in the same browser process with no sandboxing.
+- Top-level module bindings are shared and available to any script
+  that imports that module.
+- Bitburner emulates scripts as processes by controlling access to the
+  Netscript API (the `NS` interface). When a script is "killed", the
+  next time an NS API is accessed it throws an exception.
+- If a script runs an async function that loops and either doesn't
+  access the Netscript API or catches the exceptions thrown by it, it
+  will continue running even though the script has been "killed."
+- Interacting with ports through a `NetscriptPort` handle will not
+  trigger an exception in a "killed" script.
 - There is a bug in the implementation of `NetscriptPort.nextWrite`
   that makes it impossible to listen to two different ports from the
   same script. This is the reason that all services listen on a single
