@@ -20,7 +20,7 @@ export async function main(ns: NS) {
         ns.tprint(`
 USAGE: run ${ns.getScriptName()}
 
-Start bootstrapping process on ${BOOTSTRAP_HOST}.
+Start bootstrapping process on home.
 
 Example:
   > run ${ns.getScriptName()}
