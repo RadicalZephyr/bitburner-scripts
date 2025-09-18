@@ -1,8 +1,6 @@
 import type { AutocompleteData, NS } from '@ns';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
-import { collectDependencies } from 'util/dependencies';
-
 const BOOTSTRAP_HOST = 'foodnstuff';
 
 const FLAGS = [
@@ -37,14 +35,7 @@ OPTIONS
     ns.disableLog('sleep');
 
     const script = '/bootstrap.js';
-    const dependencies = collectDependencies(ns, script);
-    const files = [script, ...dependencies];
     const hostname = BOOTSTRAP_HOST;
-
-    if (!ns.scp(files, hostname, 'home')) {
-        reportError(ns, `failed to send files to ${hostname}`);
-        return;
-    }
 
     if (!ns.nuke(hostname)) {
         reportError(ns, `failed to nuke ${hostname}`);
@@ -52,16 +43,11 @@ OPTIONS
     }
 
     const args = flags.minimal ? ['--minimal'] : [];
-    const pid = ns.exec(
+    ns.spawn(
         script,
-        hostname,
-        { threads: 1, preventDuplicates: true },
+        { threads: 1, preventDuplicates: true, spawnDelay: 0 },
         ...args,
     );
-    if (pid === 0) {
-        reportError(ns, `failed to launch ${script} on ${hostname}`);
-        return;
-    }
 }
 
 function reportError(ns: NS, error: string) {
