@@ -2,8 +2,33 @@ import { NS } from '@ns';
 
 import { makeFuid } from 'util/fuid';
 
-import { Cell, CellSink, Stream, Transaction } from 'lib/sodium';
+import {
+    Cell,
+    CellSink,
+    Stream,
+    StreamLoop,
+    Transaction,
+    Unit,
+} from 'lib/sodium';
 import { isFunction } from 'lib/typescript-collections/util';
+
+export function resettableAccumulator<Item, State>(
+    initState: State,
+    items: Stream<Item>,
+    reset: Stream<Unit>,
+    f: (item: Item, state: State) => State,
+): Cell<State> {
+    return Transaction.execute(() => {
+        const nextStateLoop = new StreamLoop<State>();
+        const state = nextStateLoop.hold(initState);
+        const nextState = items.snapshot(state, f);
+        const resetToInit = reset.map(() => initState);
+        // Combine nextState and reset, preferring reset
+        const resettableNextState = resetToInit.orElse(nextState);
+        nextStateLoop.loop(resettableNextState);
+        return state;
+    });
+}
 
 /**
  * A forward-declaration of a `Stream` whose source can be changed
