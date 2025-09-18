@@ -22,7 +22,11 @@ export function autocomplete(data: AutocompleteData): string[] {
 export async function main(ns: NS) {
     const flags = await parseFlags(ns, FLAGS);
 
-    const host = ns.self().server;
+    const hostArg =
+        flags._.length > 0 && typeof flags._[0] === 'string'
+            ? flags._[0]
+            : null;
+    const host = hostArg ?? ns.self().server;
 
     // We start the Discovery service first because everything else
     // needs the hosts and targets that it finds and cracks.

@@ -46,6 +46,7 @@ OPTIONS
     ns.spawn(
         script,
         { threads: 1, preventDuplicates: true, spawnDelay: 0 },
+        hostname,
         ...args,
     );
 }
