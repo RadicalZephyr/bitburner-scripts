@@ -68,11 +68,13 @@ CONFIGURATION
         ns.print(`ERROR: Grind intelligence failed: ${String(e)}`),
     );
 
+    const bestFaction = await eventuallyGetBestFactionForNGF(ns);
+
     // Wait until we can buy at least one NFG level
-    await buyOneNeuroFlux(ns);
+    await buyOneNeuroFlux(ns, bestFaction);
 
     // Buy as many NFG levels as we can within a reasonable time
-    await buyNeuroFlux(ns);
+    await buyNeuroFlux(ns, bestFaction);
 
     // The final step, this eventually restarts this script after a
     // fresh install.
@@ -111,10 +113,8 @@ async function eventuallyGetBestFactionForNGF(ns: NS): Promise<string> {
     return bestFaction;
 }
 
-async function buyOneNeuroFlux(ns: NS) {
+async function buyOneNeuroFlux(ns: NS, bestFaction: string) {
     const nfgName = 'NeuroFlux Governor';
-
-    const bestFaction = await eventuallyGetBestFactionForNGF(ns);
 
     const neuro = new Aug(ns, nfgName, bestFaction);
     const donation = neededReputationCost(ns, neuro);
@@ -138,12 +138,10 @@ async function buyOneNeuroFlux(ns: NS) {
     if (!purchased) throw new Error('Could not buy Neuroflux Governor!');
 }
 
-async function buyNeuroFlux(ns: NS) {
+async function buyNeuroFlux(ns: NS, bestFaction: string) {
     const sing = ns.singularity;
 
     const nfgName = 'NeuroFlux Governor';
-
-    const bestFaction = await eventuallyGetBestFactionForNGF(ns);
 
     let cost = augCost(ns, nfgName);
 
