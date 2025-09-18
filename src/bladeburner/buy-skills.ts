@@ -144,13 +144,16 @@ async function buySkills(ns: NS, skillNames: `${BladeburnerSkillName}`[]) {
         if (skills.length < 1) throw new Error(`empty skills list!`);
 
         const skillToBuy = skills[0];
-        const skillDescription = `${skillToBuy.name} ${skillToBuy.level + CONFIG.skillBuyAmount} for ${skillToBuy.cost}`;
+        const skillDescription = `${skillToBuy.name} ${skillToBuy.level + skillToBuy.levelsToBuy} for ${skillToBuy.cost}`;
         ns.print(`INFO: trying to buy ${skillDescription}`);
 
         await untilPoints(ns, skillToBuy.cost);
 
         if (
-            !ns.bladeburner.upgradeSkill(skillToBuy.name, CONFIG.skillBuyAmount)
+            !ns.bladeburner.upgradeSkill(
+                skillToBuy.name,
+                skillToBuy.levelsToBuy,
+            )
         )
             throw new Error(`ERROR: failed to buy ${skillDescription}`);
 
@@ -165,11 +168,13 @@ type SkillName = BladeburnerSkillName | `${BladeburnerSkillName}`;
 class Skill {
     name: SkillName;
     level: number;
+    levelsToBuy: number;
     cost: number;
 
     constructor(ns: NS, name: SkillName) {
         this.name = name;
         this.level = ns.bladeburner.getSkillLevel(name);
+        this.levelsToBuy = CONFIG.skillBuyAmount;
         this.cost = ns.bladeburner.getSkillUpgradeCost(
             name,
             CONFIG.skillBuyAmount,
