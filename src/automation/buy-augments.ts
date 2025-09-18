@@ -249,13 +249,16 @@ export function augCost(ns: NS, augName: string): number {
  * @returns Name of Faction with most favor or rep, null if you are not in any factions
  */
 export function getBestFaction(ns: NS): string | null {
-    const factions = ns.getPlayer().factions.map((f) => {
-        return {
-            name: f,
-            rep: ns.singularity.getFactionRep(f),
-            favor: ns.singularity.getFactionFavor(f),
-        };
-    });
+    const factions = ns
+        .getPlayer()
+        .factions.filter((f) => canBuyNFGFrom(ns, f))
+        .map((f) => {
+            return {
+                name: f,
+                rep: ns.singularity.getFactionRep(f),
+                favor: ns.singularity.getFactionFavor(f),
+            };
+        });
     const favorFactions = factions
         .filter((f) => f.favor >= ns.getFavorToDonate())
         .sort((a, b) => b.rep - a.rep);
@@ -265,4 +268,9 @@ export function getBestFaction(ns: NS): string | null {
     if (factions.length >= 1) return factions[0].name;
 
     return null;
+}
+
+function canBuyNFGFrom(ns: NS, factionName: string): boolean {
+    const factionAugs = ns.singularity.getAugmentationsFromFaction(factionName);
+    return factionAugs.some((aug) => aug === 'NeuroFlux Governor');
 }
