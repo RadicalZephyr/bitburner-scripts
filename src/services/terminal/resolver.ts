@@ -1,7 +1,16 @@
 import type { NS } from '@ns';
 
+import { normalizePath, splitDirBase } from 'services/terminal/vfs';
+
 export interface ResolveOk {
     ok: true;
+    /**
+     * Absolute normalized path to the script.
+     */
+    absPath: string;
+    /**
+     * Script path to pass to Netscript APIs.
+     */
     script: string;
 }
 
@@ -12,7 +21,7 @@ export interface ResolveErr {
 
 export type ResolveResult = ResolveOk | ResolveErr;
 
-export type ScriptResolver = (name: string) => ResolveResult;
+export type ScriptResolver = (cwd: string, name: string) => ResolveResult;
 
 export interface ResolverOptions {
     aliases?: Record<string, string>;
@@ -33,7 +42,7 @@ export function createScriptResolver(
 ): ScriptResolver {
     const aliases = options.aliases ?? {};
 
-    return (name: string): ResolveResult => {
+    return (cwd: string, name: string): ResolveResult => {
         const trimmed = name.trim();
         if (!trimmed) {
             return { ok: false, message: 'missing script name' };
@@ -41,18 +50,28 @@ export function createScriptResolver(
 
         const alias = aliases[trimmed];
         const target = alias ?? trimmed;
+        const normalized = normalizePath(target, cwd);
+        const { dir, base } = splitDirBase(normalized);
 
-        const candidates = hasExtension(target)
-            ? [target]
-            : [`${target}.js`, `${target}.ts`];
+        const candidates = hasExtension(base)
+            ? [base]
+            : [`${base}.js`, `${base}.ts`];
 
         for (const candidate of candidates) {
-            if (ns.fileExists(candidate, HOME)) {
-                return { ok: true, script: candidate };
+            const absPath = dir === '/' ? `/${candidate}` : `${dir}/${candidate}`;
+            const scriptPath = absPath.slice(1);
+            if (ns.fileExists(scriptPath, HOME)) {
+                return { ok: true, absPath, script: scriptPath };
             }
         }
 
-        const hint = candidates.map((c) => `- ${c}`).join('\n');
+        const hint = candidates
+            .map((candidate) => {
+                const absPath = dir === '/' ? `/${candidate}` : `${dir}/${candidate}`;
+                return `- ${absPath}`;
+            })
+            .join('\n');
+
         const message = alias
             ? `alias "${trimmed}" points to missing script:\n${hint}`
             : `unable to resolve script:\n${hint}`;
@@ -62,5 +81,5 @@ export function createScriptResolver(
 }
 
 function hasExtension(script: string): boolean {
-    return script.includes('.') && !script.endsWith('.');
+    return script.includes('.') && !script.endsWith('.') && script.indexOf('.') !== 0;
 }
