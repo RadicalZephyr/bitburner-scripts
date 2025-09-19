@@ -1097,7 +1097,7 @@ function makeCss(theme: ReturnType<typeof useTheme>): string {
         overflow-y: auto;
         white-space: pre-wrap;
         word-break: break-word;
-        font-size: 12px;
+        font-size: 16px;
         padding: 4px;
         border: 1px solid ${theme.primarydark};
         margin-bottom: 8px;
@@ -1138,7 +1138,7 @@ function makeCss(theme: ReturnType<typeof useTheme>): string {
         color: ${theme.primary};
         padding: 6px;
         font-family: monospace;
-        font-size: 12px;
+        font-size: 16px;
         outline: none;
     }
     .bb-terminal__input-field:focus {
