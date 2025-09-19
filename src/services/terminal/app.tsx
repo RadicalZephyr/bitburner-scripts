@@ -41,6 +41,7 @@ const BUILTIN_NAMES = [
 ] as const;
 const PATH_COMMANDS = new Set(['ls', 'cd', 'mem']);
 const FILE_ONLY_COMMANDS = new Set(['mem']);
+const DIR_ONLY_COMMANDS = new Set(['cd']);
 
 type OutputKind = 'echo' | 'info' | 'warn' | 'error';
 
@@ -472,11 +473,11 @@ export function TerminalApp({
                     prefix = pathResult.prefix;
                     base = pathResult.base;
                     matches = pathResult.matches
-                        .filter(
-                            (entry) =>
-                                !FILE_ONLY_COMMANDS.has(command)
-                                || entry.kind === 'file',
-                        )
+                        .filter((entry) => {
+                            if (DIR_ONLY_COMMANDS.has(command))
+                                return entry.kind === 'dir';
+                            return true;
+                        })
                         .map((entry) => entry.name);
                     listing = matches;
                 }
