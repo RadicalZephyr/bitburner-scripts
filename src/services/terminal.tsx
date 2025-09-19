@@ -2,6 +2,8 @@ import type { NS, AutocompleteData } from '@ns';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { LaunchClient } from 'services/client/launch';
+import { TerminalApp } from 'services/terminal/app';
+import { createScriptResolver } from 'services/terminal/resolver';
 
 import { exitOnKill } from 'util/exitOnKill';
 
@@ -42,17 +44,15 @@ async function startTerminal(ns: NS) {
     ns.ui.openTail();
 
     const launcher = new LaunchClient(ns);
+    const resolveScript = createScriptResolver(ns);
 
-    ns.printRaw(<Terminal ns={ns} launcher={launcher} />);
+    ns.printRaw(
+        <TerminalApp
+            ns={ns}
+            launcher={launcher}
+            resolveScript={resolveScript}
+        />,
+    );
 
     await exitOnKill(ns);
-}
-
-interface TerminalProps {
-    ns: NS;
-    launcher: LaunchClient;
-}
-
-function Terminal({ ns, launcher }: TerminalProps) {
-    return <div></div>;
 }
