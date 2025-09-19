@@ -12,6 +12,7 @@ import {
     normalizePath,
     splitDirBase,
 } from 'services/terminal/vfs';
+import { computePathMatches } from 'services/terminal/completion';
 
 describe('tokenize', () => {
     it('splits on spaces', () => {
@@ -142,6 +143,33 @@ describe('virtual directory helpers', () => {
             'utils/',
             'hack.js',
         ]);
+    });
+});
+
+describe('computePathMatches', () => {
+    const files = [
+        '/scripts/hack.js',
+        '/scripts/utils/helper.ts',
+        '/scripts/utils/extra/deep.js',
+    ];
+
+    it('enumerates children inside a completed directory', () => {
+        const result = computePathMatches('scripts/', '/', files);
+        expect(result).toEqual({
+            prefix: 'scripts/',
+            base: '',
+            matches: [
+                { name: 'utils/', absolutePath: '/scripts/utils', kind: 'dir' },
+                { name: 'hack.js', absolutePath: '/scripts/hack.js', kind: 'file' },
+            ],
+        });
+    });
+
+    it('filters matches relative to nested directories', () => {
+        const result = computePathMatches('scripts/utils/h', '/', files);
+        expect(result.prefix).toBe('scripts/utils/');
+        expect(result.base).toBe('h');
+        expect(result.matches.map((entry) => entry.name)).toEqual(['helper.ts']);
     });
 });
 

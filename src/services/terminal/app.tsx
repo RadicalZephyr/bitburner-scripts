@@ -13,12 +13,11 @@ import {
     type TokenizeErr,
 } from 'services/terminal/tokenizer';
 import type { ResolveErr, ScriptResolver } from 'services/terminal/resolver';
+import { computePathMatches } from 'services/terminal/completion';
 import {
     directoryExists,
     listImmediateChildren,
     normalizePath,
-    splitDirBase,
-    type PathChild,
 } from 'services/terminal/vfs';
 
 import { React } from 'lib/react';
@@ -834,25 +833,6 @@ function InputLine({
             />
         </div>
     );
-}
-
-function computePathMatches(
-    tokenValue: string,
-    cwd: string,
-    paths: string[],
-): { prefix: string; base: string; matches: PathChild[] } {
-    const normalizedInput = tokenValue === '' ? '.' : tokenValue;
-    const absPath = normalizePath(normalizedInput, cwd);
-    const { dir, base } = splitDirBase(absPath);
-    const listing = listImmediateChildren(paths, dir);
-    const slashIndex = tokenValue.lastIndexOf('/');
-    const prefix = slashIndex >= 0 ? tokenValue.slice(0, slashIndex + 1) : '';
-    const localBase =
-        slashIndex >= 0 ? tokenValue.slice(slashIndex + 1) : tokenValue;
-    const matches = listing.entries.filter((entry) =>
-        entry.name.startsWith(base),
-    );
-    return { prefix, base: localBase, matches };
 }
 
 function formatCandidateList(candidates: string[]): string {
