@@ -336,6 +336,10 @@ function InputLine({
     const handleKeyDown = React.useCallback(
         (event: React.KeyboardEvent<HTMLInputElement>) => {
             const el = event.currentTarget;
+            if (el === inputRef.current) {
+                event.stopPropagation();
+            }
+
             if (event.key === 'Enter') {
                 event.preventDefault();
                 handleSubmit();
