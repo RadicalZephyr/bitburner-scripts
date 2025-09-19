@@ -178,7 +178,14 @@ class Skill {
             CONFIG.skillBuyAmount,
             skillMaxUpgradeCount(this.name, this.level),
         );
-        this.cost = ns.bladeburner.getSkillUpgradeCost(name, this.levelsToBuy);
+        if (this.levelsToBuy > 0) {
+            this.cost = ns.bladeburner.getSkillUpgradeCost(
+                name,
+                this.levelsToBuy,
+            );
+        } else {
+            this.cost = Infinity;
+        }
     }
 }
 
