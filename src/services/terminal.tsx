@@ -40,7 +40,7 @@ OPTIONS
 async function startTerminal(ns: NS) {
     ns.disableLog('sleep');
     ns.disableLog('asleep');
-
+    ns.clearLog();
     ns.ui.openTail();
 
     const launcher = new LaunchClient(ns);
