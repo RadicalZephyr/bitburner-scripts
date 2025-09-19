@@ -15,9 +15,7 @@ export function normalizePath(input: string, cwd: string): string {
         path = `/${path.slice(1)}`;
     }
 
-    const absolute = path.startsWith('/')
-        ? path
-        : joinPaths(cwd, path);
+    const absolute = path.startsWith('/') ? path : joinPaths(cwd, path);
 
     const segments = absolute.split('/');
     const stack: string[] = [];
@@ -53,9 +51,10 @@ export function splitDirBase(absPath: string): { dir: string; base: string } {
         return { dir: '/', base: '' };
     }
 
-    const normalized = absPath.endsWith('/') && absPath !== '/'
-        ? absPath.slice(0, -1)
-        : absPath;
+    const normalized =
+        absPath.endsWith('/') && absPath !== '/'
+            ? absPath.slice(0, -1)
+            : absPath;
 
     const index = normalized.lastIndexOf('/');
     if (index <= 0) {
@@ -135,9 +134,10 @@ export function listImmediateChildren(
         if (!first) {
             continue;
         }
-        const absChild = normalizedTarget === '/'
-            ? `/${first}`
-            : `${normalizedTarget}/${first}`;
+        const absChild =
+            normalizedTarget === '/'
+                ? `/${first}`
+                : `${normalizedTarget}/${first}`;
         if (rest.length === 0) {
             fileEntries.set(first, {
                 name: first,
