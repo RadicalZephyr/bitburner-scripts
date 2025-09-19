@@ -40,7 +40,7 @@ const BUILTIN_NAMES = [
     'rehash',
 ] as const;
 const PATH_COMMANDS = new Set(['ls', 'cd', 'mem']);
-const FILE_ONLY_COMMANDS = new Set(['mem']);
+// const FILE_ONLY_COMMANDS = new Set(['mem']);
 const DIR_ONLY_COMMANDS = new Set(['cd']);
 
 type OutputKind = 'echo' | 'info' | 'warn' | 'error';
