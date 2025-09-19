@@ -5,6 +5,7 @@ import { main as serviceBootstrap } from 'services/bootstrap';
 import { main as batchBootstrap } from 'batch/bootstrap';
 import { main as automationBootstrap } from 'automation/bootstrap';
 import { main as goBootstrap } from 'go/bootstrap';
+import { main as bladeburnerBootstrap } from 'bladeburner/bootstrap';
 
 import { getSourceFileLevel } from 'services/client/reset-info';
 
@@ -51,6 +52,11 @@ OPTIONS
     const sf4 = getSourceFileLevel(4);
     if (sf4 > 0) {
         await automationBootstrap(ns);
+    }
+
+    const sf7 = getSourceFileLevel(7);
+    if (sf7 > 0) {
+        await bladeburnerBootstrap(ns);
     }
 }
 

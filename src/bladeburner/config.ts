@@ -13,6 +13,7 @@ const entries = [
     ['minSurveySuccess', 0.75],
     ['skillBuyAmount', 1],
     ['skillBuyRateMs', 1000],
+    ['skillPreset', ''],
 ] as const;
 
 export const CONFIG: ConfigInstance<typeof entries> = new Config(
