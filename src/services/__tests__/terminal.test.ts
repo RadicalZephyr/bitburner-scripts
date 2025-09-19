@@ -6,6 +6,12 @@ import {
     type ResolveResult,
 } from 'services/terminal/resolver';
 import { tokenize } from 'services/terminal/tokenizer';
+import {
+    directoryExists,
+    listImmediateChildren,
+    normalizePath,
+    splitDirBase,
+} from 'services/terminal/vfs';
 
 describe('tokenize', () => {
     it('splits on spaces', () => {
@@ -54,13 +60,21 @@ describe('createScriptResolver', () => {
     it('prefers js extension when missing', () => {
         const ns = mockNs(new Set(['foo.js']));
         const resolve = createScriptResolver(ns as NS);
-        expect(resolve('foo')).toEqual({ ok: true, script: 'foo.js' });
+        expect(resolve('/', 'foo')).toEqual({
+            ok: true,
+            absPath: '/foo.js',
+            script: 'foo.js',
+        });
     });
 
     it('uses provided extension unchanged', () => {
         const ns = mockNs(new Set(['bar.ts']));
         const resolve = createScriptResolver(ns as NS);
-        expect(resolve('bar.ts')).toEqual({ ok: true, script: 'bar.ts' });
+        expect(resolve('/', 'bar.ts')).toEqual({
+            ok: true,
+            absPath: '/bar.ts',
+            script: 'bar.ts',
+        });
     });
 
     it('handles aliases', () => {
@@ -68,15 +82,66 @@ describe('createScriptResolver', () => {
         const resolve = createScriptResolver(ns as NS, {
             aliases: { b: 'baz' },
         });
-        expect(resolve('b')).toEqual({ ok: true, script: 'baz.js' });
+        expect(resolve('/', 'b')).toEqual({
+            ok: true,
+            absPath: '/baz.js',
+            script: 'baz.js',
+        });
     });
 
     it('returns friendly errors', () => {
         const ns = mockNs(new Set());
         const resolve = createScriptResolver(ns as NS);
-        const result = resolve('missing');
+        const result = resolve('/', 'missing');
         expectResolveErr(result);
         expect(result.message).toContain('missing.js');
+    });
+});
+
+describe('normalizePath', () => {
+    it('normalizes complex paths', () => {
+        expect(normalizePath('/a//b/./c/..', '/')).toBe('/a/b');
+    });
+
+    it('clamps to root on parent traversal', () => {
+        expect(normalizePath('../../x', '/')).toBe('/x');
+    });
+
+    it('resolves relative segments', () => {
+        expect(normalizePath('scripts/util', '/home')).toBe(
+            '/home/scripts/util',
+        );
+    });
+});
+
+describe('splitDirBase', () => {
+    it('handles root path', () => {
+        expect(splitDirBase('/')).toEqual({ dir: '/', base: '' });
+    });
+
+    it('splits directory and base', () => {
+        expect(splitDirBase('/scripts/hack.js')).toEqual({
+            dir: '/scripts',
+            base: 'hack.js',
+        });
+    });
+});
+
+describe('virtual directory helpers', () => {
+    const files = ['/foo.txt', '/scripts/hack.js', '/scripts/utils/helper.ts'];
+
+    it('detects directory existence', () => {
+        expect(directoryExists(files, '/scripts')).toBe(true);
+        expect(directoryExists(files, '/missing')).toBe(false);
+    });
+
+    it('lists immediate children', () => {
+        const result = listImmediateChildren(files, '/scripts');
+        expect(result.exists).toBe(true);
+        expect(result.entries.map((entry) => entry.name)).toEqual([
+            'utils/',
+            'hack.js',
+        ]);
     });
 });
 

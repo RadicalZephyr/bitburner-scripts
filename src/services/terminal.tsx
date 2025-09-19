@@ -2,6 +2,8 @@ import type { NS, AutocompleteData } from '@ns';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { LaunchClient } from 'services/client/launch';
+import { MemoryClient } from 'services/client/memory';
+
 import { TerminalApp } from 'services/terminal/app';
 import { createScriptResolver } from 'services/terminal/resolver';
 
@@ -45,12 +47,14 @@ async function startTerminal(ns: NS) {
 
     const launcher = new LaunchClient(ns);
     const resolveScript = createScriptResolver(ns);
+    const memoryClient = new MemoryClient(ns);
 
     ns.printRaw(
         <TerminalApp
             ns={ns}
             launcher={launcher}
             resolveScript={resolveScript}
+            memoryClient={memoryClient}
         />,
     );
 
