@@ -8,6 +8,7 @@ import { TerminalApp } from 'services/terminal/app';
 import { createScriptResolver } from 'services/terminal/resolver';
 
 import { exitOnKill } from 'util/exitOnKill';
+import { HUD_WIDTH, STATUS_WINDOW_WIDTH } from 'util/ui';
 
 import { React } from 'lib/react';
 
@@ -43,6 +44,14 @@ async function startTerminal(ns: NS) {
     ns.disableLog('ALL');
     ns.clearLog();
     ns.ui.openTail();
+
+    ns.ui.setTailTitle('Terminal');
+    const height = 500;
+    ns.ui.resizeTail(850, height);
+
+    const [ww, wh] = ns.ui.windowSize();
+    const xPos = Math.max(0, ww - (HUD_WIDTH + STATUS_WINDOW_WIDTH));
+    ns.ui.moveTail(xPos, wh - (height + 60));
 
     const launcher = new LaunchClient(ns);
     const resolveScript = createScriptResolver(ns);
