@@ -40,8 +40,7 @@ OPTIONS
 }
 
 async function startTerminal(ns: NS) {
-    ns.disableLog('sleep');
-    ns.disableLog('asleep');
+    ns.disableLog('ALL');
     ns.clearLog();
     ns.ui.openTail();
 
