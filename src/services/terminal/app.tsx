@@ -28,7 +28,7 @@ const SCROLL_THRESHOLD = 8;
 const STYLE_ID = 'CustomTerminalStyles';
 const DOUBLE_TAB_MS = 500;
 const SCRIPT_INDEX_TTL = 5000;
-const SCRIPT_EXTENSIONS = ['.js', '.ns'];
+const SCRIPT_EXTENSIONS = ['.js', '.ts', '.jsx', '.tsx'];
 
 const BUILTIN_NAMES = [
     'clear',
