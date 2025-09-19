@@ -34,13 +34,13 @@ export function computePathMatches(
     const prefix = treatAsDir
         ? raw
         : slashIndex >= 0
-            ? raw.slice(0, slashIndex + 1)
-            : '';
+          ? raw.slice(0, slashIndex + 1)
+          : '';
     const localBase = treatAsDir
         ? ''
         : slashIndex >= 0
-            ? raw.slice(slashIndex + 1)
-            : raw;
+          ? raw.slice(slashIndex + 1)
+          : raw;
     const listing = listImmediateChildren(paths, searchDir);
     const matches = listing.entries.filter((entry) =>
         entry.name.startsWith(localBase),

@@ -160,7 +160,11 @@ describe('computePathMatches', () => {
             base: '',
             matches: [
                 { name: 'utils/', absolutePath: '/scripts/utils', kind: 'dir' },
-                { name: 'hack.js', absolutePath: '/scripts/hack.js', kind: 'file' },
+                {
+                    name: 'hack.js',
+                    absolutePath: '/scripts/hack.js',
+                    kind: 'file',
+                },
             ],
         });
     });
@@ -169,7 +173,9 @@ describe('computePathMatches', () => {
         const result = computePathMatches('scripts/utils/h', '/', files);
         expect(result.prefix).toBe('scripts/utils/');
         expect(result.base).toBe('h');
-        expect(result.matches.map((entry) => entry.name)).toEqual(['helper.ts']);
+        expect(result.matches.map((entry) => entry.name)).toEqual([
+            'helper.ts',
+        ]);
     });
 });
 
