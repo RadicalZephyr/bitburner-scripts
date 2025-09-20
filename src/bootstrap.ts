@@ -82,7 +82,7 @@ export async function dynamicBootstrap(_ns: NS) {
             Math.max(currentDynamicRam, scriptRam),
         );
 
-        const mod = (await ns.dynamicImport(script)) as ImportedScript;
+        const mod = await ns.dynamicImport(script);
         await mod.main(ns);
 
         await ns.sleep(10);
