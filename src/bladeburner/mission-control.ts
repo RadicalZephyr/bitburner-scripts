@@ -281,6 +281,9 @@ function candidate(ns: NS, action: Action): ActionCandidate {
 async function doAction(ns: NS, action: Action): Promise<boolean> {
     const actionTime = getActionTime(ns, action);
 
+    if (ns.bladeburner.getActionCountRemaining(action.type, action.name) <= 0)
+        return false;
+
     const currentAction = ns.bladeburner.getCurrentAction() as Action;
     if (!isStructuralEqual(currentAction, action)) {
         if (!startAction(ns, action)) return false;
