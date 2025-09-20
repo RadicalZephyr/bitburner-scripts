@@ -274,7 +274,11 @@ function candidate(ns: NS, action: Action): ActionCandidate {
 
 async function doAction(ns: NS, action: Action): Promise<boolean> {
     const actionTime = ns.bladeburner.getActionTime(action.type, action.name);
-    if (!startAction(ns, action)) return false;
+
+    const currentAction = ns.bladeburner.getCurrentAction() as Action;
+    if (currentAction !== action) {
+        if (!startAction(ns, action)) return false;
+    }
 
     await ns.asleep(actionTime + CONFIG.actionBufferMs);
     return true;
