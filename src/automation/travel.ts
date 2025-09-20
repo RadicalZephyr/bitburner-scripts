@@ -49,7 +49,7 @@ function cityForLocation(
 }
 
 function cityToLocation(ns: NS): Map<CityName, Set<LocationName>> {
-    const cityToLocation = new Map();
+    const cityToLocation = new Map<CityName, Set<LocationName>>();
 
     cityToLocation.set(ns.enums.CityName.Aevum, aevumLocations(ns));
     cityToLocation.set(ns.enums.CityName.Chongqing, chongqingLocations(ns));
