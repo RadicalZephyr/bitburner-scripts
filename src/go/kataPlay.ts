@@ -15,7 +15,7 @@ import {
 
 import { CONFIG } from 'go/config';
 
-import { HUD_HEIGHT, KARMA_HEIGHT } from 'util/ui';
+import { HUD_HEIGHT, KARMA_HEIGHT } from 'ui/constants';
 
 const FLAGS = [['help', false]] as const satisfies FlagsSchema;
 

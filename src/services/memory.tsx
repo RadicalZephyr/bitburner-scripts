@@ -20,12 +20,12 @@ import { DiscoveryClient } from 'services/client/discover';
 import { fromFixed, MemoryAllocator, Worker } from 'services/allocator';
 
 import { UI_CONFIG } from 'ui/config';
+import { HUD_HEIGHT, HUD_WIDTH, STATUS_WINDOW_WIDTH } from 'ui/constants';
 import { useNsUpdate, useTheme } from 'ui/hooks';
 
 import { installLogger } from 'util/logger';
 import { BaseServer, Handlers } from 'util/protocol';
 import { RingBuffer } from 'util/ring-buffer';
-import { HUD_HEIGHT, HUD_WIDTH, STATUS_WINDOW_WIDTH } from 'util/ui';
 
 import { LogRoot } from 'ui/LogRoot';
 

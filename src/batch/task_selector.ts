@@ -33,13 +33,14 @@ import { LaunchClient } from 'services/client/launch';
 import { MemoryClient, type FreeRam } from 'services/client/memory';
 import { PortClient } from 'services/client/port';
 
+import { UI_CONFIG } from 'ui/config';
+import { HUD_HEIGHT, KARMA_HEIGHT } from 'ui/constants';
+
 import { growthAnalyze } from 'util/growthAnalyze';
 import { BaseServer, type Handlers } from 'util/protocol';
 import { sleep } from 'util/time';
-import { HUD_HEIGHT, KARMA_HEIGHT } from 'util/ui';
 
 import { CONFIG } from 'batch/config';
-import { UI_CONFIG } from 'ui/config';
 
 const FLAGS = [['help', false]] as const satisfies FlagsSchema;
 

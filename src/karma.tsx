@@ -1,13 +1,12 @@
 import type { NS } from '@ns';
 import { parseFlags } from 'util/flags';
 
-import { useNsUpdate } from 'ui/hooks';
-
 import {
     STATUS_WINDOW_WIDTH,
     STATUS_WINDOW_HEIGHT,
     KARMA_HEIGHT,
-} from 'util/ui';
+} from 'ui/constants';
+import { useNsUpdate } from 'ui/hooks';
 
 import { React } from 'lib/react';
 

@@ -11,13 +11,13 @@ import {
 import { MemoryClient } from 'services/client/memory';
 
 import { UI_CONFIG } from 'ui/config';
+import { HUD_HEIGHT, HUD_WIDTH, STATUS_WINDOW_WIDTH } from 'ui/constants';
 import { usePoll, useNsUpdate, useTheme } from 'ui/hooks';
 import { LogRoot } from 'ui/LogRoot';
 
 import { installLogger } from 'util/logger';
 import { BaseServer, type Handlers } from 'util/protocol';
 import { RingBuffer } from 'util/ring-buffer';
-import { HUD_HEIGHT, HUD_WIDTH, STATUS_WINDOW_WIDTH } from 'util/ui';
 
 import { React } from 'lib/react';
 

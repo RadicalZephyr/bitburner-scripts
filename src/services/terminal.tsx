@@ -7,8 +7,9 @@ import { MemoryClient } from 'services/client/memory';
 import { TerminalApp } from 'services/terminal/app';
 import { createScriptResolver } from 'services/terminal/resolver';
 
+import { HUD_WIDTH, STATUS_WINDOW_WIDTH } from 'ui/constants';
+
 import { exitOnKill } from 'util/exitOnKill';
-import { HUD_WIDTH, STATUS_WINDOW_WIDTH } from 'util/ui';
 
 import { React } from 'lib/react';
 

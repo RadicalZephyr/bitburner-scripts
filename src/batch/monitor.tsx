@@ -22,9 +22,10 @@ import { TaskSelectorClient } from 'batch/client/task_selector';
 
 import { MoneyTracker, primedMoneyTracker } from 'util/money-tracker';
 
+import { HUD_HEIGHT, HUD_WIDTH, STATUS_WINDOW_WIDTH } from 'ui/constants';
+
 import { extend } from 'util/extend';
 import { BaseServer, type Handlers } from 'util/protocol';
-import { HUD_HEIGHT, HUD_WIDTH, STATUS_WINDOW_WIDTH } from 'util/ui';
 
 import { UI_CONFIG } from 'ui/config';
 import { useNsUpdate, usePoll, useTheme } from 'ui/hooks';
