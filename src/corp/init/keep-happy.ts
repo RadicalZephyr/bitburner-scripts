@@ -15,7 +15,7 @@ export async function main(ns: NS) {
 
         for (const city of agriDiv.cities) {
             const office = corpNS.getOffice(div, city);
-            manageOfficeHappiness(ns, div, office);
+            void manageOfficeHappiness(ns, div, office);
         }
     }
 
