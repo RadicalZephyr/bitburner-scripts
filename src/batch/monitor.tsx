@@ -142,7 +142,7 @@ CONFIGURATION
     const lifecycleByHost: Map<string, Lifecycle> = new Map(snapshot);
 
     const server = new Server(ns, workers, lifecycleByHost);
-    server.readLoop();
+    void server.readLoop();
 
     const moneyTracker: MoneyTracker = await primedMoneyTracker(ns, 3, 1000);
 
@@ -243,49 +243,42 @@ class Server extends BaseServer<MonitorProtocolDef> {
         ) => {
             const hosts = Array.isArray(payload) ? payload : [payload];
             for (const host of hosts) fn(host);
+            return Promise.resolve();
         };
 
         const handlers: Handlers<MonitorProtocolDef> = {
-            [Lifecycle.Worker]: async (payload) => {
+            [Lifecycle.Worker]: (payload) =>
                 handleHosts(payload, (host) => {
                     if (!workers.includes(host)) workers.push(host);
-                });
-            },
-            [Lifecycle.PendingTilling]: async (payload) => {
+                }),
+            [Lifecycle.PendingTilling]: (payload) =>
                 handleHosts(payload, (host) =>
                     lifecycleByHost.set(host, Lifecycle.PendingTilling),
-                );
-            },
-            [Lifecycle.Tilling]: async (payload) => {
+                ),
+            [Lifecycle.Tilling]: (payload) =>
                 handleHosts(payload, (host) =>
                     lifecycleByHost.set(host, Lifecycle.Tilling),
-                );
-            },
-            [Lifecycle.PendingSowing]: async (payload) => {
+                ),
+            [Lifecycle.PendingSowing]: (payload) =>
                 handleHosts(payload, (host) =>
                     lifecycleByHost.set(host, Lifecycle.PendingSowing),
-                );
-            },
-            [Lifecycle.Sowing]: async (payload) => {
+                ),
+            [Lifecycle.Sowing]: (payload) =>
                 handleHosts(payload, (host) =>
                     lifecycleByHost.set(host, Lifecycle.Sowing),
-                );
-            },
-            [Lifecycle.PendingHarvesting]: async (payload) => {
+                ),
+            [Lifecycle.PendingHarvesting]: (payload) =>
                 handleHosts(payload, (host) =>
                     lifecycleByHost.set(host, Lifecycle.PendingHarvesting),
-                );
-            },
-            [Lifecycle.Harvesting]: async (payload) => {
+                ),
+            [Lifecycle.Harvesting]: (payload) =>
                 handleHosts(payload, (host) =>
                     lifecycleByHost.set(host, Lifecycle.Harvesting),
-                );
-            },
-            [Lifecycle.Rebalancing]: async (payload) => {
+                ),
+            [Lifecycle.Rebalancing]: (payload) =>
                 handleHosts(payload, (host) =>
                     lifecycleByHost.set(host, Lifecycle.Rebalancing),
-                );
-            },
+                ),
         };
 
         super(ns, MonitorProtocol, requestPort, responsePort, handlers);
@@ -484,11 +477,13 @@ function formatThreads(ns: NS, threads: number): string {
     return ns.formatNumber(threads, 2, 1000, true);
 }
 
+type TableSortingFn = (table: string, column: string) => void;
+
 interface IMonitorSettings {
     ns: NS;
     getHackMoneyPerSec: () => number;
     getTableSortings: (ns: NS) => Record<string, SortBy>;
-    setTableSorting: (table: string, column: string) => void;
+    setTableSorting: TableSortingFn;
     queuePidsForTail: (pids: number[]) => void;
 }
 
@@ -510,7 +505,10 @@ function Monitor({
                 queuePidsForTail={queuePidsForTail}
                 title={'Harvesting'}
                 phase={tableSortings.harvesting}
-                setTableSorting={setTableSorting.bind(null, 'harvesting')}
+                setTableSorting={bindTableSorting(
+                    setTableSorting,
+                    'harvesting',
+                )}
                 theme={theme}
                 moneyPerSec={hackMoneyPerSec}
             ></ServerBlock>
@@ -519,8 +517,8 @@ function Monitor({
                 queuePidsForTail={queuePidsForTail}
                 title={'Pending Harvesting'}
                 phase={tableSortings.pendingHarvesting}
-                setTableSorting={setTableSorting.bind(
-                    null,
+                setTableSorting={bindTableSorting(
+                    setTableSorting,
                     'pendingHarvesting',
                 )}
                 theme={theme}
@@ -530,7 +528,7 @@ function Monitor({
                 queuePidsForTail={queuePidsForTail}
                 title={'Sowing'}
                 phase={tableSortings.sowing}
-                setTableSorting={setTableSorting.bind(null, 'sowing')}
+                setTableSorting={bindTableSorting(setTableSorting, 'sowing')}
                 theme={theme}
             ></ServerBlock>
             <ServerBlock
@@ -538,7 +536,10 @@ function Monitor({
                 queuePidsForTail={queuePidsForTail}
                 title={'Pending Sowing'}
                 phase={tableSortings.pendingSowing}
-                setTableSorting={setTableSorting.bind(null, 'pendingSowing')}
+                setTableSorting={bindTableSorting(
+                    setTableSorting,
+                    'pendingSowing',
+                )}
                 theme={theme}
             ></ServerBlock>
             <ServerBlock
@@ -546,7 +547,7 @@ function Monitor({
                 queuePidsForTail={queuePidsForTail}
                 title={'Tilling'}
                 phase={tableSortings.tilling}
-                setTableSorting={setTableSorting.bind(null, 'tilling')}
+                setTableSorting={bindTableSorting(setTableSorting, 'tilling')}
                 theme={theme}
             ></ServerBlock>
             <ServerBlock
@@ -554,11 +555,21 @@ function Monitor({
                 queuePidsForTail={queuePidsForTail}
                 title={'Pending Tilling'}
                 phase={tableSortings.pendingTilling}
-                setTableSorting={setTableSorting.bind(null, 'pendingTilling')}
+                setTableSorting={bindTableSorting(
+                    setTableSorting,
+                    'pendingTilling',
+                )}
                 theme={theme}
             ></ServerBlock>
         </>
     );
+}
+
+function bindTableSorting(
+    setTableSorting: TableSortingFn,
+    tableName: string,
+): (column: string) => void {
+    return setTableSorting.bind(null, tableName) as (column: string) => void;
 }
 
 interface IBlockSettings {
