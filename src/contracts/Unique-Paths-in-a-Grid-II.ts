@@ -22,6 +22,7 @@ representing the grid.
 
 import type { NS } from '@ns';
 import { parseFlags } from 'util/flags';
+import { isArrayOf, isNumber, Validator } from 'util/validate';
 
 export async function main(ns: NS) {
     await parseFlags(ns, []);
@@ -43,19 +44,29 @@ export async function main(ns: NS) {
         );
         return;
     }
-    const contractData = JSON.parse(contractDataJSON);
+
+    const contractData = JSON.parse(contractDataJSON) as unknown;
+
+    if (!isContractData(contractData)) {
+        ns.writePort(contractPortNum, JSON.stringify(null));
+        return;
+    }
+
     ns.tprintf('contract data: %s', JSON.stringify(contractData));
     const answer = solve(contractData);
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
+
+const isContractData: Validator<number[][]> = isArrayOf(isArrayOf(isNumber));
 
 export function solve(data: number[][]): number {
     const rows = data.length;
     const cols = data[0].length;
 
     // dp[r][c] holds number of ways to reach cell r,c avoiding obstacles.
-    const dp: number[][] = Array.from({ length: rows }, () =>
-        Array(cols).fill(0),
+    const dp: number[][] = Array.from(
+        { length: rows },
+        () => Array(cols).fill(0) as number[],
     );
 
     // Start position is blocked
