@@ -69,6 +69,8 @@ CONFIGURATION
     await trainCombat(ns, gym, targetLevel);
 }
 
+const COMBAT_SKILLS = ['strength', 'defense', 'dexterity', 'agility'] as const;
+
 /**
  * Train all combat stats to the target level.
  *
@@ -84,20 +86,11 @@ export async function trainCombat(
 
     travelToCityForLocation(ns, gymLocation as LocationName);
 
-    const combatSkills = new Set([
-        'strength',
-        'defense',
-        'dexterity',
-        'agility',
-    ]);
     while (true) {
         const playerSkills = ns.getPlayer().skills;
-        const skillsToTrain = Object.keys(playerSkills)
-            .filter((s) => combatSkills.has(s))
-            .map((s) => {
-                return { name: s, level: playerSkills[s] };
-            })
-            .filter((s) => s.level < targetLevel);
+        const skillsToTrain = COMBAT_SKILLS.map((s) => {
+            return { name: s, level: playerSkills[s] };
+        }).filter((s) => s.level < targetLevel);
 
         if (skillsToTrain.length === 0) return;
 
