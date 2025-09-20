@@ -17,6 +17,7 @@ import {
     isUndefined,
     isDefined,
     isAny,
+    isTuple,
 } from '../validate';
 
 describe('Validator functions', () => {
@@ -113,6 +114,26 @@ describe('Validator functions', () => {
 
         test.each([null, 0, 0n, '', []])('%s is not an object', (value) => {
             expect(isObjectUnknown(value)).toBeFalsy();
+        });
+    });
+
+    describe('isTuple', () => {
+        const isNumString = isTuple(isNumber, isString);
+
+        test('falsy values of types are valid', () => {
+            expect(isNumString([0, ''])).toBeTruthy();
+        });
+
+        test('other values of types are valid', () => {
+            expect(isNumString([700, 'helloworld'])).toBeTruthy();
+        });
+
+        test('reversed values of types are invalid', () => {
+            expect(isNumString(['helloworld', 700])).toBeFalsy();
+        });
+
+        test('extra values of any type are invalid', () => {
+            expect(isNumString([700, 'helloworld', null])).toBeFalsy();
         });
     });
 

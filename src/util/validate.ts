@@ -119,6 +119,30 @@ export const isError: Validator<Error> = (v): v is Error => {
     );
 };
 
+type Infer<T> = T extends Validator<infer U> ? U : never;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type TupleFromValidators<Vs extends readonly Validator<any>[]> = {
+    -readonly [K in keyof Vs]: Infer<Vs[K]>;
+};
+
+/**
+ * Type predicate for tuples checking length and type sequence
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function isTuple<Vs extends readonly Validator<any>[]>(
+    ...validators: Vs
+): Validator<TupleFromValidators<Vs>> {
+    return (v: unknown): v is TupleFromValidators<Vs> => {
+        if (!(isArrayUnknown(v) && v.length === validators.length))
+            return false;
+        for (let i = 0; i < v.length; i++) {
+            if (!validators[i](v[i])) return false;
+        }
+        return true;
+    };
+}
+
 /**
  * Type predicate for records of string to V
  */
