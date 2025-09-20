@@ -19,4 +19,10 @@ describe('Clamp', () => {
         expect(clamp(0, 3, 1)).toBe(1);
         expect(clamp(4, 3, 1)).toBe(3);
     });
+
+    test('different length bounds are sorted correctly', () => {
+        expect(clamp(123, 200, 1500)).toBe(200);
+        expect(clamp(300, 200, 1500)).toBe(300);
+        expect(clamp(1700, 200, 1500)).toBe(1500);
+    });
 });

@@ -11,6 +11,6 @@ export function clamp(
     lowerBound: number,
     upperBound: number,
 ): number {
-    const [lower, upper] = [lowerBound, upperBound].sort();
+    const [lower, upper] = [lowerBound, upperBound].sort((a, b) => a - b);
     return Math.min(upper, Math.max(lower, x));
 }
