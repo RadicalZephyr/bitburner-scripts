@@ -214,7 +214,10 @@ async function tryBlackOp(ns: NS): Promise<boolean> {
 
 async function bestAction(ns: NS) {
     const staminaStatus = getStaminaStatus(ns);
-    if (staminaStatus === Stamina.Low) await doAction(ns, fieldAnalysis);
+    if (staminaStatus === Stamina.Low) {
+        await doAction(ns, fieldAnalysis);
+        return;
+    }
 
     const dangerousActionsPred: (c: ActionCandidate) => boolean =
         CONFIG.includeDangerousActions
