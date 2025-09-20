@@ -108,6 +108,8 @@
 - Add configuration to allow turning off dangerous actions entirely [#322][pr-322].
 - Add configuration for buying skills in larger quantities [#326][pr-326].
 - Remove feature to run SRO to reduce city chaos [#326][pr-326].
+- Add bladeburner to the main bootstrap sequence [#334][pr-334].
+- Add more sophisticated contract generating sequence to mission control [#334][pr-334].
 
 ### Stocks
 
@@ -218,6 +220,7 @@
 [pr-323]: https://github.com/RadicalZephyr/bitburner-scripts/pull/323
 [pr-326]: https://github.com/RadicalZephyr/bitburner-scripts/pull/326
 [pr-331]: https://github.com/RadicalZephyr/bitburner-scripts/pull/331
+[pr-334]: https://github.com/RadicalZephyr/bitburner-scripts/pull/334
 
 ## v2.1.0
 
