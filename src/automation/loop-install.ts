@@ -119,14 +119,20 @@ async function buyOneNeuroFlux(ns: NS, bestFaction: string) {
     const neuro = new Aug(ns, nfgName, bestFaction);
     const donation = neededReputationCost(ns, neuro);
 
+    // TODO: Check for donation > 0
     if (!Number.isFinite(donation))
         throw new Error(
             `Cannot donate to buy Neuroflux Governor, you need more faction rep!`,
         );
     while (!canAfford(ns, donation)) await ns.asleep(1000);
-    const donated = ns.singularity.donateToFaction(neuro.faction, donation);
-    if (!donated)
-        throw new Error(`Could not donate to ${neuro.faction} for reputation!`);
+
+    if (donation > 0) {
+        const donated = ns.singularity.donateToFaction(neuro.faction, donation);
+        if (!donated)
+            throw new Error(
+                `Could not donate to ${neuro.faction} for reputation!`,
+            );
+    }
 
     const cost = augCost(ns, nfgName);
     while (!canAfford(ns, cost)) await ns.asleep(1000);
