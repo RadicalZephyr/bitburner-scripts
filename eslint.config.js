@@ -6,5 +6,19 @@ import reactHooks from 'eslint-plugin-react-hooks';
 export default defineConfig(
     eslint.configs.recommended,
     tseslint.configs.recommended,
+    tseslint.configs.recommendedTypeChecked,
     reactHooks.configs['recommended-latest'],
+    {
+        languageOptions: {
+            parserOptions: {
+                projectService: true,
+                tsconfigRootDir: import.meta.dirname,
+            },
+        },
+        rules: {
+            // Disallow unhandled/un-awaited promises
+            "@typescript-eslint/no-floating-promises": "warn"
+        }
+
+    }
 );
