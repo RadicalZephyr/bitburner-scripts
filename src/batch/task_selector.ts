@@ -140,10 +140,10 @@ CONFIGURATION
     }
 
     const server = new Server(ns, manager, monitor);
-    server.readLoop();
+    void server.readLoop();
 
     while (true) {
-        await tick(ns, memory, manager);
+        await tick(memory, manager);
         await sleep(CONFIG.taskSelectorTickMs);
     }
 }
@@ -153,27 +153,31 @@ class Server extends BaseServer<TaskSelectorProtocolDef> {
         const requestPort = ns.getPortHandle(TASK_SELECTOR_PORT);
         const responsePort = ns.getPortHandle(TASK_SELECTOR_RESPONSE_PORT);
         const handlers: Handlers<TaskSelectorProtocolDef> = {
-            [MessageType.NewTarget]: async (targets) => {
+            [MessageType.NewTarget]: (targets) => {
                 ns.print(`INFO: received target ${targets.join(', ')}`);
                 for (const t of targets) {
-                    await manager.pushTarget(t);
+                    manager.pushTarget(t);
                 }
+                return Promise.resolve();
             },
-            [MessageType.FinishedTilling]: async (hostname) => {
+            [MessageType.FinishedTilling]: (hostname) => {
                 ns.print(`SUCCESS: finished tilling ${hostname}`);
-                await monitor.sowing(hostname);
-                await manager.pushTarget(hostname);
+                void monitor.sowing(hostname);
+                manager.pushTarget(hostname);
+                return Promise.resolve();
             },
-            [MessageType.FinishedSowing]: async (hostname) => {
+            [MessageType.FinishedSowing]: (hostname) => {
                 ns.print(`SUCCESS: finished sowing ${hostname}`);
-                await manager.pushTarget(hostname);
+                manager.pushTarget(hostname);
+                return Promise.resolve();
             },
-            [MessageType.Heartbeat]: async (hb) => {
+            [MessageType.Heartbeat]: (hb) => {
                 ns.print(`INFO: heartbeat from ${hb.target}`);
-                await manager.handleHeartbeat(hb);
+                manager.handleHeartbeat(hb);
+                return Promise.resolve();
             },
-            [MessageType.RequestLifecycle]: async () => {
-                return manager.snapshotLifecycle();
+            [MessageType.RequestLifecycle]: () => {
+                return Promise.resolve(manager.snapshotLifecycle());
             },
         };
         super(ns, TaskSelectorProtocol, requestPort, responsePort, handlers);
@@ -221,7 +225,7 @@ class TaskSelector {
      * - If both security and funds are optimal, queue for harvesting and notify
      *   the monitor via `pendingHarvesting()`.
      */
-    async pushTarget(target: string) {
+    pushTarget(target: string) {
         if (!this.allTargets.has(target)) this.allTargets.add(target);
 
         if (
@@ -253,26 +257,26 @@ class TaskSelector {
         if (curSec > minSec + CONFIG.minSecTolerance) {
             this.ns.print(`INFO: queue till ${target}`);
             this.pendingTillTargets.push(target);
-            await this.monitor.pendingTilling(target);
+            void this.monitor.pendingTilling(target);
             return;
         }
 
         if (curMoney < maxMoney * CONFIG.maxMoneyTolerance) {
             this.ns.print(`INFO: queue sow ${target}`);
             this.pendingSowTargets.push(target);
-            await this.monitor.pendingSowing(target);
+            void this.monitor.pendingSowing(target);
             return;
         }
 
         this.ns.print(`INFO: queue harvest ${target}`);
         this.pendingHarvestTargets.push(target);
-        await this.monitor.pendingHarvesting(target);
+        void this.monitor.pendingHarvesting(target);
     }
 
     /**
      * Update internal tracking based on a heartbeat from a worker script.
      */
-    async handleHeartbeat(hb: Heartbeat) {
+    handleHeartbeat(hb: Heartbeat) {
         const idx = this.launchedTasks.findIndex((pl) => pl.pid === hb.pid);
         if (idx !== -1) {
             const [task] = this.launchedTasks.splice(idx, 1);
@@ -382,7 +386,7 @@ class TaskSelector {
         return rounds * this.ns.getWeakenTime(host);
     }
 
-    private async checkLaunchedTasks() {
+    private checkLaunchedTasks() {
         const now = Date.now();
         const stillWaiting: LaunchedTask[] = [];
         for (const launch of this.launchedTasks) {
@@ -394,7 +398,7 @@ class TaskSelector {
                     `WARN: launch of ${launch.type} on ${launch.host} failed`,
                 );
                 this.recordLaunchFailure(launch.host);
-                await this.pushTarget(launch.host);
+                this.pushTarget(launch.host);
             } else {
                 stillWaiting.push(launch);
             }
@@ -403,7 +407,7 @@ class TaskSelector {
     }
 
     async launchPendingTasks(memInfo: FreeRam) {
-        await this.checkLaunchedTasks();
+        this.checkLaunchedTasks();
         if (this.launchedTasks.length > 0) return;
 
         const totalProfit = Array.from(
@@ -716,7 +720,7 @@ class TaskSelector {
     }
 }
 
-async function tick(ns: NS, memory: MemoryClient, manager: TaskSelector) {
+async function tick(memory: MemoryClient, manager: TaskSelector) {
     manager.updateVelocity();
 
     const status = await memory.getFreeRam();
