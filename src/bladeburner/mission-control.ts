@@ -3,6 +3,7 @@ import type {
     AutocompleteData,
     BladeburnerActionName,
     BladeburnerActionType,
+    CityName,
 } from '@ns';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
@@ -32,10 +33,12 @@ OPTIONS
 
 CONFIGURATION
   BLADE_dangerousActionPenalty  Percent of actual gains to count for dangerous actions
+  BLADE_diplomacyPowerForChaos  Percent chaos reduction from diplomacy to consider increasing chaos
   BLADE_highStaminaPercent      Percent of max stamina that is considered "high"
   BLADE_includeDangerousActions Whether to consider performing dangerous actions
   BLADE_lowStaminaPercent       Percent of max stamina that is considered "low"
   BLADE_maxChaos                Maximum allowed city chaos before we try to lower it
+  BLADE_maxChaosGenMs           Maximum time to generate chaos for
   BLADE_maxSuccessChanceSpread  Maxmimum allowed success chance spread before we need to survery population
   BLADE_minBlackOpSuccess       Minimum success chance to attempt next Black Op
   BLADE_minSuccessSpread        Minimum success chance used to estimate population accuracy
@@ -65,11 +68,7 @@ async function directMissions(ns: NS) {
         if (await tryBlackOp(ns)) continue;
 
         // 5) EV selection across cities (rank/sec) ----------------------------
-        const pick = bestAction(ns);
-
-        // If best pick is in another city and sufficiently better,
-        // we'll travel inside enactPick
-        await enactPick(ns, pick);
+        await bestAction(ns);
 
         await ns.asleep(100);
     }
@@ -213,10 +212,9 @@ async function tryBlackOp(ns: NS): Promise<boolean> {
     return false;
 }
 
-function bestAction(ns: NS): Action {
+async function bestAction(ns: NS) {
     const staminaStatus = getStaminaStatus(ns);
-    if (staminaStatus === Stamina.Low)
-        return { type: 'General', name: 'Field Analysis' };
+    if (staminaStatus === Stamina.Low) await doAction(ns, fieldAnalysis);
 
     const dangerousActionsPred: (c: ActionCandidate) => boolean =
         CONFIG.includeDangerousActions
@@ -231,10 +229,18 @@ function bestAction(ns: NS): Action {
         (a, b) => b.expectedRankPerSecond - a.expectedRankPerSecond,
     );
 
-    if (allActionCandidates.length === 0)
-        return CONFIG.includeDangerousActions ? increaseChaos : recruit;
+    let pick: Action;
+    if (allActionCandidates.length === 0) {
+        if (diplomacyPercent(ns) > CONFIG.diplomacyPowerForChaos) {
+            await generateContracts(ns);
+        } else {
+            pick = recruit;
+        }
+    } else {
+        pick = allActionCandidates[0];
+    }
 
-    return allActionCandidates[0];
+    if (pick != null) await doAction(ns, pick);
 }
 
 interface ActionCandidate extends Action {
@@ -264,10 +270,6 @@ function candidate(ns: NS, action: Action): ActionCandidate {
         expectedRankPerSecond,
         ...action,
     };
-}
-
-async function enactPick(ns: NS, pick: Action) {
-    await doAction(ns, pick);
 }
 
 async function doAction(ns: NS, action: Action): Promise<boolean> {
@@ -302,6 +304,57 @@ function actionChance(ns: NS, action: Action): number {
     return (lo + hi) / 2;
 }
 
+async function generateContracts(ns: NS) {
+    // Generate chaos with our bonus time
+    const bonusTime = ns.bladeburner.getBonusTime();
+    const chaosGenTime = Math.min(bonusTime / 2, CONFIG.maxChaosGenMs);
+    const startTime = Date.now();
+
+    const res = startAction(ns, increaseChaos);
+    if (!res)
+        throw new Error(`Failed to increase chaos for an unknown reason!`);
+    while (Date.now() > startTime + chaosGenTime) {
+        await ns.sleep(1000);
+    }
+
+    // Travel around the cities reducing chaos with Diplomacy back to zero
+    const cn = ns.enums.CityName;
+    const cities = [
+        cn.Sector12,
+        cn.Aevum,
+        cn.Ishima,
+        cn.NewTokyo,
+        cn.Chongqing,
+        cn.Volhaven,
+    ];
+    for (const city of cities) {
+        if (!ns.bladeburner.switchCity(city))
+            throw new Error(`Failed to switch cities to ${city}`);
+
+        await reduceChaos(ns, city);
+    }
+}
+
+async function reduceChaos(ns: NS, city: CityName) {
+    const res = startAction(ns, diplomacy);
+    if (!res) throw new Error(`Failed to do Diplomacy in ${city}`);
+    while (ns.bladeburner.getCityChaos(city) > 0.0001) {
+        await ns.sleep(1000);
+    }
+}
+
 const increaseChaos: Action = { type: 'General', name: 'Incite Violence' };
 
 const recruit: Action = { type: 'General', name: 'Recruitment' };
+
+function diplomacyPercent(ns: NS): number {
+    const player = ns.getPlayer();
+    // Returns a percentage by which the city's chaos level should be modified (e.g. 2 for 2%)
+    const CharismaLinearFactor = 1e3;
+    const CharismaExponentialFactor = 0.045;
+
+    const charismaEff =
+        Math.pow(player.skills.charisma, CharismaExponentialFactor)
+        + player.skills.charisma / CharismaLinearFactor;
+    return charismaEff / 100;
+}
