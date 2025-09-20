@@ -26,12 +26,12 @@ OPTIONS
         return;
     }
 
-    await printBestCrime(ns);
+    printBestCrime(ns);
 }
 
-async function printBestCrime(ns: NS) {
+function printBestCrime(ns: NS) {
     const crimes = Object.keys(ns.enums.CrimeType)
-        .map((c) => crimeStats(ns, ns.enums.CrimeType[c]))
+        .map((c) => crimeStats(ns, ns.enums.CrimeType[c] as CrimeType))
         .map(
             // c.time is in milliseconds, convert to seconds
             (c) => {
