@@ -157,7 +157,7 @@ export function isRecordOf<V>(
 export type ObjectSpec = Record<string, Validator<any>>;
 
 type ObjectFor<Spec extends ObjectSpec> = {
-    [K in keyof Spec]: Spec[K] extends Validator<infer R> ? R : never;
+    -readonly [K in keyof Spec]: Spec[K] extends Validator<infer R> ? R : never;
 };
 
 /**
