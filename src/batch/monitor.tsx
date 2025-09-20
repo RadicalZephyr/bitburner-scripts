@@ -29,6 +29,8 @@ import { HUD_HEIGHT, HUD_WIDTH, STATUS_WINDOW_WIDTH } from 'util/ui';
 
 import { React } from 'lib/react';
 
+import { UI_CONFIG } from 'ui/config';
+
 const FLAGS = [
     ['refreshrate', 200],
     ['help', false],
@@ -68,12 +70,15 @@ CONFIGURATION
 
     ns.disableLog('ALL');
     ns.clearLog();
-    ns.ui.openTail();
-    ns.ui.setTailTitle('Monitor');
-    ns.ui.resizeTail(HUD_WIDTH, HUD_HEIGHT);
 
-    const [ww] = ns.ui.windowSize();
-    ns.ui.moveTail(ww - (HUD_WIDTH + STATUS_WINDOW_WIDTH), 0);
+    if (UI_CONFIG.openHUD) {
+        ns.ui.openTail();
+        ns.ui.setTailTitle('Monitor');
+        ns.ui.resizeTail(HUD_WIDTH, HUD_HEIGHT);
+
+        const [ww] = ns.ui.windowSize();
+        ns.ui.moveTail(ww - (HUD_WIDTH + STATUS_WINDOW_WIDTH), 0);
+    }
 
     const tableSortings: Record<string, SortBy> = {
         harvesting: {

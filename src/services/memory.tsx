@@ -30,6 +30,7 @@ import { LogRoot } from 'ui/LogRoot';
 import { React } from 'lib/react';
 
 import { CONFIG } from 'services/config';
+import { UI_CONFIG } from 'ui/config';
 
 const FLAGS = [
     ['refresh-rate', 1000],
@@ -69,12 +70,15 @@ CONFIGURATION
     }
 
     ns.disableLog('ALL');
-    ns.ui.openTail();
     ns.ui.setTailTitle('Memory Allocator');
-    ns.ui.resizeTail(HUD_WIDTH / 2, HUD_HEIGHT);
 
-    const [ww] = ns.ui.windowSize();
-    ns.ui.moveTail(ww - (1.5 * HUD_WIDTH + STATUS_WINDOW_WIDTH), 0);
+    if (UI_CONFIG.openHUD) {
+        ns.ui.openTail();
+        ns.ui.resizeTail(HUD_WIDTH / 2, HUD_HEIGHT);
+
+        const [ww] = ns.ui.windowSize();
+        ns.ui.moveTail(ww - (1.5 * HUD_WIDTH + STATUS_WINDOW_WIDTH), 0);
+    }
 
     const bufferCap = 500;
     const { ns: logNS, buffer } = installLogger(ns, { bufferCap });

@@ -39,6 +39,7 @@ import { sleep } from 'util/time';
 import { HUD_HEIGHT, KARMA_HEIGHT } from 'util/ui';
 
 import { CONFIG } from 'batch/config';
+import { UI_CONFIG } from 'ui/config';
 
 const FLAGS = [['help', false]] as const satisfies FlagsSchema;
 
@@ -104,14 +105,18 @@ CONFIGURATION
     }
 
     ns.disableLog('ALL');
-    ns.ui.openTail();
     ns.ui.setTailTitle('Task Selector');
 
-    const WIDTH = 500;
-    ns.ui.resizeTail(WIDTH, 500);
+    if (UI_CONFIG.openHUD) {
+        ns.ui.openTail();
 
-    const [ww] = ns.ui.windowSize();
-    ns.ui.moveTail(ww - WIDTH, HUD_HEIGHT + KARMA_HEIGHT);
+        const WIDTH = 500;
+        ns.ui.resizeTail(WIDTH, 500);
+
+        const [ww] = ns.ui.windowSize();
+        ns.ui.moveTail(ww - WIDTH, HUD_HEIGHT + KARMA_HEIGHT);
+    }
+
     ns.print(`INFO: starting manager on ${ns.getHostname()}`);
 
     const discovery = new DiscoveryClient(ns);

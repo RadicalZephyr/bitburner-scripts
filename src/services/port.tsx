@@ -20,6 +20,8 @@ import { HUD_HEIGHT, HUD_WIDTH, STATUS_WINDOW_WIDTH } from 'util/ui';
 
 import { React } from 'lib/react';
 
+import { UI_CONFIG } from 'ui/config';
+
 /**
  * Main loop for the PortAllocator daemon.
  */
@@ -28,13 +30,16 @@ export async function main(ns: NS) {
 
     ns.disableLog('ALL');
     ns.clearLog();
-    ns.ui.openTail();
     ns.ui.setTailTitle('Port Allocator');
-    ns.ui.resizeTail(HUD_WIDTH / 4, HUD_HEIGHT);
 
-    const [ww] = ns.ui.windowSize();
-    const xPos = Math.max(0, ww - (1.75 * HUD_WIDTH + STATUS_WINDOW_WIDTH));
-    ns.ui.moveTail(xPos, 0);
+    if (UI_CONFIG.openHUD) {
+        ns.ui.openTail();
+        ns.ui.resizeTail(HUD_WIDTH / 4, HUD_HEIGHT);
+
+        const [ww] = ns.ui.windowSize();
+        const xPos = Math.max(0, ww - (1.75 * HUD_WIDTH + STATUS_WINDOW_WIDTH));
+        ns.ui.moveTail(xPos, 0);
+    }
 
     const { ns: logNS, buffer } = installLogger(ns, { bufferCap: 100 });
 
