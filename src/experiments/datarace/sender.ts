@@ -11,7 +11,7 @@ export async function main(ns: NS) {
         if (sync.empty()) {
             await sync.nextWrite();
         }
-        const token = sync.read();
+        const token = sync.read() as unknown;
         // Write immediately to maximize chance of landing in the race window
         data.write(token);
     }
