@@ -314,7 +314,11 @@ function actionChance(ns: NS, action: Action): number {
 async function generateContracts(ns: NS) {
     // Generate chaos with our bonus time
     const bonusTime = ns.bladeburner.getBonusTime();
-    const chaosGenTime = Math.min(bonusTime / 2, CONFIG.maxChaosGenMs);
+    const chaosGenTime = Math.min(
+        ns.bladeburner.getActionTime(increaseChaos.type, increaseChaos.name)
+            + 100,
+        Math.min(bonusTime / 2, CONFIG.maxChaosGenMs),
+    );
     const startTime = Date.now();
 
     const res = startAction(ns, increaseChaos);
