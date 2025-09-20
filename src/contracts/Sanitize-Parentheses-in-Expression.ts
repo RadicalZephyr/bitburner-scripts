@@ -22,6 +22,7 @@ IMPORTANT: The string may contain letters, not just parentheses. Examples:
 
 import type { NS } from '@ns';
 import { parseFlags } from 'util/flags';
+import { isString } from 'util/validate';
 
 export async function main(ns: NS) {
     await parseFlags(ns, []);
@@ -43,7 +44,14 @@ export async function main(ns: NS) {
         );
         return;
     }
-    const contractData = JSON.parse(contractDataJSON);
+
+    const contractData = JSON.parse(contractDataJSON) as unknown;
+
+    if (!isString(contractData)) {
+        ns.writePort(contractPortNum, JSON.stringify(null));
+        return;
+    }
+
     ns.tprintf('contract data: %s', JSON.stringify(contractData));
     const answer = solve(contractData);
     ns.writePort(contractPortNum, JSON.stringify(answer));
@@ -111,16 +119,14 @@ function areParensBalanced(s: string): boolean {
 
 function* choose<T>(a: T[], m: number): Iterable<T[]> {
     const n = a.length;
-    const c = [];
+    const c: T[] = [];
     for (let i = 0; i != m; i++) {
         c.push(a[n - m + i]);
     }
     yield [...c];
     const p = initTwiddle(m, n);
     while (true) {
-        const [done, x, _y, z] = twiddle(p);
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const _ = _y;
+        const [done, x, , z] = twiddle(p);
         if (done) {
             return;
         }
@@ -130,9 +136,9 @@ function* choose<T>(a: T[], m: number): Iterable<T[]> {
 }
 
 function initTwiddle(m: number, n: number): number[] {
-    const p = [];
+    const p: number[] = [];
     p.push(n + 1);
-    let i;
+    let i: number;
     for (i = 1; i != n - m + 1; i++) {
         p.push(0);
     }
@@ -148,7 +154,7 @@ function initTwiddle(m: number, n: number): number[] {
 }
 
 function twiddle(p: number[]): [boolean, number, number, number] {
-    let x, y, z;
+    let x: number, y: number, z: number;
     let done = false;
 
     let j = 1;
@@ -156,7 +162,7 @@ function twiddle(p: number[]): [boolean, number, number, number] {
         j++;
     }
     if (p[j - 1] == 0) {
-        let i;
+        let i: number;
         for (i = j - 1; i != 1; i--) {
             p[i] = -1;
         }
