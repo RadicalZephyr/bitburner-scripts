@@ -41,6 +41,7 @@ Answer: [1, 2, 3, 4, 8, 12, 11, 10, 9, 5, 6, 7]
 
 import type { NS } from '@ns';
 import { parseFlags } from 'util/flags';
+import { isArrayOf, isNumber, Validator } from 'util/validate';
 
 export async function main(ns: NS) {
     await parseFlags(ns, []);
@@ -62,11 +63,20 @@ export async function main(ns: NS) {
         );
         return;
     }
-    const contractData = JSON.parse(contractDataJSON);
+
+    const contractData = JSON.parse(contractDataJSON) as unknown;
+
+    if (!isContractData(contractData)) {
+        ns.writePort(contractPortNum, JSON.stringify(null));
+        return;
+    }
+
     ns.tprintf('contract data: %s', JSON.stringify(contractData));
     const answer = solve(contractData);
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
+
+const isContractData: Validator<number[][]> = isArrayOf(isArrayOf(isNumber));
 
 export function solve(data: number[][]): number[] {
     const rows = data.length;
