@@ -148,7 +148,7 @@ async function prepareHarvest(
     }
     ns.atExit(
         () => {
-            portClient.releasePort(donePortId);
+            void portClient.releasePort(donePortId);
         },
         'donePortRelease-' + makeFuid(ns),
     );
@@ -157,7 +157,7 @@ async function prepareHarvest(
     if (args.portId !== -1) {
         ns.atExit(
             () => {
-                portClient.releasePort(args.portId);
+                void portClient.releasePort(args.portId);
             },
             'stopPortRelease-' + makeFuid(ns),
         );
@@ -169,7 +169,7 @@ async function prepareHarvest(
                 return Promise.resolve();
             },
         });
-        server.readLoop();
+        void server.readLoop();
     }
 
     const memClient = new GrowableMemoryClient(ns);
