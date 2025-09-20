@@ -7,6 +7,7 @@ import { travelToCityForLocation } from 'automation/travel';
 
 import { useTheme } from 'ui/hooks';
 
+import { assertEl } from 'util/assertEl';
 import { exitOnKill } from 'util/exitOnKill';
 import { makeFuid } from 'util/fuid';
 import { getReactProps } from 'util/props';
@@ -98,17 +99,11 @@ async function searchForNoodles(ns: NS): Promise<EatButton> {
 }
 
 function findEatNoodlesButton() {
-    const unclickable = globalThis['unclickable'];
-    if (!(unclickable instanceof Element)) {
-        globalThis.console.log('no unclickable element found');
-        return null;
-    }
-
-    const root = unclickable.parentElement;
-    if (!(root instanceof Element)) {
-        globalThis.console.log('no root element found');
-        return null;
-    }
+    const root = assertEl(
+        globalThis['root'],
+        'No root element found',
+        (el: unknown): el is HTMLElement => el instanceof HTMLElement,
+    );
 
     const buttons = root.getElementsByTagName('button');
 
@@ -163,7 +158,8 @@ interface IEatItProps {
 
 function EatIt({ ns, className, eatFn }: IEatItProps) {
     const theme = useTheme(ns);
-    const interval: React.MutableRefObject<MaybeInterval> = React.useRef(null);
+    const interval: React.MutableRefObject<MaybeInterval> =
+        React.useRef<MaybeInterval>(null);
     const [bowlsEaten, eatBowl] = React.useState(0);
     const eatAndCount = () => {
         eatBowl((n) => n + 1);
