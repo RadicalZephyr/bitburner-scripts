@@ -8,6 +8,7 @@ import type {
 import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { clamp } from 'util/clamp';
+import { isStructuralEqual } from 'util/structural-equals';
 
 import { CONFIG } from 'bladeburner/config';
 
@@ -281,7 +282,7 @@ async function doAction(ns: NS, action: Action): Promise<boolean> {
     const actionTime = getActionTime(ns, action);
 
     const currentAction = ns.bladeburner.getCurrentAction() as Action;
-    if (currentAction !== action) {
+    if (!isStructuralEqual(currentAction, action)) {
         if (!startAction(ns, action)) return false;
     }
 
