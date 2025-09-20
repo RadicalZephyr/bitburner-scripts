@@ -28,6 +28,7 @@ Output: []
 
 import type { NS } from '@ns';
 import { parseFlags } from 'util/flags';
+import { isArrayOf, isNumber, isTuple, Validator } from 'util/validate';
 
 export async function main(ns: NS) {
     await parseFlags(ns, []);
@@ -49,13 +50,27 @@ export async function main(ns: NS) {
         );
         return;
     }
-    const contractData = JSON.parse(contractDataJSON);
+
+    const contractData = JSON.parse(contractDataJSON) as unknown;
+
+    if (!isContractData(contractData)) {
+        ns.writePort(contractPortNum, JSON.stringify(null));
+        return;
+    }
+
     ns.tprintf('contract data: %s', JSON.stringify(contractData));
     const answer = solve(contractData);
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
 
-export function solve(data: [number, [number, number][]]) {
+type ContractData = [number, [number, number][]];
+
+const isContractData: Validator<ContractData> = isTuple(
+    isNumber,
+    isArrayOf(isTuple(isNumber, isNumber)),
+);
+
+export function solve(data: ContractData) {
     const [numVertices, edges] = data;
     const graph = new Graph(numVertices, edges);
 
