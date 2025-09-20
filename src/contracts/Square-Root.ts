@@ -58,7 +58,9 @@ export function solve(data: bigint): bigint {
 
     // Calculate sqrt(a), where a is the two most significant digits
     // of s
-    const a = Math.round(Math.sqrt(JSON.parse(s_str.substring(0, 2))));
+    const a = Math.round(
+        Math.sqrt(JSON.parse(s_str.substring(0, 2)) as number),
+    );
     // Calculate n from  for the exponent
     const n = Math.floor((s_str.length - 2) / 2);
 
