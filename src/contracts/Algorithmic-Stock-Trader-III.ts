@@ -16,6 +16,7 @@ If no profit can be made, then the answer should be 0
 
 import type { NS } from '@ns';
 import { parseFlags } from 'util/flags';
+import { isArrayOf, isNumber, Validator } from 'util/validate';
 
 export async function main(ns: NS) {
     await parseFlags(ns, []);
@@ -37,27 +38,35 @@ export async function main(ns: NS) {
         );
         return;
     }
-    const contractData = JSON.parse(contractDataJSON);
+    const contractData = JSON.parse(contractDataJSON) as unknown;
+
+    if (!isContractData(contractData)) {
+        ns.writePort(contractPortNum, JSON.stringify(null));
+        return;
+    }
+
     ns.tprintf('contract data: %s', JSON.stringify(contractData));
-    const answer = await solve(ns, contractData);
+    const answer = solve(ns, contractData);
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
+
+const isContractData: Validator<number[]> = isArrayOf(isNumber);
 
 /**
  * Maximum profit with at most two transactions.
  */
-export async function solve(_ns: NS, data: number[]): Promise<number> {
+export function solve(_ns: NS, data: number[]): number {
     if (data.length === 0) return 0;
 
     const n = data.length;
-    const left: number[] = Array(n).fill(0);
+    const left: number[] = Array(n).fill(0) as number[];
     let minPrice = data[0];
     for (let i = 1; i < n; i++) {
         minPrice = Math.min(minPrice, data[i]);
         left[i] = Math.max(left[i - 1], data[i] - minPrice);
     }
 
-    const right: number[] = Array(n).fill(0);
+    const right: number[] = Array(n).fill(0) as number[];
     let maxPrice = data[n - 1];
     for (let i = n - 2; i >= 0; i--) {
         maxPrice = Math.max(maxPrice, data[i]);
