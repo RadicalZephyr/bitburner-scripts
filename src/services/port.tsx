@@ -10,17 +10,16 @@ import {
 } from 'services/client/port';
 import { MemoryClient } from 'services/client/memory';
 
+import { UI_CONFIG } from 'ui/config';
+import { usePoll, useNsUpdate, useTheme } from 'ui/hooks';
 import { LogRoot } from 'ui/LogRoot';
 
-import { usePoll, useNsUpdate, useTheme } from 'util/hooks';
 import { installLogger } from 'util/logger';
 import { BaseServer, type Handlers } from 'util/protocol';
 import { RingBuffer } from 'util/ring-buffer';
 import { HUD_HEIGHT, HUD_WIDTH, STATUS_WINDOW_WIDTH } from 'util/ui';
 
 import { React } from 'lib/react';
-
-import { UI_CONFIG } from 'ui/config';
 
 /**
  * Main loop for the PortAllocator daemon.

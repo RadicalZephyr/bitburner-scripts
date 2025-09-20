@@ -1,6 +1,7 @@
 import type { NS } from '@ns';
 
-import { useTheme } from 'util/hooks';
+import { useTheme } from 'ui/hooks';
+
 import { RingBuffer } from 'util/ring-buffer';
 
 import { React } from 'lib/react';

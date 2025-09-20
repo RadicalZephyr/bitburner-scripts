@@ -3,8 +3,9 @@ import type { NS } from '@ns';
 import type { LaunchClient } from 'services/client/launch';
 import type { MemoryClient, FreeChunk } from 'services/client/memory';
 
+import { useTheme } from 'ui/hooks';
+
 import { assertEl } from 'util/assertEl';
-import { useTheme } from 'util/hooks';
 
 import {
     scanTokens,

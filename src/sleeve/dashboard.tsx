@@ -6,8 +6,9 @@ import type {
 } from '@ns';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
+import { usePoll, useTheme } from 'ui/hooks';
+
 import { exitOnKill } from 'util/exitOnKill';
-import { usePoll, useTheme } from 'util/hooks';
 import { StatTracker } from 'util/stat-tracker';
 
 import { React } from 'lib/react';

@@ -1,7 +1,8 @@
 import type { NS } from '@ns';
 
+import { useTheme } from 'ui/hooks';
+
 import { assertEl } from 'util/assertEl';
-import { useTheme } from 'util/hooks';
 
 import { React } from 'lib/react';
 

@@ -19,7 +19,9 @@ import { DiscoveryClient } from 'services/client/discover';
 
 import { fromFixed, MemoryAllocator, Worker } from 'services/allocator';
 
-import { useNsUpdate, useTheme } from 'util/hooks';
+import { UI_CONFIG } from 'ui/config';
+import { useNsUpdate, useTheme } from 'ui/hooks';
+
 import { installLogger } from 'util/logger';
 import { BaseServer, Handlers } from 'util/protocol';
 import { RingBuffer } from 'util/ring-buffer';
@@ -30,7 +32,6 @@ import { LogRoot } from 'ui/LogRoot';
 import { React } from 'lib/react';
 
 import { CONFIG } from 'services/config';
-import { UI_CONFIG } from 'ui/config';
 
 const FLAGS = [
     ['refresh-rate', 1000],

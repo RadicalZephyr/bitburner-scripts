@@ -6,8 +6,9 @@ import type {
 } from '@ns';
 import { parseFlags } from 'util/flags';
 
+import { useNsUpdate, useTheme } from 'ui/hooks';
+
 import { exitOnKill } from 'util/exitOnKill';
-import { useNsUpdate, useTheme } from 'util/hooks';
 
 import { React } from 'lib/react';
 

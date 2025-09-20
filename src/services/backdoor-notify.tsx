@@ -1,9 +1,10 @@
 import type { NS, UserInterfaceTheme } from '@ns';
 import { parseFlags } from 'util/flags';
 
+import { useNsUpdate, useTheme } from 'ui/hooks';
+
 import { canInstallBackdoor, needsBackdoor } from 'util/backdoor';
 import { FACTION_SERVERS } from 'util/faction-servers';
-import { useNsUpdate, useTheme } from 'util/hooks';
 import { sendTerminalCommand } from 'util/terminal';
 import { walkNetworkBFS } from 'util/walk';
 

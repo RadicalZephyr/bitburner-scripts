@@ -1,7 +1,7 @@
 import type { NS } from '@ns';
 import { parseFlags } from 'util/flags';
 
-import { useNsUpdate } from 'util/hooks';
+import { useNsUpdate } from 'ui/hooks';
 
 import {
     STATUS_WINDOW_WIDTH,

@@ -5,9 +5,10 @@ import { getSourceFileLevel } from 'services/client/reset-info';
 
 import { travelToCityForLocation } from 'automation/travel';
 
+import { useTheme } from 'ui/hooks';
+
 import { exitOnKill } from 'util/exitOnKill';
 import { makeFuid } from 'util/fuid';
-import { useTheme } from 'util/hooks';
 import { getReactProps } from 'util/props';
 
 import { React } from 'lib/react';
