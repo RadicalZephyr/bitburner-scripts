@@ -23,9 +23,7 @@ type SetTimeout = (
  * @returns A Promise that resolves after the sleep has elapsed
  */
 export function sleep(ms: number): Promise<void> {
-    return new Promise((res) =>
-        globalThis.setTimeout(() => res.call(null), ms),
-    );
+    return new Promise((res) => globalThis.setTimeout(() => res(), ms));
 }
 
 /**
