@@ -6,8 +6,8 @@ import { exitOnKill } from 'util/exitOnKill';
 export async function main(ns: NS) {
     await parseFlags(ns, []);
 
-    acceptInvites(ns);
-    pursueInvites(ns);
+    void acceptInvites(ns);
+    void pursueInvites(ns);
 
     return exitOnKill(ns);
 }
@@ -34,6 +34,7 @@ async function pursueInvites(ns: NS) {
     const myFactions = new Set(ns.getPlayer().factions);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const factionsToJoin = allFactions(ns).filter((f) => !myFactions.has(f));
+    await ns.asleep(100);
 }
 
 function allFactions(ns: NS): FactionName[] {
