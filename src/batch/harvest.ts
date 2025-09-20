@@ -31,6 +31,7 @@ import { makeFuid } from 'util/fuid';
 import { BaseServer } from 'util/protocol';
 
 import { CONFIG } from 'batch/config';
+import { isNumber, isObjectLike, isString, Validator } from 'util/validate';
 
 const FLAGS = [
     ['max-ram', -1],
@@ -356,9 +357,8 @@ async function harvestPipeline(ns: NS, target: string, setup: HarvestSetup) {
         if (finishedPort.peek() === 'NULL PORT DATA') {
             await finishedPort.nextWrite();
         }
-        const msg = finishedPort.read();
-        const doneMsg = parseDoneMsg(ns, msg);
-        if (!doneMsg) {
+        const msg = finishedPort.read() as unknown;
+        if (!isDoneMsg(msg)) {
             ns.print(
                 `WARN: malformed batch completion message ${JSON.stringify(msg)}`,
             );
@@ -366,8 +366,8 @@ async function harvestPipeline(ns: NS, target: string, setup: HarvestSetup) {
             continue;
         }
 
-        const donePid = doneMsg.pid;
-        const msgHost = doneMsg.host;
+        const donePid = msg.pid;
+        const msgHost = msg.host;
 
         const mappedHost = pidHostMap.get(donePid);
         if (mappedHost !== undefined && mappedHost !== msgHost) {
@@ -622,17 +622,7 @@ function calculateRebalancePhases(
     return calculatePhaseStartTimes(phases);
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function parseDoneMsg(ns: NS, msg: any): DoneMsg | null {
-    if (
-        typeof msg === 'object'
-        && msg !== null
-        && Object.hasOwn(msg, 'pid')
-        && Object.hasOwn(msg, 'host')
-        && typeof msg.pid === 'number'
-        && typeof msg.host === 'string'
-    ) {
-        return msg as DoneMsg;
-    }
-    return null;
-}
+const isDoneMsg: Validator<DoneMsg> = isObjectLike({
+    pid: isNumber,
+    host: isString,
+});
