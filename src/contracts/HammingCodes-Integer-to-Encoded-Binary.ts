@@ -31,6 +31,7 @@ Hamming Codes. (https://youtube.com/watch?v=X8jsijhllIA)
 
 import type { NS } from '@ns';
 import { parseFlags } from 'util/flags';
+import { isNumber } from 'util/validate';
 
 export async function main(ns: NS) {
     await parseFlags(ns, []);
@@ -52,7 +53,14 @@ export async function main(ns: NS) {
         );
         return;
     }
-    const contractData = JSON.parse(contractDataJSON);
+
+    const contractData = JSON.parse(contractDataJSON) as unknown;
+
+    if (!isNumber(contractData)) {
+        ns.writePort(contractPortNum, JSON.stringify(null));
+        return;
+    }
+
     ns.tprintf('contract data: %s', JSON.stringify(contractData));
     const answer = solve(contractData);
     ns.writePort(contractPortNum, answer);
