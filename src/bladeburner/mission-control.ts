@@ -276,7 +276,7 @@ async function doAction(ns: NS, action: Action): Promise<boolean> {
     const actionTime = ns.bladeburner.getActionTime(action.type, action.name);
     if (!startAction(ns, action)) return false;
 
-    await ns.asleep(actionTime + 1000);
+    await ns.asleep(actionTime + CONFIG.actionBufferMs);
     return true;
 }
 

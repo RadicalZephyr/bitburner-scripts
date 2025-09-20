@@ -1,6 +1,7 @@
 import { Config, ConfigInstance } from 'util/config';
 
 const entries = [
+    ['actionBufferMs', 200],
     ['dangerousActionPenalty', 0.1],
     ['diplomacyPowerForChaos', 0.1],
     ['highStaminaPercent', 0.95],
