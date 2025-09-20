@@ -10,6 +10,7 @@ You may use each integer in the set zero or more times.
 
 import type { NS } from '@ns';
 import { parseFlags } from 'util/flags';
+import { isArrayOf, isNumber, isTuple, Validator } from 'util/validate';
 
 export async function main(ns: NS) {
     await parseFlags(ns, []);
@@ -23,7 +24,14 @@ export async function main(ns: NS) {
         );
         return;
     }
-    const contractDataJSON = ns.args[1];
+
+    const contractDataJSON = ns.args[1] as unknown;
+
+    if (!isContractData(contractDataJSON)) {
+        ns.writePort(contractPortNum, JSON.stringify(null));
+        return;
+    }
+
     if (typeof contractDataJSON !== 'string') {
         ns.tprintf(
             '%s contract run with non-string data argument. Must be a JSON string containing file, host and contract data.',
@@ -31,16 +39,30 @@ export async function main(ns: NS) {
         );
         return;
     }
-    const contractData = JSON.parse(contractDataJSON);
+
+    const contractData = JSON.parse(contractDataJSON) as unknown;
+
+    if (!isContractData(contractData)) {
+        ns.writePort(contractPortNum, JSON.stringify(null));
+        return;
+    }
+
     ns.tprintf('contract data: %s', JSON.stringify(contractData));
     const answer = solve(contractData);
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
 
-export function solve(data: [number, number[]]): number {
+type ContractData = [number, number[]];
+
+const isContractData: Validator<ContractData> = isTuple(
+    isNumber,
+    isArrayOf(isNumber),
+);
+
+export function solve(data: ContractData): number {
     const [target, nums] = data;
     nums.sort((a, b) => a - b);
-    const dp = Array(target + 1).fill(0);
+    const dp = Array(target + 1).fill(0) as number[];
     dp[0] = 1;
     for (const num of nums) {
         for (let i = num; i <= target; i++) {
