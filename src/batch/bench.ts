@@ -51,13 +51,7 @@ OPTIONS
         ns.print(`INFO: benchmarking ${target}`);
 
         for (const [fn, name] of algos) {
-            const results = await benchmark(
-                ns,
-                fn,
-                name,
-                target,
-                maxThreadsList,
-            );
+            const results = benchmark(ns, fn, name, target, maxThreadsList);
 
             const iters = results.map((r) => r.iterations);
             const wastes = results.map((r) => r.maxThreads - r.usedThreads);
@@ -85,7 +79,7 @@ interface Result {
     efficiency: number;
 }
 
-async function benchmark(
+function benchmark(
     ns: NS,
     fn: (
         ns: NS,
@@ -95,7 +89,7 @@ async function benchmark(
     name: string,
     target: string,
     maxThreadsList: number[],
-): Promise<Result[]> {
+): Result[] {
     const results: Result[] = [];
     for (const m of maxThreadsList) {
         const { n, growThreads, weakenThreads } = fn(ns, target, m);
