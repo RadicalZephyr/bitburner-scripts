@@ -14,6 +14,8 @@ import { CONFIG as SleeveConfig } from 'sleeve/config';
 import { CONFIG as GraftConfig } from 'graft/config';
 import { UI_CONFIG as UIConfig } from 'ui/config';
 
+import { ConfigValue } from 'util/config';
+
 const ALL_CONFIGS = [
     ServiceConfig,
     BatchConfig,
@@ -82,7 +84,7 @@ OPTIONS
 
     for (const config of ALL_CONFIGS) {
         if (Object.hasOwn(config, key)) {
-            const prev = config[key];
+            const prev = config[key] as ConfigValue;
             if (value) {
                 config.setRaw(key, value);
                 ns.tprint(
