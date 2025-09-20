@@ -2,12 +2,12 @@ import type { NS } from '@ns';
 
 import { AGRI_DIVISION, CITIES } from 'corp/constants';
 
-export async function main(ns: NS) {
+export function main(ns: NS) {
     const corp = ns.corporation;
 
     if (!corp.hasCorporation()) {
         ns.tprint('you must start a corporation first!');
-        return;
+        return Promise.resolve();
     }
 
     const agriDiv = corp.getDivision(AGRI_DIVISION);
@@ -20,4 +20,6 @@ export async function main(ns: NS) {
     }
 
     ns.tprint('now run corp/init/warehouse.js');
+
+    return Promise.resolve();
 }
