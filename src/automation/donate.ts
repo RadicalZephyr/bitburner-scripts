@@ -26,10 +26,10 @@ OPTIONS
         return;
     }
 
-    await donateForAugments(ns);
+    donateForAugments(ns);
 }
 
-async function donateForAugments(ns: NS) {
+function donateForAugments(ns: NS) {
     const player = ns.getPlayer();
     const factions = player.factions;
 
