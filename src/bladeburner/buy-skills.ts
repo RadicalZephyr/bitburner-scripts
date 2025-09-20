@@ -113,7 +113,7 @@ function buildSkills(
 
     for (const p of presets) {
         const preset = p.trim().toLocaleLowerCase();
-        if (!(preset in PRESETS)) {
+        if (!isPreset(preset)) {
             ns.tprint(`WARN: unknown preset: '${preset}'`);
             continue;
         }
@@ -132,6 +132,10 @@ function buildSkills(
     }
 
     return Array.from(skillsToBuy);
+}
+
+function isPreset(name: string): name is keyof typeof PRESETS {
+    return Object.hasOwn(PRESETS, name);
 }
 
 async function buySkills(ns: NS, skillNames: `${BladeburnerSkillName}`[]) {
