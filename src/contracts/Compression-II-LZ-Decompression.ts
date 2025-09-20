@@ -31,6 +31,7 @@ Example: decoding '5aaabb450723abb' chunk-by-chunk
 
 import type { NS } from '@ns';
 import { parseFlags } from 'util/flags';
+import { isString } from 'util/validate';
 
 export async function main(ns: NS) {
     await parseFlags(ns, []);
@@ -52,13 +53,19 @@ export async function main(ns: NS) {
         );
         return;
     }
-    const contractData = JSON.parse(contractDataJSON);
+    const contractData = JSON.parse(contractDataJSON) as unknown;
+
+    if (!isString(contractData)) {
+        ns.writePort(contractPortNum, JSON.stringify(null));
+        return;
+    }
+
     ns.tprintf('contract data: %s', JSON.stringify(contractData));
     const answer = solve(contractData);
     ns.writePort(contractPortNum, answer);
 }
 
-function isDigit(c): boolean {
+function isDigit(c: string): boolean {
     return /\d/.test(c);
 }
 
