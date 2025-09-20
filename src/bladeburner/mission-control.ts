@@ -317,7 +317,7 @@ async function generateContracts(ns: NS) {
     const res = startAction(ns, increaseChaos);
     if (!res)
         throw new Error(`Failed to increase chaos for an unknown reason!`);
-    while (Date.now() > startTime + chaosGenTime) {
+    while (Date.now() < startTime + chaosGenTime) {
         await ns.sleep(1000);
     }
 
