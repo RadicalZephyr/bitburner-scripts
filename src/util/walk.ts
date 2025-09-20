@@ -42,9 +42,9 @@ function walkNetwork(ns: NS, options?: WalkOptions): Map<string, string[]> {
             : (n) => n.shift();
 
     const root = 'home';
-    const nodesToExplore = [];
-    const explored = new Set();
-    const network = new Map();
+    const nodesToExplore: string[] = [];
+    const explored: Set<string> = new Set();
+    const network: Map<string, string[]> = new Map();
 
     explored.add(root);
     nodesToExplore.push(root);
