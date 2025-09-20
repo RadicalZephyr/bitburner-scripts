@@ -30,7 +30,7 @@ OPTIONS
     }
 
     // Launch sowing and harvesting n00dles as a background task
-    sowAndHackNoodles(ns);
+    void sowAndHackNoodles(ns);
     await studyAndCode(ns);
 }
 
@@ -79,7 +79,7 @@ async function untilCombatStat(
     targetLevel: number,
 ) {
     while (true) {
-        const statLevel = ns.getPlayer().skills[stat];
+        const statLevel = ns.getPlayer().skills[stat] as number;
         if (statLevel >= targetLevel) return;
         await ns.asleep(1000);
     }
