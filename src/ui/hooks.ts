@@ -36,8 +36,12 @@ export function usePoll<T>(ns: NS, interval: number, pollFn: () => T): T {
         ns.atExit(clearInterval, exitHandlerName);
 
         return () => {
-            ns.atExit(() => null, exitHandlerName);
             clearInterval();
+            try {
+                ns.atExit(() => null, exitHandlerName);
+            } catch {
+                return;
+            }
         };
     }, [ns, interval, pollFn]);
 
@@ -81,8 +85,12 @@ export function useNsUpdate<T>(
         ns.atExit(clearInterval, exitHandlerName);
 
         return () => {
-            ns.atExit(() => null, exitHandlerName);
             clearInterval();
+            try {
+                ns.atExit(() => null, exitHandlerName);
+            } catch {
+                return;
+            }
         };
     }, [ns, interval, updateFn]);
 
