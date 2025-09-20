@@ -72,7 +72,7 @@ CONFIGURATION
     if (maxThreadsCap === 0 || isNaN(maxThreadsCap)) {
         ns.printf('%s security is already at minimum level', target);
         ns.toast(`finished tilling ${target}!`, 'success');
-        taskSelectorClient.finishedTilling(target);
+        void taskSelectorClient.finishedTilling(target);
         return;
     }
 
@@ -146,7 +146,7 @@ CONFIGURATION
 
     await allocation.release(ns);
     ns.toast(`finished tilling ${target}!`, 'success');
-    taskSelectorClient.finishedTilling(target);
+    void taskSelectorClient.finishedTilling(target);
 }
 
 /** Calculate the number of weaken threads required to bring
