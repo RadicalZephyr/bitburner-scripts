@@ -105,7 +105,7 @@ async function handleHealing(ns: NS): Promise<boolean> {
     const player = ns.getPlayer();
     const health = player.hp;
     if (health.current < health.max * CONFIG.minHealthPercent) {
-        return await startAction(ns, heal);
+        return await doAction(ns, heal);
     }
     return false;
 }
@@ -120,7 +120,7 @@ async function handleChaos(ns: NS): Promise<boolean> {
     const currentChaos = ns.bladeburner.getCityChaos(currentCity);
 
     if (currentChaos > CONFIG.maxChaos) {
-        return await startAction(ns, diplomacy);
+        return await doAction(ns, diplomacy);
     }
     return false;
 }
@@ -134,11 +134,11 @@ async function handleSurveying(ns: NS): Promise<boolean> {
         if (staminaStatus !== Stamina.Low) {
             for (const surveyAction of surveyingActions) {
                 if (actionChance(ns, surveyAction) > CONFIG.minSurveySuccess) {
-                    return await startAction(ns, surveyAction);
+                    return await doAction(ns, surveyAction);
                 }
             }
         }
-        return await startAction(ns, fieldAnalysis);
+        return await doAction(ns, fieldAnalysis);
     }
     return false;
 }
@@ -208,7 +208,7 @@ async function tryBlackOp(ns: NS): Promise<boolean> {
         currentRank >= nextBlackOp.rank
         && actionChance(ns, nextBlackOp) > CONFIG.minBlackOpSuccess
     ) {
-        return await startAction(ns, nextBlackOp);
+        return await doAction(ns, nextBlackOp);
     }
     return false;
 }
@@ -267,15 +267,19 @@ function candidate(ns: NS, action: Action): ActionCandidate {
 }
 
 async function enactPick(ns: NS, pick: Action) {
-    await startAction(ns, pick);
+    await doAction(ns, pick);
 }
 
-async function startAction(ns: NS, action: Action): Promise<boolean> {
+async function doAction(ns: NS, action: Action): Promise<boolean> {
     const actionTime = ns.bladeburner.getActionTime(action.type, action.name);
-    if (!ns.bladeburner.startAction(action.type, action.name)) return false;
+    if (!startAction(ns, action)) return false;
 
     await ns.asleep(actionTime + 1000);
     return true;
+}
+
+function startAction(ns: NS, action: Action): boolean {
+    return ns.bladeburner.startAction(action.type, action.name);
 }
 
 const DANGEROUS_ACTIONS: Set<`${BladeburnerActionName}`> = new Set([
