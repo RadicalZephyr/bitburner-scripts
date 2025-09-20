@@ -7,6 +7,8 @@ import type {
 } from '@ns';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
+import { clamp } from 'util/clamp';
+
 import { CONFIG } from 'bladeburner/config';
 
 const FLAGS = [['help', false]] as const satisfies FlagsSchema;
@@ -325,10 +327,12 @@ function actionChance(ns: NS, action: Action): number {
 async function generateContracts(ns: NS) {
     // Generate chaos with our bonus time
     const bonusTime = ns.bladeburner.getBonusTime();
-    const chaosGenTime = Math.max(
+    const chaosGenTime = clamp(
+        bonusTime / 2,
         getActionTime(ns, increaseChaos) + 100,
-        Math.min(bonusTime / 2, CONFIG.maxChaosGenMs),
+        CONFIG.maxChaosGenMs,
     );
+
     const startTime = Date.now();
 
     const res = startAction(ns, increaseChaos);
