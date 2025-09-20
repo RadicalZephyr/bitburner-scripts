@@ -260,7 +260,7 @@ function candidate(ns: NS, action: Action): ActionCandidate {
         action.name,
     );
     const rankGain = ns.bladeburner.getActionRepGain(action.type, action.name);
-    const duration = ns.bladeburner.getActionTime(action.type, action.name);
+    const duration = getActionTime(ns, action);
     const penalty = getActionPenalty(action);
     const successChance = actionChance(ns, action);
     const expectedRankPerSecond =
@@ -276,7 +276,7 @@ function candidate(ns: NS, action: Action): ActionCandidate {
 }
 
 async function doAction(ns: NS, action: Action): Promise<boolean> {
-    const actionTime = ns.bladeburner.getActionTime(action.type, action.name);
+    const actionTime = getActionTime(ns, action);
 
     const currentAction = ns.bladeburner.getCurrentAction() as Action;
     if (currentAction !== action) {
@@ -285,6 +285,17 @@ async function doAction(ns: NS, action: Action): Promise<boolean> {
 
     await ns.asleep(actionTime + CONFIG.actionBufferMs);
     return true;
+}
+
+const BONUS_TIME_SPEEDUP = 5;
+
+function getActionTime(ns: NS, action: Action): number {
+    const bonusTime = ns.bladeburner.getBonusTime();
+    const actionTime = ns.bladeburner.getActionTime(action.type, action.name);
+
+    if (bonusTime >= actionTime) return actionTime / BONUS_TIME_SPEEDUP;
+
+    return actionTime;
 }
 
 function startAction(ns: NS, action: Action): boolean {
@@ -315,8 +326,7 @@ async function generateContracts(ns: NS) {
     // Generate chaos with our bonus time
     const bonusTime = ns.bladeburner.getBonusTime();
     const chaosGenTime = Math.min(
-        ns.bladeburner.getActionTime(increaseChaos.type, increaseChaos.name)
-            + 100,
+        getActionTime(ns, increaseChaos) + 100,
         Math.min(bonusTime / 2, CONFIG.maxChaosGenMs),
     );
     const startTime = Date.now();
