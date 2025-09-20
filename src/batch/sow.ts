@@ -77,7 +77,7 @@ CONFIGURATION
         return;
     }
     allocation.releaseAtExit(ns);
-    allocation.startPolling(true);
+    void allocation.startPolling(true);
 
     // Send a Sow Heartbeat to indicate we're starting the main loop
     taskSelectorClient.tryHeartbeat(
@@ -145,7 +145,7 @@ CONFIGURATION
 
     await allocation.release(ns);
     ns.toast(`finished sowing ${target}!`, 'success');
-    taskSelectorClient.finishedSowing(target);
+    void taskSelectorClient.finishedSowing(target);
 }
 
 function neededGrowThreads(ns: NS, target: string) {
