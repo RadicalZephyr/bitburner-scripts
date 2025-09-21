@@ -11,7 +11,7 @@ export const EMPTY_SENTINEL: string = 'NULL PORT DATA';
  */
 export function* readAllFromPort(port: NetscriptPort) {
     while (true) {
-        const nextMsg = port.read();
+        const nextMsg = port.read() as unknown;
         if (typeof nextMsg === 'string' && nextMsg === EMPTY_SENTINEL) {
             return;
         }
