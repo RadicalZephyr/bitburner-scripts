@@ -37,43 +37,43 @@ export interface SendWithResponseOptions {
 
 /*---------------- Protocol Envelopes ----------------*/
 
-export interface RequestEnvelope<T, I, R> {
+export interface RequestEnvelope<T extends string, I, R> {
     type: T;
     id?: I;
     payload: R;
 }
 
-export type RequestUnknown = RequestEnvelope<unknown, string | null, unknown>;
+export type RequestUnknown = RequestEnvelope<string, string | null, unknown>;
 
 export const isRequestUnknown: Validator<RequestUnknown> = isObjectLike({
-    type: isDefined,
+    type: isString,
     id: isOptional(isString),
     payload: isDefined,
 });
 
-export interface ResponseOkEnvelope<T, R> {
+export interface ResponseOkEnvelope<T extends string, R> {
     type: T;
     id: string;
     ok: true;
     payload: R;
 }
 
-export interface ResponseErrEnvelope<T> {
+export interface ResponseErrEnvelope<T extends string> {
     type: T;
     id: string;
     ok: false;
     error: Error;
 }
 
-export type ResponseEnvelope<T, R> =
+export type ResponseEnvelope<T extends string, R> =
     | ResponseOkEnvelope<T, R>
     | ResponseErrEnvelope<T>;
 
-export type ResponseOkUnknown = ResponseOkEnvelope<unknown, unknown>;
+export type ResponseOkUnknown = ResponseOkEnvelope<string, unknown>;
 
-export type ResponseErrUnknown = ResponseErrEnvelope<unknown>;
+export type ResponseErrUnknown = ResponseErrEnvelope<string>;
 
-export type ResponseUnknown = ResponseEnvelope<unknown, unknown>;
+export type ResponseUnknown = ResponseEnvelope<string, unknown>;
 
 export const isResponseOkUnknown: Validator<ResponseOkUnknown> = isObjectLike({
     type: isString,
@@ -114,7 +114,11 @@ export type ProtocolDef = Record<
 >;
 
 type KeysWithResponse<P extends ProtocolDef> = {
-    [K in keyof P]-?: P[K] extends { response: Validator<unknown> } ? K : never;
+    [K in keyof P]-?: K extends string
+        ? P[K] extends { response: Validator<unknown> }
+            ? K
+            : never
+        : never;
 }[keyof P];
 
 type KeysWithoutResponse<P extends ProtocolDef> = Exclude<
@@ -138,7 +142,9 @@ type ResponseOf<P extends ProtocolDef, K extends keyof P> = P[K] extends {
     : void;
 
 export type AnyRequest<P extends ProtocolDef> = {
-    [K in keyof P]: RequestEnvelope<K, IdOf<P, K>, PayloadOf<P, K>>;
+    [K in keyof P]: K extends string
+        ? RequestEnvelope<K, IdOf<P, K>, PayloadOf<P, K>>
+        : never;
 }[keyof P];
 
 export function defineProtocol<const P extends ProtocolDef>(def: P) {
@@ -165,7 +171,7 @@ export function defineProtocol<const P extends ProtocolDef>(def: P) {
      * @returns Whether this message has known type and a well formed payload for it's type
      */
     function isRequest(m: RequestUnknown): m is AnyRequest<P> {
-        if (!types.has(String(m.type))) return false;
+        if (!types.has(m.type)) return false;
         const spec = def[m.type as keyof P];
         if (!spec || typeof spec.payload !== 'function') return false;
         if (spec.response) {
@@ -186,7 +192,7 @@ export function defineProtocol<const P extends ProtocolDef>(def: P) {
      * @param type     - Message type tag
      * @param payload  - Message payload
      */
-    function trySendMessage<K extends KeysWithoutResponse<P>>(
+    function trySendMessage<K extends string & KeysWithoutResponse<P>>(
         sendPort: NetscriptPort,
         type: K,
         payload: PayloadOf<P, K>,
@@ -218,7 +224,7 @@ export function defineProtocol<const P extends ProtocolDef>(def: P) {
      * @param payload      - Message payload
      * @param pollPeriodMs - Period to wait between attempts to send message
      */
-    async function sendMessage<K extends KeysWithoutResponse<P>>(
+    async function sendMessage<K extends string & KeysWithoutResponse<P>>(
         sendPort: NetscriptPort,
         type: K,
         payload: PayloadOf<P, K>,
@@ -374,14 +380,14 @@ export class BaseClient<P extends ProtocolDef> {
         this.#responsePort = responsePort;
     }
 
-    trySendMessage<K extends KeysWithoutResponse<P>>(
+    trySendMessage<K extends string & KeysWithoutResponse<P>>(
         type: K,
         payload: PayloadOf<P, K>,
     ): boolean {
         return this.#protocol.trySendMessage(this.#requestPort, type, payload);
     }
 
-    async sendMessage<K extends KeysWithoutResponse<P>>(
+    async sendMessage<K extends string & KeysWithoutResponse<P>>(
         type: K,
         payload: PayloadOf<P, K>,
         pollPeriod?: number,
@@ -394,7 +400,7 @@ export class BaseClient<P extends ProtocolDef> {
         );
     }
 
-    async sendMessageReceiveResponse<K extends KeysWithResponse<P>>(
+    async sendMessageReceiveResponse<K extends string & KeysWithResponse<P>>(
         type: K,
         payload: PayloadOf<P, K>,
         opts?: SendWithResponseOptions,
@@ -506,7 +512,7 @@ export class BaseServer<P extends ProtocolDef> {
 
             try {
                 responsePayload = await handler(msg.payload);
-            } catch (err) {
+            } catch (err: unknown) {
                 const cause = {
                     request: msg.payload,
                     error: err,
@@ -515,7 +521,8 @@ export class BaseServer<P extends ProtocolDef> {
                 const error =
                     err instanceof Error
                         ? new Error('Handler error', { cause })
-                        : new Error(`Handler error: ${String(err)}`, { cause });
+                        : // eslint-disable-next-line @typescript-eslint/no-base-to-string
+                          new Error(`Handler error: ${String(err)}`, { cause });
 
                 if (this.#responsePort && typeof msg.id === 'string') {
                     const response = {
@@ -556,7 +563,7 @@ export class BaseServer<P extends ProtocolDef> {
 function getRequestId(makeReqId: MakeReqId): MakeReqId {
     if (typeof makeReqId === 'function') return makeReqId;
     if (typeof crypto?.randomUUID === 'function')
-        return crypto.randomUUID.bind(crypto);
+        return crypto.randomUUID.bind(crypto) as MakeReqId;
     return () => {
         const r1 = Math.floor(Math.random() * 1e9);
         const ts = Date.now();
