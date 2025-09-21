@@ -51,7 +51,7 @@ async function startAllocator(ns: NS, buffer: RingBuffer<string>) {
     const memClient = new MemoryClient(ns);
 
     const self = ns.self();
-    memClient.registerAllocation(self.server, self.ramUsage, 1);
+    void memClient.registerAllocation(self.server, self.ramUsage, 1);
 
     ns.printRaw(
         <LogRoot ns={ns} buffer={buffer}>
