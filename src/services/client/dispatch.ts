@@ -184,7 +184,7 @@ export class DispatchClient {
      *
      * @throws Promise rejects if `methodName` is not a valid Netscript API or if it throws an error.
      */
-    async dispatch<K extends NSMethodName>(
+    async dispatch<const K extends NSMethodName>(
         methodName: K,
         ...args: NSArgs<K>
     ): Promise<NSReturn<K>> {
@@ -199,6 +199,9 @@ export class DispatchClient {
             req,
         )) as DispatchResponse<NSReturn<K>>;
 
+        // NOTE: This lint is spurious, sendMessageReceiveResponse
+        // validates the shape of the return type.
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         if (res.ok) return res.value;
         else
             throw new Error(
@@ -243,21 +246,23 @@ export async function callNsFn<K extends NSMethodName = NSMethodName>(
         ctx = (ctx as Record<string, unknown>)[seg];
     }
 
-    const fnName = parts[parts.length - 1]!;
+    const fnName = parts[parts.length - 1];
     const candidate = (ctx as Record<string, unknown>)?.[fnName];
 
     if (typeof candidate !== 'function') {
         throw new Error(`NS method not found or not callable: ${method}`);
     }
 
-    const args = _args.map((a) => JSON.stringify(a)).join(', ');
+    const args = _args.map((a: unknown) => JSON.stringify(a)).join(', ');
     try {
         ns.print(`calling ns.${method}(${args})`);
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return await (candidate as (...a: unknown[]) => unknown).apply(
             ctx,
             _args,
         );
     } catch (e) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
         const msg = e?.message ?? String(e);
         throw new Error(`${method}(${args}) failed: ${msg}`, { cause: e });
     }
