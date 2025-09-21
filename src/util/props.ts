@@ -1,4 +1,4 @@
-import { isObjectUnknown } from './validate';
+import { isObjectUnknown } from 'util/validate';
 
 /**
  * Get the key for the React prop object from an HTML Element.
