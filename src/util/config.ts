@@ -39,17 +39,17 @@ function getSerDeFor<T extends ConfigValue>(v: T): SerDeFor<T> {
         return [identity, identity] as SerDeFor<T>;
     } else if (typeof v === 'boolean') {
         return [
-            (v: T) => v.toString(),
+            (v: boolean) => v.toString(),
             (s: string) => boolFromString(s),
         ] as SerDeFor<T>;
     } else if (typeof v === 'number') {
         return [
-            (v: T) => v.toString(),
+            (v: number) => v.toString(),
             (s: string) => Number(s),
         ] as SerDeFor<T>;
     } else if (typeof v === 'bigint') {
         return [
-            (v: T) => v.toString(),
+            (v: bigint) => v.toString(),
             (s: string) => BigInt(s),
         ] as SerDeFor<T>;
     } else {
