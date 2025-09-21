@@ -127,7 +127,7 @@ export class RingBuffer<T> {
     drain(out?: T[], limit = Number.POSITIVE_INFINITY): number {
         let n = 0;
         while (n < limit && this._size) {
-            const v = this.shift()!;
+            const v = this.shift();
             if (out) out.push(v);
             n++;
         }
@@ -138,7 +138,7 @@ export class RingBuffer<T> {
     *values(): IterableIterator<T> {
         let idx = this.head;
         for (let i = 0; i < this._size; i++) {
-            yield this.store[idx] as T;
+            yield this.store[idx];
             idx = this.mod(idx + 1);
         }
     }
