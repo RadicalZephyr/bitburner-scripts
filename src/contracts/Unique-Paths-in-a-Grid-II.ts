@@ -45,7 +45,7 @@ export async function main(ns: NS) {
         return;
     }
 
-    const contractData = JSON.parse(contractDataJSON) as unknown;
+    const contractData = JSON.parse(contractDataJSON);
 
     if (!isContractData(contractData)) {
         ns.writePort(contractPortNum, JSON.stringify(null));

@@ -30,7 +30,7 @@ export function readStoredTickData(ns: NS, sym: string): TickData[] {
     const path = `${dataPath}${sym}.json`;
     if (!ns.fileExists(path)) return [];
 
-    const tickData = JSON.parse(ns.read(path)) as unknown;
+    const tickData = JSON.parse(ns.read(path));
     if (!isTickDataArray(tickData)) {
         ns.print(
             `WARN: stored tick data for symbol ${sym} format is unrecognized`,

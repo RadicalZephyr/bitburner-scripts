@@ -34,6 +34,7 @@
         "@eslint/js": "^9.31.0",
         "@observablehq/plot": "^0.6.4",
         "@swc/core": "^1.13.3",
+        "@total-typescript/ts-reset": "^0.6.1",
         "@tsconfig/node22": "^22.0.2",
         "@types/d3": "^7.4.3",
         "@types/jest": "^30.0.0",

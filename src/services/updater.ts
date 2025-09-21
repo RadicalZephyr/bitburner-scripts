@@ -79,7 +79,7 @@ CONFIGURATION
         let remote: Version;
         let local: Version;
         try {
-            const version = JSON.parse(ns.read(tempFile)) as unknown;
+            const version = JSON.parse(ns.read(tempFile));
             if (!isVersion(version))
                 throw new Error(`version format unrecognized`);
             remote = version;
@@ -89,7 +89,7 @@ CONFIGURATION
         }
 
         try {
-            const version = JSON.parse(ns.read(VERSION_FILE)) as unknown;
+            const version = JSON.parse(ns.read(VERSION_FILE));
             if (!isVersion(version))
                 throw new Error(`version format unrecognized`);
             local = version;
