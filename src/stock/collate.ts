@@ -1,7 +1,7 @@
 import type { NS, AutocompleteData } from '@ns';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
-import { TickData } from 'stock/indicators';
+import { isTickDataArray, TickData } from 'stock/indicators';
 
 import { CONFIG } from 'stock/config';
 
@@ -30,10 +30,10 @@ OPTIONS
         return;
     }
 
-    await collateData(ns);
+    collateData(ns);
 }
 
-async function collateData(ns: NS) {
+function collateData(ns: NS) {
     const dataPath = CONFIG.dataPath;
     const symbols = ns.stock.getSymbols();
 
@@ -43,8 +43,10 @@ async function collateData(ns: NS) {
         let ticks: TickData[] = [];
         if (ns.fileExists(path)) {
             try {
-                const text = ns.read(path) as string;
-                ticks = JSON.parse(text);
+                const text = ns.read(path);
+                const data = JSON.parse(text) as unknown;
+                if (!isTickDataArray(data)) ticks = [];
+                else ticks = data;
             } catch {
                 ticks = [];
             }
