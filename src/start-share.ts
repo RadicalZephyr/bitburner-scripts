@@ -38,17 +38,17 @@ OPTIONS
     const share_percent = options['share-percent'];
 
     const ownedHosts = ns.getPurchasedServers();
-    await shareHosts(ns, ownedHosts, shareScript, share_percent, maxRam);
+    shareHosts(ns, ownedHosts, shareScript, share_percent, maxRam);
 
     const network = walkNetworkBFS(ns);
     const allHosts = Array.from(network.keys());
 
     const hosts = usableHosts(ns, allHosts);
 
-    await shareHosts(ns, hosts, shareScript, share_percent, maxRam);
+    shareHosts(ns, hosts, shareScript, share_percent, maxRam);
 }
 
-async function shareHosts(
+function shareHosts(
     ns: NS,
     hosts: string[],
     shareScript: string,
