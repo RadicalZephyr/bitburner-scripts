@@ -27,11 +27,6 @@ export async function main(ns: NS) {
 
     const contractDataJSON = ns.args[1] as unknown;
 
-    if (!isContractData(contractDataJSON)) {
-        ns.writePort(contractPortNum, JSON.stringify(null));
-        return;
-    }
-
     if (typeof contractDataJSON !== 'string') {
         ns.tprintf(
             '%s contract run with non-string data argument. Must be a JSON string containing file, host and contract data.',
