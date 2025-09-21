@@ -155,7 +155,7 @@ function makeAdjacencyTable(
     vertices: Vertex[],
     edges: Edge[],
 ): Map<number, Set<number>> {
-    const adjacencyTable = new Map();
+    const adjacencyTable: Map<number, Set<number>> = new Map();
     for (const v of vertices) {
         adjacencyTable.set(v.label, new Set());
     }
