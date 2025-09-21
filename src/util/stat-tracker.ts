@@ -86,7 +86,7 @@ export class StatTracker<Type> {
      */
     value(stat: keyof PickByType<Type, number>): number {
         if (this.history.length > 0) {
-            return this.history.at(-1)![stat] as number;
+            return this.history.at(-1)[stat] as number;
         }
         return 1;
     }
@@ -100,8 +100,8 @@ export class StatTracker<Type> {
     velocity(stat: keyof PickByType<Type, number>): number {
         if (this.history.length > 2) {
             const velocity = computeVelocity(
-                this.history.at(-1)!,
-                this.history.at(0)!,
+                this.history.at(-1),
+                this.history.at(0),
             );
             return velocity[stat] as number;
         }
@@ -231,7 +231,7 @@ function notifyListeners<Type>(
     s: Sample<Type>,
     listeners: StatListener<keyof PickByType<Type, number>>[],
 ) {
-    const remaining = [];
+    const remaining: StatListener<keyof PickByType<Type, number>>[] = [];
     for (const l of listeners) {
         const stat = s[l.stat];
         const compare = compareBy(l.condition);
