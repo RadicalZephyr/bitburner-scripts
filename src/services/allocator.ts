@@ -58,6 +58,7 @@ export class MemoryAllocator {
 
     constructor(ns: NS, printLog?: LogFn) {
         this.ns = ns;
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         this.printLog = printLog ?? ns.print ?? (() => null);
     }
 
