@@ -102,7 +102,7 @@ async function workForFactions(ns: NS) {
 
         unfinishedFactions.sort((a, b) => a.rep - b.rep);
 
-        const lowestRepFaction = unfinishedFactions[0];
+        const lowestRepFaction = unfinishedFactions[0]!;
 
         const workType = getBestWorkTypeForFaction(ns, lowestRepFaction.name);
 
@@ -134,9 +134,12 @@ function getBestWorkTypeForFaction(ns: NS, faction: string): FactionWorkType {
         };
     });
 
+    if (workTypes.length === 0)
+        throw new Error(`No work available with ${faction}`);
+
     workTypes.sort((a, b) => b.reputation - a.reputation);
 
-    return workTypes[0].type;
+    return workTypes[0]!.type;
 }
 
 function getOwnedAugs(ns: NS): Set<string> {
