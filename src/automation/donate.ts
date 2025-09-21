@@ -59,7 +59,7 @@ function getMaxRep(ns: NS, f: string): number {
 
     augs.sort((a, b) => b.rep - a.rep);
 
-    return augs[0].rep;
+    return augs[0]!.rep;
 }
 
 function donationForRep(ns: NS, rep: number, player: Player): number {
