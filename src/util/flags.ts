@@ -9,6 +9,10 @@ import { parseAndRegisterAlloc } from 'services/client/memory';
 
 type FlagsFn = NS['flags'];
 
+type BetterBaseFlags = { _: string[] } & {
+    [key: string]: ScriptArg;
+};
+
 /**
  * Type of the schema passed to the `ns.flags` function.
  */
@@ -53,7 +57,7 @@ export async function parseFlags<S extends readonly [string, DefaultValue][]>(
     const options = ns.flags([
         ...schema,
         ...MEM_TAG_FLAGS,
-    ] as unknown as FlagsSchema);
+    ] as unknown as FlagsSchema) as BetterBaseFlags;
 
     const allocationId = await parseAndRegisterAlloc(ns, options, claimAlloc);
     if (
@@ -67,6 +71,7 @@ export async function parseFlags<S extends readonly [string, DefaultValue][]>(
     for (const [key, def] of schema) {
         if (typeof options[key] !== typeof def) {
             throw new Error(
+                // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
                 `flag '--${key} ${options[key]}' somehow parsed as the wrong type: '${typeof options[key]}'. Default value: '${def}' `,
             );
         }
