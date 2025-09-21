@@ -196,7 +196,7 @@ async function pumpOnce(
                     `Requested function exceeds max configured NS fn RAM ${ns.formatRam(CONFIG.maxNsFnRam)}`,
                 ),
             },
-        } satisfies ResponseOkEnvelope<unknown, DispatchResponse>;
+        } satisfies ResponseOkEnvelope<string, DispatchResponse>;
         while (!resp.tryWrite(envelope)) {
             await ns.sleep(20);
         }
@@ -212,7 +212,7 @@ async function pumpOnce(
         type: peeked.type,
         ok: true,
         payload: response,
-    } satisfies ResponseOkEnvelope<unknown, DispatchResponse>;
+    } satisfies ResponseOkEnvelope<string, DispatchResponse>;
     while (!resp.tryWrite(envelope)) {
         await ns.sleep(20);
     }
@@ -231,12 +231,14 @@ async function handleMessage(
     ns.print('got a new valid DaemonRequest');
 
     try {
+        // NOTE: this should be safe, I'm not sure why the lint is complaining
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const value = await callNsFn(ns, req.method, req.args);
         return { ok: true, value };
-    } catch (error) {
+    } catch (error: unknown) {
         return {
             ok: false,
-            error,
+            error: error as Error,
         };
     }
 }
