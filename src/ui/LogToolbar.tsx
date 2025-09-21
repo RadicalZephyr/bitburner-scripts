@@ -32,7 +32,12 @@ export const LogToolbar: React.FC<LogToolbarProps> = ({
     const [expanded, setExpanded] = React.useState(false);
 
     React.useEffect(() => {
-        if (!globalThis[styleId]) {
+        if (
+            !(
+                globalThis[styleId]
+                && globalThis[styleId] instanceof HTMLStyleElement
+            )
+        ) {
             const styleEl = globalThis['document'].createElement('style');
             styleEl.id = styleId;
             styleEl.textContent = makeCss(theme);
@@ -42,7 +47,7 @@ export const LogToolbar: React.FC<LogToolbarProps> = ({
             );
             rootEl.parentElement.appendChild(styleEl);
         }
-        globalThis[styleId].textContent = makeCss(theme);
+        (globalThis[styleId] as HTMLStyleElement).textContent = makeCss(theme);
     }, [theme]);
 
     return (
