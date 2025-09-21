@@ -49,7 +49,7 @@ async function startLaunchService(ns: NS) {
 
     const memClient = new MemoryClient(ns);
     const self = ns.self();
-    memClient.registerAllocation(self.server, self.ramUsage, 1);
+    void memClient.registerAllocation(self.server, self.ramUsage, 1);
 
     const server = new Server(ns);
 
