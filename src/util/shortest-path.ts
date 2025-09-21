@@ -22,7 +22,7 @@ export async function shortestPath(
     const shortestPaths = dijkstra(network, startHost);
     await ns.asleep(0);
 
-    const path = [];
+    const path: string[] = [];
     let u = goalHost;
 
     if (shortestPaths.get(u) !== null) {
@@ -55,8 +55,8 @@ export function dijkstra(
     source: string,
 ): Map<string, string> {
     const Q: Set<string> = new Set();
-    const dist = new Map();
-    const prev = new Map();
+    const dist: Map<string, number> = new Map();
+    const prev: Map<string, string> = new Map();
     for (const v of network.keys()) {
         dist.set(v, +Infinity);
         prev.set(v, null);
@@ -90,7 +90,7 @@ function min_distance(
     unvisited: Set<string>,
 ): string {
     let least = Infinity;
-    let leastV = null;
+    let leastV: string = null;
     for (const v of unvisited.keys()) {
         if (dist.get(v) < least) {
             least = dist.get(v);
