@@ -79,7 +79,10 @@ export class GtpClient {
      * @param positions - list of alternating color and vertex pairs
      */
     async setPosition(positions: PlaceTurn[]) {
-        const flatPositions = positions.reduce((acc, n) => extend(acc, n), []);
+        const flatPositions = positions.reduce<(Color | Vertex)[]>(
+            (acc, n) => extend(acc, n),
+            [],
+        );
         await this.send(
             'set_position',
             encodeURIComponent(flatPositions.join(' ')),
@@ -169,8 +172,7 @@ export class GtpClient {
     }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function parseResponse(o: any): Response {
+function parseResponse(o: unknown): Response {
     if (typeof o !== 'object')
         throw new Error(`response was not an object: ${JSON.stringify(o)}`);
     if (!(Object.hasOwn(o, 'status') && Object.hasOwn(o, 'response')))
@@ -188,7 +190,11 @@ function makeRequest(method: Method, url: string): Promise<string> {
         const xhr = new XMLHttpRequest();
         xhr.open(method, url);
         xhr.onload = () => {
-            if (xhr.status >= 200 && xhr.status < 400) {
+            if (
+                xhr.status >= 200
+                && xhr.status < 400
+                && typeof xhr.response === 'string'
+            ) {
                 resolve(xhr.response);
             } else {
                 reject(
