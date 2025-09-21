@@ -158,7 +158,6 @@ CONFIGURATION
         return;
     }
 
-    const dataPath = CONFIG.dataPath;
     const symbols = ns.stock.getSymbols();
     const ticks: Record<string, TickData[]> = {};
     for (const sym of symbols) {
