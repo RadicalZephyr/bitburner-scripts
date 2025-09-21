@@ -67,10 +67,12 @@ function checkWorkers(
                     (c) => c.hostname === w.hostname && !ns.isRunning(c.pid),
                 );
                 if (allocClaims.length > 0) {
-                    const claims = allocClaims.map(
-                        (c) =>
-                            `\n    ${c.filename} claimed ${c.numChunks}x${ns.formatRam(c.chunkSize)}`,
-                    );
+                    const claims = allocClaims
+                        .map(
+                            (c) =>
+                                `\n    ${c.filename} claimed ${c.numChunks}x${ns.formatRam(c.chunkSize)}`,
+                        )
+                        .join('');
                     ns.print(
                         `INFO: allocating process ${alloc.pid} running ${alloc.filename}`
                             + `\n  claims: ${claims}`,
