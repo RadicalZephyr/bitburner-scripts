@@ -228,14 +228,14 @@ export function TerminalApp({
     }, []);
 
     const ensureScriptIndex = React.useCallback(
-        async (force = false) => {
+        (force: boolean = false) => {
             const now = Date.now();
             if (
                 !force
                 && completion.scriptIndex
                 && now - completion.scriptIndexTs <= SCRIPT_INDEX_TTL
             ) {
-                return completion.scriptIndex;
+                return Promise.resolve(completion.scriptIndex);
             }
             const files = ns.ls('home');
             const scripts = files
@@ -248,7 +248,7 @@ export function TerminalApp({
                 scriptIndex: scripts,
                 scriptIndexTs: now,
             }));
-            return scripts;
+            return Promise.resolve(scripts);
         },
         [completion.scriptIndex, completion.scriptIndexTs, ns],
     );
@@ -572,12 +572,12 @@ export function TerminalApp({
             <InputLine
                 value={input}
                 onChange={handleInputChange}
-                onSubmit={handleCommand}
+                onSubmit={() => void handleCommand()}
                 onHistoryPrev={historyPrev}
                 onHistoryNext={historyNext}
                 onHistoryReset={historyReset}
                 onClear={clearOutput}
-                onTabComplete={handleTabComplete}
+                onTabComplete={(r) => void handleTabComplete(r)}
                 onNonTabKey={handleNonTabKey}
                 selectionRequest={selectionRequest}
             />
@@ -886,54 +886,57 @@ function longestCommonPrefix(items: string[]): string {
     return prefix;
 }
 
-async function lsBuiltin(argv: string[], ctx: BuiltinContext) {
+function lsBuiltin(argv: string[], ctx: BuiltinContext) {
     const targetInput = argv[0] ?? '.';
     const target = normalizePath(targetInput, ctx.cwd);
     const files = ctx.ns.ls('home').map(toAbsolutePath);
     const listing = listImmediateChildren(files, target);
     if (!listing.exists) {
         ctx.appendLine('error', `no such file or directory: ${target}`);
-        return;
+        return Promise.resolve();
     }
     if (listing.entries.length === 0) {
         ctx.appendLine('info', 'empty');
-        return;
+        return Promise.resolve();
     }
     ctx.appendLine(
         'info',
         listing.entries.map((entry) => entry.name).join('  '),
     );
+    return Promise.resolve();
 }
 
-async function cdBuiltin(argv: string[], ctx: BuiltinContext) {
+function cdBuiltin(argv: string[], ctx: BuiltinContext) {
     const targetInput = argv[0] ?? '/';
     const target = normalizePath(targetInput, ctx.cwd);
     const files = ctx.ns.ls('home').map(toAbsolutePath);
     if (!directoryExists(files, target)) {
         ctx.appendLine('error', `no such directory: ${target}`);
-        return;
+        return Promise.resolve();
     }
     ctx.setCwd(target);
     ctx.appendLine('info', `cwd: ${target}`);
+    return Promise.resolve();
 }
 
-async function memBuiltin(argv: string[], ctx: BuiltinContext) {
+function memBuiltin(argv: string[], ctx: BuiltinContext) {
     if (argv.length !== 1) {
         ctx.appendLine('error', 'usage: mem <script>');
-        return;
+        return Promise.resolve();
     }
     const resolved = ctx.resolveScript(ctx.cwd, argv[0]);
     if (!resolved.ok) {
         const err = resolved as ResolveErr;
         ctx.appendLines('error', err.message);
-        return;
+        return Promise.resolve();
     }
     const ram = ctx.ns.getScriptRam(resolved.script, 'home');
     if (!ram || Number.isNaN(ram)) {
         ctx.appendLine('error', `cannot determine RAM for ${resolved.absPath}`);
-        return;
+        return Promise.resolve();
     }
     ctx.appendLine('info', `${resolved.absPath}: ${ctx.ns.formatRam(ram)}`);
+    return Promise.resolve();
 }
 
 async function freeBuiltin(_: string[], ctx: BuiltinContext) {
@@ -1013,6 +1016,7 @@ function formatError(err: unknown): string {
         const base = err.message || err.name;
         return err.name && err.message ? `${err.name}: ${err.message}` : base;
     }
+    // eslint-disable-next-line @typescript-eslint/no-base-to-string
     return String(err);
 }
 
@@ -1052,6 +1056,7 @@ function helpText(): string {
 
 function ensureStyles(theme: ReturnType<typeof useTheme>): void {
     const root = assertEl(globalThis['root'], 'No root element found');
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     let styleEl: HTMLStyleElement = globalThis[STYLE_ID];
     if (!styleEl) {
         styleEl = globalThis['document'].createElement('style');
