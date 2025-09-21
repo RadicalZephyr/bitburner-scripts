@@ -65,5 +65,8 @@ export function bindPropFn<A extends unknown[]>(
     if (typeof fn !== 'function')
         throw new Error(`${msg}: Key ${String(key)} is not a function`);
 
-    return (fn as (...a: [...A, ...unknown[]]) => unknown).bind(obj, ...args);
+    return (fn as (...a: [...A, ...unknown[]]) => unknown).bind(
+        obj,
+        ...args,
+    ) as (...args: unknown[]) => void;
 }
