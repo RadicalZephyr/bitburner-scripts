@@ -38,7 +38,7 @@ CONFIGURATION
     const maxLogSize = 100000;
     function rotateLog() {
         if (ns.fileExists(logPath)) {
-            const data = ns.read(logPath) as string;
+            const data = ns.read(logPath);
             if (data.length > maxLogSize) {
                 const ts = Date.now();
                 ns.write(`${logPath}.${ts}`, data, 'w');
@@ -66,10 +66,7 @@ CONFIGURATION
     }
 
     while (true) {
-        const indicators = (await client.requestIndicators()) as Record<
-            string,
-            Indicators
-        >;
+        const indicators = await client.requestIndicators();
         const maxPosition = CONFIG.maxPosition;
         const buyPct = CONFIG.buyPercentile;
         const sellPct = CONFIG.sellPercentile;
