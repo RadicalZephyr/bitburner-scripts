@@ -45,7 +45,7 @@ OPTIONS
 
     const sleeveTrackers: StatTracker<SleevePerson>[] = [];
     const pollFn = () => {
-        const sleeveData = [];
+        const sleeveData: SleeveData[] = [];
 
         for (let i = 0; i < ns.sleeve.getNumSleeves(); i++) {
             const sp = ns.sleeve.getSleeve(i);
