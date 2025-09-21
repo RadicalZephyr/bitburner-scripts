@@ -5,7 +5,7 @@ import { d3 } from 'lib/d3';
 import { Plot } from 'lib/plot';
 import { React } from 'lib/react';
 
-import { TickData } from 'stock/indicators';
+import { TickData } from 'stock/data';
 import { TrackerClient } from 'stock/client/tracker';
 
 const FLAGS = [

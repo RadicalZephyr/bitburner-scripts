@@ -1,7 +1,7 @@
 import type { NS, AutocompleteData } from '@ns';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
-import { isTickDataArray, TickData } from 'stock/indicators';
+import { isTickDataArray, TickData } from 'stock/data';
 
 import { CONFIG } from 'stock/config';
 

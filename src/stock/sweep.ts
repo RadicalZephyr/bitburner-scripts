@@ -2,7 +2,7 @@ import type { AutocompleteData, NS } from '@ns';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { CONFIG } from 'stock/config';
-import { TickData } from 'stock/indicators';
+import { TickData } from 'stock/data';
 import { simulateTrades, StrategyParams } from 'stock/backtest';
 
 const FLAGS = [

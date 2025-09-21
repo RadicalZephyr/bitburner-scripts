@@ -11,7 +11,7 @@ import {
     type Validator,
 } from 'util/validate';
 
-import type { TickData } from 'stock/indicators';
+import type { TickData } from 'stock/data';
 
 export const TRACKER_PORT = 30;
 export const TRACKER_RESPONSE_PORT = 31;

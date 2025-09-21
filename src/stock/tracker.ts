@@ -2,8 +2,8 @@ import type { NS } from '@ns';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { CONFIG } from 'stock/config';
-import { computeIndicators, TickData } from 'stock/indicators';
-import { computeCorrelations } from 'stock/indicators';
+import { TickData } from 'stock/data';
+import { computeCorrelations, computeIndicators } from 'stock/indicators';
 import {
     TRACKER_PORT,
     TRACKER_RESPONSE_PORT,
