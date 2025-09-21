@@ -1,4 +1,4 @@
-import type { AutocompleteData, GoOpponent, NS } from '@ns';
+import type { AutocompleteData, Go, GoOpponent, NS } from '@ns';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { GtpClient } from 'go/GtpClient';
@@ -149,7 +149,7 @@ async function playGame(ns: NS, client: GtpClient, turns: Turn[]) {
             myMove = 'pass';
         }
 
-        let opponentMove;
+        let opponentMove: Awaited<ReturnType<Go['passTurn']>>;
         if (myMove === 'pass') {
             turns.push(['black', 'pass']);
             opponentMove = await ns.go.passTurn();
