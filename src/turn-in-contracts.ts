@@ -1,12 +1,12 @@
 import type { NS } from '@ns';
 import { parseFlags } from 'util/flags';
 
-import { CONTRACTS } from 'all-contracts';
+import { ContractData, CONTRACTS } from 'all-contracts';
 
 export async function main(ns: NS) {
     await parseFlags(ns, []);
 
-    const failures = {};
+    const failures: Record<string, ContractData[]> = {};
     for (const contract of CONTRACTS) {
         if (contract.answer !== 'null') {
             const reward = ns.codingcontract.attempt(
