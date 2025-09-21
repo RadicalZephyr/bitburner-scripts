@@ -105,7 +105,7 @@ export async function insertRemoteScript(
 
     // If an install is in flight for this URL, await it.
     const inFlight = pendingMap.get(resolvedUrl);
-    if (inFlight) return inFlight;
+    if (inFlight != null) return inFlight;
 
     // Optional pre-hash (blocks until we compute it, but avoids double transfer later via cache).
     let preHash: string | undefined;
@@ -123,7 +123,7 @@ export async function insertRemoteScript(
     }
 
     const p = new Promise<void>((resolve, reject) => {
-        const doc = globalThis['document']!;
+        const doc = globalThis['document'];
         const script = doc.createElement('script');
 
         if (module) script.type = 'module';
@@ -133,15 +133,12 @@ export async function insertRemoteScript(
 
         if (integrity) {
             script.integrity = integrity;
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            script.crossOrigin = (crossOrigin ?? 'anonymous') as any;
+            script.crossOrigin = crossOrigin ?? 'anonymous';
         } else if (crossOrigin) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            script.crossOrigin = crossOrigin as any;
+            script.crossOrigin = crossOrigin;
         }
 
-        // eslint-disable-next-line prefer-const, @typescript-eslint/no-explicit-any
-        let timeoutId: any = setTimeout(() => {
+        let timeoutId: number = setTimeout(() => {
             cleanup();
             reject(
                 new Error(
@@ -151,13 +148,16 @@ export async function insertRemoteScript(
         }, timeoutMs);
 
         const cleanup = () => {
-            clearTimeout(timeoutId);
-            pendingMap!.delete(resolvedUrl);
+            if (timeoutId != null) {
+                clearTimeout(timeoutId);
+                timeoutId = null;
+            }
+            pendingMap.delete(resolvedUrl);
         };
 
         script.addEventListener('load', () => {
             cleanup();
-            installed!.add(resolvedUrl);
+            installed.add(resolvedUrl);
             // Optional post-hash (non-blocking to you, but we await it here so the promise
             // resolves *after* the hashing if recordHash === "post-wait". We stick to "post"
             // meaning we don't delay resolve; we just fire-and-forget).
@@ -228,8 +228,7 @@ export async function importFromGlobal<T>(
 
 /** Assert that a global binding exists. */
 export function assertGlobal<T>(globalKey: string, errorMessage: string): T {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const v = (globalThis as any)[globalKey] as T | undefined;
+    const v = globalThis[globalKey] as T | undefined;
     if (!v) throw new Error(errorMessage);
     return v;
 }
