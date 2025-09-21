@@ -103,6 +103,10 @@
 // eslint-disable-next-line no-var
 var $$type: string = '@@type';
 
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function type(x: any): string {
     return x != null
