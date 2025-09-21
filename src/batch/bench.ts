@@ -191,11 +191,14 @@ function mean(values: number[]): number {
 
 function median(values: number[]): number {
     if (values.length === 0) return 0;
+    if (values.length === 1) return values[0]!;
+    if (values.length === 2) return (values[0]! + values[1]!) / 2;
+
     const sorted = [...values].sort((a, b) => a - b);
     const mid = Math.floor(sorted.length / 2);
     return sorted.length % 2 === 0
-        ? (sorted[mid - 1] + sorted[mid]) / 2
-        : sorted[mid];
+        ? (sorted[mid - 1]! + sorted[mid]!) / 2
+        : sorted[mid]!;
 }
 
 function std(values: number[]): number {
