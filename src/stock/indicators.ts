@@ -1,4 +1,5 @@
 import { Indicators } from 'stock/client/tracker';
+import { isArrayOf, isNumber, isObjectLike, Validator } from 'util/validate';
 
 export interface TickData {
     ts: number;
@@ -7,6 +8,16 @@ export interface TickData {
     volatility: number;
     forecast: number;
 }
+
+export const isTickData: Validator<TickData> = isObjectLike({
+    ts: isNumber,
+    askPrice: isNumber,
+    bidPrice: isNumber,
+    volatility: isNumber,
+    forecast: isNumber,
+});
+
+export const isTickDataArray: Validator<TickData[]> = isArrayOf(isTickData);
 
 export interface IndicatorOptions {
     smaPeriods?: number[];

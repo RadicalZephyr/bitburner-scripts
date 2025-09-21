@@ -1,8 +1,9 @@
 import type { AutocompleteData, NS } from '@ns';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
+import { computeIndicators, isTickDataArray, TickData } from 'stock/indicators';
+
 import { CONFIG } from 'stock/config';
-import { computeIndicators, TickData } from 'stock/indicators';
 
 const FLAGS = [
     ['cash', 1_000_000],
@@ -162,7 +163,15 @@ CONFIGURATION
     for (const sym of symbols) {
         const path = `${dataPath}${sym}.json`;
         if (ns.fileExists(path)) {
-            ticks[sym] = JSON.parse(ns.read(path) as string);
+            const tickData = JSON.parse(ns.read(path)) as unknown;
+            if (!isTickDataArray(tickData)) {
+                ns.print(
+                    `WARN: stored tick data for symbol ${sym} format is unrecognized`,
+                );
+                ticks[sym] = [];
+                continue;
+            }
+            ticks[sym] = tickData;
         } else {
             ticks[sym] = [];
         }
