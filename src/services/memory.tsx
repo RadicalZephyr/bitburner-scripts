@@ -124,7 +124,7 @@ async function startMemoryAllocator(ns: NS, log: RingBuffer<string>) {
     });
 
     const server = new Server(ns, memoryManager);
-    server.readLoop();
+    void server.readLoop();
 
     let lastCollection = Date.now();
     let lastGrowCheck = 0;
@@ -188,17 +188,16 @@ class Server extends BaseServer<MemoryProtocolDef> {
         const requestPort = ns.getPortHandle(MEMORY_PORT);
         const responsePort = ns.getPortHandle(MEMORY_RESPONSE_PORT);
         const handlers: Handlers<MemoryProtocolDef> = {
-            [MessageType.Worker]: async (hostPayload: string | string[]) => {
+            [MessageType.Worker]: (hostPayload: string | string[]) => {
                 const hosts = Array.isArray(hostPayload)
                     ? hostPayload
                     : [hostPayload];
                 for (const h of hosts) {
                     memoryManager.pushWorker(h);
                 }
+                return Promise.resolve();
             },
-            [MessageType.AllocationRequest]: async (
-                request: AllocationRequest,
-            ) => {
+            [MessageType.AllocationRequest]: (request: AllocationRequest) => {
                 ns.print(
                     `INFO: request pid=${request.pid} filename=${request.filename} `
                         + `${request.numChunks}x${ns.formatRam(request.chunkSize)} `
@@ -224,9 +223,9 @@ class Server extends BaseServer<MemoryProtocolDef> {
                 } else {
                     ns.print('WARN: allocation failed, not enough space');
                 }
-                return allocation;
+                return Promise.resolve(allocation);
             },
-            [MessageType.GrowableRequest]: async (
+            [MessageType.GrowableRequest]: (
                 growReq: GrowableAllocationRequest,
             ) => {
                 ns.print(
@@ -252,9 +251,9 @@ class Server extends BaseServer<MemoryProtocolDef> {
                 } else {
                     ns.print('WARN: growable allocation failed');
                 }
-                return growAlloc;
+                return Promise.resolve(growAlloc);
             },
-            [MessageType.Release]: async (release: AllocationRelease) => {
+            [MessageType.Release]: (release: AllocationRelease) => {
                 if (
                     memoryManager.deallocate(
                         release.allocationId,
@@ -271,10 +270,9 @@ class Server extends BaseServer<MemoryProtocolDef> {
                         `WARN: allocation ${release.allocationId} not found for pid ${release.pid}`,
                     );
                 }
+                return Promise.resolve();
             },
-            [MessageType.ClaimRelease]: async (
-                claimRel: AllocationClaimRelease,
-            ) => {
+            [MessageType.ClaimRelease]: (claimRel: AllocationClaimRelease) => {
                 if (
                     memoryManager.releaseClaim(
                         claimRel.allocationId,
@@ -291,26 +289,28 @@ class Server extends BaseServer<MemoryProtocolDef> {
                         `WARN: claim for allocation ${claimRel.allocationId} not found for pid ${claimRel.pid}`,
                     );
                 }
+                return Promise.resolve();
             },
-            [MessageType.Register]: async (reg: AllocationRegister) => {
+            [MessageType.Register]: (reg: AllocationRegister) => {
                 ns.print(
                     `INFO: register pid=${reg.pid} host=${reg.hostname} `
                         + `${reg.numChunks}x${ns.formatRam(reg.chunkSize)} `
                         + `${reg.filename}`,
                 );
                 memoryManager.registerAllocation(reg);
+                return Promise.resolve();
             },
-            [MessageType.Status]: async () => {
-                return {
+            [MessageType.Status]: () => {
+                return Promise.resolve({
                     freeRam: memoryManager.getFreeRamTotal(),
                     chunks: memoryManager.getFreeChunks(),
-                };
+                });
             },
-            [MessageType.Snapshot]: async () => {
+            [MessageType.Snapshot]: () => {
                 ns.print(`INFO: processing snapshot request`);
-                return memoryManager.getSnapshot();
+                return Promise.resolve(memoryManager.getSnapshot());
             },
-            [MessageType.Claim]: async (claimInfo: AllocationClaim) => {
+            [MessageType.Claim]: (claimInfo: AllocationClaim) => {
                 if (memoryManager.claimAllocation(claimInfo)) {
                     ns.print(
                         `INFO: claimed allocation ${claimInfo.allocationId} `
@@ -323,6 +323,7 @@ class Server extends BaseServer<MemoryProtocolDef> {
                         `WARN: failed to claim allocation ${claimInfo.allocationId}`,
                     );
                 }
+                return Promise.resolve();
             },
         };
 
