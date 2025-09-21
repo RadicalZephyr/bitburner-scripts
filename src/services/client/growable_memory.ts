@@ -9,7 +9,6 @@ import {
     AllocOptions,
     GrowableAllocationRequest,
     AllocationRelease,
-    AllocationResult,
     HostAllocation,
     AllocationChunk,
     MemoryProtocol,
@@ -73,7 +72,7 @@ export class GrowableMemoryClient extends MemoryClient {
             this.ns.print('WARN: growable allocation request failed');
             return null;
         }
-        const allocation = result as AllocationResult;
+        const allocation = result;
         return new GrowableAllocation(
             this.ns,
             allocation.allocationId,
@@ -194,10 +193,15 @@ export class GrowableAllocation extends TransferableAllocation {
     releaseAtExit(ns: NS) {
         const memPort = ns.getPortHandle(MEMORY_PORT);
         const portClient = new PortClient(ns);
-        const rel = this._release.bind(this, ns.self(), memPort, portClient);
+        const rel = this._release.bind(
+            this,
+            ns.self(),
+            memPort,
+            portClient,
+        ) as () => Promise<void>;
         ns.atExit(
             () => {
-                rel();
+                void rel();
             },
             'memoryRelease-' + makeFuid(ns),
         );
