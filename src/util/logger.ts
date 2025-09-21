@@ -40,13 +40,14 @@ export function installLogger(
                 case 'clearLog':
                     return clearLog;
                 default:
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
                     return Reflect.get(target, prop, recv);
             }
         },
     });
 
     return {
-        ns: proxy as NS,
+        ns: proxy,
         buffer,
     };
 }
@@ -77,6 +78,7 @@ function argsToString(args: unknown[]): string {
                  * normal object. If we don't do that, all promises will be serialized into "{}".
                  */
                 if (value instanceof Promise) {
+                    // eslint-disable-next-line @typescript-eslint/no-base-to-string
                     return value.toString();
                 }
                 if (value instanceof Map) {
@@ -89,19 +91,21 @@ function argsToString(args: unknown[]): string {
             }));
         }
 
+        // eslint-disable-next-line @typescript-eslint/no-base-to-string
         return (out += String(arg));
     }, '');
 }
 
 function mapToString(map: Map<unknown, unknown>): string {
-    const formattedMap = [...map]
+    const formattedMap = Array.from(map.entries())
         .map((m) => {
-            return `${String(m[0])} => ${String(m[1])}`;
+            // eslint-disable-next-line @typescript-eslint/no-base-to-string
+            return `${String(m[0])} => ${argsToString([m[1]])}`;
         })
         .join('; ');
     return `< Map: ${formattedMap} >`;
 }
 
 function setToString(set: Set<unknown>): string {
-    return `< Set: ${[...set].join('; ')} >`;
+    return `< Set: ${[...set].map((el) => argsToString([el])).join('; ')} >`;
 }
