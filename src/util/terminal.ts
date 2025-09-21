@@ -124,7 +124,7 @@ export function sendTerminalCommand(
  * @returns A list of strings of commands where timed commands have been separated from other commands.
  */
 export function splitAtTimedCommands(commands: string): string[] {
-    const finalCommands = [];
+    const finalCommands: string[] = [];
     const commandTokens = tokenize(commands);
 
     let currentCommand = '';
@@ -216,7 +216,7 @@ export async function findTerminalInput(
     ns: NS,
     timeoutMs = DEFAULT_OPTIONS.commandTimeoutMs,
 ): Promise<HTMLInputElement> {
-    let termInputEl: unknown | null;
+    let termInputEl: unknown;
     const start = Date.now();
 
     while (true) {
@@ -249,6 +249,7 @@ function dispatchReactInputAndEnter(
     const propKey = getReactPropKey(terminalInput);
 
     // Perform an onChange event to set some internal values.
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     terminalInput[propKey].onChange({ target: terminalInput });
 
     // Simulate an enter press
@@ -260,6 +261,7 @@ function dispatchReactInputAndEnter(
     // handler closes over the state value, so even though the value
     // is updated you need to get the new handler for the new value to
     // be used.
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     terminalInput[propKey].onKeyDown({
         key: 'Enter',
         preventDefault: (): void => null,
