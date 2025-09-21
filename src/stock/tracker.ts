@@ -55,7 +55,7 @@ CONFIGURATION
     }
 
     const server = new Server(ns, buffers);
-    server.readLoop();
+    void server.readLoop();
 
     while (true) {
         const windowSize = CONFIG.windowSize;
@@ -67,7 +67,7 @@ CONFIGURATION
                 volatility: ns.stock.getVolatility(sym),
                 forecast: ns.stock.getForecast(sym),
             };
-            const buf = buffers.get(sym)!;
+            const buf = buffers.get(sym);
             buf.push(tick);
             if (buf.length > windowSize) {
                 buf.splice(0, buf.length - windowSize);
@@ -75,7 +75,7 @@ CONFIGURATION
             ns.write(`${CONFIG.dataPath}${sym}.json`, JSON.stringify(buf), 'w');
         }
         const percentiles = [CONFIG.buyPercentile, CONFIG.sellPercentile];
-        const stats = computeIndicators(buffers.get(symbols[0])!, {
+        const stats = computeIndicators(buffers.get(symbols[0]), {
             smaPeriods: [CONFIG.smaPeriod],
             emaPeriods: [CONFIG.emaPeriod],
             rocPeriods: [CONFIG.rocPeriod],
