@@ -140,6 +140,7 @@
 - Tail UIs like monitor, infiltration list, and backdoor notifier render once and poll for updates using hook utilities [#229][pr-229].
 - Added a new `LogRoot` container and logging interceptor for preserving access to script logging output when implementing custom UIs [pr-315].
 - Position Port Allocator HUD in line with other HUD script displays [#331][pr-331].
+- Add config to not open HUD script tail windows [#337][pr-337].
 
 ### Documentation and tests
 
@@ -221,6 +222,7 @@
 [pr-326]: https://github.com/RadicalZephyr/bitburner-scripts/pull/326
 [pr-331]: https://github.com/RadicalZephyr/bitburner-scripts/pull/331
 [pr-334]: https://github.com/RadicalZephyr/bitburner-scripts/pull/334
+[pr-337]: https://github.com/RadicalZephyr/bitburner-scripts/pull/337
 
 ## v2.1.0
 
