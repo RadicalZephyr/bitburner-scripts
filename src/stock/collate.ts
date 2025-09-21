@@ -1,9 +1,7 @@
 import type { NS, AutocompleteData } from '@ns';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
-import { isTickDataArray, TickData } from 'stock/data';
-
-import { CONFIG } from 'stock/config';
+import { readStoredTickData, TickData } from 'stock/data';
 
 const FLAGS = [['help', false]] as const satisfies FlagsSchema;
 
@@ -34,23 +32,11 @@ OPTIONS
 }
 
 function collateData(ns: NS) {
-    const dataPath = CONFIG.dataPath;
     const symbols = ns.stock.getSymbols();
 
     const buffers = new Map<string, TickData[]>();
     for (const sym of symbols) {
-        const path = `${dataPath}${sym}.json`;
-        let ticks: TickData[] = [];
-        if (ns.fileExists(path)) {
-            try {
-                const text = ns.read(path);
-                const data = JSON.parse(text) as unknown;
-                if (!isTickDataArray(data)) ticks = [];
-                else ticks = data;
-            } catch {
-                ticks = [];
-            }
-        }
+        const ticks = readStoredTickData(ns, sym);
         buffers.set(sym, ticks);
     }
 

@@ -1,9 +1,10 @@
 import type { AutocompleteData, NS } from '@ns';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
-import { CONFIG } from 'stock/config';
-import { TickData } from 'stock/data';
+import { readStoredTickData, TickData } from 'stock/data';
 import { simulateTrades, StrategyParams } from 'stock/backtest';
+
+import { CONFIG } from 'stock/config';
 
 const FLAGS = [
     ['cash', 1_000_000],
@@ -39,16 +40,10 @@ CONFIGURATION
         return;
     }
 
-    const dataPath = CONFIG.dataPath;
     const symbols = ns.stock.getSymbols();
     const ticks: Record<string, TickData[]> = {};
     for (const sym of symbols) {
-        const path = `${dataPath}${sym}.json`;
-        if (ns.fileExists(path)) {
-            ticks[sym] = JSON.parse(ns.read(path) as string);
-        } else {
-            ticks[sym] = [];
-        }
+        ticks[sym] = readStoredTickData(ns, sym);
     }
 
     const buyOpts = [5, 10, 20];

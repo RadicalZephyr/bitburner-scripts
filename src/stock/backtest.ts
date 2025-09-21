@@ -1,7 +1,7 @@
 import type { AutocompleteData, NS } from '@ns';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
-import { isTickDataArray, TickData } from 'stock/data';
+import { readStoredTickData, TickData } from 'stock/data';
 import { computeIndicators } from 'stock/indicators';
 
 import { CONFIG } from 'stock/config';
@@ -162,20 +162,7 @@ CONFIGURATION
     const symbols = ns.stock.getSymbols();
     const ticks: Record<string, TickData[]> = {};
     for (const sym of symbols) {
-        const path = `${dataPath}${sym}.json`;
-        if (ns.fileExists(path)) {
-            const tickData = JSON.parse(ns.read(path)) as unknown;
-            if (!isTickDataArray(tickData)) {
-                ns.print(
-                    `WARN: stored tick data for symbol ${sym} format is unrecognized`,
-                );
-                ticks[sym] = [];
-                continue;
-            }
-            ticks[sym] = tickData;
-        } else {
-            ticks[sym] = [];
-        }
+        ticks[sym] = readStoredTickData(ns, sym);
     }
 
     const params: StrategyParams = {

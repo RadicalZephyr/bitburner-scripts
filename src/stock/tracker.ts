@@ -1,8 +1,7 @@
 import type { NS } from '@ns';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
-import { CONFIG } from 'stock/config';
-import { TickData } from 'stock/data';
+import { readStoredTickData, TickData } from 'stock/data';
 import { computeCorrelations, computeIndicators } from 'stock/indicators';
 import {
     TRACKER_PORT,
@@ -12,7 +11,10 @@ import {
     TrackerProtocol,
     TrackerProtocolDef,
 } from 'stock/client/tracker';
+
 import { BaseServer, type Handlers } from 'util/protocol';
+
+import { CONFIG } from 'stock/config';
 
 const FLAGS = [['help', false]] as const satisfies FlagsSchema;
 
@@ -44,21 +46,11 @@ CONFIGURATION
     ns.disableLog('ALL');
     ns.ui.openTail();
 
-    const dataPath = CONFIG.dataPath;
     const symbols = ns.stock.getSymbols();
 
     const buffers = new Map<string, TickData[]>();
     for (const sym of symbols) {
-        const path = `${dataPath}${sym}.json`;
-        let ticks: TickData[] = [];
-        if (ns.fileExists(path)) {
-            try {
-                const text = ns.read(path) as string;
-                ticks = JSON.parse(text);
-            } catch {
-                ticks = [];
-            }
-        }
+        const ticks = readStoredTickData(ns, sym);
         buffers.set(sym, ticks);
     }
 
@@ -80,7 +72,7 @@ CONFIGURATION
             if (buf.length > windowSize) {
                 buf.splice(0, buf.length - windowSize);
             }
-            ns.write(`${dataPath}${sym}.json`, JSON.stringify(buf), 'w');
+            ns.write(`${CONFIG.dataPath}${sym}.json`, JSON.stringify(buf), 'w');
         }
         const percentiles = [CONFIG.buyPercentile, CONFIG.sellPercentile];
         const stats = computeIndicators(buffers.get(symbols[0])!, {
