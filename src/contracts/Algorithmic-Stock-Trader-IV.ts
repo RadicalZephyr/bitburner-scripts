@@ -73,7 +73,7 @@ export function solve(_ns: NS, data1: [number, number[]]): number {
     const dp: number[][] = Array.from(
         { length: k + 1 },
         () => Array(n).fill(0) as number[],
-    ) as number[][];
+    );
 
     for (let t = 1; t <= k; t++) {
         let maxDiff = -stocks[0];
