@@ -171,7 +171,7 @@ function buildMultipliers(
 
     for (const p of presets) {
         const preset = p.trim().toLocaleLowerCase();
-        if (!(preset in PRESETS)) {
+        if (!isPreset(preset)) {
             ns.tprint(`WARN: unknown preset: '${preset}'`);
             continue;
         }
@@ -182,6 +182,10 @@ function buildMultipliers(
         }
     }
     return Array.from(multipliers);
+}
+
+function isPreset(name: string): name is keyof typeof PRESETS {
+    return Object.hasOwn(PRESETS, name);
 }
 
 async function graftAugments(
@@ -332,7 +336,8 @@ function augment(ns: NS, name: string): Augment {
 function stripUnitMults(aug: Multipliers): Partial<Multipliers> {
     const out: Partial<Multipliers> = {};
     for (const k in aug) {
-        if (aug[k] !== 1) out[k] = aug[k];
+        if (Object.hasOwn(aug, k) && typeof aug[k] === 'number' && aug[k] !== 1)
+            out[k] = aug[k];
     }
     return out;
 }
