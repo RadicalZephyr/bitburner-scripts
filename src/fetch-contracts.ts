@@ -1,4 +1,4 @@
-import type { AutocompleteData, NS } from '@ns';
+import type { AutocompleteData, CodingContractObject, NS } from '@ns';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
 import type { ContractData } from 'all-contracts';
@@ -82,7 +82,7 @@ OPTIONS
     const portClient = new PortClient(ns);
     const contractPortNum = await portClient.requestPort();
     ns.atExit(() => {
-        portClient.releasePort(contractPortNum);
+        void portClient.releasePort(contractPortNum);
     }, makeFuid(ns));
 
     const contractFile = /\.cct/;
@@ -90,8 +90,8 @@ OPTIONS
     const contractPort = ns.getPortHandle(contractPortNum);
     const contracts: ContractData[] = [];
 
-    const incompleteScriptContracts = [];
-    const missingScriptContracts = [];
+    const incompleteScriptContracts: ContractData[] = [];
+    const missingScriptContracts: ContractData[] = [];
 
     let count = 0;
 
@@ -111,8 +111,8 @@ OPTIONS
                 continue;
             }
 
-            const data = ns.codingcontract.getData(file, host);
-            const dataJson = JSON.stringify(data, (key, value) =>
+            const data = ns.codingcontract.getData(file, host) as unknown;
+            const dataJson = JSON.stringify(data, (_, value: unknown) =>
                 typeof value === 'bigint' ? value.toString() : value,
             );
 
@@ -173,7 +173,9 @@ OPTIONS
                 }
             }
 
-            contract.answer = contractPort.read();
+            contract.answer = contractPort.read() as unknown as Parameters<
+                CodingContractObject['submit']
+            >;
 
             contracts.push(contract);
 
