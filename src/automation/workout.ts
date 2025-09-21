@@ -28,7 +28,7 @@ export function autocomplete(data: AutocompleteData, args: string[]): string[] {
     if (last === gymFlag) return gymLocs;
 
     if (secondLast === gymFlag) {
-        const c = gymLocs.filter((g) => g.startsWith(last));
+        const c = gymLocs.filter((g) => g.startsWith(last!));
         return c;
     }
 
@@ -96,7 +96,7 @@ export async function trainCombat(
 
         skillsToTrain.sort((a, b) => a.level - b.level);
 
-        const skill = skillsToTrain[0];
+        const skill = skillsToTrain[0]!;
         gymWorkout(
             ns,
             gymLocation,
