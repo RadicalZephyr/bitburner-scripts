@@ -10,7 +10,8 @@ export default defineConfig(
             'src/lib/typescript-collections**',
             'src/lib/sodium**',
             'src/**/*.test.ts',
-            'src/jest-shim.ts'
+            'src/jest-shim.ts',
+            'src/test_util**',
         ],
     },
     eslint.configs.recommended,
@@ -25,8 +26,7 @@ export default defineConfig(
         },
         rules: {
             // Disallow unhandled/un-awaited promises
-            "@typescript-eslint/no-floating-promises": "warn"
-        }
-
-    }
+            '@typescript-eslint/no-floating-promises': 'warn',
+        },
+    },
 );
