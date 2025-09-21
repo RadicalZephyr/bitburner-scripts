@@ -589,10 +589,10 @@ export class TransferableAllocation {
     }
 
     releaseAtExit(ns: NS) {
-        const release = this.release.bind(this, ns);
+        const release = this.release.bind(this, ns) as () => Promise<void>;
         ns.atExit(
             () => {
-                release();
+                void release();
             },
             'memoryRelease-' + makeFuid(ns),
         );
