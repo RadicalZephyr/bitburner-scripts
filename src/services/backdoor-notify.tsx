@@ -85,21 +85,7 @@ function ServerDisplay({ ns, title, servers, theme }: ServerDisplayProps) {
                     <li key={host}>
                         <a
                             href="#"
-                            onClick={async () => {
-                                try {
-                                    await sendTerminalCommand(
-                                        ns,
-                                        `home ; whereis --goto  ${host}`,
-                                    );
-                                    await sendTerminalCommand(ns, 'backdoor');
-                                } catch (err) {
-                                    ns.tprintf(
-                                        'failed to backdoor %s: %s',
-                                        host,
-                                        String(err),
-                                    );
-                                }
-                            }}
+                            onClick={() => void backdoorHost(ns, host)}
                             style={{ color: theme.success }}
                         >
                             {host}
@@ -109,6 +95,17 @@ function ServerDisplay({ ns, title, servers, theme }: ServerDisplayProps) {
             </ul>
         </div>
     );
+}
+
+function backdoorHost(ns: NS, host: string) {
+    return async () => {
+        try {
+            await sendTerminalCommand(ns, `home ; whereis --goto  ${host}`);
+            await sendTerminalCommand(ns, 'backdoor');
+        } catch (err) {
+            ns.tprintf('failed to backdoor %s: %s', host, String(err));
+        }
+    };
 }
 
 function backdoorableServers(ns: NS) {
