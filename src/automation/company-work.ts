@@ -4,6 +4,8 @@ import type {
     CompanyPositionInfo,
     Player,
     NS,
+    JobName,
+    Skills,
 } from '@ns';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
@@ -165,11 +167,10 @@ export function bestJob(ns: NS, c: CompanyName): CompanyPositionInfo | null {
 
     const jobs = sing
         .getCompanyPositions(c)
-        .map((j) => {
+        .map((j: JobName) => {
             const jobInfo = sing.getCompanyPositionInfo(c, j);
             const gains = ns.formulas.work.companyGains(player, c, j, favor);
             return {
-                name: j,
                 ...jobInfo,
                 ...gains,
             };
@@ -184,13 +185,23 @@ export function bestJob(ns: NS, c: CompanyName): CompanyPositionInfo | null {
     return null;
 }
 
+const skillNames: (keyof Skills)[] = [
+    'hacking',
+    'strength',
+    'defense',
+    'dexterity',
+    'agility',
+    'charisma',
+    'intelligence',
+];
+
 function isHireable(
     player: Player,
     companyRep: number,
     info: CompanyPositionInfo,
 ) {
     if (companyRep < info.requiredReputation) return false;
-    for (const skill in player.skills) {
+    for (const skill of skillNames) {
         if (player.skills[skill] < info.requiredSkills[skill]) return false;
     }
     return true;
