@@ -97,15 +97,13 @@ function ServerDisplay({ ns, title, servers, theme }: ServerDisplayProps) {
     );
 }
 
-function backdoorHost(ns: NS, host: string) {
-    return async () => {
-        try {
-            await sendTerminalCommand(ns, `home ; whereis --goto  ${host}`);
-            await sendTerminalCommand(ns, 'backdoor');
-        } catch (err) {
-            ns.tprintf('failed to backdoor %s: %s', host, String(err));
-        }
-    };
+async function backdoorHost(ns: NS, host: string) {
+    try {
+        await sendTerminalCommand(ns, `home ; whereis --goto  ${host}`);
+        await sendTerminalCommand(ns, 'backdoor');
+    } catch (err) {
+        ns.tprintf('failed to backdoor %s: %s', host, String(err));
+    }
 }
 
 function backdoorableServers(ns: NS) {
