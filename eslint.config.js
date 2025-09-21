@@ -9,6 +9,8 @@ export default defineConfig(
         ignores: [
             'src/lib/typescript-collections**',
             'src/lib/sodium**',
+            'src/**/*.test.ts',
+            'src/jest-shim.ts'
         ],
     },
     eslint.configs.recommended,
