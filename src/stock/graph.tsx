@@ -181,6 +181,6 @@ function stockPlot(data: EnhancedTickData[]) {
 
 function allCompanyNames(enums: NSEnums): string[] {
     return Object.getOwnPropertyNames(enums.CompanyName).map(
-        (k) => enums.CompanyName[k],
+        (k) => enums.CompanyName[k] as string,
     );
 }
