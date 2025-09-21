@@ -85,7 +85,7 @@ async function workForCompanies(ns: NS) {
         if (unfinished.length === 0) return;
 
         unfinished.sort((a, b) => a.rep - b.rep);
-        const target = unfinished[0];
+        const target = unfinished[0]!;
 
         applyToBestJob(ns, target);
 
@@ -117,7 +117,7 @@ async function becomeCeo(ns: NS) {
 
         jobCompanies.sort((a, b) => b.rep - a.rep);
 
-        const target = jobCompanies[0];
+        const target = jobCompanies[0]!;
 
         applyToBestJob(ns, target);
 
@@ -180,7 +180,7 @@ export function bestJob(ns: NS, c: CompanyName): CompanyPositionInfo | null {
         })
         .sort((a, b) => b.reputation - a.reputation);
 
-    if (jobs.length > 0) return jobs[0];
+    if (jobs.length > 0) return jobs[0]!;
 
     return null;
 }
