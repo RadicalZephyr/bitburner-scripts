@@ -14,7 +14,6 @@ export default defineConfig(
         ],
     },
     eslint.configs.recommended,
-    tseslint.configs.recommended,
     tseslint.configs.recommendedTypeChecked,
     reactHooks.configs['recommended-latest'],
     {
