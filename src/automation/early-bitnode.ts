@@ -1,4 +1,4 @@
-import type { AutocompleteData, GymType, NS } from '@ns';
+import type { AutocompleteData, NS, Skills } from '@ns';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { LaunchClient } from 'services/client/launch';
@@ -53,7 +53,7 @@ async function studyAndCode(ns: NS) {
     if (!ns.singularity.gymWorkout('Powerhouse Gym', 'agi'))
         throw new Error('failed to workout agility at Powerhouse Gym');
 
-    await untilCombatStat(ns, 'agi', 10);
+    await untilCombatStat(ns, 'agility', 10);
 
     try {
         startSleevesShoplifting(ns);
@@ -75,11 +75,11 @@ function startSleevesShoplifting(ns: NS) {
 
 async function untilCombatStat(
     ns: NS,
-    stat: GymType | `${GymType}`,
+    stat: keyof Skills,
     targetLevel: number,
 ) {
     while (true) {
-        const statLevel = ns.getPlayer().skills[stat] as number;
+        const statLevel = ns.getPlayer().skills[stat];
         if (statLevel >= targetLevel) return;
         await ns.asleep(1000);
     }
@@ -125,9 +125,10 @@ async function sowAndHackNoodles(ns: NS) {
         },
         noods,
     );
-    if (!sowResult) throw new Error('failed to launch sow against n00dles');
+    if (sowResult != null && sowResult.pids.length > 0)
+        throw new Error('failed to launch sow against n00dles');
 
-    await waitForExit(ns, sowResult.pids[0]);
+    await waitForExit(ns, sowResult.pids[0]!);
 
     const harvestResult = await client.launch(
         '/batch/harvest.js',
