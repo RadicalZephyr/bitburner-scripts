@@ -4,6 +4,7 @@ import { FlagsSchema, parseFlags } from 'util/flags';
 import { MemoryClient } from 'services/client/memory';
 
 import { CONFIG } from 'services/config';
+import { isNumber, isObjectLike, isString, Validator } from 'util/validate';
 
 const FLAGS = [['help', false]] as const satisfies FlagsSchema;
 
@@ -12,6 +13,12 @@ interface Version {
     epoch: number;
     sha: string;
 }
+
+const isVersion: Validator<Version> = isObjectLike({
+    date: isString,
+    epoch: isNumber,
+    sha: isString,
+});
 
 const VERSION_FILE = 'VERSION.json';
 const REMOTE_URL =
@@ -45,7 +52,11 @@ CONFIGURATION
     const tempFile = 'VERSION.remote.json';
 
     const memClient = new MemoryClient(ns);
-    memClient.registerAllocation(scriptInfo.server, scriptInfo.ramUsage, 1);
+    void memClient.registerAllocation(
+        scriptInfo.server,
+        scriptInfo.ramUsage,
+        1,
+    );
 
     while (true) {
         if (!ns.fileExists(VERSION_FILE, 'home')) {
@@ -68,14 +79,20 @@ CONFIGURATION
         let remote: Version;
         let local: Version;
         try {
-            remote = JSON.parse(ns.read(tempFile));
+            const version = JSON.parse(ns.read(tempFile)) as unknown;
+            if (!isVersion(version))
+                throw new Error(`version format unrecognized`);
+            remote = version;
         } catch (err) {
-            ns.print(`ERROR: failed to parse ${tempFile}: ${String(err)}`);
+            ns.print(`ERROR: failed to parse remote version: ${String(err)}`);
             continue;
         }
 
         try {
-            local = JSON.parse(ns.read(VERSION_FILE));
+            const version = JSON.parse(ns.read(VERSION_FILE)) as unknown;
+            if (!isVersion(version))
+                throw new Error(`version format unrecognized`);
+            local = version;
         } catch (err) {
             ns.print(`ERROR: failed to parse ${VERSION_FILE}: ${String(err)}`);
             continue;
