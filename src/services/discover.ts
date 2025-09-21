@@ -42,7 +42,7 @@ CONFIGURATION
     const memClient = new MemoryClient(ns);
 
     const self = ns.self();
-    memClient.registerAllocation(self.server, self.ramUsage, 1);
+    void memClient.registerAllocation(self.server, self.ramUsage, 1);
 
     while (true) {
         const network = walkNetworkBFS(ns);
@@ -85,11 +85,26 @@ type CrackProgram = {
 
 function portOpeningProgramFns(ns: NS): CrackProgram[] {
     return [
-        { file: 'BruteSSH.exe', fn: ns.brutessh.bind(ns) },
-        { file: 'FTPCrack.exe', fn: ns.ftpcrack.bind(ns) },
-        { file: 'relaySMTP.exe', fn: ns.relaysmtp.bind(ns) },
-        { file: 'HTTPWorm.exe', fn: ns.httpworm.bind(ns) },
-        { file: 'SQLInject.exe', fn: ns.sqlinject.bind(ns) },
+        {
+            file: 'BruteSSH.exe',
+            fn: ns.brutessh.bind(ns) as (host: string) => boolean,
+        },
+        {
+            file: 'FTPCrack.exe',
+            fn: ns.ftpcrack.bind(ns) as (host: string) => boolean,
+        },
+        {
+            file: 'relaySMTP.exe',
+            fn: ns.relaysmtp.bind(ns) as (host: string) => boolean,
+        },
+        {
+            file: 'HTTPWorm.exe',
+            fn: ns.httpworm.bind(ns) as (host: string) => boolean,
+        },
+        {
+            file: 'SQLInject.exe',
+            fn: ns.sqlinject.bind(ns) as (host: string) => boolean,
+        },
     ];
 }
 
