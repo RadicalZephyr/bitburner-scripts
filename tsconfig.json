@@ -31,5 +31,9 @@
         "paths": {
             "@ns": ["../NetScriptDefinitions.d.ts"]
         }
+    },
+    "watchOptions": {
+        "excludeDirectories": ["node_modules", "dist/**"],
+        "excludeFiles": ["src/lib/sodium**", "src/lib/typescript-collections**"]
     }
 }
