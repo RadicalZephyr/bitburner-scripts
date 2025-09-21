@@ -30,8 +30,8 @@ OPTIONS
 }
 
 function printBestCrime(ns: NS) {
-    const crimes = Object.keys(ns.enums.CrimeType)
-        .map((c) => crimeStats(ns, ns.enums.CrimeType[c] as CrimeType))
+    const crimes = allCrimes
+        .map((c) => crimeStats(ns, c))
         .map(
             // c.time is in milliseconds, convert to seconds
             (c) => {
@@ -45,11 +45,26 @@ function printBestCrime(ns: NS) {
     ns.tprint(`Crime money/s:\n${crimes.join('\n')}`);
 }
 
+const allCrimes: `${CrimeType}`[] = [
+    'Shoplift',
+    'Rob Store',
+    'Mug',
+    'Larceny',
+    'Deal Drugs',
+    'Bond Forgery',
+    'Traffick Arms',
+    'Homicide',
+    'Grand Theft Auto',
+    'Kidnap',
+    'Assassination',
+    'Heist',
+];
+
 interface Crime extends CrimeStats {
-    name: CrimeType;
+    name: CrimeType | `${CrimeType}`;
 }
 
-function crimeStats(ns: NS, name: CrimeType): Crime {
+function crimeStats(ns: NS, name: CrimeType | `${CrimeType}`): Crime {
     return { name, ...ns.singularity.getCrimeStats(name) };
 }
 
