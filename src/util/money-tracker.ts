@@ -23,7 +23,7 @@ export async function primedMoneyTracker(
     for (let i = 0; i < historyLen; i++) {
         await updateMoneyTracker(ns, tracker, cadence);
     }
-    tickMoneyTrackerUpdates(ns, tracker, cadence);
+    void tickMoneyTrackerUpdates(ns, tracker, cadence);
 
     return tracker;
 }
