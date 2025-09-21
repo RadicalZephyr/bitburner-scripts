@@ -62,7 +62,7 @@ CONFIGURATION
     gangTracker.tick();
 
     for (const name of ns.gang.getMemberNames()) {
-        trainMember(ns, name, gangTracker.member(name));
+        void trainMember(ns, name, gangTracker.member(name));
     }
 
     while (true) {
