@@ -96,7 +96,7 @@ export function filterMapBoard<T>(
     board: string[],
     callbackFn: BoardCallbackFn<T>,
 ): T[] {
-    const result = [];
+    const result: T[] = [];
     for (let i = 0; i < board.length && i < COL_NAMES.length; i++) {
         const col = COL_NAMES[i] satisfies Col;
         const column = board[i].split('');
@@ -170,7 +170,7 @@ export function toVertex(x: number, y: number): Vertex {
 
     const col = COL_NAMES[x];
     const row = ROW_NAMES[y];
-    return `${col}${row}` as Vertex;
+    return `${col}${row}`;
 }
 
 const VERTEX_RE = /^([a-hj-t])(\d+)$/;
