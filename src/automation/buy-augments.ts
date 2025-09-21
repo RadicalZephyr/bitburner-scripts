@@ -262,10 +262,10 @@ export function getBestFactionForNFG(ns: NS): string | null {
     const favorFactions = factions
         .filter((f) => f.favor >= ns.getFavorToDonate())
         .sort((a, b) => b.rep - a.rep);
-    if (favorFactions.length >= 1) return favorFactions[0].name;
+    if (favorFactions.length >= 1) return favorFactions[0]!.name;
 
     factions.sort((a, b) => b.rep - a.rep);
-    if (factions.length >= 1) return factions[0].name;
+    if (factions.length >= 1) return factions[0]!.name;
 
     return null;
 }
