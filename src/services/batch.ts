@@ -68,7 +68,7 @@ export function hostListFromChunks(chunks: AllocationChunk[]): string[] {
  * @returns - Returns the phase array passed in modified with correct start times
  */
 export function calculatePhaseStartTimes(phases: BatchPhase[]) {
-    const spacing = CONFIG.batchInterval as number;
+    const spacing = CONFIG.batchInterval;
 
     let endTime = 0;
     for (const p of phases) {
@@ -122,7 +122,7 @@ export async function spawnBatch(
         .reduce((c, s) => c.union(s));
     ns.scp([...scripts, ...dependencies], hostname, 'home');
 
-    const pids = [];
+    const pids: number[] = [];
     for (const [idx, phase] of phases.map(
         (phase, idx) => [idx, phase] as [number, BatchPhase],
     )) {
