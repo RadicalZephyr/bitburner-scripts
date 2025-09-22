@@ -297,7 +297,7 @@ export function analyzeBatchThreads(
     hackThreads: number = 1,
 ): BatchThreadAnalysis {
     const stolen = successfulHackValue(ns, host, hackThreads);
-    const maxMoney = ns.getServer(host).moneyMax;
+    const maxMoney = ns.getServer(host).moneyMax ?? 0;
     const afterHackMoney = Math.max(1, maxMoney - stolen);
 
     const growThreads = growthAnalyze(ns, host, afterHackMoney);
@@ -343,7 +343,7 @@ export function growthAnalyze(
         // N.B. from testing this calculation tracks very closely with
         // the formulas value, _except_ as the afterHackMoney
         // approaches zero the error grows super-linearly
-        const maxMoney = ns.getServer(hostname).moneyMax;
+        const maxMoney = ns.getServer(hostname).moneyMax ?? 0;
         const growMultiplier = maxMoney / Math.max(1, afterHackMoney);
         return Math.ceil(ns.growthAnalyze(hostname, growMultiplier));
     }
@@ -482,9 +482,25 @@ function canUseFormulas(ns: NS): boolean {
     return ns.fileExists('Formulas.exe', 'home');
 }
 
-function idealServer(ns: NS, host: string): Server {
+interface TargetServer extends Server {
+    moneyAvailable: number;
+    moneyMax: number;
+    hackDifficulty: number;
+    minDifficulty: number;
+}
+
+function idealServer(ns: NS, host: string): TargetServer {
     const server = ns.getServer(host);
+
+    if (
+        typeof server.moneyMax !== 'number'
+        && typeof server.minDifficulty !== 'number'
+    )
+        throw new Error(
+            `Cannot determine expected value of a server that has no money or difficulty!`,
+        );
+
     server.moneyAvailable = server.moneyMax;
     server.hackDifficulty = server.minDifficulty;
-    return server;
+    return server as TargetServer;
 }
