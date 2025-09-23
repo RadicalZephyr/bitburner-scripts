@@ -103,8 +103,8 @@ export class MemoryAllocator {
 
     /** Check if the home server has increased in RAM. */
     checkHomeForRamIncrease() {
-        if (this.workers.has('home')) {
-            const home = this.workers.get('home');
+        const home = this.workers.get('home');
+        if (home != null) {
             home.updateRam();
         }
     }
@@ -264,7 +264,7 @@ export class MemoryAllocator {
         shrinkable: boolean = false,
         longRunning: boolean = false,
         notifyPort?: number,
-    ): AllocationResult {
+    ): AllocationResult | null {
         if (chunkSize <= 0 || numChunks <= 0) {
             this.printLog('ERROR: bad allocation request, zero size');
             return null;
@@ -300,20 +300,20 @@ export class MemoryAllocator {
         if (contiguous) {
             // If any worker can satisfy the full request, allocate it there.
             for (const worker of workers) {
-                if (Math.floor(worker.freeRam / chunkSize) >= numChunks) {
-                    const chunk = worker.allocate(chunkSize, numChunks);
-                    const id = this.nextAllocId++;
-                    const allocation = new Allocation(
-                        id,
-                        pid,
-                        filename,
-                        [chunk],
-                        numChunks,
-                        notifyPort,
-                    );
-                    this.allocations.set(id, allocation);
-                    return allocation.asAllocationResult();
-                }
+                const chunk = worker.allocate(chunkSize, numChunks);
+                if (!chunk) continue;
+
+                const id = this.nextAllocId++;
+                const allocation = new Allocation(
+                    id,
+                    pid,
+                    filename,
+                    [chunk],
+                    numChunks,
+                    notifyPort,
+                );
+                this.allocations.set(id, allocation);
+                return allocation.asAllocationResult();
             }
         }
 
@@ -359,7 +359,7 @@ export class MemoryAllocator {
      * @param info - Details of the allocation to register
      * @returns AllocationResult
      */
-    registerAllocation(info: AllocationRegister): AllocationResult {
+    registerAllocation(info: AllocationRegister): AllocationResult | null {
         const worker = this.workers.get(info.hostname);
         if (!worker) return null;
 
@@ -649,8 +649,8 @@ class AllocationChunk {
 export class Worker {
     ns: NS;
     hostname: string;
-    totalRam: number;
-    totalRamStr: string;
+    totalRam: number = 0;
+    totalRamStr: string = '0 GiB';
     setAsideRam: bigint;
     reservedRam: bigint = 0n;
     allocatedRam: bigint = 0n;
@@ -696,7 +696,7 @@ export class Worker {
      * @param numChunks - Number of chunks to allocate
      * @returns Description of the allocation on this Worker or null if allocation failed
      */
-    allocate(chunkSize: number, numChunks: number): AllocationChunk {
+    allocate(chunkSize: number, numChunks: number): AllocationChunk | null {
         const maxAllocatableChunks = Math.floor(this.freeRam / chunkSize);
         const chunksToAllocate = Math.min(numChunks, maxAllocatableChunks);
 
