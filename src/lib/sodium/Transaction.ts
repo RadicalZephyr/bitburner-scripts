@@ -16,20 +16,20 @@ export class Source {
     //
     // rank-independent souces DO NOT bump up the rank of the vertex containing those sources.
     // rank-depdendent sources DO bump up the rank of the vertex containing thoses sources when required.
-    constructor(origin: Vertex, register_: () => () => void) {
+    constructor(origin: Vertex, register_: (() => () => void) | null) {
         if (origin === null) throw new Error('null origin!');
         this.origin = origin;
         this.register_ = register_;
     }
     origin: Vertex;
-    private register_: () => () => void;
+    private register_: (() => () => void) | null;
     private registered: boolean = false;
-    private deregister_: () => void = null;
+    private deregister_: (() => void) | null = null;
 
     register(target: Vertex): void {
         if (!this.registered) {
             this.registered = true;
-            if (this.register_ !== null) this.deregister_ = this.register_();
+            if (this.register_ != null) this.deregister_ = this.register_();
             else {
                 // Note: The use of Vertex.NULL here instead of "target" is not a bug, this is done to create a
                 // rank-independent source. (see note at constructor for more details.). The origin vertex still gets
@@ -162,7 +162,7 @@ export class Vertex {
     }
 
     descr(): string {
-        let colStr: string = null;
+        let colStr: string | null = null;
         switch (this.color) {
             case Color.black:
                 colStr = 'black';
@@ -262,7 +262,7 @@ export class Vertex {
             let stack: Vertex[] = roots.slice(0);
             let visited: Collections.Set<number> = new Collections.Set();
             while (stack.length != 0) {
-                let vertex = stack.pop();
+                let vertex = stack.pop()!;
                 if (visited.contains(vertex.id)) {
                     continue;
                 }
@@ -301,7 +301,7 @@ export class Vertex {
             let stack: Vertex[] = roots.slice(0);
             let visited: Collections.Set<number> = new Collections.Set();
             while (stack.length != 0) {
-                let vertex = stack.pop();
+                let vertex = stack.pop()!;
                 if (visited.contains(vertex.id)) {
                     continue;
                 }
@@ -375,7 +375,7 @@ export class Entry {
 }
 
 export class Transaction {
-    public static currentTransaction: Transaction = null;
+    public static currentTransaction: Transaction | null = null;
     private static onStartHooks: (() => void)[] = [];
     private static runningOnStartHooks: boolean = false;
 
@@ -403,7 +403,7 @@ export class Transaction {
     );
     private sampleQ: Array<() => void> = [];
     private lastQ: Array<() => void> = [];
-    private postQ: Array<() => void> = null;
+    private postQ: Array<(() => void) | null> | null = null;
     private static collectCyclesAtEnd: boolean = false;
 
     prioritized(target: Vertex, action: () => void): void {
@@ -463,7 +463,7 @@ export class Transaction {
             while (true) {
                 this.checkRegen();
                 if (this.prioritizedQ.isEmpty()) break;
-                const e = this.prioritizedQ.dequeue();
+                const e = this.prioritizedQ.dequeue()!;
                 this.entries.remove(e);
                 e.action();
             }
@@ -485,7 +485,7 @@ export class Transaction {
                         if (i > 0) {
                             Transaction.currentTransaction = new Transaction();
                             try {
-                                this.postQ[i]();
+                                this.postQ[i]!();
                                 Transaction.currentTransaction.close();
                             } catch (err) {
                                 Transaction.currentTransaction.close();
@@ -493,7 +493,7 @@ export class Transaction {
                             }
                         } else {
                             Transaction.currentTransaction = null;
-                            this.postQ[i]();
+                            this.postQ[i]!();
                         }
                         Transaction.currentTransaction = parent;
                     } catch (err) {
@@ -518,7 +518,7 @@ export class Transaction {
     }
 
     public static execute<A>(f: () => A): A {
-        const transWas: Transaction = Transaction.currentTransaction;
+        const transWas: Transaction | null = Transaction.currentTransaction;
         if (transWas === null) {
             if (!Transaction.runningOnStartHooks) {
                 Transaction.runningOnStartHooks = true;
@@ -534,7 +534,7 @@ export class Transaction {
         try {
             const a: A = f();
             if (transWas === null) {
-                Transaction.currentTransaction.close();
+                Transaction.currentTransaction!.close();
                 Transaction.currentTransaction = null;
                 if (Transaction.collectCyclesAtEnd) {
                     Vertex.collectCycles();
@@ -544,7 +544,7 @@ export class Transaction {
             return a;
         } catch (err) {
             if (transWas === null) {
-                Transaction.currentTransaction.close();
+                Transaction.currentTransaction!.close();
                 Transaction.currentTransaction = null;
             }
             throw err;
