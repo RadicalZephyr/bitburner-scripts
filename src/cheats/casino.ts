@@ -143,7 +143,10 @@ interface CoinFlipGameWithResult extends CoinFlipGame {
 async function searchForCoinFlip(ns: NS): Promise<CoinFlipGameWithResult> {
     const hasSF4 = getSourceFileLevel(4) > 0;
 
-    const root = assertEl(globalThis['root'], 'Could not find root element!');
+    const root = assertEl(
+        globalThis['document'].getElementById('root'),
+        'Could not find root element!',
+    );
 
     let message: string;
     if (hasSF4) {
@@ -188,7 +191,7 @@ function findCoinFlipGame(root: Element): CoinFlipGame | null {
         (h) => h.innerText === 'Iker Molina Casino',
     );
     if (!casinoHeading) return null;
-    const gameRoot = casinoHeading.parentElement;
+    const gameRoot = casinoHeading.parentElement!;
 
     const input = findElementWithTagName(gameRoot, 'input');
     if (!input) return null;
@@ -254,7 +257,7 @@ function findElementWithTagName<K extends keyof HTMLElementTagNameMap>(
     const _pred = pred ?? (() => true);
     const tags = e.getElementsByTagName(tagName);
     for (let i = 0; i < tags.length; i++) {
-        const t = tags.item(i);
+        const t = tags.item(i)!;
         if (_pred(t)) return t;
     }
     return null;
