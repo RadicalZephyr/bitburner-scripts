@@ -91,14 +91,14 @@ export function solve(data: [string, number]): string {
         .join('');
 }
 
-const A_CODE: number = 'A'.codePointAt(0);
+const A_CODE: number = 'A'.codePointAt(0)!;
 
 function shift(c: string, n: number): string {
     // Spaces remain unchanged
     if (c === ' ') {
         return c;
     }
-    const index = c.codePointAt(0) - A_CODE;
+    const index = c.codePointAt(0)! - A_CODE;
 
     // If c is not in the uppercase alphabet just return it.
     if (index >= ALPHABET.length || index < 0) {
