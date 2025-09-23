@@ -162,7 +162,9 @@ export class Config<
          */
         Object.defineProperty(this, spec[0], {
             get() {
-                return de(LocalStorage.getItem(localStorageKey));
+                return de(
+                    LocalStorage.getItem(localStorageKey) ?? ser(spec[1]),
+                );
             },
             set(v: V) {
                 LocalStorage.setItem(localStorageKey, ser(v));
