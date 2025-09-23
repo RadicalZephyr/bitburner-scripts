@@ -48,7 +48,7 @@ export class Operational {
      */
     static updates<A>(c: Cell<A>): Stream<A> {
         /*  Don't think this is needed
-        const out = new StreamWithSend<A>(null);
+        const out = new StreamWithSend<A>();
         out.setVertex__(new Vertex("updates", 0, [
                 new Source(
                     c.getStream__().getVertex__(),
@@ -84,7 +84,7 @@ export class Operational {
     static value<A>(c: Cell<A>): Stream<A> {
         return Transaction.execute(() => {
             const sSpark = new StreamWithSend<Unit>();
-            Transaction.currentTransaction.prioritized(
+            Transaction.currentTransaction!.prioritized(
                 sSpark.getVertex__(),
                 () => {
                     sSpark.send_(Unit.UNIT);
@@ -115,7 +115,7 @@ export class Operational {
      * events output by split() or {@link defer(Stream)} invoked elsewhere in the code.
      */
     static split<A>(s: Stream<Array<A>>): Stream<A> {
-        const out = new StreamWithSend<A>(null);
+        const out = new StreamWithSend<A>(undefined);
         out.setVertex__(
             new Vertex('split', 0, [
                 new Source(s.getVertex__(), () => {
@@ -126,7 +126,7 @@ export class Operational {
                             Vertex.NULL,
                             (as: Array<A>) => {
                                 for (let i = 0; i < as.length; i++) {
-                                    Transaction.currentTransaction.post(
+                                    Transaction.currentTransaction!.post(
                                         i,
                                         () => {
                                             Transaction.execute(() => {
@@ -161,9 +161,9 @@ export class Operational {
 
 class MergeState<A> {
     constructor() {}
-    left: A = null;
+    left: A | null = null;
     left_present: boolean = false;
-    right: A = null;
+    right: A | null = null;
     right_present: boolean = false;
 }
 
@@ -189,7 +189,7 @@ export class Stream<A> {
      *    cell. Apart from this the function must be <em>referentially transparent</em>.
      */
     map<B>(f: ((a: A) => B) | Lambda1<A, B>): Stream<B> {
-        const out = new StreamWithSend<B>(null);
+        const out = new StreamWithSend<B>();
         const ff = Lambda1_toFunction(f);
         out.vertex = new Vertex(
             'map',
@@ -214,7 +214,7 @@ export class Stream<A> {
      * @param b Constant value.
      */
     mapTo<B>(b: B): Stream<B> {
-        const out = new StreamWithSend<B>(null);
+        const out = new StreamWithSend<B>();
         out.vertex = new Vertex('mapTo', 0, [
             new Source(this.vertex, () => {
                 return this.listen_(
@@ -267,21 +267,21 @@ export class Stream<A> {
         const ff = Lambda2_toFunction(f);
         const mergeState = new MergeState<A>();
         let pumping = false;
-        const out = new StreamWithSend<A>(null);
+        const out = new StreamWithSend<A>();
         const pump = () => {
             if (pumping) {
                 return;
             }
             pumping = true;
-            Transaction.currentTransaction.prioritized(
+            Transaction.currentTransaction!.prioritized(
                 out.getVertex__(),
                 () => {
                     if (mergeState.left_present && mergeState.right_present) {
-                        out.send_(ff(mergeState.left, mergeState.right));
+                        out.send_(ff(mergeState.left!, mergeState.right!));
                     } else if (mergeState.left_present) {
-                        out.send_(mergeState.left);
+                        out.send_(mergeState.left!);
                     } else if (mergeState.right_present) {
-                        out.send_(mergeState.right);
+                        out.send_(mergeState.right!);
                     }
                     mergeState.left = null;
                     mergeState.left_present = false;
@@ -327,7 +327,7 @@ export class Stream<A> {
      * Return a stream that only outputs events for which the predicate returns true.
      */
     filter(f: ((a: A) => boolean) | Lambda1<A, boolean>): Stream<A> {
-        const out = new StreamWithSend<A>(null);
+        const out = new StreamWithSend<A>();
         const ff = Lambda1_toFunction(f);
         out.vertex = new Vertex(
             'filter',
@@ -351,14 +351,14 @@ export class Stream<A> {
      * Return a stream that only outputs events that have present
      * values, discarding null values.
      */
-    filterNotNull(): Stream<A> {
-        const out = new StreamWithSend<A>(null);
+    filterNotNull(): Stream<NonNullable<A>> {
+        const out = new StreamWithSend<NonNullable<A>>();
         out.vertex = new Vertex('filterNotNull', 0, [
             new Source(this.vertex, () => {
                 return this.listen_(
                     out.vertex,
                     (a: A) => {
-                        if (a !== null) out.send_(a);
+                        if (a != null) out.send_(a);
                     },
                     false,
                 );
@@ -371,7 +371,7 @@ export class Stream<A> {
      * Return a stream that only outputs events from the input stream
      * when the specified cell's value is true.
      */
-    gate(c: Cell<boolean>): Stream<A> {
+    gate(c: Cell<boolean>): Stream<NonNullable<A>> {
         return this.snapshot(c, (a: A, pred: boolean) => {
             return pred ? a : null;
         }).filterNotNull();
@@ -382,7 +382,7 @@ export class Stream<A> {
      * at the time of the event firing, ignoring the stream's value.
      */
     snapshot1<B>(c: Cell<B>): Stream<B> {
-        const out = new StreamWithSend<B>(null);
+        const out = new StreamWithSend<B>();
         out.vertex = new Vertex('snapshot1', 0, [
             new Source(this.vertex, () => {
                 return this.listen_(
@@ -412,7 +412,7 @@ export class Stream<A> {
         b: Cell<B>,
         f_: ((a: A, b: B) => C) | Lambda2<A, B, C>,
     ): Stream<C> {
-        const out = new StreamWithSend<C>(null);
+        const out = new StreamWithSend<C>();
         const ff = Lambda2_toFunction(f_);
         out.vertex = new Vertex(
             'snapshot',
@@ -448,7 +448,7 @@ export class Stream<A> {
         c: Cell<C>,
         f_: ((a: A, b: B, c: C) => D) | Lambda3<A, B, C, D>,
     ): Stream<D> {
-        const out = new StreamWithSend<D>(null);
+        const out = new StreamWithSend<D>();
         const ff = Lambda3_toFunction(f_);
         out.vertex = new Vertex(
             'snapshot',
@@ -488,7 +488,7 @@ export class Stream<A> {
         d: Cell<D>,
         f_: ((a: A, b: B, c: C, d: D) => E) | Lambda4<A, B, C, D, E>,
     ): Stream<E> {
-        const out = new StreamWithSend<E>(null);
+        const out = new StreamWithSend<E>();
         const ff = Lambda4_toFunction(f_);
         out.vertex = new Vertex(
             'snapshot',
@@ -535,7 +535,7 @@ export class Stream<A> {
         e: Cell<E>,
         f_: ((a: A, b: B, c: C, d: D, e: E) => F) | Lambda5<A, B, C, D, E, F>,
     ): Stream<F> {
-        const out = new StreamWithSend<F>(null);
+        const out = new StreamWithSend<F>();
         const ff = Lambda5_toFunction(f_);
         out.vertex = new Vertex(
             'snapshot',
@@ -587,7 +587,7 @@ export class Stream<A> {
             | ((a: A, b: B, c: C, d: D, e: E, f: F) => G)
             | Lambda6<A, B, C, D, E, F, G>,
     ): Stream<G> {
-        const out = new StreamWithSend<G>(null);
+        const out = new StreamWithSend<G>();
         const ff = Lambda6_toFunction(f_);
         out.vertex = new Vertex(
             'snapshot',
@@ -722,7 +722,7 @@ export class Stream<A> {
      * Return a stream that outputs only one value: the next event of the
      * input stream, starting from the transaction in which once() was invoked.
      */
-    once(): Stream<A> {
+    once(): Stream<NonNullable<A>> {
         /*
             return Transaction.run(() => {
                 const ev = this,
@@ -759,12 +759,12 @@ export class Stream<A> {
         suppressEarlierFirings: boolean,
     ): () => void {
         if (this.vertex.register(target))
-            Transaction.currentTransaction.requestRegen();
+            Transaction.currentTransaction!.requestRegen();
         const listener = new Listener<A>(h, target);
         this.listeners.push(listener);
         if (!suppressEarlierFirings && this.firings.length != 0) {
             const firings = this.firings.slice();
-            Transaction.currentTransaction.prioritized(target, () => {
+            Transaction.currentTransaction!.prioritized(target, () => {
                 // Anything sent already in this transaction must be sent now so that
                 // there's no order dependency between send and listen.
                 for (let i = 0; i < firings.length; i++) h(firings[i]);
@@ -819,22 +819,22 @@ export class StreamWithSend<A> extends Stream<A> {
 
     send_(a: A): void {
         if (this.firings.length == 0)
-            Transaction.currentTransaction.last(() => {
+            Transaction.currentTransaction!.last(() => {
                 this.firings = [];
             });
         this.firings.push(a);
         const listeners = this.listeners.slice();
         for (let i = 0; i < listeners.length; i++) {
             const h = listeners[i].h;
-            Transaction.currentTransaction.prioritized(
+            Transaction.currentTransaction!.prioritized(
                 listeners[i].target,
                 () => {
-                    Transaction.currentTransaction.inCallback++;
+                    Transaction.currentTransaction!.inCallback++;
                     try {
                         h(a);
-                        Transaction.currentTransaction.inCallback--;
+                        Transaction.currentTransaction!.inCallback--;
                     } catch (err) {
-                        Transaction.currentTransaction.inCallback--;
+                        Transaction.currentTransaction!.inCallback--;
                         throw err;
                     }
                 },
@@ -886,25 +886,27 @@ class LazySample<A> {
     constructor(cell: Cell<A>) {
         this.cell = cell;
     }
-    cell: Cell<A>;
+    cell: Cell<A> | null;
     hasValue: boolean = false;
-    value: A = null;
+    value: A | null = null;
 }
 
 class ApplyState<A, B> {
     constructor() {}
-    f: (a: A) => B = null;
+    f: ((a: A) => B) | null = null;
     f_present: boolean = false;
-    a: A = null;
+    a: A | null = null;
     a_present: boolean = false;
 }
 
 export class Cell<A> {
+    // @ts-expect-error: this.setStream definitely sets this value in the constructor
     private str: Stream<A>;
     protected value: A;
-    protected valueUpdate: A;
-    private cleanup: () => void;
-    protected lazyInitValue: Lazy<A>; // Used by LazyCell
+    protected valueUpdate: A | null = null;
+    private cleanup: (() => void) | null = null;
+    protected lazyInitValue: Lazy<A> | null = null; // Used by LazyCell
+    // @ts-expect-error: this.setStream definitely sets this value in the constructor
     private vertex: Vertex;
 
     constructor(initValue: A, str?: Stream<A>) {
@@ -920,11 +922,11 @@ export class Cell<A> {
         const me = this,
             src = new Source(str.getVertex__(), () => {
                 return str.listen_(
-                    me.vertex,
+                    me.vertex!,
                     (a: A) => {
                         if (me.valueUpdate == null) {
-                            Transaction.currentTransaction.last(() => {
-                                me.value = me.valueUpdate;
+                            Transaction.currentTransaction!.last(() => {
+                                me.value = me.valueUpdate!;
                                 me.lazyInitValue = null;
                                 me.valueUpdate = null;
                             });
@@ -944,8 +946,8 @@ export class Cell<A> {
         // n is the number of children in the vertex.
         let tmpVertexNULL = new Vertex('Cell::setStream', 1e12, []);
         this.vertex.register(tmpVertexNULL);
-        Transaction.currentTransaction.last(() => {
-            this.vertex.deregister(tmpVertexNULL);
+        Transaction.currentTransaction!.last(() => {
+            this.vertex!.deregister(tmpVertexNULL);
         });
     }
 
@@ -1004,15 +1006,15 @@ export class Cell<A> {
         // TO DO figure out how to hide this
         const me = this,
             s = new LazySample<A>(me);
-        Transaction.currentTransaction.sample(() => {
+        Transaction.currentTransaction!.sample(() => {
             s.value =
                 me.valueUpdate != null ? me.valueUpdate : me.sampleNoTrans__();
             s.hasValue = true;
             s.cell = null;
         });
         return new Lazy<A>(() => {
-            if (s.hasValue) return s.value;
-            else return s.cell.sample();
+            if (s.hasValue) return s.value!;
+            else return s.cell!.sample();
         });
     }
 
@@ -1170,7 +1172,7 @@ export class Cell<A> {
      * happen to accumulate state, this method will keep the accumulation of state up to date.
      */
     public tracking(extractor: (a: A) => (Stream<any> | Cell<any>)[]): Cell<A> {
-        const out = new StreamWithSend<A>(null);
+        const out = new StreamWithSend<A>();
         let vertex = new Vertex('tracking', 0, [
             new Source(this.vertex, () => {
                 let cleanup2: () => void = () => {};
@@ -1263,14 +1265,14 @@ export class Cell<A> {
                         return;
                     }
                     pumping = true;
-                    Transaction.currentTransaction.prioritized(
+                    Transaction.currentTransaction!.prioritized(
                         out.getVertex__(),
                         () => {
                             let f = state.f_present
-                                ? state.f
+                                ? state.f!
                                 : cf.sampleNoTrans__();
                             let a = state.a_present
-                                ? state.a
+                                ? state.a!
                                 : ca.sampleNoTrans__();
                             out.send_(f(a));
                             pumping = false;
@@ -1319,26 +1321,26 @@ export class Cell<A> {
         return Transaction.execute(() => {
             const za = cca.sampleLazy().map((ba: Cell<A>) => ba.sample()),
                 out = new StreamWithSend<A>();
-            let outValue: A = null;
+            let outValue: A | null = null;
             let pumping = false;
             const pump = () => {
                 if (pumping) {
                     return;
                 }
                 pumping = true;
-                Transaction.currentTransaction.prioritized(
+                Transaction.currentTransaction!.prioritized(
                     out.getVertex__(),
                     () => {
-                        out.send_(outValue);
+                        out.send_(outValue!);
                         outValue = null;
                         pumping = false;
                     },
                 );
             };
-            let last_ca: Cell<A> = null;
+            let last_ca: Cell<A> | null = null;
             const cca_value = Operational.value(cca),
                 src = new Source(cca_value.getVertex__(), () => {
-                    let kill2: () => void =
+                    let kill2: (() => void) | null =
                         last_ca === null
                             ? null
                             : Operational.value(last_ca).listen_(
@@ -1369,7 +1371,7 @@ export class Cell<A> {
                     );
                     return () => {
                         kill1();
-                        kill2();
+                        kill2!();
                     };
                 });
             out.setVertex__(new Vertex('switchC', 0, [src]));
@@ -1419,18 +1421,19 @@ export class Cell<A> {
      * propergated. This function insures only distinct changes get propergated.
      */
     calm(eq: (a: A, b: A) => boolean): Cell<A> {
-        return Operational.updates(this)
-            .collectLazy(this.sampleLazy(), (newValue, oldValue) => {
-                let result: A;
-                if (eq(newValue, oldValue)) {
-                    result = null;
-                } else {
-                    result = newValue;
-                }
-                return new Tuple2(result, newValue);
-            })
-            .filterNotNull()
-            .holdLazy(this.sampleLazy());
+        return (
+            Operational.updates(this)
+                .collectLazy(this.sampleLazy(), (newValue, oldValue) => {
+                    let result: A | null;
+                    if (eq(newValue, oldValue)) {
+                        result = null;
+                    } else {
+                        result = newValue;
+                    }
+                    return new Tuple2(result, newValue);
+                })
+                .filterNotNull() as Stream<A>
+        ).holdLazy(this.sampleLazy());
     }
 
     /**
@@ -1483,6 +1486,10 @@ export class Cell<A> {
 
 export class LazyCell<A> extends Cell<A> {
     constructor(lazyInitValue: Lazy<A>, str?: Stream<A>) {
+        // @ts-expect-error: Passing null for init is safe because we
+        // override sampleNoTrans__ to populate this.value with
+        // realizing this.lazyInitValue which is initialized by this
+        // constructor.
         super(null, null);
         Transaction.execute(() => {
             if (str) this.setStream(str);
