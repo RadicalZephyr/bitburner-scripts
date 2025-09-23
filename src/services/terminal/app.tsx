@@ -11,9 +11,8 @@ import {
     scanTokens,
     tokenize,
     type TokenSpan,
-    type TokenizeErr,
 } from 'services/terminal/tokenizer';
-import type { ResolveErr, ScriptResolver } from 'services/terminal/resolver';
+import type { ScriptResolver } from 'services/terminal/resolver';
 import { computePathMatches } from 'services/terminal/completion';
 import {
     directoryExists,
@@ -273,9 +272,8 @@ export function TerminalApp({
 
         const result = tokenize(raw);
         if (!result.ok) {
-            const err = result as TokenizeErr;
-            appendLine('error', `parse error: ${err.message}`);
-            appendLine('error', caretLine(err.index));
+            appendLine('error', `parse error: ${result.message}`);
+            appendLine('error', caretLine(result.index));
             return;
         }
 
@@ -303,8 +301,7 @@ export function TerminalApp({
 
         const resolved = resolveScript(cwd, command);
         if (!resolved.ok) {
-            const err = resolved as ResolveErr;
-            appendLines('error', err.message);
+            appendLines('error', resolved.message);
             return;
         }
 
@@ -926,8 +923,7 @@ function memBuiltin(argv: string[], ctx: BuiltinContext) {
     }
     const resolved = ctx.resolveScript(ctx.cwd, argv[0]);
     if (!resolved.ok) {
-        const err = resolved as ResolveErr;
-        ctx.appendLines('error', err.message);
+        ctx.appendLines('error', resolved.message);
         return Promise.resolve();
     }
     const ram = ctx.ns.getScriptRam(resolved.script, 'home');
@@ -1016,7 +1012,6 @@ function formatError(err: unknown): string {
         const base = err.message || err.name;
         return err.name && err.message ? `${err.name}: ${err.message}` : base;
     }
-    // eslint-disable-next-line @typescript-eslint/no-base-to-string
     return String(err);
 }
 
@@ -1055,14 +1050,16 @@ function helpText(): string {
 }
 
 function ensureStyles(theme: ReturnType<typeof useTheme>): void {
-    const root = assertEl(globalThis['root'], 'No root element found');
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    let styleEl: HTMLStyleElement = globalThis[STYLE_ID];
+    const root = assertEl(
+        globalThis['document'].getElementById('root'),
+        'No root element found',
+    );
+    let styleEl: HTMLElement | null =
+        globalThis['document'].getElementById(STYLE_ID);
     if (!styleEl) {
         styleEl = globalThis['document'].createElement('style');
         styleEl.id = STYLE_ID;
         root.parentElement?.appendChild(styleEl);
-        globalThis[STYLE_ID] = styleEl;
     }
     styleEl.textContent = makeCss(theme);
 }
