@@ -95,8 +95,8 @@ export type BoardCallbackFn<T> = (
 export function filterMapBoard<T>(
     board: string[],
     callbackFn: BoardCallbackFn<T>,
-): T[] {
-    const result: T[] = [];
+): NonNullable<T>[] {
+    const result: NonNullable<T>[] = [];
     for (let i = 0; i < board.length && i < COL_NAMES.length; i++) {
         const col = COL_NAMES[i] satisfies Col;
         const column = board[i].split('');
@@ -106,7 +106,7 @@ export function filterMapBoard<T>(
             const vertex = `${col}${row}` satisfies Vertex;
             const mapped = callbackFn(node, vertex, board);
             if (mapped) {
-                result.push(mapped);
+                result.push(mapped satisfies NonNullable<T>);
             }
         }
     }
