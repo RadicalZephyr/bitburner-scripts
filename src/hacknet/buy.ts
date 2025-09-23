@@ -189,11 +189,11 @@ function moneyGain(ns: NS, level: number, ram: number, cores: number) {
         : nodeMoneyGain(ns, level, ram, cores);
 }
 
-type UpgradeType = 'node' | 'level' | 'ram' | 'core' | null;
+type UpgradeType = 'level' | 'ram' | 'core';
 
-interface UpgradeCandidate {
+interface UpgradeNode {
     /** Index of the hacknet node, if applicable. */
-    index: number | null;
+    index: number;
 
     /** Type of the upgrade. */
     type: UpgradeType;
@@ -204,6 +204,22 @@ interface UpgradeCandidate {
     /** Time to the upgrade will take to pay for itself in seconds. */
     paybackTime: number;
 }
+
+interface NewNode {
+    /** Index of the hacknet node, if applicable. */
+    index: null;
+
+    /** Type of the upgrade. */
+    type: 'node';
+
+    /** Cost of the upgrade in dollars */
+    cost: number;
+
+    /** Time to the upgrade will take to pay for itself in seconds. */
+    paybackTime: number;
+}
+
+type UpgradeCandidate = NewNode | UpgradeNode;
 
 function bestCandidate(
     best: UpgradeCandidate,
