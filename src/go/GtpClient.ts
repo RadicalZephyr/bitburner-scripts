@@ -4,6 +4,13 @@ import { Color, PlaceTurn, Move, Vertex, isMove } from 'go/types';
 
 import { CONFIG } from 'go/config';
 import { extend } from 'util/extend';
+import {
+    isLiteral,
+    isObjectLike,
+    isString,
+    isUnionOf,
+    Validator,
+} from 'util/validate';
 
 type Command =
     | 'boardsize'
@@ -172,15 +179,18 @@ export class GtpClient {
     }
 }
 
+const isResponse: Validator<Response> = isObjectLike({
+    status: isUnionOf(isLiteral('OK'), isLiteral('ERROR')),
+    response: isString,
+});
+
 function parseResponse(o: unknown): Response {
-    if (typeof o !== 'object')
-        throw new Error(`response was not an object: ${JSON.stringify(o)}`);
-    if (!(Object.hasOwn(o, 'status') && Object.hasOwn(o, 'response')))
+    if (!isResponse(o))
         throw new Error(
             `response is missing required keys ${JSON.stringify(o)}`,
         );
 
-    return o as Response;
+    return o;
 }
 
 type Method = 'HEAD' | 'GET' | 'POST' | 'PUT' | 'DELETE';
