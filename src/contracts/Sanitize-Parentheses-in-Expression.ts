@@ -154,7 +154,9 @@ function initTwiddle(m: number, n: number): number[] {
 }
 
 function twiddle(p: number[]): [boolean, number, number, number] {
-    let x: number, y: number, z: number;
+    let x: number = 0,
+        y: number = 0,
+        z: number = 0;
     let done = false;
 
     let j = 1;
