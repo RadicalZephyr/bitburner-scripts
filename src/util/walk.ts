@@ -30,7 +30,7 @@ export type WalkOptions = {
     order: WalkOrder;
 };
 
-type NextNodeFn = (nodes: string[]) => string;
+type NextNodeFn = (nodes: string[]) => string | undefined;
 
 /** Walk the network and return an array of all hosts.
  *
@@ -50,7 +50,7 @@ function walkNetwork(ns: NS, options?: WalkOptions): Map<string, string[]> {
     nodesToExplore.push(root);
 
     while (nodesToExplore.length > 0) {
-        const v = nextNode(nodesToExplore);
+        const v = nextNode(nodesToExplore)!;
 
         const edges = ns.scan(v);
         network.set(v, edges);
