@@ -81,6 +81,8 @@ OPTIONS
 
     const portClient = new PortClient(ns);
     const contractPortNum = await portClient.requestPort();
+    if (!contractPortNum) return;
+
     ns.atExit(() => {
         void portClient.releasePort(contractPortNum);
     }, makeFuid(ns));

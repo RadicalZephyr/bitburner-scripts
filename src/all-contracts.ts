@@ -5,7 +5,7 @@ export type ContractData = {
     host: string;
     type: string;
     data: CodingContractObject['data'];
-    answer: Parameters<CodingContractObject['submit']> | string;
+    answer: Parameters<CodingContractObject['submit']> | string | null;
 };
 
 export const CONTRACTS: ContractData[] = [];
