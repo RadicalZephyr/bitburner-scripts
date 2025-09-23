@@ -1,4 +1,4 @@
-import type { NS, AutocompleteData, NSEnums } from '@ns';
+import { CompanyName, type AutocompleteData, type NS } from '@ns';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { d3 } from 'lib/d3';
@@ -20,14 +20,12 @@ export function autocomplete(data: AutocompleteData, args: string[]): string[] {
     const last = args.at(-1);
 
     const flag = '--company';
-    const companyNames = allCompanyNames(data.enums).map((name) =>
-        JSON.stringify(name),
-    );
+    const companyNames = allCompanyNames.map((name) => JSON.stringify(name));
 
     if (last === flag) return companyNames;
 
     if (secondLast === flag)
-        return companyNames.filter((c) => c.startsWith(last));
+        return companyNames.filter((c) => c.startsWith(last!));
 
     return [];
 }
@@ -179,8 +177,43 @@ function stockPlot(data: EnhancedTickData[]) {
     });
 }
 
-function allCompanyNames(enums: NSEnums): string[] {
-    return Object.getOwnPropertyNames(enums.CompanyName).map(
-        (k) => enums.CompanyName[k] as string,
-    );
-}
+const allCompanyNames = [
+    'ECorp',
+    'MegaCorp',
+    'Bachman & Associates',
+    'Blade Industries',
+    'NWO',
+    'Clarke Incorporated',
+    'OmniTek Incorporated',
+    'Four Sigma',
+    'KuaiGong International',
+    'Fulcrum Technologies',
+    'Storm Technologies',
+    'DefComm',
+    'Helios Labs',
+    'VitaLife',
+    'Icarus Microsystems',
+    'Universal Energy',
+    'Galactic Cybersystems',
+    'AeroCorp',
+    'Omnia Cybersystems',
+    'Solaris Space Systems',
+    'DeltaOne',
+    'Global Pharmaceuticals',
+    'Nova Medical',
+    'Central Intelligence Agency',
+    'National Security Agency',
+    'Watchdog Security',
+    'LexoCorp',
+    'Rho Construction',
+    'Alpha Enterprises',
+    'Aevum Police Headquarters',
+    'SysCore Securities',
+    'CompuTek',
+    'NetLink Technologies',
+    'Carmichael Security',
+    'FoodNStuff',
+    "Joe's Guns",
+    'Omega Software',
+    'Noodle Bar',
+] as const satisfies `${CompanyName}`[];
