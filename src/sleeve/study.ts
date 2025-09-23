@@ -18,7 +18,7 @@ export function autocomplete(data: AutocompleteData, args: string[]): string[] {
     if (last === courseFlag) return courses;
 
     if (secondLast === courseFlag)
-        return courses.filter((c) => c.startsWith(last));
+        return courses.filter((c) => c.startsWith(last!));
 
     return [];
 }
