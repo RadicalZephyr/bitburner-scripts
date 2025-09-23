@@ -31,15 +31,15 @@ export function pickByType<T, V>(
     obj: T,
     isV: (x: unknown) => x is V,
 ): PickByType<T, V> {
-    const result = {} as PickByType<T, V>;
+    const result: Partial<PickByType<T, V>> = {};
     for (const key in obj) {
         const val = obj[key];
         if (isV(val)) {
-            // TS knows `key` is one of the ValueFilter keys
-            (result as unknown)[key] = val;
+            // @ts-expect-error: We know `key` is one of the keys from T
+            result[key] = val;
         }
     }
-    return result;
+    return result as PickByType<T, V>;
 }
 
 /**
@@ -86,7 +86,7 @@ export class StatTracker<Type> {
      */
     value(stat: keyof PickByType<Type, number>): number {
         if (this.history.length > 0) {
-            return this.history.at(-1)[stat] as number;
+            return this.history.at(-1)![stat] as number;
         }
         return 1;
     }
@@ -100,8 +100,8 @@ export class StatTracker<Type> {
     velocity(stat: keyof PickByType<Type, number>): number {
         if (this.history.length > 2) {
             const velocity = computeVelocity(
-                this.history.at(-1),
-                this.history.at(0),
+                this.history.at(-1)!,
+                this.history.at(0)!,
             );
             return velocity[stat] as number;
         }
@@ -194,8 +194,8 @@ export class StatTracker<Type> {
 
         if (this.history.length > 2) {
             const velocity = computeVelocity(
-                this.history.at(-1),
-                this.history.at(0),
+                this.history.at(-1)!,
+                this.history.at(0)!,
             );
             this.velocityListeners = notifyListeners(
                 velocity,
@@ -222,6 +222,7 @@ function computeVelocity<Type>(
     for (const key in first) {
         if (key === 't') continue;
 
+        // @ts-expect-error: These values all have the same keys
         velocity[key] = (last[key] - first[key]) / deltaT;
     }
     return velocity;
