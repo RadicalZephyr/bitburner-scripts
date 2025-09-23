@@ -34,20 +34,23 @@ export const LogToolbar: React.FC<LogToolbarProps> = ({
     React.useEffect(() => {
         if (
             !(
-                globalThis[styleId]
-                && globalThis[styleId] instanceof HTMLStyleElement
+                globalThis['document'].getElementById(styleId)
+                && globalThis['document'].getElementById(styleId)
+                    instanceof HTMLStyleElement
             )
         ) {
             const styleEl = globalThis['document'].createElement('style');
             styleEl.id = styleId;
             styleEl.textContent = makeCss(theme);
             const rootEl = assertEl(
-                globalThis['root'],
+                globalThis['document'].getElementById('root'),
                 'No root element found!',
             );
-            rootEl.parentElement.appendChild(styleEl);
+            rootEl.parentElement!.appendChild(styleEl);
         }
-        (globalThis[styleId] as HTMLStyleElement).textContent = makeCss(theme);
+        (
+            globalThis['document'].getElementById(styleId) as HTMLStyleElement
+        ).textContent = makeCss(theme);
     }, [theme]);
 
     return (
