@@ -18,7 +18,7 @@ export function autocomplete(data: AutocompleteData, args: string[]): string[] {
     if (last === crimeFlag) return crimes;
 
     if (secondLast === crimeFlag)
-        return crimes.filter((c) => c.startsWith(last));
+        return crimes.filter((c) => c.startsWith(last!));
 
     return [];
 }
