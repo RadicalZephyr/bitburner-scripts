@@ -187,11 +187,14 @@ async function playGame(ns: NS, client: GtpClient, turns: Turn[]) {
 
         switch (opponentMove.type) {
             case 'move': {
-                turns.push(['white', toVertex(opponentMove.x, opponentMove.y)]);
+                turns.push([
+                    'white',
+                    toVertex(opponentMove.x!, opponentMove.y!),
+                ]);
                 opponentPasses = 0;
                 await client.play(
                     'white',
-                    toVertex(opponentMove.x, opponentMove.y),
+                    toVertex(opponentMove.x!, opponentMove.y!),
                 );
                 break;
             }
