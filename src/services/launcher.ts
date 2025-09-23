@@ -113,7 +113,7 @@ async function launch(
     let allocOptions = {};
     let totalThreads: number;
     let explicitDependencies: string[] = [];
-    let ramOverride: number | undefined;
+    let ramOverride: number | null | undefined;
     let baseRunOpts: RunOptions = {};
     if (
         typeof threadOrOptions === 'number'
@@ -181,10 +181,15 @@ async function launch(
 }
 
 function baseRunOptions(opts: LaunchRunOptions): RunOptions {
-    const runOptions = { ...opts };
-    delete runOptions.alloc;
-    delete runOptions.dependencies;
-    return runOptions;
+    return {
+        threads: opts.threads === null ? undefined : opts.threads,
+        temporary: opts.temporary === null ? undefined : opts.temporary,
+        ramOverride: opts.ramOverride === null ? undefined : opts.ramOverride,
+        preventDuplicates:
+            opts.preventDuplicates === null
+                ? undefined
+                : opts.preventDuplicates,
+    };
 }
 
 function createRunOptions(threads: number, options: RunOptions): RunOptions {
