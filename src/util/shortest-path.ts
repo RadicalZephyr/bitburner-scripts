@@ -23,10 +23,10 @@ export async function shortestPath(
     await ns.asleep(0);
 
     const path: string[] = [];
-    let u = goalHost;
+    let u: string | undefined = goalHost;
 
     if (shortestPaths.get(u) !== null) {
-        while (u !== null) {
+        while (u != null) {
             path.push(u);
             const serverInfo = ns.getServer(u);
             if (serverInfo.backdoorInstalled) {
@@ -59,18 +59,20 @@ export function dijkstra(
     const prev: Map<string, string> = new Map();
     for (const v of network.keys()) {
         dist.set(v, +Infinity);
-        prev.set(v, null);
         Q.add(v);
     }
     dist.set(source, 0);
-    while (Array.from(Q.keys()).length > 0) {
-        const u = min_distance(dist, Q);
+    while (Q.size > 0) {
+        // NOTE: Min distance only returns null if Q is empty which is
+        // checked in the loop guard
+        const u = min_distance(dist, Q)!;
         Q.delete(u);
-        const neighbours = network.get(u);
+        // Should never be undefined because we populate Q only from they keys of network
+        const neighbours = network.get(u)!;
         const unvisitedNeighbours = neighbours.filter((v) => Q.has(v));
         for (const v of unvisitedNeighbours) {
-            const alt = dist.get(u) + 1;
-            if (alt < dist.get(v) && dist.get(u) != Infinity) {
+            const alt = dist.get(u)! + 1;
+            if (alt < dist.get(v)! && alt != Infinity) {
                 dist.set(v, alt);
                 prev.set(v, u);
             }
@@ -88,12 +90,13 @@ export function dijkstra(
 function min_distance(
     dist: Map<string, number>,
     unvisited: Set<string>,
-): string {
+): string | null {
     let least = Infinity;
-    let leastV: string = null;
+    let leastV: string | null = null;
     for (const v of unvisited.keys()) {
-        if (dist.get(v) < least) {
-            least = dist.get(v);
+        const vDist = dist.get(v);
+        if (vDist && vDist < least) {
+            least = vDist;
             leastV = v;
         }
     }
