@@ -71,7 +71,7 @@ function mergeRanges(acc: Range[], next: Range): Range[] {
         return [next];
     }
 
-    const last: Range = acc.at(-1);
+    const last: Range = acc.at(-1)!;
 
     // Sorting means that `last[0] <= next[0]`, so checking if
     // next.start < last.end means these two ranges overlap.
