@@ -100,7 +100,7 @@ async function searchForNoodles(ns: NS): Promise<EatButton> {
 
 function findEatNoodlesButton() {
     const root = assertEl(
-        globalThis['root'],
+        globalThis['document'].getElementById('root'),
         'No root element found',
         (el: unknown): el is HTMLElement => el instanceof HTMLElement,
     );
@@ -108,7 +108,7 @@ function findEatNoodlesButton() {
     const buttons = root.getElementsByTagName('button');
 
     for (let i = 0; i < buttons.length; i++) {
-        const b = buttons.item(i);
+        const b = buttons.item(i)!;
         if (b.innerText === 'Eat noodles') return b;
     }
     return null;
