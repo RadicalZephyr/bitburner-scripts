@@ -117,7 +117,7 @@ class MemberTracker {
     info: GangMemberInfo;
     infoTracker: StatTracker<GangMemberInfo> = new StatTracker();
 
-    ascension: GangMemberAscension;
+    ascension: GangMemberAscension | undefined;
     ascensionTracker: StatTracker<GangMemberAscension> = new StatTracker();
 
     constructor(ns: NS, name: string) {
