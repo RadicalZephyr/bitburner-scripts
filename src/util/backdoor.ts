@@ -22,7 +22,7 @@ export function needsBackdoor(info: Server): boolean {
  * @returns if we can install a backdoor on the server
  */
 export function canInstallBackdoor(ns: NS, info: Server): boolean {
-    return (
-        ns.getHackingLevel() >= info.requiredHackingSkill && info.hasAdminRights
-    );
+    // Servers that have no requiredHackingSkill field cannot have a backdoor installed
+    const requiredHackingLevel = info.requiredHackingSkill ?? Infinity;
+    return ns.getHackingLevel() >= requiredHackingLevel && info.hasAdminRights;
 }
