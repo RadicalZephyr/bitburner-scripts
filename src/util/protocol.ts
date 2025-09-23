@@ -423,14 +423,14 @@ export class BaseServer<P extends ProtocolDef> {
     #ns: ServerNS;
     #protocol: Protocol<P>;
     #requestPort: NetscriptPort;
-    #responsePort: NetscriptPort;
+    #responsePort: NetscriptPort | null;
     #handlers: Handlers<P>;
 
     constructor(
         ns: ServerNS,
         protocol: Protocol<P>,
         requestPort: NetscriptPort,
-        responsePort: NetscriptPort,
+        responsePort: NetscriptPort | null,
         handlers: Handlers<P>,
     ) {
         this.#ns = ns;
@@ -444,7 +444,7 @@ export class BaseServer<P extends ProtocolDef> {
         // Clear the response port to get rid of stale responses
         if (this.#responsePort) this.#responsePort.clear();
 
-        const makeReqId = getRequestId(null);
+        const makeReqId = getRequestId();
 
         // A tiny "Deferred" exit signal we can resolve from atExit
         let resolveExit!: () => void;
@@ -560,7 +560,7 @@ export class BaseServer<P extends ProtocolDef> {
     }
 }
 
-function getRequestId(makeReqId: MakeReqId): MakeReqId {
+function getRequestId(makeReqId?: MakeReqId): MakeReqId {
     if (typeof makeReqId === 'function') return makeReqId;
     if (typeof crypto?.randomUUID === 'function')
         return crypto.randomUUID.bind(crypto) as MakeReqId;
