@@ -47,7 +47,7 @@ export class StreamSink<A> extends StreamWithSend<A> {
                 }
             }
             //
-            if (Transaction.currentTransaction.inCallback > 0)
+            if (Transaction.currentTransaction!.inCallback > 0)
                 throw new Error(
                     'You are not allowed to use send() inside a Sodium callback',
                 );
