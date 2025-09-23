@@ -10,7 +10,6 @@ import {
     Transaction,
     Unit,
 } from 'lib/sodium';
-import { isFunction } from 'lib/typescript-collections/util';
 
 export function resettableAccumulator<Item, State>(
     initState: State,
@@ -102,6 +101,15 @@ export class ApiCell<T> {
     }
 }
 
+/**
+ * Checks if the given argument is a function.
+ * @function
+ */
+// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+export function isFunction(f: unknown): f is Function {
+    return typeof f === 'function';
+}
+
 export class ApiCellUpdater<T> {
     readonly #sink: CellSink<T>;
     readonly #unlisten: () => void;
@@ -118,7 +126,7 @@ export class ApiCellUpdater<T> {
     constructor(
         public readonly apiCell: ApiCell<T>,
         public readonly pollFn: () => T,
-        isEqual: (a: T, b: T) => boolean = null,
+        isEqual: ((a: T, b: T) => boolean) | null = null,
     ) {
         this.#sink = new CellSink(this.pollFn());
         this.cell = this.#sink;
