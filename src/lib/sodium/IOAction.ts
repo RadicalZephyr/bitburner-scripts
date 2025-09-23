@@ -12,7 +12,7 @@ export class IOAction {
         performIO: (a: A, result: (b: B) => void) => void,
     ): (sa: Stream<A>) => Stream<B> {
         return (sa: Stream<A>) => {
-            const out = new StreamWithSend<B>(null);
+            const out = new StreamWithSend<B>();
             out.setVertex__(
                 new Vertex('map', 0, [
                     new Source(sa.getVertex__(), () => {
