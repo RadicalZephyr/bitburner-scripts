@@ -257,13 +257,11 @@ export async function callNsFn<K extends NSMethodName = NSMethodName>(
     try {
         ns.print(`calling ns.${method}(${args})`);
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-        return await (candidate as (...a: unknown[]) => unknown).apply(
+        return (await (candidate as (...a: unknown[]) => unknown).apply(
             ctx,
             _args,
-        );
+        )) as Awaited<NSReturn<K>>;
     } catch (e) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-        const msg = e?.message ?? String(e);
-        throw new Error(`${method}(${args}) failed: ${msg}`, { cause: e });
+        throw new Error(`${method}(${args})`, { cause: e });
     }
 }
