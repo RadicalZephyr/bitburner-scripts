@@ -12,7 +12,9 @@ import * as util from 'lib/typescript-collections/util';
  * the 'unlink' function defined.
  */
 class LinkedDictionaryPair<K, V> implements IDictionaryPair<K, V> {
+    // @ts-expect-error: This class needs to be constructed before insertion into the doubly linked list
     prev: LinkedDictionaryPair<K, V> | HeadOrTailLinkedDictionaryPair<K, V>;
+    // @ts-expect-error: This class needs to be constructed before insertion into the doubly linked list
     next: LinkedDictionaryPair<K, V> | HeadOrTailLinkedDictionaryPair<K, V>;
 
     constructor(
@@ -33,7 +35,9 @@ class LinkedDictionaryPair<K, V> implements IDictionaryPair<K, V> {
 class HeadOrTailLinkedDictionaryPair<K, V>
     implements IDictionaryPair<null, null>
 {
+    // @ts-expect-error: This class needs to be constructed before insertion into the doubly linked list
     prev: LinkedDictionaryPair<K, V> | HeadOrTailLinkedDictionaryPair<K, V>;
+    // @ts-expect-error: This class needs to be constructed before insertion into the doubly linked list
     next: LinkedDictionaryPair<K, V> | HeadOrTailLinkedDictionaryPair<K, V>;
     key: null = null;
     value: null = null;
