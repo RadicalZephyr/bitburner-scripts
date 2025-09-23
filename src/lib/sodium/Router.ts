@@ -60,7 +60,8 @@ export class Router<A, K> {
             [
                 new Source(this._vertex, () => {
                     this._vertex.increment(out.getVertex__());
-                    let outs: StreamWithSend<A>[] = this._table.getValue(k);
+                    let outs: StreamWithSend<A>[] | undefined =
+                        this._table.getValue(k);
                     if (outs == undefined) {
                         outs = [];
                         this._table.setValue(k, outs);
@@ -68,7 +69,8 @@ export class Router<A, K> {
                     outs.push(out);
                     return () => {
                         this._vertex.decrement(out.getVertex__());
-                        let outs2 = this._table.getValue(k);
+                        // This is definitely not undefined because it was set above
+                        let outs2 = this._table.getValue(k)!;
                         for (let i = outs2.length - 1; i >= 0; --i) {
                             if (outs2[i] == out) {
                                 outs2.splice(i, 1);
