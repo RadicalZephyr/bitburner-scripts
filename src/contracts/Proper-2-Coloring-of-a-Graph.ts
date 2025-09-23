@@ -143,7 +143,7 @@ class Graph {
     }
 
     colorVertex(vertex: number, color: Color) {
-        this.vertices.at(vertex).color = color;
+        this.vertices.at(vertex)!.color = color;
     }
 
     neighbors(vertex: number): number[] {
@@ -163,8 +163,8 @@ function makeAdjacencyTable(
     for (const e of edges) {
         const l = e[0];
         const r = e[1];
-        adjacencyTable.get(l).add(r);
-        adjacencyTable.get(r).add(l);
+        adjacencyTable.get(l)!.add(r);
+        adjacencyTable.get(r)!.add(l);
     }
     return adjacencyTable;
 }
