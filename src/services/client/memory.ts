@@ -296,10 +296,10 @@ export type MemoryProtocolDef = (typeof MemoryProtocol)['def'];
  * longRunning:   Prefer non-home servers for long running tasks
  */
 export interface AllocOptions {
-    contiguous?: boolean;
-    coreDependent?: boolean;
-    shrinkable?: boolean;
-    longRunning?: boolean;
+    contiguous?: boolean | null;
+    coreDependent?: boolean | null;
+    shrinkable?: boolean | null;
+    longRunning?: boolean | null;
 }
 
 export class MemoryClient {
