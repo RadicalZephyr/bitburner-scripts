@@ -85,6 +85,22 @@ export function calculatePhaseStartTimes(phases: BatchPhase[]) {
 
 export type HostDesignation = HostAllocation | string | null;
 
+function hostAndScale(host: HostAllocation | string): [string, number] {
+    let hostname: string;
+    let scaling: number = 1;
+
+    if (typeof host === 'string') {
+        hostname = host;
+    } else if (typeof host.hostname === 'string') {
+        hostname = host.hostname;
+
+        if (typeof host.numChunks === 'number') {
+            scaling = host.numChunks;
+        }
+    }
+    return [hostname!, scaling];
+}
+
 /**
  * Exec all phases in a batch on host
  *
@@ -102,19 +118,11 @@ export async function spawnBatch(
     donePort: number,
     allocId: number,
 ): Promise<number[]> {
-    let hostname: string;
-    let scaling: number = 1;
     if (!host) {
         return [];
-    } else if (typeof host === 'string') {
-        hostname = host;
-    } else if (typeof host.hostname === 'string') {
-        hostname = host.hostname;
-
-        if (typeof host.numChunks === 'number') {
-            scaling = host.numChunks;
-        }
     }
+
+    const [hostname, scaling] = hostAndScale(host);
 
     const scripts = Array.from(new Set(phases.map((p) => p.script)));
     const dependencies = scripts
