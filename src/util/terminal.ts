@@ -25,7 +25,7 @@ export interface TerminalOptions {
     commandTimeoutMs?: number;
 }
 
-const DEFAULT_OPTIONS: TerminalOptions = {
+const DEFAULT_OPTIONS: Required<TerminalOptions> = {
     actionBufferMs: 100,
     commandTimeoutMs: 0,
 };
@@ -176,7 +176,7 @@ function withTerminalLock<T>(fn: () => Promise<T>): Promise<T> {
 async function sendOneTimedTerminalCommand(
     ns: NS,
     command: string,
-    opts: TerminalOptions,
+    opts: Required<TerminalOptions>,
 ): Promise<string> {
     // N.B. the minimum is enforced by `sendTerminalCommand`
     const { actionBufferMs } = opts;
@@ -220,7 +220,9 @@ export async function findTerminalInput(
     const start = Date.now();
 
     while (true) {
-        termInputEl = globalThis['terminal-input'] as unknown;
+        termInputEl = globalThis['document'].getElementById(
+            'terminal-input',
+        ) as unknown;
         if (termInputEl) break;
         if (timeoutMs > 0 && Date.now() > start + timeoutMs)
             throw new Error(
@@ -249,6 +251,7 @@ function dispatchReactInputAndEnter(
     const propKey = getReactPropKey(terminalInput);
 
     // Perform an onChange event to set some internal values.
+    // @ts-expect-error: We found this key on the terminalInput object
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     terminalInput[propKey].onChange({ target: terminalInput });
 
@@ -261,10 +264,12 @@ function dispatchReactInputAndEnter(
     // handler closes over the state value, so even though the value
     // is updated you need to get the new handler for the new value to
     // be used.
+
+    // @ts-expect-error: We found this key on the terminalInput object
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     terminalInput[propKey].onKeyDown({
         key: 'Enter',
-        preventDefault: (): void => null,
+        preventDefault: (): void => undefined,
     });
 }
 
