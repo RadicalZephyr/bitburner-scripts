@@ -12,8 +12,10 @@ import { isObjectUnknown } from 'util/validate';
 export function getReactPropKey(el: Element): string {
     const propKey = Object.keys(el).find((k) => k.startsWith('__reactProps'));
     if (!propKey) throw new Error(`no react prop key found on ${el.nodeName}`);
+    // @ts-expect-error: We know this key exists because we found it on this object
     if (!isObjectUnknown(el[propKey]))
         throw new Error(`React prop key holds an unexpected value`, {
+            // @ts-expect-error: We know this key exists because we found it on this object
             cause: el[propKey],
         });
 
@@ -33,6 +35,7 @@ export function getReactProps(el: Element): Record<string, unknown> {
     const propKey = getReactPropKey(el);
     // NOTE: getReactPropKey verifies that this key definitely exists
     // and has the right shape
+    // @ts-expect-error: We know this key exists because we found it on this object
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return el[propKey];
 }
