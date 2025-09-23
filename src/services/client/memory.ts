@@ -43,10 +43,10 @@ export interface AllocationRequest {
     filename: string;
     chunkSize: number;
     numChunks: number;
-    contiguous?: boolean;
-    coreDependent?: boolean;
-    shrinkable?: boolean;
-    longRunning?: boolean;
+    contiguous?: boolean | null;
+    coreDependent?: boolean | null;
+    shrinkable?: boolean | null;
+    longRunning?: boolean | null;
 }
 
 const isAllocationRequest: Validator<AllocationRequest> = isObjectLike({
@@ -415,7 +415,7 @@ export class MemoryClient {
         chunkSize: number,
         numChunks: number,
         options?: AllocOptions,
-    ): Promise<HostAllocation[]> {
+    ): Promise<HostAllocation[] | null> {
         const result = await this.requestTransferableAllocation(
             chunkSize,
             numChunks,
