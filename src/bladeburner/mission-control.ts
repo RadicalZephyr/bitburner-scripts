@@ -239,6 +239,7 @@ async function bestAction(ns: NS) {
     if (allActionCandidates.length === 0) {
         if (diplomacyPercent(ns) > CONFIG.diplomacyPowerForChaos) {
             await generateContracts(ns);
+            return;
         } else {
             pick = recruit;
         }
