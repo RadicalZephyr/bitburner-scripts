@@ -48,9 +48,9 @@ export function autocomplete(data: AutocompleteData, args: string[]): string[] {
 
     const secondLast = args.at(-2);
     if (secondLast === skillFlag)
-        return SKILLS.map((s) => `"${s}"`).filter((s) => s.startsWith(last));
+        return SKILLS.map((s) => `"${s}"`).filter((s) => s.startsWith(last!));
     if (secondLast === presetFlag)
-        return Object.keys(PRESETS).filter((p) => p.startsWith(last));
+        return Object.keys(PRESETS).filter((p) => p.startsWith(last!));
 
     return [];
 }
