@@ -138,7 +138,7 @@ export async function insertRemoteScript(
             script.crossOrigin = crossOrigin;
         }
 
-        let timeoutId: number = setTimeout(() => {
+        let timeoutId: number | null = setTimeout(() => {
             cleanup();
             reject(
                 new Error(
@@ -228,6 +228,8 @@ export async function importFromGlobal<T>(
 
 /** Assert that a global binding exists. */
 export function assertGlobal<T>(globalKey: string, errorMessage: string): T {
+    // @ts-expect-error: We're checking if this key exists on
+    // globalThis so it's not an error.
     const v = globalThis[globalKey] as T | undefined;
     if (!v) throw new Error(errorMessage);
     return v;
