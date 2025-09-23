@@ -98,9 +98,9 @@ export function autocomplete(
 
     const secondLast = args.at(-2);
     if (secondLast === multFlag)
-        return MULTIPLIERS.filter((m) => m.startsWith(last));
+        return MULTIPLIERS.filter((m) => m.startsWith(last!));
     if (secondLast === presetFlag)
-        return Object.keys(PRESETS).filter((p) => p.startsWith(last));
+        return Object.keys(PRESETS).filter((p) => p.startsWith(last!));
 
     return [];
 }
@@ -333,9 +333,42 @@ function augment(ns: NS, name: string): Augment {
     };
 }
 
+const MultiplierKeys = [
+    'hacking',
+    'strength',
+    'defense',
+    'dexterity',
+    'agility',
+    'charisma',
+    'hacking_exp',
+    'strength_exp',
+    'defense_exp',
+    'dexterity_exp',
+    'agility_exp',
+    'charisma_exp',
+    'hacking_chance',
+    'hacking_speed',
+    'hacking_money',
+    'hacking_grow',
+    'company_rep',
+    'faction_rep',
+    'crime_money',
+    'crime_success',
+    'work_money',
+    'hacknet_node_money',
+    'hacknet_node_purchase_cost',
+    'hacknet_node_ram_cost',
+    'hacknet_node_core_cost',
+    'hacknet_node_level_cost',
+    'bladeburner_max_stamina',
+    'bladeburner_stamina_gain',
+    'bladeburner_analysis',
+    'bladeburner_success_chance',
+] as const satisfies (keyof Multipliers)[];
+
 function stripUnitMults(aug: Multipliers): Partial<Multipliers> {
     const out: Partial<Multipliers> = {};
-    for (const k in aug) {
+    for (const k of MultiplierKeys) {
         if (Object.hasOwn(aug, k) && typeof aug[k] === 'number' && aug[k] !== 1)
             out[k] = aug[k];
     }
