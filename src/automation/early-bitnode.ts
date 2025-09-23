@@ -125,10 +125,10 @@ async function sowAndHackNoodles(ns: NS) {
         },
         noods,
     );
-    if (sowResult != null && sowResult.pids.length > 0)
+    if (!sowResult || sowResult.pids.length > 0)
         throw new Error('failed to launch sow against n00dles');
 
-    await waitForExit(ns, sowResult.pids[0]!);
+    await waitForExit(ns, sowResult.pids[0]);
 
     const harvestResult = await client.launch(
         '/batch/harvest.js',
