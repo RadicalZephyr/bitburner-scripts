@@ -84,14 +84,17 @@ OPTIONS
 
     for (const config of ALL_CONFIGS) {
         if (Object.hasOwn(config, key)) {
+            // @ts-expect-error It's valid to access config values using index access
             const prev = config[key] as ConfigValue;
             if (value) {
                 config.setRaw(key, value);
                 ns.tprint(
+                    // @ts-expect-error It's valid to access config values using index access
                     `${config.prefix}_${key} changed: ${JSON.stringify(prev)} ⇒ ${JSON.stringify(config[key])}`,
                 );
             } else {
                 ns.tprint(
+                    // @ts-expect-error It's valid to access config values using index access
                     `${config.prefix}_${key} = ${JSON.stringify(config[key])}`,
                 );
             }
@@ -123,6 +126,7 @@ function formatAllConfigValues() {
     for (const c of ALL_CONFIGS) {
         output.push(`${c.prefix}:\n`);
         const keys = uniqueKeys(c)
+            // @ts-expect-error It's valid to access config values using index access
             .map((k) => `  ${k} = ${JSON.stringify(c[k])}`)
             .join('\n');
         output.push(keys);
