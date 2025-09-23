@@ -81,7 +81,7 @@ CONFIGURATION
         ns.ui.moveTail(ww - (HUD_WIDTH + STATUS_WINDOW_WIDTH), 0);
     }
 
-    const tableSortings: Record<string, SortBy> = {
+    const tableSortings: Record<TableKey, SortBy> = {
         harvesting: {
             key: 'hckLevel',
             dir: Dir.Desc,
@@ -114,7 +114,7 @@ CONFIGURATION
         },
     };
 
-    function setTableSorting(table: string, sortBy: string) {
+    function setTableSorting(table: TableKey, sortBy: ColumnKey) {
         if (tableSortings[table].key == sortBy) {
             tableSortings[table].dir =
                 tableSortings[table].dir === Dir.Asc ? Dir.Desc : Dir.Asc;
@@ -161,14 +161,16 @@ CONFIGURATION
         tableSortings.pendingTilling.data = [];
 
         for (const [host, phase] of lifecycleByHost.entries()) {
+            const targetThreads = threadsByTarget.get(host);
             if (
                 host === 'home'
                 || host.startsWith('pserv')
                 || ns.getServerMaxMoney(host) <= 0
+                || targetThreads == undefined
             )
                 continue;
 
-            const info = hostInfo(ns, host, threadsByTarget.get(host));
+            const info = hostInfo(ns, host, targetThreads);
             switch (phase) {
                 case Lifecycle.Worker:
                     break;
@@ -193,7 +195,7 @@ CONFIGURATION
             }
         }
 
-        for (const phaseName in tableSortings) {
+        for (const phaseName of TableKey) {
             const phase = tableSortings[phaseName];
             const sortKey = phase.key;
             const phaseTargets = phase.data ?? [];
@@ -290,8 +292,20 @@ enum Dir {
     Desc,
 }
 
+const TableKey = [
+    'harvesting',
+    'pendingHarvesting',
+    'sowing',
+    'pendingSowing',
+    'tilling',
+    'pendingTilling',
+] as const;
+type TableKey = (typeof TableKey)[number];
+
+type ColumnKey = keyof Omit<HostInfo, 'pids'>;
+
 interface SortBy {
-    key: string;
+    key: ColumnKey;
     dir: Dir;
     data: HostInfo[];
 }
@@ -303,7 +317,9 @@ function sortByFn(sortBy: SortBy) {
             if (sortKey === 'name') {
                 return b.name.localeCompare(a.name);
             } else {
-                return b[sortKey] - a[sortKey];
+                const aKey = a[sortKey];
+                const bKey = b[sortKey];
+                return bKey - aKey;
             }
         };
     } else {
@@ -477,12 +493,12 @@ function formatThreads(ns: NS, threads: number): string {
     return ns.formatNumber(threads, 2, 1000, true);
 }
 
-type TableSortingFn = (table: string, column: string) => void;
+type TableSortingFn = (table: TableKey, column: ColumnKey) => void;
 
 interface IMonitorSettings {
     ns: NS;
     getHackMoneyPerSec: () => number;
-    getTableSortings: (ns: NS) => Record<string, SortBy>;
+    getTableSortings: (ns: NS) => Record<TableKey, SortBy>;
     setTableSorting: TableSortingFn;
     queuePidsForTail: (pids: number[]) => void;
 }
@@ -567,7 +583,7 @@ function Monitor({
 
 function bindTableSorting(
     setTableSorting: TableSortingFn,
-    tableName: string,
+    tableName: TableKey,
 ): (column: string) => void {
     return setTableSorting.bind(null, tableName) as (column: string) => void;
 }
