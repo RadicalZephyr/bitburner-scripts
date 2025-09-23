@@ -1,4 +1,10 @@
-import { CityName, Multipliers, Player as NSPlayer, Skills } from '@ns';
+import {
+    CityName,
+    LocationName,
+    Multipliers,
+    Player as NSPlayer,
+    Skills,
+} from '@ns';
 
 import { ApiCell } from 'util/sodium-api';
 
@@ -57,7 +63,7 @@ const dummyPlayer: NSPlayer = {
     jobs: {},
     factions: [],
     totalPlaytime: 0,
-    location: null,
+    location: 'Travel Agency' as LocationName,
     karma: 0,
 };
 
