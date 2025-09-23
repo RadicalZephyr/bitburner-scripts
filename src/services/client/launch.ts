@@ -1,4 +1,4 @@
-import type { NS, ScriptArg, RunOptions } from '@ns';
+import type { NS, ScriptArg } from '@ns';
 
 import type { AllocOptions, HostAllocation } from 'services/client/memory';
 import {
@@ -27,15 +27,22 @@ export const MessageType = {
     Launch: 'Launch',
 } as const;
 
+interface StrictRunOptions {
+    threads?: number | null;
+    temporary?: boolean | null;
+    ramOverride?: number | null;
+    preventDuplicates?: boolean | null;
+}
+
 /**
  * Options for running a script remotely.
  *
  * alloc: Optional flags to request specific allocation strategies {@link AllocOptions}
  * dependencies:  Extra files to `scp` before execution
  */
-export interface LaunchRunOptions extends RunOptions {
-    alloc?: AllocOptions;
-    dependencies?: string[];
+export interface LaunchRunOptions extends StrictRunOptions {
+    alloc?: AllocOptions | null;
+    dependencies?: string[] | null;
 }
 
 export interface LaunchRequest {
@@ -73,7 +80,7 @@ const isAllocOptions: Validator<AllocOptions> = isObjectLike({
     longRunning: isOptional(isBoolean),
 });
 
-const isLaunchRunOptions: Validator<RunOptions> = isObjectLike({
+const isLaunchRunOptions: Validator<LaunchRunOptions> = isObjectLike({
     alloc: isOptional(isAllocOptions),
     dependencies: isOptional(isArrayOf(isString)),
     threads: isOptional(isNumber),
@@ -141,14 +148,14 @@ export class LaunchClient {
         script: string,
         options: LaunchRunOptions,
         ...args: ScriptArg[]
-    ): Promise<{ allocation: TransferableAllocation; pids: number[] }> {
+    ): Promise<{ allocation: TransferableAllocation; pids: number[] } | null> {
         const payload: LaunchRequest = { script, options, args };
         const result = await this.#client.sendMessageReceiveResponse(
             MessageType.Launch,
             payload,
         );
         if (!result.ok) {
-            const errMessage = (result as LaunchErrResponse).error.message;
+            const errMessage = result.error.message;
             this.#ns.print(`ERROR: ${errMessage}`);
             return null;
         }
