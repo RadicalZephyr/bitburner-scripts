@@ -164,16 +164,19 @@ async function pumpOnce(
         port.read();
         const errorMsg = `ERROR: received unknown message type: '${peeked.type}' with payload: ${JSON.stringify(peeked.payload)}`;
         ns.print(errorMsg);
-        const response = {
-            id: peeked.id,
-            type: peeked.type,
-            ok: false,
-            error: new Error(errorMsg, { cause: peeked }),
-        } satisfies ResponseErrUnknown;
-        // Send response
-        while (!resp.tryWrite(response)) {
-            await ns.sleep(20);
+        if (typeof peeked.id === 'string') {
+            const response = {
+                id: peeked.id,
+                type: peeked.type,
+                ok: false,
+                error: new Error(errorMsg, { cause: peeked }),
+            } satisfies ResponseErrUnknown;
+            // Send response
+            while (!resp.tryWrite(response)) {
+                await ns.sleep(20);
+            }
         }
+
         return LoopAction.Continue;
     }
 
@@ -186,20 +189,23 @@ async function pumpOnce(
 
     if (ramDecision === DispatchResult.RamLimitExceeded) {
         port.read();
-        const envelope = {
-            id: peeked.id,
-            type: peeked.type,
-            ok: true,
-            payload: {
-                ok: false,
-                error: new Error(
-                    `Requested function exceeds max configured NS fn RAM ${ns.formatRam(CONFIG.maxNsFnRam)}`,
-                ),
-            },
-        } satisfies ResponseOkEnvelope<string, DispatchResponse>;
-        while (!resp.tryWrite(envelope)) {
-            await ns.sleep(20);
+        if (typeof peeked.id === 'string') {
+            const envelope = {
+                id: peeked.id,
+                type: peeked.type,
+                ok: true,
+                payload: {
+                    ok: false,
+                    error: new Error(
+                        `Requested function exceeds max configured NS fn RAM ${ns.formatRam(CONFIG.maxNsFnRam)}`,
+                    ),
+                },
+            } satisfies ResponseOkEnvelope<string, DispatchResponse>;
+            while (!resp.tryWrite(envelope)) {
+                await ns.sleep(20);
+            }
         }
+
         return LoopAction.Continue;
     }
 
@@ -207,14 +213,16 @@ async function pumpOnce(
     const response = await handleMessage(ns, payload);
     port.read();
 
-    const envelope = {
-        id: peeked.id,
-        type: peeked.type,
-        ok: true,
-        payload: response,
-    } satisfies ResponseOkEnvelope<string, DispatchResponse>;
-    while (!resp.tryWrite(envelope)) {
-        await ns.sleep(20);
+    if (typeof peeked.id === 'string') {
+        const envelope = {
+            id: peeked.id,
+            type: peeked.type,
+            ok: true,
+            payload: response,
+        } satisfies ResponseOkEnvelope<string, DispatchResponse>;
+        while (!resp.tryWrite(envelope)) {
+            await ns.sleep(20);
+        }
     }
 
     return LoopAction.Continue;
@@ -261,7 +269,10 @@ function canExecuteNextFn(
 
     if (!calledNsFns.has(method)) {
         const self = ns.self();
-        const currentDynRam = Math.max(self.ramUsage, self.dynamicRamUsage);
+        const currentDynRam = Math.max(
+            self.ramUsage,
+            self.dynamicRamUsage ?? 0,
+        );
         const nextDynRam = currentDynRam + nextFnRam;
 
         if (CONFIG.maxNsFnRam < nextDynRam) {
