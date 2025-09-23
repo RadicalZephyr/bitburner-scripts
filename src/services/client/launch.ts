@@ -27,7 +27,7 @@ export const MessageType = {
     Launch: 'Launch',
 } as const;
 
-interface StrictRunOptions {
+export interface StrictRunOptions {
     threads?: number | null;
     temporary?: boolean | null;
     ramOverride?: number | null;

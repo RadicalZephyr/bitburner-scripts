@@ -1,6 +1,9 @@
-import type { NetscriptPort, NS, ScriptArg, RunOptions } from '@ns';
+import type { NetscriptPort, NS, ScriptArg } from '@ns';
 
-import type { LaunchRunOptions } from 'services/client/launch';
+import type {
+    LaunchRunOptions,
+    StrictRunOptions,
+} from 'services/client/launch';
 import {
     MEMORY_PORT,
     MemoryClient,
@@ -231,13 +234,13 @@ export class GrowableAllocation extends TransferableAllocation {
     ): Promise<number[]> {
         let totalThreads: number;
         let explicitDependencies: string[] = [];
-        let baseRunOptions: RunOptions | undefined;
+        let baseRunOptions: StrictRunOptions | undefined;
         if (typeof threads === 'number') {
             totalThreads = threads;
         } else {
             totalThreads = threads.threads ?? 1;
             explicitDependencies = threads.dependencies ?? [];
-            const runOpts: RunOptions = {};
+            const runOpts: StrictRunOptions = {};
             if (threads.ramOverride !== undefined)
                 runOpts.ramOverride = threads.ramOverride;
             if (threads.temporary !== undefined)
