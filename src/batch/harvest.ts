@@ -323,7 +323,7 @@ async function harvestPipeline(ns: NS, target: string, setup: HarvestSetup) {
             for (let i = batches.length; i < hosts.length; i++) {
                 const extraPids = await spawnBatch(
                     ns,
-                    hosts[i],
+                    hosts[i]!,
                     target,
                     logistics.phases,
                     donePortId,
@@ -332,7 +332,7 @@ async function harvestPipeline(ns: NS, target: string, setup: HarvestSetup) {
                 batches[i] = extraPids;
                 const lastPid = extraPids.at(-1);
                 if (typeof lastPid === 'number')
-                    pidHostMap.set(lastPid, hosts[i]);
+                    pidHostMap.set(lastPid, hosts[i]!);
                 currentBatches++;
                 if (Date.now() >= lastHeartbeat + CONFIG.heartbeatCadence) {
                     taskSelectorClient.tryHeartbeat(
@@ -495,12 +495,12 @@ function cancelRemovedBatches(
 ): number[][] {
     const remaining = hostCountMap(newHosts);
     const keep: number[][] = [];
-    for (let i = 0; i < prevHosts.length; i++) {
-        const host = prevHosts[i];
+    for (let i = 0; i < prevHosts.length && i < batches.length; i++) {
+        const host = prevHosts[i]!;
         const allowed = remaining.get(host) ?? 0;
         if (allowed > 0) {
             remaining.set(host, allowed - 1);
-            keep.push(batches[i]);
+            keep.push(batches[i]!);
         } else {
             for (const pid of batches[i] ?? []) {
                 if (ns.isRunning(pid)) ns.kill(pid);
