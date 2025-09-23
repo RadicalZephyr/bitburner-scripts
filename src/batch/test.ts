@@ -71,7 +71,7 @@ function predictHackFormula(
     const mult = applyMults ? ns.getHackingMultipliers().money : 1;
     const percent =
         ns.formulas.hacking.hackPercent(server, player) * threads * mult;
-    const money = -percent * server.moneyMax;
+    const money = -percent * server.moneyMax!;
     const sec = ns.hackAnalyzeSecurity(threads, target);
     return { money, sec };
 }
