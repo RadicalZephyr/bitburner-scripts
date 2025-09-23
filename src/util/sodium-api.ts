@@ -150,7 +150,8 @@ export class ApiCellUpdater<T> {
 export async function updateCells(
     ns: NS,
     periodMs: number,
-    updaters: ApiCellUpdater<unknown>[],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    updaters: ApiCellUpdater<any>[],
 ) {
     if (updaters.length === 0) return;
 
