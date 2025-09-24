@@ -15,7 +15,7 @@
         "lib": ["esnext", "dom"],
         "module": "esnext",
         "target": "esnext",
-        "moduleResolution": "node",
+        "moduleResolution": "bundler",
         "jsx": "react",
         "strict": true,
         "skipLibCheck": true,
