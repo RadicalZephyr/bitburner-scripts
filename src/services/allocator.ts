@@ -300,20 +300,20 @@ export class MemoryAllocator {
         if (contiguous) {
             // If any worker can satisfy the full request, allocate it there.
             for (const worker of workers) {
-                const chunk = worker.allocate(chunkSize, numChunks);
-                if (!chunk) continue;
-
-                const id = this.nextAllocId++;
-                const allocation = new Allocation(
-                    id,
-                    pid,
-                    filename,
-                    [chunk],
-                    numChunks,
-                    notifyPort,
-                );
-                this.allocations.set(id, allocation);
-                return allocation.asAllocationResult();
+                if (Math.floor(worker.freeRam / chunkSize) >= numChunks) {
+                    const chunk = worker.allocate(chunkSize, numChunks)!;
+                    const id = this.nextAllocId++;
+                    const allocation = new Allocation(
+                        id,
+                        pid,
+                        filename,
+                        [chunk],
+                        numChunks,
+                        notifyPort,
+                    );
+                    this.allocations.set(id, allocation);
+                    return allocation.asAllocationResult();
+                }
             }
         }
 
