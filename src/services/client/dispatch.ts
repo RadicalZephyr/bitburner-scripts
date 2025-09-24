@@ -205,8 +205,8 @@ export class DispatchClient {
         if (res.ok) return res.value;
         else
             throw new Error(
-                `Dispatch daemon errored while processing request: ${String((res as DispatchResponseErr).error)}`,
-                { cause: (res as DispatchResponseErr).error },
+                `Dispatch daemon errored while processing request: ${String(res.error)}`,
+                { cause: res.error },
             );
     }
 }

@@ -96,7 +96,7 @@ export async function trainCombat(
 
         skillsToTrain.sort((a, b) => a.level - b.level);
 
-        const skill = skillsToTrain[0]!;
+        const skill = skillsToTrain[0];
         gymWorkout(
             ns,
             gymLocation,

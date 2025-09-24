@@ -65,7 +65,6 @@ CONFIGURATION
     study(ns, zbU, algClass);
 
     void grindIntelligence(ns).catch((e) =>
-        // eslint-disable-next-line @typescript-eslint/no-base-to-string
         ns.print(`ERROR: Grind intelligence failed: ${String(e)}`),
     );
 

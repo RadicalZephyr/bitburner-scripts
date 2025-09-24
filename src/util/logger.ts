@@ -99,7 +99,6 @@ function argsToString(args: unknown[]): string {
 function mapToString(map: Map<unknown, unknown>): string {
     const formattedMap = Array.from(map.entries())
         .map((m) => {
-            // eslint-disable-next-line @typescript-eslint/no-base-to-string
             return `${String(m[0])} => ${argsToString([m[1]])}`;
         })
         .join('; ');

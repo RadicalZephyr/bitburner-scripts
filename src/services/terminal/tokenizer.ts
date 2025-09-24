@@ -220,7 +220,7 @@ export function scanTokens(
 export function tokenize(input: string): TokenizeResult {
     const result = scanTokens(input);
     if (!result.ok) {
-        return result as TokenizeErr;
+        return result;
     }
     return { ok: true, tokens: result.tokens.map((token) => token.value) };
 }

@@ -521,8 +521,7 @@ export class BaseServer<P extends ProtocolDef> {
                 const error =
                     err instanceof Error
                         ? new Error('Handler error', { cause })
-                        : // eslint-disable-next-line @typescript-eslint/no-base-to-string
-                          new Error(`Handler error: ${String(err)}`, { cause });
+                        : new Error(`Handler error: ${String(err)}`, { cause });
 
                 if (this.#responsePort && typeof msg.id === 'string') {
                     const response = {
