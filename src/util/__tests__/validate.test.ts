@@ -169,7 +169,7 @@ describe('Validator functions', () => {
 
         for (const k of Object.keys(baseObject)) {
             const missingK = { ...baseObject };
-            delete missingK[k];
+            delete missingK[k as unknown as keyof typeof baseObject];
 
             test(`missing ${k}`, () => {
                 expect(isTestObject(missingK)).toBeFalsy();
