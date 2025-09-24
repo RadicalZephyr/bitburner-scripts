@@ -28,15 +28,22 @@ export class CoalesceHandler<A> {
     private f: (l: A, r: A) => A;
     private out: StreamWithSend<A>;
     private accumValid: boolean;
-    private accum: A;
-    private verbose: boolean;
+    private accum: A | null = null;
+
+    /**
+     * Push a value into the coalescer.
+     *
+     * NOTE: _Must_ be called from within a transaction.
+     *
+     * @param a
+     */
     send_(a: A) {
-        if (this.accumValid) this.accum = this.f(this.accum, a);
+        if (this.accumValid) this.accum = this.f(this.accum!, a);
         else {
-            Transaction.currentTransaction.prioritized(
+            Transaction.currentTransaction!.prioritized(
                 this.out.getVertex__(),
                 () => {
-                    this.out.send_(this.accum);
+                    this.out.send_(this.accum!);
                     this.accumValid = false;
                     this.accum = null;
                 },
