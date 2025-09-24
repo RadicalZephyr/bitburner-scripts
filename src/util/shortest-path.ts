@@ -95,7 +95,7 @@ function min_distance(
     let leastV: string | null = null;
     for (const v of unvisited.keys()) {
         const vDist = dist.get(v);
-        if (vDist && vDist < least) {
+        if (vDist !== undefined && vDist < least) {
             least = vDist;
             leastV = v;
         }
