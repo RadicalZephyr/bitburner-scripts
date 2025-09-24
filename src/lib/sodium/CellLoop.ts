@@ -10,6 +10,8 @@ import { StreamLoop } from 'lib/sodium/Stream.js';
  */
 export class CellLoop<A> extends LazyCell<A> {
     constructor() {
+        // @ts-expect-error: Passing a null init value is only valid
+        // if loop is called in the same transaction as construction.
         super(null, new StreamLoop<A>());
     }
 
