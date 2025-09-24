@@ -1,6 +1,14 @@
 import { describe, expect, test } from '@jest/globals';
 
-import { solve as solveMerge } from '../Merge-Overlapping-Intervals';
+import {
+    type Range,
+    solve as solveMerge,
+} from '../Merge-Overlapping-Intervals';
+
+type TestCase = [
+    Parameters<typeof solveMerge>[0],
+    ReturnType<typeof solveMerge>,
+];
 
 describe('Merge Overlapping Intervals', () => {
     test.each([
@@ -24,7 +32,7 @@ describe('Merge Overlapping Intervals', () => {
             ],
             [[7, 24]],
         ],
-    ])('%s', (data: [number, number][], expected) => {
+    ] satisfies TestCase[])('%s', (data: Range[], expected: Range[]) => {
         expect(solveMerge(data)).toEqual(expected);
     });
 });
