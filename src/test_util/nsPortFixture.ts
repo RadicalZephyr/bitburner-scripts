@@ -43,7 +43,7 @@ import type { NetscriptPort, NS } from '@ns';
 const cloneValue: <T>(v: T) => T =
     typeof structuredClone === 'function'
         ? structuredClone
-        : <T>(v: T): T => JSON.parse(JSON.stringify(v));
+        : <T>(v: T): T => JSON.parse(JSON.stringify(v)) as T;
 
 const DEFAULT_PORT_COUNT = 100;
 const DEFAULT_CAPACITY = 100;
