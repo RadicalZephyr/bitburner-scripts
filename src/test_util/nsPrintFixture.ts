@@ -113,7 +113,7 @@ export function createPrintFixture(
 
     function splice(
         start: number,
-        deleteCount?: number,
+        deleteCount: number,
         ...items: string[]
     ): string[] {
         return buffer.splice(start, deleteCount, ...items);
