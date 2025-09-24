@@ -51,7 +51,7 @@ export async function main(ns: NS) {
     }
 
     ns.tprintf('contract data: %s', JSON.stringify(contractData));
-    const answer = solve(ns, contractData);
+    const answer = solve(contractData);
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
 
@@ -63,7 +63,7 @@ const isContractData: Validator<[number, number[]]> = isTuple(
 /**
  * Maximum profit with at most k transactions.
  */
-export function solve(_ns: NS, data1: [number, number[]]): number {
+export function solve(data1: [number, number[]]): number {
     /*eslint prefer-const: ["error", {"destructuring": "all"}]*/
     let [k, stocks] = data1;
     if (stocks.length === 0 || k === 0) return 0;

@@ -2,9 +2,9 @@ import { expect, test } from '@jest/globals';
 
 import { solve as solveAST4 } from '../Algorithmic-Stock-Trader-IV';
 
-test('Algorithmic Stock Trader IV', async () => {
+test('Algorithmic Stock Trader IV', () => {
     expect(
-        await solveAST4(undefined, [
+        solveAST4([
             10,
             [
                 5, 90, 66, 133, 66, 57, 137, 159, 102, 30, 109, 193, 125, 151,
