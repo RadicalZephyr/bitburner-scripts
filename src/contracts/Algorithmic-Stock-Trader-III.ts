@@ -46,7 +46,7 @@ export async function main(ns: NS) {
     }
 
     ns.tprintf('contract data: %s', JSON.stringify(contractData));
-    const answer = solve(ns, contractData);
+    const answer = solve(contractData);
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
 
@@ -55,7 +55,7 @@ const isContractData: Validator<number[]> = isArrayOf(isNumber);
 /**
  * Maximum profit with at most two transactions.
  */
-export function solve(_ns: NS, data: number[]): number {
+export function solve(data: number[]): number {
     if (data.length === 0) return 0;
 
     const n = data.length;
