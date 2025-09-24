@@ -2,6 +2,11 @@ import { describe, expect, test } from '@jest/globals';
 
 import { solve as solveColor } from '../Proper-2-Coloring-of-a-Graph';
 
+type TestCase = [
+    Parameters<typeof solveColor>[0],
+    ReturnType<typeof solveColor>,
+];
+
 describe('Proper 2 Coloring', () => {
     test.each([
         [
@@ -40,7 +45,10 @@ describe('Proper 2 Coloring', () => {
             ],
             [0, 0, 0, 0, 1, 1, 1],
         ],
-    ])('%s', (data: [number, [number, number][]], expected) => {
-        expect(solveColor(data)).toEqual(expected);
-    });
+    ] satisfies TestCase[])(
+        '%s',
+        (data: [number, [number, number][]], expected) => {
+            expect(solveColor(data)).toEqual(expected);
+        },
+    );
 });

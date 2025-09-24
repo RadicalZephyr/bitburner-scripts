@@ -63,7 +63,7 @@ export async function main(ns: NS) {
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
 
-type ContractData = [number, [number, number][]];
+export type ContractData = [number, [number, number][]];
 
 const isContractData: Validator<ContractData> = isTuple(
     isNumber,
