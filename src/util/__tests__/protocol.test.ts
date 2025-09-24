@@ -632,8 +632,8 @@ describe('BaseClient and BaseServer provide a higher-level interface to custom p
                     const res = getPortHandle(2);
                     const handlers: Handlers<TestProtocolDef> = {
                         // withNoResponse missing entirely
-                        withResponse: async (payload) =>
-                            mockWithResponse(payload as string),
+                        withResponse: async (payload: string) =>
+                            mockWithResponse(payload),
                     } as unknown as Handlers<TestProtocolDef>;
                     super(ns, TestProtocol, req, res, handlers);
                 }
@@ -668,7 +668,7 @@ describe('BaseClient and BaseServer provide a higher-level interface to custom p
                     const req = getPortHandle(1);
                     const res = getPortHandle(2);
                     const handlers: Handlers<TestProtocolDef> = {
-                        withNoResponse: async () => null,
+                        withNoResponse: async () => undefined,
                         withResponse: async () => {
                             throw new Error('An Error with no cause');
                         },
