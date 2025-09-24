@@ -1,6 +1,6 @@
 import { NetscriptPort } from '@ns';
 
-import { ServerNS } from 'util/ns';
+import { ServerNS } from 'ns/interfaces';
 import { readAllFromPort } from 'util/ports';
 import { sleep } from 'util/time';
 import {

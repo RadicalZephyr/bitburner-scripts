@@ -1,6 +1,6 @@
 import { describe, expect, jest, test } from '@jest/globals';
 
-import { ServerNS } from '../ns';
+import { ServerNS } from '../../ns/interfaces';
 
 import {
     isRequestUnknown,
