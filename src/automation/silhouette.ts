@@ -46,6 +46,7 @@ async function workFor(ns: NS, companyName: CompanyName) {
 
     while (true) {
         const myJobs = ns.getPlayer().jobs;
+        // @ts-expect-error: I don't care because this script is going away
         if (chiefRe.test(myJobs[companyName])) return;
 
         const job = bestJob(ns, companyName);
