@@ -96,7 +96,7 @@ export function usePlugins<T extends NS, P extends NsPlugin[]>(
             }
             provided = { [key]: Object.freeze(raw) };
         } else {
-            provided = raw as ExtraRecord;
+            provided = raw;
         }
 
         // flat collision guard
@@ -122,6 +122,7 @@ type PluginSurface<P extends NsPlugin> = P['__nsKey__'] extends infer K
         : ExtrasOf<P>
     : ExtrasOf<P>;
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 type UnionExtras<P extends NsPlugin[], Acc = {}> = P extends [
     infer H,
     ...infer T,
