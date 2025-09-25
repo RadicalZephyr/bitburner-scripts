@@ -10,6 +10,9 @@ import { FlagsSchema, parseFlags } from 'util/flags';
 import { CONFIG } from 'gang/config';
 import { NAMES } from 'gang/names';
 
+import { withPlugins } from 'ns/extend';
+import { alivePlugin } from 'ns/plugins/alive';
+
 import {
     Condition,
     PickByType,
@@ -23,6 +26,12 @@ export function autocomplete(data: AutocompleteData): string[] {
     data.flags(FLAGS);
     return [];
 }
+
+function extendNs(ns: NS) {
+    return withPlugins(ns, alivePlugin());
+}
+
+type NSX = ReturnType<typeof extendNs>;
 
 export async function main(ns: NS) {
     const flags = await parseFlags(ns, FLAGS);
@@ -52,10 +61,10 @@ CONFIGURATION
         return;
     }
 
-    await manageGang(ns);
+    await manageGang(extendNs(ns));
 }
 
-async function manageGang(ns: NS) {
+async function manageGang(ns: NSX) {
     const memberNames = ns.gang.getMemberNames();
     const currentNames = new Set(memberNames);
     const availableNames = NAMES.filter((n) => !currentNames.has(n));
@@ -69,7 +78,7 @@ async function manageGang(ns: NS) {
         void trainMember(ns, name, gangTracker.member(name));
     }
 
-    while (true) {
+    while (ns.alive.isAlive()) {
         if (ns.gang.canRecruitMember() && nameIndex < availableNames.length) {
             const name = availableNames[nameIndex++];
             if (ns.gang.recruitMember(name)) {
@@ -179,13 +188,8 @@ class MemberTracker {
     }
 }
 
-async function trainMember(ns: NS, name: string, tracker: MemberTracker) {
-    let running = true;
-    ns.atExit(() => {
-        running = false;
-    }, `trainMember-${name}-cleanup`);
-
-    while (running) {
+async function trainMember(ns: NSX, name: string, tracker: MemberTracker) {
+    while (ns.alive.isAlive()) {
         buyEquipment(ns, name);
 
         await setTask(ns, name, 'Train Hacking');
