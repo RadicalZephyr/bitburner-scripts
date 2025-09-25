@@ -1,8 +1,6 @@
-import type { NS } from '@ns';
-
 import { namespaced } from 'ns/namespace';
 
-export const loggerPlugin = (ns: NS) =>
+export const loggerPlugin = () =>
     namespaced('log', {
         name: 'logger',
         setup(ns, { onExit }) {

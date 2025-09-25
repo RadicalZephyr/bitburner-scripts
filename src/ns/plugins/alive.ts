@@ -1,8 +1,6 @@
-import type { NS } from '@ns';
-
 import { namespaced } from 'ns/namespace';
 
-export const alivePlugin = (ns: NS) =>
+export const alivePlugin = () =>
     namespaced('alive', {
         name: 'alive',
         setup(ns, { onExit, signal }) {
