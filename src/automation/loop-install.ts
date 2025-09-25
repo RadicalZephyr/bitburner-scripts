@@ -116,32 +116,37 @@ async function eventuallyGetBestFactionForNGF(ns: NS): Promise<string> {
 async function buyOneNeuroFlux(ns: NS, bestFaction: string) {
     const nfgName = 'NeuroFlux Governor';
 
-    const neuro = new Aug(ns, nfgName, bestFaction);
-    const donation = neededReputationCost(ns, neuro);
+    let purchased = false;
 
-    // TODO: Check for donation > 0
-    if (!Number.isFinite(donation))
-        throw new Error(
-            `Cannot donate to buy Neuroflux Governor, you need more faction rep!`,
-        );
-    while (!canAfford(ns, donation)) await ns.asleep(1000);
+    while (!purchased) {
+        const neuro = new Aug(ns, nfgName, bestFaction);
+        const donation = neededReputationCost(ns, neuro);
 
-    if (donation > 0) {
-        const donated = ns.singularity.donateToFaction(neuro.faction, donation);
-        if (!donated)
+        if (!Number.isFinite(donation))
             throw new Error(
-                `Could not donate to ${neuro.faction} for reputation!`,
+                `Cannot donate to buy Neuroflux Governor, you need more faction rep!`,
             );
+        while (!canAfford(ns, donation)) await ns.asleep(1000);
+
+        if (donation > 0) {
+            const donated = ns.singularity.donateToFaction(
+                neuro.faction,
+                donation,
+            );
+            if (!donated)
+                throw new Error(
+                    `Could not donate to ${neuro.faction} for reputation!`,
+                );
+        }
+
+        const cost = augCost(ns, nfgName);
+        while (!canAfford(ns, cost)) await ns.asleep(1000);
+
+        purchased = ns.singularity.purchaseAugmentation(
+            neuro.faction,
+            neuro.name,
+        );
     }
-
-    const cost = augCost(ns, nfgName);
-    while (!canAfford(ns, cost)) await ns.asleep(1000);
-
-    const purchased = ns.singularity.purchaseAugmentation(
-        neuro.faction,
-        neuro.name,
-    );
-    if (!purchased) throw new Error('Could not buy Neuroflux Governor!');
 }
 
 async function buyNeuroFlux(ns: NS, bestFaction: string) {
