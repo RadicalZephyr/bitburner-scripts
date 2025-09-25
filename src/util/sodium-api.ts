@@ -1,6 +1,7 @@
 import { NS } from '@ns';
 
-import { makeFuid } from 'util/fuid';
+import { withPlugins } from 'ns/extend';
+import { alivePlugin } from 'ns/plugins/alive';
 
 import {
     Cell,
@@ -163,22 +164,13 @@ export async function updateCells(
 ) {
     if (updaters.length === 0) return;
 
-    let running = true;
-    ns.atExit(() => {
-        running = false;
-        Transaction.execute(() => {
-            for (const updater of updaters) {
-                updater.unlisten();
-            }
-        });
-    }, makeFuid(ns));
-
-    while (running) {
+    const nsx = withPlugins(ns, alivePlugin());
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    for await (const _ of nsx.alive.loop(periodMs)) {
         Transaction.execute(() => {
             for (const updater of updaters) {
                 updater.update();
             }
         });
-        await ns.asleep(periodMs);
     }
 }
