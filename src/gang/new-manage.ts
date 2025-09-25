@@ -52,6 +52,10 @@ CONFIGURATION
         return;
     }
 
+    await manageGang(ns);
+}
+
+async function manageGang(ns: NS) {
     const memberNames = ns.gang.getMemberNames();
     const currentNames = new Set(memberNames);
     const availableNames = NAMES.filter((n) => !currentNames.has(n));
