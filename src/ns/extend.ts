@@ -72,6 +72,7 @@ function ensureCore(ns: NS): ProxyMeta {
 
     const meta: ProxyMeta = { prox, extras, ctrl, hooks, plugins };
     META.set(ns, meta);
+    META.set(prox, meta);
     return meta;
 }
 
