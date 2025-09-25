@@ -1,5 +1,8 @@
 import type { NS } from '@ns';
 
+import { withPlugins } from 'ns/extend';
+import { alivePlugin } from 'ns/plugins/alive';
+
 import { makeFuid } from 'util/fuid';
 import { ApiStream, resettableAccumulator } from 'util/sodium-api';
 import { isNumber, isObjectLike, isString, Validator } from 'util/validate';
@@ -86,14 +89,11 @@ export class DiscoveryClient {
     }
 
     private async pollFlushSubscriptions() {
-        let running = true;
-        this.#ns.atExit(() => {
-            running = false;
-        }, makeFuid(this.#ns));
-        while (running) {
+        const nsx = withPlugins(this.#ns, alivePlugin());
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        for await (const _ of nsx.alive.loop(100)) {
             this.notifyWorkerSubscriptions();
             this.notifyTargetSubscriptions();
-            await this.#ns.asleep(100);
         }
     }
 
