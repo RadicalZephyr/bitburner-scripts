@@ -1,6 +1,8 @@
 import type { MoneySource, NS } from '@ns';
 
-import { makeFuid } from 'util/fuid';
+import { withPlugins } from 'ns/extend';
+import { alivePlugin } from 'ns/plugins/alive';
+
 import { StatTracker } from 'util/stat-tracker';
 
 export type MoneyTracker = StatTracker<MoneySource>;
@@ -40,15 +42,9 @@ export async function tickMoneyTrackerUpdates(
     tracker: MoneyTracker,
     cadence = 10_000,
 ) {
-    let running = true;
-    ns.atExit(
-        () => {
-            running = false;
-        },
-        `moneyTracker-tickUpdates-${makeFuid(ns)}`,
-    );
+    const nsx = withPlugins(ns, alivePlugin());
 
-    while (running) {
+    while (nsx.alive.isAlive()) {
         await updateMoneyTracker(ns, tracker, cadence);
     }
 }
