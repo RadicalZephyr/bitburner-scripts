@@ -1,25 +1,30 @@
 import type { FactionName, NS } from '@ns';
 import { parseFlags } from 'util/flags';
 
-import { exitOnKill } from 'util/exitOnKill';
+import { withPlugins } from 'ns/extend';
+import { alivePlugin } from 'ns/plugins/alive';
+
+function extendNs(ns: NS) {
+    return withPlugins(ns, alivePlugin());
+}
+
+type NSX = ReturnType<typeof extendNs>;
 
 export async function main(ns: NS) {
     await parseFlags(ns, []);
 
-    void acceptInvites(ns);
-    void pursueInvites(ns);
+    const nsx = extendNs(ns);
 
-    return exitOnKill(ns);
+    void acceptInvites(nsx);
+    void pursueInvites(nsx);
+
+    return await nsx.alive.untilKilled();
 }
 
-async function acceptInvites(ns: NS) {
-    let running = true;
-    ns.atExit(() => {
-        running = false;
-    }, 'acceptInvites');
-
+async function acceptInvites(ns: NSX) {
     const sing = ns.singularity;
-    while (running) {
+
+    while (ns.alive.isAlive()) {
         const factionInvites = sing.checkFactionInvitations();
 
         for (const f of factionInvites) {
@@ -30,7 +35,7 @@ async function acceptInvites(ns: NS) {
     }
 }
 
-async function pursueInvites(ns: NS) {
+async function pursueInvites(ns: NSX) {
     const myFactions = new Set(ns.getPlayer().factions);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const factionsToJoin = allFactions(ns).filter((f) => !myFactions.has(f));
