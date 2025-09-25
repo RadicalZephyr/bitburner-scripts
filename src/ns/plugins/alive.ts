@@ -26,7 +26,7 @@ export const alivePlugin = () =>
                 while (alive) {
                     yield;
                     if (!alive) break;
-                    if (interval > 0) await ns.sleep(interval);
+                    if (interval > 0) await ns.asleep(interval);
                     else await ns.asleep(0);
                 }
             }
