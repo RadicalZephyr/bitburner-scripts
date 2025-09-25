@@ -3,39 +3,35 @@ import { namespaced } from 'ns/namespace';
 export const alivePlugin = () =>
     namespaced('alive', {
         name: 'alive',
-        setup(ns, { onExit, signal }) {
-            let alive = true;
-            onExit(() => {
-                alive = false;
-            });
-
-            const untilKilled = (): Promise<void> =>
-                alive
-                    ? new Promise<void>((res) => {
-                          const h = () => {
-                              signal.removeEventListener('abort', h);
-                              res();
-                          };
-                          signal.addEventListener('abort', h, { once: true });
-                      })
-                    : Promise.resolve();
+        setup(ns, { signal }) {
+            // One promise forever: resolves exactly once when the script is being killed
+            const killed: Promise<void> = signal.aborted
+                ? Promise.resolve()
+                : new Promise<void>((resolve) => {
+                      // Resolve when our shared AbortSignal fires.
+                      // `once: true` guarantees the handler runs a single time.
+                      signal.addEventListener('abort', () => resolve(), {
+                          once: true,
+                      });
+                  });
 
             async function* loop(
                 interval = 0,
             ): AsyncGenerator<void, void, void> {
-                while (alive) {
+                while (!signal.aborted) {
                     yield;
-                    if (!alive) break;
-                    if (interval > 0) await ns.asleep(interval);
-                    else await ns.asleep(0);
+                    if (signal.aborted) break;
+                    if (interval > 0)
+                        await Promise.race([killed, ns.asleep(interval)]);
+                    else await Promise.race([killed, ns.asleep(0)]);
                 }
             }
 
             return {
                 /** True until the script is killed (zero RAM; custom). */
-                isAlive: () => alive,
+                isAlive: () => !signal.aborted,
                 /** Resolves when killed. */
-                untilKilled,
+                untilKilled: () => killed,
                 /** AbortSignal that fires on kill. */
                 signal,
                 /** Async generator that ticks until killed. */
