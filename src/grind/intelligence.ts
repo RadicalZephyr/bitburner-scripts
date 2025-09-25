@@ -1,8 +1,10 @@
 import type { NS, AutocompleteData } from '@ns';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
+import { withPlugins } from 'ns/extend';
+import { alivePlugin } from 'ns/plugins/alive';
+
 import { LaunchClient } from 'services/client/launch';
-import { makeFuid } from 'util/fuid';
 
 const FLAGS = [['help', false]] as const satisfies FlagsSchema;
 
@@ -10,6 +12,12 @@ export function autocomplete(data: AutocompleteData): string[] {
     data.flags(FLAGS);
     return [];
 }
+
+function extendNs(ns: NS) {
+    return withPlugins(ns, alivePlugin());
+}
+
+type NSX = ReturnType<typeof extendNs>;
 
 export async function main(ns: NS) {
     const flags = await parseFlags(ns, FLAGS);
@@ -29,10 +37,10 @@ OPTIONS
         return;
     }
 
-    await grindThatLevel(ns);
+    await grindThatLevel(extendNs(ns));
 }
 
-async function grindThatLevel(ns: NS) {
+async function grindThatLevel(ns: NSX) {
     const target = 'fulcrumassets';
 
     const launch = new LaunchClient(ns);
@@ -70,12 +78,8 @@ async function grindThatLevel(ns: NS) {
 /**
  * Grind intelligence by buying and removing a program repeatedly.
  */
-async function buyProgramGrindLoop(ns: NS, programName: string) {
-    let running = true;
-    ns.atExit(() => {
-        running = false;
-    }, makeFuid(ns));
-    while (running) {
+async function buyProgramGrindLoop(ns: NSX, programName: string) {
+    while (ns.alive.isAlive()) {
         ns.rm(programName);
         ns.singularity.purchaseProgram(programName);
         await ns.asleep(10);
@@ -85,14 +89,10 @@ async function buyProgramGrindLoop(ns: NS, programName: string) {
 /**
  * Grind intelligence by creating a program and removing it repeatedly.
  */
-async function writePrograms(ns: NS) {
+async function writePrograms(ns: NSX) {
     const program = 'ServerProfiler.exe';
 
-    let running = true;
-    ns.atExit(() => {
-        running = false;
-    }, makeFuid(ns));
-    while (running) {
+    while (ns.alive.isAlive()) {
         ns.rm(program);
         ns.singularity.createProgram(program, false);
         await doneWorking(ns);
