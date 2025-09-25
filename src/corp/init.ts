@@ -2,7 +2,7 @@ import type { AutocompleteData, CorpEmployeePosition, NS } from '@ns';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { AGRI_DIVISION, CITIES, CORPORATION_NAME } from 'corp/constants';
-import { DispatchClient, DispatchFn } from 'services/client/dispatch';
+import { DispatchClient } from 'services/client/dispatch';
 
 const FLAGS = [
     ['self-fund', false],
@@ -85,7 +85,7 @@ async function initCorporation(ns: NS, selfFund: boolean) {
         agriDivision.name,
     );
     for (let i = adCount; i < 2; i++) {
-        _ns('corporation.hireAdVert', agriDivision.name);
+        await _ns('corporation.hireAdVert', agriDivision.name);
     }
 
     const agriCities = new Set(agriDivision.cities);
@@ -121,7 +121,8 @@ async function initCorporation(ns: NS, selfFund: boolean) {
         }
 
         for (const job in office.employeeJobs) {
-            if (office.employeeJobs[job] === 0) continue;
+            if (office.employeeJobs[job as CorpEmployeePosition] === 0)
+                continue;
             await _ns(
                 'corporation.setAutoJobAssignment',
                 agriDivision.name,
@@ -159,7 +160,7 @@ async function initCorporation(ns: NS, selfFund: boolean) {
             }
         }
         for (let i = warehouse.level; i < 2; i++) {
-            _ns('corporation.upgradeWarehouse', agriDivision.name, city);
+            await _ns('corporation.upgradeWarehouse', agriDivision.name, city);
         }
     }
 
@@ -176,7 +177,8 @@ async function initCorporation(ns: NS, selfFund: boolean) {
         );
         // Remove workers from current jobs
         for (const job in office.employeeJobs) {
-            if (office.employeeJobs[job] === 0) continue;
+            if (office.employeeJobs[job as CorpEmployeePosition] === 0)
+                continue;
             await _ns(
                 'corporation.setAutoJobAssignment',
                 agriDivision.name,

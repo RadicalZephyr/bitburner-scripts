@@ -4,7 +4,7 @@ import type {
     CorpEmployeePosition,
     Division,
     NS,
-} from 'netscript';
+} from '@ns';
 import { FlagsSchema, parseFlags } from 'util/flags';
 
 import { DispatchClient, DispatchFn } from 'services/client/dispatch';
@@ -53,18 +53,17 @@ async function upgradeRound2(ns: NS) {
     const corpInfo = await _ns('corporation.getCorporation');
 
     for (const divName of corpInfo.divisions)
-        await upgradeDivision(ns, _ns, divName);
+        await upgradeDivision(_ns, divName);
 }
 
-async function upgradeDivision(ns: NS, _ns: DispatchFn, divName: string) {
+async function upgradeDivision(_ns: DispatchFn, divName: string) {
     const division = await _ns('corporation.getDivision', divName);
     for (const city of division.cities) {
-        await upgradeOffice(ns, _ns, division, city);
+        await upgradeOffice(_ns, division, city);
     }
 }
 
 async function upgradeOffice(
-    ns: NS,
     _ns: DispatchFn,
     division: Division,
     city: CityName,
@@ -156,7 +155,7 @@ async function setAllWorkersTo(
 ) {
     const office = await _ns('corporation.getOffice', division.name, city);
     for (const job in office.employeeJobs) {
-        if (office.employeeJobs[job] === 0) continue;
+        if (office.employeeJobs[job as CorpEmployeePosition] === 0) continue;
         await _ns(
             'corporation.setAutoJobAssignment',
             division.name,
