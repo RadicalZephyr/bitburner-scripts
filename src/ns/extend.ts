@@ -68,7 +68,29 @@ function ensureCore(ns: NS): ProxyMeta {
     return meta;
 }
 
-/** Compose any number of plugins into a single proxy (reused per ns). */
+/**
+ * Compose any number of plugins into a single proxy (reused per ns).
+ *
+ * @example Creating an extended NS and capturing the type
+ *
+ * When you need to pass the enhanced NS object and still retain
+ * knowledge of the additional methods, you need to be able to name
+ * the type returned by `withPlugins`. The easiest way to do this is
+ * by defining a help function and capturing the return type in a type
+ * alias.
+ *
+ * ```ts
+ * import { withPlugins } from 'ns/extend';
+ * import { alivePlugin } from 'ns/plugins/alive';
+ * import { loggerPlugin } from 'ns/plugins/logger';
+ *
+ * function extendNs(ns: NS) {
+ *     return withPlugins(ns, alivePlugin(), loggerPlugin());
+ * }
+ *
+ * type NSX = ReturnType<typeof extendNs>;
+ * ```
+ */
 export function withPlugins<T extends NS, P extends NsPlugin[]>(
     ns: T,
     ...plugins: P
