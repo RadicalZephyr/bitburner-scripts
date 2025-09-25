@@ -19,11 +19,13 @@ import { DiscoveryClient } from 'services/client/discover';
 
 import { fromFixed, MemoryAllocator, Worker } from 'services/allocator';
 
+import { withPlugins } from 'ns/extend';
+import { loggerPlugin } from 'ns/plugins/logger';
+
 import { UI_CONFIG } from 'ui/config';
 import { HUD_HEIGHT, HUD_WIDTH, STATUS_WINDOW_WIDTH } from 'ui/constants';
 import { useNsUpdate, useTheme } from 'ui/hooks';
 
-import { installLogger } from 'util/logger';
 import { BaseServer, Handlers } from 'util/protocol';
 import { RingBuffer } from 'util/ring-buffer';
 
@@ -41,6 +43,11 @@ const FLAGS = [
 export function autocomplete(data: AutocompleteData): string[] {
     data.flags(FLAGS);
     return [];
+}
+
+function extendNs(ns: NS) {
+    const bufferCap = 500;
+    return withPlugins(ns, loggerPlugin(bufferCap));
 }
 
 export async function main(ns: NS) {
@@ -81,10 +88,10 @@ CONFIGURATION
         ns.ui.moveTail(ww - (1.5 * HUD_WIDTH + STATUS_WINDOW_WIDTH), 0);
     }
 
-    const bufferCap = 500;
-    const { ns: logNS, buffer } = installLogger(ns, { bufferCap });
+    const nsx = extendNs(ns);
+    const buffer = nsx.getLogBuffer();
 
-    await startMemoryAllocator(logNS, buffer);
+    await startMemoryAllocator(nsx, buffer);
 }
 
 async function startMemoryAllocator(ns: NS, log: RingBuffer<string>) {

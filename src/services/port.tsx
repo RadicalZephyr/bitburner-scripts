@@ -10,16 +10,23 @@ import {
 } from 'services/client/port';
 import { MemoryClient } from 'services/client/memory';
 
+import { withPlugins } from 'ns/extend';
+import { loggerPlugin } from 'ns/plugins/logger';
+
 import { UI_CONFIG } from 'ui/config';
 import { HUD_HEIGHT, HUD_WIDTH, STATUS_WINDOW_WIDTH } from 'ui/constants';
 import { usePoll, useNsUpdate, useTheme } from 'ui/hooks';
 import { LogRoot } from 'ui/LogRoot';
 
-import { installLogger } from 'util/logger';
 import { BaseServer, type Handlers } from 'util/protocol';
 import { RingBuffer } from 'util/ring-buffer';
 
 import { React } from 'lib/react';
+
+function extendNs(ns: NS) {
+    const bufferCap = 500;
+    return withPlugins(ns, loggerPlugin(bufferCap));
+}
 
 /**
  * Main loop for the PortAllocator daemon.
@@ -40,9 +47,10 @@ export async function main(ns: NS) {
         ns.ui.moveTail(xPos, 0);
     }
 
-    const { ns: logNS, buffer } = installLogger(ns, { bufferCap: 100 });
+    const nsx = extendNs(ns);
+    const buffer = nsx.getLogBuffer();
 
-    await startAllocator(logNS, buffer);
+    await startAllocator(nsx, buffer);
 }
 
 async function startAllocator(ns: NS, buffer: RingBuffer<string>) {
