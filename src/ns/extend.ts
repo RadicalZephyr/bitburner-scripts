@@ -15,22 +15,22 @@ export interface NsPlugin<TExtras = ExtraRecord> {
     __nsKey__?: string | symbol;
 }
 
-const PROXY = new WeakMap<NS, NS>();
-const EXTRAS = new WeakMap<NS, ExtraRecord>();
-const EXIT_HOOKS = new WeakMap<NS, Set<() => void>>();
-const SIGNALS = new WeakMap<NS, AbortController>();
+interface ProxyMeta {
+    prox: NS;
+    extras: ExtraRecord;
+    ctrl: AbortController;
+    hooks: Set<() => void>;
+}
 
-function ensureCore(ns: NS) {
-    if (PROXY.has(ns)) return;
+const META = new WeakMap<NS, ProxyMeta>();
+
+function ensureCore(ns: NS): ProxyMeta {
+    const cached = META.get(ns);
+    if (cached) return cached;
 
     const extras: ExtraRecord = {};
-    EXTRAS.set(ns, extras);
-
     const ctrl = new AbortController();
-    SIGNALS.set(ns, ctrl);
-
     const hooks = new Set<() => void>();
-    EXIT_HOOKS.set(ns, hooks);
 
     ns.atExit(() => {
         for (const h of hooks) {
@@ -58,12 +58,14 @@ function ensureCore(ns: NS) {
         },
         set() {
             throw new Error(
-                `Cannot assign to properties on the composed ns proxy.`,
+                'Cannot assign to properties on the composed ns proxy.',
             );
         },
     });
 
-    PROXY.set(ns, prox);
+    const meta: ProxyMeta = { prox, extras, ctrl, hooks };
+    META.set(ns, meta);
+    return meta;
 }
 
 /** Compose any number of plugins into a single proxy (reused per ns). */
@@ -71,12 +73,7 @@ export function usePlugins<T extends NS, P extends NsPlugin[]>(
     ns: T,
     ...plugins: P
 ): T & UnionExtras<P> {
-    ensureCore(ns);
-
-    const prox = PROXY.get(ns)! as T;
-    const extras = EXTRAS.get(ns)!;
-    const hooks = EXIT_HOOKS.get(ns)!;
-    const ctrl = SIGNALS.get(ns)!;
+    const { prox, extras, hooks, ctrl } = ensureCore(ns);
 
     const ctx = {
         onExit(fn: () => void) {
@@ -104,12 +101,12 @@ export function usePlugins<T extends NS, P extends NsPlugin[]>(
 
         // flat collision guard
         for (const k of Reflect.ownKeys(provided)) {
-            if (k in extras)
+            if (k in extras) {
                 throw new Error(
                     `ns-compose: plugin "${p.name}" defines duplicate key ${String(k)}`,
                 );
+            }
         }
-
         Object.assign(extras, provided);
     }
 
@@ -118,6 +115,12 @@ export function usePlugins<T extends NS, P extends NsPlugin[]>(
 
 /* ---------- type plumbing for nice autocompletion ---------- */
 type ExtrasOf<P extends NsPlugin> = ReturnType<P['setup']>;
+
+type PluginSurface<P extends NsPlugin> = P['__nsKey__'] extends infer K
+    ? K extends string | symbol
+        ? { [NS in K]: Readonly<ExtrasOf<P>> }
+        : ExtrasOf<P>
+    : ExtrasOf<P>;
 
 type UnionExtras<P extends NsPlugin[], Acc = {}> = P extends [
     infer H,
@@ -129,9 +132,3 @@ type UnionExtras<P extends NsPlugin[], Acc = {}> = P extends [
             : Acc & PluginSurface<H>
         : Acc
     : Acc;
-
-type PluginSurface<P extends NsPlugin> = P['__nsKey__'] extends infer K
-    ? K extends string | symbol
-        ? { [NS in K]: Readonly<ExtrasOf<P>> }
-        : ExtrasOf<P>
-    : ExtrasOf<P>;
