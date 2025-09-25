@@ -1,5 +1,7 @@
 import type { NS } from '@ns';
 
+import { makeFuid } from 'util/fuid';
+
 type ExtraRecord = Record<string | symbol, unknown>;
 
 export interface NsPlugin<TExtras = ExtraRecord> {
@@ -32,20 +34,23 @@ function ensureCore(ns: NS): ProxyMeta {
     const ctrl = new AbortController();
     const hooks = new Set<() => void>();
 
-    ns.atExit(() => {
-        for (const h of hooks) {
+    ns.atExit(
+        () => {
+            for (const h of hooks) {
+                try {
+                    h();
+                } catch {
+                    /* ignore */
+                }
+            }
             try {
-                h();
+                ctrl.abort();
             } catch {
                 /* ignore */
             }
-        }
-        try {
-            ctrl.abort();
-        } catch {
-            /* ignore */
-        }
-    });
+        },
+        `ns-extend-${makeFuid(ns)}`,
+    );
 
     const prox = new Proxy(ns, {
         get(target, prop, receiver) {
