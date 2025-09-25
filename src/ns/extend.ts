@@ -22,6 +22,7 @@ interface ProxyMeta {
     extras: ExtraRecord;
     ctrl: AbortController;
     hooks: Set<() => void>;
+    plugins: Set<string>;
 }
 
 const META = new WeakMap<NS, ProxyMeta>();
@@ -33,6 +34,7 @@ function ensureCore(ns: NS): ProxyMeta {
     const extras: ExtraRecord = {};
     const ctrl = new AbortController();
     const hooks = new Set<() => void>();
+    const plugins = new Set<string>();
 
     ns.atExit(
         () => {
@@ -68,7 +70,7 @@ function ensureCore(ns: NS): ProxyMeta {
         },
     });
 
-    const meta: ProxyMeta = { prox, extras, ctrl, hooks };
+    const meta: ProxyMeta = { prox, extras, ctrl, hooks, plugins };
     META.set(ns, meta);
     return meta;
 }
@@ -100,7 +102,7 @@ export function withPlugins<T extends NS, P extends NsPlugin[]>(
     ns: T,
     ...plugins: P
 ): T & UnionExtras<P> {
-    const { prox, extras, hooks, ctrl } = ensureCore(ns);
+    const { prox, extras, hooks, ctrl, plugins: installed } = ensureCore(ns);
 
     const ctx = {
         onExit(fn: () => void) {
@@ -110,31 +112,44 @@ export function withPlugins<T extends NS, P extends NsPlugin[]>(
     };
 
     for (const p of plugins) {
+        if (installed.has(p.name)) continue;
+
+        if (p.__nsKey__ != null && p.__nsKey__ in extras) {
+            installed.add(p.name);
+            continue;
+        }
+
         const raw = p.setup(ns, ctx) || {};
         let provided: ExtraRecord;
 
         if (p.__nsKey__ != null) {
             // mount under a single namespace key, frozen to avoid accidental runtime mutation
             const key = p.__nsKey__;
-            if (key in extras) {
-                throw new Error(
-                    `ns/extend: plugin "${p.name}" tried to mount duplicate namespace ${String(key)}`,
-                );
-            }
             provided = { [key]: Object.freeze(raw) };
         } else {
             provided = raw;
         }
 
-        // flat collision guard
-        for (const k of Reflect.ownKeys(provided)) {
-            if (k in extras) {
-                throw new Error(
-                    `ns/extend: plugin "${p.name}" defines duplicate key ${String(k)}`,
-                );
-            }
+        const providedKeys = Reflect.ownKeys(provided);
+        if (providedKeys.length === 0) {
+            installed.add(p.name);
+            continue;
         }
+
+        const duplicates = providedKeys.filter((key) => key in extras);
+        if (duplicates.length > 0) {
+            if (duplicates.length === providedKeys.length) {
+                installed.add(p.name);
+                continue;
+            }
+            throw new Error(
+                `ns/extend: plugin "${p.name}" defines duplicate key(s)`,
+                { cause: duplicates },
+            );
+        }
+
         Object.assign(extras, provided);
+        installed.add(p.name);
     }
 
     return prox as T & UnionExtras<P>;
