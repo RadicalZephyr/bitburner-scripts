@@ -10,15 +10,17 @@ import {
     callNsFn,
 } from 'services/client/dispatch';
 
-import { makeFuid } from 'util/fuid';
-import { EMPTY_SENTINEL } from 'util/ports';
+import { withPlugins } from 'ns/extend';
+import { alivePlugin } from 'ns/plugins/alive';
 
-import { CONFIG } from 'services/config';
+import { EMPTY_SENTINEL } from 'util/ports';
 import {
     isRequestUnknown,
     ResponseErrUnknown,
     ResponseOkEnvelope,
 } from 'util/protocol';
+
+import { CONFIG } from 'services/config';
 
 const FLAGS = [['help', false]] as const satisfies FlagsSchema;
 
@@ -32,6 +34,12 @@ export function autocomplete(data: AutocompleteData): readonly string[] {
     data.flags(FLAGS);
     return [];
 }
+
+function extendNs(ns: NS) {
+    return withPlugins(ns, alivePlugin());
+}
+
+type NSX = ReturnType<typeof extendNs>;
 
 export async function main(ns: NS) {
     const flags = await parseFlags(ns, FLAGS, false);
@@ -54,7 +62,7 @@ CONFIGURATION
     ns.disableLog('sleep');
     ns.ui.setTailTitle(`Dispatch Executor - ${ns.self().server}`);
 
-    await runLoop(ns);
+    await runLoop(extendNs(ns));
 }
 
 enum ResetAction {
@@ -62,19 +70,14 @@ enum ResetAction {
     RamReset = 'ram-reset',
 }
 
-async function runLoop(ns: NS) {
-    let running = true;
-    ns.atExit(() => {
-        running = false;
-    }, makeFuid(ns));
-
+async function runLoop(ns: NSX) {
     const requestPort = ns.getPortHandle(DISPATCH_PORT);
     const responsePort = ns.getPortHandle(DISPATCH_RESPONSE_PORT);
 
     const calledNsFns: Set<string> = new Set();
 
     let next: Promise<void>;
-    while (running) {
+    while (ns.alive.isAlive()) {
         next = requestPort.nextWrite();
 
         // Drain all currently queued work
