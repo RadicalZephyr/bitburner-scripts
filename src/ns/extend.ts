@@ -91,7 +91,7 @@ export function withPlugins<T extends NS, P extends NsPlugin[]>(
             const key = p.__nsKey__;
             if (key in extras) {
                 throw new Error(
-                    `ns-compose: plugin "${p.name}" tried to mount duplicate namespace ${String(key)}`,
+                    `ns/extend: plugin "${p.name}" tried to mount duplicate namespace ${String(key)}`,
                 );
             }
             provided = { [key]: Object.freeze(raw) };
@@ -103,7 +103,7 @@ export function withPlugins<T extends NS, P extends NsPlugin[]>(
         for (const k of Reflect.ownKeys(provided)) {
             if (k in extras) {
                 throw new Error(
-                    `ns-compose: plugin "${p.name}" defines duplicate key ${String(k)}`,
+                    `ns/extend: plugin "${p.name}" defines duplicate key ${String(k)}`,
                 );
             }
         }
