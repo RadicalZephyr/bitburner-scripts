@@ -69,7 +69,7 @@ function ensureCore(ns: NS): ProxyMeta {
 }
 
 /** Compose any number of plugins into a single proxy (reused per ns). */
-export function usePlugins<T extends NS, P extends NsPlugin[]>(
+export function withPlugins<T extends NS, P extends NsPlugin[]>(
     ns: T,
     ...plugins: P
 ): T & UnionExtras<P> {
