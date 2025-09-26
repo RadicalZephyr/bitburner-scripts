@@ -46,17 +46,30 @@ async function manageOffices(ns: NSX) {
         return;
     }
 
-    const corp = ns.corporation.getCorporation();
+    const happyDivisions: Map<string, Set<CityName>> = new Map();
 
-    for (const divisionName of corp.divisions) {
-        const division = ns.corporation.getDivision(divisionName);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    for await (const _ of ns.alive.loop(100)) {
+        const corp = ns.corporation.getCorporation();
 
-        for (const city of division.cities) {
-            void manageOfficeHappiness(ns, divisionName, city);
+        for (const divisionName of corp.divisions) {
+            const division = ns.corporation.getDivision(divisionName);
+
+            let happyCities: Set<CityName> | undefined =
+                happyDivisions.get(divisionName);
+            if (!happyCities) {
+                happyCities = new Set();
+                happyDivisions.set(divisionName, happyCities);
+            }
+
+            for (const city of division.cities) {
+                if (happyCities.has(city)) continue;
+
+                void manageOfficeHappiness(ns, divisionName, city);
+                happyCities.add(city);
+            }
         }
     }
-
-    return await ns.alive.untilKilled();
 }
 
 async function manageOfficeHappiness(
