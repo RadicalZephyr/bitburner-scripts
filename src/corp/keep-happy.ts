@@ -4,6 +4,7 @@ import { FlagsSchema, parseFlags } from 'util/flags';
 import { withPlugins } from 'ns/extend';
 import { alivePlugin } from 'ns/plugins/alive';
 import { CONFIG } from './config';
+import { DispatchClient } from 'services/client/dispatch';
 
 const FLAGS = [['help', false]] as const satisfies FlagsSchema;
 
@@ -78,22 +79,23 @@ async function manageOfficeHappiness(
     city: CityName,
 ) {
     ns.print(`managing ${division} office in ${city}`);
+    const _ns = new DispatchClient(ns).asNs();
 
     while (ns.alive.isAlive()) {
         const phase = await ns.corporation.nextUpdate();
-        if (phase !== 'SALE') continue;
+        if (phase !== 'START') continue;
 
-        const office = ns.corporation.getOffice(division, city);
+        const office = await _ns('corporation.getOffice', division, city);
 
         const energyPct = office.avgEnergy / office.maxEnergy;
         if (energyPct < CONFIG.lowEnergyThreshold) {
-            ns.corporation.buyTea(division, city);
+            void _ns('corporation.buyTea', division, city);
         }
 
         const moralePct = office.avgMorale / office.maxMorale;
         if (moralePct < CONFIG.lowMoraleThreshold) {
             const budget = budgetForParty(office.avgMorale, office.maxMorale);
-            ns.corporation.throwParty(division, city, budget);
+            await _ns('corporation.throwParty', division, city, budget);
         }
     }
 }
