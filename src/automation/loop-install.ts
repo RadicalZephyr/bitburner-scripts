@@ -146,6 +146,8 @@ async function buyOneNeuroFlux(ns: NS, bestFaction: string) {
             neuro.faction,
             neuro.name,
         );
+
+        await ns.asleep(100);
     }
 }
 
