@@ -186,7 +186,7 @@ class Skill {
         );
         this.levelsToBuy = Math.min(
             Math.max(1, fraction),
-            skillMaxUpgradeCount(this.name, this.level),
+            skillUpgradeLimit(this.name, this.level),
         );
         if (this.levelsToBuy > 0) {
             this.cost = ns.bladeburner.getSkillUpgradeCost(
@@ -205,7 +205,7 @@ async function untilPoints(ns: NS, points: number) {
     }
 }
 
-function skillMaxUpgradeCount(name: SkillName, level: number): number {
+function skillUpgradeLimit(name: SkillName, level: number): number {
     if (name === 'Overclock') return 90 - level;
     return Number.MAX_SAFE_INTEGER - level;
 }
