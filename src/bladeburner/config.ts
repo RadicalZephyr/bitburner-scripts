@@ -14,8 +14,8 @@ const entries = [
     ['minSuccessSpread', 0.001],
     ['minHealthPercent', 0.8],
     ['minSurveySuccess', 0.75],
-    ['skillBuyAmount', 1],
     ['skillBuyRateMs', 1000],
+    ['skillBuySpendPercent', 0.01],
     ['skillPreset', ''],
 ] as const;
 

@@ -76,8 +76,8 @@ OPTIONS
   --help       Show this help message
 
 CONFIGURATION
-  BLADE_skillBuyAmount  How many skill levels to buy each cycle
-  BLADE_skillBuyRateMs  How many milliseconds to sleep between buying skill levels
+  BLADE_skillBuyRateMs        How many milliseconds to sleep between buying skill levels
+  BLADE_skillBuySpendPercent  How much of current skill points to spend on skills per purchase
 `);
         return;
     }
@@ -178,8 +178,14 @@ class Skill {
     constructor(ns: NS, name: SkillName) {
         this.name = name;
         this.level = ns.bladeburner.getSkillLevel(name);
+        const totalSkillPoints = ns.bladeburner.getSkillPoints();
+        const fraction = ns.formulas.bladeburner.skillMaxUpgradeCount(
+            this.name,
+            this.level,
+            Math.round(totalSkillPoints * CONFIG.skillBuySpendPercent),
+        );
         this.levelsToBuy = Math.min(
-            CONFIG.skillBuyAmount,
+            Math.max(1, fraction),
             skillMaxUpgradeCount(this.name, this.level),
         );
         if (this.levelsToBuy > 0) {
