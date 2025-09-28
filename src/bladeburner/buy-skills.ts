@@ -179,7 +179,8 @@ class Skill {
         this.name = name;
         this.level = ns.bladeburner.getSkillLevel(name);
         const totalSkillPoints = ns.bladeburner.getSkillPoints();
-        const fraction = ns.formulas.bladeburner.skillMaxUpgradeCount(
+        const fraction = skillMaxUpgradeCount(
+            ns,
             this.name,
             this.level,
             Math.round(totalSkillPoints * CONFIG.skillBuySpendPercent),
@@ -208,4 +209,56 @@ async function untilPoints(ns: NS, points: number) {
 function skillUpgradeLimit(name: SkillName, level: number): number {
     if (name === 'Overclock') return 90 - level;
     return Number.MAX_SAFE_INTEGER - level;
+}
+
+function skillMaxUpgradeCount(
+    ns: NS,
+    name: SkillName,
+    level: number,
+    skillPoints: number,
+) {
+    if (ns.fileExists('Formulas.exe', 'home')) {
+        return ns.formulas.bladeburner.skillMaxUpgradeCount(
+            name,
+            level,
+            skillPoints,
+        );
+    } else {
+        return calculateMaxUpgradeCount(level, skillPoints);
+    }
+}
+
+function calculateMaxUpgradeCount(currentLevel: number, cost: number): number {
+    // Use highest values so we underestimate how many we can buy
+    const baseCost = 3;
+    const costInc = 3;
+    const m = -baseCost - costInc * currentLevel + costInc / 2;
+    const delta = Math.sqrt(m * m + 2 * costInc * cost);
+    const result = Math.round((m + delta) / costInc);
+    /**
+     * Due to floating-point rounding and edge-cases, we cannot ensure that rounding x_1 will give us the correct
+     * integer. In other words, we cannot be sure that x_1 is within 0.5 of the integer value we want. However, we can
+     * be sure that it is within 1 of the value we want, which means that checking the numbers above and below the
+     * rounded value are sufficient to find our correct integer.
+     */
+    const costOfResultPlus1 = calculateCost(currentLevel, result + 1);
+    if (costOfResultPlus1 <= cost) {
+        return result + 1;
+    }
+    const costOfResult = calculateCost(currentLevel, result);
+    if (costOfResult <= cost) {
+        return result;
+    }
+    return result - 1;
+}
+
+function calculateCost(currentLevel: number, count: number = 1): number {
+    // Use highest values so we underestimate how many we can buy
+    const baseCost = 3;
+    const costInc = 3;
+    const actualCount = currentLevel + count - currentLevel;
+    return Math.round(
+        actualCount
+            * (baseCost + costInc * (currentLevel + (actualCount - 1) / 2)),
+    );
 }
