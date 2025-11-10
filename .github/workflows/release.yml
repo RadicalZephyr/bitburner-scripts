@@ -81,12 +81,17 @@ jobs:
                   cat > bootstrap.js <<BOOTSTRAP_HERE
                   /** @param {NS} ns */
                   export async function main(ns) {
+                    ns.disableLog('ALL');
+                    ns.ui.openTail();
                     files.pop(); // drop empty final element
                     const slashRE = /^\//;
                     for (const file of files) {
                       const prefix = slashRE.test(file) ? '/' : '';
                       await ns.wget(baseUrl + file, prefix + file, "home");
                     }
+                    ns.print();
+                    ns.print();
+                    ns.print('Finished downloading all files!');
                   }
                   const baseUrl = "https://github.com/RadicalZephyr/bitburner-scripts/raw/${{ env.RELEASE_SHA }}/";
                   const files = [
