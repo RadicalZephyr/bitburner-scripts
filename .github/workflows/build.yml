@@ -71,7 +71,8 @@ jobs:
 
             - name: Package output
               if: github.ref_type == 'tag'
-              run: zip ${{ env.ARTIFACT_FILE }} dist/**/*.js dist/*.js
+              run: |
+                find dist/ \( \( -type d -name '*test*' \) -o \( -type f -name '*.test.[jt]s' \) -prune \) -o \( -type f -name '*.js' -print0 \) | xargs -0x zip ${{ env.ARTIFACT_FILE }}
 
             - name: Upload Bitburner Runnable Scripts
               uses: actions/upload-artifact@v4
