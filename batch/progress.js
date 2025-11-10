@@ -1,4 +1,4 @@
-import { CONFIG } from "batch/config";
+import { CONFIG } from 'batch/config';
 /**
  * Compute batch round timing information.
  *
@@ -37,10 +37,13 @@ export async function awaitRound(ns, pids, info, nextHeartbeat, sendHeartbeat) {
             if (Date.now() >= nextHeartbeat) {
                 const result = await sendHeartbeat();
                 if (result !== false) {
-                    nextHeartbeat = Date.now() + CONFIG.heartbeatCadence + Math.random() * 500;
+                    nextHeartbeat =
+                        Date.now()
+                            + CONFIG.heartbeatCadence
+                            + Math.random() * 500;
                 }
             }
-            await ns.sleep(1000);
+            await ns.asleep(1000);
         }
     }
     return nextHeartbeat;

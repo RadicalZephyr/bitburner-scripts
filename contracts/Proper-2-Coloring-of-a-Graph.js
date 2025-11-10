@@ -25,28 +25,34 @@ Output: [0, 0, 1, 1]
 Input: [3, [[0, 1], [0, 2], [1, 2]]]
 Output: []
  */
-import { MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { parseFlags } from 'util/flags';
+import { isArrayOf, isNumber, isTuple } from 'util/validate';
 export async function main(ns) {
-    const flags = ns.flags(MEM_TAG_FLAGS);
-    let scriptName = ns.getScriptName();
-    let contractPortNum = ns.args[0];
+    await parseFlags(ns, []);
+    const scriptName = ns.getScriptName();
+    const contractPortNum = ns.args[0];
     if (typeof contractPortNum !== 'number') {
         ns.tprintf('%s contract run with non-number answer port argument', scriptName);
         return;
     }
-    let contractDataJSON = ns.args[1];
+    const contractDataJSON = ns.args[1];
     if (typeof contractDataJSON !== 'string') {
         ns.tprintf('%s contract run with non-string data argument. Must be a JSON string containing file, host and contract data.', scriptName);
         return;
     }
-    let contractData = JSON.parse(contractDataJSON);
+    const contractData = JSON.parse(contractDataJSON);
+    if (!isContractData(contractData)) {
+        ns.writePort(contractPortNum, JSON.stringify(null));
+        return;
+    }
     ns.tprintf('contract data: %s', JSON.stringify(contractData));
-    let answer = solve(contractData);
+    const answer = solve(contractData);
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
+const isContractData = isTuple(isNumber, isArrayOf(isTuple(isNumber, isNumber)));
 export function solve(data) {
-    let [numVertices, edges] = data;
-    let graph = new Graph(numVertices, edges);
+    const [numVertices, edges] = data;
+    const graph = new Graph(numVertices, edges);
     for (let v = 0; v < numVertices; v++) {
         if (graph.getColor(v) === undefined) {
             if (!colorGraphDfs(graph, v, 0)) {
@@ -82,13 +88,15 @@ class Graph {
     edges;
     adjacency;
     constructor(numVertices, edges) {
-        let vertices = Array.from({ length: numVertices }, (_v, i) => { return { label: i }; });
+        const vertices = Array.from({ length: numVertices }, (_v, i) => {
+            return { label: i };
+        });
         this.vertices = vertices;
         this.edges = edges;
         this.adjacency = makeAdjacencyTable(vertices, edges);
     }
     getColoring() {
-        return this.vertices.map((v) => v.color !== undefined ? v.color : 0);
+        return this.vertices.map((v) => (v.color !== undefined ? v.color : 0));
     }
     getColor(vertex) {
         return this.vertices.at(vertex)?.color;
@@ -101,7 +109,7 @@ class Graph {
     }
 }
 function makeAdjacencyTable(vertices, edges) {
-    let adjacencyTable = new Map();
+    const adjacencyTable = new Map();
     for (const v of vertices) {
         adjacencyTable.set(v.label, new Set());
     }

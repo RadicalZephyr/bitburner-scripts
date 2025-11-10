@@ -27,25 +27,31 @@ Output: ["1+2+3", "1*2*3"]
 Input: digits = "105", target = 5
 Output: ["1*0+5", "10-5"]
  */
-import { MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { parseFlags } from 'util/flags';
+import { isNumber, isString, isTuple } from 'util/validate';
 export async function main(ns) {
-    const flags = ns.flags(MEM_TAG_FLAGS);
-    let scriptName = ns.getScriptName();
-    let contractPortNum = ns.args[0];
+    await parseFlags(ns, []);
+    const scriptName = ns.getScriptName();
+    const contractPortNum = ns.args[0];
     if (typeof contractPortNum !== 'number') {
         ns.tprintf('%s contract run with non-number answer port argument', scriptName);
         return;
     }
-    let contractDataJSON = ns.args[1];
+    const contractDataJSON = ns.args[1];
     if (typeof contractDataJSON !== 'string') {
         ns.tprintf('%s contract run with non-string data argument. Must be a JSON string containing file, host and contract data.', scriptName);
         return;
     }
-    let contractData = JSON.parse(contractDataJSON);
+    const contractData = JSON.parse(contractDataJSON);
+    if (!isContractData(contractData)) {
+        ns.writePort(contractPortNum, JSON.stringify(null));
+        return;
+    }
     ns.tprintf('contract data: %s', JSON.stringify(contractData));
-    let answer = solve(contractData);
+    const answer = solve(contractData);
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
+const isContractData = isTuple(isString, isNumber);
 export function solve(data) {
     const [digits, target] = data;
     const results = [];
@@ -70,6 +76,6 @@ export function solve(data) {
             }
         }
     }
-    backtrack(0, "", 0, 0);
+    backtrack(0, '', 0, 0);
     return results;
 }

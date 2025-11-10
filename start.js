@@ -1,28 +1,42 @@
-import { MEM_TAG_FLAGS } from "services/client/memory_tag";
-import { collectDependencies } from "util/dependencies";
+import { parseFlags } from 'util/flags';
+const BOOTSTRAP_HOST = 'foodnstuff';
+const FLAGS = [
+    ['minimal', false],
+    ['help', false],
+];
+export function autocomplete(data) {
+    data.flags(FLAGS);
+    return [];
+}
 export async function main(ns) {
-    const flags = ns.flags(MEM_TAG_FLAGS);
-    ns.disableLog("sleep");
-    let script = "/bootstrap.js";
-    let dependencies = collectDependencies(ns, script);
-    let files = [script, ...dependencies];
-    let hostname = "foodnstuff";
-    if (!ns.scp(files, hostname, "home")) {
-        reportError(ns, `failed to send files to ${hostname}`);
+    const flags = await parseFlags(ns, FLAGS);
+    if (flags.help) {
+        ns.tprint(`
+USAGE: run ${ns.getScriptName()}
+
+Start bootstrapping process on home.
+
+Example:
+  > run ${ns.getScriptName()}
+
+OPTIONS
+  --minimal  Start minimal services appropriate to early bitnode conditions
+  --help     Show this help message
+`);
         return;
     }
+    ns.disableLog('sleep');
+    const script = '/bootstrap.js';
+    const hostname = BOOTSTRAP_HOST;
     if (!ns.nuke(hostname)) {
         reportError(ns, `failed to nuke ${hostname}`);
         return;
     }
-    let pid = ns.exec(script, hostname);
-    if (pid === 0) {
-        reportError(ns, `failed to launch ${script} on ${hostname}`);
-        return;
-    }
+    const args = flags.minimal ? ['--minimal'] : [];
+    ns.spawn(script, { threads: 1, preventDuplicates: true, spawnDelay: 0 }, hostname, ...args);
 }
 function reportError(ns, error) {
-    ns.toast(error, "error");
+    ns.toast(error, 'error');
     ns.print(`ERROR: ${error}`);
     ns.ui.openTail();
 }

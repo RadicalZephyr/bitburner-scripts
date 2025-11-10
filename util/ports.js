@@ -1,9 +1,15 @@
-export const EMPTY_SENTINEL = "NULL PORT DATA";
-export const DONE_SENTINEL = "PORT CLOSED";
-export function* readAllFromPort(ns, port) {
+export const EMPTY_SENTINEL = 'NULL PORT DATA';
+/**
+ * Read all messages available on a port,
+ *
+ * @param ns   - Netscript API object
+ * @param port - NetscriptPort to wait to read from
+ * @yields Messages read from the given port
+ */
+export function* readAllFromPort(port) {
     while (true) {
-        let nextMsg = port.read();
-        if (typeof nextMsg === "string" && (nextMsg === EMPTY_SENTINEL || nextMsg === DONE_SENTINEL)) {
+        const nextMsg = port.read();
+        if (typeof nextMsg === 'string' && nextMsg === EMPTY_SENTINEL) {
             return;
         }
         yield nextMsg;

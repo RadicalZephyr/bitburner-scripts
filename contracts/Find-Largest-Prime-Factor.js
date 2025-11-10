@@ -3,7 +3,8 @@
 A prime factor is a factor that is a prime number. What is the largest
 prime factor of 129983129?
  */
-import { MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { parseFlags } from 'util/flags';
+import { isNumber } from 'util/validate';
 /**
  * Generate all prime numbers less than or equal to the provided limit using a
  * simple Sieve of Eratosthenes.
@@ -29,25 +30,29 @@ function primesUpTo(limit) {
     return primes;
 }
 export async function main(ns) {
-    const flags = ns.flags(MEM_TAG_FLAGS);
-    let scriptName = ns.getScriptName();
-    let contractPortNum = ns.args[0];
+    await parseFlags(ns, []);
+    const scriptName = ns.getScriptName();
+    const contractPortNum = ns.args[0];
     if (typeof contractPortNum !== 'number') {
         ns.tprintf('%s contract run with non-number answer port argument', scriptName);
         return;
     }
-    let contractDataJSON = ns.args[1];
+    const contractDataJSON = ns.args[1];
     if (typeof contractDataJSON !== 'string') {
         ns.tprintf('%s contract run with non-string data argument. Must be a JSON string containing file, host and contract data.', scriptName);
         return;
     }
-    let contractData = JSON.parse(contractDataJSON);
+    const contractData = JSON.parse(contractDataJSON);
+    if (!isNumber(contractData)) {
+        ns.writePort(contractPortNum, JSON.stringify(null));
+        return;
+    }
     ns.tprintf('contract data: %s', JSON.stringify(contractData));
-    let answer = solve(contractData);
+    const answer = solve(contractData);
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
 export function solve(data) {
-    let factors = [];
+    const factors = [];
     // copy so we can make sure the product of the factorization is
     // the same.
     let n = data;
@@ -61,7 +66,7 @@ export function solve(data) {
     if (n > 1) {
         factors.push(n);
     }
-    let product = factors.reduce((prev, cur) => prev * cur, 1);
+    const product = factors.reduce((prev, cur) => prev * cur, 1);
     if (product === data) {
         return factors[factors.length - 1];
     }

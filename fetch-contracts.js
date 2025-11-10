@@ -1,38 +1,46 @@
-import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
-import { parseAndRegisterAlloc } from "services/client/memory";
-import { walkNetworkBFS } from "util/walk";
+import { parseFlags } from 'util/flags';
+import { PortClient } from 'services/client/port';
+import { walkNetworkBFS } from 'util/walk';
+import { makeFuid } from 'util/fuid';
 const ALL_CONTRACT_TYPES = [
-    "Algorithmic-Stock-Trader-I",
-    "Algorithmic-Stock-Trader-II",
-    "Algorithmic-Stock-Trader-III",
-    "Algorithmic-Stock-Trader-IV",
-    "Array-Jumping-Game-II",
-    "Array-Jumping-Game",
-    "Compression-I-RLE-Compression",
-    "Compression-II-LZ-Decompression",
-    "Compression-III-LZ-Compression",
-    "Encryption-I-Caesar-Cipher",
-    "Encryption-II-Vigenère-Cipher",
-    "Find-All-Valid-Math-Expressions",
-    "Find-Largest-Prime-Factor",
-    "Generate-IP-Addresses",
-    "HammingCodes-Encoded-Binary-to-Integer",
-    "HammingCodes-Integer-to-Encoded-Binary",
-    "Merge-Overlapping-Intervals",
-    "Minimum-Path-Sum-in-a-Triangle",
-    "Proper-2-Coloring-of-a-Graph",
-    "Sanitize-Parentheses-in-Expression",
-    "Shortest-Path-in-a-Grid",
-    "Spiralize-Matrix",
-    "Square-Root",
-    "Subarray-with-Maximum-Sum",
-    "Total-Ways-to-Sum",
-    "Total-Ways-to-Sum-II",
-    "Unique-Paths-in-a-Grid-II",
-    "Unique-Paths-in-a-Grid-I"
+    'Algorithmic-Stock-Trader-I',
+    'Algorithmic-Stock-Trader-II',
+    'Algorithmic-Stock-Trader-III',
+    'Algorithmic-Stock-Trader-IV',
+    'Array-Jumping-Game-II',
+    'Array-Jumping-Game',
+    'Compression-I-RLE-Compression',
+    'Compression-II-LZ-Decompression',
+    'Compression-III-LZ-Compression',
+    'Encryption-I-Caesar-Cipher',
+    'Encryption-II-Vigenère-Cipher',
+    'Find-All-Valid-Math-Expressions',
+    'Find-Largest-Prime-Factor',
+    'Generate-IP-Addresses',
+    'HammingCodes-Encoded-Binary-to-Integer',
+    'HammingCodes-Integer-to-Encoded-Binary',
+    'Merge-Overlapping-Intervals',
+    'Minimum-Path-Sum-in-a-Triangle',
+    'Proper-2-Coloring-of-a-Graph',
+    'Sanitize-Parentheses-in-Expression',
+    'Shortest-Path-in-a-Grid',
+    'Spiralize-Matrix',
+    'Square-Root',
+    'Subarray-with-Maximum-Sum',
+    'Total-Ways-to-Sum',
+    'Total-Ways-to-Sum-II',
+    'Unique-Paths-in-a-Grid-II',
+    'Unique-Paths-in-a-Grid-I',
+];
+const FLAGS = [
+    ['test', ''],
+    ['count', -1],
+    ['help', false],
 ];
 export function autocomplete(data, args) {
-    if (args[args.length - 1] === "--test" || args[args.length - 2] === "--test") {
+    data.flags(FLAGS);
+    if (args[args.length - 1] === '--test'
+        || args[args.length - 2] === '--test') {
         return ALL_CONTRACT_TYPES;
     }
     else {
@@ -40,16 +48,10 @@ export function autocomplete(data, args) {
     }
 }
 export async function main(ns) {
-    const flags = ns.flags([
-        ['test', null],
-        ['count', -1],
-        ['help', false],
-        ...MEM_TAG_FLAGS
-    ]);
-    const rest = flags._;
-    if (flags.help ||
-        (flags.test !== null && typeof flags.test != 'string') ||
-        (flags.count !== -1 && typeof flags.count !== 'number')) {
+    const flags = await parseFlags(ns, FLAGS);
+    if (flags.help
+        || (flags.test !== '' && typeof flags.test != 'string')
+        || (flags.count !== -1 && typeof flags.count !== 'number')) {
         ns.tprint(`
 USAGE: run ${ns.getScriptName()} [--test CONTRACT_NAME]
 
@@ -60,38 +62,49 @@ OPTIONS
 `);
         return;
     }
-    const allocationId = await parseAndRegisterAlloc(ns, flags);
-    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
+    const network = walkNetworkBFS(ns);
+    const allHosts = Array.from(network.keys());
+    const portClient = new PortClient(ns);
+    const contractPortNum = await portClient.requestPort();
+    if (!contractPortNum)
         return;
-    }
-    let network = walkNetworkBFS(ns);
-    let allHosts = Array.from(network.keys());
-    const contractPortNum = 266; // "CON"
+    ns.atExit(() => {
+        void portClient.releasePort(contractPortNum);
+    }, makeFuid(ns));
     const contractFile = /\.cct/;
-    let contractPort = ns.getPortHandle(contractPortNum);
-    let contracts = [];
-    let incompleteScriptContracts = [];
-    let missingScriptContracts = [];
+    const contractPort = ns.getPortHandle(contractPortNum);
+    const contracts = [];
+    const incompleteScriptContracts = [];
+    const missingScriptContracts = [];
     let count = 0;
     outer: for (const host of allHosts) {
-        if (host == "home") {
+        if (flags.test === '' && host == 'home') {
             continue;
         }
-        let files = ns.ls(host).filter(file => contractFile.test(file));
+        const files = ns.ls(host).filter((file) => contractFile.test(file));
         for (const file of files) {
-            let contractType = ns.codingcontract.getContractType(file, host).replace(':', '').replaceAll(' ', '-');
-            if (flags.test !== null && flags.test !== contractType) {
+            const contractType = ns.codingcontract
+                .getContractType(file, host)
+                .replace(':', '')
+                .replaceAll(' ', '-');
+            if (flags.test !== '' && flags.test !== contractType) {
                 continue;
             }
-            let data = ns.codingcontract.getData(file, host);
-            let dataJson = JSON.stringify(data, (key, value) => typeof value === "bigint" ? value.toString() : value);
-            let contract = { type: contractType, file: file, host: host, data: dataJson, answer: null };
+            const data = ns.codingcontract.getData(file, host);
+            const dataJson = JSON.stringify(data, (_, value) => typeof value === 'bigint' ? value.toString() : value);
+            const contract = {
+                type: contractType,
+                file: file,
+                host: host,
+                data: dataJson,
+                answer: null,
+            };
             let contractScriptName = ns.sprintf('/contracts/%s.js', contractType);
             if (!ns.fileExists(contractScriptName)) {
-                let incompleteContractScriptName = ns.sprintf('/contracts/incomplete/%s.js', contractType);
+                const incompleteContractScriptName = ns.sprintf('/contracts/incomplete/%s.js', contractType);
                 if (ns.fileExists(incompleteContractScriptName)) {
                     incompleteScriptContracts.push(contract);
-                    if (flags.test !== null) {
+                    if (flags.test !== '') {
                         contractScriptName = incompleteContractScriptName;
                     }
                     else {
@@ -107,7 +120,7 @@ OPTIONS
                     continue;
                 }
             }
-            let pid = ns.run(contractScriptName, 1, contractPortNum, dataJson);
+            const pid = ns.run(contractScriptName, 1, contractPortNum, dataJson);
             if (pid === 0) {
                 ns.tprintf('failed to run script for contract %s from host %s', contractType, contract['host']);
             }
@@ -120,7 +133,7 @@ OPTIONS
             }
             contract.answer = contractPort.read();
             contracts.push(contract);
-            if (flags.test !== null && flags.count !== null) {
+            if (flags.test !== '' && flags.count !== -1) {
                 count += 1;
                 if (count >= flags.count) {
                     break outer;
@@ -128,7 +141,9 @@ OPTIONS
             }
         }
     }
-    let incompleteContractTypes = [...new Set(incompleteScriptContracts.map((c) => c.type))];
+    const incompleteContractTypes = [
+        ...new Set(incompleteScriptContracts.map((c) => c.type)),
+    ];
     if (incompleteContractTypes.length > 0) {
         incompleteContractTypes.sort();
         ns.tprintf('\ncontracts with an incomplete solution: %s', JSON.stringify(incompleteContractTypes, null, 2));
@@ -139,7 +154,7 @@ OPTIONS
             ns.tprintf(' type %s contract %s from host %s', c.file, c.type, c.host);
         }
     }
-    let allContractsFile = "all-contracts.js";
-    let fileData = ns.sprintf('export let CONTRACTS = %s;', JSON.stringify(contracts, null, 2));
+    const allContractsFile = 'all-contracts.js';
+    const fileData = ns.sprintf('export let CONTRACTS = %s;', JSON.stringify(contracts, null, 2));
     ns.write(allContractsFile, fileData, 'w');
 }

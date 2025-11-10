@@ -10,34 +10,40 @@ transaction (i.e. you can only buy and sell the stock once). If no
 profit can be made then the answer should be 0. Note that you have to
 buy the stock before you can sell it.
 */
-import { MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { parseFlags } from 'util/flags';
+import { isArrayOf, isNumber } from 'util/validate';
 export async function main(ns) {
-    const flags = ns.flags(MEM_TAG_FLAGS);
-    let scriptName = ns.getScriptName();
-    let contractPortNum = ns.args[0];
+    await parseFlags(ns, []);
+    const scriptName = ns.getScriptName();
+    const contractPortNum = ns.args[0];
     if (typeof contractPortNum !== 'number') {
         ns.tprintf('%s contract run with non-number answer port argument', scriptName);
         return;
     }
-    let contractDataJSON = ns.args[1];
+    const contractDataJSON = ns.args[1];
     if (typeof contractDataJSON !== 'string') {
         ns.tprintf('%s contract run with non-string data argument. Must be a JSON string containing file, host and contract data.', scriptName);
         return;
     }
-    let contractData = JSON.parse(contractDataJSON);
+    const contractData = JSON.parse(contractDataJSON);
+    if (!isContractData(contractData)) {
+        ns.writePort(contractPortNum, JSON.stringify(null));
+        return;
+    }
     ns.tprintf('contract data: %s', JSON.stringify(contractData));
-    let answer = solve(contractData);
+    const answer = solve(contractData);
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
+const isContractData = isArrayOf(isNumber);
 export function solve(data) {
-    let profitableTrades = [];
+    const profitableTrades = [];
     for (let i = 0; i < data.length - 1; ++i) {
         for (let j = i + 1; j < data.length; ++j) {
             if (data[i] < data[j]) {
-                let trade = {
+                const trade = {
                     startDay: i,
                     endDay: j,
-                    amount: data[j] - data[i]
+                    amount: data[j] - data[i],
                 };
                 profitableTrades.push(trade);
             }

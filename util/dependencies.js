@@ -10,13 +10,16 @@ export function collectDependencies(ns, file, visited = new Set()) {
     if (visited.has(file))
         return visited;
     visited.add(file);
-    ns.scp(file, ns.self().server, "home");
+    ns.scp(file, ns.self().server, 'home');
     const content = ns.read(file);
-    if (typeof content === "string" && content.length > 0) {
-        const regex = /^\s*import[^\n]*? from ["'](.+?)["']/gm;
+    if (typeof content === 'string' && content.length > 0) {
+        const regex = /^\s*(im|ex)port[^'"]*? from ["'](.+?)["']/gm;
         let match;
-        while ((match = regex.exec(content)) !== null) {
-            const dep = resolveImport(file, match[1]);
+        while ((match = regex['exec'](content)) !== null) {
+            // Don't try to resolve dependencies for netscript import
+            if (match[2] === '@ns')
+                continue;
+            const dep = resolveImport(ns, file, match[2]);
             collectDependencies(ns, dep, visited);
         }
     }
@@ -29,16 +32,20 @@ export function collectDependencies(ns, file, visited = new Set()) {
  * @param importPath - Import path
  * @returns Import path relative to base path
  */
-function resolveImport(base, importPath) {
-    if (!importPath.endsWith(".js")) {
-        importPath += ".js";
+function resolveImport(ns, base, importPath) {
+    const extRE = /.*\.([jt]sx?|json)$/;
+    if (!importPath.match(extRE)) {
+        for (const ext of ['.ts', '.tsx', '.js', '.jsx', '.json']) {
+            if (ns.fileExists(`${importPath}${ext}`, 'home'))
+                importPath += ext;
+        }
     }
-    if (importPath.startsWith("./")) {
-        const idx = base.lastIndexOf("/");
-        const dir = idx >= 0 ? base.slice(0, idx + 1) : "";
+    if (importPath.startsWith('./')) {
+        const idx = base.lastIndexOf('/');
+        const dir = idx >= 0 ? base.slice(0, idx + 1) : '';
         return dir + importPath.slice(2);
     }
-    else if (importPath.startsWith("/")) {
+    else if (importPath.startsWith('/')) {
         importPath = importPath.slice(1);
     }
     return importPath;

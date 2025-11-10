@@ -1,17 +1,63 @@
-import { MEM_TAG_FLAGS } from "services/client/memory_tag";
-import { CONFIG } from "batch/config";
-export function autocomplete(data, _args) {
+import { parseFlags } from 'util/flags';
+import { calculatePhaseStartTimes, } from 'services/batch';
+import { CONFIG } from 'batch/config';
+const FLAGS = [['help', false]];
+export function autocomplete(data) {
+    data.flags(FLAGS);
     return data.servers;
 }
 export async function main(ns) {
-    const flags = ns.flags(MEM_TAG_FLAGS);
-    let target = ns.args[0];
-    if (typeof target !== 'string' || !ns.serverExists(target)) {
-        ns.tprintf("target %s does not exist", target);
+    const flags = await parseFlags(ns, FLAGS);
+    const rest = flags._;
+    if (rest.length === 0 || flags.help) {
+        ns.tprint(`
+USAGE: run ${ns.getScriptName()} SERVER_NAME
+
+Display the expected value per RAM-second for hacking batches.
+
+Example:
+  > run ${ns.getScriptName()} n00dles
+
+OPTIONS
+  --help   Show this help message
+
+CONFIGURATION
+  BATCH_maxHackPercent  Default hack percentage when estimating value
+  BATCH_batchInterval   Phase spacing used for batch calculations
+`);
         return;
     }
-    let eValue = expectedValuePerRamSecond(ns, target);
+    const target = rest[0];
+    if (typeof target !== 'string' || !ns.serverExists(target)) {
+        ns.tprintf('target %s does not exist', target);
+        return;
+    }
+    const eValue = expectedValuePerRamSecond(ns, target);
     ns.tprint(`${target} ${eValue}`);
+}
+/** Calculate the number of hack threads needed to steal the given
+ *  percentage of the target server's max money.
+ *
+ * @param ns - Netscript API instance
+ * @param host - Hostname of the target server
+ * @param percent - Desired money percentage to hack (0-1)
+ * @returns Required hack thread count adjusted for hacking multipliers
+ */
+export function hackThreadsForPercent(ns, host, percent) {
+    if (percent <= 0)
+        return 0;
+    let hackPercent;
+    if (canUseFormulas(ns)) {
+        const player = ns.getPlayer();
+        const server = idealServer(ns, host);
+        hackPercent = ns.formulas.hacking.hackPercent(server, player);
+    }
+    else {
+        hackPercent = ns.hackAnalyze(host);
+    }
+    if (hackPercent <= 0)
+        return 0;
+    return Math.ceil(percent / hackPercent);
 }
 /**
  * Calculate the expected monetary value generated per RAM-second for a full
@@ -22,18 +68,11 @@ export async function main(ns) {
  * @param spacing - Delay (ms) between batch phases
  * @returns Expected value per RAM-second
  */
-export function expectedValuePerRamSecond(ns, host) {
-    const { hackThreads, growThreads, postHackWeakenThreads, postGrowWeakenThreads, } = analyzeBatchThreads(ns, host);
-    const weakenThreads = postHackWeakenThreads + postGrowWeakenThreads;
-    const ramUse = hackThreads * ns.getScriptRam("/batch/h.js", "home") +
-        growThreads * ns.getScriptRam("/batch/g.js", "home") +
-        weakenThreads * ns.getScriptRam("/batch/w.js", "home");
-    const batchTime = fullBatchTime(ns, host);
-    const hackValue = successfulHackValue(ns, host, hackThreads);
-    const expectedHackValue = hackValue * ns.hackAnalyzeChance(host);
-    // Scale by 1000 to get human readable values and convert units
-    // from $/GB*ms to $/GB*s
-    return 1000 * expectedHackValue / (batchTime * ramUse);
+export function expectedValuePerRamSecond(ns, host, hackPercent = CONFIG.maxHackPercent) {
+    const logistics = calculateBatchLogistics(ns, host, hackPercent);
+    const profitPerSecond = harvestProfit(ns, host, hackPercent, logistics.endingPeriod);
+    const requiredRam = logistics.requiredRam;
+    return profitPerSecond / requiredRam;
 }
 /** Calculate the total runtime for a full hack-weaken-grow-weaken batch.
  *
@@ -45,15 +84,120 @@ export function expectedValuePerRamSecond(ns, host) {
 export function fullBatchTime(ns, host) {
     return ns.getWeakenTime(host) + 2 * CONFIG.batchInterval;
 }
+/**
+ * Determine how many full batch allocations fit in the provided chunks.
+ *
+ * @param chunks    - List of worker chunks and free RAM sizes
+ * @param batchRam  - RAM required for a single batch
+ * @returns Number of batches that can fit in memory
+ */
+export function availableBatchCount(chunks, batchRam) {
+    if (batchRam <= 0)
+        return 0;
+    return chunks.reduce((sum, c) => sum + Math.floor(c.freeRam / batchRam), 0);
+}
+/**
+ * Find the maximum hack percent that can run with the provided memory info.
+ *
+ * The search first attempts to satisfy the full overlap requirement. If even
+ * the minimal batch cannot fit, it relaxes the requirement to just a single
+ * batch.
+ *
+ * @param ns      - Netscript API instance
+ * @param host    - Hostname of the target server
+ * @param memInfo - Current free memory snapshot
+ * @returns Largest hack percent that fits in memory
+ */
+export function maxHackPercentForMemory(ns, host, memInfo) {
+    const minPercent = (() => {
+        if (canUseFormulas(ns)) {
+            const server = idealServer(ns, host);
+            const player = ns.getPlayer();
+            return ns.formulas.hacking.hackPercent(server, player);
+        }
+        return ns.hackAnalyze(host);
+    })();
+    const minLog = calculateBatchLogistics(ns, host, minPercent);
+    const minChunks = availableBatchCount(memInfo.chunks, minLog.batchRam);
+    if (minChunks === 0 || memInfo.freeRam < minLog.batchRam)
+        return 0;
+    if (!fitsFullBatch(memInfo, minLog))
+        return minPercent;
+    let low = minPercent;
+    let high = CONFIG.maxHackPercent;
+    for (let i = 0; i < 16; i++) {
+        const mid = (low + high) / 2;
+        const log = calculateBatchLogistics(ns, host, mid);
+        if (fitsFullBatch(memInfo, log)) {
+            low = mid;
+        }
+        else {
+            high = mid;
+        }
+    }
+    return low;
+}
+function fitsFullBatch(memInfo, log) {
+    const chunks = availableBatchCount(memInfo.chunks, log.batchRam);
+    return chunks >= log.overlap && memInfo.freeRam >= log.requiredRam;
+}
+/**
+ * Estimate expected value per RAM-second using current memory limits.
+ *
+ * @param ns      - Netscript API instance
+ * @param host    - Hostname of the target server
+ * @param memInfo - Current free memory snapshot
+ * @returns Expected value per RAM-second
+ */
+export function expectedValueForMemory(ns, host, memInfo, hackPercent) {
+    hackPercent = hackPercent ?? maxHackPercentForMemory(ns, host, memInfo);
+    if (hackPercent === 0)
+        return { hackPercent, profit: 0, expectedValue: 0 };
+    const logistics = calculateBatchLogistics(ns, host, hackPercent);
+    const batchCount = Math.min(logistics.overlap, availableBatchCount(memInfo.chunks, logistics.batchRam));
+    if (batchCount === 0)
+        return { hackPercent, profit: 0, expectedValue: 0 };
+    const profitPerSecond = harvestProfit(ns, host, hackPercent, logistics.endingPeriod);
+    const overlapCompleteness = batchCount / logistics.overlap;
+    const scaledProfitPerSecond = profitPerSecond * overlapCompleteness;
+    const requiredRam = logistics.batchRam * batchCount;
+    const expectedValue = scaledProfitPerSecond / requiredRam;
+    return { hackPercent, profit: scaledProfitPerSecond, expectedValue };
+}
+/**
+ * Calculate the expected profit of hacking this target.
+ *
+ * @param ns           - Netscript API instance
+ * @param target       - Target server
+ * @param hackPercent  - Percent of server money to hack each batch
+ * @param endingPeriod - Batch ending period {@see harvestBatchEndingPeriod}
+ * @returns Calculated profits per second
+ */
+export function harvestProfit(ns, target, hackPercent, endingPeriod) {
+    const hackThreads = hackThreadsForPercent(ns, target, hackPercent);
+    const hackValue = successfulHackValue(ns, target, hackThreads);
+    const expectedHackValue = hackValue * hackAnalyzeChance(ns, target);
+    const batchesPerSecond = 1000 / endingPeriod;
+    return expectedHackValue * batchesPerSecond;
+}
 function successfulHackValue(ns, host, threads) {
-    const maxMoney = ns.getServerMaxMoney(host);
+    const server = idealServer(ns, host);
     if (canUseFormulas(ns)) {
-        const server = ns.getServer(host);
         const player = ns.getPlayer();
         const percent = ns.formulas.hacking.hackPercent(server, player);
         return threads * server.moneyMax * percent;
     }
-    return threads * maxMoney * ns.hackAnalyze(host);
+    return threads * server.moneyMax * ns.hackAnalyze(host);
+}
+function hackAnalyzeChance(ns, target) {
+    if (canUseFormulas(ns)) {
+        const player = ns.getPlayer();
+        const server = idealServer(ns, target);
+        return ns.formulas.hacking.hackChance(server, player);
+    }
+    else {
+        return ns.hackAnalyzeChance(target);
+    }
 }
 /**
  * Calculate the minimal thread distribution for a HWGW batch.
@@ -65,7 +209,7 @@ function successfulHackValue(ns, host, threads) {
  */
 export function analyzeBatchThreads(ns, host, hackThreads = 1) {
     const stolen = successfulHackValue(ns, host, hackThreads);
-    const maxMoney = ns.getServerMaxMoney(host);
+    const maxMoney = ns.getServer(host).moneyMax ?? 0;
     const afterHackMoney = Math.max(1, maxMoney - stolen);
     const growThreads = growthAnalyze(ns, host, afterHackMoney);
     const hackSecInc = ns.hackAnalyzeSecurity(hackThreads);
@@ -93,8 +237,8 @@ export function analyzeBatchThreads(ns, host, hackThreads = 1) {
  */
 export function growthAnalyze(ns, hostname, afterHackMoney) {
     if (canUseFormulas(ns)) {
-        let server = ns.getServer(hostname);
-        let player = ns.getPlayer();
+        const player = ns.getPlayer();
+        const server = idealServer(ns, hostname);
         server.moneyAvailable = afterHackMoney;
         return Math.ceil(ns.formulas.hacking.growThreads(server, player, server.moneyMax));
     }
@@ -102,10 +246,112 @@ export function growthAnalyze(ns, hostname, afterHackMoney) {
         // N.B. from testing this calculation tracks very closely with
         // the formulas value, _except_ as the afterHackMoney
         // approaches zero the error grows super-linearly
-        const maxMoney = ns.getServerMaxMoney(hostname);
+        const maxMoney = ns.getServer(hostname).moneyMax ?? 0;
         const growMultiplier = maxMoney / Math.max(1, afterHackMoney);
         return Math.ceil(ns.growthAnalyze(hostname, growMultiplier));
     }
+}
+/** Calculate RAM and phase information for a full harvest batch.
+ *
+ * @param ns          - Netscript API instance
+ * @param target      - Hostname of the target server
+ * @param hackPercent - Fraction of money to hack each batch (0-1)
+ */
+export function calculateBatchLogistics(ns, target, hackPercent) {
+    const hackThreads = hackPercent !== undefined
+        ? hackThreadsForPercent(ns, target, hackPercent)
+        : 1;
+    const threads = analyzeBatchThreads(ns, target, hackThreads);
+    const phases = calculateBatchPhases(ns, target, threads);
+    const hRam = ns.getScriptRam('/batch/h.js', 'home') * threads.hackThreads;
+    const gRam = ns.getScriptRam('/batch/g.js', 'home') * threads.growThreads;
+    const wRam = ns.getScriptRam('/batch/w.js', 'home')
+        * (threads.postHackWeakenThreads + threads.postGrowWeakenThreads);
+    const batchRam = hRam + gRam + wRam;
+    const batchTime = fullBatchTime(ns, target);
+    const endingPeriod = harvestBatchEndingPeriod();
+    const overlap = Math.ceil(batchTime / endingPeriod);
+    const requiredRam = batchRam * overlap;
+    return {
+        target,
+        batchRam,
+        overlap,
+        endingPeriod,
+        requiredRam,
+        phases,
+    };
+}
+/**
+ * Calculate how long the critical period during batch ending is.
+ *
+ * @remarks One of the premises of batch hacking is that the number of
+ * threads in each phase and the phase ordering is calculated such
+ * that after all phases of a batch are complete the target will be
+ * left in the same state it was in before the batch started.
+ *
+ * For this to actually hold true, batches phases need to end in the
+ * correct order, and batches need to end serially with no
+ * interleaving of phases from different batches.
+ *
+ * Because each Netscript action takes some time to actually commit,
+ * we need to plan for an interval between each phase of a batch
+ * ending the `CONFIG.batchInterval`. Similarly, we need to have an
+ * interval between the last phase of one batch ending and the first
+ * phase of the next batch ending.
+ *
+ * This function calculates the duration when one batch has exclusive
+ * "ending rights" to a particular target.
+ *
+ * @returns The time in milliseconds for all phases of a batch to
+ * complete.
+ */
+export function harvestBatchEndingPeriod() {
+    return CONFIG.batchInterval * 4;
+}
+/**
+ * Calculate relative start times for a batch.
+ *
+ * Calculate the phase order and relative start times for a full
+ * H-W-G-W batch so that each script ends `CONFIG.batchInterval`
+ * milliseconds after the previous one. Durations account for the
+ * player's hacking speed multiplier.
+ *
+ * @param ns      - Netscript API instance
+ * @param target  - Target server
+ * @param threads - Batch thread sizes
+ * @returns A list of ordered phases with start time delays so they all end in phase order.
+ */
+export function calculateBatchPhases(ns, target, threads) {
+    const hackTime = ns.getHackTime(target);
+    const weakenTime = ns.getWeakenTime(target);
+    const growTime = ns.getGrowTime(target);
+    const phases = [
+        {
+            script: '/batch/h.js',
+            start: 0,
+            duration: hackTime,
+            threads: threads.hackThreads,
+        },
+        {
+            script: '/batch/w.js',
+            start: 0,
+            duration: weakenTime,
+            threads: threads.postHackWeakenThreads,
+        },
+        {
+            script: '/batch/g.js',
+            start: 0,
+            duration: growTime,
+            threads: threads.growThreads,
+        },
+        {
+            script: '/batch/w.js',
+            start: 0,
+            duration: weakenTime,
+            threads: threads.postGrowWeakenThreads,
+        },
+    ];
+    return calculatePhaseStartTimes(phases);
 }
 function weakenThreadsNeeded(securityDecrease) {
     // N.B. this function cannot be substited with the ns function
@@ -113,5 +359,14 @@ function weakenThreadsNeeded(securityDecrease) {
     return Math.max(1, Math.ceil(securityDecrease * 20));
 }
 function canUseFormulas(ns) {
-    return ns.fileExists("Formulas.exe", "home");
+    return ns.fileExists('Formulas.exe', 'home');
+}
+function idealServer(ns, host) {
+    const server = ns.getServer(host);
+    if (typeof server.moneyMax !== 'number'
+        && typeof server.minDifficulty !== 'number')
+        throw new Error(`Cannot determine expected value of a server that has no money or difficulty!`);
+    server.moneyAvailable = server.moneyMax;
+    server.hackDifficulty = server.minDifficulty;
+    return server;
 }

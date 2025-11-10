@@ -19,25 +19,31 @@ Determine how many unique paths there are from start to finish.
 NOTE: The data returned for this contract is an 2D array of numbers
 representing the grid.
  */
-import { MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { parseFlags } from 'util/flags';
+import { isArrayOf, isNumber } from 'util/validate';
 export async function main(ns) {
-    const flags = ns.flags(MEM_TAG_FLAGS);
-    let scriptName = ns.getScriptName();
-    let contractPortNum = ns.args[0];
+    await parseFlags(ns, []);
+    const scriptName = ns.getScriptName();
+    const contractPortNum = ns.args[0];
     if (typeof contractPortNum !== 'number') {
         ns.tprintf('%s contract run with non-number answer port argument', scriptName);
         return;
     }
-    let contractDataJSON = ns.args[1];
+    const contractDataJSON = ns.args[1];
     if (typeof contractDataJSON !== 'string') {
         ns.tprintf('%s contract run with non-string data argument. Must be a JSON string containing file, host and contract data.', scriptName);
         return;
     }
-    let contractData = JSON.parse(contractDataJSON);
+    const contractData = JSON.parse(contractDataJSON);
+    if (!isContractData(contractData)) {
+        ns.writePort(contractPortNum, JSON.stringify(null));
+        return;
+    }
     ns.tprintf('contract data: %s', JSON.stringify(contractData));
-    let answer = solve(contractData);
+    const answer = solve(contractData);
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
+const isContractData = isArrayOf(isArrayOf(isNumber));
 export function solve(data) {
     const rows = data.length;
     const cols = data[0].length;

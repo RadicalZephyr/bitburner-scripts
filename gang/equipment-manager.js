@@ -1,4 +1,4 @@
-import { CONFIG } from "gang/config";
+import { CONFIG } from 'gang/config';
 function weightedStatGain(stats, profile) {
     let total = 0;
     total += ((stats.hack ?? 1) - 1) * profile.hackWeight;
@@ -23,13 +23,16 @@ export function computeROI(cost, gainRate) {
 export function purchaseBestGear(ns, memberName, role, moneyTracker, profile) {
     const info = ns.gang.getMemberInformation(memberName);
     const limit = CONFIG.maxROITime[role] ?? 0;
-    const gainRate = moneyTracker.velocity("total");
+    const gainRate = moneyTracker.velocity('total');
     if (!gainRate)
         return;
-    const equips = ns.gang.getEquipmentNames().map(e => computeEquipValue(ns, e, gainRate, profile));
+    const equips = ns.gang
+        .getEquipmentNames()
+        .map((e) => computeEquipValue(ns, e, gainRate, profile));
     equips.sort(compareEquips);
     for (const equip of equips) {
-        if (info.upgrades.includes(equip.name) || info.augmentations.includes(equip.name))
+        if (info.upgrades.includes(equip.name)
+            || info.augmentations.includes(equip.name))
             continue;
         ns.print(`INFO: ROI on buying ${equip.name} is ${ns.tFormat(equip.roi * 1000)}`);
         if (equip.roi <= limit) {

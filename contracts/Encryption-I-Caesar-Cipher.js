@@ -12,43 +12,79 @@ The first element is the plaintext, the second element is the left shift value.
 
 Return the ciphertext as uppercase string. Spaces remains the same.
  */
-import { MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { parseFlags } from 'util/flags';
+import { isNumber, isString, isTuple } from 'util/validate';
 export async function main(ns) {
-    const flags = ns.flags(MEM_TAG_FLAGS);
-    let scriptName = ns.getScriptName();
-    let contractPortNum = ns.args[0];
+    await parseFlags(ns, []);
+    const scriptName = ns.getScriptName();
+    const contractPortNum = ns.args[0];
     if (typeof contractPortNum !== 'number') {
         ns.tprintf('%s contract run with non-number answer port argument', scriptName);
         return;
     }
-    let contractDataJSON = ns.args[1];
+    const contractDataJSON = ns.args[1];
     if (typeof contractDataJSON !== 'string') {
         ns.tprintf('%s contract run with non-string data argument. Must be a JSON string containing file, host and contract data.', scriptName);
         return;
     }
-    let contractData = JSON.parse(contractDataJSON);
+    const contractData = JSON.parse(contractDataJSON);
+    if (!isContractData(contractData)) {
+        ns.writePort(contractPortNum, JSON.stringify(null));
+        return;
+    }
     ns.tprintf('contract data: %s', JSON.stringify(contractData));
-    let answer = solve(contractData);
+    const answer = solve(contractData);
     ns.writePort(contractPortNum, answer);
 }
-const ALPHABET = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
+const isContractData = isTuple(isString, isNumber);
+const ALPHABET = [
+    'A',
+    'B',
+    'C',
+    'D',
+    'E',
+    'F',
+    'G',
+    'H',
+    'I',
+    'J',
+    'K',
+    'L',
+    'M',
+    'N',
+    'O',
+    'P',
+    'Q',
+    'R',
+    'S',
+    'T',
+    'U',
+    'V',
+    'W',
+    'X',
+    'Y',
+    'Z',
+];
 export function solve(data) {
-    let [plaintext, n] = data;
-    let leftShift = ALPHABET.length - n;
-    let upcase_plaintext = plaintext.toUpperCase();
-    return upcase_plaintext.split('').map((c) => shift(c, leftShift)).join('');
+    const [plaintext, n] = data;
+    const leftShift = ALPHABET.length - n;
+    const upcase_plaintext = plaintext.toUpperCase();
+    return upcase_plaintext
+        .split('')
+        .map((c) => shift(c, leftShift))
+        .join('');
 }
-const A_CODE = "A".codePointAt(0);
+const A_CODE = 'A'.codePointAt(0);
 function shift(c, n) {
     // Spaces remain unchanged
     if (c === ' ') {
         return c;
     }
-    let index = c.codePointAt(0) - A_CODE;
+    const index = c.codePointAt(0) - A_CODE;
     // If c is not in the uppercase alphabet just return it.
     if (index >= ALPHABET.length || index < 0) {
         return c;
     }
-    let shiftedIndex = (index + n) % ALPHABET.length;
+    const shiftedIndex = (index + n) % ALPHABET.length;
     return ALPHABET[shiftedIndex];
 }

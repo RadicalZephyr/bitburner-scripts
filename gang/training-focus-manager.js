@@ -1,10 +1,3 @@
-function normalize(v) {
-    const sum = Object.values(v).reduce((a, b) => a + b, 0);
-    const result = {};
-    for (const k in v)
-        result[k] = sum === 0 ? 0 : v[k] / sum;
-    return result;
-}
 function distance(a, b) {
     let d = 0;
     for (const k in a)
@@ -32,7 +25,7 @@ function profileVector(p) {
 }
 export function selectTrainingTask(info, profiles) {
     const m = memberVector(info);
-    let bestRole = "bootstrapping";
+    let bestRole = 'bootstrapping';
     let bestDist = Infinity;
     for (const role of Object.keys(profiles)) {
         const p = profileVector(profiles[role]);
@@ -50,10 +43,10 @@ export function selectTrainingTask(info, profiles) {
     };
     const max = Math.max(weights.hack, weights.combat, weights.cha);
     if (max === weights.cha)
-        return "Train Charisma";
+        return 'Train Charisma';
     if (max === weights.hack)
-        return "Train Hacking";
-    return "Train Combat";
+        return 'Train Hacking';
+    return 'Train Combat';
 }
 /**
  * Assign training tasks for members by comparing their stats to role profiles.

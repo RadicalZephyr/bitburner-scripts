@@ -41,7 +41,11 @@ export class AscensionReviewBoard {
             const member = ns.gang.getMemberInformation(name);
             const mult = isHacking
                 ? member.hack_asc_mult
-                : (member.str_asc_mult + member.def_asc_mult + member.dex_asc_mult + member.agi_asc_mult) / 4;
+                : (member.str_asc_mult
+                    + member.def_asc_mult
+                    + member.dex_asc_mult
+                    + member.agi_asc_mult)
+                    / 4;
             candidates.push({ name, mult, respect: member.earnedRespect });
         }
         candidates.sort((a, b) => a.mult - b.mult);

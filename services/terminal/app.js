@@ -1,0 +1,883 @@
+import { useTheme } from 'ui/hooks';
+import { assertEl } from 'util/assertEl';
+import { scanTokens, tokenize, } from 'services/terminal/tokenizer';
+import { computePathMatches } from 'services/terminal/completion';
+import { directoryExists, listImmediateChildren, normalizePath, } from 'services/terminal/vfs';
+import { React } from 'lib/react';
+const MAX_LINES = 1000;
+const HISTORY_LIMIT = 100;
+const SCROLL_THRESHOLD = 8;
+const STYLE_ID = 'CustomTerminalStyles';
+const DOUBLE_TAB_MS = 500;
+const SCRIPT_INDEX_TTL = 5000;
+const SCRIPT_EXTENSIONS = ['.js', '.ts', '.jsx', '.tsx'];
+const BUILTIN_NAMES = [
+    'clear',
+    'help',
+    'ls',
+    'cd',
+    'mem',
+    'free',
+    'rehash',
+];
+const PATH_COMMANDS = new Set(['ls', 'cd', 'mem']);
+// const FILE_ONLY_COMMANDS = new Set(['mem']);
+const DIR_ONLY_COMMANDS = new Set(['cd']);
+const BUILTINS = {
+    clear: (_, ctx) => ctx.clearOutput(),
+    help: (_, ctx) => ctx.appendLines('info', helpText()),
+    ls: lsBuiltin,
+    cd: cdBuiltin,
+    mem: memBuiltin,
+    free: freeBuiltin,
+    rehash: rehashBuiltin,
+};
+/**
+ * Interactive terminal UI rendered inside a tail window.
+ *
+ * @param ns - Netscript API instance.
+ * @param launcher - Launch client used to run scripts.
+ * @param resolveScript - Function that resolves script identifiers to files.
+ * @param memoryClient - Memory client used to fetch free RAM summaries.
+ * @returns The terminal React component tree.
+ */
+export function TerminalApp({ ns, launcher, resolveScript, memoryClient, }) {
+    const theme = useTheme(ns, 500);
+    const [lines, setLines] = React.useState([]);
+    const [input, setInput] = React.useState('');
+    const [history, setHistory] = React.useState([]);
+    const [historyIndex, setHistoryIndex] = React.useState(null);
+    const [cwd, setCwd] = React.useState('/');
+    const [completion, setCompletion] = React.useState({
+        lastKeyWasTab: false,
+        lastTabTs: 0,
+        lastInputSnapshot: '',
+        scriptIndex: null,
+        scriptIndexTs: 0,
+    });
+    const [selectionRequest, setSelectionRequest] = React.useState(null);
+    const idRef = React.useRef(0);
+    const draftRef = React.useRef('');
+    const outputRef = React.useRef(null);
+    const autoScrollRef = React.useRef(true);
+    const selectionVersionRef = React.useRef(0);
+    React.useEffect(() => {
+        ensureStyles(theme);
+    }, [theme]);
+    React.useEffect(() => {
+        if (!autoScrollRef.current)
+            return;
+        const el = outputRef.current;
+        if (!el)
+            return;
+        el.scrollTop = el.scrollHeight;
+    }, [lines]);
+    const appendLine = React.useCallback((kind, text) => {
+        setLines((prev) => {
+            const nextLine = {
+                id: `${Date.now()}-${idRef.current}`,
+                kind,
+                text,
+                ts: Date.now(),
+            };
+            idRef.current += 1;
+            const next = [...prev, nextLine];
+            if (next.length > MAX_LINES) {
+                return next.slice(next.length - MAX_LINES);
+            }
+            return next;
+        });
+    }, []);
+    const appendLines = React.useCallback((kind, text) => {
+        text.split('\n').forEach((line) => appendLine(kind, line));
+    }, [appendLine]);
+    const handleScroll = React.useCallback(() => {
+        const el = outputRef.current;
+        if (!el)
+            return;
+        const distance = el.scrollHeight - el.clientHeight - el.scrollTop;
+        autoScrollRef.current = distance < SCROLL_THRESHOLD;
+    }, []);
+    const clearOutput = React.useCallback(() => {
+        setLines([]);
+        autoScrollRef.current = true;
+    }, []);
+    const pushHistory = React.useCallback((command) => {
+        if (!command.trim())
+            return;
+        setHistory((prev) => {
+            if (prev[0] === command) {
+                return prev;
+            }
+            const next = [command, ...prev];
+            if (next.length > HISTORY_LIMIT) {
+                return next.slice(0, HISTORY_LIMIT);
+            }
+            return next;
+        });
+    }, []);
+    const resetHistoryState = React.useCallback(() => {
+        setHistoryIndex(null);
+        draftRef.current = '';
+    }, []);
+    const setInputValue = React.useCallback((value) => {
+        setInput(value);
+        setCompletion((prev) => ({
+            ...prev,
+            lastKeyWasTab: false,
+        }));
+    }, []);
+    const requestSelection = React.useCallback((start, end) => {
+        selectionVersionRef.current += 1;
+        setSelectionRequest({
+            start,
+            end,
+            version: selectionVersionRef.current,
+        });
+    }, []);
+    const ensureScriptIndex = React.useCallback((force = false) => {
+        const now = Date.now();
+        if (!force
+            && completion.scriptIndex
+            && now - completion.scriptIndexTs <= SCRIPT_INDEX_TTL) {
+            return Promise.resolve(completion.scriptIndex);
+        }
+        const files = ns.ls('home');
+        const scripts = files
+            .filter((file) => SCRIPT_EXTENSIONS.some((ext) => file.endsWith(ext)))
+            .map(toAbsolutePath);
+        setCompletion((prev) => ({
+            ...prev,
+            scriptIndex: scripts,
+            scriptIndexTs: now,
+        }));
+        return Promise.resolve(scripts);
+    }, [completion.scriptIndex, completion.scriptIndexTs, ns]);
+    const handleNonTabKey = React.useCallback(() => {
+        setCompletion((prev) => ({
+            ...prev,
+            lastKeyWasTab: false,
+        }));
+    }, []);
+    const handleCommand = React.useCallback(async () => {
+        const raw = input;
+        if (raw === '') {
+            return;
+        }
+        appendLine('echo', `$ ${raw}`);
+        pushHistory(raw);
+        resetHistoryState();
+        setInputValue('');
+        const result = tokenize(raw);
+        if (!result.ok) {
+            appendLine('error', `parse error: ${result.message}`);
+            appendLine('error', caretLine(result.index));
+            return;
+        }
+        if (result.tokens.length === 0) {
+            return;
+        }
+        const [command, ...args] = result.tokens;
+        const builtin = BUILTINS[command];
+        if (builtin) {
+            await builtin(args, {
+                ns,
+                cwd,
+                setCwd,
+                appendLine,
+                appendLines,
+                clearOutput,
+                resolveScript,
+                memoryClient,
+                ensureScriptIndex,
+            });
+            return;
+        }
+        const resolved = resolveScript(cwd, command);
+        if (!resolved.ok) {
+            appendLines('error', resolved.message);
+            return;
+        }
+        try {
+            const response = await launcher.launch(resolved.script, { threads: 1 }, ...args);
+            if (!response) {
+                appendLine('error', `failed to launch ${resolved.absPath}`);
+                return;
+            }
+            const pidSummary = summarizePids(response.pids);
+            appendLine('info', pidSummary
+                ? `launched ${resolved.absPath} ${pidSummary}`
+                : `launched ${resolved.absPath}`);
+        }
+        catch (err) {
+            appendLine('error', `failed to launch ${resolved.absPath}: ${formatError(err)}`);
+        }
+    }, [
+        appendLine,
+        appendLines,
+        clearOutput,
+        cwd,
+        ensureScriptIndex,
+        input,
+        launcher,
+        memoryClient,
+        ns,
+        pushHistory,
+        resolveScript,
+        resetHistoryState,
+        setCwd,
+        setInputValue,
+    ]);
+    const historyPrev = React.useCallback(() => {
+        if (history.length === 0) {
+            return;
+        }
+        setHistoryIndex((index) => {
+            if (index == null) {
+                draftRef.current = input;
+                setInputValue(history[0]);
+                return 0;
+            }
+            if (index >= history.length - 1) {
+                return index;
+            }
+            const nextIndex = index + 1;
+            setInputValue(history[nextIndex]);
+            return nextIndex;
+        });
+    }, [history, input, setInputValue]);
+    const historyNext = React.useCallback(() => {
+        setHistoryIndex((index) => {
+            if (index == null) {
+                return index;
+            }
+            if (index === 0) {
+                setInputValue(draftRef.current);
+                draftRef.current = '';
+                return null;
+            }
+            const nextIndex = index - 1;
+            setInputValue(history[nextIndex]);
+            return nextIndex;
+        });
+    }, [history, setInputValue]);
+    const historyReset = React.useCallback(() => {
+        if (historyIndex == null) {
+            setInputValue('');
+            return;
+        }
+        setInputValue(history[historyIndex]);
+    }, [history, historyIndex, setInputValue]);
+    const handleInputChange = React.useCallback((value) => {
+        setInputValue(value);
+    }, [setInputValue]);
+    const handleTabComplete = React.useCallback(async ({ value, selectionStart, selectionEnd }) => {
+        const now = Date.now();
+        const cursor = selectionEnd;
+        const scan = scanTokens(value, {
+            stopAt: cursor,
+            allowIncomplete: true,
+        });
+        if (!scan.ok) {
+            setCompletion((prev) => ({
+                ...prev,
+                lastKeyWasTab: true,
+                lastTabTs: now,
+                lastInputSnapshot: value,
+            }));
+            return;
+        }
+        const tokens = scan.tokens;
+        const collapsed = selectionStart === selectionEnd;
+        const lastToken = tokens[tokens.length - 1];
+        const editingCurrent = collapsed && lastToken && lastToken.tokenEnd === cursor;
+        const precedingTokens = editingCurrent
+            ? tokens.slice(0, -1).map((token) => token.value)
+            : tokens.map((token) => token.value);
+        const currentToken = editingCurrent
+            ? lastToken
+            : null;
+        const tokenIndex = precedingTokens.length;
+        const typedValue = currentToken ? currentToken.value : '';
+        const doubleTab = completion.lastKeyWasTab
+            && now - completion.lastTabTs <= DOUBLE_TAB_MS
+            && completion.lastInputSnapshot === value
+            && collapsed;
+        let matches = [];
+        let listing = [];
+        let prefix = '';
+        let base = typedValue;
+        if (tokenIndex === 0) {
+            const isPathLike = typedValue.includes('/')
+                || typedValue.startsWith('.')
+                || typedValue.startsWith('~');
+            const scripts = await ensureScriptIndex();
+            const pathResult = computePathMatches(typedValue, cwd, scripts);
+            prefix = pathResult.prefix;
+            base = pathResult.base;
+            const pathMatches = pathResult.matches.map((entry) => entry.name);
+            if (isPathLike) {
+                matches = pathMatches;
+            }
+            else {
+                const builtinMatches = BUILTIN_NAMES.filter((name) => name.startsWith(typedValue));
+                matches = [...builtinMatches, ...pathMatches];
+            }
+            listing = matches;
+        }
+        else {
+            const command = precedingTokens[0] ?? '';
+            if (PATH_COMMANDS.has(command)) {
+                const scripts = await ensureScriptIndex();
+                const pathResult = computePathMatches(typedValue, cwd, scripts);
+                prefix = pathResult.prefix;
+                base = pathResult.base;
+                matches = pathResult.matches
+                    .filter((entry) => {
+                    if (DIR_ONLY_COMMANDS.has(command))
+                        return entry.kind === 'dir';
+                    return true;
+                })
+                    .map((entry) => entry.name);
+                listing = matches;
+            }
+        }
+        if (matches.length === 0) {
+            setCompletion((prev) => ({
+                ...prev,
+                lastKeyWasTab: true,
+                lastTabTs: now,
+                lastInputSnapshot: value,
+            }));
+            return;
+        }
+        let insertText = null;
+        if (matches.length === 1) {
+            insertText = matches[0];
+        }
+        else {
+            const lcp = longestCommonPrefix(matches);
+            if (lcp.length > base.length) {
+                insertText = lcp;
+            }
+            else if (doubleTab) {
+                appendLine('info', formatCandidateList(listing));
+                setCompletion((prev) => ({
+                    ...prev,
+                    lastKeyWasTab: true,
+                    lastTabTs: now,
+                    lastInputSnapshot: value,
+                }));
+                return;
+            }
+        }
+        if (insertText == null) {
+            setCompletion((prev) => ({
+                ...prev,
+                lastKeyWasTab: true,
+                lastTabTs: now,
+                lastInputSnapshot: value,
+            }));
+            return;
+        }
+        const newTokenValue = `${prefix}${insertText}`;
+        let formatted = formatTokenForInsertion(newTokenValue, currentToken?.quote ?? null);
+        let tokenStart = currentToken
+            ? currentToken.tokenStart
+            : selectionStart;
+        if (currentToken?.quote) {
+            tokenStart = currentToken.contentStart;
+            formatted = escapeForQuote(newTokenValue, currentToken.quote);
+        }
+        const before = value.slice(0, tokenStart);
+        const after = value.slice(selectionEnd);
+        const newValue = `${before}${formatted}${after}`;
+        const newCursor = before.length + formatted.length;
+        setInput(newValue);
+        requestSelection(newCursor, newCursor);
+        setCompletion((prev) => ({
+            ...prev,
+            lastKeyWasTab: true,
+            lastTabTs: now,
+            lastInputSnapshot: newValue,
+        }));
+    }, [
+        appendLine,
+        completion.lastInputSnapshot,
+        completion.lastKeyWasTab,
+        completion.lastTabTs,
+        cwd,
+        ensureScriptIndex,
+        requestSelection,
+        setCompletion,
+        setInput,
+    ]);
+    return (React.createElement("div", { className: "bb-terminal", style: rootStyle(theme) },
+        React.createElement(OutputPane, { lines: lines, onScroll: handleScroll, outputRef: outputRef }),
+        React.createElement(InputLine, { value: input, onChange: handleInputChange, onSubmit: () => void handleCommand(), onHistoryPrev: historyPrev, onHistoryNext: historyNext, onHistoryReset: historyReset, onClear: clearOutput, onTabComplete: (r) => void handleTabComplete(r), onNonTabKey: handleNonTabKey, selectionRequest: selectionRequest })));
+}
+function OutputPane({ lines, onScroll, outputRef }) {
+    return (React.createElement("div", { className: "bb-terminal__output", role: "log", "aria-live": "polite", onScroll: onScroll, ref: outputRef }, lines.map((line) => (React.createElement("div", { key: line.id, className: `bb-terminal__line bb-terminal__line--${line.kind}` }, line.text)))));
+}
+function InputLine({ value, onChange, onSubmit, onHistoryPrev, onHistoryNext, onHistoryReset, onClear, onTabComplete, onNonTabKey, selectionRequest, }) {
+    const inputRef = React.useRef(null);
+    React.useEffect(() => {
+        inputRef.current?.focus();
+    }, []);
+    const setSelection = React.useCallback((start, end) => {
+        const el = inputRef.current;
+        if (!el)
+            return;
+        const posStart = clamp(start, 0, el.value.length);
+        const posEnd = clamp(end, 0, el.value.length);
+        globalThis.setTimeout(() => {
+            const target = inputRef.current;
+            target?.setSelectionRange(posStart, posEnd);
+        }, 0);
+    }, []);
+    React.useEffect(() => {
+        if (!selectionRequest) {
+            return;
+        }
+        setSelection(selectionRequest.start, selectionRequest.end);
+    }, [selectionRequest, setSelection]);
+    const handleSubmit = React.useCallback(() => {
+        onSubmit();
+        inputRef.current?.focus();
+    }, [onSubmit]);
+    const handleChange = React.useCallback((event) => {
+        const el = event.currentTarget;
+        if (el === inputRef.current) {
+            event.stopPropagation();
+        }
+        onChange(event.currentTarget.value);
+    }, [onChange]);
+    const handleKeyDown = React.useCallback((event) => {
+        const el = event.currentTarget;
+        if (el === inputRef.current) {
+            event.stopPropagation();
+        }
+        if (event.key === 'Tab') {
+            event.preventDefault();
+            onTabComplete({
+                value: el.value,
+                selectionStart: el.selectionStart ?? el.value.length,
+                selectionEnd: el.selectionEnd ?? el.value.length,
+            });
+            return;
+        }
+        onNonTabKey();
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            handleSubmit();
+            return;
+        }
+        if (event.key === 'ArrowUp') {
+            event.preventDefault();
+            onHistoryPrev();
+            return;
+        }
+        if (event.key === 'ArrowDown') {
+            event.preventDefault();
+            onHistoryNext();
+            return;
+        }
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            onHistoryReset();
+            return;
+        }
+        if (event.ctrlKey && !event.altKey && !event.metaKey) {
+            switch (event.key) {
+                case 'a':
+                case 'A':
+                    event.preventDefault();
+                    setSelection(0, 0);
+                    return;
+                case 'e':
+                case 'E':
+                    event.preventDefault();
+                    setSelection(el.value.length, el.value.length);
+                    return;
+                case 'b':
+                case 'B': {
+                    event.preventDefault();
+                    const start = el.selectionStart ?? 0;
+                    const pos = Math.max(0, start - 1);
+                    setSelection(pos, pos);
+                    return;
+                }
+                case 'f':
+                case 'F': {
+                    event.preventDefault();
+                    const start = el.selectionStart ?? el.value.length;
+                    const pos = Math.min(el.value.length, start + 1);
+                    setSelection(pos, pos);
+                    return;
+                }
+                case 'k':
+                case 'K': {
+                    event.preventDefault();
+                    const start = el.selectionStart ?? el.value.length;
+                    const end = el.selectionEnd ?? el.value.length;
+                    const newValue = el.value.slice(0, Math.min(start, end));
+                    onChange(newValue);
+                    setSelection(newValue.length, newValue.length);
+                    return;
+                }
+                case 'l':
+                case 'L':
+                    event.preventDefault();
+                    onClear();
+                    return;
+                default:
+                    break;
+            }
+        }
+        if (event.altKey && !event.ctrlKey && !event.metaKey) {
+            switch (event.key) {
+                case 'b':
+                case 'B': {
+                    event.preventDefault();
+                    const start = el.selectionStart ?? 0;
+                    const pos = findWordBoundaryBackward(el.value, start);
+                    setSelection(pos, pos);
+                    return;
+                }
+                case 'f':
+                case 'F': {
+                    event.preventDefault();
+                    const start = el.selectionStart ?? 0;
+                    const pos = findWordBoundaryForward(el.value, start);
+                    setSelection(pos, pos);
+                    return;
+                }
+                case 'Backspace': {
+                    event.preventDefault();
+                    const start = el.selectionStart ?? 0;
+                    const end = el.selectionEnd ?? 0;
+                    const segmentStart = start === end
+                        ? findWordBoundaryBackward(el.value, start)
+                        : start;
+                    const newValue = el.value.slice(0, segmentStart)
+                        + el.value.slice(end);
+                    onChange(newValue);
+                    setSelection(segmentStart, segmentStart);
+                    return;
+                }
+                default:
+                    break;
+            }
+        }
+    }, [
+        handleSubmit,
+        onChange,
+        onClear,
+        onHistoryNext,
+        onHistoryPrev,
+        onHistoryReset,
+        onNonTabKey,
+        onTabComplete,
+        setSelection,
+    ]);
+    return (React.createElement("div", { className: "bb-terminal__input" },
+        React.createElement("label", { className: "bb-terminal__label", htmlFor: "bb-terminal-input" }, "Command input"),
+        React.createElement("input", { id: "bb-terminal-input", "aria-label": "Command input", ref: inputRef, value: value, onChange: handleChange, onKeyDown: handleKeyDown, className: "bb-terminal__input-field", autoComplete: "off" })));
+}
+function formatCandidateList(candidates) {
+    return candidates.join('  ');
+}
+function formatTokenForInsertion(value, quote) {
+    if (quote === '"' || quote === "'") {
+        return `${quote}${escapeForQuote(value, quote)}${quote}`;
+    }
+    if (/\s/.test(value)) {
+        return `"${escapeForQuote(value, '"')}"`;
+    }
+    return escapeUnquoted(value);
+}
+function escapeForQuote(value, quote) {
+    const escapeChar = quote === '"' ? '"' : "'";
+    return value
+        .replace(/\\/g, '\\\\')
+        .replace(new RegExp(`[${escapeChar}]`, 'g'), (match) => `\\${match}`);
+}
+function escapeUnquoted(value) {
+    return value.replace(/[\\\s"']/g, (match) => `\\${match}`);
+}
+function longestCommonPrefix(items) {
+    if (items.length === 0) {
+        return '';
+    }
+    let prefix = items[0];
+    for (let i = 1; i < items.length; i += 1) {
+        let j = 0;
+        while (j < prefix.length && j < items[i].length) {
+            if (prefix[j] !== items[i][j]) {
+                break;
+            }
+            j += 1;
+        }
+        prefix = prefix.slice(0, j);
+        if (prefix === '') {
+            break;
+        }
+    }
+    return prefix;
+}
+function lsBuiltin(argv, ctx) {
+    const targetInput = argv[0] ?? '.';
+    const target = normalizePath(targetInput, ctx.cwd);
+    const files = ctx.ns.ls('home').map(toAbsolutePath);
+    const listing = listImmediateChildren(files, target);
+    if (!listing.exists) {
+        ctx.appendLine('error', `no such file or directory: ${target}`);
+        return Promise.resolve();
+    }
+    if (listing.entries.length === 0) {
+        ctx.appendLine('info', 'empty');
+        return Promise.resolve();
+    }
+    ctx.appendLine('info', listing.entries.map((entry) => entry.name).join('  '));
+    return Promise.resolve();
+}
+function cdBuiltin(argv, ctx) {
+    const targetInput = argv[0] ?? '/';
+    const target = normalizePath(targetInput, ctx.cwd);
+    const files = ctx.ns.ls('home').map(toAbsolutePath);
+    if (!directoryExists(files, target)) {
+        ctx.appendLine('error', `no such directory: ${target}`);
+        return Promise.resolve();
+    }
+    ctx.setCwd(target);
+    ctx.appendLine('info', `cwd: ${target}`);
+    return Promise.resolve();
+}
+function memBuiltin(argv, ctx) {
+    if (argv.length !== 1) {
+        ctx.appendLine('error', 'usage: mem <script>');
+        return Promise.resolve();
+    }
+    const resolved = ctx.resolveScript(ctx.cwd, argv[0]);
+    if (!resolved.ok) {
+        ctx.appendLines('error', resolved.message);
+        return Promise.resolve();
+    }
+    const ram = ctx.ns.getScriptRam(resolved.script, 'home');
+    if (!ram || Number.isNaN(ram)) {
+        ctx.appendLine('error', `cannot determine RAM for ${resolved.absPath}`);
+        return Promise.resolve();
+    }
+    ctx.appendLine('info', `${resolved.absPath}: ${ctx.ns.formatRam(ram)}`);
+    return Promise.resolve();
+}
+async function freeBuiltin(_, ctx) {
+    const free = await ctx.memoryClient.getFreeRam();
+    const rows = [...free.chunks].sort((a, b) => b.freeRam - a.freeRam);
+    if (rows.length === 0) {
+        ctx.appendLine('info', 'no workers reported');
+        return;
+    }
+    const lines = formatFreeTable(ctx.ns, rows);
+    lines.forEach((line) => ctx.appendLine('info', line));
+    ctx.appendLine('info', `sum: ${ctx.ns.formatRam(free.freeRam)} free on ${rows.length} hosts`);
+}
+async function rehashBuiltin(_, ctx) {
+    await ctx.ensureScriptIndex(true);
+    ctx.appendLine('info', 'script index refreshed');
+}
+function formatFreeTable(ns, rows) {
+    const hostWidth = Math.max(4, ...rows.map((row) => row.hostname.length));
+    const freeStrings = rows.map((row) => ns.formatRam(row.freeRam));
+    const totals = rows.map((row) => {
+        const total = row.totalRam;
+        if (typeof total === 'number') {
+            return total;
+        }
+        return ns.getServerMaxRam(row.hostname);
+    });
+    const totalStrings = totals.map((total) => ns.formatRam(total));
+    const freeWidth = Math.max(4, ...freeStrings.map((item) => item.length));
+    const totalWidth = Math.max(5, ...totalStrings.map((item) => item.length));
+    const header = `${padRight('HOST', hostWidth)}  ${padLeft('FREE', freeWidth)}  ${padLeft('TOTAL', totalWidth)}  UTIL%`;
+    const lines = [header];
+    rows.forEach((row, index) => {
+        const freeText = padLeft(freeStrings[index], freeWidth);
+        const totalText = padLeft(totalStrings[index], totalWidth);
+        const totalRam = totals[index];
+        const util = totalRam > 0 ? 1 - row.freeRam / totalRam : 0;
+        const utilText = padLeft(ns.formatPercent(util), 7);
+        lines.push(`${padRight(row.hostname, hostWidth)}  ${freeText}  ${totalText}  ${utilText}`);
+    });
+    return lines;
+}
+function padRight(value, width) {
+    if (value.length >= width) {
+        return value;
+    }
+    return value + ' '.repeat(width - value.length);
+}
+function padLeft(value, width) {
+    if (value.length >= width) {
+        return value;
+    }
+    return ' '.repeat(width - value.length) + value;
+}
+function summarizePids(pids) {
+    if (pids.length === 0) {
+        return '';
+    }
+    if (pids.length === 1) {
+        return `(pid ${pids[0]})`;
+    }
+    return `(pids ${pids.join(', ')})`;
+}
+function formatError(err) {
+    if (err instanceof Error) {
+        const base = err.message || err.name;
+        return err.name && err.message ? `${err.name}: ${err.message}` : base;
+    }
+    return String(err);
+}
+function caretLine(index) {
+    return `${' '.repeat(Math.max(0, index + 2))}^`;
+}
+function helpText() {
+    return [
+        'Bitburner launch terminal',
+        '',
+        'Usage:',
+        '  <script> [args...]',
+        '',
+        'Quoting rules:',
+        '  - Use \'single\' or "double" quotes to include spaces.',
+        '  - Use \\ to escape the next character.',
+        '',
+        'Built-ins:',
+        '  clear   Clear all output',
+        '  help    Show this message',
+        '  ls      List files in the current or provided directory',
+        '  cd      Change the current working directory',
+        '  mem     Show static RAM usage for a script',
+        '  free    Display free RAM by host',
+        '  rehash  Refresh the script autocomplete index',
+        '',
+        'Paths:',
+        '  - / is the root directory; ~ is an alias for /.',
+        '  - .. moves to the parent directory; . keeps the current directory.',
+        '',
+        'Completion:',
+        '  - Press TAB to complete commands and paths.',
+        '  - Press TAB twice quickly to list candidates.',
+    ].join('\n');
+}
+function ensureStyles(theme) {
+    const root = assertEl(globalThis['document'].getElementById('root'), 'No root element found');
+    let styleEl = globalThis['document'].getElementById(STYLE_ID);
+    if (!styleEl) {
+        styleEl = globalThis['document'].createElement('style');
+        styleEl.id = STYLE_ID;
+        root.parentElement?.appendChild(styleEl);
+    }
+    styleEl.textContent = makeCss(theme);
+}
+function makeCss(theme) {
+    return `
+    .bb-terminal {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        font-family: monospace;
+        color: ${theme.primary};
+        background: ${theme.backgroundprimary};
+        padding: 8px;
+        box-sizing: border-box;
+    }
+    .bb-terminal__output {
+        flex: 1;
+        overflow-y: auto;
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-size: 16px;
+        padding: 4px;
+        border: 1px solid ${theme.primarydark};
+        margin-bottom: 8px;
+        background: ${theme.backgroundsecondary};
+    }
+    .bb-terminal__line {
+        line-height: 1.4;
+    }
+    .bb-terminal__line--echo {
+        color: ${theme.secondary};
+    }
+    .bb-terminal__line--info {
+        color: ${theme.primary};
+    }
+    .bb-terminal__line--warn {
+        color: ${theme.warning};
+    }
+    .bb-terminal__line--error {
+        color: ${theme.error};
+    }
+    .bb-terminal__input {
+        display: flex;
+        flex-direction: column;
+    }
+    .bb-terminal__label {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        border: 0;
+    }
+    .bb-terminal__input-field {
+        border: 1px solid ${theme.primarydark};
+        background: ${theme.backgroundprimary};
+        color: ${theme.primary};
+        padding: 6px;
+        font-family: monospace;
+        font-size: 16px;
+        outline: none;
+    }
+    .bb-terminal__input-field:focus {
+        border-color: ${theme.success};
+        box-shadow: 0 0 0 1px ${theme.success};
+    }
+    `;
+}
+function rootStyle(theme) {
+    return {
+        background: theme.backgroundprimary,
+        color: theme.primary,
+        height: '100%',
+    };
+}
+function clamp(value, min, max) {
+    return Math.min(max, Math.max(min, value));
+}
+function toAbsolutePath(path) {
+    return path.startsWith('/') ? path : `/${path}`;
+}
+function findWordBoundaryBackward(value, index) {
+    let pos = Math.max(0, index);
+    while (pos > 0 && value[pos - 1] === ' ') {
+        pos -= 1;
+    }
+    while (pos > 0 && value[pos - 1] !== ' ') {
+        pos -= 1;
+    }
+    return pos;
+}
+function findWordBoundaryForward(value, index) {
+    let pos = Math.min(value.length, Math.max(0, index));
+    while (pos < value.length && value[pos] === ' ') {
+        pos += 1;
+    }
+    while (pos < value.length && value[pos] !== ' ') {
+        pos += 1;
+    }
+    return pos;
+}

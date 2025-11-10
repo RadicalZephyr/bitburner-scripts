@@ -1,18 +1,22 @@
-import { Config } from "util/config";
+import { Config } from 'util/config';
 const entries = [
-    ["batchInterval", 80],
-    ["maxTillTargets", 2],
-    ["maxSowTargets", 2],
-    ["expectedValueThreshold", 100],
-    ["minSecTolerance", 1],
-    ["maxMoneyTolerance", 0.99],
-    ["maxHackPercent", 0.5],
-    ["heartbeatCadence", 2000],
-    ["heartbeatTimeoutMs", 3000],
-    ["hackLevelVelocityThreshold", 0.05],
-    ["harvestRetryMax", 5],
-    ["harvestRetryWait", 50],
-    ["launchFailLimit", 5],
-    ["launchFailBackoffMs", 2000]
+    ['batchInterval', 80],
+    ['expectedValueThreshold', 100],
+    ['hackHistoryMax', 5],
+    ['hackLevelVelocityThreshold', 0.05],
+    ['harvestRetryMax', 5],
+    ['harvestRetryWait', 50],
+    ['harvestGainThreshold', 0.001],
+    ['heartbeatCadence', 2000],
+    ['heartbeatTimeoutMs', 3000],
+    ['launchFailBackoffMs', 2000],
+    ['launchFailLimit', 5],
+    ['maxHackPercent', 0.5],
+    ['maxMoneyTolerance', 0.99],
+    ['maxSowTargets', 2],
+    ['maxTillTargets', 2],
+    ['minSecTolerance', 1],
+    ['spawnBatchOpenTailOnExecFail', true],
+    ['taskSelectorTickMs', 500],
 ];
-export const CONFIG = new Config("BATCH", entries);
+export const CONFIG = new Config('BATCH', entries);

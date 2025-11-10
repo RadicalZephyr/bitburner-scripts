@@ -1,14 +1,19 @@
-import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
-import { parseAndRegisterAlloc } from "services/client/memory";
-import { CONFIG } from "gang/config";
-import { NAMES } from "gang/names";
-import { Condition, StatTracker } from "util/stat-tracker";
-const MAX_GANG_MEMBERS = 12;
+import { parseFlags } from 'util/flags';
+import { CONFIG } from 'gang/config';
+import { NAMES } from 'gang/names';
+import { withPlugins } from 'ns/extend';
+import { alivePlugin } from 'ns/plugins/alive';
+import { Condition, StatTracker, } from 'util/stat-tracker';
+const FLAGS = [['help', false]];
+export function autocomplete(data) {
+    data.flags(FLAGS);
+    return [];
+}
+function extendNs(ns) {
+    return withPlugins(ns, alivePlugin());
+}
 export async function main(ns) {
-    const flags = ns.flags([
-        ["help", false],
-        ...MEM_TAG_FLAGS
-    ]);
+    const flags = await parseFlags(ns, FLAGS);
     if (typeof flags.help !== 'boolean' || flags.help) {
         ns.tprint(`
 USAGE: run ${ns.getScriptName()}
@@ -18,33 +23,33 @@ Automate gang recruitment and task assignments.
 Example:
   > run ${ns.getScriptName()}
 
-CONFIG VALUES
-  GANG_hackTrainVelocity      The threshold for when we're done hack training
-  GANG_combatTrainVelocity    The threshold for when we're done combat training
-  GANG_charismaTrainVelocity  The threshold for when we're done charisma training
+OPTIONS
+  --help   Show this help message
+
+CONFIGURATION
+  GANG_hackTrainVelocity      The threshold for when hack training ends
+  GANG_combatTrainVelocity    The threshold for combat training completion
+  GANG_charismaTrainVelocity  The threshold for charisma training completion
 `);
         return;
     }
-    const allocationId = await parseAndRegisterAlloc(ns, flags);
-    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
-        return;
-    }
     if (!ns.gang.inGang()) {
-        ns.tprint("No gang to manage.");
+        ns.tprint('No gang to manage.');
         return;
     }
+    await manageGang(extendNs(ns));
+}
+async function manageGang(ns) {
     const memberNames = ns.gang.getMemberNames();
     const currentNames = new Set(memberNames);
-    const availableNames = NAMES.filter(n => !currentNames.has(n));
+    const availableNames = NAMES.filter((n) => !currentNames.has(n));
     let nameIndex = 0;
-    const isHackingGang = ns.gang.getGangInformation().isHacking;
     const gangTracker = new GangTracker(ns);
     gangTracker.tick();
     for (const name of ns.gang.getMemberNames()) {
-        trainMember(ns, name, gangTracker.member(name));
+        void trainMember(ns, name, gangTracker.member(name));
     }
-    let deltaT = 0;
-    while (true) {
+    while (ns.alive.isAlive()) {
         if (ns.gang.canRecruitMember() && nameIndex < availableNames.length) {
             const name = availableNames[nameIndex++];
             if (ns.gang.recruitMember(name)) {
@@ -52,8 +57,8 @@ CONFIG VALUES
                 gangTracker.pushMember(name);
             }
         }
-        deltaT = await ns.gang.nextUpdate();
-        gangTracker.tick(deltaT);
+        await ns.gang.nextUpdate();
+        gangTracker.tick();
     }
 }
 class GangTracker extends StatTracker {
@@ -73,11 +78,11 @@ class GangTracker extends StatTracker {
     pushMember(name) {
         this.members[name] = new MemberTracker(this.ns, name);
     }
-    tick(deltaT) {
+    tick() {
         const gangInfo = this.ns.gang.getGangInformation();
         this.update(gangInfo);
         for (const name in this.members) {
-            this.members[name].tick(deltaT);
+            this.members[name].tick();
         }
     }
 }
@@ -106,7 +111,7 @@ class MemberTracker {
     whenAscensionVelocity(stat, condition, threshold) {
         return this.ascensionTracker.whenVelocity(stat, condition, threshold);
     }
-    tick(deltaT) {
+    tick() {
         this.info = this.ns.gang.getMemberInformation(this.name);
         this.infoTracker.update(this.info);
         this.ascension = this.ns.gang.getAscensionResult(this.name);
@@ -120,18 +125,14 @@ class MemberTracker {
     }
 }
 async function trainMember(ns, name, tracker) {
-    let running = true;
-    ns.atExit(() => {
-        running = false;
-    }, `trainMember-${name}-cleanup`);
-    while (running) {
+    while (ns.alive.isAlive()) {
         buyEquipment(ns, name);
-        await setTask(ns, name, "Train Hacking");
-        await tracker.whenVelocity("hack", Condition.LessThan, () => CONFIG.hackTrainVelocity);
-        await setTask(ns, name, "Train Combat");
-        await tracker.whenVelocity("dex", Condition.LessThan, () => CONFIG.combatTrainVelocity);
-        await setTask(ns, name, "Train Charisma");
-        await tracker.whenVelocity("cha", Condition.LessThan, () => CONFIG.charismaTrainVelocity);
+        await setTask(ns, name, 'Train Hacking');
+        await tracker.whenVelocity('hack', Condition.LessThan, () => CONFIG.hackTrainVelocity);
+        await setTask(ns, name, 'Train Combat');
+        await tracker.whenVelocity('dex', Condition.LessThan, () => CONFIG.combatTrainVelocity);
+        await setTask(ns, name, 'Train Charisma');
+        await tracker.whenVelocity('cha', Condition.LessThan, () => CONFIG.charismaTrainVelocity);
         if (ns.gang.ascendMember(name))
             tracker.reset();
         await ns.gang.nextUpdate();
@@ -149,7 +150,7 @@ function buyEquipment(ns, name) {
     for (const e of allEquipment) {
         const type = ns.gang.getEquipmentType(e);
         // Skip augments
-        if (type === "Augments")
+        if (type === 'Augments')
             continue;
         ns.gang.purchaseEquipment(name, e);
     }

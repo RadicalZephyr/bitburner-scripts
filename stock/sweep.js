@@ -1,33 +1,41 @@
-import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
-import { parseAndRegisterAlloc } from "services/client/memory";
-import { CONFIG } from "stock/config";
-import { simulateTrades } from "stock/backtest";
+import { parseFlags } from 'util/flags';
+import { readStoredTickData } from 'stock/data';
+import { simulateTrades } from 'stock/backtest';
+import { CONFIG } from 'stock/config';
+const FLAGS = [
+    ['cash', 1_000_000],
+    ['help', false],
+];
+export function autocomplete(data) {
+    data.flags(FLAGS);
+    return [];
+}
 export async function main(ns) {
-    const flags = ns.flags([
-        ["cash", 1_000_000],
-        ["help", false],
-        ...MEM_TAG_FLAGS
-    ]);
+    const flags = await parseFlags(ns, FLAGS);
     if (flags.help) {
-        ns.tprint(`USAGE: run ${ns.getScriptName()} [--cash CASH]`);
-        ns.tprint("Sweep parameter combinations for backtesting.");
+        ns.tprint(`
+USAGE: run ${ns.getScriptName()} [--cash CASH]
+
+Try multiple parameter combos for the stock backtester.
+
+Example:
+  > run ${ns.getScriptName()} --cash 1000000
+
+OPTIONS
+  --cash  Starting cash for the sweep
+  --help  Show this help message
+
+CONFIGURATION
+  STOCK_dataPath     Directory containing tick data
+  STOCK_maxPosition  Maximum shares per symbol
+  STOCK_cooldownMs   Cooldown between trades
+`);
         return;
     }
-    const allocationId = await parseAndRegisterAlloc(ns, flags);
-    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
-        return;
-    }
-    const dataPath = CONFIG.dataPath;
     const symbols = ns.stock.getSymbols();
     const ticks = {};
     for (const sym of symbols) {
-        const path = `${dataPath}${sym}.json`;
-        if (ns.fileExists(path)) {
-            ticks[sym] = JSON.parse(ns.read(path));
-        }
-        else {
-            ticks[sym] = [];
-        }
+        ticks[sym] = readStoredTickData(ns, sym);
     }
     const buyOpts = [5, 10, 20];
     const sellOpts = [80, 90, 95];

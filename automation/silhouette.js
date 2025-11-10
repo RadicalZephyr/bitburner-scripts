@@ -1,0 +1,55 @@
+import { parseFlags } from 'util/flags';
+import { bestJob } from 'automation/company-work';
+import { exitOnKill } from 'util/exitOnKill';
+const FLAGS = [['help', false]];
+export function autocomplete(data) {
+    data.flags(FLAGS);
+    return [];
+}
+export async function main(ns) {
+    const flags = await parseFlags(ns, FLAGS);
+    if (flags.help) {
+        ns.tprint(`
+USAGE: run ${ns.getScriptName()}
+
+{{ description }}
+
+Example:
+  > {{ exampleUsages }}
+
+OPTIONS
+  --help   Show this help message
+  {{ other FLAGS options }}
+
+CONFIGURATION
+  {{ CONFIG values used }}
+`);
+        return;
+    }
+    const company = ns.enums.CompanyName.BachmanAndAssociates;
+    await workFor(ns, company);
+    ns.spawn('/automation/faction-work.js', { threads: 1, spawnDelay: 0 });
+}
+async function workFor(ns, companyName) {
+    const chiefRe = /^Chief/;
+    const sing = ns.singularity;
+    while (true) {
+        const myJobs = ns.getPlayer().jobs;
+        // @ts-expect-error: I don't care because this script is going away
+        if (chiefRe.test(myJobs[companyName]))
+            return;
+        const job = bestJob(ns, companyName);
+        if (!job)
+            throw new Error(`No jobs to work at ${companyName}`);
+        if (myJobs[companyName] !== job.name) {
+            if (!sing.applyToCompany(companyName, job.field)) {
+                ns.print(`WARN: failed to apply to ${companyName}`);
+            }
+        }
+        if (!sing.workForCompany(companyName, false)) {
+            ns.print(`WARN: failed to start work for ${companyName}`);
+            return;
+        }
+        return exitOnKill(ns);
+    }
+}

@@ -15,25 +15,31 @@ The intervals must be returned in ASCENDING order. You can assume that
 in an interval, the first number will always be smaller than the
 second.
 */
-import { MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { parseFlags } from 'util/flags';
+import { isArrayOf, isNumber, isTuple } from 'util/validate';
 export async function main(ns) {
-    const flags = ns.flags(MEM_TAG_FLAGS);
-    let scriptName = ns.getScriptName();
-    let contractPortNum = ns.args[0];
+    await parseFlags(ns, []);
+    const scriptName = ns.getScriptName();
+    const contractPortNum = ns.args[0];
     if (typeof contractPortNum !== 'number') {
         ns.tprintf('%s contract run with non-number answer port argument', scriptName);
         return;
     }
-    let contractDataJSON = ns.args[1];
+    const contractDataJSON = ns.args[1];
     if (typeof contractDataJSON !== 'string') {
         ns.tprintf('%s contract run with non-string data argument. Must be a JSON string containing file, host and contract data.', scriptName);
         return;
     }
-    let contractData = JSON.parse(contractDataJSON);
+    const contractData = JSON.parse(contractDataJSON);
+    if (!isContractData(contractData)) {
+        ns.writePort(contractPortNum, JSON.stringify(null));
+        return;
+    }
     ns.tprintf('contract data: %s', JSON.stringify(contractData));
-    let answer = solve(contractData);
+    const answer = solve(contractData);
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
+const isContractData = isArrayOf(isTuple(isNumber, isNumber));
 export function solve(data) {
     data.sort((b, c) => b[1] - c[1]);
     data.sort((b, c) => b[0] - c[0]);
@@ -43,7 +49,7 @@ function mergeRanges(acc, next) {
     if (acc.length == 0) {
         return [next];
     }
-    let last = acc.at(-1);
+    const last = acc.at(-1);
     // Sorting means that `last[0] <= next[0]`, so checking if
     // next.start < last.end means these two ranges overlap.
     if (next[0] <= last[1]) {

@@ -1,43 +1,124 @@
-import { AGRI_DIVISION, CITIES, CORPORATION_NAME } from "corp/constants";
+import { parseFlags } from 'util/flags';
+import { AGRI_DIVISION, CITIES, CORPORATION_NAME } from 'corp/constants';
+import { DispatchClient } from 'services/client/dispatch';
+const FLAGS = [
+    ['self-fund', false],
+    ['help', false],
+];
+export function autocomplete(data) {
+    data.flags(FLAGS);
+    return [];
+}
 export async function main(ns) {
-    const flags = ns.flags([
-        ['self', false],
-        ['help', false]
-    ]);
-    if ((typeof flags.help !== 'boolean' && flags.help) || typeof flags.self !== 'boolean') {
+    const flags = await parseFlags(ns, FLAGS);
+    if (flags.help) {
         ns.tprint(`
 USAGE: run ${ns.getScriptName()}
 
 Create our corporation and initial agriculture division.
 
 OPTIONS
-  --help Display this help message
-  --self Self fund starting your corporation (need +$150 billion)
+  --help       Display this help message
+  --self-fund  Self fund starting your corporation (need +$150 billion)
 
 Example:
   > run ${ns.getScriptName()}
 `);
         return;
     }
-    const selfFund = flags.self;
-    const corp = ns.corporation;
-    if (!corp.hasCorporation()) {
-        if (!corp.canCreateCorporation(selfFund)) {
-            ns.tprint("not in a corporation!");
+    await initCorporation(ns, flags['self-fund']);
+}
+async function initCorporation(ns, selfFund) {
+    const _ns = new DispatchClient(ns).asNs();
+    if (!ns.corporation.hasCorporation()) {
+        if (!(await _ns('corporation.canCreateCorporation', selfFund))) {
+            const description = selfFund
+                ? 'by self-funding'
+                : 'with government seed money';
+            ns.ui.openTail();
+            ns.print(`ERROR: cannot create a corporation ${description}`);
             return;
         }
-        if (!corp.createCorporation(CORPORATION_NAME, selfFund)) {
-            ns.tprint("could not create corporation, you may need to self-fund it!");
+        if (!(await _ns('corporation.createCorporation', CORPORATION_NAME, selfFund))) {
+            ns.ui.openTail();
+            ns.print('could not create corporation, you may need to self-fund it!');
             return;
         }
     }
-    const c = corp.getCorporation();
-    if (-1 === c.divisions.findIndex(d => d === AGRI_DIVISION)) {
-        corp.expandIndustry("Agriculture", AGRI_DIVISION);
+    const c = await _ns('corporation.getCorporation');
+    const divisions = await Promise.all(c.divisions.map((name) => _ns('corporation.getDivision', name)));
+    let agriDivision = divisions.find((d) => d.type === 'Agriculture');
+    if (!agriDivision) {
+        await _ns('corporation.expandIndustry', 'Agriculture', AGRI_DIVISION);
+        agriDivision = await _ns('corporation.getDivision', AGRI_DIVISION);
+        if (!agriDivision) {
+            ns.ui.openTail();
+            ns.print(`WARN: Could not expand into Agriculture`);
+            return;
+        }
     }
+    const adCount = await _ns('corporation.getHireAdVertCount', agriDivision.name);
+    for (let i = adCount; i < 2; i++) {
+        await _ns('corporation.hireAdVert', agriDivision.name);
+    }
+    const agriCities = new Set(agriDivision.cities);
     for (const city of CITIES) {
-        corp.expandCity(AGRI_DIVISION, city);
-        corp.getWarehouse(AGRI_DIVISION, city);
-        corp.upgradeOfficeSize(AGRI_DIVISION, city, 4);
+        if (!agriCities.has(city)) {
+            await _ns('corporation.expandCity', agriDivision.name, city);
+        }
+        const office = await _ns('corporation.getOffice', agriDivision.name, city);
+        if (!office) {
+            ns.ui.openTail();
+            ns.print(`WARN: Could not open a ${agriDivision.name} office in ${city}`);
+            return;
+        }
+        if (office.size < 4) {
+            const seatsToAdd = Math.max(0, 4 - office.size);
+            await _ns('corporation.upgradeOfficeSize', agriDivision.name, city, seatsToAdd);
+        }
+        for (let i = office.numEmployees; i < 4; i++) {
+            await _ns('corporation.hireEmployee', agriDivision.name, city);
+        }
+        for (const job in office.employeeJobs) {
+            if (office.employeeJobs[job] === 0)
+                continue;
+            await _ns('corporation.setAutoJobAssignment', agriDivision.name, city, job, 0);
+        }
+        await _ns('corporation.setAutoJobAssignment', agriDivision.name, city, 'Research & Development', 4);
+        let warehouse = await _ns('corporation.getWarehouse', agriDivision.name, city);
+        if (!warehouse) {
+            await _ns('corporation.purchaseWarehouse', agriDivision.name, city);
+            warehouse = await _ns('corporation.getWarehouse', agriDivision.name, city);
+            if (!warehouse) {
+                ns.ui.openTail();
+                ns.print(`WARN: could not buy warehouse for ${agriDivision.name} in ${city}`);
+                return;
+            }
+        }
+        for (let i = warehouse.level; i < 2; i++) {
+            await _ns('corporation.upgradeWarehouse', agriDivision.name, city);
+        }
+    }
+    while (agriDivision.researchPoints < 55) {
+        await ns.sleep(1000);
+        agriDivision = await _ns('corporation.getDivision', agriDivision.name);
+    }
+    for (const city of agriDivision.cities) {
+        const office = await _ns('corporation.getOffice', agriDivision.name, city);
+        // Remove workers from current jobs
+        for (const job in office.employeeJobs) {
+            if (office.employeeJobs[job] === 0)
+                continue;
+            await _ns('corporation.setAutoJobAssignment', agriDivision.name, city, job, 0);
+        }
+        const jobs = [
+            'Operations',
+            'Engineer',
+            'Business',
+            'Management',
+        ];
+        for (const job of jobs) {
+            await _ns('corporation.setAutoJobAssignment', agriDivision.name, city, job, 1);
+        }
     }
 }

@@ -1,64 +1,83 @@
-import { MEM_TAG_FLAGS } from "services/client/memory_tag";
-import { collectDependencies } from "util/dependencies";
+import { parseFlags } from 'util/flags';
+import { LaunchClient } from 'services/client/launch';
+import { getSourceFileLevel } from 'services/client/reset-info';
+import { collectDependencies } from 'util/dependencies';
+// NOTE: These flags _must_ be the same as in the root bootstrap script
+// because we import and run this main function it sees the same
+// arguments as the root bootstrap script received.
+const FLAGS = [
+    ['minimal', false],
+    ['help', false],
+];
+export function autocomplete(data) {
+    data.flags(FLAGS);
+    return [];
+}
 export async function main(ns) {
-    const flags = ns.flags(MEM_TAG_FLAGS);
-    const host = ns.self().server;
+    const flags = await parseFlags(ns, FLAGS);
+    const hostArg = flags._.length > 0 && typeof flags._[0] === 'string'
+        ? flags._[0]
+        : null;
+    const host = hostArg ?? ns.self().server;
     // We start the Discovery service first because everything else
     // needs the hosts and targets that it finds and cracks.
-    await startDiscover(ns, host);
+    startService(ns, '/services/discover.js', host);
     await ns.sleep(500);
-    await startMemory(ns, host);
-    await startPort(ns, host);
-    await startUpdater(ns, "n00dles");
-}
-async function startMemory(ns, host) {
-    const memoryScript = "/services/memory.js";
-    const memory = ns.getRunningScript(memoryScript, host);
-    if (memory !== null) {
-        ns.kill(memory.pid);
+    startService(ns, '/services/memory.js', host);
+    startService(ns, '/services/launcher.js', host);
+    startService(ns, '/services/terminal.js', host);
+    startService(ns, '/services/player-and-money.js', host);
+    const client = new LaunchClient(ns);
+    const essentialServices = [
+        '/services/port.js',
+        '/services/reset-info.js',
+        '/services/dispatch-init.js',
+    ];
+    for (const script of essentialServices) {
+        await client.launch(script, {
+            threads: 1,
+            preventDuplicates: true,
+            alloc: { longRunning: true },
+        });
     }
-    manualLaunch(ns, memoryScript, host);
-}
-async function startDiscover(ns, host) {
-    const discoverScript = "/services/discover.js";
-    const discover = ns.getRunningScript(discoverScript, host);
-    if (discover !== null) {
-        ns.kill(discover.pid);
+    if (flags.minimal)
+        return;
+    startService(ns, '/services/updater.js', 'n00dles');
+    const sf4 = getSourceFileLevel(4);
+    if (sf4 === 0) {
+        await client.launch('/services/backdoor-notify.js', {
+            threads: 1,
+            preventDuplicates: true,
+            alloc: { longRunning: true },
+        });
     }
-    manualLaunch(ns, discoverScript, host);
 }
-async function startUpdater(ns, host) {
-    const updaterScript = "/services/updater.js";
-    const updater = ns.getRunningScript(updaterScript, host);
-    if (updater !== null) {
-        ns.kill(updater.pid);
+function startService(ns, script, host) {
+    const scriptInfo = ns.getRunningScript(script, host);
+    if (scriptInfo !== null) {
+        ns.kill(scriptInfo.pid);
     }
-    manualLaunch(ns, updaterScript, host);
-}
-async function startPort(ns, host) {
-    const portScript = "/services/port.js";
-    const portAllocator = ns.getRunningScript(portScript, host);
-    if (portAllocator !== null) {
-        ns.kill(portAllocator.pid);
-    }
-    manualLaunch(ns, portScript, host);
+    manualLaunch(ns, script, host);
 }
 function manualLaunch(ns, script, hostname) {
-    let dependencies = collectDependencies(ns, script);
-    let files = [script, ...dependencies];
-    if (!ns.scp(files, hostname, "home")) {
-        let error = `failed to send files to ${hostname}`;
-        ns.toast(error, "error");
+    const dependencies = collectDependencies(ns, script);
+    const files = [script, ...dependencies];
+    if (!ns.scp(files, hostname, 'home')) {
+        const error = `failed to send files to ${hostname}`;
+        ns.toast(error, 'error');
         ns.print(`ERROR: ${error}`);
         ns.ui.openTail();
-        return;
+        throw new Error(error);
     }
-    let pid = ns.exec(script, hostname);
+    const pid = ns.exec(script, hostname, {
+        threads: 1,
+        preventDuplicates: true,
+    });
     if (pid === 0) {
-        let error = `failed to launch ${script} on ${hostname}`;
-        ns.toast(error, "error");
+        const error = `failed to launch ${script} on ${hostname}`;
+        ns.toast(error, 'error');
         ns.print(`ERROR: ${error}`);
         ns.ui.openTail();
-        return;
+        throw new Error(error);
     }
 }

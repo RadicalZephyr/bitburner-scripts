@@ -1,7 +1,15 @@
-import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
-import { parseAndRegisterAlloc } from "services/client/memory";
-import { CONFIG } from "stock/config";
-import { computeIndicators } from "stock/indicators";
+import { parseFlags } from 'util/flags';
+import { readStoredTickData } from 'stock/data';
+import { computeIndicators } from 'stock/indicators';
+import { CONFIG } from 'stock/config';
+const FLAGS = [
+    ['cash', 1_000_000],
+    ['help', false],
+];
+export function autocomplete(data) {
+    data.flags(FLAGS);
+    return [];
+}
 /**
  * Run a backtest simulation with the given tick data.
  */
@@ -13,7 +21,7 @@ export function simulateTrades(ticks, params, initialCash) {
     let cash = initialCash;
     let trades = 0;
     const timeline = [];
-    const maxLen = Math.max(...symbols.map(s => ticks[s].length));
+    const maxLen = Math.max(...symbols.map((s) => ticks[s].length));
     for (let i = 0; i < maxLen; i++) {
         let tradePnl = 0;
         for (const sym of symbols) {
@@ -31,13 +39,15 @@ export function simulateTrades(ticks, params, initialCash) {
             if (lastTrade[sym] && now - lastTrade[sym] < params.cooldownMs) {
                 continue;
             }
-            const price = (history[history.length - 1].askPrice + history[history.length - 1].bidPrice) / 2;
+            const price = (history[history.length - 1].askPrice
+                + history[history.length - 1].bidPrice)
+                / 2;
             const buyThresh = info.percentiles[params.buyPct];
             const sellThresh = info.percentiles[params.sellPct];
             const shares = holdings[sym] ?? 0;
-            if (info.zScore < -params.threshold &&
-                price <= buyThresh &&
-                shares < params.maxPosition) {
+            if (info.zScore < -params.threshold
+                && price <= buyThresh
+                && shares < params.maxPosition) {
                 const toBuy = params.maxPosition - shares;
                 const cost = toBuy * price;
                 if (cash >= cost) {
@@ -48,9 +58,9 @@ export function simulateTrades(ticks, params, initialCash) {
                     lastTrade[sym] = now;
                 }
             }
-            else if (info.zScore > params.threshold &&
-                price >= sellThresh &&
-                shares > 0) {
+            else if (info.zScore > params.threshold
+                && price >= sellThresh
+                && shares > 0) {
                 const proceeds = shares * price;
                 cash += proceeds;
                 const basis = costBasis[sym] ?? 0;
@@ -84,31 +94,37 @@ export function simulateTrades(ticks, params, initialCash) {
     return { result, timeline };
 }
 export async function main(ns) {
-    const flags = ns.flags([
-        ["cash", 1_000_000],
-        ["help", false],
-        ...MEM_TAG_FLAGS
-    ]);
+    const flags = await parseFlags(ns, FLAGS);
     if (flags.help) {
-        ns.tprint(`USAGE: run ${ns.getScriptName()} [--cash CASH]`);
-        ns.tprint("Simulate trades using historical tick data.");
+        ns.tprint(`
+USAGE: run ${ns.getScriptName()} [--cash CASH]
+
+Simulate trading performance using historical tick data.
+
+Example:
+  > run ${ns.getScriptName()} --cash 1000000
+
+OPTIONS
+  --cash  Starting cash for the simulation
+  --help  Show this help message
+
+CONFIGURATION
+  STOCK_smaPeriod       Period for simple moving average
+  STOCK_emaPeriod       Period for exponential moving average
+  STOCK_rocPeriod       Period for rate-of-change
+  STOCK_bollingerK      Bollinger band K value
+  STOCK_dataPath        Directory containing tick data
+  STOCK_buyPercentile   Percentile threshold for buys
+  STOCK_sellPercentile  Percentile threshold for sells
+  STOCK_maxPosition     Maximum shares per symbol
+  STOCK_cooldownMs      Cooldown between trades on a symbol
+`);
         return;
     }
-    const allocationId = await parseAndRegisterAlloc(ns, flags);
-    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
-        return;
-    }
-    const dataPath = CONFIG.dataPath;
     const symbols = ns.stock.getSymbols();
     const ticks = {};
     for (const sym of symbols) {
-        const path = `${dataPath}${sym}.json`;
-        if (ns.fileExists(path)) {
-            ticks[sym] = JSON.parse(ns.read(path));
-        }
-        else {
-            ticks[sym] = [];
-        }
+        ticks[sym] = readStoredTickData(ns, sym);
     }
     const params = {
         threshold: 2,

@@ -1,19 +1,20 @@
-import { ALLOC_ID, ALLOC_ID_ARG, MEM_TAG_FLAGS } from "services/client/memory_tag";
-import { TaskSelectorClient, Lifecycle } from "batch/client/task_selector";
-import { GrowableMemoryClient } from "services/client/growable_memory";
-import { parseAndRegisterAlloc } from "services/client/memory";
-import { CONFIG } from "batch/config";
-import { awaitRound, calculateRoundInfo } from "batch/progress";
-export function autocomplete(data, _args) {
+import { parseFlags } from 'util/flags';
+import { TaskSelectorClient, Lifecycle } from 'batch/client/task_selector';
+import { awaitRound, calculateRoundInfo } from 'batch/progress';
+import { GrowableMemoryClient } from 'services/client/growable_memory';
+import { ALLOC_ID_ARG } from 'services/client/memory_tag';
+import { CONFIG } from 'batch/config';
+const FLAGS = [
+    ['max-threads', -1],
+    ['help', false],
+];
+export function autocomplete(data) {
+    data.flags(FLAGS);
     return data.servers;
 }
 export async function main(ns) {
+    const flags = await parseFlags(ns, FLAGS);
     ns.disableLog('ALL');
-    const flags = ns.flags([
-        ['max-threads', -1],
-        ['help', false],
-        ...MEM_TAG_FLAGS
-    ]);
     const rest = flags._;
     if (rest.length === 0 || flags.help) {
         ns.tprint(`
@@ -27,14 +28,13 @@ Example:
 OPTIONS
   --help           Show this help message
   --max-threads    Cap the number of threads spawned
+
+CONFIGURATION
+  BATCH_heartbeatCadence  Interval between heartbeat messages
 `);
         return;
     }
-    const allocationId = await parseAndRegisterAlloc(ns, flags);
-    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
-        return;
-    }
-    let maxThreads = flags['max-threads'];
+    const maxThreads = flags['max-threads'];
     if (maxThreads !== -1) {
         if (typeof maxThreads !== 'number' || maxThreads <= 0) {
             ns.tprint('--max-threads must be a positive number');
@@ -42,32 +42,32 @@ OPTIONS
             return;
         }
     }
-    let target = rest[0];
+    const target = rest[0];
     if (typeof target !== 'string' || !ns.serverExists(target)) {
-        ns.tprintf("target %s does not exist", target);
+        ns.tprintf('target %s does not exist', target);
         return;
     }
     const taskSelectorClient = new TaskSelectorClient(ns);
     const memClient = new GrowableMemoryClient(ns);
-    const script = "/batch/w.js";
-    const scriptRam = ns.getScriptRam(script, "home");
+    const script = '/batch/w.js';
+    const scriptRam = ns.getScriptRam(script, 'home');
     let maxThreadsCap = calculateWeakenThreads(ns, target);
     if (maxThreads !== -1) {
         maxThreadsCap = Math.min(maxThreadsCap, maxThreads);
     }
     if (maxThreadsCap === 0 || isNaN(maxThreadsCap)) {
-        ns.printf("%s security is already at minimum level", target);
-        ns.toast(`finished tilling ${target}!`, "success");
-        taskSelectorClient.finishedTilling(target);
+        ns.printf('%s security is already at minimum level', target);
+        ns.toast(`finished tilling ${target}!`, 'success');
+        void taskSelectorClient.finishedTilling(target);
         return;
     }
-    let requestThreads = maxThreadsCap;
-    let allocation = await memClient.requestGrowableAllocation(scriptRam, requestThreads, {
+    const requestThreads = maxThreadsCap;
+    const allocation = await memClient.requestGrowableAllocation(scriptRam, requestThreads, {
         coreDependent: true,
         shrinkable: true,
     });
     if (!allocation) {
-        ns.tprint("ERROR: failed to allocate memory for weaken threads");
+        ns.tprint('ERROR: failed to allocate memory for weaken threads');
         return;
     }
     // Send a Till Heartbeat to indicate we're starting the main loop
@@ -79,7 +79,7 @@ OPTIONS
     while (threadsNeeded > 0) {
         round += 1;
         const roundsRemaining = Math.ceil(threadsNeeded / totalThreads);
-        const totalRounds = (round - 1) + roundsRemaining;
+        const totalRounds = round - 1 + roundsRemaining;
         const info = calculateRoundInfo(ns, target, round, totalRounds, roundsRemaining);
         const spawnThreads = Math.min(threadsNeeded, totalThreads);
         const pids = await allocation.launch(script, { threads: spawnThreads, temporary: true }, target, 0, ALLOC_ID_ARG, allocation.allocationId);
@@ -88,16 +88,16 @@ OPTIONS
         threadsNeeded = calculateWeakenThreads(ns, target);
     }
     await allocation.release(ns);
-    ns.toast(`finished tilling ${target}!`, "success");
-    taskSelectorClient.finishedTilling(target);
+    ns.toast(`finished tilling ${target}!`, 'success');
+    void taskSelectorClient.finishedTilling(target);
 }
 /** Calculate the number of weaken threads required to bring
  *  `target` back to its minimum security level.
  */
 export function calculateWeakenThreads(ns, target) {
-    let minSec = ns.getServerMinSecurityLevel(target);
-    let curSec = ns.getServerSecurityLevel(target);
-    let deltaSec = curSec - minSec;
+    const minSec = ns.getServerMinSecurityLevel(target);
+    const curSec = ns.getServerSecurityLevel(target);
+    const deltaSec = curSec - minSec;
     if (deltaSec <= 0 || isNaN(deltaSec))
         return 0;
     return Math.ceil(deltaSec * 20);

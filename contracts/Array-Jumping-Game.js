@@ -14,33 +14,39 @@ determine whether you are able to reach the last index.
 Your answer should be submitted as 1 or 0, representing true and false
 respectively
  */
-import { MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { parseFlags } from 'util/flags';
+import { isArrayOf, isNumber } from 'util/validate';
 export async function main(ns) {
-    const flags = ns.flags(MEM_TAG_FLAGS);
-    let scriptName = ns.getScriptName();
-    let contractPortNum = ns.args[0];
+    await parseFlags(ns, []);
+    const scriptName = ns.getScriptName();
+    const contractPortNum = ns.args[0];
     if (typeof contractPortNum !== 'number') {
         ns.tprintf('%s contract run with non-number answer port argument', scriptName);
         return;
     }
-    let contractDataJSON = ns.args[1];
+    const contractDataJSON = ns.args[1];
     if (typeof contractDataJSON !== 'string') {
         ns.tprintf('%s contract run with non-string data argument. Must be a JSON string containing file, host and contract data.', scriptName);
         return;
     }
-    let contractData = JSON.parse(contractDataJSON);
+    const contractData = JSON.parse(contractDataJSON);
+    if (!isContractData(contractData)) {
+        ns.writePort(contractPortNum, JSON.stringify(null));
+        return;
+    }
     ns.tprintf('contract data: %s', JSON.stringify(contractData));
-    let answer = solve(contractData);
+    const answer = solve(contractData);
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
+const isContractData = isArrayOf(isNumber);
 export function solve(data) {
     return jump(data, 0) ? 1 : 0;
 }
 function jump(a, i) {
-    let maxJumps = a[i];
-    let maxIndex = i + maxJumps;
+    const maxJumps = a[i];
+    const maxIndex = i + maxJumps;
     // Base case, we can reach the end in one jump.
-    if (maxIndex >= (a.length - 1)) {
+    if (maxIndex >= a.length - 1) {
         return true;
     }
     // Now we know we can't directly reach the end from this start

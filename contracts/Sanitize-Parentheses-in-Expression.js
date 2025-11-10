@@ -19,59 +19,64 @@ IMPORTANT: The string may contain letters, not just parentheses. Examples:
 ")(" -> [""]
 ```
  */
-import { MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { parseFlags } from 'util/flags';
+import { isString } from 'util/validate';
 export async function main(ns) {
-    const flags = ns.flags(MEM_TAG_FLAGS);
-    let scriptName = ns.getScriptName();
-    let contractPortNum = ns.args[0];
+    await parseFlags(ns, []);
+    const scriptName = ns.getScriptName();
+    const contractPortNum = ns.args[0];
     if (typeof contractPortNum !== 'number') {
         ns.tprintf('%s contract run with non-number answer port argument', scriptName);
         return;
     }
-    let contractDataJSON = ns.args[1];
+    const contractDataJSON = ns.args[1];
     if (typeof contractDataJSON !== 'string') {
         ns.tprintf('%s contract run with non-string data argument. Must be a JSON string containing file, host and contract data.', scriptName);
         return;
     }
-    let contractData = JSON.parse(contractDataJSON);
+    const contractData = JSON.parse(contractDataJSON);
+    if (!isString(contractData)) {
+        ns.writePort(contractPortNum, JSON.stringify(null));
+        return;
+    }
     ns.tprintf('contract data: %s', JSON.stringify(contractData));
-    let answer = solve(contractData);
+    const answer = solve(contractData);
     ns.writePort(contractPortNum, JSON.stringify(answer));
 }
 export function solve(data) {
     if (areParensBalanced(data)) {
         return [data];
     }
-    let parenPositions = findParenPositions(data);
-    let solutions = uniqueBalancedParens(data, parenPositions.map((x) => [x]));
+    const parenPositions = findParenPositions(data);
+    const solutions = uniqueBalancedParens(data, parenPositions.map((x) => [x]));
     if (solutions.length > 0) {
         return solutions;
     }
     for (let m = 2; m < parenPositions.length; m++) {
-        let idxChoices = [...choose(parenPositions, m)];
-        let solutions = uniqueBalancedParens(data, idxChoices);
+        const idxChoices = [...choose(parenPositions, m)];
+        const solutions = uniqueBalancedParens(data, idxChoices);
         if (solutions.length > 0) {
             return solutions;
         }
     }
-    return [data.replaceAll(/[()]/g, "")];
+    return [data.replaceAll(/[()]/g, '')];
 }
 function uniqueBalancedParens(data, idxChoices) {
-    let balancedParens = idxChoices
+    const balancedParens = idxChoices
         .map((is) => {
         is.sort((a, b) => b - a);
-        let s = data.split('');
+        const s = data.split('');
         for (const i of is) {
             s.splice(i, 1);
         }
         return s.join('');
     })
-        .filter(s => areParensBalanced(s));
-    let uniqueBalancedParens = new Set(balancedParens);
+        .filter((s) => areParensBalanced(s));
+    const uniqueBalancedParens = new Set(balancedParens);
     return [...uniqueBalancedParens];
 }
 function findParenPositions(s) {
-    return [...s.matchAll(/([()])/g)].map(m => m.index);
+    return [...s.matchAll(/([()])/g)].map((m) => m.index);
 }
 function areParensBalanced(s) {
     let count = 0;
@@ -89,15 +94,15 @@ function areParensBalanced(s) {
     return count === 0;
 }
 function* choose(a, m) {
-    let n = a.length;
-    let c = [];
+    const n = a.length;
+    const c = [];
     for (let i = 0; i != m; i++) {
         c.push(a[n - m + i]);
     }
     yield [...c];
-    let p = initTwiddle(m, n);
+    const p = initTwiddle(m, n);
     while (true) {
-        let [done, x, _y, z] = twiddle(p);
+        const [done, x, , z] = twiddle(p);
         if (done) {
             return;
         }
@@ -106,7 +111,7 @@ function* choose(a, m) {
     }
 }
 function initTwiddle(m, n) {
-    let p = [];
+    const p = [];
     p.push(n + 1);
     let i;
     for (i = 1; i != n - m + 1; i++) {
@@ -123,7 +128,7 @@ function initTwiddle(m, n) {
     return p;
 }
 function twiddle(p) {
-    let x, y, z;
+    let x = 0, y = 0, z = 0;
     let done = false;
     let j = 1;
     while (p[j] <= 0) {
@@ -146,7 +151,7 @@ function twiddle(p) {
         do {
             j++;
         } while (p[j] > 0);
-        let k = j - 1;
+        const k = j - 1;
         let i = j;
         while (p[i] == 0) {
             p[i++] = -1;

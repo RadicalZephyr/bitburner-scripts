@@ -5,13 +5,16 @@ export var Condition;
 })(Condition || (Condition = {}));
 function compareBy(condition) {
     switch (condition) {
-        case Condition.GreaterThan:
+        case Condition.GreaterThan: {
             return (a, b) => a > b;
-        case Condition.LessThan:
+        }
+        case Condition.LessThan: {
             return (a, b) => a < b;
-        default:
+        }
+        default: {
             const _exhaustiveCheck = condition;
             return _exhaustiveCheck;
+        }
     }
 }
 export function pickByType(obj, isV) {
@@ -19,7 +22,7 @@ export function pickByType(obj, isV) {
     for (const key in obj) {
         const val = obj[key];
         if (isV(val)) {
-            // TS knows `key` is one of the ValueFilter keys
+            // @ts-expect-error: We know `key` is one of the keys from T
             result[key] = val;
         }
     }
@@ -28,7 +31,7 @@ export function pickByType(obj, isV) {
 function sample(obj, t) {
     return {
         t: t ?? Date.now(),
-        ...pickByType(obj, (v) => typeof v === 'number')
+        ...pickByType(obj, (v) => typeof v === 'number'),
     };
 }
 /**
@@ -40,13 +43,14 @@ export class StatTracker {
     listeners = [];
     velocityListeners = [];
     constructor(historyLen) {
-        this.historyLen = typeof historyLen === 'number' && historyLen >= 2 ? historyLen : 3;
+        this.historyLen =
+            typeof historyLen === 'number' && historyLen >= 2 ? historyLen : 3;
     }
     /**
      * Return the most recent value of the specified field.
      *
      * @param stat - The field to retrieve the most recent value of
-     * @returns Numeric value of the field, or null if no history exists yet
+     * @returns Numeric value of the field, or `1` if no history exists yet
      */
     value(stat) {
         if (this.history.length > 0) {
@@ -58,7 +62,7 @@ export class StatTracker {
      * Compute the velocity of the specified field.
      *
      * @param stat - The field to compute the velocity for
-     * @returns Numeric value of the velocity or null if not enough history exists
+     * @returns Numeric value of the velocity or zero if not enough history exists
      */
     velocity(stat) {
         if (this.history.length > 2) {
@@ -66,6 +70,31 @@ export class StatTracker {
             return velocity[stat];
         }
         return 0;
+    }
+    /**
+     * Compute the average velocity every N samples.
+     *
+     * @param n       - History window length to sample velocity at
+     * @param stat    - The field to compute the average velocity for
+     * @param epsilon - Minimum velocity absolute value to include in average
+     * @returns Numeric value of the averaged velocity or zero if not enough history exists
+     */
+    averageVelocity(n, stat, epsilon = 0.000001) {
+        if (this.history.length < 2)
+            return 0;
+        let velocitySum = 0;
+        let samples = 0;
+        for (let i = 0; i < this.history.length - n; i++) {
+            const v = computeVelocity(this.history[i], this.history[i + n]);
+            const statSample = v[stat];
+            if (Math.abs(statSample) > epsilon) {
+                velocitySum += statSample;
+                samples += 1;
+            }
+        }
+        if (samples === 0)
+            return 0;
+        return velocitySum / samples;
     }
     /**
      * Watches the value of the given field, resolving when it the
@@ -128,17 +157,18 @@ function computeVelocity(first, last) {
     for (const key in first) {
         if (key === 't')
             continue;
+        // @ts-expect-error: These values all have the same keys
         velocity[key] = (last[key] - first[key]) / deltaT;
     }
     return velocity;
 }
 function notifyListeners(s, listeners) {
-    let remaining = [];
+    const remaining = [];
     for (const l of listeners) {
         const stat = s[l.stat];
         const compare = compareBy(l.condition);
         const threshold = typeof l.threshold === 'function' ? l.threshold() : l.threshold;
-        if (typeof stat === "number" && compare(stat, threshold)) {
+        if (typeof stat === 'number' && compare(stat, threshold)) {
             l.resolve(stat);
         }
         else {

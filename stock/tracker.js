@@ -1,98 +1,95 @@
-import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
-import { CONFIG } from "stock/config";
-import { computeIndicators } from "stock/indicators";
-import { computeCorrelations } from "stock/indicators";
-import { TRACKER_PORT, TRACKER_RESPONSE_PORT, MessageType, } from "stock/client/tracker";
-import { parseAndRegisterAlloc } from "services/client/memory";
-import { readAllFromPort } from "util/ports";
+import { parseFlags } from 'util/flags';
+import { readStoredTickData } from 'stock/data';
+import { computeCorrelations, computeIndicators } from 'stock/indicators';
+import { TRACKER_PORT, TRACKER_RESPONSE_PORT, MessageType, TrackerProtocol, } from 'stock/client/tracker';
+import { BaseServer } from 'util/protocol';
+import { CONFIG } from 'stock/config';
+const FLAGS = [['help', false]];
 export async function main(ns) {
-    const flags = ns.flags([
-        ...MEM_TAG_FLAGS
-    ]);
-    const allocationId = await parseAndRegisterAlloc(ns, flags, "tracker");
-    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
+    const flags = await parseFlags(ns, FLAGS);
+    if (flags.help) {
+        ns.tprint(`
+USAGE: run ${ns.getScriptName()}
+
+Track live stock data and expose indicators via ports.
+
+OPTIONS
+  --help   Show this help message
+
+CONFIGURATION
+  STOCK_dataPath        Directory for persisting tick data
+  STOCK_windowSize      Number of ticks kept in memory
+  STOCK_smaPeriod       Simple moving average period
+  STOCK_emaPeriod       Exponential moving average period
+  STOCK_rocPeriod       Rate-of-change period
+  STOCK_bollingerK      Bollinger band K value
+  STOCK_buyPercentile   Buy percentile
+  STOCK_sellPercentile  Sell percentile
+`);
         return;
     }
-    ns.disableLog("ALL");
+    ns.disableLog('ALL');
     ns.ui.openTail();
-    const dataPath = CONFIG.dataPath;
     const symbols = ns.stock.getSymbols();
     const buffers = new Map();
     for (const sym of symbols) {
-        const path = `${dataPath}${sym}.json`;
-        let ticks = [];
-        if (ns.fileExists(path)) {
-            try {
-                const text = ns.read(path);
-                ticks = JSON.parse(text);
-            }
-            catch {
-                ticks = [];
-            }
-        }
+        const ticks = readStoredTickData(ns, sym);
         buffers.set(sym, ticks);
     }
-    const port = ns.getPortHandle(TRACKER_PORT);
-    const respPort = ns.getPortHandle(TRACKER_RESPONSE_PORT);
-    let waiting = true;
-    let stockUpdated = true;
+    const server = new Server(ns, buffers);
+    void server.readLoop();
     while (true) {
-        if (waiting) {
-            waiting = false;
-            port.nextWrite().then(() => { waiting = true; });
-            await processMessages(ns, port, respPort, buffers);
-        }
-        if (stockUpdated) {
-            stockUpdated = false;
-            ns.stock.nextUpdate().then(() => { stockUpdated = true; });
-            const windowSize = CONFIG.windowSize;
-            for (const sym of symbols) {
-                const tick = {
-                    ts: Date.now(),
-                    askPrice: ns.stock.getAskPrice(sym),
-                    bidPrice: ns.stock.getBidPrice(sym),
-                    volatility: ns.stock.getVolatility(sym),
-                    forecast: ns.stock.getForecast(sym),
-                };
-                const buf = buffers.get(sym);
-                buf.push(tick);
-                if (buf.length > windowSize) {
-                    buf.splice(0, buf.length - windowSize);
-                }
-                ns.write(`${dataPath}${sym}.json`, JSON.stringify(buf), "w");
+        const windowSize = CONFIG.windowSize;
+        for (const sym of symbols) {
+            const tick = {
+                ts: Date.now(),
+                askPrice: ns.stock.getAskPrice(sym),
+                bidPrice: ns.stock.getBidPrice(sym),
+                volatility: ns.stock.getVolatility(sym),
+                forecast: ns.stock.getForecast(sym),
+            };
+            const buf = buffers.get(sym);
+            buf.push(tick);
+            if (buf.length > windowSize) {
+                buf.splice(0, buf.length - windowSize);
             }
-            const percentiles = [CONFIG.buyPercentile, CONFIG.sellPercentile];
-            const stats = computeIndicators(buffers.get(symbols[0]), {
-                smaPeriods: [CONFIG.smaPeriod],
-                emaPeriods: [CONFIG.emaPeriod],
-                rocPeriods: [CONFIG.rocPeriod],
-                bollingerK: CONFIG.bollingerK,
-                percentiles,
-            });
-            const corr = computeCorrelations(Object.fromEntries(buffers));
-            ns.print(`INFO: ${symbols[0]} μ=${ns.formatNumber(stats.mean)} ` +
-                `median=${ns.formatNumber(stats.median)} ` +
-                `σ=${ns.formatNumber(stats.std)} ` +
-                `z=${ns.formatNumber(stats.zScore)} ` +
-                `roc=${ns.formatPercent(stats.roc[5])}`);
-            if (symbols.length > 1) {
-                ns.print(`INFO: corr ${symbols[0]}-${symbols[1]}=` +
-                    ns.formatPercent(corr[symbols[0]][symbols[1]]));
-            }
+            ns.write(`${CONFIG.dataPath}${sym}.json`, JSON.stringify(buf), 'w');
         }
-        await ns.sleep(100);
+        const percentiles = [CONFIG.buyPercentile, CONFIG.sellPercentile];
+        const stats = computeIndicators(buffers.get(symbols[0]), {
+            smaPeriods: [CONFIG.smaPeriod],
+            emaPeriods: [CONFIG.emaPeriod],
+            rocPeriods: [CONFIG.rocPeriod],
+            bollingerK: CONFIG.bollingerK,
+            percentiles,
+        });
+        const corr = computeCorrelations(Object.fromEntries(buffers));
+        ns.print(`INFO: ${symbols[0]} μ=${ns.formatNumber(stats.mean)} `
+            + `median=${ns.formatNumber(stats.median)} `
+            + `σ=${ns.formatNumber(stats.std)} `
+            + `z=${ns.formatNumber(stats.zScore)} `);
+        if (symbols.length > 1) {
+            ns.print(`INFO: corr ${symbols[0]}-${symbols[1]}=`
+                + ns.formatPercent(corr[symbols[0]][symbols[1]]));
+        }
+        await ns.stock.nextUpdate();
     }
 }
-async function processMessages(ns, port, respPort, buffers) {
-    for (const next of readAllFromPort(ns, port)) {
-        const msg = next;
-        const requestId = msg[1];
-        let response = null;
-        switch (msg[0]) {
-            case MessageType.RequestTicks:
-                response = Object.fromEntries(buffers);
-                break;
-            case MessageType.RequestIndicators:
+class Server extends BaseServer {
+    constructor(ns, buffers) {
+        const requestPort = ns.getPortHandle(TRACKER_PORT);
+        const responsePort = ns.getPortHandle(TRACKER_RESPONSE_PORT);
+        const handlers = {
+            [MessageType.RequestStockTicks]: (sym) => {
+                if (buffers.has(sym))
+                    return Promise.resolve(buffers.get(sym));
+                else
+                    throw new Error(`No stock symbol found for ${sym}`);
+            },
+            [MessageType.RequestAllTicks]: () => {
+                return Promise.resolve(Object.fromEntries(buffers));
+            },
+            [MessageType.RequestIndicators]: () => {
                 const res = {};
                 for (const [sym, buf] of buffers.entries()) {
                     res[sym] = computeIndicators(buf, {
@@ -100,14 +97,15 @@ async function processMessages(ns, port, respPort, buffers) {
                         emaPeriods: [CONFIG.emaPeriod],
                         rocPeriods: [CONFIG.rocPeriod],
                         bollingerK: CONFIG.bollingerK,
-                        percentiles: [CONFIG.buyPercentile, CONFIG.sellPercentile],
+                        percentiles: [
+                            CONFIG.buyPercentile,
+                            CONFIG.sellPercentile,
+                        ],
                     });
                 }
-                response = res;
-                break;
-        }
-        while (!respPort.tryWrite([requestId, response])) {
-            await ns.sleep(20);
-        }
+                return Promise.resolve(res);
+            },
+        };
+        super(ns, TrackerProtocol, requestPort, responsePort, handlers);
     }
 }

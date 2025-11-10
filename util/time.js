@@ -1,3 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any --
+ *
+ * These functions can actually take any arguments to pass to their
+   callback so `any` is appropriate here.
+ */
 /**
  * Sleep for at least ms milliseconds.
  *
@@ -5,7 +10,7 @@
  * @returns A Promise that resolves after the sleep has elapsed
  */
 export function sleep(ms) {
-    return new Promise(res => globalThis.setTimeout(() => res.call(null), ms));
+    return new Promise((res) => globalThis.setTimeout(() => res(), ms));
 }
 /**
  * Repeatedly calls a function or executes a code snippet, with a

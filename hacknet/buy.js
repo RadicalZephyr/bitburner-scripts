@@ -1,43 +1,46 @@
-import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
-import { parseAndRegisterAlloc } from "services/client/memory";
-import { CONFIG } from "hacknet/config";
+import { parseFlags } from 'util/flags';
+import { CONFIG } from 'hacknet/config';
 const DEFAULT_RETURN_TIME = 2;
 const DEFAULT_SPEND = 1;
+const FLAGS = [
+    ['return-time', DEFAULT_RETURN_TIME],
+    ['spend', DEFAULT_SPEND],
+    ['help', false],
+];
+export function autocomplete(data) {
+    data.flags(FLAGS);
+    return [];
+}
 export async function main(ns) {
-    const flags = ns.flags([
-        ["return-time", DEFAULT_RETURN_TIME],
-        ["spend", DEFAULT_SPEND],
-        ["help", false],
-        ...MEM_TAG_FLAGS
-    ]);
-    if (flags.help ||
-        typeof flags["return-time"] !== "number" ||
-        flags["return-time"] <= 0 ||
-        typeof flags.spend !== "number" ||
-        flags.spend < 0 ||
-        flags.spend > 1) {
+    const flags = await parseFlags(ns, FLAGS);
+    if (flags.help
+        || flags['return-time'] <= 0
+        || flags.spend < 0
+        || flags.spend > 1) {
         ns.tprint(`
-Usage: run ${ns.getScriptName()} [--return-time HOURS] [--spend 0-1] [--help]
+USAGE: run ${ns.getScriptName()} [--return-time HOURS] [--spend 0-1]
 
-Buy hacknet nodes/servers and upgrades that can pay for themselves within a time limit.
+Buy hacknet nodes and upgrades that pay for themselves within the given window.
+
+Example:
+  > run ${ns.getScriptName()} --return-time 2 --spend 0.5
 
 OPTIONS
   --return-time  Desired payback time window (default ${DEFAULT_RETURN_TIME} hours)
   --spend        Portion of money to spend (default ${ns.formatPercent(DEFAULT_SPEND)})
-  --help         Display this message
+  --help         Show this help message
+
+CONFIGURATION
+  HACKNET_paybackTimeTolerance  Allowed payback time difference when comparing upgrades
 `);
         return;
     }
-    const allocationId = await parseAndRegisterAlloc(ns, flags);
-    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
-        return;
-    }
-    const returnTimeSeconds = flags["return-time"] * 60 * 60;
-    let totalSpend = ns.getServerMoneyAvailable("home") * flags.spend;
+    const returnTimeSeconds = flags['return-time'] * 60 * 60;
+    const totalSpend = ns.getServerMoneyAvailable('home') * flags.spend;
     ns.print(`INFO: starting with budget $${ns.formatNumber(totalSpend)} and payback time ${ns.tFormat(returnTimeSeconds * 1000)}`);
-    let budget = {
+    const budget = {
         total: totalSpend,
-        remaining: totalSpend
+        remaining: totalSpend,
     };
     while (true) {
         const currentGain = calculateCurrentGain(ns);
@@ -48,11 +51,14 @@ OPTIONS
             candidates.push(upgradeRamCandidate(ns, i, currentGain));
             candidates.push(upgradeCoreCandidate(ns, i, currentGain));
         }
-        const allCandidates = candidates.map(c => upgradeDescription(ns, c)).join("\n  ");
+        const allCandidates = candidates
+            .map((c) => upgradeDescription(ns, c))
+            .join('\n  ');
         ns.print(`all candidates:\n  ${allCandidates}`);
         const best = candidates.reduce((best, next) => bestCandidate(best, next));
         ns.print(`found best candidate: ${upgradeDescription(ns, best)}`);
-        if (best.cost > budget.remaining || best.paybackTime > returnTimeSeconds)
+        if (best.cost > budget.remaining
+            || best.paybackTime > returnTimeSeconds)
             break;
         purchaseCandidate(ns, budget, best);
         await ns.sleep(0);
@@ -84,12 +90,12 @@ function calculateHashGainRate(level, ramUsed, maxRam, cores, mult = 1) {
 }
 function calculateHashToMoneyExchange(ns, hashes) {
     const SELL_HASH_VALUE = 1_000_000;
-    const cost = ns.hacknet.hashCost("Sell for Money");
-    return hashes * SELL_HASH_VALUE / cost;
+    const cost = ns.hacknet.hashCost('Sell for Money');
+    return (hashes * SELL_HASH_VALUE) / cost;
 }
 function nodeMoneyGain(ns, level, ram, cores) {
     const prodMult = ns.getHacknetMultipliers().production;
-    if (ns.fileExists("Formulas.exe", "home")) {
+    if (ns.fileExists('Formulas.exe', 'home')) {
         return ns.formulas.hacknetNodes.moneyGainRate(level, ram, cores, prodMult);
     }
     else {
@@ -98,7 +104,7 @@ function nodeMoneyGain(ns, level, ram, cores) {
 }
 function hashGain(ns, level, ram, cores) {
     const prodMult = ns.getHacknetMultipliers().production;
-    if (ns.fileExists("Formulas.exe", "home")) {
+    if (ns.fileExists('Formulas.exe', 'home')) {
         return ns.formulas.hacknetServers.hashGainRate(level, 0, ram, cores, prodMult);
     }
     else {
@@ -111,10 +117,9 @@ function hashMoneyGain(ns, level, ram, cores) {
 }
 function moneyGain(ns, level, ram, cores) {
     const hashCapacity = ns.hacknet.hashCapacity();
-    return hashCapacity > 0 ? hashMoneyGain(ns, level, ram, cores) : nodeMoneyGain(ns, level, ram, cores);
-}
-function getMoneyGainFn(ns) {
-    return moneyGain.bind(null, ns);
+    return hashCapacity > 0
+        ? hashMoneyGain(ns, level, ram, cores)
+        : nodeMoneyGain(ns, level, ram, cores);
 }
 function bestCandidate(best, candidate) {
     const delta = candidate.paybackTime - best.paybackTime;
@@ -133,9 +138,9 @@ function newNodeCandidate(ns, baseGain) {
     const paybackTime = cost / (baseGain + newNodeGain);
     return {
         index: null,
-        type: "node",
+        type: 'node',
         cost,
-        paybackTime
+        paybackTime,
     };
 }
 function upgradeLevelCandidate(ns, index, baseGain) {
@@ -146,7 +151,7 @@ function upgradeLevelCandidate(ns, index, baseGain) {
     const paybackTime = cost / (baseGain + gain - currentGain);
     return {
         index,
-        type: "level",
+        type: 'level',
         cost,
         paybackTime,
     };
@@ -159,7 +164,7 @@ function upgradeRamCandidate(ns, index, baseGain) {
     const paybackTime = cost / (baseGain + gain - currentGain);
     return {
         index,
-        type: "ram",
+        type: 'ram',
         cost,
         paybackTime,
     };
@@ -172,15 +177,15 @@ function upgradeCoreCandidate(ns, index, baseGain) {
     const paybackTime = cost / (baseGain + gain - currentGain);
     return {
         index,
-        type: "core",
+        type: 'core',
         cost,
         paybackTime,
     };
 }
 function purchaseCandidate(ns, budget, candidate) {
-    let hacknetType = ns.hacknet.hashCapacity() > 0 ? "server" : "node";
+    const hacknetType = ns.hacknet.hashCapacity() > 0 ? 'server' : 'node';
     switch (candidate.type) {
-        case "node": {
+        case 'node': {
             const index = ns.hacknet.purchaseNode();
             if (index !== -1) {
                 budget.remaining -= candidate.cost;
@@ -192,21 +197,21 @@ function purchaseCandidate(ns, budget, candidate) {
             }
             break;
         }
-        case "level": {
+        case 'level': {
             if (ns.hacknet.upgradeLevel(candidate.index, 1)) {
                 budget.remaining -= candidate.cost;
                 printUpgrade(ns, candidate);
             }
             break;
         }
-        case "ram": {
+        case 'ram': {
             if (ns.hacknet.upgradeRam(candidate.index, 1)) {
                 budget.remaining -= candidate.cost;
                 printUpgrade(ns, candidate);
             }
             break;
         }
-        case "core": {
+        case 'core': {
             if (ns.hacknet.upgradeCore(candidate.index, 1)) {
                 budget.remaining -= candidate.cost;
                 printUpgrade(ns, candidate);
@@ -216,13 +221,12 @@ function purchaseCandidate(ns, budget, candidate) {
     }
 }
 function printUpgrade(ns, upgrade) {
-    let hacknetType = ns.hacknet.hashCapacity() > 0 ? "server" : "node";
     ns.print(`SUCCESS: upgraded ${upgradeDescription(ns, upgrade)}`);
 }
 function upgradeDescription(ns, upgrade) {
-    let hacknetType = ns.hacknet.hashCapacity() > 0 ? "server" : "node";
-    let numNodes = ns.hacknet.numNodes();
-    if (upgrade.type === "node") {
+    const hacknetType = ns.hacknet.hashCapacity() > 0 ? 'server' : 'node';
+    const numNodes = ns.hacknet.numNodes();
+    if (upgrade.type === 'node') {
         return `hacknet-${hacknetType}-${numNodes} for $${ns.formatNumber(upgrade.cost)} payback ${ns.tFormat(upgrade.paybackTime * 1000)}`;
     }
     return `${upgrade.type} of hacknet-${hacknetType}-${upgrade.index} for $${ns.formatNumber(upgrade.cost)} payback ${ns.tFormat(upgrade.paybackTime * 1000)}`;

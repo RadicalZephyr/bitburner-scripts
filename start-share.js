@@ -1,13 +1,16 @@
-import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
-import { parseAndRegisterAlloc } from "services/client/memory";
+import { parseFlags } from 'util/flags';
 import { walkNetworkBFS } from 'util/walk';
+const FLAGS = [
+    ['share-percent', 0.75],
+    ['max-ram', 32],
+    ['help', false],
+];
+export function autocomplete(data) {
+    data.flags(FLAGS);
+    return [];
+}
 export async function main(ns) {
-    const options = ns.flags([
-        ['share-percent', 0.75],
-        ['max-ram', 32],
-        ['help', false],
-        ...MEM_TAG_FLAGS
-    ]);
+    const options = await parseFlags(ns, FLAGS);
     if (options.help
         || typeof options['share-percent'] != 'number'
         || typeof options['max-ram'] !== 'number') {
@@ -21,21 +24,17 @@ OPTIONS
 `);
         return;
     }
-    const allocationId = await parseAndRegisterAlloc(ns, options);
-    if (options[ALLOC_ID] !== -1 && allocationId === null) {
-        return;
-    }
-    let shareScript = "/share.js";
-    let maxRam = options['max-ram'];
-    let share_percent = options['share-percent'];
-    let ownedHosts = ns.getPurchasedServers();
-    await shareHosts(ns, ownedHosts, shareScript, share_percent, maxRam);
-    let network = walkNetworkBFS(ns);
-    let allHosts = Array.from(network.keys());
-    let hosts = usableHosts(ns, allHosts);
-    await shareHosts(ns, hosts, shareScript, share_percent, maxRam);
+    const shareScript = '/share.js';
+    const maxRam = options['max-ram'];
+    const share_percent = options['share-percent'];
+    const ownedHosts = ns.getPurchasedServers();
+    shareHosts(ns, ownedHosts, shareScript, share_percent, maxRam);
+    const network = walkNetworkBFS(ns);
+    const allHosts = Array.from(network.keys());
+    const hosts = usableHosts(ns, allHosts);
+    shareHosts(ns, hosts, shareScript, share_percent, maxRam);
 }
-async function shareHosts(ns, hosts, shareScript, shareAmount, maxRam) {
+function shareHosts(ns, hosts, shareScript, shareAmount, maxRam) {
     if (!ns.fileExists(shareScript)) {
         ns.tprintf("share script '%s' does not exist", shareScript);
         return;
@@ -43,9 +42,9 @@ async function shareHosts(ns, hosts, shareScript, shareAmount, maxRam) {
     for (const host of hosts) {
         if (maxRam < ns.getServerMaxRam(host))
             continue;
-        let threads = numThreads(ns, host, shareScript, shareAmount);
+        const threads = numThreads(ns, host, shareScript, shareAmount);
         if (threads > 0) {
-            ns.printf("calculated num threads of %d", threads);
+            ns.printf('calculated num threads of %d', threads);
             ns.scp(shareScript, host, 'home');
             ns.exec(shareScript, host, threads);
         }
@@ -60,25 +59,23 @@ export function availableRam(ns, node) {
  */
 export function numThreads(ns, node, hackScript, percentage) {
     percentage = percentage ? percentage : 1.0;
-    let hackScriptRam = ns.getScriptRam(hackScript, "home");
-    let availableNodeRam = availableRam(ns, node);
-    return Math.floor(availableNodeRam * percentage / hackScriptRam);
+    const hackScriptRam = ns.getScriptRam(hackScript, 'home');
+    const availableNodeRam = availableRam(ns, node);
+    return Math.floor((availableNodeRam * percentage) / hackScriptRam);
 }
 /** Filter hosts by whether they can run scripts.
  */
 export function usableHosts(ns, hosts) {
     return hosts.filter((host) => {
-        return ns.serverExists(host)
-            && canNuke(ns, host)
-            && hasRam(ns, host);
+        return ns.serverExists(host) && canNuke(ns, host) && hasRam(ns, host);
     });
 }
 const portOpeningPrograms = [
-    "BruteSSH.exe",
-    "FTPCrack.exe",
-    "relaySMTP.exe",
-    "HTTPWorm.exe",
-    "SQLInject.exe"
+    'BruteSSH.exe',
+    'FTPCrack.exe',
+    'relaySMTP.exe',
+    'HTTPWorm.exe',
+    'SQLInject.exe',
 ];
 /** Check if we can nuke this host.
  *
@@ -92,9 +89,9 @@ export function canNuke(ns, host) {
         return true;
     }
     // Get number of open ports needed
-    let portsNeeded = ns.getServerNumPortsRequired(host);
+    const portsNeeded = ns.getServerNumPortsRequired(host);
     // Check for existence of enough port opening programs
-    let existingPrograms = portOpeningPrograms.filter(p => ns.fileExists(p));
+    const existingPrograms = portOpeningPrograms.filter((p) => ns.fileExists(p));
     return existingPrograms.length >= portsNeeded;
 }
 /** Check if a host has non-zero RAM.

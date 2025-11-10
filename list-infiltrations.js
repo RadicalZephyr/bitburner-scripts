@@ -1,24 +1,36 @@
-import { MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { parseFlags } from 'util/flags';
+import { useNsUpdate, useTheme } from 'ui/hooks';
+import { exitOnKill } from 'util/exitOnKill';
+import { React } from 'lib/react';
 export async function main(ns) {
-    const flags = ns.flags(MEM_TAG_FLAGS);
-    ns.disableLog("ALL");
+    await parseFlags(ns, []);
+    ns.disableLog('ALL');
     ns.ui.openTail();
     ns.ui.moveTail(60, 350);
     ns.ui.resizeTail(825, 800);
-    let infiltrations = ns.infiltration.getPossibleLocations().map((loc) => ns.infiltration.getInfiltration(loc.name));
-    const augInfiltrations = infiltrations.map(augmentInfiltration).sort((a, b) => a.expPerAction - b.expPerAction);
-    let theme = ns.ui.getTheme();
     ns.clearLog();
-    ns.printRaw(React.createElement(LocationBlock, { infiltrations: augInfiltrations, theme: theme }));
+    ns.printRaw(React.createElement(LocationBlock, { ns: ns }));
+    return exitOnKill(ns);
+}
+function getInfiltrations(ns) {
+    const infiltrations = ns.infiltration
+        .getPossibleLocations()
+        .map((loc) => ns.infiltration.getInfiltration(loc.name));
+    const augInfiltrations = infiltrations
+        .map(augmentInfiltration)
+        .sort((a, b) => a.expPerAction - b.expPerAction);
+    return augInfiltrations;
 }
 function augmentInfiltration(i) {
     return {
         expPerAction: i.reward.SoARep / i.maxClearanceLevel,
-        ...i
+        ...i,
     };
 }
-function LocationBlock({ infiltrations, theme }) {
-    const cellStyle = { padding: "0 0.5em" };
+function LocationBlock({ ns }) {
+    const theme = useTheme(ns);
+    const infiltrations = useNsUpdate(ns, 100, getInfiltrations);
+    const cellStyle = { padding: '0 0.5em' };
     return (React.createElement(React.Fragment, null,
         React.createElement("h2", null, "Infiltration Locations "),
         React.createElement("table", null,
@@ -31,10 +43,10 @@ function LocationBlock({ infiltrations, theme }) {
                 React.createElement("th", { style: cellStyle }, "City"),
                 React.createElement("th", { style: cellStyle }, "Name")),
             infiltrations.map((infiltration, idx) => {
-                return React.createElement(LocationRow, { rowIndex: idx, infiltration: infiltration, cellStyle: cellStyle, theme: theme });
+                return (React.createElement(LocationRow, { rowIndex: idx, infiltration: infiltration, cellStyle: cellStyle, theme: theme }));
             }))));
 }
-function LocationRow({ rowIndex, infiltration: location, cellStyle, theme }) {
+function LocationRow({ rowIndex, infiltration: location, cellStyle, theme, }) {
     return (React.createElement("tr", { key: location.location.name, style: rowIndex % 2 === 1 ? undefined : { backgroundColor: theme.well } },
         React.createElement("td", { style: cellStyle }, location.difficulty.toFixed(2)),
         React.createElement("td", { style: cellStyle }, location.startingSecurityLevel),

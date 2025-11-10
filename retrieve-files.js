@@ -1,21 +1,21 @@
-import { MEM_TAG_FLAGS } from "services/client/memory_tag";
-import { walkNetworkBFS } from "util/walk";
+import { parseFlags } from 'util/flags';
+import { walkNetworkBFS } from 'util/walk';
 export async function main(ns) {
-    const flags = ns.flags(MEM_TAG_FLAGS);
-    let network = walkNetworkBFS(ns);
-    let allHosts = Array.from(network.keys());
-    let scriptFile = /\.(js|script)/;
-    let textFile = /\.txt/;
-    let litFile = /\.lit/;
+    await parseFlags(ns, []);
+    const network = walkNetworkBFS(ns);
+    const allHosts = Array.from(network.keys());
+    const scriptFile = /\.(js|script)/;
+    const textFile = /\.txt/;
+    const litFile = /\.lit/;
     for (const host of allHosts) {
-        if (host == "home") {
+        if (host == 'home') {
             continue;
         }
-        let files = ns.ls(host).filter(file => !scriptFile.test(file));
-        let qualifiedNames = [];
+        const files = ns.ls(host).filter((file) => !scriptFile.test(file));
+        const qualifiedNames = [];
         for (const file of files) {
             if (textFile.test(file)) {
-                let qualifiedName = "/" + host + "/" + file;
+                const qualifiedName = '/' + host + '/' + file;
                 ns.mv(host, file, qualifiedName);
                 qualifiedNames.push(qualifiedName);
             }
@@ -28,7 +28,7 @@ export async function main(ns) {
             }
         }
         if (qualifiedNames.length > 0) {
-            ns.scp(qualifiedNames, "home", host);
+            ns.scp(qualifiedNames, 'home', host);
         }
     }
 }

@@ -1,14 +1,12 @@
-import { ALLOC_ID, MEM_TAG_FLAGS } from "services/client/memory_tag";
-import { parseAndRegisterAlloc } from "services/client/memory";
-export function autocomplete(data, _args) {
+import { parseFlags } from 'util/flags';
+const FLAGS = [['help', false]];
+export function autocomplete(data) {
+    data.flags(FLAGS);
     return data.servers;
 }
 export async function main(ns) {
-    const flags = ns.flags([
-        ["help", false],
-        ...MEM_TAG_FLAGS
-    ]);
-    const targets = flags._.filter((t) => typeof t === "string");
+    const flags = await parseFlags(ns, FLAGS);
+    const targets = flags._.filter((t) => typeof t === 'string');
     if (targets.length === 0 || flags.help) {
         ns.tprint(`
 USAGE: run ${ns.getScriptName()} TARGET [...TARGETS]
@@ -20,16 +18,14 @@ OPTIONS
 `);
         return;
     }
-    const allocationId = await parseAndRegisterAlloc(ns, flags);
-    if (flags[ALLOC_ID] !== -1 && allocationId === null) {
-        return;
-    }
-    ns.disableLog("ALL");
-    const maxThreadsList = [8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384];
+    ns.disableLog('ALL');
+    const maxThreadsList = [
+        8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384,
+    ];
     const algos = [
-        [calculateSowThreadsForMaxThreads1, "v1"],
-        [calculateSowThreadsForMaxThreads2, "v2"],
-        [calculateSowThreadsForMaxThreads3, "v3"],
+        [calculateSowThreadsForMaxThreads1, 'v1'],
+        [calculateSowThreadsForMaxThreads2, 'v2'],
+        [calculateSowThreadsForMaxThreads3, 'v3'],
     ];
     for (const target of targets) {
         if (!ns.serverExists(target)) {
@@ -38,21 +34,21 @@ OPTIONS
         }
         ns.print(`INFO: benchmarking ${target}`);
         for (const [fn, name] of algos) {
-            const results = await benchmark(ns, fn, name, target, maxThreadsList);
+            const results = benchmark(ns, fn, name, target, maxThreadsList);
             const iters = results.map((r) => r.iterations);
             const wastes = results.map((r) => r.maxThreads - r.usedThreads);
             const iterMean = mean(iters);
             const iterMed = median(iters);
             const wasteMean = mean(wastes);
             const wasteStd = std(wastes);
-            ns.print(`INFO: ${target} ${name} μ=${ns.formatNumber(iterMean)} ` +
-                `median=${ns.formatNumber(iterMed)} ` +
-                `Δ=${ns.formatNumber(wasteMean)} σ=${ns.formatNumber(wasteStd)}`);
+            ns.print(`INFO: ${target} ${name} μ=${ns.formatNumber(iterMean)} `
+                + `median=${ns.formatNumber(iterMed)} `
+                + `Δ=${ns.formatNumber(wasteMean)} σ=${ns.formatNumber(wasteStd)}`);
             await ns.sleep(10);
         }
     }
 }
-async function benchmark(ns, fn, name, target, maxThreadsList) {
+function benchmark(ns, fn, name, target, maxThreadsList) {
     const results = [];
     for (const m of maxThreadsList) {
         const { n, growThreads, weakenThreads } = fn(ns, target, m);
@@ -126,6 +122,10 @@ function mean(values) {
 function median(values) {
     if (values.length === 0)
         return 0;
+    if (values.length === 1)
+        return values[0];
+    if (values.length === 2)
+        return (values[0] + values[1]) / 2;
     const sorted = [...values].sort((a, b) => a - b);
     const mid = Math.floor(sorted.length / 2);
     return sorted.length % 2 === 0

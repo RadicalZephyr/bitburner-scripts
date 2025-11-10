@@ -1,0 +1,168 @@
+import { parseFlags } from 'util/flags';
+import { GtpClient } from 'go/GtpClient';
+import { filterMapBoard, Node, toIndices, toVertex, } from 'go/types';
+import { CONFIG } from 'go/config';
+import { HUD_HEIGHT, KARMA_HEIGHT } from 'ui/constants';
+const FLAGS = [['help', false]];
+export function autocomplete(data) {
+    data.flags(FLAGS);
+    return [];
+}
+export async function main(ns) {
+    const flags = await parseFlags(ns, FLAGS);
+    if (flags.help) {
+        ns.tprint(`
+USAGE: run ${ns.getScriptName()}
+
+Play IPvGO games using a KataGo HTTP proxy.
+
+Example:
+  > run ${ns.getScriptName()}
+
+OPTIONS
+  --help   Show this help message
+
+CONFIGURATION
+  GO_goOpponent             Default opponent to challenge
+  GO_boardSize              Board size for new games
+  GO_maxOpponentPasses      Max passes opponent can make before we yield
+  GO_maxEngineInvalidMoves  Max repeated invalid moves the engine can suggest before we reset the game
+  GO_gtpProxyHost           Hostname where the GTP proxy is listening
+  GO_gtpProxyPort           Port number where the GTP proxy is listening
+`);
+        return;
+    }
+    ns.disableLog('ALL');
+    ns.ui.openTail();
+    ns.ui.setTailTitle(`KataGo - ${ns.self().server}`);
+    const WIDTH = 500;
+    ns.ui.resizeTail(WIDTH, 500);
+    const [ww] = ns.ui.windowSize();
+    ns.ui.moveTail(ww - WIDTH - 40, HUD_HEIGHT + KARMA_HEIGHT + 40);
+    const client = new GtpClient(ns);
+    let gameIndex = 0;
+    while (true) {
+        const gameState = ns.go.getGameState();
+        if (gameState.currentPlayer === 'None') {
+            ns.go.resetBoardState(CONFIG.goOpponent, CONFIG.boardSize);
+        }
+        await setupExistingGame(ns, client);
+        const turns = [];
+        try {
+            await playGame(ns, client, turns);
+            await ns.asleep(100);
+        }
+        catch (err) {
+            const gameFile = `/go-games/game${gameIndex}.json`;
+            const gameInfo = {
+                history: turns,
+                board: ns.go.getBoardState(),
+                state: ns.go.getGameState(),
+            };
+            ns.write(gameFile, JSON.stringify(gameInfo, null, 2), 'w');
+            if (!ns.scp(gameFile, 'home'))
+                throw new Error(`failed to scp ${gameFile}`);
+            ns.print(`ERROR: errored while playing game. Game history written to ${gameFile}`);
+            ns.print(`ERROR: ${String(err)}`);
+            gameIndex += 1;
+            await ns.asleep(1000);
+        }
+    }
+}
+async function setupExistingGame(ns, client) {
+    await client.clearBoard();
+    const board = ns.go.getBoardState();
+    await client.boardsize(board.length);
+    const gameState = ns.go.getGameState();
+    await client.komi(gameState.komi);
+    const walls = filterMapBoard(board, isWall);
+    if (walls.length > 0)
+        await client.setWalls(walls);
+    const positions = filterMapBoard(board, vertexToMove);
+    if (positions.length > 0)
+        await client.setPosition(positions);
+}
+function isWall(node, vertex) {
+    if (node === Node.DISABLED)
+        return vertex;
+    return null;
+}
+function vertexToMove(node, vertex) {
+    switch (node) {
+        case Node.BLACK: {
+            return ['black', vertex];
+        }
+        case Node.WHITE: {
+            return ['white', vertex];
+        }
+        case Node.DISABLED:
+        case Node.EMPTY: {
+            return null;
+        }
+    }
+}
+async function playGame(ns, client, turns) {
+    let repeatedErrors = 0;
+    const errorMoves = [];
+    let opponentPasses = 0;
+    while (true) {
+        const validMoves = ns.go.analysis.getValidMoves();
+        let myMove;
+        if (opponentPasses < CONFIG.maxOpponentPasses) {
+            // Have the engine generate the next move
+            myMove = await client.genmove('black');
+        }
+        else {
+            myMove = 'pass';
+        }
+        let opponentMove;
+        if (myMove === 'pass') {
+            turns.push(['black', 'pass']);
+            opponentMove = await ns.go.passTurn();
+        }
+        else if (myMove === 'resign') {
+            throw new Error(`ERROR: engine returned 'resign' unexpectedly!`);
+        }
+        else {
+            const [x, y] = toIndices(myMove);
+            if (!validMoves[x][y]) {
+                repeatedErrors += 1;
+                errorMoves.push(myMove);
+                if (repeatedErrors >= CONFIG.maxEngineInvalidMoves) {
+                    ns.print(`ERROR: resetting game. KataGo returned ${errorMoves.length} invalid moves: ${errorMoves.join(', ')}`);
+                    ns.go.resetBoardState(CONFIG.goOpponent, CONFIG.boardSize);
+                    return;
+                }
+                ns.print(`WARN: KataGo returned an invalid move: ${myMove}`);
+                await client.clearCache();
+                await ns.sleep(10);
+                continue;
+            }
+            turns.push(['black', myMove]);
+            opponentMove = await ns.go.makeMove(x, y);
+        }
+        repeatedErrors = 0;
+        errorMoves.length = 0;
+        switch (opponentMove.type) {
+            case 'move': {
+                turns.push([
+                    'white',
+                    toVertex(opponentMove.x, opponentMove.y),
+                ]);
+                opponentPasses = 0;
+                await client.play('white', toVertex(opponentMove.x, opponentMove.y));
+                break;
+            }
+            case 'pass': {
+                turns.push(['white', 'pass']);
+                opponentPasses += 1;
+                await ns.sleep(10);
+                break;
+            }
+            case 'gameOver': {
+                return;
+            }
+        }
+        await ns.sleep(0);
+    }
+}

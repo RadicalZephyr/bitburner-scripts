@@ -1,13 +1,25 @@
-import { MEM_TAG_FLAGS } from "services/client/memory_tag";
-import { launch } from "services/launch";
+import { parseFlags } from 'util/flags';
+import { LaunchClient } from 'services/client/launch';
+// NOTE: These flags _must_ be the same as in the root bootstrap script
+// because we import and run this main function it sees the same
+// arguments as the root bootstrap script received.
+const FLAGS = [
+    ['minimal', false],
+    ['help', false],
+];
+export function autocomplete(data) {
+    data.flags(FLAGS);
+    return [];
+}
 export async function main(ns) {
-    const flags = ns.flags(MEM_TAG_FLAGS);
-    await launch(ns, "/batch/task_selector.js", {
-        threads: 1,
-        longRunning: true,
-    });
-    await launch(ns, "/batch/monitor.js", {
-        threads: 1,
-        longRunning: true,
-    });
+    await parseFlags(ns, FLAGS);
+    const client = new LaunchClient(ns);
+    const services = ['/batch/task_selector.js', '/batch/monitor.js'];
+    for (const script of services) {
+        await client.launch(script, {
+            threads: 1,
+            preventDuplicates: true,
+            alloc: { longRunning: true },
+        });
+    }
 }

@@ -1,4 +1,4 @@
-import { ALLOC_ID_ARG } from "services/client/memory_tag";
+import { ALLOC_ID_ARG } from 'services/client/memory_tag';
 /**
  * Convert a floating point RAM value to a fixed point bigint
  * representation.
@@ -16,7 +16,7 @@ export const toFixed = (val) => BigInt(Math.round(val * 100));
 export const fromFixed = (val) => Number(val) / 100;
 function hasAllocTag(proc) {
     const idx = proc.args.indexOf(ALLOC_ID_ARG);
-    return idx !== -1 && typeof proc.args[idx + 1] === "number";
+    return idx !== -1 && typeof proc.args[idx + 1] === 'number';
 }
 export class MemoryAllocator {
     ns;
@@ -26,7 +26,8 @@ export class MemoryAllocator {
     allocations = new Map();
     constructor(ns, printLog) {
         this.ns = ns;
-        this.printLog = printLog ?? (() => null);
+        // eslint-disable-next-line @typescript-eslint/unbound-method
+        this.printLog = printLog ?? ns.print ?? (() => null);
     }
     /**
      * Add a new worker to allocate memory on.
@@ -39,40 +40,56 @@ export class MemoryAllocator {
             this.printLog(`INFO: received duplicate worker registration for ${hostname}`);
             return;
         }
-        if (hostname.startsWith('pserv') && setAsideRam === undefined && this.ns.getServerMaxRam(hostname) > 1024) {
+        if (hostname.startsWith('pserv')
+            && setAsideRam === undefined
+            && this.ns.getServerMaxRam(hostname) > 1024) {
             setAsideRam = 8;
         }
-        if (hostname.startsWith('hacknet-server') && setAsideRam === undefined) {
+        if (hostname.startsWith('hacknet-server')
+            && setAsideRam === undefined) {
             setAsideRam = this.ns.getServerMaxRam(hostname);
         }
-        this.workers.set(hostname, new Worker(this.ns, hostname, setAsideRam));
-        this.printLog(`INFO: registered worker ${hostname} with ` +
-            `${this.ns.formatRam(this.ns.getServerMaxRam(hostname))}`);
+        const worker = new Worker(this.ns, hostname, setAsideRam);
+        worker.updateReservedRam();
+        this.workers.set(hostname, worker);
+        this.printLog(`INFO: registered worker ${hostname} with `
+            + `${this.ns.formatRam(this.ns.getServerMaxRam(hostname))}`);
     }
     /** Check if the home server has increased in RAM. */
     checkHomeForRamIncrease() {
-        if (this.workers.has("home")) {
-            let home = this.workers.get("home");
+        const home = this.workers.get('home');
+        if (home != null) {
             home.updateRam();
         }
+    }
+    /**
+     * Get a list of available free RAM chunks on each worker.
+     *
+     * @returns Array describing free RAM per worker
+     */
+    getFreeChunks() {
+        const chunks = [];
+        for (const w of this.workers.values()) {
+            if (w.freeRam > 0) {
+                chunks.push({ hostname: w.hostname, freeRam: w.freeRam });
+            }
+        }
+        return chunks;
     }
     /**
      * Query total free RAM across all workers.
      * @returns Total free RAM across all workers in GB
      */
     getFreeRamTotal() {
-        let total = 0;
-        for (const w of this.workers.values()) {
-            total += w.freeRam;
-        }
-        return total;
+        return this.getFreeChunks().reduce((sum, c) => sum + c.freeRam, 0);
     }
     /** Check for allocations belonging to terminated processes. */
     cleanupTerminated() {
         for (const [id, allocation] of this.allocations.entries()) {
-            if (allocation.claims.length === 0 && !this.ns.isRunning(allocation.pid)) {
+            if (allocation.claims.length === 0
+                && !this.ns.isRunning(allocation.pid)) {
                 for (const c of allocation.chunks) {
-                    let worker = this.workers.get(c.hostname);
+                    const worker = this.workers.get(c.hostname);
                     if (worker) {
                         worker.free(c.chunkSize * c.numChunks);
                     }
@@ -84,15 +101,15 @@ export class MemoryAllocator {
                 if (!this.ns.isRunning(claim.pid)) {
                     // Release the memory held by this terminated pid
                     this.releaseClaimInternal(allocation, claim);
-                    this.printLog(`INFO: reclaimed allocation ${id} ` +
-                        `pid=${claim.pid} host=${claim.hostname}`);
+                    this.printLog(`INFO: reclaimed allocation ${id} `
+                        + `pid=${claim.pid} host=${claim.hostname}`);
                 }
                 else {
                     remaining.push(claim);
                 }
             }
             allocation.claims = remaining;
-            allocation.chunks = allocation.chunks.filter(c => c.numChunks > 0);
+            allocation.chunks = allocation.chunks.filter((c) => c.numChunks > 0);
             if (allocation.chunks.length === 0) {
                 this.allocations.delete(id);
             }
@@ -108,7 +125,8 @@ export class MemoryAllocator {
             let allocRam = 0n;
             let foreignRam = 0n;
             for (const p of procs) {
-                const ram = toFixed(this.ns.getScriptRam(p.filename, worker.hostname));
+                const ram = toFixed(this.ns.getScriptRam(p.filename, worker.hostname)
+                    * p.threads);
                 if (hasAllocTag(p))
                     allocRam += ram;
                 else if (this.isRegistered(p.pid))
@@ -119,9 +137,9 @@ export class MemoryAllocator {
             if (allocRam > worker.allocatedRam) {
                 const allocRamStr = this.ns.formatRam(fromFixed(allocRam));
                 const workerAllocRamStr = this.ns.formatRam(fromFixed(worker.allocatedRam));
-                this.printLog(`WARN: ${worker.hostname} has more in use RAM ` +
-                    `attributed to allocations (${allocRamStr}) ` +
-                    `than total allocated RAM (${workerAllocRamStr})`);
+                this.printLog(`WARN: ${worker.hostname} has more in use RAM `
+                    + `attributed to allocations (${allocRamStr}) `
+                    + `than total allocated RAM (${workerAllocRamStr})`);
             }
             worker.reservedRam = foreignRam;
         }
@@ -149,8 +167,8 @@ export class MemoryAllocator {
                 allocationId: id,
                 pid: alloc.pid,
                 filename: alloc.filename,
-                hosts: alloc.chunks.map(c => c.asHostAllocation()),
-                claims: alloc.claims.map(c => ({
+                hosts: alloc.chunks.map((c) => c.asHostAllocation()),
+                claims: alloc.claims.map((c) => ({
                     pid: c.pid,
                     hostname: c.hostname,
                     filename: c.filename,
@@ -172,24 +190,28 @@ export class MemoryAllocator {
      */
     allocate(pid, filename, chunkSize, numChunks, contiguous = false, coreDependent = false, shrinkable = false, longRunning = false, notifyPort) {
         if (chunkSize <= 0 || numChunks <= 0) {
-            this.printLog("ERROR: bad allocation request, zero size");
+            this.printLog('ERROR: bad allocation request, zero size');
             return null;
         }
-        let workers = Array.from(this.workers.values());
+        const workers = Array.from(this.workers.values());
         const purchased = new Set(this.ns.getPurchasedServers());
         workers.sort((a, b) => {
             if (longRunning) {
-                const prio = (w) => w.hostname === "home" ? 2 : purchased.has(w.hostname) ? 1 : 0;
+                const prio = (w) => w.hostname === 'home'
+                    ? 2
+                    : purchased.has(w.hostname)
+                        ? 1
+                        : 0;
                 const pa = prio(a);
                 const pb = prio(b);
                 if (pa !== pb)
                     return pa - pb;
                 return b.freeRam - a.freeRam;
             }
-            if (a.hostname === "home" && b.hostname !== "home") {
+            if (a.hostname === 'home' && b.hostname !== 'home') {
                 return coreDependent ? -1 : 1;
             }
-            if (a.hostname !== "home" && b.hostname === "home") {
+            if (a.hostname !== 'home' && b.hostname === 'home') {
                 return coreDependent ? 1 : -1;
             }
             return b.freeRam - a.freeRam;
@@ -206,7 +228,7 @@ export class MemoryAllocator {
                 }
             }
         }
-        let chunks = [];
+        const chunks = [];
         let remainingChunks = numChunks;
         for (const worker of workers) {
             const chunk = worker.allocate(chunkSize, remainingChunks);
@@ -260,15 +282,40 @@ export class MemoryAllocator {
         const allocation = this.allocations.get(id);
         if (!allocation)
             return false;
-        // Released by single requesting process, release all chunks
+        // Released by single requesting process
         if (allocation.pid === pid) {
+            if (allocation.claims.length === 0) {
+                // No outstanding claims, free the entire allocation
+                for (const c of allocation.chunks) {
+                    const worker = this.workers.get(c.hostname);
+                    if (worker) {
+                        worker.free(c.chunkSize * c.numChunks);
+                    }
+                }
+                this.allocations.delete(id);
+                return true;
+            }
+            // Active claims exist, release only unclaimed chunks
             for (const c of allocation.chunks) {
-                const worker = this.workers.get(c.hostname);
-                if (worker) {
-                    worker.free(c.chunkSize * c.numChunks);
+                const claimed = allocation.claims
+                    .filter((cl) => cl.hostname === c.hostname
+                    && cl.chunkSize === c.chunkSize)
+                    .reduce((sum, cl) => sum + cl.numChunks, 0);
+                const unclaimed = c.numChunks - claimed;
+                if (unclaimed > 0) {
+                    const worker = this.workers.get(c.hostname);
+                    if (worker) {
+                        worker.free(c.chunkSize * unclaimed);
+                    }
+                    c.numChunks = claimed;
                 }
             }
-            this.allocations.delete(id);
+            allocation.chunks = allocation.chunks.filter((c) => c.numChunks > 0);
+            allocation.requestedChunks = allocation.chunks.reduce((sum, c) => sum + c.numChunks, 0);
+            allocation.claims = allocation.claims.filter((c) => c.numChunks > 0);
+            if (allocation.claims.length === 0) {
+                this.allocations.delete(id);
+            }
             return true;
         }
         return this.releaseClaim(id, pid, hostname);
@@ -285,7 +332,7 @@ export class MemoryAllocator {
         const allocation = this.allocations.get(id);
         if (!allocation)
             return false;
-        const idx = allocation.claims.findIndex(c => c.pid === pid && c.hostname === hostname);
+        const idx = allocation.claims.findIndex((c) => c.pid === pid && c.hostname === hostname);
         if (idx === -1) {
             this.printLog(`WARN: couldn't find a claim for ${pid} on ${hostname} to release`);
             return false;
@@ -293,62 +340,11 @@ export class MemoryAllocator {
         const claim = allocation.claims[idx];
         this.releaseClaimInternal(allocation, claim);
         allocation.claims.splice(idx, 1);
-        allocation.chunks = allocation.chunks.filter(c => c.numChunks > 0);
+        allocation.chunks = allocation.chunks.filter((c) => c.numChunks > 0);
         if (allocation.chunks.length === 0) {
             this.allocations.delete(id);
         }
         return true;
-    }
-    /**
-     * Release a number of chunks from an allocation.
-     *
-     * @param id        - Allocation ID
-     * @param numChunks - The number of chunks to release
-     * @returns The new allocation details after releasing the chunks
-     */
-    releaseChunks(id, numChunks) {
-        const allocation = this.allocations.get(id);
-        if (!allocation)
-            return null;
-        let remaining = numChunks;
-        const chunks = [...allocation.chunks].sort((a, b) => {
-            const freeA = this.workers.get(a.hostname)?.freeRam ?? 0;
-            const freeB = this.workers.get(b.hostname)?.freeRam ?? 0;
-            return freeB - freeA;
-        });
-        for (const chunk of chunks) {
-            if (remaining <= 0)
-                break;
-            const toFree = Math.min(remaining, chunk.numChunks);
-            const worker = this.workers.get(chunk.hostname);
-            if (worker) {
-                worker.free(chunk.chunkSize * toFree);
-            }
-            chunk.numChunks -= toFree;
-            remaining -= toFree;
-            let remainingFromClaims = toFree;
-            for (const claim of allocation.claims) {
-                if (remainingFromClaims <= 0)
-                    break;
-                if (claim.hostname === chunk.hostname && claim.chunkSize === chunk.chunkSize) {
-                    const reduce = Math.min(claim.numChunks, remainingFromClaims);
-                    claim.numChunks -= reduce;
-                    remainingFromClaims -= reduce;
-                }
-            }
-        }
-        // Important! Reduce the number of requested chunks so the
-        // allocator doesn't try to grow our allocation back to the
-        // original size!!
-        allocation.requestedChunks =
-            Math.max(0, allocation.requestedChunks - numChunks);
-        allocation.chunks = allocation.chunks.filter(c => c.numChunks > 0);
-        allocation.claims = allocation.claims.filter(c => c.numChunks > 0);
-        if (allocation.chunks.length === 0) {
-            this.allocations.delete(id);
-            return null;
-        }
-        return allocation.asAllocationResult();
     }
     /**
      * Attempt to add additional chunks to an existing allocation.
@@ -376,19 +372,21 @@ export class MemoryAllocator {
         if (chunks.length > 0) {
             allocation.chunks.push(...chunks);
         }
-        return chunks.map(c => c.asHostAllocation());
+        return chunks.map((c) => c.asHostAllocation());
     }
     claimAllocation(claim) {
         const allocation = this.allocations.get(claim.allocationId);
         if (!allocation)
             return false;
-        const chunk = allocation.chunks.find(c => c.hostname === claim.hostname && c.chunkSize === claim.chunkSize);
+        const chunk = allocation.chunks.find((c) => c.hostname === claim.hostname
+            && c.chunkSize === claim.chunkSize);
         if (!chunk) {
             this.printLog(`WARN: claim request for allocation ${claim.allocationId} on ${claim.hostname} not found`);
             return false;
         }
         const claimedSoFar = allocation.claims
-            .filter(c => c.hostname === claim.hostname && c.chunkSize === claim.chunkSize)
+            .filter((c) => c.hostname === claim.hostname
+            && c.chunkSize === claim.chunkSize)
             .reduce((sum, c) => sum + c.numChunks, 0);
         if (claimedSoFar + claim.numChunks > chunk.numChunks) {
             this.printLog(`WARN: claim for allocation ${claim.allocationId} exceeds reserved chunks`);
@@ -406,16 +404,19 @@ export class MemoryAllocator {
         if (worker) {
             worker.free(claim.chunkSize * claim.numChunks);
         }
-        const chunk = allocation.chunks.find(c => c.hostname === claim.hostname && c.chunkSize === claim.chunkSize);
+        const chunk = allocation.chunks.find((c) => c.hostname === claim.hostname
+            && c.chunkSize === claim.chunkSize);
         if (chunk) {
             chunk.numChunks -= claim.numChunks;
         }
+        const totalChunks = allocation.chunks.reduce((sum, c) => sum + c.numChunks, 0);
+        allocation.requestedChunks = Math.max(totalChunks, allocation.requestedChunks - claim.numChunks);
     }
     isRegistered(pid) {
         for (const alloc of this.allocations.values()) {
             if (alloc.pid === pid)
                 return true;
-            if (alloc.claims.some(c => c.pid === pid))
+            if (alloc.claims.some((c) => c.pid === pid))
                 return true;
         }
         return false;
@@ -470,17 +471,19 @@ class AllocationChunk {
 export class Worker {
     ns;
     hostname;
-    totalRam;
-    totalRamStr;
+    totalRam = 0;
+    totalRamStr = '0 GiB';
     setAsideRam;
-    reservedRam;
+    reservedRam = 0n;
     allocatedRam = 0n;
     constructor(ns, hostname, setAsideRam) {
         this.ns = ns;
         this.hostname = hostname;
         this.updateTotalRam();
-        this.setAsideRam = typeof setAsideRam == "number" && setAsideRam >= 0 ? toFixed(setAsideRam) : 0n;
-        this.reservedRam = toFixed(ns.getServerUsedRam(hostname));
+        this.setAsideRam =
+            typeof setAsideRam == 'number' && setAsideRam >= 0
+                ? toFixed(setAsideRam)
+                : 0n;
     }
     get usedRam() {
         return fromFixed(this.setAsideRam + this.reservedRam + this.allocatedRam);
@@ -491,7 +494,7 @@ export class Worker {
     updateTotalRam() {
         this.totalRam = this.ns.getServerMaxRam(this.hostname);
         this.totalRamStr = this.ns.formatRam(this.totalRam, 0);
-        if (this.hostname === "home" && this.totalRam > 32) {
+        if (this.hostname === 'home' && this.totalRam > 32) {
             this.setAsideRam = toFixed(32);
         }
     }
@@ -523,7 +526,8 @@ export class Worker {
      */
     free(ram) {
         const delta = toFixed(ram);
-        this.allocatedRam = this.allocatedRam >= delta ? this.allocatedRam - delta : 0n;
+        this.allocatedRam =
+            this.allocatedRam >= delta ? this.allocatedRam - delta : 0n;
     }
     /** Update server's total RAM. */
     updateRam() {

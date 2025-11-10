@@ -1,1 +1,1 @@
-export let CONTRACTS = [];
+export const CONTRACTS = [];

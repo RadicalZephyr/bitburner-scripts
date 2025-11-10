@@ -28,34 +28,39 @@ Example: decoding '5aaabb450723abb' chunk-by-chunk
     5aaabb45072      ->  aaabbaaababababa
     5aaabb450723abb  ->  aaabbaaababababaabb
  */
-import { MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { parseFlags } from 'util/flags';
+import { isString } from 'util/validate';
 export async function main(ns) {
-    const flags = ns.flags(MEM_TAG_FLAGS);
-    let scriptName = ns.getScriptName();
-    let contractPortNum = ns.args[0];
+    await parseFlags(ns, []);
+    const scriptName = ns.getScriptName();
+    const contractPortNum = ns.args[0];
     if (typeof contractPortNum !== 'number') {
         ns.tprintf('%s contract run with non-number answer port argument', scriptName);
         return;
     }
-    let contractDataJSON = ns.args[1];
+    const contractDataJSON = ns.args[1];
     if (typeof contractDataJSON !== 'string') {
         ns.tprintf('%s contract run with non-string data argument. Must be a JSON string containing file, host and contract data.', scriptName);
         return;
     }
-    let contractData = JSON.parse(contractDataJSON);
+    const contractData = JSON.parse(contractDataJSON);
+    if (!isString(contractData)) {
+        ns.writePort(contractPortNum, JSON.stringify(null));
+        return;
+    }
     ns.tprintf('contract data: %s', JSON.stringify(contractData));
-    let answer = solve(contractData);
+    const answer = solve(contractData);
     ns.writePort(contractPortNum, answer);
 }
 function isDigit(c) {
     return /\d/.test(c);
 }
 export function solve(data) {
-    let uncompressed = "";
+    let uncompressed = '';
     let i = 0;
     let nextChunkType = 0 /* ChunkType.Literal */;
     while (i < data.length) {
-        let len = parseInt(data[i]);
+        const len = parseInt(data[i]);
         switch (nextChunkType) {
             case 0 /* ChunkType.Literal */:
                 if (len > 0) {
@@ -71,8 +76,8 @@ export function solve(data) {
             case 1 /* ChunkType.BackRef */:
                 if (len > 0 && isDigit(data[i + 1])) {
                     // Back reference to uncompressed data
-                    let charsBack = parseInt(data[i + 1]);
-                    let start = uncompressed.length - charsBack;
+                    const charsBack = parseInt(data[i + 1]);
+                    const start = uncompressed.length - charsBack;
                     for (let j = start; j < start + len; ++j) {
                         uncompressed += uncompressed[j];
                     }

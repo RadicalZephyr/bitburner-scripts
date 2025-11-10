@@ -35,60 +35,72 @@ Answer: 'DRRURRD'
 
 Answer: ''
  */
-import { MEM_TAG_FLAGS } from "services/client/memory_tag";
+import { parseFlags } from 'util/flags';
+import { isArrayOf, isNumber } from 'util/validate';
 export async function main(ns) {
-    const flags = ns.flags(MEM_TAG_FLAGS);
-    let scriptName = ns.getScriptName();
-    let contractPortNum = ns.args[0];
+    await parseFlags(ns, []);
+    const scriptName = ns.getScriptName();
+    const contractPortNum = ns.args[0];
     if (typeof contractPortNum !== 'number') {
         ns.tprintf('%s contract run with non-number answer port argument', scriptName);
         return;
     }
-    let contractDataJSON = ns.args[1];
+    const contractDataJSON = ns.args[1];
     if (typeof contractDataJSON !== 'string') {
         ns.tprintf('%s contract run with non-string data argument. Must be a JSON string containing file, host and contract data.', scriptName);
         return;
     }
-    let contractData = JSON.parse(contractDataJSON);
+    const contractData = JSON.parse(contractDataJSON);
+    if (!isContractData(contractData)) {
+        ns.writePort(contractPortNum, JSON.stringify(null));
+        return;
+    }
     ns.tprintf('contract data: %s', JSON.stringify(contractData));
-    let answer = solve(contractData);
+    const answer = solve(contractData);
     ns.writePort(contractPortNum, answer);
 }
+const isContractData = isArrayOf(isArrayOf(isNumber));
 export function solve(data) {
     // Step 1: Determine grid dimensions and the start and goal cells.
-    let numRows = data.length;
+    const numRows = data.length;
     if (numRows === 0) {
-        return "";
+        return '';
     }
-    let numCols = data[0].length;
-    let start = [0, 0];
-    let goal = [numRows - 1, numCols - 1];
+    const numCols = data[0].length;
+    const start = [0, 0];
+    const goal = [numRows - 1, numCols - 1];
     // Step 2: If the start or goal is blocked we can immediately return.
     if (data[start[0]][start[1]] === 1 || data[goal[0]][goal[1]] === 1) {
-        return "";
+        return '';
     }
     // Step 3: Helper for retrieving valid neighbours.
     function neighbors([x, y]) {
-        let possible = [
-            [x - 1, y, "U"],
-            [x + 1, y, "D"],
-            [x, y - 1, "L"],
-            [x, y + 1, "R"],
+        const possible = [
+            [x - 1, y, 'U'],
+            [x + 1, y, 'D'],
+            [x, y - 1, 'L'],
+            [x, y + 1, 'R'],
         ];
         return possible.filter(([nx, ny]) => {
-            return nx >= 0 && nx < numRows && ny >= 0 && ny < numCols && data[nx][ny] === 0;
+            return (nx >= 0
+                && nx < numRows
+                && ny >= 0
+                && ny < numCols
+                && data[nx][ny] === 0);
         });
     }
     // Step 4: Breadth first search keeping track of the path taken to each cell.
-    let queue = [{ pos: start, path: "" }];
-    let visited = new Set([start.toString()]);
+    const queue = [
+        { pos: start, path: '' },
+    ];
+    const visited = new Set([start.toString()]);
     while (queue.length > 0) {
-        let { pos, path } = queue.shift();
+        const { pos, path } = queue.shift();
         if (pos[0] === goal[0] && pos[1] === goal[1]) {
             return path;
         }
         for (const [nx, ny, dir] of neighbors(pos)) {
-            let key = `${nx},${ny}`;
+            const key = `${nx},${ny}`;
             if (visited.has(key)) {
                 continue;
             }
@@ -97,5 +109,5 @@ export function solve(data) {
         }
     }
     // Step 5: No path found.
-    return "";
+    return '';
 }
