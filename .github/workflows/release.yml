@@ -68,7 +68,6 @@ jobs:
               shell: bash
               run: |
                   cat > README.md <<README_HERE
-                  # Latest Release
                   To download the bootstrap script copy this command into your Bitburner Terminal:
                   \`wget https://github.com/RadicalZephyr/bitburner-scripts/releases/download/${{github.ref_name }}/bootstrap.js external-bootstrap.js\`
                   then run the downloaded bootstrap script with \`run external-bootstrap.js\`.
