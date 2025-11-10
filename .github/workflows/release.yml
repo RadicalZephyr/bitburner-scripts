@@ -61,6 +61,7 @@ jobs:
                   git config user.email "earthlingzephyr@gmail.com"
                   git add .
                   git commit -m 'Update to ${{ github.sha }}' || exit 0
+                  echo "RELEASE_SHA="`git rev-parse HEAD` >> $GITHUB_ENV
                   git push origin ${{ env.RELEASE_BRANCH }}
 
             - name: Create README
@@ -81,14 +82,14 @@ jobs:
                   /** @param {NS} ns */
                   export async function main(ns) {
                     files.pop(); // drop empty final element
-                    const slashRE = /\//;
+                    const slashRE = /^\//;
                     for (const file of files) {
                       const prefix = slashRE.test(file) ? '/' : '';
                       await ns.wget(baseUrl + file, prefix + file, "home");
                     }
                   }
-                  const baseUrl = "https://github.com/RadicalZephyr/bitburner-scripts/raw/refs/heads/${{ env.RELEASE_BRANCH }}/";
-                  let files = [
+                  const baseUrl = "https://github.com/RadicalZephyr/bitburner-scripts/raw/${{ env.RELEASE_SHA }}/";
+                  const files = [
                     $FILES
                     ""
                   ];
