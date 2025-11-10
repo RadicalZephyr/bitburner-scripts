@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## v2.2.0
+## [v2.2.0](https://github.com/RadicalZephyr/bitburner-scripts/compare/v2.1.0...v2.2.0)
 
 ### Repository Wide Improvements
 
@@ -226,7 +226,7 @@
 [pr-334]: https://github.com/RadicalZephyr/bitburner-scripts/pull/334
 [pr-337]: https://github.com/RadicalZephyr/bitburner-scripts/pull/337
 
-## v2.1.0
+## [v2.1.0](https://github.com/RadicalZephyr/bitburner-scripts/compare/v2.0.0...v2.1.0)
 
 - Services bootstrap now launches the updater on `n00dles` to avoid running too many scripts on `foodnstuff`.
 - Added initial corporation management scripts and configuration support.
