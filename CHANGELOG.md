@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v2.2.0
+
 ### Repository Wide Improvements
 
 - Added support for autocompleting flags to all scripts [#213][pr-213].
