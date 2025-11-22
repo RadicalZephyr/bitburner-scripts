@@ -55,3 +55,10 @@ The allocator should detect this and return an error saying
 selector skips any harvest whose expected profit is less than this fraction of
 the combined profits from existing harvests. This avoids spending RAM on
 nearly unprofitable harvests.
+
+### Harvest rebalancing
+
+The task selector now stops any running harvests with a lower expected value per
+RAM-second when a more efficient candidate appears. All weaker harvests are
+shut down, their RAM is reclaimed, and the new target launches using the freed
+memory.

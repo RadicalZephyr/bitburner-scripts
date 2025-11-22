@@ -184,7 +184,10 @@ class Server extends BaseServer<TaskSelectorProtocolDef> {
     }
 }
 
-class TaskSelector {
+/**
+ * Coordinates target selection and task launches for batch scripts.
+ */
+export class TaskSelector {
     ns: NS;
     monitor: MonitorClient;
     launcher: LaunchClient;
@@ -410,6 +413,19 @@ class TaskSelector {
         this.checkLaunchedTasks();
         if (this.launchedTasks.length > 0) return;
 
+        for (const [host, task] of this.launchedHarvestTasks) {
+            const { expectedValue, profit, requiredRam } =
+                expectedValueForMemory(
+                    this.ns,
+                    host,
+                    memInfo,
+                    task.hackPercent,
+                );
+            task.value = expectedValue;
+            task.profit = profit;
+            task.requiredRam = requiredRam;
+        }
+
         const totalProfit = Array.from(
             this.launchedHarvestTasks.values(),
         ).reduce((acc, t) => acc + t.profit, 0);
@@ -435,12 +451,11 @@ class TaskSelector {
                     return null;
                 }
 
-                const { profit, expectedValue: value } = expectedValueForMemory(
-                    this.ns,
-                    h,
-                    memInfo,
-                    hackPercent,
-                );
+                const {
+                    profit,
+                    expectedValue: value,
+                    requiredRam,
+                } = expectedValueForMemory(this.ns, h, memInfo, hackPercent);
                 if (value <= CONFIG.expectedValueThreshold) return null;
 
                 return {
@@ -449,6 +464,7 @@ class TaskSelector {
                     profit,
                     value,
                     ...logistics,
+                    requiredRam,
                 };
             })
             .filter((t): t is HarvestTask => t !== null)
@@ -475,6 +491,46 @@ class TaskSelector {
         for (const task of harvestTasks) {
             const lf = this.launchFailures.get(task.host);
             if (lf && lf.nextAttempt > Date.now()) continue;
+            const weaker = Array.from(
+                this.launchedHarvestTasks.values(),
+            ).filter((t) => t.value < task.value);
+            for (const wt of weaker) {
+                memInfo.freeRam += wt.requiredRam;
+                if (memInfo.chunks.length > 0) {
+                    memInfo.chunks[0].freeRam += wt.requiredRam;
+                }
+                await this.stopHarvest(wt.host);
+            }
+
+            if (weaker.length > 0) {
+                const hackPercent = maxHackPercentForMemory(
+                    this.ns,
+                    task.host,
+                    memInfo,
+                );
+                const logistics = calculateBatchLogistics(
+                    this.ns,
+                    task.host,
+                    hackPercent,
+                );
+                const {
+                    profit,
+                    expectedValue: value,
+                    requiredRam,
+                } = expectedValueForMemory(
+                    this.ns,
+                    task.host,
+                    memInfo,
+                    hackPercent,
+                );
+                Object.assign(task, logistics, {
+                    hackPercent,
+                    profit,
+                    value,
+                    requiredRam,
+                });
+            }
+
             if (
                 harvestScriptRam + task.requiredRam <= memInfo.freeRam
                 && availableBatchCount(memInfo.chunks, task.batchRam)
@@ -600,6 +656,14 @@ class TaskSelector {
                 }
             }
         }
+    }
+
+    private async stopHarvest(host: string) {
+        this.launchedHarvestTasks.get(host)?.client.shutdown();
+        this.harvestTargets.delete(host);
+        this.launchedHarvestTasks.delete(host);
+        this.launchFailures.delete(host);
+        await this.pushTarget(host);
     }
 
     private async launchTill(host: string, threads: number) {
