@@ -1,8 +1,8 @@
 # Changelog
 
-## Unreleased
+## [Unreleased]
 
-## v2.2.0
+## [v2.2.0]
 
 ### Repository Wide Improvements
 
@@ -226,7 +226,7 @@
 [pr-334]: https://github.com/RadicalZephyr/bitburner-scripts/pull/334
 [pr-337]: https://github.com/RadicalZephyr/bitburner-scripts/pull/337
 
-## v2.1.0
+## [v2.1.0]
 
 - Services bootstrap now launches the updater on `n00dles` to avoid running too many scripts on `foodnstuff`.
 - Added initial corporation management scripts and configuration support.
@@ -258,3 +258,7 @@ Built for Bitburner 2.8.1
     - `stopworld.ts` supports tab-completion of script names.
     - `whereis.ts` no longer checks RAM before running `--goto`.
     - `buy-hacknet.ts` was removed in favour of `hacknet/buy.ts` which uses hours for `--return-time`.
+
+[Unreleased]: https://github.com/RadicalZephyr/bitburner-scripts/compare/v2.2.0...dev
+[v2.2.0]: https://github.com/RadicalZephyr/bitburner-scripts/compare/v2.1.0...v2.2.0
+[v2.1.0]: https://github.com/RadicalZephyr/bitburner-scripts/compare/v2.0.0...v2.1.0
